@@ -43,7 +43,6 @@ module Make
       refine: unit -> Type.t option;
       subexpressions: unit -> 'a * 'b;
       get_result: 'a -> Reason.t -> Type.t -> Type.t;
-      test_hooks: Type.t -> Type.tvar option;
       get_opt_use: 'a -> Reason.t -> Type.opt_use_t;
       get_reason: Type.t -> Reason.t;
     }
@@ -3872,7 +3871,7 @@ module Make
     in
     let noop _ = None in
     let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) =
-      let { ChainingConf.subexpressions; get_reason; test_hooks; get_opt_use; _ } = conf in
+      let { ChainingConf.subexpressions; get_reason; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
          We need to flow the "success" type of object_ into a OptionalChainT
          type, which will "filter out" VoidT and NullT from the type of
@@ -3907,11 +3906,7 @@ module Make
       let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason chain_t in
       let chain_reason = mk_reason ROptionalChain loc in
-      let mem_tvar =
-        match test_hooks chain_t with
-        | Some hit -> hit
-        | None -> (reason, Tvar.mk_no_wrap cx reason)
-      in
+      let mem_tvar = (reason, Tvar.mk_no_wrap cx reason) in
       let voided_out =
         Tvar.mk_where cx reason (fun t ->
             Base.List.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t
@@ -3941,15 +3936,7 @@ module Make
       (mem_t, voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
     in
     let handle_continue_chain conf (chain_t, voided_t, object_ast) =
-      let {
-        ChainingConf.refine;
-        refinement_action;
-        subexpressions;
-        get_result;
-        test_hooks;
-        get_reason;
-        _;
-      } =
+      let { ChainingConf.refine; refinement_action; subexpressions; get_result; get_reason; _ } =
         conf
       in
       (* We're looking at a non-optional call or member access, but one where
@@ -3962,28 +3949,19 @@ module Make
       let (subexpression_types, subexpression_asts) = subexpressions () in
       let reason = get_reason chain_t in
       let res_t =
-        match (test_hooks chain_t, refine ()) with
-        | (Some hit, _) -> OpenT hit
-        | (None, Some refi) ->
+        match refine () with
+        | Some refi ->
           Base.Option.value_map
             ~f:(fun refinement_action -> refinement_action subexpression_types chain_t refi)
             ~default:refi
             refinement_action
-        | (None, None) -> get_result subexpression_types reason chain_t
+        | None -> get_result subexpression_types reason chain_t
       in
       let lhs_t = join_optional_branches voided_t res_t in
       (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts)
     in
     let handle_chaining conf opt object_ loc =
-      let {
-        ChainingConf.refinement_action;
-        refine;
-        subexpressions;
-        get_result;
-        test_hooks;
-        get_reason;
-        _;
-      } =
+      let { ChainingConf.refinement_action; refine; subexpressions; get_result; get_reason; _ } =
         conf
       in
       match opt with
@@ -3995,14 +3973,13 @@ module Make
         let (subexpression_types, subexpression_asts) = subexpressions () in
         let reason = get_reason obj_t in
         let lhs_t =
-          match (test_hooks obj_t, refine ()) with
-          | (Some hit, _) -> OpenT hit
-          | (None, Some refi) ->
+          match refine () with
+          | Some refi ->
             Base.Option.value_map
               ~f:(fun refinement_action -> refinement_action subexpression_types obj_t refi)
               ~default:refi
               refinement_action
-          | (None, None) -> get_result subexpression_types reason obj_t
+          | None -> get_result subexpression_types reason obj_t
         in
         (lhs_t, [], lhs_t, obj_t, object_ast, subexpression_asts)
       | NewChain ->
@@ -4155,7 +4132,6 @@ module Make
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
             subexpressions = eval_index;
             get_result = get_mem_t;
-            test_hooks = noop;
             get_opt_use;
             get_reason = Fun.const reason;
           }
@@ -4185,7 +4161,6 @@ module Make
         let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
         let use_op = Op (GetProperty expr_reason) in
         let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
-        let test_hooks _ = None in
         let get_mem_t () _ obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
@@ -4198,7 +4173,6 @@ module Make
             subexpressions = (fun () -> ((), ()));
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
-            test_hooks;
             get_opt_use = (fun _ _ -> opt_use);
             get_reason = Fun.const expr_reason;
           }
@@ -4224,7 +4198,6 @@ module Make
         let expr_reason = mk_reason (RPrivateProperty name) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
         let opt_use = get_private_field_opt_use cx expr_reason ~use_op name in
-        let test_hooks _ = None in
         let get_mem_t () _ obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
@@ -4237,7 +4210,6 @@ module Make
             subexpressions = (fun () -> ((), ()));
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
-            test_hooks;
             get_opt_use = (fun _ _ -> opt_use);
             get_reason = Fun.const expr_reason;
           }
@@ -4313,7 +4285,6 @@ module Make
                 argts
                 (Some specialized_callee)
             in
-            let test_hooks _ = None in
             let handle_refined_callee argts obj_t f =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
                   let app =
@@ -4368,7 +4339,6 @@ module Make
               {
                 ChainingConf.subexpressions = eval_args;
                 get_result = get_mem_t;
-                test_hooks;
                 get_opt_use;
                 refine =
                   (fun () ->
@@ -4452,7 +4422,6 @@ module Make
                 ChainingConf.refinement_action = None;
                 subexpressions = eval_args_and_expr;
                 get_result = get_mem_t;
-                test_hooks = noop;
                 get_opt_use;
                 refine = noop;
                 get_reason = Fun.const expr_reason;
@@ -4540,7 +4509,6 @@ module Make
             subexpressions = eval_args;
             refine = noop;
             get_result;
-            test_hooks = noop;
             get_opt_use;
             get_reason;
           }
