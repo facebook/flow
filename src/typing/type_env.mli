@@ -96,8 +96,6 @@ val get_hint : Context.t -> ALoc.t -> Type.lazy_hint_t
 
 val get_var : ?lookup_mode:LookupMode.t -> Context.t -> string -> ALoc.t -> Type.t
 
-val get_module_exports : Context.t -> ALoc.t -> Type.t
-
 val get_var_declared_type :
   ?lookup_mode:LookupMode.t ->
   ?is_declared_function:bool ->

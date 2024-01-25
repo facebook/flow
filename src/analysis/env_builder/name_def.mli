@@ -25,6 +25,5 @@ val find_defs :
   autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
   Env_api.env_info ->
   scope_kind ->
-  File_key.t ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   env_entries_map * hint_map

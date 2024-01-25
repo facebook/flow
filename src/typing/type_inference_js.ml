@@ -365,7 +365,7 @@ let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplev
       }
     in
     let (name_def_graph, hint_map) =
-      Name_def.find_defs ~autocomplete_hooks info toplevel_scope_kind (Context.file cx) aloc_ast
+      Name_def.find_defs ~autocomplete_hooks info toplevel_scope_kind aloc_ast
     in
     let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
     let pred_func_map =

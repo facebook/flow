@@ -546,10 +546,6 @@ let find_write cx kind reason =
   | Some t -> t
   | None -> Tvar.mk cx reason
 
-let get_module_exports cx loc =
-  let env = Context.environment cx in
-  t_option_value_exn cx loc (Loc_env.find_write env Env_api.CJSModuleExportsLoc loc)
-
 let get_refinement cx key loc =
   let reason = mk_reason (Key.reason_desc key) loc in
   match read_entry ~lookup_mode:ForValue cx loc reason with

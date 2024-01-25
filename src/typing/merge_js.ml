@@ -526,14 +526,12 @@ let check_multiplatform_conformance cx ast tast =
         let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
         get_exports_t ~is_common_interface_module:true reason interface_module_t
       in
-      let () = Module_info_analyzer.visit_program cx tast in
-      let self_sig_loc =
-        Import_export.module_exports_sig_loc cx |> Base.Option.value ~default:prog_aloc
-      in
+      let (self_sig_loc, self_module_t) = Module_info_analyzer.analyze_program cx tast in
       let self_t =
-        let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
-        let source_module_t = Import_export.mk_module_t cx reason file_loc in
-        get_exports_t ~is_common_interface_module:false reason source_module_t
+        get_exports_t
+          ~is_common_interface_module:false
+          (TypeUtil.reason_of_t self_module_t)
+          self_module_t
       in
       (* We need to fully resolve the type to prevent tvar widening. *)
       Tvar_resolver.resolve cx interface_t;

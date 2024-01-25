@@ -1194,15 +1194,6 @@ struct
       | GeneratorNext (Some { return_annot; tparams_map; _ }) ->
         depends_of_annotation tparams_map return_annot EnvMap.empty
       | DeclaredModule (_, module_) -> depends_of_declared_module module_
-      | CJSModuleExportsType (Env_api.CJSModuleExports loc) ->
-        EnvMap.singleton (Env_api.OrdinaryNameLoc, loc) (Nel.one loc)
-      | CJSModuleExportsType (Env_api.CJSExportNames named) ->
-        named
-        |> SMap.values
-        |> List.map (fun (_key_loc, def_loc) ->
-               ((Env_api.OrdinaryNameLoc, def_loc), Nel.one def_loc)
-           )
-        |> EnvMap.of_list
       | GeneratorNext None -> EnvMap.empty
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
@@ -1284,8 +1275,7 @@ struct
       | OpAssign _
       | Function _
       | Enum _
-      | Import _
-      | CJSModuleExportsType _ ->
+      | Import _ ->
         false
   end
 
@@ -1363,7 +1353,6 @@ struct
     | DeclaredComponent _
     | ExpressionDef _
     | DeclaredModule _
-    | CJSModuleExportsType _
     | MissingThisAnnot
     | GeneratorNext (Some _) ->
       []

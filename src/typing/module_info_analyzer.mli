@@ -5,4 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val visit_program : Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> unit
+(* Returns the signature location of the module and the module type *)
+val analyze_program : Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t * Type.t
