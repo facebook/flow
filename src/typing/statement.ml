@@ -881,51 +881,35 @@ module Make
       | Ast.Statement.ExportType -> ForType
     in
     (* [declare] export [type] {foo [as bar]}; *)
-    let export_ref loc local_name remote_name =
+    let export_ref loc local_name =
       let t = Type_env.var_ref ~lookup_mode cx local_name loc in
       match export_kind with
       | Ast.Statement.ExportType ->
         let reason = mk_reason (RType local_name) loc in
-        let t =
-          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-              Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
-          )
-        in
-        Import_export.export_type cx remote_name ~name_loc:loc t;
-        t
-      | Ast.Statement.ExportValue ->
-        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
-        t
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+            Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
+        )
+      | Ast.Statement.ExportValue -> t
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from source_ns_t loc local_name remote_name =
-      let t =
-        let reason = mk_reason (RIdentifier local_name) loc in
-        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-            let use_t =
-              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
-            in
-            Flow.flow cx (source_ns_t, use_t)
-        )
-      in
-      match export_kind with
-      | Ast.Statement.ExportType ->
-        Import_export.export_type cx remote_name ~name_loc:loc t;
-        t
-      | Ast.Statement.ExportValue ->
-        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
-        t
+    let export_from source_ns_t loc local_name =
+      let reason = mk_reason (RIdentifier local_name) loc in
+      Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+          let use_t =
+            GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
+          in
+          Flow.flow cx (source_ns_t, use_t)
+      )
     in
     let export_specifier export (loc, { E.ExportSpecifier.local; exported }) =
       let (local_loc, ({ Ast.Identifier.name = local_name; comments = _ } as local_id)) = local in
       let local_name = OrdinaryName local_name in
-      let (remote_name, reconstruct_remote) =
+      let reconstruct_remote =
         match exported with
-        | None -> (local_name, Fun.const None)
-        | Some (remote_loc, ({ Ast.Identifier.name = remote_name; comments = _ } as remote_id)) ->
-          (OrdinaryName remote_name, (fun t -> Some ((remote_loc, t), remote_id)))
+        | None -> Fun.const None
+        | Some (remote_loc, remote_id) -> (fun t -> Some ((remote_loc, t), remote_id))
       in
-      let t = export local_loc local_name remote_name in
+      let t = export local_loc local_name in
       ( loc,
         { E.ExportSpecifier.local = ((local_loc, t), local_id); exported = reconstruct_remote t }
       )
@@ -950,21 +934,12 @@ module Make
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
       let ns_t = Import_export.import_ns cx reason module_t in
-      let is_type_only_export =
-        match export_kind with
-        | Ast.Statement.ExportValue -> false
-        | Ast.Statement.ExportType -> true
-      in
-      Import_export.export cx (OrdinaryName name) ~name_loc:loc ~is_type_only_export module_t;
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) ->
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RCustom "batch export") loc in
       Flow.flow cx (module_t, CheckUntypedImportT (reason, ImportValue));
-      (match export_kind with
-      | Ast.Statement.ExportValue -> Import_export.export_star cx loc module_t
-      | Ast.Statement.ExportType -> Import_export.export_type_star cx loc module_t);
       E.ExportBatchSpecifier (specifier_loc, None)
 
   (************)
@@ -1566,106 +1541,63 @@ module Make
       (loc, DeclareNamespace decl_ast)
     | (loc, DeclareExportDeclaration decl) ->
       let module D = DeclareExportDeclaration in
-      let { D.default; declaration; specifiers; source; comments = _ } = decl in
+      let { D.default = _; declaration; specifiers; source; comments = _ } = decl in
       let declaration =
-        let export_maybe_default_binding id =
-          let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
-          match default with
-          | None ->
-            Import_export.export cx (OrdinaryName name) ~name_loc ~is_type_only_export:false t
-          | Some default_loc ->
-            Import_export.export
-              cx
-              (OrdinaryName "default")
-              ~name_loc:default_loc
-              ~is_type_only_export:false
-              t
-        in
         let f = function
-          | D.Variable (loc, ({ DeclareVariable.id; _ } as v)) ->
-            let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+          | D.Variable (loc, v) ->
             let dec_var = statement cx (loc, DeclareVariable v) in
             begin
               match dec_var with
-              | (_, DeclareVariable ({ DeclareVariable.id = ((_, t), _); _ } as v_ast)) ->
-                Import_export.export cx (OrdinaryName name) ~name_loc ~is_type_only_export:false t;
-                D.Variable (loc, v_ast)
+              | (_, DeclareVariable v_ast) -> D.Variable (loc, v_ast)
               | _ -> assert_false "DeclareVariable typed AST doesn't preserve structure"
             end
           | D.Function (loc, f) ->
             let dec_fun = statement cx (loc, DeclareFunction f) in
             begin
               match dec_fun with
-              | (_, DeclareFunction f_ast) ->
-                export_maybe_default_binding f_ast.DeclareFunction.id;
-                D.Function (loc, f_ast)
+              | (_, DeclareFunction f_ast) -> D.Function (loc, f_ast)
               | _ -> assert_false "DeclareFunction typed AST doesn't preserve structure"
             end
           | D.Class (loc, c) ->
             let dec_class = statement cx (loc, DeclareClass c) in
             begin
               match dec_class with
-              | (_, DeclareClass c_ast) ->
-                export_maybe_default_binding c_ast.DeclareClass.id;
-                D.Class (loc, c_ast)
+              | (_, DeclareClass c_ast) -> D.Class (loc, c_ast)
               | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
             end
           | D.Component (loc, c) ->
             let dec_component = statement cx (loc, DeclareComponent c) in
             begin
               match dec_component with
-              | (_, DeclareComponent c_ast) ->
-                export_maybe_default_binding c_ast.DeclareComponent.id;
-                D.Component (loc, c_ast)
+              | (_, DeclareComponent c_ast) -> D.Component (loc, c_ast)
               | _ -> assert_false "DeclareComponent typed AST doesn't preserve structure"
             end
           | D.DefaultType (loc, t) ->
-            let default_loc = Base.Option.value_exn default in
-            let (((_, t), _) as t_ast) = Anno.convert cx Subst_name.Map.empty (loc, t) in
-            Import_export.export
-              cx
-              (OrdinaryName "default")
-              ~name_loc:default_loc
-              ~is_type_only_export:true
-              t;
+            let t_ast = Anno.convert cx Subst_name.Map.empty (loc, t) in
             D.DefaultType t_ast
-          | D.NamedType (loc, ({ TypeAlias.id; _ } as t)) ->
-            let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+          | D.NamedType (loc, t) ->
             let type_alias = statement cx (loc, TypeAlias t) in
             begin
               match type_alias with
-              | (_, TypeAlias ({ TypeAlias.id = ((_, t), _); _ } as talias)) ->
-                Import_export.export_type cx (OrdinaryName name) ~name_loc t;
-                D.NamedType (loc, talias)
+              | (_, TypeAlias talias) -> D.NamedType (loc, talias)
               | _ -> assert_false "TypeAlias typed AST doesn't preserve structure"
             end
-          | D.NamedOpaqueType (loc, ({ OpaqueType.id; _ } as t)) ->
-            let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+          | D.NamedOpaqueType (loc, t) ->
             let opaque_type = statement cx (loc, OpaqueType t) in
             begin
               match opaque_type with
-              | (_, OpaqueType ({ OpaqueType.id = ((_, t), _); _ } as opaque_t)) ->
-                Import_export.export_type cx (OrdinaryName name) ~name_loc t;
-                D.NamedOpaqueType (loc, opaque_t)
+              | (_, OpaqueType opaque_t) -> D.NamedOpaqueType (loc, opaque_t)
               | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
             end
-          | D.Interface (loc, ({ Interface.id; _ } as i)) ->
-            let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+          | D.Interface (loc, i) ->
             let int_dec = statement cx (loc, InterfaceDeclaration i) in
             begin
               match int_dec with
-              | (_, InterfaceDeclaration ({ Interface.id = ((_, t), _); _ } as i_ast)) ->
-                Import_export.export_type cx (OrdinaryName name) ~name_loc t;
-                D.Interface (loc, i_ast)
+              | (_, InterfaceDeclaration i_ast) -> D.Interface (loc, i_ast)
               | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
             end
-          | D.Enum (loc, ({ EnumDeclaration.id; _ } as enum)) ->
-            let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
-            let ({ EnumDeclaration.id = ((_, t), _); _ } as enum_ast) =
-              enum_declaration cx loc enum
-            in
-            if Context.enable_enums cx then
-              Import_export.export cx (OrdinaryName name) ~name_loc ~is_type_only_export:false t;
+          | D.Enum (loc, enum) ->
+            let enum_ast = enum_declaration cx loc enum in
             D.Enum (loc, enum_ast)
         in
         Option.map f declaration
@@ -1685,7 +1617,6 @@ module Make
     | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
       ->
       let (((_, t), _) as t_ast) = Anno.convert cx Subst_name.Map.empty t in
-      Import_export.cjs_clobber cx loc t;
       let reason =
         let filename = Context.file cx in
         mk_reason
@@ -1702,34 +1633,11 @@ module Make
           export_decl
           )
       ) ->
-      let export_id ((name_loc, t), { Ast.Identifier.name; comments = _ }) =
-        match export_kind with
-        | Ast.Statement.ExportValue ->
-          Import_export.export cx (OrdinaryName name) ~name_loc ~is_type_only_export:false t
-        | Ast.Statement.ExportType -> Import_export.export_type cx (OrdinaryName name) ~name_loc t
-      in
       let declaration =
         match declaration with
         | None -> None
         | Some (loc, stmt) ->
-          let ((_, tast_stmt) as stmt') = statement cx (loc, stmt) in
-          begin
-            match tast_stmt with
-            | FunctionDeclaration { Ast.Function.id = Some id; _ }
-            | ClassDeclaration { Ast.Class.id = Some id; _ }
-            | TypeAlias { TypeAlias.id; _ }
-            | OpaqueType { OpaqueType.id; _ }
-            | InterfaceDeclaration { Interface.id; _ }
-            | ComponentDeclaration { ComponentDeclaration.id; _ }
-            | EnumDeclaration { EnumDeclaration.id; _ } ->
-              export_id id
-            | VariableDeclaration { VariableDeclaration.declarations; _ } ->
-              Flow_ast_utils.fold_bindings_of_variable_declarations
-                (fun _ () id -> export_id id)
-                ()
-                declarations
-            | _ -> failwith "Parser Error: Invalid export-declaration type!"
-          end;
+          let stmt' = statement cx (loc, stmt) in
           Some stmt'
       in
       let source =
@@ -1753,20 +1661,20 @@ module Make
       )
     | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
       let module D = ExportDefaultDeclaration in
-      let (export_loc, t, declaration) =
+      let (t, declaration) =
         match declaration with
         | D.Declaration (loc, stmt) ->
-          let (export_loc, t, stmt) =
+          let (t, stmt) =
             match stmt with
             | FunctionDeclaration ({ Ast.Function.id = None; _ } as fn) ->
               let { Ast.Function.sig_loc; async; generator; _ } = fn in
               let reason = func_reason ~async ~generator sig_loc in
               let (t, fn) = mk_function_declaration cx reason loc fn in
-              (loc, t, (loc, FunctionDeclaration fn))
+              (t, (loc, FunctionDeclaration fn))
             | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
               let reason = DescFormat.instance_reason (internal_name "*default*") loc in
               let (t, c) = mk_class cx loc ~name_loc:loc reason c in
-              (loc, t, (loc, ClassDeclaration c))
+              (t, (loc, ClassDeclaration c))
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
             | ClassDeclaration { Ast.Class.id = Some id; _ }
             | EnumDeclaration { EnumDeclaration.id; _ }
@@ -1776,21 +1684,15 @@ module Make
               let t =
                 Type_env.get_var_declared_type ~lookup_mode:ForValue cx (OrdinaryName name) id_loc
               in
-              (id_loc, t, stmt)
+              (t, stmt)
             | _ -> failwith "unexpected default export declaration"
           in
-          (export_loc, t, D.Declaration stmt)
+          (t, D.Declaration stmt)
         | D.Expression expr ->
-          let (((loc, t), _) as expr) = expression cx expr in
-          (loc, t, D.Expression expr)
+          let (((_, t), _) as expr) = expression cx expr in
+          (t, D.Expression expr)
       in
       let default = (default, t) in
-      Import_export.export
-        cx
-        (OrdinaryName "default")
-        ~name_loc:export_loc
-        ~is_type_only_export:false
-        t;
       (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
     | (import_loc, ImportDeclaration import_decl) ->
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in

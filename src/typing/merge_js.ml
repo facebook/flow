@@ -485,13 +485,10 @@ let validate_renders_type_arguments cx =
   in
   Context.renders_type_argument_validations cx |> Base.List.iter ~f:validate_arg
 
-let check_multiplatform_conformance cx ast =
+let check_multiplatform_conformance cx ast tast =
   let (prog_aloc, _) = ast in
   let filename = Context.file cx in
   let file_options = (Context.metadata cx).Context.file_options in
-  let self_sig_loc =
-    Import_export.module_exports_sig_loc cx |> Base.Option.value ~default:prog_aloc
-  in
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   match
     Files.relative_interface_mref_of_possibly_platform_specific_file ~options:file_options filename
@@ -528,6 +525,10 @@ let check_multiplatform_conformance cx ast =
       let interface_t =
         let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
         get_exports_t ~is_common_interface_module:true reason interface_module_t
+      in
+      let () = Module_info_analyzer.visit_program cx tast in
+      let self_sig_loc =
+        Import_export.module_exports_sig_loc cx |> Base.Option.value ~default:prog_aloc
       in
       let self_t =
         let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
@@ -590,7 +591,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  *)
 let post_merge_checks cx ast tast metadata =
   check_react_rules cx tast;
-  check_multiplatform_conformance cx ast;
+  check_multiplatform_conformance cx ast tast;
   check_exists_marker cx tast;
   check_polarity cx;
   check_general_post_inference_validations cx;
