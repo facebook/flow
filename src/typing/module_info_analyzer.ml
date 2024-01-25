@@ -493,7 +493,7 @@ let mk_module_t =
 
 let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   let state =
-    { module_info = Context.toplevel_module_info cx; cjs_exports_state = CJSExportNames SMap.empty }
+    { module_info = Module_info.empty_cjs_module (); cjs_exports_state = CJSExportNames SMap.empty }
   in
   Base.List.iter ~f:(visit_toplevel_statement cx state) statements;
   let module_sig_loc = module_exports_sig_loc state |> Base.Option.value ~default:prog_aloc in

@@ -216,7 +216,6 @@ type t = {
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   resolve_require: resolve_require;
-  toplevel_module_info: Module_info.t;
   hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
   hint_map_jsx_cache:
     ( Reason.t * string * ALoc.t list * ALoc.t,
@@ -403,7 +402,6 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
       aloc_table;
       metadata;
       resolve_require;
-      toplevel_module_info = Module_info.empty_cjs_module ();
       hint_map_arglist_cache = ref ALocMap.empty;
       hint_map_jsx_cache = Hashtbl.create 0;
       hint_eval_cache = IMap.empty;
@@ -420,12 +418,6 @@ let sig_cx cx = cx.ccx.sig_cx
 (* modules *)
 
 let in_declare_module cx = cx.environment.Loc_env.scope_kind = Name_def.DeclareModule
-
-let toplevel_module_info cx =
-  if in_declare_module cx then
-    Utils_js.assert_false "module_info should not be called from within declare modules"
-  else
-    cx.toplevel_module_info
 
 (* accessors *)
 

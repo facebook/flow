@@ -297,8 +297,6 @@ val automatic_require_default : t -> bool
 (* modules *)
 val in_declare_module : t -> bool
 
-val toplevel_module_info : t -> Module_info.t
-
 (* mutators *)
 val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit
 
