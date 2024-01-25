@@ -252,12 +252,6 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t
 
-  val declare_module :
-    Context.t ->
-    ALoc.t ->
-    (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t ->
-    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareModule.t
-
   val mk_enum :
     Context.t ->
     enum_reason:Reason.t ->

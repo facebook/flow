@@ -49,9 +49,6 @@ val set_declared_class :
 val set_declared_component :
   t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t -> unit
 
-val set_declared_module :
-  t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareModule.t -> unit
-
 val set_class : t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t -> unit
 
 val set_class_sig :
@@ -115,9 +112,6 @@ val get_declared_class :
 
 val get_declared_component :
   t -> ALoc.t -> (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t) option
-
-val get_declared_module :
-  t -> ALoc.t -> (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareModule.t) option
 
 val get_class : t -> ALoc.t -> (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t) option
 

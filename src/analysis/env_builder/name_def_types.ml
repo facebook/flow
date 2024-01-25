@@ -240,7 +240,6 @@ type def =
       declare_module: bool;
     }
   | GeneratorNext of generator_annot option
-  | DeclaredModule of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t
   | MissingThisAnnot
 
 module Print = struct
@@ -355,7 +354,6 @@ module Print = struct
     | TypeParam { tparam = (loc, _); _ } -> spf "tparam %s" (ALoc.debug_to_string loc)
     | Enum (loc, name, _) -> spf "enum %s %s" name (ALoc.debug_to_string loc)
     | Interface _ -> "interface"
-    | DeclaredModule _ -> "declare module"
     | GeneratorNext _ -> "next"
     | Import { import_kind; source; import; source_loc = _; declare_module = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source

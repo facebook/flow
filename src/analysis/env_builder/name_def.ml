@@ -2193,16 +2193,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       this#in_new_tparams_env (fun () -> super#interface loc interface)
 
     method! declare_module loc (m : ('loc, 'loc) Ast.Statement.DeclareModule.t) =
-      let { Ast.Statement.DeclareModule.id; _ } = m in
-      let (name_loc, name) =
-        match id with
-        | Ast.Statement.DeclareModule.Identifier
-            (name_loc, { Ast.Identifier.name = value; comments = _ })
-        | Ast.Statement.DeclareModule.Literal (name_loc, { Ast.StringLiteral.value; _ }) ->
-          (name_loc, value)
-      in
-      let r = mk_reason (RModule (OrdinaryName name)) loc in
-      this#add_ordinary_binding name_loc r (DeclaredModule (loc, m));
       in_declare_module <- true;
       let ret = this#in_scope (super#declare_module loc) DeclareModule m in
       in_declare_module <- false;

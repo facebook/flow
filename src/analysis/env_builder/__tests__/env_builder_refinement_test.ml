@@ -6636,9 +6636,7 @@ declare module F { }
 |};
     [%expect {|
       [
-        (2, 15) to (2, 16) => {
-          (2, 15) to (2, 16): (module `F`)
-        }] |}]
+        ] |}]
 
 let%expect_test "delete_member" =
   print_ssa_test {|

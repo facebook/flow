@@ -1534,7 +1534,7 @@ module Make
       let (_, decl_ast) = interface cx loc decl in
       (loc, InterfaceDeclaration decl_ast)
     | (loc, DeclareModule module_) ->
-      let (_, decl_ast) = declare_module cx loc module_ in
+      let (_, decl_ast) = declare_module cx module_ in
       (loc, DeclareModule decl_ast)
     | (loc, DeclareNamespace namespace) ->
       let (_, decl_ast) = declare_namespace cx loc namespace in
@@ -1942,60 +1942,53 @@ module Make
       let (t, decl_ast) = Anno.mk_declare_component_sig cx loc decl in
       (t, decl_ast)
 
-  and declare_module cx loc { Ast.Statement.DeclareModule.id; body; comments } =
+  and declare_module cx { Ast.Statement.DeclareModule.id; body; comments } =
     let open Ast.Statement in
-    let node_cache = Context.node_cache cx in
-    match Node_cache.get_declared_module node_cache loc with
-    | Some x -> x
-    | None ->
-      let (id_loc, name) =
-        match id with
-        | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
-        | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
-          (id_loc, value)
-      in
-      if not (File_key.is_lib_file (Context.file cx) && Type_env.in_global_scope cx) then
-        Flow_js_utils.add_output
-          cx
-          Error_message.(EUnsupportedSyntax (id_loc, NonLibdefToplevelDeclareModule));
-      let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
-        body
-      in
-      let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
+    let (id_loc, name) =
+      match id with
+      | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
+      | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
+        (id_loc, value)
+    in
+    if not (File_key.is_lib_file (Context.file cx) && Type_env.in_global_scope cx) then
+      Flow_js_utils.add_output
+        cx
+        Error_message.(EUnsupportedSyntax (id_loc, NonLibdefToplevelDeclareModule));
+    let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) = body in
+    let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
 
-      let elements_ast = statement_list cx elements in
-      let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
-      let module_t =
-        ModuleT
-          {
-            module_reason = reason;
-            module_export_types =
-              {
-                exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-                cjs_export = None;
-                has_every_named_export = false;
-              };
-            module_is_strict = Context.is_strict cx;
-            module_available_platforms = Context.available_platforms cx;
-          }
-      in
-      let ast =
+    let elements_ast = statement_list cx elements in
+    let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
+    let module_t =
+      ModuleT
         {
-          DeclareModule.id =
-            begin
-              match id with
-              | DeclareModule.Identifier (id_loc, id) ->
-                DeclareModule.Identifier ((id_loc, module_t), id)
-              | DeclareModule.Literal (id_loc, lit) ->
-                DeclareModule.Literal ((id_loc, module_t), lit)
-            end;
-          body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
-          comments;
+          module_reason = reason;
+          module_export_types =
+            {
+              exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+              cjs_export = None;
+              has_every_named_export = false;
+            };
+          module_is_strict = Context.is_strict cx;
+          module_available_platforms = Context.available_platforms cx;
         }
-      in
-      ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
+    in
+    let ast =
+      {
+        DeclareModule.id =
+          begin
+            match id with
+            | DeclareModule.Identifier (id_loc, id) ->
+              DeclareModule.Identifier ((id_loc, module_t), id)
+            | DeclareModule.Literal (id_loc, lit) -> DeclareModule.Literal ((id_loc, module_t), lit)
+          end;
+        body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
+        comments;
+      }
+    in
+    ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
 
-      (module_t, ast)
+    (module_t, ast)
 
   and declare_namespace cx loc decl =
     Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));

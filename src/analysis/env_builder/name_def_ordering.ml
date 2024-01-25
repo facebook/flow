@@ -906,14 +906,6 @@ struct
             ())
           EnvMap.empty
       in
-      let depends_of_declared_module { Ast.Statement.DeclareModule.id = _; body; comments = _ } =
-        depends_of_node
-          (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = map_loc visitor#block body in
-            ())
-          EnvMap.empty
-      in
       let depends_of_alias { Ast.Statement.TypeAlias.tparams; right; _ } =
         depends_of_node
           (fun visitor ->
@@ -1193,7 +1185,6 @@ struct
       | Interface (_, inter) -> depends_of_interface inter
       | GeneratorNext (Some { return_annot; tparams_map; _ }) ->
         depends_of_annotation tparams_map return_annot EnvMap.empty
-      | DeclaredModule (_, module_) -> depends_of_declared_module module_
       | GeneratorNext None -> EnvMap.empty
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
@@ -1261,7 +1252,6 @@ struct
       | MissingThisAnnot
       | DeclaredComponent _
       | DeclaredClass _
-      | DeclaredModule _
       | Function
           {
             synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
@@ -1352,7 +1342,6 @@ struct
     | DeclaredClass _
     | DeclaredComponent _
     | ExpressionDef _
-    | DeclaredModule _
     | MissingThisAnnot
     | GeneratorNext (Some _) ->
       []

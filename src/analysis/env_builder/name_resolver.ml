@@ -5509,29 +5509,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let v = Val.simplify def_loc (Some kind) (Some name) v in
         v
 
-      method! declare_module _loc ({ Ast.Statement.DeclareModule.id; body; _ } as m) =
-        let (name_loc, name) =
-          match id with
-          | Ast.Statement.DeclareModule.Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name)
-          | Ast.Statement.DeclareModule.Literal (loc, { Ast.StringLiteral.value; _ }) -> (loc, value)
-        in
+      method! declare_module _loc ({ Ast.Statement.DeclareModule.id = _; body; _ } as m) =
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
-        let reason = mk_reason (RModule (OrdinaryName name)) name_loc in
-        let write_entries =
-          EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason) env_state.write_entries
-        in
-        let values =
-          L.LMap.add
-            name_loc
-            {
-              def_loc = Some name_loc;
-              value = Val.one reason;
-              binding_kind_opt = None;
-              name = Some name;
-            }
-            env_state.values
-        in
-        env_state <- { env_state with values; write_entries };
         let bindings =
           let hoist =
             new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
