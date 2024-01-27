@@ -766,6 +766,7 @@ and internal_error =
 
 and unsupported_syntax =
   | AnnotationInsideDestructuring
+  | AsConstOnNonLiteral
   | ExistsType
   | MetaPropertyExpression
   | ObjectPropertyGetSet
@@ -2114,10 +2115,10 @@ let type_casting_examples enabled_casting_syntax =
   let example_colon = "(<expr>: <type>)" in
   let open Options.CastingSyntax in
   match enabled_casting_syntax with
-  | Colon
-  | Both ->
-    (example_colon, example_as)
-  | As -> (example_as, example_colon)
+  | Colon -> (example_colon, example_as)
+  | Both
+  | As ->
+    (example_as, example_colon)
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
@@ -3075,6 +3076,13 @@ let friendly_message_of_msg loc_of_aloc msg =
           text " do ";
           code "const [a, b]: [number, string] = ...";
           text ".";
+        ]
+      | AsConstOnNonLiteral ->
+        [
+          text "The ";
+          code "as const";
+          text " assertion can only be used on string, numeric, boolean, object, ";
+          text "or array literals.";
         ]
       | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
       | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
@@ -5334,13 +5342,16 @@ let friendly_message_of_msg loc_of_aloc msg =
       let (example, _) = type_casting_examples enabled_casting_syntax in
       let features =
         [
-          text "Flow does not have an equivalent of ";
           code "as const";
-          text ". ";
+          text " syntax is not enabled by default. ";
           text "Try adding a type annotation instead. ";
           text "You can cast an expression to a type using the form ";
           code example;
-          text ".";
+          text ". ";
+          text "Alternatively, you can enable experimental support for ";
+          text "the feature by setting ";
+          code "experimental.as_const=true";
+          text " in your flow config.";
         ]
       in
       Normal { features }

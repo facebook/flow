@@ -659,7 +659,7 @@ module Make
     let t = identifier_ cx name loc in
     t
 
-  let string_literal_value cx loc value =
+  let string_literal_value cx ~as_const:_ loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
@@ -675,19 +675,20 @@ module Make
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
         DefT (reason, StrT AnyLiteral)
 
-  let string_literal cx loc { Ast.StringLiteral.value; _ } = string_literal_value cx loc value
+  let string_literal cx ~as_const loc { Ast.StringLiteral.value; _ } =
+    string_literal_value cx ~as_const loc value
 
-  let boolean_literal loc { Ast.BooleanLiteral.value; _ } =
+  let boolean_literal ~as_const:_ loc { Ast.BooleanLiteral.value; _ } =
     let reason = mk_annot_reason RBoolean loc in
     DefT (reason, BoolT (Some value))
 
   let null_literal loc = NullT.at loc
 
-  let number_literal loc { Ast.NumberLiteral.value; raw; _ } =
+  let number_literal ~as_const:_ loc { Ast.NumberLiteral.value; raw; _ } =
     let reason = mk_annot_reason RNumber loc in
     DefT (reason, NumT (Literal (None, (value, raw))))
 
-  let bigint_literal loc { Ast.BigIntLiteral.value; raw; _ } =
+  let bigint_literal ~as_const:_ loc { Ast.BigIntLiteral.value; raw; _ } =
     let reason = mk_annot_reason RBigInt loc in
     DefT (reason, BigIntT (Literal (None, (value, raw))))
 
@@ -703,6 +704,22 @@ module Make
     let reason = mk_reason (RCustom "module reference") loc in
     let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
     (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
+
+  let check_const_assertion cx (loc, e) =
+    let open Ast.Expression in
+    if
+      match e with
+      | StringLiteral _
+      | BooleanLiteral _
+      | NumberLiteral _
+      | BigIntLiteral _
+      | RegExpLiteral _
+      | Array _
+      | Object _ ->
+        false
+      | _ -> true
+    then
+      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, AsConstOnNonLiteral))
 
   (*********)
   (* Types *)
@@ -1994,7 +2011,7 @@ module Make
     Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
     (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#declare_namespace loc decl)
 
-  and object_prop cx acc prop =
+  and object_prop cx ~as_const acc prop =
     let open Ast.Expression.Object in
     match prop with
     (* named prop *)
@@ -2022,10 +2039,10 @@ module Make
             let key = translate_identifer_or_literal_key t key in
             (* don't add `name` to `acc` because `name` is the autocomplete token *)
             let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
-            let (((_, _t), _) as value) = expression cx v in
+            let (((_, _t), _) as value) = expression cx ~as_const v in
             (acc, key, value)
           else
-            let (((_, t), _) as value) = expression cx v in
+            let (((_, t), _) as value) = expression cx ~as_const v in
             let key = translate_identifer_or_literal_key t key in
             let acc =
               ObjectExpressionAcc.add_prop
@@ -2163,7 +2180,7 @@ module Make
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (map, rev_prop_asts) prop ->
-          let (map, prop) = object_prop cx map prop in
+          let (map, prop) = object_prop cx ~as_const:false map prop in
           (map, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty (), [])
         props
@@ -2202,7 +2219,7 @@ module Make
       Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
       AnyT.error reason
 
-  and object_ cx reason ~frozen props =
+  and object_ cx reason ~frozen ~as_const props =
     let open Ast.Expression.Object in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
@@ -2233,7 +2250,7 @@ module Make
                   }
               ) ->
             let (((_, kt), _) as k') = expression cx k in
-            let (((_, vt), _) as v') = expression cx v in
+            let (((_, vt), _) as v') = expression cx ~as_const v in
             let computed = mk_computed k kt vt in
             ( ObjectExpressionAcc.add_spread computed acc,
               Property
@@ -2306,7 +2323,7 @@ module Make
               :: rev_prop_asts
             )
           | prop ->
-            let (acc, prop) = object_prop cx acc prop in
+            let (acc, prop) = object_prop cx ~as_const acc prop in
             (acc, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty (), [])
         props
@@ -2458,14 +2475,14 @@ module Make
       let (((_, t), _) as e') = expression cx argument in
       (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
-  and array_elements cx undef_loc =
+  and array_elements cx ~as_const undef_loc =
     let open Ast.Expression.Array in
     Base.Fn.compose
       List.split
       (Base.List.map ~f:(fun e ->
            match e with
            | Expression e ->
-             let (((loc, t), _) as e) = expression cx e in
+             let (((loc, t), _) as e) = expression cx ~as_const e in
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Expression e)
            | Hole loc ->
@@ -2510,7 +2527,7 @@ module Make
   (* can raise Abnormal.(Exn (_, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond cx (loc, e) =
+  and expression ?cond ?(as_const = false) cx (loc, e) =
     let log_slow_to_check ~f =
       match Context.slow_to_check_logging cx with
       | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
@@ -2537,7 +2554,7 @@ module Make
             (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
           node
         | None ->
-          let res = expression_ ~cond cx loc e in
+          let res = expression_ ~cond ~as_const cx loc e in
           if not (Context.typing_mode cx <> Context.CheckingMode) then begin
             let cache = Context.constraint_cache cx in
             cache := FlowSet.empty;
@@ -2566,24 +2583,24 @@ module Make
 
   and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
-  and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+  and expression_ ~cond ~as_const cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
     | StringLiteral lit ->
-      let t = string_literal cx loc lit in
+      let t = string_literal cx ~as_const loc lit in
       ((loc, t), StringLiteral lit)
     | BooleanLiteral lit ->
-      let t = boolean_literal loc lit in
+      let t = boolean_literal ~as_const loc lit in
       ((loc, t), BooleanLiteral lit)
     | NullLiteral lit ->
       let t = null_literal loc in
       ((loc, t), NullLiteral lit)
     | NumberLiteral lit ->
-      let t = number_literal loc lit in
+      let t = number_literal ~as_const loc lit in
       ((loc, t), NumberLiteral lit)
     | BigIntLiteral lit ->
-      let t = bigint_literal loc lit in
+      let t = bigint_literal ~as_const loc lit in
       ((loc, t), BigIntLiteral lit)
     | RegExpLiteral lit ->
       let t = regexp_literal cx loc in
@@ -2651,12 +2668,16 @@ module Make
           (Error_message.EInvalidTypeCastSyntax { loc; enabled_casting_syntax = casting_syntax });
         let t = AnyT.at (AnyError None) loc in
         ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast)))
-    | AsConstExpression cast ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.ETSSyntax { kind = Error_message.TSAsConst (Context.casting_syntax cx); loc });
-      let t = AnyT.at (AnyError None) loc in
-      ((loc, t), AsConstExpression (Tast_utils.error_mapper#as_const_expression cast))
+    | AsConstExpression ({ AsConstExpression.expression = e; comments } as cast) ->
+      if Context.enable_as_const cx then (
+        check_const_assertion cx e;
+        let (((_, t), _) as e) = expression cx ~as_const:true e in
+        ((loc, t), AsConstExpression { AsConstExpression.expression = e; comments })
+      ) else
+        let kind = Error_message.TSAsConst (Context.casting_syntax cx) in
+        Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind; loc });
+        let t = AnyT.at (AnyError None) loc in
+        ((loc, t), AsConstExpression (Tast_utils.error_mapper#as_const_expression cast))
     | TSSatisfies cast ->
       Flow_js_utils.add_output
         cx
@@ -2670,7 +2691,7 @@ module Make
     | Object { Object.properties; comments } ->
       error_on_this_uses_in_object_methods cx properties;
       let reason = mk_reason RObjectLit loc in
-      let (t, properties) = object_ ~frozen:false cx reason properties in
+      let (t, properties) = object_ ~frozen:false ~as_const cx reason properties in
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
       (match elements with
@@ -2694,7 +2715,7 @@ module Make
         )
       | elems ->
         let reason = mk_reason RArrayLit loc in
-        let (elem_spread_list, elements) = array_elements cx loc elems in
+        let (elem_spread_list, elements) = array_elements cx ~as_const loc elems in
         ( ( loc,
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
                 let reason_op = reason in
@@ -3059,7 +3080,7 @@ module Make
               ) =
             head
           in
-          let t = string_literal_value cx elem_loc cooked in
+          let t = string_literal_value cx ~as_const:false elem_loc cooked in
           (t, [])
         | _ ->
           let t_out = StrT.at loc in
@@ -5297,7 +5318,7 @@ module Make
           jsx_mk_props
             cx
             fbt_reason
-            ~check_expression:(Statement.expression ?cond:None)
+            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
             ~collapse_children
             name
             attributes
@@ -5351,7 +5372,7 @@ module Make
             jsx_mk_props
               cx
               reason
-              ~check_expression:(Statement.expression ?cond:None)
+              ~check_expression:(Statement.expression ?cond:None ?as_const:None)
               ~collapse_children
               name
               attributes
@@ -5373,7 +5394,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(Statement.expression ?cond:None)
+            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
             ~collapse_children
             name
             attributes
@@ -5395,7 +5416,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(Statement.expression ?cond:None)
+            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
             ~collapse_children
             el_name
             attributes
@@ -5412,7 +5433,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(Statement.expression ?cond:None)
+            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
             ~collapse_children
             el_name
             attributes
@@ -5503,7 +5524,7 @@ module Make
               match value with
               (* <element name="literal" /> *)
               | Some (Attribute.StringLiteral (loc, lit)) ->
-                let t = string_literal cx loc lit in
+                let t = string_literal cx ~as_const:false loc lit in
                 (t, Some (Attribute.StringLiteral ((loc, t), lit)))
               (* <element name={expression} /> *)
               | Some
@@ -6216,7 +6237,7 @@ module Make
         let { Object.properties; comments } = o in
         error_on_this_uses_in_object_methods cx properties;
         let reason = mk_reason (RFrozen RObjectLit) arg_loc in
-        let (t, properties) = object_ ~frozen:true cx reason properties in
+        let (t, properties) = object_ ~frozen:true ~as_const:false cx reason properties in
         ((arg_loc, t), Object { Object.properties; comments })
       in
       let reason = mk_reason (RMethodCall (Some m)) loc in
@@ -6353,19 +6374,20 @@ module Make
         let (annot_t, ast_annot) = unconditionally_required_annot annot in
         (Annot annot_t, annot_t, ast_annot, Fun.const Ast.Class.Property.Uninitialized)
       | Ast.Class.Property.Initialized expr ->
+        (* TODO(pvekris) expr could be an `as const` *)
         let (annot_t, annot_ast) =
           match (expr, annot) with
           | ((loc, Ast.Expression.StringLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = string_literal cx loc lit in
+            let t = string_literal cx ~as_const:false loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.BooleanLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = boolean_literal loc lit in
+            let t = boolean_literal ~as_const:false loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.NumberLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = number_literal loc lit in
+            let t = number_literal ~as_const:false loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.BigIntLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = bigint_literal loc lit in
+            let t = bigint_literal loc ~as_const:false lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.RegExpLiteral _), Ast.Type.Missing annot_loc) ->
             let t = regexp_literal cx loc in

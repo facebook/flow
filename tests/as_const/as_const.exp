@@ -1,0 +1,74 @@
+Error -------------------------------------------------------------------------------------------------- invalid.js:14:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   14| one as const; // error variable is not a literal
+       ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:15:2
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   15| (function f() {}) as const; // error function is not a literal
+        ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:16:2
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   16| (class C {}) as const; // error class is not a literal
+        ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:17:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   17| 1 as const as const; // error as const is not a literal
+       ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:18:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   18| 1 + 1 as const; // error binary operation is not a literal
+       ^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:19:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   19| 1 as number as const; // error cast expression is not a literal
+       ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:20:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   20| null as const; // error null is not a supported literal
+       ^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:21:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   21| undefined as const; // error undefined is not a supported literal
+       ^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:22:1
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
+
+   22| foo() as const; // error function call is not a literal
+       ^^^^^
+
+
+
+Found 9 errors

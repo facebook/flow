@@ -99,8 +99,9 @@ Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<
 
 Error ------------------------------------------------------------------------------------------------------- as.js:27:1
 
-Flow does not have an equivalent of `as const`. Try adding a type annotation instead. You can cast an expression to a
-type using the form `(<expr>: <type>)`. [ts-syntax]
+`as const` syntax is not enabled by default. Try adding a type annotation instead. You can cast an expression to a type
+using the form `(<expr>: <type>)`. Alternatively, you can enable experimental support for the feature by setting
+`experimental.as_const=true` in your flow config. [ts-syntax]
 
    27| n as const; // ERROR
        ^^^^^^^^^^
