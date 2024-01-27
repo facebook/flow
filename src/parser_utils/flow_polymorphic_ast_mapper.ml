@@ -157,7 +157,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | TemplateLiteral x -> TemplateLiteral (this#template_literal x)
         | This x -> This (this#this_expression x)
         | TypeCast x -> TypeCast (this#type_cast x)
-        | TSTypeCast x -> TSTypeCast (this#ts_type_cast x)
+        | TSSatisfies x -> TSSatisfies (this#ts_satisfies x)
         | Unary x -> Unary (this#unary_expression x)
         | Update x -> Update (this#update_expression x)
         | Yield x -> Yield (this#yield x)
@@ -2502,17 +2502,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { expression = expression'; annot = annot'; comments = comments' }
 
-    method ts_type_cast (expr : ('M, 'T) Ast.Expression.TSTypeCast.t)
-        : ('N, 'U) Ast.Expression.TSTypeCast.t =
-      let open Ast.Expression.TSTypeCast in
-      let { expression; kind; comments } = expr in
+    method ts_satisfies (expr : ('M, 'T) Ast.Expression.TSSatisfies.t)
+        : ('N, 'U) Ast.Expression.TSSatisfies.t =
+      let open Ast.Expression.TSSatisfies in
+      let { expression; annot; comments } = expr in
       let expression' = this#expression expression in
-      let kind' =
-        match kind with
-        | Satisfies annot -> Satisfies (this#type_ annot)
-      in
+      let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
-      { expression = expression'; kind = kind'; comments = comments' }
+      { expression = expression'; annot = annot'; comments = comments' }
 
     method unary_expression (expr : ('M, 'T) Ast.Expression.Unary.t)
         : ('N, 'U) Ast.Expression.Unary.t =

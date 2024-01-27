@@ -2657,14 +2657,14 @@ module Make
         (Error_message.ETSSyntax { kind = Error_message.TSAsConst (Context.casting_syntax cx); loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), AsConstExpression (Tast_utils.error_mapper#as_const_expression cast))
-    | TSTypeCast ({ TSTypeCast.kind = TSTypeCast.Satisfies _; _ } as cast) ->
+    | TSSatisfies cast ->
       Flow_js_utils.add_output
         cx
         (Error_message.ETSSyntax
            { kind = Error_message.TSSatisfiesType (Context.casting_syntax cx); loc }
         );
       let t = AnyT.at (AnyError None) loc in
-      ((loc, t), TSTypeCast (Tast_utils.error_mapper#ts_type_cast cast))
+      ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
     | Member _ -> subscript ~cond cx ex
     | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->

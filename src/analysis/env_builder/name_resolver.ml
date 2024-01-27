@@ -5355,7 +5355,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | TaggedTemplate _
         | TemplateLiteral _
         | TypeCast _
-        | TSTypeCast _
+        | TSSatisfies _
         | This _
         | Update _
         | Yield _ ->

@@ -2753,7 +2753,7 @@ let rec expression opts scope tbls (loc, expr) =
     | Both ->
       annot opts scope tbls SSet.empty t)
   | E.AsConstExpression _ -> Annot (Any loc)
-  | E.TSTypeCast _ -> Annot (Any loc)
+  | E.TSSatisfies _ -> Annot (Any loc)
   | E.Object { E.Object.properties; comments = _ } ->
     object_literal opts scope tbls loc ~frozen:false properties
   | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements

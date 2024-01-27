@@ -28,7 +28,7 @@ class mapper ~enabled_casting_syntax target_loc kind =
       | (loc, AsExpression { AsExpression.expression; annot = (_, annot); comments })
         when kind = `AsExpression && this#is_target loc ->
         this#build_cast ?comments expression annot
-      | (loc, TSTypeCast { TSTypeCast.expression; kind = TSTypeCast.Satisfies annot; comments })
+      | (loc, TSSatisfies { TSSatisfies.expression; annot = (_, annot); comments })
         when kind = `SatisfiesExpression && this#is_target loc ->
         this#build_cast ?comments expression annot
       | _ -> super#expression e

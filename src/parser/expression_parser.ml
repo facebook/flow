@@ -94,7 +94,7 @@ module Expression
     | (_, TemplateLiteral _)
     | (_, This _)
     | (_, TypeCast _)
-    | (_, TSTypeCast _)
+    | (_, TSSatisfies _)
     | (_, Unary _)
     | (_, Update _)
     | (_, Yield _) ->
@@ -314,7 +314,7 @@ module Expression
     | (_, TemplateLiteral _)
     | (_, This _)
     | (_, TypeCast _)
-    | (_, TSTypeCast _)
+    | (_, TSSatisfies _)
     | (_, Unary _)
     | (_, Update _)
     | (_, Yield _) ->
@@ -536,10 +536,10 @@ module Expression
                 let loc = Loc.btwn expr_loc annot_loc in
                 Cover_expr
                   ( loc,
-                    Expression.TSTypeCast
+                    Expression.TSSatisfies
                       {
-                        Expression.TSTypeCast.expression = expr;
-                        kind = Expression.TSTypeCast.Satisfies annot;
+                        Expression.TSSatisfies.expression = expr;
+                        annot = (annot_loc, annot);
                         comments = None;
                       }
                   )

@@ -500,9 +500,7 @@ with type t = Impl.t = struct
           "AsExpression"
           loc
           [("expression", expression expr); ("typeAnnotation", _type annot)]
-      | ( loc,
-          TSTypeCast { TSTypeCast.expression = expr; kind = TSTypeCast.Satisfies annot; comments }
-        ) ->
+      | (loc, TSSatisfies { TSSatisfies.expression = expr; annot = (_, annot); comments }) ->
         node
           ?comments
           "SatisfiesExpression"

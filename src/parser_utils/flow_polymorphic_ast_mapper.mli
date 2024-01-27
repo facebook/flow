@@ -781,8 +781,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_cast : ('M, 'T) Ast.Expression.TypeCast.t -> ('N, 'U) Ast.Expression.TypeCast.t
 
-    method ts_type_cast :
-      ('M, 'T) Ast.Expression.TSTypeCast.t -> ('N, 'U) Ast.Expression.TSTypeCast.t
+    method ts_satisfies :
+      ('M, 'T) Ast.Expression.TSSatisfies.t -> ('N, 'U) Ast.Expression.TSSatisfies.t
 
     method type_params_opt :
       'a.

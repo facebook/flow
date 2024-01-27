@@ -1142,7 +1142,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | TaggedTemplate { TaggedTemplate.tag; _ } -> code_desc_of_expression ~wrap:true tag ^ "`...`"
   | TemplateLiteral _ -> "`...`"
   | This _ -> "this"
-  | TSTypeCast { TSTypeCast.expression; _ }
+  | TSSatisfies { TSSatisfies.expression; _ }
   | TypeCast { TypeCast.expression; _ } ->
     code_desc_of_expression ~wrap expression
   | Unary { Unary.operator; argument; comments = _ } ->

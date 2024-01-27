@@ -169,7 +169,7 @@ let precedence_of_expression expr =
     17
   | (_, E.AsExpression _)
   | (_, E.AsConstExpression _)
-  | (_, E.TSTypeCast _) ->
+  | (_, E.TSSatisfies _) ->
     12
   | (_, E.Binary { E.Binary.operator; _ }) -> begin
     match operator with
@@ -1265,7 +1265,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.TypeCast cast -> type_cast ~opts loc cast
       | E.AsConstExpression cast -> as_const_expression ~opts loc cast
       | E.AsExpression cast -> as_expression ~opts loc cast
-      | E.TSTypeCast cast -> ts_type_cast ~opts loc cast
+      | E.TSSatisfies cast -> ts_satisfies ~opts loc cast
       | E.Import { E.Import.argument; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
@@ -1500,14 +1500,11 @@ and as_expression ~opts loc cast =
   layout_node_with_comments_opt loc comments
   @@ fuse [expression ~opts expr; space; Atom "as"; space; type_ ~opts annot]
 
-and ts_type_cast ~opts loc cast =
-  let open Ast.Expression.TSTypeCast in
-  let { expression = expr; kind; comments } = cast in
+and ts_satisfies ~opts loc cast =
+  let open Ast.Expression.TSSatisfies in
+  let { expression = expr; annot = (_, annot); comments } = cast in
   let expr_layout = expression ~opts expr in
-  let rhs =
-    match kind with
-    | Satisfies annot -> [Atom "satisfies"; space; type_ ~opts annot]
-  in
+  let rhs = [Atom "satisfies"; space; type_ ~opts annot] in
   layout_node_with_comments_opt loc comments @@ fuse [expr_layout; space; fuse rhs]
 
 and pattern_object_property_key ~opts =

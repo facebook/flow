@@ -59,10 +59,10 @@ class mapper target_loc kind =
         let expression = super#expression expression in
         let annot = super#type_ annot in
         Ast_builder.Expressions.typecast ?comments expression annot
-      | (loc, TSTypeCast { TSTypeCast.expression; kind = TSTypeCast.Satisfies annot; comments })
+      | (loc, TSSatisfies { TSSatisfies.expression; annot; comments })
         when kind = `SatisfiesExpression && this#is_target loc ->
         let expression = super#expression expression in
-        let annot = super#type_ annot in
+        let (_, annot) = super#type_annotation annot in
         Ast_builder.Expressions.typecast ?comments expression annot
       | _ -> super#expression e
   end

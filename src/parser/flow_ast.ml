@@ -1674,12 +1674,10 @@ and Expression : sig
     [@@deriving show]
   end
 
-  module TSTypeCast : sig
-    type ('M, 'T) kind = Satisfies of ('M, 'T) Type.t [@@deriving show]
-
+  module TSSatisfies : sig
     type ('M, 'T) t = {
       expression: ('M, 'T) Expression.t;
-      kind: ('M, 'T) kind;
+      annot: ('M, 'T) Type.annotation;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
@@ -1747,7 +1745,7 @@ and Expression : sig
     | TemplateLiteral of ('M, 'T) TemplateLiteral.t
     | This of 'M This.t
     | TypeCast of ('M, 'T) TypeCast.t
-    | TSTypeCast of ('M, 'T) TSTypeCast.t
+    | TSSatisfies of ('M, 'T) TSSatisfies.t
     | Unary of ('M, 'T) Unary.t
     | Update of ('M, 'T) Update.t
     | Yield of ('M, 'T) Yield.t

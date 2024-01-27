@@ -570,7 +570,7 @@ let resolve_binding cx reason loc b =
         | Ast.Expression.TaggedTemplate _
         | Ast.Expression.TemplateLiteral _
         | Ast.Expression.This _
-        | Ast.Expression.TSTypeCast _
+        | Ast.Expression.TSSatisfies _
         | Ast.Expression.Unary _
         | Ast.Expression.Update _
         | Ast.Expression.Yield _ ->
