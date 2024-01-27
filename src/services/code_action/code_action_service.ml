@@ -736,10 +736,7 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
     else
       []
   | Error_message.ETSSyntax
-      {
-        kind = Error_message.TSTypeCast { kind = `Satisfies; enabled_casting_syntax };
-        loc = error_loc;
-      } ->
+      { kind = Error_message.TSSatisfiesType enabled_casting_syntax; loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
       let title =
         let open Options.CastingSyntax in

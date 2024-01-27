@@ -844,10 +844,8 @@ and ts_syntax_kind =
   | TSTypeParamExtends
   | TSReadonlyVariance
   | TSInOutVariance of [ `In | `Out | `InOut ]
-  | TSTypeCast of {
-      kind: [ `AsConst | `Satisfies ];
-      enabled_casting_syntax: Options.CastingSyntax.t;
-    }
+  | TSAsConst of Options.CastingSyntax.t
+  | TSSatisfiesType of Options.CastingSyntax.t
   | TSReadonlyType of [ `Tuple | `Array ] option
 
 and invalid_mapped_type_error_kind =
@@ -5332,28 +5330,30 @@ let friendly_message_of_msg loc_of_aloc msg =
               text "it's the default if you don't have a variance annotation.";
             ];
         }
-    | TSTypeCast { kind; enabled_casting_syntax } ->
+    | TSAsConst enabled_casting_syntax ->
       let (example, _) = type_casting_examples enabled_casting_syntax in
       let features =
-        match kind with
-        | `AsConst ->
-          [
-            text "Flow does not have an equivalent of ";
-            code "as const";
-            text ". ";
-            text "Try adding a type annotation instead. ";
-            text "You can cast an expression to a type using the form ";
-            code example;
-            text ".";
-          ]
-        | `Satisfies ->
-          [
-            text "The closest equivalent of TypeScript's ";
-            code "satisfies";
-            text " expression in Flow is to do a cast in the form ";
-            code example;
-            text ".";
-          ]
+        [
+          text "Flow does not have an equivalent of ";
+          code "as const";
+          text ". ";
+          text "Try adding a type annotation instead. ";
+          text "You can cast an expression to a type using the form ";
+          code example;
+          text ".";
+        ]
+      in
+      Normal { features }
+    | TSSatisfiesType enabled_casting_syntax ->
+      let (example, _) = type_casting_examples enabled_casting_syntax in
+      let features =
+        [
+          text "The closest equivalent of TypeScript's ";
+          code "satisfies";
+          text " expression in Flow is to do a cast in the form ";
+          code example;
+          text ".";
+        ]
       in
       Normal { features }
     | TSReadonlyType (Some arg_kind) ->
