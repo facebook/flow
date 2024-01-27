@@ -659,12 +659,15 @@ module Make
     let t = identifier_ cx name loc in
     t
 
-  let string_literal_value cx ~as_const:_ loc value =
+  let string_literal_value cx ~as_const loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
       let error () = EmptyT.at loc in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
+    else if as_const then
+      let reason = mk_annot_reason (RStringLit (OrdinaryName value)) loc in
+      DefT (reason, SingletonStrT (OrdinaryName value))
     else
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
@@ -678,19 +681,31 @@ module Make
   let string_literal cx ~as_const loc { Ast.StringLiteral.value; _ } =
     string_literal_value cx ~as_const loc value
 
-  let boolean_literal ~as_const:_ loc { Ast.BooleanLiteral.value; _ } =
-    let reason = mk_annot_reason RBoolean loc in
-    DefT (reason, BoolT (Some value))
+  let boolean_literal ~as_const loc { Ast.BooleanLiteral.value; _ } =
+    if as_const then
+      let reason = mk_annot_reason (RBooleanLit value) loc in
+      DefT (reason, SingletonBoolT value)
+    else
+      let reason = mk_annot_reason RBoolean loc in
+      DefT (reason, BoolT (Some value))
 
   let null_literal loc = NullT.at loc
 
-  let number_literal ~as_const:_ loc { Ast.NumberLiteral.value; raw; _ } =
-    let reason = mk_annot_reason RNumber loc in
-    DefT (reason, NumT (Literal (None, (value, raw))))
+  let number_literal ~as_const loc { Ast.NumberLiteral.value; raw; _ } =
+    if as_const then
+      let reason = mk_annot_reason (RNumberLit raw) loc in
+      DefT (reason, SingletonNumT (value, raw))
+    else
+      let reason = mk_annot_reason RNumber loc in
+      DefT (reason, NumT (Literal (None, (value, raw))))
 
-  let bigint_literal ~as_const:_ loc { Ast.BigIntLiteral.value; raw; _ } =
-    let reason = mk_annot_reason RBigInt loc in
-    DefT (reason, BigIntT (Literal (None, (value, raw))))
+  let bigint_literal ~as_const loc { Ast.BigIntLiteral.value; raw; _ } =
+    if as_const then
+      let reason = mk_annot_reason (RBigIntLit raw) loc in
+      DefT (reason, SingletonBigIntT (value, raw))
+    else
+      let reason = mk_annot_reason RBigInt loc in
+      DefT (reason, BigIntT (Literal (None, (value, raw))))
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in

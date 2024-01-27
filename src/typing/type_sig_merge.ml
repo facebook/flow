@@ -1138,7 +1138,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
         )
     )
 
-and merge_value ?as_const:(_ = false) tps infer_tps file = function
+and merge_value ?(as_const = false) tps infer_tps file = function
   | ClassExpr (loc, def) ->
     let name = "<<anonymous class>>" in
     let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
@@ -1152,8 +1152,12 @@ and merge_value ?as_const:(_ = false) tps infer_tps file = function
     let reason = Reason.(mk_reason RString loc) in
     Type.(DefT (reason, StrT AnyLiteral))
   | StringLit (loc, lit) ->
-    let reason = Reason.(mk_reason RString loc) in
-    Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName lit))))
+    if as_const then
+      let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
+      Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
+    else
+      let reason = Reason.(mk_reason RString loc) in
+      Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName lit))))
   | LongStringLit loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
@@ -1162,20 +1166,32 @@ and merge_value ?as_const:(_ = false) tps infer_tps file = function
     let reason = Reason.(mk_reason RNumber loc) in
     Type.(DefT (reason, NumT AnyLiteral))
   | NumberLit (loc, num, raw) ->
-    let reason = Reason.(mk_reason RNumber loc) in
-    Type.(DefT (reason, NumT (Literal (None, (num, raw)))))
+    if as_const then
+      let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
+      Type.(DefT (reason, SingletonNumT (num, raw)))
+    else
+      let reason = Reason.(mk_reason RNumber loc) in
+      Type.(DefT (reason, NumT (Literal (None, (num, raw)))))
   | BigIntVal loc ->
     let reason = Reason.(mk_reason RBigInt loc) in
     Type.(DefT (reason, BigIntT AnyLiteral))
   | BigIntLit (loc, bigint, raw) ->
-    let reason = Reason.(mk_reason RBigInt loc) in
-    Type.(DefT (reason, BigIntT (Literal (None, (bigint, raw)))))
+    if as_const then
+      let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
+      Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
+    else
+      let reason = Reason.(mk_reason RBigInt loc) in
+      Type.(DefT (reason, BigIntT (Literal (None, (bigint, raw)))))
   | BooleanVal loc ->
     let reason = Reason.(mk_reason RBoolean loc) in
     Type.(DefT (reason, BoolT None))
   | BooleanLit (loc, lit) ->
-    let reason = Reason.(mk_reason RBoolean loc) in
-    Type.(DefT (reason, BoolT (Some lit)))
+    if as_const then
+      let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
+      Type.(DefT (reason, SingletonBoolT lit))
+    else
+      let reason = Reason.(mk_reason RBoolean loc) in
+      Type.(DefT (reason, BoolT (Some lit)))
   | NullLit loc -> Type.NullT.at loc
   | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
     merge_declare_module_implicitly_exported_object tps infer_tps file (loc, module_name, props)
