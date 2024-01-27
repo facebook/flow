@@ -2651,12 +2651,12 @@ module Make
           (Error_message.EInvalidTypeCastSyntax { loc; enabled_casting_syntax = casting_syntax });
         let t = AnyT.at (AnyError None) loc in
         ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast)))
-    | TSTypeCast ({ TSTypeCast.kind = TSTypeCast.AsConst; _ } as cast) ->
+    | AsConstExpression cast ->
       Flow_js_utils.add_output
         cx
         (Error_message.ETSSyntax { kind = Error_message.TSAsConst (Context.casting_syntax cx); loc });
       let t = AnyT.at (AnyError None) loc in
-      ((loc, t), TSTypeCast (Tast_utils.error_mapper#ts_type_cast cast))
+      ((loc, t), AsConstExpression (Tast_utils.error_mapper#as_const_expression cast))
     | TSTypeCast ({ TSTypeCast.kind = TSTypeCast.Satisfies _; _ } as cast) ->
       Flow_js_utils.add_output
         cx

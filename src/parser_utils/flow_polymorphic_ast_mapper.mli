@@ -20,6 +20,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method array_type : ('M, 'T) Ast.Type.Array.t -> ('N, 'U) Ast.Type.Array.t
 
+    method as_const_expression :
+      ('M, 'T) Ast.Expression.AsConstExpression.t -> ('N, 'U) Ast.Expression.AsConstExpression.t
+
     method as_expression :
       ('M, 'T) Ast.Expression.AsExpression.t -> ('N, 'U) Ast.Expression.AsExpression.t
 

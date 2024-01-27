@@ -508,7 +508,7 @@ with type t = Impl.t = struct
           "SatisfiesExpression"
           loc
           [("expression", expression expr); ("typeAnnotation", _type annot)]
-      | (loc, TSTypeCast { TSTypeCast.expression = expr; kind = TSTypeCast.AsConst; comments }) ->
+      | (loc, AsConstExpression { AsConstExpression.expression = expr; comments }) ->
         node ?comments "AsConstExpression" loc [("expression", expression expr)]
       | (loc, Assignment { Assignment.left; operator; right; comments }) ->
         let operator =

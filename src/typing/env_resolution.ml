@@ -497,6 +497,7 @@ let resolve_binding cx reason loc b =
         | Ast.Expression.ModuleRefLiteral _
         | Ast.Expression.Identifier _
         | Ast.Expression.TypeCast _
+        | Ast.Expression.AsConstExpression _
         | Ast.Expression.AsExpression _
         | Ast.Expression.Member _ ->
           synthesizable_expression cx (loc, expr)

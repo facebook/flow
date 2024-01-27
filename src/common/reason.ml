@@ -1014,6 +1014,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | ArrowFunction { Ast.Function.body = Ast.Function.BodyExpression e; _ } ->
     do_wrap ("(...) => " ^ code_desc_of_expression ~wrap:false e)
   | ArrowFunction _ -> do_wrap "(...) => { ... }"
+  | AsConstExpression { AsConstExpression.expression; _ } ->
+    code_desc_of_expression ~wrap expression
   | AsExpression { AsExpression.expression; _ } -> code_desc_of_expression ~wrap expression
   | Assignment { Assignment.left; operator; right; comments = _ } ->
     let left = code_desc_of_pattern left in

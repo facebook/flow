@@ -126,6 +126,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Array x -> Array (this#array x)
         | ArrowFunction x -> ArrowFunction (this#arrow_function x)
         | AsExpression x -> AsExpression (this#as_expression x)
+        | AsConstExpression x -> AsConstExpression (this#as_const_expression x)
         | Assignment x -> Assignment (this#assignment x)
         | Binary x -> Binary (this#binary x)
         | Call x -> Call (this#call annot x)
@@ -188,6 +189,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method arrow_function (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       this#function_ expr
+
+    method as_const_expression (expr : ('M, 'T) Ast.Expression.AsConstExpression.t)
+        : ('N, 'U) Ast.Expression.AsConstExpression.t =
+      let open Ast.Expression.AsConstExpression in
+      let { expression; comments } = expr in
+      let expression' = this#expression expression in
+      let comments' = this#syntax_opt comments in
+      { expression = expression'; comments = comments' }
 
     method as_expression (expr : ('M, 'T) Ast.Expression.AsExpression.t)
         : ('N, 'U) Ast.Expression.AsExpression.t =
@@ -2500,7 +2509,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let expression' = this#expression expression in
       let kind' =
         match kind with
-        | AsConst -> AsConst
         | Satisfies annot -> Satisfies (this#type_ annot)
       in
       let comments' = this#syntax_opt comments in

@@ -211,6 +211,8 @@ class ['loc] mapper =
       | (loc, Array x) -> id_loc this#array loc x expr (fun x -> (loc, Array x))
       | (loc, ArrowFunction x) ->
         id_loc this#arrow_function loc x expr (fun x -> (loc, ArrowFunction x))
+      | (loc, AsConstExpression x) ->
+        id_loc this#as_const_expression loc x expr (fun x -> (loc, AsConstExpression x))
       | (loc, AsExpression x) ->
         id_loc this#as_expression loc x expr (fun x -> (loc, AsExpression x))
       | (loc, Assignment x) -> id_loc this#assignment loc x expr (fun x -> (loc, Assignment x))
@@ -276,6 +278,16 @@ class ['loc] mapper =
       | Hole _ -> element
 
     method arrow_function loc (expr : ('loc, 'loc) Ast.Function.t) = this#function_ loc expr
+
+    method as_const_expression _loc (expr : ('loc, 'loc) Ast.Expression.AsConstExpression.t) =
+      let open Ast.Expression.AsConstExpression in
+      let { expression; comments } = expr in
+      let expression' = this#expression expression in
+      let comments' = this#syntax_opt comments in
+      if expression' == expression && comments' == comments then
+        expr
+      else
+        { expression = expression'; comments = comments' }
 
     method as_expression _loc (expr : ('loc, 'loc) Ast.Expression.AsExpression.t) =
       let open Ast.Expression.AsExpression in
@@ -3079,7 +3091,6 @@ class ['loc] mapper =
       let expression' = this#expression expression in
       let kind' =
         match kind with
-        | AsConst -> kind
         | Satisfies annot ->
           let annot' = this#type_ annot in
           if annot == annot' then

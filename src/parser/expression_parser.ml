@@ -66,6 +66,7 @@ module Expression
     | (_, Object _) ->
       true
     | (_, ArrowFunction _)
+    | (_, AsConstExpression _)
     | (_, AsExpression _)
     | (_, Assignment _)
     | (_, Binary _)
@@ -284,6 +285,7 @@ module Expression
       true
     | (_, Array _)
     | (_, ArrowFunction _)
+    | (_, AsConstExpression _)
     | (_, AsExpression _)
     | (_, Assignment _)
     | (_, Binary _)
@@ -546,12 +548,8 @@ module Expression
                 Eat.token env;
                 Cover_expr
                   ( loc,
-                    Expression.TSTypeCast
-                      {
-                        Expression.TSTypeCast.expression = expr;
-                        kind = Expression.TSTypeCast.AsConst;
-                        comments = None;
-                      }
+                    Expression.AsConstExpression
+                      { Expression.AsConstExpression.expression = expr; comments = None }
                   )
               ) else
                 let ((annot_loc, _) as annot) = Type._type env in

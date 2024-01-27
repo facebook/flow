@@ -1979,11 +1979,9 @@ let tests =
            assert_statement_string ~ctxt "type T<out A>=A;";
            assert_statement_string ~ctxt "type T<in out A>=A;"
          );
-         ( "ts_type_cast_expression" >:: fun ctxt ->
-           assert_expression_string ~ctxt "a as T";
-           assert_expression_string ~ctxt "a satisfies T";
-           assert_expression_string ~ctxt "a as const"
-         );
+         ("as_expression" >:: fun ctxt -> assert_expression_string ~ctxt "a as T");
+         ("as_const_expression" >:: fun ctxt -> assert_expression_string ~ctxt "a as const");
+         ("satisfies_expression" >:: fun ctxt -> assert_expression_string ~ctxt "a satisfies T");
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt "type a<a,b>=a;";
