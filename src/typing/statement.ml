@@ -3768,9 +3768,9 @@ module Make
     let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) =
       let { ChainingConf.subexpressions; get_reason; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
-         We need to flow the "success" type of object_ into a OptionalChainT
+         We need to flow the "success" type of obj_ into a OptionalChainT
          type, which will "filter out" VoidT and NullT from the type of
-         object_ and flow them into `voided_out`, and then flow any non-void
+         obj_ and flow them into `voided_out`, and then flow any non-void
          type into a use_t created by applying an opt_use_t (representing the
          operation that will occur on the upper bound) to a new "output" tvar.
 
@@ -3855,7 +3855,7 @@ module Make
       let lhs_t = join_optional_branches voided_t res_t in
       (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts)
     in
-    let handle_chaining conf opt object_ loc =
+    let handle_chaining conf opt obj_ loc =
       let { ChainingConf.refinement_action; refine; subexpressions; get_result; get_reason; _ } =
         conf
       in
@@ -3864,7 +3864,7 @@ module Make
         (* Proceeding as normal: no need to worry about optionality, so T2 from
            above is None. We don't need to consider optional short-circuiting, so
            we can call expression_ rather than optional_chain. *)
-        let (((_, obj_t), _) as object_ast) = expression cx object_ in
+        let (((_, obj_t), _) as object_ast) = expression cx obj_ in
         let (subexpression_types, subexpression_asts) = subexpressions () in
         let reason = get_reason obj_t in
         let lhs_t =
@@ -3878,9 +3878,9 @@ module Make
         in
         (lhs_t, [], lhs_t, obj_t, object_ast, subexpression_asts)
       | NewChain ->
-        let lhs_reason = mk_expression_reason object_ in
+        let lhs_reason = mk_expression_reason obj_ in
         let ((filtered_t, voided_t, object_ast) as object_data) =
-          optional_chain ~cond:None cx object_
+          optional_chain ~cond:None cx obj_
         in
         begin
           match refine () with
@@ -3902,7 +3902,7 @@ module Make
             )
           | None -> handle_new_chain conf lhs_reason loc object_data
         end
-      | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx object_)
+      | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx obj_)
     in
     let specialize_callee callee specialized_callee =
       let (Specialized_callee { finalized; _ }) = specialized_callee in
