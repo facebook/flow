@@ -2752,7 +2752,11 @@ let rec expression opts scope tbls (loc, expr) =
     | As
     | Both ->
       annot opts scope tbls SSet.empty t)
-  | E.AsConstExpression _ -> Annot (Any loc)
+  | E.AsConstExpression { E.AsConstExpression.expression = e; comments = _ } -> begin
+    match expression opts scope tbls e with
+    | Value v -> Value (AsConst v)
+    | e -> e
+  end
   | E.TSSatisfies _ -> Annot (Any loc)
   | E.Object { E.Object.properties; comments = _ } ->
     object_literal opts scope tbls loc ~frozen:false properties

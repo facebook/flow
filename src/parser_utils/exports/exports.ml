@@ -212,7 +212,7 @@ module Eval = struct
     | Value
         ( ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | LongStringLit _ | NumberVal _
           | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | ArrayLit _ | BigIntVal _
-          | BigIntLit _ ),
+          | BigIntLit _ | AsConst _ ),
           _
         ) ->
       Nothing
@@ -317,7 +317,7 @@ module CJS = struct
   open Type_sig_pack
 
   (** only objects can be destructured on import *)
-  let exports_of_value acc type_sig = function
+  let rec exports_of_value acc type_sig = function
     | ObjLit { props; _ }
     | DeclareModuleImplicitlyExportedObject { props; _ } ->
       SMap.fold
@@ -340,6 +340,7 @@ module CJS = struct
             acc)
         props
         acc
+    | AsConst v -> exports_of_value acc type_sig v
     | ArrayLit _
     | BooleanLit _
     | BooleanVal _

@@ -450,6 +450,7 @@ type ('loc, 'a) value =
       elems_rev: ('loc, 'a) obj_value_spread_elem Nel.t;
     }
   | ArrayLit of 'loc * 'a * 'a tailrec_list
+  | AsConst of ('loc, 'a) value
 [@@deriving iter, map, show { with_path = false }]
 
 type 'a obj_kind =

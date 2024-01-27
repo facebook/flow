@@ -1138,7 +1138,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
         )
     )
 
-and merge_value tps infer_tps file = function
+and merge_value ?as_const:(_ = false) tps infer_tps file = function
   | ClassExpr (loc, def) ->
     let name = "<<anonymous class>>" in
     let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
@@ -1197,6 +1197,7 @@ and merge_value tps infer_tps file = function
         )
     in
     Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
+  | AsConst value -> merge_value ~as_const:true tps infer_tps file value
 
 and merge_declare_module_implicitly_exported_object tps infer_tps file (loc, module_name, props) =
   let reason = Reason.(mk_reason (RModule (OrdinaryName module_name)) loc) in
