@@ -41,6 +41,7 @@ let stub_metadata ~root ~checked =
     hooklike_functions = true;
     react_rules = [];
     react_rules_always = false;
+    enable_as_const = false;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;

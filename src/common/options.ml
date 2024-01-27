@@ -65,6 +65,7 @@ end
 
 type t = {
   opt_all: bool;
+  opt_as_const: bool;
   opt_any_propagation: bool;
   opt_autoimports: bool;
   opt_autoimports_ranked_by_usage: bool;
@@ -153,6 +154,8 @@ type t = {
 }
 
 let all opts = opts.opt_all
+
+let as_const opts = opts.opt_as_const
 
 let any_propagation opts = opts.opt_any_propagation
 

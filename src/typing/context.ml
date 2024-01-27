@@ -42,6 +42,7 @@ type metadata = {
   hooklike_functions: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
+  enable_as_const: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -253,6 +254,7 @@ let metadata_of_options options =
     hooklike_functions = Options.hooklike_functions options;
     react_rules = Options.react_rules options;
     react_rules_always = false;
+    enable_as_const = Options.as_const options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
@@ -453,6 +455,8 @@ let hooklike_functions cx = cx.metadata.hooklike_functions
 let react_rules_always cx = cx.metadata.react_rules_always
 
 let react_rule_enabled cx rule = List.mem rule cx.metadata.react_rules
+
+let enable_as_const cx = cx.metadata.enable_as_const
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local

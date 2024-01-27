@@ -79,6 +79,7 @@ type metadata = {
   hooklike_functions: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
+  enable_as_const: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -163,6 +164,8 @@ val hooklike_functions : t -> bool
 val react_rule_enabled : t -> Options.react_rules -> bool
 
 val react_rules_always : t -> bool
+
+val enable_as_const : t -> bool
 
 val enable_const_params : t -> bool
 

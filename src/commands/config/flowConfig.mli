@@ -90,6 +90,8 @@ val react_rules : config -> Options.react_rules list
 
 val emoji : config -> bool option
 
+val enable_as_const : config -> bool option
+
 val enable_const_params : config -> bool option
 
 val enums : config -> bool
