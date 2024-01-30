@@ -813,97 +813,6 @@ module Make
   (* Import/Export *)
   (*****************)
 
-  let type_kind_of_kind = function
-    | Ast.Statement.ImportDeclaration.ImportType -> Type.ImportType
-    | Ast.Statement.ImportDeclaration.ImportTypeof -> Type.ImportTypeof
-    | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
-
-  let get_imported_t cx get_reason module_name module_t import_kind remote_export_name local_name =
-    let is_strict = Context.is_strict cx in
-    let name_def_loc_ref = ref None in
-    let resolver tout =
-      let assert_import_is_value cx reason name export_t =
-        Flow.FlowJs.flow_opt
-          cx
-          ~trace:Trace.dummy_trace
-          (export_t, AssertImportIsValueT (reason, name))
-      in
-      let with_concretized_type cx r f t = f (Flow.singleton_concrete_type_for_inspection cx r t) in
-      match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
-      | [ModuleT m] ->
-        let (name_loc_opt, t) =
-          if remote_export_name = "default" then
-            Flow_js_utils.ImportDefaultTKit.on_ModuleT
-              cx
-              ~assert_import_is_value
-              ~with_concretized_type
-              (get_reason, import_kind, (local_name, module_name), is_strict)
-              m
-          else
-            Flow_js_utils.ImportNamedTKit.on_ModuleT
-              cx
-              ~assert_import_is_value
-              ~with_concretized_type
-              (get_reason, import_kind, remote_export_name, module_name, is_strict)
-              m
-        in
-        name_def_loc_ref := name_loc_opt;
-        Flow.flow_t cx (t, tout)
-      | [(AnyT (lreason, _) as l)] ->
-        Flow_js_utils.check_untyped_import cx import_kind lreason get_reason;
-        Flow.flow_t cx (Flow.reposition_reason cx get_reason l, tout)
-      | _ ->
-        Flow_js_utils.add_output
-          cx
-          Error_message.(
-            EInternal
-              (loc_of_reason get_reason, UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 module_t))
-          );
-        Flow.flow_t cx (AnyT.error get_reason, tout)
-    in
-    let t = Tvar_resolver.mk_tvar_and_fully_resolve_where cx get_reason resolver in
-    let name_def_loc = !name_def_loc_ref in
-    (name_def_loc, t)
-
-  let import_named_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~remote_name ~local_name =
-    let import_kind = type_kind_of_kind import_kind in
-    get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
-
-  let import_namespace_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
-    let open Ast.Statement in
-    let is_strict = Context.is_strict cx in
-    let get_module_ns_t reason =
-      match Flow.possible_concrete_types_for_inspection cx reason source_module_t with
-      | [ModuleT m] -> Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
-      | [(AnyT (lreason, _) as l)] ->
-        Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-        Flow.reposition_reason cx reason l
-      | _ ->
-        Flow_js_utils.add_output
-          cx
-          Error_message.(
-            EInternal
-              (loc_of_reason reason, UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 source_module_t))
-          );
-        AnyT.error reason
-    in
-    match import_kind with
-    | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-    | ImportDeclaration.ImportTypeof ->
-      let module_ns_t = get_module_ns_t import_reason in
-      let bind_reason = repos_reason local_loc import_reason in
-      Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
-    | ImportDeclaration.ImportValue ->
-      let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-      get_module_ns_t reason
-
-  let import_default_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_name =
-    let import_kind = type_kind_of_kind import_kind in
-    get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name
-
   let export_specifiers cx loc source export_kind =
     let open Ast.Statement in
     let module E = ExportNamedDeclaration in
@@ -1767,7 +1676,7 @@ module Make
                    in
                    let import_kind = Base.Option.value ~default:import_kind kind in
                    let (remote_name_def_loc, imported_t) =
-                     import_named_specifier_type
+                     Type_operation_utils.Import_export.import_named_specifier_type
                        cx
                        import_reason
                        import_kind
@@ -1809,7 +1718,7 @@ module Make
               mk_reason import_reason_desc local_loc
             in
             let t =
-              import_namespace_specifier_type
+              Type_operation_utils.Import_export.import_namespace_specifier_type
                 cx
                 import_reason
                 import_kind
@@ -1832,7 +1741,7 @@ module Make
             } ->
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let (remote_default_name_def_loc, imported_t) =
-            import_default_specifier_type
+            Type_operation_utils.Import_export.import_default_specifier_type
               cx
               import_reason
               import_kind

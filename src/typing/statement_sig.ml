@@ -207,34 +207,6 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.OpaqueType.t
 
-  val import_named_specifier_type :
-    Context.t ->
-    Reason.t ->
-    Ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
-    source_module_t:Type.t ->
-    remote_name:string ->
-    local_name:string ->
-    ALoc.t option * Type.t
-
-  val import_namespace_specifier_type :
-    Context.t ->
-    Reason.t ->
-    Ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
-    source_module_t:Type.t ->
-    local_loc:ALoc.t ->
-    Type.t
-
-  val import_default_specifier_type :
-    Context.t ->
-    Reason.t ->
-    Ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
-    source_module_t:Type.t ->
-    local_name:string ->
-    ALoc.t option * Type.t
-
   val interface :
     Context.t ->
     ALoc.t ->

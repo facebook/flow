@@ -1034,7 +1034,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
     | Name_def.Named { kind; remote; local } ->
       let import_kind = Base.Option.value ~default:import_kind kind in
       let (_, t) =
-        Statement.import_named_specifier_type
+        Type_operation_utils.Import_export.import_named_specifier_type
           cx
           import_reason
           import_kind
@@ -1045,7 +1045,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
       in
       t
     | Namespace ->
-      Statement.import_namespace_specifier_type
+      Type_operation_utils.Import_export.import_namespace_specifier_type
         cx
         import_reason
         import_kind
@@ -1054,7 +1054,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         ~local_loc:id_loc
     | Default local_name ->
       let (_, t) =
-        Statement.import_default_specifier_type
+        Type_operation_utils.Import_export.import_default_specifier_type
           cx
           import_reason
           import_kind
