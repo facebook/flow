@@ -1,5 +1,20 @@
 Default .flowconfig with bad code should not typecheck:
-Found 0 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:2:19
+
+Cannot assign `1` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:2:19
+   2| const a: string = 1;
+                        ^ [1]
+
+References:
+   test.js:2:10
+   2| const a: string = 1;
+               ^^^^^^ [2]
+
+
+
+Found 1 error
 Default .flowconfig with bad code should not typecheck when run again with the same config:
 Error ----------------------------------------------------------------------------------------------------- test.js:2:19
 
