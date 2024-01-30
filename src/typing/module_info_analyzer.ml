@@ -8,10 +8,6 @@
 module Ast = Flow_ast
 open Reason
 
-type cjs_exports_state =
-  | CJSExportNames of (ALoc.t * Type.t) SMap.t
-  | CJSModuleExports of ALoc.t * Type.t
-
 module Module_info = struct
   type t = {
     mutable kind: kind;
@@ -19,18 +15,21 @@ module Module_info = struct
     mutable type_star: (ALoc.t * Type.t) list;
   }
 
+  and cjs_exports_state =
+    | CJSExportNames of (ALoc.t * Type.t) SMap.t
+    | CJSModuleExports of ALoc.t * Type.t
+
   and kind =
-    | CJS of ALoc.t option
+    | Unknown
+    | CJS of cjs_exports_state
     | ES of {
         named: Type.Exports.t;
         star: (ALoc.t * Type.t) list;
       }
 
-  let empty_cjs_module () = { kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
-
   let export info name ?preferred_def_locs ~name_loc ~is_type_only_export type_ =
     match info.kind with
-    | CJS None ->
+    | Unknown ->
       info.kind <-
         ES
           {
@@ -51,16 +50,16 @@ module Module_info = struct
                 named;
             star;
           }
-    | CJS (Some _) ->
-      (* Indeterminate module. We already errored during parsing. *)
+    | CJS _ ->
+      (* Indeterminate module. We already errored in module_exports_checker. *)
       ()
 
   let export_star info loc module_t =
     match info.kind with
-    | CJS None -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, module_t)] }
+    | Unknown -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, module_t)] }
     | ES { named; star } -> info.kind <- ES { named; star = (loc, module_t) :: star }
-    | CJS (Some _) ->
-      (* Indeterminate module. We already errored during parsing. *)
+    | CJS _ ->
+      (* Indeterminate module. We already errored in module_exports_checker. *)
       ()
 
   let export_type info name ?preferred_def_locs ~name_loc type_ =
@@ -72,12 +71,11 @@ module Module_info = struct
 
   let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
 
-  let cjs_clobber info loc =
+  let cjs_mod_export info f =
     match info.kind with
-    | CJS _ ->
-      info.kind <- CJS (Some loc);
-      true
-    | ES _ -> false
+    | Unknown -> info.kind <- CJS (f (CJSExportNames SMap.empty))
+    | CJS state -> info.kind <- CJS (f state)
+    | ES _ -> ()
 
   (* Re-exporting names from another file can lead to conflicts. We resolve
    * conflicts on a last-export-wins basis. Star exports are accumulated in
@@ -94,10 +92,7 @@ module Module_info = struct
         fold_star2 f g (g acc y) (xs, ys')
 end
 
-type state = {
-  module_info: Module_info.t;
-  mutable cjs_exports_state: cjs_exports_state;
-}
+type state = { module_info: Module_info.t }
 
 let export_specifiers state loc source export_kind =
   let open Ast.Statement in
@@ -238,7 +233,9 @@ let visit_toplevel_statement cx state : (ALoc.t, ALoc.t * Type.t) Ast.Statement.
      comments = _;
     }
       when Type_env.is_global_var cx module_loc ->
-      state.cjs_exports_state <- CJSModuleExports (exports_loc, t)
+      Module_info.cjs_mod_export state.module_info (fun _ ->
+          Module_info.CJSModuleExports (exports_loc, t)
+      )
     (* module.exports.foo = ... *)
     | {
      Ast.Expression.Member._object =
@@ -260,10 +257,11 @@ let visit_toplevel_statement cx state : (ALoc.t, ALoc.t * Type.t) Ast.Statement.
      comments = _;
     }
       when Type_env.is_global_var cx module_loc ->
-      (match state.cjs_exports_state with
-      | CJSModuleExports _ -> ()
-      | CJSExportNames named ->
-        state.cjs_exports_state <- CJSExportNames (SMap.add name (key_loc, t) named))
+      Module_info.cjs_mod_export state.module_info (function
+          | Module_info.CJSModuleExports _ as state -> state
+          | Module_info.CJSExportNames named ->
+            Module_info.CJSExportNames (SMap.add name (key_loc, t) named)
+          )
     (* exports.foo = ... *)
     | {
      Ast.Expression.Member._object =
@@ -276,10 +274,11 @@ let visit_toplevel_statement cx state : (ALoc.t, ALoc.t * Type.t) Ast.Statement.
      comments = _;
     }
       when Type_env.is_global_var cx exports_loc ->
-      (match state.cjs_exports_state with
-      | CJSModuleExports _ -> ()
-      | CJSExportNames named ->
-        state.cjs_exports_state <- CJSExportNames (SMap.add name (key_loc, t) named))
+      Module_info.cjs_mod_export state.module_info (function
+          | Module_info.CJSModuleExports _ as state -> state
+          | Module_info.CJSExportNames named ->
+            Module_info.CJSExportNames (SMap.add name (key_loc, t) named)
+          )
     | _ -> ())
   | (_, Expression _) -> ()
   | (loc, DeclareExportDeclaration decl) ->
@@ -341,12 +340,13 @@ let visit_toplevel_statement cx state : (ALoc.t, ALoc.t * Type.t) Ast.Statement.
     Option.iter f declaration;
     let export_kind = Ast.Statement.ExportValue in
     Option.iter (export_specifiers state loc source export_kind) specifiers
-  | ( loc,
+  | ( _,
       DeclareModuleExports
         { Ast.Statement.DeclareModuleExports.annot = (exports_loc, ((_, t), _)); comments = _ }
     ) ->
-    if Module_info.cjs_clobber state.module_info loc then
-      state.cjs_exports_state <- CJSModuleExports (exports_loc, t)
+    Module_info.cjs_mod_export state.module_info (fun _ ->
+        Module_info.CJSModuleExports (exports_loc, t)
+    )
   | ( loc,
       ExportNamedDeclaration
         { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ }
@@ -414,8 +414,7 @@ let visit_toplevel_statement cx state : (ALoc.t, ALoc.t * Type.t) Ast.Statement.
  *   fallback to the first module.exports prop assignment
  * - For esm, we will first try to pick the location of default exports, then
  *   fallback to the first export. *)
-let module_exports_sig_loc { module_info = { Module_info.kind; type_named; _ }; cjs_exports_state }
-    =
+let module_exports_sig_loc { module_info = { Module_info.kind; type_named; _ } } =
   let first_loc_of_named_exports named =
     named
     |> NameUtils.Map.values
@@ -424,19 +423,18 @@ let module_exports_sig_loc { module_info = { Module_info.kind; type_named; _ }; 
     |> Base.List.hd
   in
   match kind with
-  | Module_info.CJS _ ->
-    (match cjs_exports_state with
-    | CJSModuleExports (l, _) -> Some l
-    | CJSExportNames names ->
-      (match
-         names
-         |> SMap.values
-         |> Base.List.map ~f:fst
-         |> Base.List.sort ~compare:ALoc.compare
-         |> Base.List.hd
-       with
-      | None -> first_loc_of_named_exports type_named
-      | loc -> loc))
+  | Module_info.Unknown -> None
+  | Module_info.(CJS (CJSModuleExports (l, _))) -> Some l
+  | Module_info.(CJS (CJSExportNames names)) ->
+    (match
+       names
+       |> SMap.values
+       |> Base.List.map ~f:fst
+       |> Base.List.sort ~compare:ALoc.compare
+       |> Base.List.hd
+     with
+    | None -> first_loc_of_named_exports type_named
+    | loc -> loc)
   | Module_info.ES { named; _ } ->
     (match NameUtils.Map.find_opt (Reason.OrdinaryName "default") named with
     | Some { Type.name_loc; _ } -> name_loc
@@ -563,8 +561,12 @@ let mk_module_t =
   in
   fun cx state self_reason exports_reason ->
     match state.module_info.kind with
-    | CJS _ ->
-      mk_commonjs_module_t cx self_reason exports_reason state.cjs_exports_state
+    | Unknown ->
+      mk_commonjs_module_t cx self_reason exports_reason (CJSExportNames SMap.empty)
+      |> export_named cx self_reason ExportType state.module_info.type_named
+      |> copy_star_exports cx self_reason ([], state.module_info.type_star)
+    | CJS cjs_exports_state ->
+      mk_commonjs_module_t cx self_reason exports_reason cjs_exports_state
       |> export_named cx self_reason ExportType state.module_info.type_named
       |> copy_star_exports cx self_reason ([], state.module_info.type_star)
     | ES { named; star } ->
@@ -575,7 +577,10 @@ let mk_module_t =
 
 let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   let state =
-    { module_info = Module_info.empty_cjs_module (); cjs_exports_state = CJSExportNames SMap.empty }
+    {
+      module_info =
+        { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] };
+    }
   in
   Base.List.iter ~f:(visit_toplevel_statement cx state) statements;
   let module_sig_loc = module_exports_sig_loc state |> Base.Option.value ~default:prog_aloc in
