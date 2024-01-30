@@ -471,12 +471,18 @@ let init ?(flowlibs_only = false) (options : options) =
     match options.default_lib_dir with
     | None -> (libs, is_valid_path ~options)
     | Some libdir ->
-      let root =
+      let root_str =
         match libdir with
         | Prelude path
         | Flowlib path ->
-          path
+          File_path.to_string path
       in
+      (* At the time when the config is first created, the flowlibs might be extracted if the
+       * user has run `flow` before, or not extracted otherwise.
+       * When the flowlibs are already extracted, the root path here will be absolute. Otherwise,
+       * it will remain relative. This inconsistency can be dangerous, so we normalize everything
+       * to absolute path here, since at this point, the flowlibs have definitely been extracted. *)
+      let root = File_path.make root_str in
       let is_in_flowlib = is_prefix (File_path.to_string root) in
       let is_valid_path = is_valid_path ~options in
       let filter path = is_in_flowlib path || is_valid_path path in
