@@ -31,7 +31,7 @@ module AcCompletion = struct
     additional_text_edits: ServerProt.Response.textedit list;
     sort_text: string option;
     preselect: bool;
-    documentation_and_tags: string option * Lsp.CompletionItemTag.t list option;
+    documentation_and_tags: (string option * Lsp.CompletionItemTag.t list option) Lazy.t;
     log_info: string;
     insert_text_format: Lsp.Completion.insertTextFormat;
   }
@@ -41,7 +41,7 @@ module AcCompletion = struct
     is_incomplete: bool;
   }
 
-  let empty_documentation_and_tags = (None, None)
+  let empty_documentation_and_tags = lazy (None, None)
 
   let to_server_prot_completion_item completion_item =
     let {
@@ -54,7 +54,7 @@ module AcCompletion = struct
       additional_text_edits;
       sort_text;
       preselect;
-      documentation_and_tags = (documentation, tags);
+      documentation_and_tags = (lazy (documentation, tags));
       log_info;
       insert_text_format;
     } =
@@ -389,19 +389,38 @@ let documentation_and_tags_of_jsdoc jsdoc =
   in
   (docs, tags)
 
-let documentation_and_tags_of_member ~reader ~typed_ast info =
-  jsdoc_of_member ~reader ~typed_ast info
-  |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+let documentation_and_tags_of_member ~options ~reader ~typed_ast info =
+  let f ~reader ~typed_ast info =
+    jsdoc_of_member ~reader ~typed_ast info
+    |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+  in
+  if Options.autocomplete_lazy_docs options then
+    lazy (f ~reader ~typed_ast info)
+  else
+    Lazy.from_val (f ~reader ~typed_ast info)
 
 let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
-  jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
-  |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+  let f ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
+    jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
+    |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+  in
+  if Options.autocomplete_lazy_docs options then
+    lazy (f ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc)
+  else
+    Lazy.from_val (f ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc)
 
-let documentation_and_tags_of_def_loc ~reader ~typed_ast def_loc =
-  jsdoc_of_def_loc ~reader ~typed_ast def_loc
-  |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+let documentation_and_tags_of_def_loc ~options ~reader ~typed_ast def_loc =
+  let f ~reader ~typed_ast def_loc =
+    jsdoc_of_def_loc ~reader ~typed_ast def_loc
+    |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
+  in
+  if Options.autocomplete_lazy_docs options then
+    lazy (f ~reader ~typed_ast def_loc)
+  else
+    Lazy.from_val (f ~reader ~typed_ast def_loc)
 
 let members_of_type
+    ~options
     ~reader
     ~exclude_proto_members
     ?(force_instance = false)
@@ -448,7 +467,9 @@ let members_of_type
         |> NameUtils.Map.bindings
         |> Base.List.filter_map ~f:include_valid_member
         |> List.map (fun (name, info) ->
-               let document_and_tags = documentation_and_tags_of_member ~reader ~typed_ast info in
+               let document_and_tags =
+                 documentation_and_tags_of_member ~options ~reader ~typed_ast info
+               in
                (name, document_and_tags, info)
            ),
         match errors with
@@ -1510,6 +1531,7 @@ let autocomplete_member
   let exact_by_default = Context.exact_by_default cx in
   match
     members_of_type
+      ~options
       ~reader
       ~exclude_proto_members:false
       ~force_instance
@@ -1712,7 +1734,8 @@ let should_autoimport_react ~options ~imports ~file_sig =
   else
     false
 
-let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~edit_locs =
+let autocomplete_jsx_intrinsic
+    ~options ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~edit_locs =
   let intrinsics_t =
     let open Reason in
     let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) ac_loc in
@@ -1721,6 +1744,7 @@ let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
   let (items, errors_to_log) =
     match
       members_of_type
+        ~options
         ~reader
         ~exclude_proto_members:true
         ~tparams_rev
@@ -1793,7 +1817,15 @@ let autocomplete_jsx_element
       ~type_
   in
   let results_jsx =
-    autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~edit_locs
+    autocomplete_jsx_intrinsic
+      ~options
+      ~reader
+      ~cx
+      ~ac_loc
+      ~file_sig
+      ~typed_ast
+      ~tparams_rev
+      ~edit_locs
   in
   let ({ result; errors_to_log } as results) =
     let open AcCompletion in
@@ -1851,6 +1883,7 @@ let autocomplete_jsx_element
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
 let autocomplete_jsx_attribute
+    ~options
     ~reader
     ~used_attr_names
     ~has_value
@@ -1881,6 +1914,7 @@ let autocomplete_jsx_attribute
   (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
   let mems_result =
     members_of_type
+      ~options
       ~reader
       ~exclude_proto_members:true
       ~exclude_keys
@@ -1916,7 +1950,17 @@ let autocomplete_jsx_attribute
     AcResult { result; errors_to_log }
 
 let autocomplete_module_exports
-    ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~edit_locs ~token ~kind ?filter_name module_type =
+    ~options
+    ~reader
+    ~cx
+    ~file_sig
+    ~typed_ast
+    ~tparams_rev
+    ~edit_locs
+    ~token
+    ~kind
+    ?filter_name
+    module_type =
   let scheme = Type.TypeScheme.{ tparams_rev; type_ = module_type } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
@@ -1926,7 +1970,7 @@ let autocomplete_module_exports
       scheme
   in
   let documentation_and_tags_of_module_member =
-    documentation_and_tags_of_def_loc ~reader ~typed_ast
+    documentation_and_tags_of_def_loc ~options ~reader ~typed_ast
   in
   let (items, errors_to_log) =
     match module_ty_res with
@@ -1958,6 +2002,7 @@ let unused_super_methods
   let open Base.Result.Let_syntax in
   let%bind (mems, errors_to_log) =
     members_of_type
+      ~options
       ~reader
       ~exclude_proto_members:false
       ~force_instance:true
@@ -1996,6 +2041,7 @@ let autocomplete_class_key
       let open Base.Result.Let_syntax in
       let%bind (existing_members, _) =
         members_of_type
+          ~options
           ~reader
           ~exclude_proto_members:true
           ~force_instance:true
@@ -2057,6 +2103,7 @@ let autocomplete_object_key
           let spread_keys =
             match
               members_of_type
+                ~options
                 ~reader
                 ~exclude_proto_members:true
                 cx
@@ -2088,6 +2135,7 @@ let autocomplete_object_key
     in
     let%bind (mems, mems_errors_to_log) =
       members_of_type
+        ~options
         ~reader
         ~exclude_keys
         ~exclude_proto_members:true
@@ -2328,6 +2376,7 @@ let autocomplete_get_results
         in
         let filter_name name = not (SSet.mem name used_keys) in
         autocomplete_module_exports
+          ~options
           ~reader
           ~cx
           ~file_sig
@@ -2494,6 +2543,7 @@ let autocomplete_get_results
           ~type_
       | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
         autocomplete_jsx_attribute
+          ~options
           ~reader
           ~used_attr_names
           ~has_value
@@ -2527,6 +2577,7 @@ let autocomplete_get_results
           )
       | Ac_qualified_type qtype ->
         autocomplete_module_exports
+          ~options
           ~reader
           ~cx
           ~file_sig
