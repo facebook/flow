@@ -1614,8 +1614,8 @@ end
    that are not @flow, so the rules have to deal with `any`. *)
 
 (* util that grows a module by adding named exports from a given map *)
-module ExportNamedT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT cx (_, tmap, export_kind) lhs module_ =
+module ExportNamedTKit = struct
+  let mod_ModuleT cx (tmap, export_kind) module_ =
     let {
       module_reason = _;
       module_export_types = { exports_tmap; _ };
@@ -1637,8 +1637,7 @@ module ExportNamedT_kit (F : Import_export_helper_sig) = struct
     in
     Context.find_exports cx exports_tmap
     |> NameUtils.Map.fold add_export tmap
-    |> Context.add_export_map cx exports_tmap;
-    F.return cx lhs
+    |> Context.add_export_map cx exports_tmap
 end
 
 module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct

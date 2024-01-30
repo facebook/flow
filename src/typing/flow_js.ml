@@ -283,7 +283,6 @@ struct
   end
 
   module CJSRequireTKit = CJSRequireT_kit (Import_export_helper)
-  module ExportNamedTKit = ExportNamedT_kit (Import_export_helper)
   module AssertExportIsTypeTKit = AssertExportIsTypeT_kit (Import_export_helper)
   module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = CopyTypeExportsT_kit (Import_export_helper)
@@ -767,8 +766,9 @@ struct
         (******************)
         (* Module exports *)
         (******************)
-        | (ModuleT m, ExportNamedT (reason, tmap, export_kind, tout)) ->
-          ExportNamedTKit.on_ModuleT cx (reason, tmap, export_kind) l m tout
+        | (ModuleT m, ExportNamedT (_reason, tmap, export_kind, tout)) ->
+          ExportNamedTKit.mod_ModuleT cx (tmap, export_kind) m;
+          rec_flow_t cx ~use_op:unknown_use trace (l, tout)
         | (_, AssertExportIsTypeT (_, name, t_out)) ->
           AssertExportIsTypeTKit.on_concrete_type cx name l t_out
         | (ModuleT m, CopyNamedExportsT (reason, target_module_t, t_out)) ->

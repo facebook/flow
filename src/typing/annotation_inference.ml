@@ -280,7 +280,7 @@ module rec ConsGen : S = struct
   module ImportDefaultTKit = Flow_js_utils.ImportDefaultTKit
   module ImportNamedTKit = Flow_js_utils.ImportNamedTKit
   module ImportTypeofTKit = Flow_js_utils.ImportTypeofTKit
-  module ExportNamedTKit = Flow_js_utils.ExportNamedT_kit (Import_export_helper)
+  module ExportNamedTKit = Flow_js_utils.ExportNamedTKit
   module AssertExportIsTypeTKit = Flow_js_utils.AssertExportIsTypeT_kit (Import_export_helper)
   module CopyNamedExportsTKit = Flow_js_utils.CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = Flow_js_utils.CopyTypeExportsT_kit (Import_export_helper)
@@ -602,8 +602,9 @@ module rec ConsGen : S = struct
     (******************)
     (* Module exports *)
     (******************)
-    | (ModuleT m, Annot_ExportNamedT (reason, tmap, export_kind)) ->
-      ExportNamedTKit.on_ModuleT cx (reason, tmap, export_kind) t m
+    | (ModuleT m, Annot_ExportNamedT (_reason, tmap, export_kind)) ->
+      ExportNamedTKit.mod_ModuleT cx (tmap, export_kind) m;
+      ModuleT m
     | (_, Annot_AssertExportIsTypeT (_, name)) -> AssertExportIsTypeTKit.on_concrete_type cx name t
     | (ModuleT m, Annot_CopyNamedExportsT (reason, target_module_t)) ->
       CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m
