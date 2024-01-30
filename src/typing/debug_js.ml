@@ -1532,9 +1532,6 @@ let dump_error_message =
     | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
     | EMixedImportAndRequire (loc, reason) ->
       spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
-    | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
-    | EUnsupportedStatementInLibdef (loc, s) ->
-      spf "EUnsupportedStatementInLibdef (%s, %s)" (string_of_aloc loc) s
     | EUnsupportedVarianceAnnotation (loc, s) ->
       spf "EUnsupportedVarianceAnnotation (%s, %s)" (string_of_aloc loc) s
     | EExportRenamedDefault { loc; name; is_reexport } ->

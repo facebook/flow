@@ -1,7 +1,7 @@
 FLOW STATUS:
 Error ------------------------------------------------------------------------------------------------- libs/libs.js:3:1
 
-Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+Cannot use `block` statements in a library file. The statement will be ignored. [unsupported-syntax]
 
       v
    3| {

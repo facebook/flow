@@ -1894,7 +1894,10 @@ module Make
     if not (File_key.is_lib_file (Context.file cx) && Type_env.in_global_scope cx) then
       Flow_js_utils.add_output
         cx
-        Error_message.(EUnsupportedSyntax (id_loc, NonLibdefToplevelDeclareModule));
+        Error_message.(
+          EUnsupportedSyntax
+            (id_loc, ContextDependentUnsupportedStatement NonLibdefToplevelDeclareModule)
+        );
     let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) = body in
     let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
 

@@ -148,7 +148,6 @@ type error_code =
   | SpeculationAmbiguous
   | TSSyntax
   | ThisInExportedFunction
-  | ToplevelLibraryImport
   | TupleInvalidTypeSpread
   | TupleRequiredAfterOptional
   | TypeAsValue
@@ -163,7 +162,6 @@ type error_code =
   | UnsafeArith
   | UnsafeGettersSetters
   | UnsupportedSyntax
-  | UnsupportedStatementInLibdef
   | UnsupportedVarianceAnnotation
   | UntypedImport
   | UntypedTypeImport
@@ -354,7 +352,6 @@ let string_of_code : error_code -> string = function
   | SpeculationAmbiguous -> "speculation-ambiguous"
   | TSSyntax -> "ts-syntax"
   | ThisInExportedFunction -> "this-in-exported-function"
-  | ToplevelLibraryImport -> "toplevel-library-import"
   | TupleInvalidTypeSpread -> "tuple-invalid-type-spread"
   | TupleRequiredAfterOptional -> "tuple-required-after-optional"
   | TypeAsValue -> "type-as-value"
@@ -369,7 +366,6 @@ let string_of_code : error_code -> string = function
   | UnsafeArith -> "unsafe-arithmetic"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | UnsupportedSyntax -> "unsupported-syntax"
-  | UnsupportedStatementInLibdef -> "unsupported-statement-in-lib"
   | UnsupportedVarianceAnnotation -> "unsupported-variance-annotation"
   | UntypedImport -> "untyped-import"
   | UntypedTypeImport -> "untyped-type-import"

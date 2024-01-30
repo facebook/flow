@@ -13,7 +13,7 @@ module! [module-type-conflict]
 Error ---------------------------------------------------------------------------------------------- libs/imports.js:3:1
 
 Cannot use an import statement at the toplevel of a library file. Import statements may only appear inside a
-`declare module`. The statement will be ignored. [toplevel-library-import]
+`declare module`. The statement will be ignored. [unsupported-syntax]
 
    3| import type {t1} from 'm1'; // error toplevel import
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,7 +55,7 @@ Error --------------------------------------------------------------------------
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:5:1
 
-Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+Cannot use `block` statements in a library file. The statement will be ignored. [unsupported-syntax]
 
       v
    5| {
@@ -66,7 +66,7 @@ Cannot use block statements in a library file. The statement will be ignored. [u
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:9:1
 
-Cannot use if statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
 
        v----------
     9| if (true) {
@@ -188,7 +188,7 @@ module! [module-type-conflict]
 Error ---------------------------------------------------------------------------------------------- libs/imports.js:3:1
 
 Cannot use an import statement at the toplevel of a library file. Import statements may only appear inside a
-`declare module`. The statement will be ignored. [toplevel-library-import]
+`declare module`. The statement will be ignored. [unsupported-syntax]
 
    3| import type {t1} from 'm1'; // error toplevel import
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -230,7 +230,7 @@ Error --------------------------------------------------------------------------
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:5:1
 
-Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+Cannot use `block` statements in a library file. The statement will be ignored. [unsupported-syntax]
 
       v
    5| {
@@ -241,7 +241,7 @@ Cannot use block statements in a library file. The statement will be ignored. [u
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:9:1
 
-Cannot use if statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
 
        v----------
     9| if (true) {

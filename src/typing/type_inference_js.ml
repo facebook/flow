@@ -402,6 +402,12 @@ let infer_ast ~lint_severities cx filename loc_comments aloc_ast =
 
 class lib_def_loc_mapper_and_validator cx =
   let stmt_validator ~in_toplevel_scope (loc, stmt) =
+    let error kind =
+      Error_message.(
+        EUnsupportedSyntax
+          (loc, ContextDependentUnsupportedStatement (UnsupportedStatementInLibdef kind))
+      )
+    in
     let error_opt =
       let open Flow_ast.Statement in
       match stmt with
@@ -427,39 +433,37 @@ class lib_def_loc_mapper_and_validator cx =
       | OpaqueType _ ->
         None
       | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportValue; _ } ->
-        Some (Error_message.EUnsupportedStatementInLibdef (loc, "export"))
+        Some (error "export")
       | ImportDeclaration _ ->
         if in_toplevel_scope then
-          Some (Error_message.EToplevelLibraryImport loc)
+          Some
+            Error_message.(
+              EUnsupportedSyntax (loc, ContextDependentUnsupportedStatement ToplevelLibraryImport)
+            )
         else
           None
-      | Block _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "block"))
-      | Break _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "break"))
-      | ClassDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (loc, "class declaration"))
-      | ComponentDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (loc, "component declaration"))
-      | Continue _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "continue"))
-      | Debugger _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "debugger"))
-      | DoWhile _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "do while"))
-      | ExportDefaultDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (loc, "export default"))
-      | Expression _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "expression"))
-      | For _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "for"))
-      | ForIn _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "for in"))
-      | ForOf _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "for of"))
-      | FunctionDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (loc, "function declaration"))
-      | If _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "if"))
-      | Labeled _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "labeled"))
-      | Return _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "return"))
-      | Switch _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "switch"))
-      | Throw _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "throw"))
-      | Try _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "try"))
-      | VariableDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (loc, "variable declaration"))
-      | While _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "while"))
-      | With _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "with"))
+      | Block _ -> Some (error "block")
+      | Break _ -> Some (error "break")
+      | ClassDeclaration _ -> Some (error "class declaration")
+      | ComponentDeclaration _ -> Some (error "component declaration")
+      | Continue _ -> Some (error "continue")
+      | Debugger _ -> Some (error "debugger")
+      | DoWhile _ -> Some (error "do while")
+      | ExportDefaultDeclaration _ -> Some (error "export default")
+      | Expression _ -> Some (error "expression")
+      | For _ -> Some (error "for")
+      | ForIn _ -> Some (error "for in")
+      | ForOf _ -> Some (error "for of")
+      | FunctionDeclaration _ -> Some (error "function declaration")
+      | If _ -> Some (error "if")
+      | Labeled _ -> Some (error "labeled")
+      | Return _ -> Some (error "return")
+      | Switch _ -> Some (error "switch")
+      | Throw _ -> Some (error "throw")
+      | Try _ -> Some (error "try")
+      | VariableDeclaration _ -> Some (error "variable declaration")
+      | While _ -> Some (error "while")
+      | With _ -> Some (error "with")
     in
     match error_opt with
     | None -> true
