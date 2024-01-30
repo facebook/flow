@@ -362,6 +362,7 @@ let autocomplete
             let open Hh_json in
             match results_res with
             | AcResult { result; errors_to_log } ->
+              let result = AcCompletion.to_server_prot_completion_t result in
               let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
               let result_string =
                 match (items, errors_to_log) with
