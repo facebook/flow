@@ -27,7 +27,7 @@ module Module_info = struct
         star: (ALoc.t * Type.t) list;
       }
 
-  let export info name ?preferred_def_locs ~name_loc ~is_type_only_export type_ =
+  let export info name ~name_loc ~is_type_only_export type_ =
     match info.kind with
     | Unknown ->
       info.kind <-
@@ -36,7 +36,12 @@ module Module_info = struct
             named =
               NameUtils.Map.singleton
                 name
-                { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export; type_ };
+                {
+                  Type.preferred_def_locs = None;
+                  name_loc = Some name_loc;
+                  is_type_only_export;
+                  type_;
+                };
             star = [];
           }
     | ES { named; star } ->
@@ -46,7 +51,12 @@ module Module_info = struct
             named =
               NameUtils.Map.add
                 name
-                { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export; type_ }
+                {
+                  Type.preferred_def_locs = None;
+                  name_loc = Some name_loc;
+                  is_type_only_export;
+                  type_;
+                }
                 named;
             star;
           }
@@ -62,11 +72,16 @@ module Module_info = struct
       (* Indeterminate module. We already errored in module_exports_checker. *)
       ()
 
-  let export_type info name ?preferred_def_locs ~name_loc type_ =
+  let export_type info name ~name_loc type_ =
     info.type_named <-
       NameUtils.Map.add
         name
-        { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export = true; type_ }
+        {
+          Type.preferred_def_locs = None;
+          name_loc = Some name_loc;
+          is_type_only_export = true;
+          type_;
+        }
         info.type_named
 
   let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
