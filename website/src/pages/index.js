@@ -19,7 +19,7 @@ import styles from './styles.module.css';
 // so we can test whether babel can handle newer syntax.
 import '../js/parser-playground';
 
-export default function Home(): React.MixedElement {
+export default component Home() {
   const context = useDocusaurusContext();
   const {siteConfig} = context;
   return (
