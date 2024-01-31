@@ -97,12 +97,12 @@ let hook_callee cx t =
     | DefT (r, FunT (_, { hook = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
     | DefT (_, FunT (_, { hook = AnyHook; _ })) -> AnyCallee
     | DefT (r, FunT (_, { hook = NonHook; _ })) -> NotHookCallee (set_of_reason r)
-    | OpaqueT (r, { underlying_t; super_t; _ }) -> begin
+    | OpaqueT (_, { underlying_t; super_t; _ }) -> begin
       match (underlying_t, super_t) with
       | (Some t, _)
       | (None, Some t) ->
         recur t
-      | _ -> NotHookCallee (set_of_reason r)
+      | _ -> AnyCallee
     end
     | OpenT (_, id) when ISet.mem id seen -> AnyCallee
     | OpenT (_, id) ->
@@ -138,7 +138,8 @@ let hook_callee cx t =
     | DefT (_, PolyT { t_out = t; _ })
     | DefT (_, TypeT (_, t)) ->
       recur t
-    | t -> NotHookCallee (set_of_reason (TypeUtil.reason_of_t t))
+    | DefT (_, ObjT { call_t = Some id; _ }) -> recur (Context.find_call cx id)
+    | _ -> AnyCallee
   in
   recur_id ISet.empty t
 

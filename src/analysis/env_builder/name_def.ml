@@ -1051,6 +1051,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
       let { id = (id_loc, { Ast.Identifier.name; _ }); annot; kind = _; comments = _ } = decl in
+      let hook_like = Flow_ast_utils.hook_name name in
       this#add_ordinary_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
@@ -1062,7 +1063,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    optional = false;
                    has_default_expression = false;
                    react_deep_read_only = None;
-                   hook_like = false;
+                   hook_like;
                    param_loc = None;
                    annot;
                    concrete = None;
@@ -2264,7 +2265,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                  import_kind;
                  source;
                  source_loc;
-                 import = Namespace;
+                 import = Namespace name;
                  declare_module = in_declare_module;
                }
             )

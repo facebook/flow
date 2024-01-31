@@ -875,20 +875,26 @@ let resolve_binding cx reason loc b =
     in
     (t, mk_use_op t)
   | Select { selector; parent = (parent_loc, binding) } ->
-    let refined_type =
+    let (refined_type, hooklike) =
       match selector with
       | Name_def.Prop { prop; prop_loc; _ } ->
         (* The key is used to generate a reason for read,
            and only the last prop in the chain matters. *)
         let key = (internal_name "_", [Key.Prop prop]) in
-        Type_env.get_refinement cx key prop_loc
-      | _ -> None
+        (Type_env.get_refinement cx key prop_loc, Flow_ast_utils.hook_name prop)
+      | _ -> (None, false)
     in
     (match refined_type with
     | Some t ->
       (* When we can get a refined value on a destructured property,
          we must be in an assignment position and the type must have been resolved. *)
-      (t, mk_use_op t)
+      ( ( if hooklike then
+          make_hooklike cx t
+        else
+          t
+        ),
+        mk_use_op t
+      )
     | None ->
       let t =
         Type_env.t_option_value_exn
@@ -915,6 +921,12 @@ let resolve_binding cx reason loc b =
           Tvar.mk_no_wrap_where cx reason (fun tout ->
               Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
           )
+        else
+          t
+      in
+      let t =
+        if hooklike then
+          make_hooklike cx t
         else
           t
       in
@@ -1043,15 +1055,24 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
           ~remote_name:remote
           ~local_name:local
       in
-      t
-    | Namespace ->
-      Type_operation_utils.Import_export.import_namespace_specifier_type
-        cx
-        import_reason
-        import_kind
-        ~module_name
-        ~source_module_t
-        ~local_loc:id_loc
+      if Flow_ast_utils.hook_name local then
+        make_hooklike cx t
+      else
+        t
+    | Namespace name ->
+      let t =
+        Type_operation_utils.Import_export.import_namespace_specifier_type
+          cx
+          import_reason
+          import_kind
+          ~module_name
+          ~source_module_t
+          ~local_loc:id_loc
+      in
+      if Flow_ast_utils.hook_name name then
+        make_hooklike cx t
+      else
+        t
     | Default local_name ->
       let (_, t) =
         Type_operation_utils.Import_export.import_default_specifier_type
@@ -1062,7 +1083,10 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
           ~source_module_t
           ~local_name
       in
-      t
+      if Flow_ast_utils.hook_name local_name then
+        make_hooklike cx t
+      else
+        t
   in
   (t, unknown_use)
 
