@@ -334,24 +334,18 @@ let autocomplete
           let open AutocompleteService_js in
           let ac_options =
             {
-              imports;
+              AutocompleteService_js.imports;
               imports_ranked_usage;
               imports_ranked_usage_boost_exact_match_min_length;
               show_ranking_info;
             }
           in
+          let exports = env.ServerEnv.exports in
+          let typing =
+            { AutocompleteService_js.exports; options; reader; cx; file_sig; ast; typed_ast }
+          in
           let (token_opt, ac_loc, ac_type_string, results_res) =
-            autocomplete_get_results
-              ~exports:env.ServerEnv.exports
-              ~options
-              ~reader
-              ~cx
-              ~file_sig
-              ~ast
-              ~typed_ast
-              ac_options
-              trigger_character
-              cursor_loc
+            autocomplete_get_results typing ac_options trigger_character cursor_loc
           in
           let json_props_to_log =
             ("ac_type", Hh_json.JSON_String ac_type_string)
