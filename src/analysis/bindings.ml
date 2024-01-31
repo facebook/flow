@@ -20,6 +20,7 @@ type kind =
   | Function
   | Class
   | DeclaredClass
+  | DeclaredNamespace
   | Parameter
   | CatchParameter
   | Import
@@ -75,6 +76,7 @@ let allow_forward_ref = function
   | DeclaredVar
   | DeclaredLet
   | DeclaredConst
+  | DeclaredNamespace
   | Var
   | Function
   | Component ->

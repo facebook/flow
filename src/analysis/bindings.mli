@@ -20,6 +20,7 @@ type kind =
   | Function
   | Class
   | DeclaredClass
+  | DeclaredNamespace
   | Parameter
   | CatchParameter
   | Import

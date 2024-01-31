@@ -1934,9 +1934,26 @@ module Make
 
     (module_t, ast)
 
-  and declare_namespace cx loc decl =
-    Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
-    (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#declare_namespace loc decl)
+  and declare_namespace
+      cx
+      loc
+      {
+        Ast.Statement.DeclareNamespace.id;
+        body = (body_loc, { Ast.Statement.Block.body; comments = body_comments });
+        comments;
+      } =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_declared_namespace node_cache loc with
+    | Some x -> x
+    | None ->
+      let body_statements = statement_list cx body in
+      let body =
+        (body_loc, { Ast.Statement.Block.body = body_statements; comments = body_comments })
+      in
+      let id = Tast_utils.error_mapper#pattern_identifier id in
+      let ns = { Ast.Statement.DeclareNamespace.id; body; comments } in
+      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
+      (AnyT.at (AnyError None) loc, ns)
 
   and object_prop cx ~as_const acc prop =
     let open Ast.Expression.Object in

@@ -6630,13 +6630,35 @@ function f() {
           (empty array) (2, 4) to (2, 5): (`x`)
         }] |}]
 
-let%expect_test "decmod" =
+let%expect_test "declare_module" =
   print_ssa_test {|
 declare module F { }
 |};
     [%expect {|
       [
         ] |}]
+
+let%expect_test "declare_namespace" =
+  print_ssa_test {|
+const c = F.v;
+declare namespace F {
+  declare type T = string;
+  declare const v: string;
+}
+const c = F.v;
+type T = F.T;
+|};
+    [%expect {|
+      [
+        (2, 10) to (2, 11) => {
+          (3, 18) to (3, 19): (`F`)
+        };
+        (7, 10) to (7, 11) => {
+          (3, 18) to (3, 19): (`F`)
+        };
+        (8, 9) to (8, 10) => {
+          (3, 18) to (3, 19): (`F`)
+        }] |}]
 
 let%expect_test "delete_member" =
   print_ssa_test {|

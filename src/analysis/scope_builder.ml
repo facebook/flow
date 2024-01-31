@@ -599,6 +599,19 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#with_bindings loc bindings (fun () -> run (this#block loc) body) ();
         m
 
+      method! declare_namespace _loc n =
+        let open Ast.Statement.DeclareNamespace in
+        let { id; body; comments = _ } = n in
+        ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
+        let (loc, body) = body in
+        let bindings =
+          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          run (hoist#block loc) body;
+          hoist#acc
+        in
+        this#with_bindings loc bindings (fun () -> run (this#block loc) body) ();
+        n
+
       method private scoped_type_params ?(hoist_op = (fun f -> f ())) ~in_tparam_scope tparams =
         let open Ast.Type.TypeParams in
         let open Ast.Type.TypeParam in

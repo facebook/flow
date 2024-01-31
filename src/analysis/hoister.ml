@@ -224,6 +224,12 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       let { id; _ } = enum in
       if enable_enums then this#add_const_binding ~kind:Bindings.Enum id;
       enum
+
+    method! declare_namespace _loc (namespace : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
+      let open Ast.Statement.DeclareNamespace in
+      let { id; _ } = namespace in
+      this#update_acc Bindings.(add (id, Bindings.DeclaredConst));
+      namespace
   end
 
 class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =

@@ -222,6 +222,7 @@ type 'loc virtual_reason_desc =
   | RArrayPatternRestProp
   | RCommonJSExports of string
   | RModule of name
+  | RNamespace of string
   | ROptionalChain
   | RReactProps
   (* TODO React element names should not allow internal names *)
@@ -340,7 +341,7 @@ let rec map_desc_locs f = function
   | RRequiredOf desc -> RRequiredOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
   | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
-  | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _
+  | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _ | RNamespace _
     | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
     | RReactDefaultProps | RReactState | RReactChildren ) as r ->
     r
@@ -738,6 +739,7 @@ let rec string_of_desc = function
   | RArrayPatternRestProp -> "rest of array pattern"
   | RCommonJSExports x -> spf "module `%s`" x
   | RModule x -> spf "module `%s`" (display_string_of_name x)
+  | RNamespace x -> spf "namespace %s" x
   | ROptionalChain -> "optional chain"
   | RReactProps -> "props"
   | RReactElement { name_opt; from_component_syntax = _ } ->
@@ -1543,6 +1545,7 @@ let classification_of_reason r =
   | RObjectPatternRestProp
   | RCommonJSExports _
   | RModule _
+  | RNamespace _
   | ROptionalChain
   | RReactProps
   | RReactElement _

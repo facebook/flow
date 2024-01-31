@@ -2200,6 +2200,19 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       in_declare_module <- false;
       ret
 
+    method! declare_namespace loc (n : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
+      let {
+        Ast.Statement.DeclareNamespace.id = (name_loc, { Ast.Identifier.name; comments = _ });
+        _;
+      } =
+        n
+      in
+      this#add_ordinary_binding
+        name_loc
+        (mk_reason (RNamespace name) name_loc)
+        (DeclaredNamespace (loc, n));
+      super#declare_namespace loc n
+
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = (name_loc, { Ast.Identifier.name; _ }); body; _ } = enum in

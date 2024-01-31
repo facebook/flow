@@ -181,6 +181,7 @@ type 'loc virtual_reason_desc =
   | RArrayPatternRestProp
   | RCommonJSExports of string
   | RModule of name
+  | RNamespace of string
   | ROptionalChain
   | RReactProps
   | RReactElement of {

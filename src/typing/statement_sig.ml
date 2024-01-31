@@ -225,6 +225,12 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t
 
+  val declare_namespace :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.DeclareNamespace.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareNamespace.t
+
   val mk_enum :
     Context.t ->
     enum_reason:Reason.t ->

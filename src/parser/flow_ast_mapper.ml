@@ -938,7 +938,7 @@ class ['loc] mapper =
     method declare_namespace _loc (m : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
       let open Ast.Statement.DeclareNamespace in
       let { id; body; comments } = m in
-      let id' = this#pattern_identifier id in
+      let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
       let body' = map_loc this#block body in
       let comments' = this#syntax_opt comments in
       if id' == id && body' == body && comments == comments' then

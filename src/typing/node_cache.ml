@@ -30,6 +30,8 @@ type cache = {
   declared_classes: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t) ALocMap.t;
   declared_components:
     (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t) ALocMap.t;
+  declared_namespaces:
+    (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareNamespace.t) ALocMap.t;
   classes: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t) ALocMap.t;
   class_sigs:
     ( Type.t
@@ -66,6 +68,7 @@ let mk_empty () =
       interfaces = ALocMap.empty;
       declared_classes = ALocMap.empty;
       declared_components = ALocMap.empty;
+      declared_namespaces = ALocMap.empty;
       classes = ALocMap.empty;
       class_sigs = ALocMap.empty;
       tparams = ALocMap.empty;
@@ -106,6 +109,9 @@ let set_declared_component cache loc component =
 let set_declared_class cache loc class_ =
   cache := { !cache with declared_classes = ALocMap.add loc class_ !cache.declared_classes }
 
+let set_declared_namespace cache loc ns =
+  cache := { !cache with declared_namespaces = ALocMap.add loc ns !cache.declared_namespaces }
+
 let set_class cache loc class_ =
   cache := { !cache with classes = ALocMap.add loc class_ !cache.classes }
 
@@ -139,6 +145,8 @@ let get_interface cache loc = ALocMap.find_opt loc !cache.interfaces
 let get_declared_class cache loc = ALocMap.find_opt loc !cache.declared_classes
 
 let get_declared_component cache loc = ALocMap.find_opt loc !cache.declared_components
+
+let get_declared_namespace cache loc = ALocMap.find_opt loc !cache.declared_namespaces
 
 let get_class cache loc = ALocMap.find_opt loc !cache.classes
 

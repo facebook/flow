@@ -5524,6 +5524,21 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         env_state <- { env_state with exclude_syms = saved_exclude_syms };
         m
 
+      method! declare_namespace _loc ({ Ast.Statement.DeclareNamespace.id; body; _ } as m) =
+        ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
+        let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
+        let bindings =
+          let hoist =
+            new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
+          in
+          hoist#eval hoist#statement_list statements
+        in
+        let saved_exclude_syms = env_state.exclude_syms in
+        env_state <- { env_state with exclude_syms = NameUtils.Set.empty };
+        ignore @@ this#statements_with_bindings block_loc bindings statements;
+        env_state <- { env_state with exclude_syms = saved_exclude_syms };
+        m
+
       method visit_program program =
         let (loc, { Flow_ast.Program.statements; _ }) = program in
         let bindings =

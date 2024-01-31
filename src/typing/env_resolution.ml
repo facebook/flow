@@ -1108,6 +1108,12 @@ let resolve_declare_component cx loc component =
   Node_cache.set_declared_component cache loc (t, ast);
   (t, unknown_use)
 
+let resolve_declare_namespace cx loc ns =
+  let cache = Context.node_cache cx in
+  let ((t, _) as ast) = Statement.declare_namespace cx loc ns in
+  Node_cache.set_declared_namespace cache loc ast;
+  (t, unknown_use)
+
 let resolve_enum cx id_loc enum_reason enum_loc name enum =
   if Context.enable_enums cx then
     let enum_t = Statement.mk_enum cx ~enum_reason id_loc name enum in
@@ -1251,6 +1257,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Enum (enum_loc, name, enum) -> resolve_enum cx id_loc def_reason enum_loc name enum
     | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
+    | DeclaredNamespace (loc, ns) -> resolve_declare_namespace cx loc ns
     | MissingThisAnnot -> (AnyT.at (AnyError None) id_loc, unknown_use)
   in
   let update_reason =

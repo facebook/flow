@@ -1146,6 +1146,45 @@ declare module 'a' {
   [%expect {|
     (3, 15) to (3, 16) |}]
 
+let%expect_test "declare namespace" =
+  print_order_test {|
+declare namespace a {
+  declare type T = S;
+}
+type S = number;
+declare namespace B {
+  declare function f(S): S;
+}
+declare namespace F {
+  declare type T = string;
+  declare const v: string;
+}
+const c = F.v;
+type T = F.T;
+  |};
+  [%expect {|
+    (5, 5) to (5, 6) =>
+    (3, 15) to (3, 16) =>
+    (2, 18) to (2, 19) =>
+    (7, 19) to (7, 20) =>
+    (6, 18) to (6, 19) =>
+    (10, 15) to (10, 16) =>
+    (11, 16) to (11, 17) =>
+    (9, 18) to (9, 19) =>
+    (13, 6) to (13, 7) =>
+    (14, 5) to (14, 6) |}]
+
+let%expect_test "declare namespace duplicate names" =
+  print_order_test {|
+declare namespace a {
+  declare type T = number;
+  declare type T = number;
+}
+  |};
+  [%expect {|
+    (3, 15) to (3, 16) =>
+    (2, 18) to (2, 19) |}]
+
 let%expect_test "empty arr" =
   print_order_test {|
 var x = [];
