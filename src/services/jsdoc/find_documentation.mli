@@ -6,7 +6,7 @@
  *)
 
 val jsdoc_of_getdef_loc :
-  ?current_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   reader:Parsing_heaps.Reader.reader ->
   Loc.t ->
   Jsdoc.t option

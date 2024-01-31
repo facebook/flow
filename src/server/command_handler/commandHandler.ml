@@ -600,7 +600,7 @@ let infer_type
       let get_def_documentation =
         match getdef_loc_result with
         | Ok [getdef_loc] ->
-          Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+          Find_documentation.jsdoc_of_getdef_loc ~ast ~reader getdef_loc
           |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
         | _ -> None
       in

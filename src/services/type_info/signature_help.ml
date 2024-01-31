@@ -318,7 +318,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
       | GetDef_js.Get_def_result.Partial (locs, _, _)
         when LocSet.cardinal locs = 1 ->
         let getdef_loc = LocSet.choose locs in
-        Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+        Find_documentation.jsdoc_of_getdef_loc ~ast ~reader getdef_loc
       | _ -> None
     in
     (match ty with

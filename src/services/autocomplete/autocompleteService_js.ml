@@ -370,9 +370,8 @@ type autocomplete_service_result =
   | AcEmpty of string
   | AcFatalError of string
 
-let jsdoc_of_def_loc { reader; typed_ast; _ } def_loc =
-  loc_of_aloc ~reader def_loc
-  |> Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader
+let jsdoc_of_def_loc { reader; ast; _ } def_loc =
+  loc_of_aloc ~reader def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~reader
 
 let jsdoc_of_member typing info =
   match info.Ty_members.def_locs with
@@ -396,7 +395,7 @@ let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   | Partial (locs, _, _)
     when LocSet.cardinal locs = 1 ->
     let getdef_loc = LocSet.choose locs in
-    Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+    Find_documentation.jsdoc_of_getdef_loc ~ast ~reader getdef_loc
   | _ -> None
 
 let documentation_and_tags_of_jsdoc jsdoc =
