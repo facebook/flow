@@ -1879,6 +1879,19 @@ module Make
     let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
 
     let elements_ast = statement_list cx elements in
+    Base.List.iter elements_ast ~f:(fun (loc, stmt) ->
+        match Flow_ast_utils.acceptable_statement_in_declaration_context stmt with
+        | Ok () -> ()
+        | Error kind ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EUnsupportedSyntax
+                ( loc,
+                  ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareModule kind)
+                )
+            )
+    );
     let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
     let module_t =
       ModuleT

@@ -143,5 +143,30 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- typing_test.js:19:3
 
-Found 11 errors
+Cannot use `if` statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
+
+   19|   if (true) {} // error
+         ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:21:1
+
+Cannot cast `unsupported_statements.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typing_test.js:21:1
+   21| unsupported_statements.a as empty; // error: number ~> empty
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:18:27
+   18|   declare export const a: number;
+                                 ^^^^^^ [1]
+   typing_test.js:21:29
+   21| unsupported_statements.a as empty; // error: number ~> empty
+                                   ^^^^^ [2]
+
+
+
+Found 13 errors

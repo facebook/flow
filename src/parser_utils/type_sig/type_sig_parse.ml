@@ -4726,7 +4726,12 @@ let rec statement opts scope tbls (loc, stmt) =
     in
     let scope = Scope.push_declare_module loc name scope in
     let (_, { S.Block.body = stmts; comments = _ }) = body in
-    List.iter (statement opts scope tbls) stmts;
+    let visit_statement ((_, stmt') as stmt) =
+      match Flow_ast_utils.acceptable_statement_in_declaration_context stmt' with
+      | Ok () -> statement opts scope tbls stmt
+      | Error _ -> ()
+    in
+    List.iter visit_statement stmts;
     Scope.finalize_declare_module_exports_exn scope
   | S.DeclareNamespace { S.DeclareNamespace.id; body; comments = _ } ->
     (* TODO(T174946399): namespace support *)

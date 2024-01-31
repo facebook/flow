@@ -13,3 +13,9 @@ declare namespace unsupported_declare_module_exports {
 }
 
 unsupported_declare_module_exports.foo; // prop-missing because `declare module.exports` is ignored
+
+declare namespace unsupported_statements {
+  declare export const a: number;
+  if (true) {} // error
+}
+unsupported_statements.a as empty; // error: number ~> empty

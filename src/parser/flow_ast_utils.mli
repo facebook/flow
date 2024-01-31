@@ -39,6 +39,10 @@ val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_super_member_access : ('a, 'b) Flow_ast.Expression.Member.t -> bool
 
+(* Returns Ok () for such statement, and Error kind_of_statement otherwise. *)
+val acceptable_statement_in_declaration_context :
+  ('a, 'b) Flow_ast.Statement.t' -> (unit, string) result
+
 val negate_number_literal : float * string -> float * string
 
 val negate_bigint_literal : int64 option * string -> int64 option * string

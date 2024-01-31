@@ -99,6 +99,22 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
                                        ^^^^^
 
 
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
+
+Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
+
+   3|   if (true) {} // error
+        ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
+
+Cannot use `if` statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+
+   3|   if (true) {} // error
+        ^^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------------- a.js:5:17
 
 Cannot assign `0` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -170,8 +186,25 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
-Found 17 errors
+Cannot cast `require(...)` to empty because exports [1] is incompatible with empty [2]. [incompatible-cast]
+
+   a.js:17:1
+   17| require('contains-unsupported-statements') as empty; // error: number ~> empty
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   libs/unsupported-statements.js:1:16
+    1| declare module 'contains-unsupported-statements' {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:17:47
+   17| require('contains-unsupported-statements') as empty; // error: number ~> empty
+                                                     ^^^^^ [2]
+
+
+
+Found 20 errors
 
 ============================================
 With warnings:
@@ -274,6 +307,22 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
                                        ^^^^^
 
 
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
+
+Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
+
+   3|   if (true) {} // error
+        ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
+
+Cannot use `if` statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+
+   3|   if (true) {} // error
+        ^^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------------- a.js:5:17
 
 Cannot assign `0` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -345,6 +394,23 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------------- a.js:17:1
+
+Cannot cast `require(...)` to empty because exports [1] is incompatible with empty [2]. [incompatible-cast]
+
+   a.js:17:1
+   17| require('contains-unsupported-statements') as empty; // error: number ~> empty
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   libs/unsupported-statements.js:1:16
+    1| declare module 'contains-unsupported-statements' {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:17:47
+   17| require('contains-unsupported-statements') as empty; // error: number ~> empty
+                                                     ^^^^^ [2]
+
+
 Warning -------------------------------------------------------------------------------------- libs/missing_name.js:10:3
 
 Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[cannot-resolve-name]`
@@ -354,4 +420,4 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 
 
-Found 17 errors and 1 warning
+Found 20 errors and 1 warning

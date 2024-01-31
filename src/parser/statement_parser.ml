@@ -1255,20 +1255,17 @@ module Statement
       env
 
   and declare_module_or_namespace_body env =
-    let rec module_items env acc =
-      match Peek.token env with
-      | T_EOF
-      | T_RCURLY ->
-        List.rev acc
-      | _ ->
-        let stmt = declare ~in_module_or_namespace:true env in
-        module_items env (stmt :: acc)
-    in
     with_loc
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_LCURLY;
-        let body = module_items env [] in
+        let body =
+          Parse.module_body
+            ~term_fn:(function
+              | T_RCURLY -> true
+              | _ -> false)
+            env
+        in
         let internal =
           if body = [] then
             Peek.comments env

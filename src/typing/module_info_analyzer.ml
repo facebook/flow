@@ -575,7 +575,20 @@ let analyze_declare_namespace cx reason statements =
   let info =
     { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] }
   in
-  Base.List.iter ~f:(visit_toplevel_statement cx info ~in_declare_namespace:true) statements;
+  Base.List.iter statements ~f:(fun ((loc, stmt') as stmt) ->
+      match Flow_ast_utils.acceptable_statement_in_declaration_context stmt' with
+      | Ok () -> visit_toplevel_statement cx info ~in_declare_namespace:true stmt
+      | Error kind ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EUnsupportedSyntax
+              ( loc,
+                ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareNamespace kind)
+              )
+          );
+        ()
+  );
   Type_operation_utils.Import_export.get_module_namespace_type
     cx
     reason

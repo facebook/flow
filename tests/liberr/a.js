@@ -13,3 +13,5 @@ require('nested-declare-module3'); // error
 
 declare module 'non-libdef-declare-module' {} // error
 require('non-libdef-declare-module'); // error
+
+require('contains-unsupported-statements') as empty; // error: number ~> empty

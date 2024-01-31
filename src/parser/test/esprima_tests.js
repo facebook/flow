@@ -1463,10 +1463,10 @@ module.exports = {
         content: 'declare module A { export default 1 +1; }',
         explanation: 'export is no longer a future reserved word',
         expected_differences: {
-            'root.errors.0.message': {
-              type: 'Wrong error message',
-              expected: 'Unexpected reserved word',
-              actual: 'Unexpected token `export`, expected the token `declare`',
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Unexpected reserved word',
+              actual: undefined,
             },
         },
       },
