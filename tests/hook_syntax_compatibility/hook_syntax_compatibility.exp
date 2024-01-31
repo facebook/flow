@@ -82,5 +82,33 @@ References:
    ^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:38:20
 
-Found 6 errors
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   test.js:38:20
+   38| const c1 = () => { useH() }; // error
+                          ^^^^^^
+
+References:
+   test.js:38:20
+   38| const c1 = () => { useH() }; // error
+                          ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:40:41
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   test.js:40:41
+   40| const C3 = id(({}: {}, ref: mixed) => { useH() }); // error
+                                               ^^^^^^
+
+References:
+   test.js:40:41
+   40| const C3 = id(({}: {}, ref: mixed) => { useH() }); // error
+                                               ^^^^ [1]
+
+
+
+Found 8 errors
