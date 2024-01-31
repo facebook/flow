@@ -47,7 +47,7 @@ type autocomplete_service_result =
   | AcFatalError of string
 
 val autocomplete_get_results :
-  env:ServerEnv.env ->
+  exports:Export_search.t ->
   options:Options.t ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->

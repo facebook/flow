@@ -342,7 +342,7 @@ let autocomplete
           in
           let (token_opt, ac_loc, ac_type_string, results_res) =
             autocomplete_get_results
-              ~env
+              ~exports:env.ServerEnv.exports
               ~options
               ~reader
               ~cx

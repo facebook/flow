@@ -877,7 +877,7 @@ let append_completion_items_of_autoimports
     filter_by_token_and_sort_rev token (Base.List.append auto_imports_items_rev items_rev)
 
 let autocomplete_id
-    ~env
+    ~exports
     ~options
     ~reader
     ~cx
@@ -1018,7 +1018,7 @@ let autocomplete_id
               Export_search.weighted = ac_options.imports_ranked_usage;
             }
           in
-          Export_search.search_values ~options before env.ServerEnv.exports
+          Export_search.search_values ~options before exports
         in
         let items_rev =
           append_completion_items_of_autoimports
@@ -1289,7 +1289,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
        ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
 let autocomplete_unqualified_type
-    ~env
+    ~exports
     ~options
     ~reader
     ~cx
@@ -1419,7 +1419,7 @@ let autocomplete_unqualified_type
             Export_search.weighted = ac_options.imports_ranked_usage;
           }
         in
-        Export_search.search_types ~options before env.ServerEnv.exports
+        Export_search.search_types ~options before exports
       in
       let items_rev =
         append_completion_items_of_autoimports
@@ -1507,7 +1507,7 @@ let print_name_as_indexer_with_edit_locs ~options ~token ~edit_locs name =
   (print_name_as_indexer ~options ~token name, edit_locs)
 
 let autocomplete_member
-    ~env
+    ~exports
     ~reader
     ~options
     ~cx
@@ -1642,7 +1642,7 @@ let autocomplete_member
       } =
         if is_type_annotation then
           autocomplete_unqualified_type
-            ~env
+            ~exports
             ~options
             ~reader
             ~cx
@@ -1657,7 +1657,7 @@ let autocomplete_member
             ~token
         else
           autocomplete_id
-            ~env
+            ~exports
             ~options
             ~reader
             ~cx
@@ -1770,7 +1770,7 @@ let autocomplete_jsx_intrinsic
   { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let autocomplete_jsx_element
-    ~env
+    ~exports
     ~options
     ~reader
     ~cx
@@ -1785,7 +1785,7 @@ let autocomplete_jsx_element
     ~type_ =
   let results_id =
     autocomplete_id
-      ~env
+      ~exports
       ~options
       ~reader
       ~cx
@@ -2293,7 +2293,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results
-    ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ac_options trigger_character cursor =
+    ~exports ~options ~reader ~cx ~file_sig ~ast ~typed_ast ac_options trigger_character cursor =
   let open Autocomplete_js in
   match process_location ~trigger_character ~cursor ~typed_ast with
   | None ->
@@ -2395,7 +2395,7 @@ let autocomplete_get_results
       | Ac_id { include_super; include_this; type_; enclosing_class_t } ->
         let result_id =
           autocomplete_id
-            ~env
+            ~exports
             ~options
             ~reader
             ~cx
@@ -2416,7 +2416,7 @@ let autocomplete_get_results
         | Some t ->
           let result_member =
             autocomplete_member
-              ~env
+              ~exports
               ~reader
               ~options
               ~cx
@@ -2470,7 +2470,7 @@ let autocomplete_get_results
           { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation; is_super }
         ->
         autocomplete_member
-          ~env
+          ~exports
           ~reader
           ~options
           ~cx
@@ -2490,7 +2490,7 @@ let autocomplete_get_results
           ~force_instance:is_super
       | Ac_jsx_element { type_ } ->
         autocomplete_jsx_element
-          ~env
+          ~exports
           ~options
           ~reader
           ~cx
@@ -2520,7 +2520,7 @@ let autocomplete_get_results
       | Ac_type { allow_react_element_shorthand } ->
         AcResult
           (autocomplete_unqualified_type
-             ~env
+             ~exports
              ~options
              ~reader
              ~cx
