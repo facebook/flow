@@ -38,3 +38,10 @@ const C1 = () => { useH() }; // no error
 const c1 = () => { useH() }; // error
 const C2 = React.forwardRef<_, mixed, _>(({}: {}, ref: mixed) => { useH() }); // no error
 const C3 = id(({}: {}, ref: mixed) => { useH() }); // error
+
+const myHOC = () => () => { useH() }; // no error;
+function myHOC2() {
+    return function() {
+        useH(); // no error
+    }
+}

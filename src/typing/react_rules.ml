@@ -306,8 +306,32 @@ let rec whole_ast_visitor cx rrid =
           Flow_ast_utils.hook_name name
         | _ -> false
       in
-      declaring_function_component <- next_declaring || cur_declaring;
+      declaring_function_component <- next_declaring;
       let res = super#object_property (loc, prop) in
+      declaring_function_component <- cur_declaring;
+      res
+
+    method! return ({ Ast.Statement.Return.argument; _ } as r) =
+      let cur_declaring = declaring_function_component in
+      let next_declaring =
+        match argument with
+        | Some (_, Ast.Expression.(ArrowFunction _ | Function _)) -> Context.hooklike_functions cx
+        | _ -> false
+      in
+      declaring_function_component <- next_declaring;
+      let res = super#return r in
+      declaring_function_component <- cur_declaring;
+      res
+
+    method! body_expression ((_, argument) as r) =
+      let cur_declaring = declaring_function_component in
+      let next_declaring =
+        match argument with
+        | Ast.Expression.(ArrowFunction _ | Function _) -> Context.hooklike_functions cx
+        | _ -> false
+      in
+      declaring_function_component <- next_declaring;
+      let res = super#body_expression r in
       declaring_function_component <- cur_declaring;
       res
 
@@ -326,7 +350,7 @@ let rec whole_ast_visitor cx rrid =
           Context.hooklike_functions cx && (Flow_ast_utils.hook_name name || componentlike_name name)
         | _ -> false
       in
-      declaring_function_component <- next_declaring || cur_declaring;
+      declaring_function_component <- next_declaring;
       let (_ : _ option) = Base.Option.map ~f:this#expression init in
       declaring_function_component <- cur_declaring;
       decl
