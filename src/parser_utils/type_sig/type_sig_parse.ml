@@ -870,13 +870,17 @@ module Scope = struct
                 | LocalBinding node ->
                   (match Local_defs.value node with
                   | VarBinding _
+                  | LetConstBinding _
+                  | ConstRefBinding _
+                  | ConstFunBinding _
+                  | ClassBinding _
                   | DeclareClassBinding _
+                  | FunBinding _
                   | DeclareFunBinding _
                   | ComponentBinding _
                   | EnumBinding _ ->
                     Exports.cjs_declare_module_set_prop name node exports
-                  | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
-                  | _ -> ())
+                  | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports)
                 | RemoteBinding _ -> ())
               names)
           scope

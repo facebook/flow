@@ -188,7 +188,8 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
-Cannot cast `require(...)` to empty because exports [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...)` to empty because module `contains-unsupported-statements` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    a.js:17:1
    17| require('contains-unsupported-statements') as empty; // error: number ~> empty
@@ -396,7 +397,8 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
-Cannot cast `require(...)` to empty because exports [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...)` to empty because module `contains-unsupported-statements` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    a.js:17:1
    17| require('contains-unsupported-statements') as empty; // error: number ~> empty

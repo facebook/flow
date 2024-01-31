@@ -5473,6 +5473,10 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
   print_builtins [{|
     declare module foo {
       declare var x: string;
+      declare const y: string;
+      declare let z: string;
+      const zRef = z;
+      function empty() {}
       declare function f(): void;
       declare class Y {}
       declare component foo()
@@ -5484,15 +5488,17 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
   [%expect {|
     Local defs:
     0. Variable {id_loc = [2:14-15]; name = "x"; def = (Annot (String [2:17-23]))}
-    1. DeclareFun {id_loc = [3:19-20];
-         name = "f"; fn_loc = [3:20-28];
+    1. Variable {id_loc = [3:16-17]; name = "y"; def = (Annot (String [3:19-25]))}
+    2. Variable {id_loc = [4:14-15]; name = "z"; def = (Annot (String [4:17-23]))}
+    3. DeclareFun {id_loc = [7:19-20];
+         name = "f"; fn_loc = [7:20-28];
          def =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
-           return = (Annot (Void [3:24-28]));
+           return = (Annot (Void [7:24-28]));
            predicate = None; hook = NonHook};
          tail = []}
-    2. DeclareClassBinding {id_loc = [4:16-17];
+    4. DeclareClassBinding {id_loc = [8:16-17];
          name = "Y";
          def =
          DeclareClassSig {tparams = Mono;
@@ -5501,26 +5507,30 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
            calls = []; dict = None; static_dict = None}}
-    3. ComponentBinding {id_loc = [5:20-23];
-         name = "foo"; fn_loc = [5:2-25];
+    5. ComponentBinding {id_loc = [9:20-23];
+         name = "foo"; fn_loc = [9:2-25];
          def =
-         ComponentSig {params_loc = [5:23-25];
+         ComponentSig {params_loc = [9:23-25];
            tparams = Mono; params = [];
            rest_param = None;
            renders =
            (Annot
-              (Renders ([5:25],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [5:25]; name = "React$Node"})),
+              (Renders ([9:25],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [9:25]; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
-    4. EnumBinding {id_loc = [6:15-16];
+    6. EnumBinding {id_loc = [10:15-16];
          name = "A"; rep = StringRep {truthy = true};
-         members = { "B" -> [6:19-20] };
+         members = { "B" -> [10:19-20] };
          has_unknown_members = false}
-    5. TypeAlias {id_loc = [7:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [7:19-25]))}
-    6. TypeAlias {id_loc = [8:22-23]; name = "U"; tparams = Mono; body = (Annot (String [8:26-32]))}
+    7. TypeAlias {id_loc = [11:15-16];
+         name = "T"; tparams = Mono;
+         body = (Annot (Number [11:19-25]))}
+    8. TypeAlias {id_loc = [12:22-23];
+         name = "U"; tparams = Mono;
+         body = (Annot (String [12:26-32]))}
 
     Builtin module foo:
-    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 5); (ExportTypeBinding 6)|];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 7); (ExportTypeBinding 8)|];
                 exports =
                 (Some (Value
                          DeclareModuleImplicitlyExportedObject {
@@ -5529,23 +5539,31 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
                            props =
                            { "A" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 4}), Polarity.Positive
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 6}), Polarity.Positive
                                 ));
                              "Y" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 2}), Polarity.Positive
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 4}), Polarity.Positive
                                 ));
                              "f" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 1}), Polarity.Positive
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 3}), Polarity.Positive
                                 ));
                              "foo" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 3}), Polarity.Positive
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 5}), Polarity.Positive
                                 ));
                              "x" ->
                              (ObjValueField ([1:15-18],
                                 (Ref LocalRef {ref_loc = [1:15-18]; index = 0}), Polarity.Positive
+                                ));
+                             "y" ->
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 1}), Polarity.Positive
+                                ));
+                             "z" ->
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 2}), Polarity.Positive
                                 )) }}));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"; "U"|];
