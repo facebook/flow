@@ -5475,6 +5475,8 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
       declare var x: string;
       declare function f(): void;
       declare class Y {}
+      declare component foo()
+      declare enum A { B }
       declare type T = number;
       declare export type U = string;
     }
@@ -5499,24 +5501,47 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
            calls = []; dict = None; static_dict = None}}
-    3. TypeAlias {id_loc = [5:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [5:19-25]))}
-    4. TypeAlias {id_loc = [6:22-23]; name = "U"; tparams = Mono; body = (Annot (String [6:26-32]))}
+    3. ComponentBinding {id_loc = [5:20-23];
+         name = "foo"; fn_loc = [5:2-25];
+         def =
+         ComponentSig {params_loc = [5:23-25];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders =
+           (Annot
+              (Renders ([5:25],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [5:25]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
+    4. EnumBinding {id_loc = [6:15-16];
+         name = "A"; rep = StringRep {truthy = true};
+         members = { "B" -> [6:19-20] };
+         has_unknown_members = false}
+    5. TypeAlias {id_loc = [7:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [7:19-25]))}
+    6. TypeAlias {id_loc = [8:22-23]; name = "U"; tparams = Mono; body = (Annot (String [8:26-32]))}
 
     Builtin module foo:
-    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 3); (ExportTypeBinding 4)|];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 5); (ExportTypeBinding 6)|];
                 exports =
                 (Some (Value
                          DeclareModuleImplicitlyExportedObject {
                            loc = [1:15-18];
                            module_name = "foo";
                            props =
-                           { "Y" ->
+                           { "A" ->
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 4}), Polarity.Positive
+                                ));
+                             "Y" ->
                              (ObjValueField ([1:15-18],
                                 (Ref LocalRef {ref_loc = [1:15-18]; index = 2}), Polarity.Positive
                                 ));
                              "f" ->
                              (ObjValueField ([1:15-18],
                                 (Ref LocalRef {ref_loc = [1:15-18]; index = 1}), Polarity.Positive
+                                ));
+                             "foo" ->
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 3}), Polarity.Positive
                                 ));
                              "x" ->
                              (ObjValueField ([1:15-18],

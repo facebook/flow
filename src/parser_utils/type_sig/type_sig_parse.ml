@@ -871,7 +871,9 @@ module Scope = struct
                   (match Local_defs.value node with
                   | VarBinding _
                   | DeclareClassBinding _
-                  | DeclareFunBinding _ ->
+                  | DeclareFunBinding _
+                  | ComponentBinding _
+                  | EnumBinding _ ->
                     Exports.cjs_declare_module_set_prop name node exports
                   | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
                   | _ -> ())
