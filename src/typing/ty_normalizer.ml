@@ -1360,6 +1360,17 @@ module Make (I : INPUT) : S = struct
       let singleton_poly ~env targs tparams t =
         let open Type in
         match t with
+        | DefT
+            ( r,
+              TypeT
+                ( _,
+                  DefT
+                    ( _,
+                      InstanceT
+                        { inst = { inst_kind = InterfaceKind { inline = true }; _ } as inst; _ }
+                    )
+                )
+            )
         | DefT (_, TypeT (_, DefT (r, InstanceT { inst; _ })))
         | DefT (_, ClassT (ThisInstanceT (r, { inst; _ }, _, _)))
         | DefT (_, ClassT (DefT (r, InstanceT { inst; _ }))) ->

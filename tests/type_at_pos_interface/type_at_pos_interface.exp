@@ -45,6 +45,6 @@ interface.js:31:11,31:13
 
 interface.js:43:13
 Flags:
-(unknown)
+PolyAnonAlias<number>
 interface.js:43:13,43:25
 
