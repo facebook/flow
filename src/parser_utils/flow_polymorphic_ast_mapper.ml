@@ -90,9 +90,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method comment ((annot, c) : 'M Ast.Comment.t) : 'N Ast.Comment.t = (this#on_loc_annot annot, c)
 
-    method t_comment ((annot, c) : 'T Ast.Comment.t) : 'U Ast.Comment.t =
-      (this#on_type_annot annot, c)
-
     method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t =
       fun attached ->
         let open Ast.Syntax in

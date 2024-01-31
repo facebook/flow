@@ -455,11 +455,6 @@ class searcher
       if covers_target loc then this#found_empty "comment";
       c
 
-    method! t_comment c =
-      let (annot, _) = c in
-      if annot_covers_target annot then this#found_empty "comment";
-      c
-
     method! template_literal_element e =
       let (loc, _) = e in
       if covers_target loc then this#found_empty "template";

@@ -141,8 +141,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method comment : 'M Ast.Comment.t -> 'N Ast.Comment.t
 
-    method t_comment : 'T Ast.Comment.t -> 'U Ast.Comment.t
-
     method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t
 
     method syntax_opt :
