@@ -16,7 +16,7 @@ module AcCompletion : sig
     additional_text_edits: ServerProt.Response.textedit list;
     sort_text: string option;
     preselect: bool;
-    documentation_and_tags: string option * Lsp.CompletionItemTag.t list option;
+    documentation_and_tags: (string option * Lsp.CompletionItemTag.t list option) Lazy.t;
     log_info: string;
     insert_text_format: Lsp.Completion.insertTextFormat;
   }
