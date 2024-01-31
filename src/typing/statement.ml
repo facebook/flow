@@ -989,6 +989,26 @@ module Make
         let (fn_type, func_ast) = mk_function_declaration cx ~tast_fun_type reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
+    let declare_function cx loc f =
+      match declare_function_to_function_declaration cx loc f with
+      | Some (FunctionDeclaration func, reconstruct_ast) ->
+        let (_, _, node) = function_ ~is_declared_function:true loc func in
+        reconstruct_ast node
+      | _ ->
+        (* error case *)
+        let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } = f in
+        let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+        let t =
+          Type_env.get_var_declared_type
+            ~lookup_mode:Type_env.LookupMode.ForValue
+            ~is_declared_function:true
+            cx
+            (OrdinaryName id_name.Ast.Identifier.name)
+            id_loc
+        in
+        let predicate = Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate in
+        { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments }
+    in
     function
     | (_, Empty _) as stmt -> stmt
     | (loc, Block { Block.body; comments }) ->
@@ -1383,36 +1403,12 @@ module Make
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in
       (loc, EnumDeclaration enum_ast)
-    | (loc, DeclareVariable { DeclareVariable.id = (id_loc, id); annot; kind; comments }) ->
-      let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-      ( loc,
-        DeclareVariable
-          { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; kind; comments }
-      )
-    | (loc, DeclareFunction declare_function) ->
-      (match declare_function_to_function_declaration cx loc declare_function with
-      | Some (FunctionDeclaration func, reconstruct_ast) ->
-        let (_, _, node) = function_ ~is_declared_function:true loc func in
-        (loc, DeclareFunction (reconstruct_ast node))
-      | _ ->
-        (* error case *)
-        let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } =
-          declare_function
-        in
-        let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-        let t =
-          Type_env.get_var_declared_type
-            ~lookup_mode:Type_env.LookupMode.ForValue
-            ~is_declared_function:true
-            cx
-            (OrdinaryName id_name.Ast.Identifier.name)
-            id_loc
-        in
-        let predicate = Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate in
-        ( loc,
-          DeclareFunction
-            { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments }
-        ))
+    | (loc, DeclareVariable decl) ->
+      let decl_ast = declare_variable cx decl in
+      (loc, DeclareVariable decl_ast)
+    | (loc, DeclareFunction decl) ->
+      let decl_ast = declare_function cx loc decl in
+      (loc, DeclareFunction decl_ast)
     | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
     | (_, ClassDeclaration { Ast.Class.id = None; _ }) ->
       failwith "unexpected anonymous class declaration"
@@ -1486,57 +1482,29 @@ module Make
       let declaration =
         let f = function
           | D.Variable (loc, v) ->
-            let dec_var = statement cx (loc, DeclareVariable v) in
-            begin
-              match dec_var with
-              | (_, DeclareVariable v_ast) -> D.Variable (loc, v_ast)
-              | _ -> assert_false "DeclareVariable typed AST doesn't preserve structure"
-            end
+            let v_ast = declare_variable cx v in
+            D.Variable (loc, v_ast)
           | D.Function (loc, f) ->
-            let dec_fun = statement cx (loc, DeclareFunction f) in
-            begin
-              match dec_fun with
-              | (_, DeclareFunction f_ast) -> D.Function (loc, f_ast)
-              | _ -> assert_false "DeclareFunction typed AST doesn't preserve structure"
-            end
+            let f_ast = declare_function cx loc f in
+            D.Function (loc, f_ast)
           | D.Class (loc, c) ->
-            let dec_class = statement cx (loc, DeclareClass c) in
-            begin
-              match dec_class with
-              | (_, DeclareClass c_ast) -> D.Class (loc, c_ast)
-              | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
-            end
+            let (_, c_ast) = declare_class cx loc c in
+            D.Class (loc, c_ast)
           | D.Component (loc, c) ->
-            let dec_component = statement cx (loc, DeclareComponent c) in
-            begin
-              match dec_component with
-              | (_, DeclareComponent c_ast) -> D.Component (loc, c_ast)
-              | _ -> assert_false "DeclareComponent typed AST doesn't preserve structure"
-            end
+            let (_, c_ast) = declare_component cx loc c in
+            D.Component (loc, c_ast)
           | D.DefaultType (loc, t) ->
             let t_ast = Anno.convert cx Subst_name.Map.empty (loc, t) in
             D.DefaultType t_ast
           | D.NamedType (loc, t) ->
-            let type_alias = statement cx (loc, TypeAlias t) in
-            begin
-              match type_alias with
-              | (_, TypeAlias talias) -> D.NamedType (loc, talias)
-              | _ -> assert_false "TypeAlias typed AST doesn't preserve structure"
-            end
+            let (_, type_alias_ast) = type_alias cx loc t in
+            D.NamedType (loc, type_alias_ast)
           | D.NamedOpaqueType (loc, t) ->
-            let opaque_type = statement cx (loc, OpaqueType t) in
-            begin
-              match opaque_type with
-              | (_, OpaqueType opaque_t) -> D.NamedOpaqueType (loc, opaque_t)
-              | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
-            end
+            let (_, opaque_type_ast) = opaque_type cx loc t in
+            D.NamedOpaqueType (loc, opaque_type_ast)
           | D.Interface (loc, i) ->
-            let int_dec = statement cx (loc, InterfaceDeclaration i) in
-            begin
-              match int_dec with
-              | (_, InterfaceDeclaration i_ast) -> D.Interface (loc, i_ast)
-              | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
-            end
+            let (_, i_ast) = interface cx loc i in
+            D.Interface (loc, i_ast)
           | D.Enum (loc, enum) ->
             let enum_ast = enum_declaration cx loc enum in
             D.Enum (loc, enum_ast)
@@ -1852,6 +1820,11 @@ module Make
       let (t, iface_sig, decl_ast) = Anno.mk_interface_sig cx loc reason decl in
       Class_type_sig.check_signature_compatibility cx (mk_reason desc loc) iface_sig;
       (t, decl_ast)
+
+  and declare_variable cx decl =
+    let { Ast.Statement.DeclareVariable.id = (id_loc, id); annot; kind; comments } = decl in
+    let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+    { Ast.Statement.DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; kind; comments }
 
   and declare_class cx loc decl =
     let node_cache = Context.node_cache cx in
