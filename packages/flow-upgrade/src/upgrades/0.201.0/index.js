@@ -12,7 +12,7 @@ import type {Upgrade} from '../../Types';
 
 import renamePartial from '../../codemods/renamePartial';
 
-export default ({
+export default {
   version: '0.201.0',
   upgrades: [renamePartial],
-}: Upgrade);
+} as Upgrade;

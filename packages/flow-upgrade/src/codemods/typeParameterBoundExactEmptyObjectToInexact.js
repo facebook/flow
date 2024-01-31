@@ -13,7 +13,7 @@ import type {Codemod} from '../Types';
 import {codemod} from '../Types';
 import {t} from 'hermes-transform';
 
-export default (codemod({
+export default codemod({
   title: 'Replace `T: {}` with `T: {...}` in type parameter bounds',
   description: 'Replace `T: {}` with `T: {...}` in type parameter bounds',
   transform: context => {
@@ -48,4 +48,4 @@ export default (codemod({
       },
     };
   },
-}): Codemod);
+}) as Codemod;

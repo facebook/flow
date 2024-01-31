@@ -12,7 +12,7 @@ import type {Upgrade} from '../../Types';
 
 import convertImplicitInexactObjectTypes from '../../codemods/convertImplicitInexactObjectTypes';
 
-export default ({
+export default {
   version: '0.84.0',
   upgrades: [convertImplicitInexactObjectTypes],
-}: Upgrade);
+} as Upgrade;

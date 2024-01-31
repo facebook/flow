@@ -125,7 +125,7 @@ function findDuplicates(
   return toDelete;
 }
 
-export default (codemod({
+export default codemod({
   title: 'Remove Duplicate Class Properties',
   description:
     'Removes useless duplicate class properties and fixes bad constructor binding in those classes',
@@ -299,4 +299,4 @@ export default (codemod({
       },
     };
   },
-}): Codemod);
+}) as Codemod;

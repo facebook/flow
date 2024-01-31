@@ -26,7 +26,7 @@ async function main(args: $ReadOnlyArray<string>) {
     .readdirSync(CODEMOD_DIR, {
       withFileTypes: false,
     })
-    .map(f => path.parse(f).name);
+    .map(f => path.parse(f).name as mixed);
 
   const yargs = yargsImport(args)
     .usage('Usage: flow-upgrade-codemod <codemod name>')

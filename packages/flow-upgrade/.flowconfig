@@ -1,5 +1,5 @@
 [version]
-^0.182.0
+^0.227.0
 
 [ignore]
 .*/node_modules/.*
@@ -13,10 +13,9 @@
 emoji=true
 file_watcher=watchman
 lazy_mode=true
-exact_by_default=true
-exact_empty_objects=true
 module.system=node
 munge_underscores=true
+casting_syntax=as
 
 [lints]
 untyped-type-import=error

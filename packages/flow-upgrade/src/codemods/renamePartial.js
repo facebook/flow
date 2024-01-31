@@ -12,7 +12,7 @@ import type {Codemod} from '../Types';
 
 import {codemod} from '../Types';
 
-export default (codemod({
+export default codemod({
   title: 'Rename `$Partial` to `Partial`',
   description: 'Renames the `$Partial` type utility to `Partial`.',
   transform: context => {
@@ -26,4 +26,4 @@ export default (codemod({
       },
     };
   },
-}): Codemod);
+}) as Codemod;

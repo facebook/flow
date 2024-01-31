@@ -12,7 +12,7 @@ import type {Upgrade} from '../../Types';
 
 import removeDuplicateClassProperties from '../../codemods/removeDuplicateClassProperties';
 
-export default ({
+export default {
   version: '0.170.0',
   upgrades: [removeDuplicateClassProperties],
-}: Upgrade);
+} as Upgrade;

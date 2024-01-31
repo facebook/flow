@@ -21,7 +21,7 @@ import type {Codemod} from '../Types';
 import {t} from 'hermes-transform';
 import {codemod} from '../Types';
 
-export default (codemod({
+export default codemod({
   title: 'Collapse Object Initialization',
   description: 'Converts static object assignments to inline properties',
   transform: context => {
@@ -238,7 +238,7 @@ export default (codemod({
             // return;
           }
 
-          const keyNames = new Set();
+          const keyNames = new Set<string>();
           for (const [{keyName, computed}, _] of objectProperties) {
             const name = `${computed ? 'c' : 'v'}-${keyName}`;
             if (keyNames.has(name)) {
@@ -267,4 +267,4 @@ export default (codemod({
       },
     };
   },
-}): Codemod);
+}) as Codemod;

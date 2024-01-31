@@ -12,7 +12,7 @@ import type {Upgrade} from '../../Types';
 
 import removeAnnotationsInDestructuring from '../../codemods/removeAnnotationsInDestructuring';
 
-export default ({
+export default {
   version: '0.176.0',
   upgrades: [removeAnnotationsInDestructuring],
-}: Upgrade);
+} as Upgrade;

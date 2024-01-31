@@ -12,7 +12,7 @@ import type {Codemod} from '../Types';
 
 import {codemod} from '../Types';
 
-export default (codemod({
+export default codemod({
   title: 'Make implicitly inexact object types explicitly inexact',
   description:
     'Convert implicitly inexact object type syntax `{}` to explicitly inexact `{...}`',
@@ -28,4 +28,4 @@ export default (codemod({
       },
     };
   },
-}): Codemod);
+}) as Codemod;

@@ -12,7 +12,7 @@ import type {Codemod} from '../Types';
 
 import {codemod} from '../Types';
 
-export default (codemod({
+export default codemod({
   title: 'Remove Annotations In Destructuring',
   description:
     'Remove annotations nested inside of destructuring. These are not valid Flow syntax.',
@@ -34,4 +34,4 @@ export default (codemod({
       },
     };
   },
-}): Codemod);
+}) as Codemod;
