@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__'",
-    "test": "jest --watch",
+    "test": "jest",
     "prepublish": "yarn run build",
     "postpublish": "node ./scripts/postpublish.js"
   },
