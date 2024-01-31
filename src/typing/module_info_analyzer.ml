@@ -554,6 +554,32 @@ let mk_module_t =
       |> export_named cx self_reason ExportType info.type_named
       |> copy_star_exports cx self_reason (star, info.type_star)
 
+let mk_namespace_t cx info reason =
+  let open Module_info in
+  let open Type in
+  if not (Base.List.is_empty info.type_star) then failwith "namespace should not have star exports";
+  let module_type =
+    {
+      module_reason = reason;
+      module_export_types =
+        {
+          exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+          cjs_export = None;
+          has_every_named_export = false;
+        };
+      module_is_strict = Context.is_strict cx;
+      module_available_platforms = Context.available_platforms cx;
+    }
+  in
+  Flow_js_utils.ExportNamedTKit.mod_ModuleT cx (info.type_named, ExportType) module_type;
+  (match info.kind with
+  | Unknown -> ()
+  | CJS _ -> failwith "namespace should never transition into CJS state"
+  | ES { named = _; star = _ :: _ } -> failwith "namespace should not have star exports"
+  | ES { named; star = [] } ->
+    Flow_js_utils.ExportNamedTKit.mod_ModuleT cx (named, ExportValue) module_type);
+  Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, Context.is_strict cx) module_type
+
 let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   let info =
     { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] }
@@ -588,8 +614,4 @@ let analyze_declare_namespace cx reason statements =
           );
         ()
   );
-  Type_operation_utils.Import_export.get_module_namespace_type
-    cx
-    reason
-    ~is_strict:(Context.is_strict cx)
-    (mk_module_t cx info reason reason)
+  mk_namespace_t cx info reason
