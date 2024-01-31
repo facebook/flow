@@ -40,5 +40,5 @@ type PolyAnonAlias<X> = interface {
   f: X;
 }
 
-declare var polyAnonAlias: PolyAnonAlias<number>; // TODO
+declare var polyAnonAlias: PolyAnonAlias<number>;
 //          ^
