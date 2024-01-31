@@ -20,6 +20,86 @@ let default_autoimport_options =
     num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
   }
 
+module AcCompletion = struct
+  type completion_item = {
+    kind: Lsp.Completion.completionItemKind option;
+    name: string;
+    labelDetail: string option;  (** LSP's CompletionItemLabelDetails.detail *)
+    description: string option;  (** LSP's CompletionItemLabelDetails.description *)
+    itemDetail: string option;  (** LSP's CompletionItem.detail *)
+    text_edit: ServerProt.Response.insert_replace_edit option;
+    additional_text_edits: ServerProt.Response.textedit list;
+    sort_text: string option;
+    preselect: bool;
+    documentation_and_tags: string option * Lsp.CompletionItemTag.t list option;
+    log_info: string;
+    insert_text_format: Lsp.Completion.insertTextFormat;
+  }
+
+  type t = {
+    items: completion_item list;
+    is_incomplete: bool;
+  }
+
+  let empty_documentation_and_tags = (None, None)
+
+  let to_server_prot_completion_item completion_item =
+    let {
+      kind;
+      name;
+      labelDetail;
+      description;
+      itemDetail;
+      text_edit;
+      additional_text_edits;
+      sort_text;
+      preselect;
+      documentation_and_tags = (documentation, tags);
+      log_info;
+      insert_text_format;
+    } =
+      completion_item
+    in
+    {
+      ServerProt.Response.Completion.kind;
+      name;
+      labelDetail;
+      description;
+      itemDetail;
+      text_edit;
+      additional_text_edits;
+      sort_text;
+      preselect;
+      documentation;
+      tags;
+      log_info;
+      insert_text_format;
+    }
+
+  let to_server_prot_completion_t t =
+    let { items; is_incomplete } = t in
+    {
+      ServerProt.Response.Completion.items = Base.List.map ~f:to_server_prot_completion_item items;
+      is_incomplete;
+    }
+
+  let of_keyword ~edit_locs:(insert, replace) keyword =
+    {
+      kind = Some Lsp.Completion.Keyword;
+      name = keyword;
+      labelDetail = None;
+      description = None;
+      itemDetail = None;
+      text_edit = Some { ServerProt.Response.newText = keyword; insert; replace };
+      additional_text_edits = [];
+      sort_text = Some (Printf.sprintf "%020u" 0);
+      preselect = false;
+      documentation_and_tags = empty_documentation_and_tags;
+      log_info = "keyword";
+      insert_text_format = Lsp.Completion.PlainText;
+    }
+end
+
 let lsp_completion_of_type =
   let open Ty in
   function
@@ -110,8 +190,7 @@ let autocomplete_create_result_method
     ~options
     ?(rank = 0)
     ?(preselect = false)
-    ?documentation
-    ?tags
+    ~documentation_and_tags
     ~log_info
     (name, edit_locs)
     ty =
@@ -147,7 +226,7 @@ let autocomplete_create_result_method
   let text_edit = Some (text_edit ~insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   {
-    ServerProt.Response.Completion.kind;
+    AcCompletion.kind;
     name;
     labelDetail = Some labelDetail;
     description = None;
@@ -156,8 +235,7 @@ let autocomplete_create_result_method
     additional_text_edits = [];
     sort_text;
     preselect;
-    documentation;
-    tags;
+    documentation_and_tags;
     log_info;
     insert_text_format = Lsp.Completion.SnippetFormat;
   }
@@ -166,9 +244,8 @@ let autocomplete_create_result
     ?insert_text
     ?(rank = 0)
     ?(preselect = false)
-    ?documentation
-    ?tags
     ?(snippet = false)
+    ~documentation_and_tags
     ~exact_by_default
     ~log_info
     (name, edit_locs)
@@ -184,7 +261,7 @@ let autocomplete_create_result
       Lsp.Completion.PlainText
   in
   {
-    ServerProt.Response.Completion.kind;
+    AcCompletion.kind;
     name;
     labelDetail;
     description = None;
@@ -193,8 +270,7 @@ let autocomplete_create_result
     additional_text_edits = [];
     sort_text;
     preselect;
-    documentation;
-    tags;
+    documentation_and_tags;
     log_info;
     insert_text_format;
   }
@@ -203,9 +279,8 @@ let autocomplete_create_result_decl
     ?insert_text
     ~rank
     ?(preselect = false)
-    ?documentation
-    ?tags
     ?(snippet = false)
+    ~documentation_and_tags
     ~exact_by_default
     ~log_info
     (name, edit_locs)
@@ -221,7 +296,7 @@ let autocomplete_create_result_decl
       Lsp.Completion.PlainText
   in
   {
-    ServerProt.Response.Completion.kind;
+    AcCompletion.kind;
     name;
     labelDetail;
     description = None;
@@ -230,8 +305,7 @@ let autocomplete_create_result_decl
     additional_text_edits = [];
     sort_text;
     preselect;
-    documentation;
-    tags;
+    documentation_and_tags;
     log_info;
     insert_text_format;
   }
@@ -240,8 +314,7 @@ let autocomplete_create_result_elt
     ?insert_text
     ?(rank = 0)
     ?preselect
-    ?documentation
-    ?tags
+    ~documentation_and_tags
     ~exact_by_default
     ~log_info
     (name, edit_locs)
@@ -252,8 +325,7 @@ let autocomplete_create_result_elt
       ?insert_text
       ~rank
       ?preselect
-      ?documentation
-      ?tags
+      ~documentation_and_tags
       ~exact_by_default
       ~log_info
       (name, edit_locs)
@@ -263,8 +335,7 @@ let autocomplete_create_result_elt
       ?insert_text
       ~rank
       ?preselect
-      ?documentation
-      ?tags
+      ~documentation_and_tags
       ~exact_by_default
       ~log_info
       (name, edit_locs)
@@ -273,7 +344,7 @@ let autocomplete_create_result_elt
 let ty_normalizer_options = Ty_normalizer_env.{ default_options with expand_internal_types = true }
 
 type ac_result = {
-  result: ServerProt.Response.Completion.t;
+  result: AcCompletion.t;
   errors_to_log: string list;
 }
 
@@ -377,8 +448,8 @@ let members_of_type
         |> NameUtils.Map.bindings
         |> Base.List.filter_map ~f:include_valid_member
         |> List.map (fun (name, info) ->
-               let (document, tags) = documentation_and_tags_of_member ~reader ~typed_ast info in
-               (name, document, tags, info)
+               let document_and_tags = documentation_and_tags_of_member ~reader ~typed_ast info in
+               (name, document_and_tags, info)
            ),
         match errors with
         | [] -> []
@@ -457,10 +528,10 @@ let local_value_identifiers
   |> Base.List.filter_map ~f:(fun (name, loc) ->
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
-             let (documentation, tags) =
+             let documentation_and_tags =
                documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
              in
-             ((name, documentation, tags), Type.TypeScheme.{ tparams_rev; type_ })
+             ((name, documentation_and_tags), Type.TypeScheme.{ tparams_rev; type_ })
          )
      )
   |> Ty_normalizer_flow.from_schemes ~options:ty_normalizer_options ~genv
@@ -562,6 +633,7 @@ let autocomplete_literals
         ~insert_text:name
         ~rank:0
         ~preselect:true
+        ~documentation_and_tags:AcCompletion.empty_documentation_and_tags
         ~exact_by_default
         ~log_info:"literal from upper bound"
         (name, edit_locs)
@@ -594,7 +666,7 @@ let completion_item_of_autoimport
       | None -> Some "(global)"
     in
     {
-      ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+      AcCompletion.kind = Some Lsp.Completion.Variable;
       name;
       labelDetail = None;
       description = None;
@@ -603,8 +675,7 @@ let completion_item_of_autoimport
       additional_text_edits = [];
       sort_text = sort_text_of_rank rank;
       preselect = false;
-      documentation = None;
-      tags = None;
+      documentation_and_tags = AcCompletion.empty_documentation_and_tags;
       log_info = "global";
       insert_text_format = Lsp.Completion.PlainText;
     }
@@ -616,7 +687,7 @@ let completion_item_of_autoimport
     in
     let additional_text_edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
     {
-      ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+      AcCompletion.kind = Some Lsp.Completion.Variable;
       name;
       labelDetail = None;
       description = Some from;
@@ -625,8 +696,7 @@ let completion_item_of_autoimport
       additional_text_edits;
       sort_text = sort_text_of_rank rank;
       preselect = false;
-      documentation = None;
-      tags = None;
+      documentation_and_tags = AcCompletion.empty_documentation_and_tags;
       log_info = "autoimport";
       insert_text_format = Lsp.Completion.PlainText;
     }
@@ -646,7 +716,7 @@ let is_reserved name kind =
     Parser_env.is_reserved_type name
 
 let compare_completion_items a b =
-  let open ServerProt.Response.Completion in
+  let open AcCompletion in
   let rankCompare =
     match (a.sort_text, b.sort_text) with
     | (Some a, Some b) -> String.compare a b
@@ -666,7 +736,7 @@ let filter_by_token_and_sort token items =
     Base.List.sort items ~compare:compare_completion_items
   else
     Base.List.rev_filter_map items ~f:(fun item ->
-        let open ServerProt.Response.Completion in
+        let open AcCompletion in
         match Fuzzy_score.fuzzy_score ~pattern:before item.name with
         | None -> None
         | Some score -> Some (score, item)
@@ -688,7 +758,7 @@ let filter_by_token_and_sort_rev ?(penalize_auto_import = false) token items =
     Base.List.sort items ~compare:(fun a b -> -1 * compare_completion_items a b)
   else
     Base.List.rev_filter_map items ~f:(fun item ->
-        let open ServerProt.Response.Completion in
+        let open AcCompletion in
         let boost_full_match = not (penalize_auto_import && item.log_info = "autoimport") in
         match Fuzzy_score.fuzzy_score ~boost_full_match ~pattern:before item.name with
         | None -> None
@@ -759,7 +829,7 @@ let append_completion_items_of_autoimports
     | Some min_length ->
       let (exact_match_auto_imports_rev, other_auto_imports_rev) =
         Base.List.partition_map auto_imports_items_rev ~f:(fun item ->
-            let open ServerProt.Response.Completion in
+            let open AcCompletion in
             (* We boost exact match auto-imports so that they are sorted together with locals
              * rather than always after locals. We only do this for auto-imports with long-enough
              * names, so that we don't end up boosting auto-imports like `a`. *)
@@ -800,7 +870,7 @@ let autocomplete_id
     ~edit_locs
     ~token
     ~type_ =
-  let open ServerProt.Response.Completion in
+  let open AcCompletion in
   let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
@@ -837,15 +907,14 @@ let autocomplete_id
   let (items_rev, errors_to_log) =
     identifiers
     |> List.fold_left
-         (fun (items_rev, errors_to_log) ((name, documentation, tags), elt_result) ->
+         (fun (items_rev, errors_to_log) ((name, documentation_and_tags), elt_result) ->
            match elt_result with
            | Ok elt ->
              let result =
                autocomplete_create_result_elt
                  ~insert_text:name
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"local value identifier"
                  (name, edit_locs)
@@ -870,8 +939,7 @@ let autocomplete_id
         additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
         preselect = false;
-        documentation = None;
-        tags = None;
+        documentation_and_tags = AcCompletion.empty_documentation_and_tags;
         log_info = "this";
         insert_text_format = Lsp.Completion.PlainText;
       }
@@ -892,8 +960,7 @@ let autocomplete_id
         additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
         preselect = false;
-        documentation = None;
-        tags = None;
+        documentation_and_tags = AcCompletion.empty_documentation_and_tags;
         log_info = "super";
         insert_text_format = Lsp.Completion.PlainText;
       }
@@ -903,7 +970,10 @@ let autocomplete_id
   in
   let items_rev =
     if include_keywords then
-      let keywords = Keywords.keywords_at_loc ~edit_locs ast (loc_of_aloc ~reader ac_aloc) in
+      let keywords =
+        Keywords.keywords_at_loc ast (loc_of_aloc ~reader ac_aloc)
+        |> Base.List.map ~f:(AcCompletion.of_keyword ~edit_locs)
+      in
       Base.List.rev_append keywords items_rev
     else
       items_rev
@@ -917,7 +987,7 @@ let autocomplete_id
            it queries again when you type something. *)
         (items_rev, true, false)
       else
-        let locals = set_of_locals ~f:(fun ((name, _docs, _tags), _ty) -> name) identifiers in
+        let locals = set_of_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) identifiers in
         let { Export_search.results = auto_imports; is_incomplete } =
           let options =
             { default_autoimport_options with Export_search.weighted = imports_ranked_usage }
@@ -951,12 +1021,12 @@ let autocomplete_id
     else
       items_rev
   in
-  let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
+  let result = { AcCompletion.items = List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
 let exports_of_module_ty
     ~edit_locs ~exact_by_default ~documentation_and_tags_of_module_member ~kind ?filter_name =
-  let open ServerProt.Response.Completion in
+  let open AcCompletion in
   let open Ty in
   let is_kind export_kind = kind = `Either || export_kind = `Either || export_kind = kind in
   let filter_name name =
@@ -978,12 +1048,11 @@ let exports_of_module_ty
         | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; _ } as d when is_ok `Type sym_name
           ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
+          let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
           Some
             (autocomplete_create_result_decl
                ~rank:0
-               ?documentation
-               ?tags
+               ~documentation_and_tags
                ~exact_by_default
                ~log_info:"qualified type alias"
                (sym_name, edit_locs)
@@ -991,12 +1060,11 @@ let exports_of_module_ty
             )
         | InterfaceDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d when is_ok `Type sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
+          let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
           Some
             (autocomplete_create_result_decl
                ~rank:0
-               ?documentation
-               ?tags
+               ~documentation_and_tags
                ~exact_by_default
                ~log_info:"qualified interface"
                (sym_name, edit_locs)
@@ -1004,12 +1072,11 @@ let exports_of_module_ty
             )
         | ClassDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d when is_ok `Either sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
+          let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
           Some
             (autocomplete_create_result_decl
                ~rank:0
-               ?documentation
-               ?tags
+               ~documentation_and_tags
                ~exact_by_default
                ~log_info:"qualified class"
                (sym_name, edit_locs)
@@ -1017,12 +1084,11 @@ let exports_of_module_ty
             )
         | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d when is_ok `Either sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
+          let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
           Some
             (autocomplete_create_result_decl
                ~rank:0
-               ?documentation
-               ?tags
+               ~documentation_and_tags
                ~exact_by_default
                ~log_info:"qualified enum"
                (sym_name, edit_locs)
@@ -1033,6 +1099,7 @@ let exports_of_module_ty
           Some
             (autocomplete_create_result_decl
                ~rank:0
+               ~documentation_and_tags:AcCompletion.empty_documentation_and_tags
                ~exact_by_default
                ~log_info:"qualified variable"
                (name, edit_locs)
@@ -1102,7 +1169,7 @@ class local_type_identifiers_searcher =
 
 let make_builtin_type ~edit_locs name =
   {
-    ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+    AcCompletion.kind = Some Lsp.Completion.Variable;
     name;
     labelDetail = None;
     description = None;
@@ -1111,8 +1178,7 @@ let make_builtin_type ~edit_locs name =
     additional_text_edits = [];
     sort_text = sort_text_of_rank 100 (* after local results *);
     preselect = false;
-    documentation = None;
-    tags = None;
+    documentation_and_tags = AcCompletion.empty_documentation_and_tags;
     log_info = "builtin type";
     insert_text_format = Lsp.Completion.PlainText;
   }
@@ -1135,7 +1201,7 @@ let builtin_types =
 
 let make_utility_type ~edit_locs name =
   {
-    ServerProt.Response.Completion.kind = Some Lsp.Completion.Function;
+    AcCompletion.kind = Some Lsp.Completion.Function;
     name;
     labelDetail = None;
     description = None;
@@ -1144,8 +1210,7 @@ let make_utility_type ~edit_locs name =
     additional_text_edits = [];
     sort_text = sort_text_of_rank 300 (* after autoimports/globals *);
     preselect = false;
-    documentation = None;
-    tags = None;
+    documentation_and_tags = AcCompletion.empty_documentation_and_tags;
     log_info = "builtin type";
     insert_text_format = Lsp.Completion.PlainText;
   }
@@ -1176,7 +1241,7 @@ let utility_types =
 let make_type_param ~edit_locs { Type.name; _ } =
   let name = Subst_name.string_of_subst_name name in
   {
-    ServerProt.Response.Completion.kind = Some Lsp.Completion.TypeParameter;
+    AcCompletion.kind = Some Lsp.Completion.TypeParameter;
     name;
     labelDetail = None;
     description = None;
@@ -1185,8 +1250,7 @@ let make_type_param ~edit_locs { Type.name; _ } =
     additional_text_edits = [];
     sort_text = sort_text_of_rank 0;
     preselect = false;
-    documentation = None;
-    tags = None;
+    documentation_and_tags = AcCompletion.empty_documentation_and_tags;
     log_info = "unqualified type parameter";
     insert_text_format = Lsp.Completion.PlainText;
   }
@@ -1230,7 +1294,7 @@ let autocomplete_unqualified_type
     type_identifiers
     |> List.fold_left
          (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
-           let (documentation, tags) =
+           let documentation_and_tags =
              loc_of_aloc ~reader aloc
              |> documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast
            in
@@ -1238,8 +1302,7 @@ let autocomplete_unqualified_type
            | Ok elt ->
              let result =
                autocomplete_create_result_elt
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"unqualified type: local type identifier"
                  (name, edit_locs)
@@ -1272,7 +1335,7 @@ let autocomplete_unqualified_type
   let (items_rev, errors_to_log) =
     value_identifiers
     |> List.fold_left
-         (fun (items_rev, errors_to_log) ((name, documentation, tags), ty_res) ->
+         (fun (items_rev, errors_to_log) ((name, documentation_and_tags), ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -1280,8 +1343,7 @@ let autocomplete_unqualified_type
            | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
              let result =
                autocomplete_create_result_elt
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"unqualified type: class or enum"
                  (name, edit_locs)
@@ -1292,8 +1354,7 @@ let autocomplete_unqualified_type
              when allow_react_element_shorthand_completion ->
              let result =
                autocomplete_create_result_elt
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"unqualified type: react element shorthand"
                  (name, edit_locs)
@@ -1304,14 +1365,14 @@ let autocomplete_unqualified_type
              when exports_of_module_ty
                     ~edit_locs
                     ~exact_by_default
-                    ~documentation_and_tags_of_module_member:(fun _ -> (None, None))
+                    ~documentation_and_tags_of_module_member:(fun _ ->
+                      AcCompletion.empty_documentation_and_tags)
                     ~kind:`Type
                     elt
                   <> [] ->
              let result =
                autocomplete_create_result_elt
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"unqualified type -> qualified type"
                  (name, edit_locs)
@@ -1326,7 +1387,7 @@ let autocomplete_unqualified_type
     if imports then
       let locals =
         let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
-        add_locals ~f:(fun ((name, _docs, _tags), _ty) -> name) value_identifiers set;
+        add_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) value_identifiers set;
         set
       in
       let { Export_search.results = auto_imports; is_incomplete } =
@@ -1362,7 +1423,7 @@ let autocomplete_unqualified_type
     else
       filter_by_token_and_sort_rev token items_rev
   in
-  let result = { ServerProt.Response.Completion.items = Base.List.rev items_rev; is_incomplete } in
+  let result = { AcCompletion.items = Base.List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
 (** If the token is a string literal, then the end of the token may be inaccurate
@@ -1463,7 +1524,7 @@ let autocomplete_member
     let items =
       mems
       |> Base.List.map
-           ~f:(fun (name, documentation, tags, Ty_members.{ ty; source; from_nullable; _ }) ->
+           ~f:(fun (name, documentation_and_tags, Ty_members.{ ty; source; from_nullable; _ }) ->
              let rank =
                match source with
                | Ty.PrimitiveProto _ -> 1
@@ -1500,8 +1561,7 @@ let autocomplete_member
                in
                autocomplete_create_result
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"member"
                  (name, edit_locs)
@@ -1514,8 +1574,7 @@ let autocomplete_member
                autocomplete_create_result
                  ~insert_text
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"bracket syntax member"
                  (insert_text, edit_locs)
@@ -1527,8 +1586,7 @@ let autocomplete_member
                autocomplete_create_result
                  ~insert_text
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"dot-member switched to bracket-syntax member"
                  (insert_text, (edit_loc, edit_loc))
@@ -1545,8 +1603,7 @@ let autocomplete_member
                autocomplete_create_result
                  ~insert_text:opt_chain_name
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"start optional chain"
                  (opt_chain_name, (edit_loc, edit_loc))
@@ -1556,11 +1613,11 @@ let autocomplete_member
     (match bracket_syntax with
     | None ->
       let items = filter_by_token_and_sort token items in
-      let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+      let result = { AcCompletion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
     | Some Autocomplete_js.{ include_this; include_super; type_; _ } ->
       let {
-        result = { ServerProt.Response.Completion.items = id_items; is_incomplete };
+        result = { AcCompletion.items = id_items; is_incomplete };
         errors_to_log = id_errors_to_log;
       } =
         if is_type_annotation then
@@ -1609,7 +1666,7 @@ let autocomplete_member
         |> filter_by_token_and_sort_rev token
         |> Base.List.rev
       in
-      let result = { ServerProt.Response.Completion.items; is_incomplete } in
+      let result = { AcCompletion.items; is_incomplete } in
       let errors_to_log = errors_to_log @ id_errors_to_log in
       AcResult { result; errors_to_log })
 
@@ -1675,9 +1732,9 @@ let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
     | Error err -> ([], [err])
     | Ok (mems, errors_to_log) ->
       let items =
-        Base.List.map mems ~f:(fun (name, documentation, tags, _) ->
+        Base.List.map mems ~f:(fun (name, documentation_and_tags, _) ->
             {
-              ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+              AcCompletion.kind = Some Lsp.Completion.Variable;
               name;
               labelDetail = None;
               description = None;
@@ -1686,8 +1743,7 @@ let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
               additional_text_edits = [];
               sort_text = sort_text_of_rank 400;
               preselect = false;
-              documentation;
-              tags;
+              documentation_and_tags;
               log_info = "$JSXIntrinsics member";
               insert_text_format = Lsp.Completion.PlainText;
             }
@@ -1695,7 +1751,7 @@ let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
       in
       (items, errors_to_log)
   in
-  { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+  { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let autocomplete_jsx_element
     ~env
@@ -1740,7 +1796,7 @@ let autocomplete_jsx_element
     autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~edit_locs
   in
   let ({ result; errors_to_log } as results) =
-    let open ServerProt.Response.Completion in
+    let open AcCompletion in
     let {
       result = { items = items_id; is_incomplete = is_incomplete_id };
       errors_to_log = errors_to_log_id;
@@ -1763,7 +1819,7 @@ let autocomplete_jsx_element
     }
   in
   if should_autoimport_react ~options ~imports ~file_sig then
-    let open ServerProt.Response.Completion in
+    let open AcCompletion in
     let import_edit =
       let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
       let kind = Export_index.Namespace in
@@ -1839,7 +1895,7 @@ let autocomplete_jsx_attribute
   | Ok (mems, errors_to_log) ->
     let items =
       mems
-      |> Base.List.map ~f:(fun (name, documentation, tags, Ty_members.{ ty; _ }) ->
+      |> Base.List.map ~f:(fun (name, documentation_and_tags, Ty_members.{ ty; _ }) ->
              let insert_text =
                if has_value then
                  name
@@ -1848,8 +1904,7 @@ let autocomplete_jsx_attribute
              in
              autocomplete_create_result
                ~insert_text
-               ?documentation
-               ?tags
+               ~documentation_and_tags
                ~exact_by_default
                ~log_info:"jsx attribute"
                (name, edit_locs)
@@ -1857,7 +1912,7 @@ let autocomplete_jsx_attribute
          )
     in
     let items = filter_by_token_and_sort token items in
-    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+    let result = { AcCompletion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
 let autocomplete_module_exports
@@ -1888,8 +1943,7 @@ let autocomplete_module_exports
       )
   in
   let items = filter_by_token_and_sort token items in
-  AcResult
-    { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+  AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let unused_super_methods
     ~reader
@@ -1917,7 +1971,8 @@ let unused_super_methods
   in
   let items =
     mems
-    |> Base.List.filter_map ~f:(fun (name, documentation, tags, { Ty_members.ty; def_locs; _ }) ->
+    |> Base.List.filter_map
+         ~f:(fun (name, documentation_and_tags, { Ty_members.ty; def_locs; _ }) ->
            let open Base.Option in
            (* Find the AST node for member we want to override *)
            def_locs |> Base.List.hd >>| loc_of_aloc ~reader >>= Find_method.find reader
@@ -1925,8 +1980,7 @@ let unused_super_methods
            autocomplete_create_result_method
              ~method_
              ~options
-             ?documentation
-             ?tags
+             ~documentation_and_tags
              ~log_info:"class key"
              (name, edit_locs)
              ty
@@ -1952,7 +2006,7 @@ let autocomplete_class_key
           ~tparams_rev
       in
       let exclude_keys =
-        existing_members |> Base.List.map ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
+        existing_members |> Base.List.map ~f:(fun (name, _, _) -> name) |> SSet.of_list
       in
       let%bind (items, errors_to_log) =
         unused_super_methods
@@ -1971,15 +2025,10 @@ let autocomplete_class_key
     with
     | Error err -> AcFatalError err
     | Ok (items, errors_to_log) ->
-      AcResult
-        { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+      AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
   end
   | None ->
-    AcResult
-      {
-        result = { ServerProt.Response.Completion.items = []; is_incomplete = false };
-        errors_to_log = [];
-      }
+    AcResult { result = { AcCompletion.items = []; is_incomplete = false }; errors_to_log = [] }
 
 let autocomplete_object_key
     ~reader
@@ -2017,8 +2066,7 @@ let autocomplete_object_key
                 ~tparams_rev
             with
             | Error _ -> SSet.empty
-            | Ok (members, _) ->
-              Base.List.map members ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
+            | Ok (members, _) -> Base.List.map members ~f:(fun (name, _, _) -> name) |> SSet.of_list
           in
           SSet.union acc spread_keys
     )
@@ -2051,14 +2099,13 @@ let autocomplete_object_key
     in
     let items =
       mems
-      |> Base.List.map ~f:(fun (name, documentation, tags, Ty_members.{ ty; _ }) ->
+      |> Base.List.map ~f:(fun (name, documentation_and_tags, Ty_members.{ ty; _ }) ->
              let rank = 0 in
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              if name_is_valid_identifier then
                autocomplete_create_result
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"object key"
                  (name, edit_locs)
@@ -2068,8 +2115,7 @@ let autocomplete_object_key
                autocomplete_create_result
                  ~insert_text
                  ~rank
-                 ?documentation
-                 ?tags
+                 ~documentation_and_tags
                  ~exact_by_default
                  ~log_info:"bracket syntax object key"
                  (insert_text, edit_locs)
@@ -2081,8 +2127,7 @@ let autocomplete_object_key
   | Error err -> AcFatalError err
   | Ok (items, errors_to_log) ->
     let items = filter_by_token_and_sort token items in
-    AcResult
-      { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+    AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 (* Applicable error codes are those corresponding to errors on the next line *)
 let applicable_error_codes ~reader ~cx comment_loc =
@@ -2128,7 +2173,7 @@ let autocomplete_fixme ~reader ~cx ~edit_locs ~token ~text ~loc =
         let name = Printf.sprintf "$FlowFixMe[%s]" code_str in
         let insert_text = Printf.sprintf "\\$FlowFixMe[%s] ${1:reason for suppression}" code_str in
         {
-          ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
+          AcCompletion.kind = Some Lsp.Completion.Text;
           name;
           labelDetail = None;
           description = None;
@@ -2137,8 +2182,7 @@ let autocomplete_fixme ~reader ~cx ~edit_locs ~token ~text ~loc =
           additional_text_edits = [];
           sort_text = sort_text_of_rank 0;
           preselect = false;
-          documentation = None;
-          tags = None;
+          documentation_and_tags = AcCompletion.empty_documentation_and_tags;
           log_info = "fixme comment";
           insert_text_format = Lsp.Completion.SnippetFormat;
         }
@@ -2163,7 +2207,7 @@ let autocomplete_jsdoc ~token ~ast ~loc =
            let insert_text = Printf.sprintf "/*%s */" stub in
            [
              {
-               ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
+               AcCompletion.kind = Some Lsp.Completion.Text;
                name;
                labelDetail = None;
                description = None;
@@ -2172,8 +2216,7 @@ let autocomplete_jsdoc ~token ~ast ~loc =
                additional_text_edits = [];
                sort_text = sort_text_of_rank 0;
                preselect = false;
-               documentation = None;
-               tags = None;
+               documentation_and_tags = AcCompletion.empty_documentation_and_tags;
                log_info = "jsdoc";
                insert_text_format = Lsp.Completion.SnippetFormat;
              };
@@ -2191,8 +2234,7 @@ let autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~
       items_fixme @ items_jsdoc
     | _ -> []
   in
-  AcResult
-    { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log = [] }
+  AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log = [] }
 
 (** Used for logging to classify the kind of completion request *)
 let string_of_autocomplete_type ac_type =
@@ -2233,7 +2275,7 @@ let autocomplete_get_results
   let open Autocomplete_js in
   match process_location ~trigger_character ~cursor ~typed_ast with
   | None ->
-    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
+    let result = { AcCompletion.items = []; is_incomplete = false } in
     ( None,
       None,
       "None",
@@ -2325,7 +2367,7 @@ let autocomplete_get_results
             ~token
           |> filter_by_token_and_sort token
         in
-        let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+        let result = { AcCompletion.items; is_incomplete = false } in
         AcResult { result; errors_to_log = [] }
       | Ac_id { include_super; include_this; type_; enclosing_class_t } ->
         let result_id =
@@ -2380,7 +2422,7 @@ let autocomplete_get_results
           | AcFatalError _ as err -> err
           | AcEmpty _ -> AcResult result_id
           | AcResult result_member ->
-            let open ServerProt.Response.Completion in
+            let open AcCompletion in
             let rev_items =
               Base.List.fold
                 ~init:(List.rev result_id.result.items)
@@ -2400,7 +2442,7 @@ let autocomplete_get_results
               {
                 result =
                   {
-                    ServerProt.Response.Completion.items = List.rev rev_items;
+                    AcCompletion.items = List.rev rev_items;
                     is_incomplete =
                       result_id.result.is_incomplete || result_member.result.is_incomplete;
                   };
