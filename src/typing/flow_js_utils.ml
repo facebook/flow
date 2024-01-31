@@ -866,6 +866,19 @@ let obj_map_const cx o reason_op target =
   let map_field _ t = map_t target t in
   map_obj cx o reason_op ~map_t ~map_field
 
+let namespace_type cx reason values types =
+  let add name { preferred_def_locs; name_loc; is_type_only_export = _; type_ } acc =
+    NameUtils.Map.add
+      name
+      (Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
+      acc
+  in
+  let props =
+    NameUtils.Map.empty |> NameUtils.Map.fold add values |> NameUtils.Map.fold add types
+  in
+  let proto = ObjProtoT reason in
+  Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
+
 let check_untyped_import cx import_kind lreason ureason =
   match (import_kind, desc_of_reason lreason) with
   (* Use a special reason so we can tell the difference between an any-typed type import
