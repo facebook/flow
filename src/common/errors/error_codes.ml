@@ -157,6 +157,7 @@ type error_code =
   | UninitializedInstanceProperty
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
+  | UnnecessaryDeclareTypeOnlyExport
   | UnreachableCode
   | UnsafeAddition
   | UnsafeArith
@@ -361,6 +362,7 @@ let string_of_code : error_code -> string = function
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
+  | UnnecessaryDeclareTypeOnlyExport -> "unnecessary-declare-type-only-export"
   | UnreachableCode -> "unreachable-code"
   | UnsafeAddition -> "unsafe-addition"
   | UnsafeArith -> "unsafe-arithmetic"

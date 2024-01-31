@@ -198,7 +198,7 @@ module type STATEMENT = sig
 
   val declare : ?in_module_or_namespace:bool -> env -> (Loc.t, Loc.t) Statement.t
 
-  val declare_export_declaration : ?allow_export_type:bool -> env -> (Loc.t, Loc.t) Statement.t
+  val declare_export_declaration : env -> (Loc.t, Loc.t) Statement.t
 
   val declare_opaque_type : env -> (Loc.t, Loc.t) Statement.t
 

@@ -1,14 +1,4 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":21}},
-      "message":"Unexpected token `*`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":26}},
-      "message":"Unexpected identifier, expected the token `=`"
-    }
-  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":33}},
   "range":[0,33],
@@ -24,19 +14,17 @@
         "range":[15,33],
         "id":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":21}},
-          "range":[20,21],
-          "name":"",
+          "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":23}},
+          "range":[20,23],
+          "name":"foo",
           "typeAnnotation":null,
           "optional":false
         },
         "typeParameters":null,
         "right":{
-          "type":"StringLiteralTypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":32}},
-          "range":[27,32],
-          "value":"foo",
-          "raw":"\"foo\""
+          "type":"NumberTypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":32}},
+          "range":[26,32]
         }
       },
       "specifiers":[],

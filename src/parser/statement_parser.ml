@@ -1361,8 +1361,7 @@ module Statement
     | T_VAR -> declare_var_statement ~kind:Ast.Variable.Var env
     | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
     | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
-    | T_EXPORT when in_module_or_namespace ->
-      declare_export_declaration ~allow_export_type:in_module_or_namespace env
+    | T_EXPORT when in_module_or_namespace -> declare_export_declaration env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module env
     | T_IDENTIFIER { raw = "namespace"; _ } -> declare_namespace env
     | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
@@ -1699,8 +1698,9 @@ module Statement
         Parse.statement_list_item env ~decorators
       )
 
-  and declare_export_declaration ?(allow_export_type = false) =
-    with_loc (fun env ->
+  and declare_export_declaration env =
+    with_loc
+      (fun env ->
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeDeclaration;
         let leading = Peek.comments env in
         Expect.token env T_DECLARE;
@@ -1814,7 +1814,7 @@ module Statement
             let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
             Statement.DeclareExportDeclaration
               { default = None; declaration = None; specifiers; source = Some source; comments }
-          | T_TYPE when allow_export_type ->
+          | T_TYPE ->
             (* declare export type = ... *)
             let alias = with_loc (type_alias_helper ~leading:[]) env in
             let comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -1838,7 +1838,7 @@ module Statement
                 source = None;
                 comments;
               }
-          | T_INTERFACE when allow_export_type ->
+          | T_INTERFACE ->
             (* declare export interface ... *)
             let iface = with_loc (interface_helper ~leading:[]) env in
             let comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -1863,10 +1863,6 @@ module Statement
                 comments;
               }
           | _ ->
-            (match Peek.token env with
-            | T_TYPE -> error env Parse_error.DeclareExportType
-            | T_INTERFACE -> error env Parse_error.DeclareExportInterface
-            | _ -> ());
             Expect.token env T_LCURLY;
             let specifiers = export_specifiers env [] in
             Expect.token env T_RCURLY;
@@ -1893,8 +1889,8 @@ module Statement
                 source;
                 comments;
               }
-        )
-    )
+        ))
+      env
 
   and import_declaration =
     Statement.ImportDeclaration.(

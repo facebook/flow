@@ -2211,7 +2211,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         name_loc
         (mk_reason (RNamespace name) name_loc)
         (DeclaredNamespace (loc, n));
-      super#declare_namespace loc n
+      this#in_scope (super#declare_namespace loc) DeclareNamespace n
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in

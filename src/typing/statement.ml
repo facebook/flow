@@ -1498,12 +1498,16 @@ module Make
             D.DefaultType t_ast
           | D.NamedType (loc, t) ->
             let (_, type_alias_ast) = type_alias cx loc t in
+            if Type_env.in_toplevel_scope cx then
+              Flow_js_utils.add_output cx (Error_message.EUnnecessaryDeclareTypeOnlyExport loc);
             D.NamedType (loc, type_alias_ast)
           | D.NamedOpaqueType (loc, t) ->
             let (_, opaque_type_ast) = opaque_type cx loc t in
             D.NamedOpaqueType (loc, opaque_type_ast)
           | D.Interface (loc, i) ->
             let (_, i_ast) = interface cx loc i in
+            if Type_env.in_toplevel_scope cx then
+              Flow_js_utils.add_output cx (Error_message.EUnnecessaryDeclareTypeOnlyExport loc);
             D.Interface (loc, i_ast)
           | D.Enum (loc, enum) ->
             let enum_ast = enum_declaration cx loc enum in
@@ -1919,7 +1923,9 @@ module Make
     match Node_cache.get_declared_namespace node_cache loc with
     | Some x -> x
     | None ->
+      let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
       let body_statements = statement_list cx body in
+      ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
       let body =
         (body_loc, { Ast.Statement.Block.body = body_statements; comments = body_comments })
       in

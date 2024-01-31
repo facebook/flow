@@ -421,6 +421,8 @@ let sig_cx cx = cx.ccx.sig_cx
 
 let in_declare_module cx = cx.environment.Loc_env.scope_kind = Name_def.DeclareModule
 
+let in_declare_namespace cx = cx.environment.Loc_env.scope_kind = Name_def.DeclareNamespace
+
 (* accessors *)
 
 let all_unresolved cx = cx.ccx.all_unresolved

@@ -1,36 +1,12 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":19}},
-      "message":"`declare export type` is not supported. Use `export type` instead."
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":19}},
-      "message":"Unexpected token `type`, expected the token `{`"
-    },
-    {
       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
-      "message":"Missing comma between export specifiers"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
-      "message":"Missing comma between export specifiers"
+      "message":"Unexpected identifier, expected the token `=`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Missing comma between export specifiers"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token `{`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":27}},
-      "message":"Unexpected reserved word"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
-      "message":"Unexpected reserved word"
+      "message":"Unexpected token `{`, expected the token `;`"
     }
   ],
   "type":"Program",
@@ -39,58 +15,27 @@
   "body":[
     {
       "type":"DeclareExportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":38}},
-      "range":[0,38],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
+      "range":[0,35],
       "default":false,
-      "declaration":null,
-      "specifiers":[
-        {
-          "type":"ExportSpecifier",
+      "declaration":{
+        "type":"TypeAlias",
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":35}},
+        "range":[15,35],
+        "id":{
+          "type":"Identifier",
           "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":27}},
           "range":[20,27],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":27}},
-            "range":[20,27],
-            "name":"default",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":27}},
-            "range":[20,27],
-            "name":"default",
-            "typeAnnotation":null,
-            "optional":false
-          }
+          "name":"default",
+          "typeAnnotation":null,
+          "optional":false
         },
-        {
-          "type":"ExportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
-          "range":[28,33],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
-            "range":[28,33],
-            "name":"class",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":33}},
-            "range":[28,33],
-            "name":"class",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        },
-        {
-          "type":"ExportSpecifier",
+        "typeParameters":null,
+        "right":{
+          "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
           "range":[34,35],
-          "local":{
+          "id":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
             "range":[34,35],
@@ -98,38 +43,17 @@
             "typeAnnotation":null,
             "optional":false
           },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
-            "range":[34,35],
-            "name":"A",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        },
-        {
-          "type":"ExportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-          "range":[36,37],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-            "range":[36,37],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-            "range":[36,37],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          }
+          "typeParameters":null
         }
-      ],
+      },
+      "specifiers":[],
       "source":null
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":38}},
+      "range":[36,38],
+      "body":[]
     }
   ],
   "comments":[]

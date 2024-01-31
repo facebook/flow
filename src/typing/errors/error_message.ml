@@ -463,6 +463,7 @@ and 'loc t' =
   | EInvalidPrototype of 'loc * 'loc virtual_reason
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
+  | EUnnecessaryDeclareTypeOnlyExport of 'loc
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
   | ESignatureVerification of 'loc Signature_error.t
@@ -1237,6 +1238,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidPrototype (loc, r) -> EInvalidPrototype (f loc, map_reason r)
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
+  | EUnnecessaryDeclareTypeOnlyExport loc -> EUnnecessaryDeclareTypeOnlyExport (f loc)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
@@ -1683,6 +1685,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidPrototype _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
+  | EUnnecessaryDeclareTypeOnlyExport _
   | EUnexpectedTemporaryBaseType _
   | ECannotDelete _
   | ESignatureVerification _
@@ -1848,6 +1851,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
+  | EUnnecessaryDeclareTypeOnlyExport loc
   | EUnusedSuppression loc
   | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
@@ -4231,6 +4235,11 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
+  | EUnnecessaryDeclareTypeOnlyExport _ ->
+    let features =
+      [text "The "; code "declare"; text " keyword is unnecessary for type exports."]
+    in
+    Normal { features }
   | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
     let kind_str =
       match kind with
@@ -5575,6 +5584,7 @@ let defered_in_speculation = function
   | ESketchyNumberLint _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
+  | EUnnecessaryDeclareTypeOnlyExport _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EEnumNotAllChecked { default_case = Some _; _ }
@@ -5872,6 +5882,7 @@ let error_code_of_message err : error_code option =
   | EBigIntNumCoerce _ -> Some BigIntNumCoerce
   | EInvalidCatchParameterAnnotation _ -> Some InvalidCatchParameterAnnotation
   | EInvalidRendersTypeArgument _ -> Some InvalidRendersTypeArgument
+  | EUnnecessaryDeclareTypeOnlyExport _ -> Some UnnecessaryDeclareTypeOnlyExport
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

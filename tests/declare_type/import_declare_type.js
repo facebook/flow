@@ -28,3 +28,10 @@ blah(0, 0);
 3 as Bar; // error : number ~> A
 
 'lol' as Id<number>; // error : string ~> number
+
+///////////////////////////////////////////////////////
+// == Permit unnecessary declare export of types == //
+/////////////////////////////////////////////////////
+import type {DeclareExportType, DeclareExportInterface} from './exported';
+"3" as DeclareExportType; // error: string ~> number
+({}) as DeclareExportInterface; // error: prop-missing

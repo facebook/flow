@@ -300,6 +300,8 @@ val automatic_require_default : t -> bool
 (* modules *)
 val in_declare_module : t -> bool
 
+val in_declare_namespace : t -> bool
+
 (* mutators *)
 val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit
 

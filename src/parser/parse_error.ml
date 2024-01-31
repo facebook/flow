@@ -20,8 +20,6 @@ type t =
   | DeclareAsync
   | DeclareClassElement
   | DeclareClassFieldInitializer
-  | DeclareExportInterface
-  | DeclareExportType
   | DeclareOpaqueTypeInitializer
   | DuplicateConstructor
   | DuplicateExport of string
@@ -208,9 +206,6 @@ module PP = struct
     | DeclareClassElement -> "`declare` modifier can only appear on class fields."
     | DeclareClassFieldInitializer ->
       "Unexpected token `=`. Initializers are not allowed in a `declare`."
-    | DeclareExportInterface ->
-      "`declare export interface` is not supported. Use `export interface` instead."
-    | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
     | DeclareOpaqueTypeInitializer ->
       "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     | DuplicateConstructor -> "Classes may only have one constructor"

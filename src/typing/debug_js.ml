@@ -1688,6 +1688,8 @@ let dump_error_message =
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
     | EUnnecessaryOptionalChain (loc, _) -> spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
     | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
+    | EUnnecessaryDeclareTypeOnlyExport loc ->
+      spf "EUnnecessaryDeclareTypeOnlyExport (%s)" (string_of_aloc loc)
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ECannotDelete (l1, r1) -> spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)

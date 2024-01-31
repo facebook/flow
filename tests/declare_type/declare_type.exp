@@ -1,3 +1,22 @@
+Error ------------------------------------------------------------------------------------------------- exported.js:1:16
+
+The `declare` keyword is unnecessary for type exports. [unnecessary-declare-type-only-export]
+
+   1| declare export type DeclareExportType = number; // unnecessary, but still works
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:2:16
+
+The `declare` keyword is unnecessary for type exports. [unnecessary-declare-type-only-export]
+
+                     v-----------------------------------------------------------------
+   2| declare export interface DeclareExportInterface { // unnecessary, but still works
+   3|   baz: string;
+   4| }
+      ^
+
+
 Error ------------------------------------------------------------------------------------- import_declare_type.js:11:15
 
 Cannot assign `'shab'` to `k2` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -54,5 +73,34 @@ References:
                 ^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- import_declare_type.js:36:1
 
-Found 4 errors
+Cannot cast `"3"` to `DeclareExportType` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_declare_type.js:36:1
+   36| "3" as DeclareExportType; // error: string ~> number
+       ^^^ [1]
+
+References:
+   import_declare_type.js:36:8
+   36| "3" as DeclareExportType; // error: string ~> number
+              ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- import_declare_type.js:37:2
+
+Cannot cast object literal to `DeclareExportInterface` because property `baz` is missing in object literal [1] but
+exists in `DeclareExportInterface` [2]. [prop-missing]
+
+   import_declare_type.js:37:2
+   37| ({}) as DeclareExportInterface; // error: prop-missing
+        ^^ [1]
+
+References:
+   import_declare_type.js:37:9
+   37| ({}) as DeclareExportInterface; // error: prop-missing
+               ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 8 errors
