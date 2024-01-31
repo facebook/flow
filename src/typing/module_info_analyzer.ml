@@ -158,7 +158,8 @@ let export_specifiers info loc source export_kind =
     | Ast.Statement.ExportValue -> Module_info.export_star info loc module_t
     | Ast.Statement.ExportType -> Module_info.export_type_star info loc module_t)
 
-let visit_toplevel_statement cx info : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t -> unit =
+let visit_toplevel_statement cx info ~in_declare_namespace :
+    (ALoc.t, ALoc.t * Type.t) Ast.Statement.t -> unit =
   let open Ast.Statement in
   function
   | (_, Empty _)
@@ -318,11 +319,22 @@ let visit_toplevel_statement cx info : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
     Option.iter f declaration;
     let export_kind = Ast.Statement.ExportValue in
     Option.iter (export_specifiers info loc source export_kind) specifiers
-  | ( _,
+  | ( loc,
       DeclareModuleExports
         { Ast.Statement.DeclareModuleExports.annot = (exports_loc, ((_, t), _)); comments = _ }
     ) ->
-    Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
+    if in_declare_namespace then
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EUnsupportedSyntax
+            ( loc,
+              ContextDependentUnsupportedStatement
+                (UnsupportedStatementInDeclareNamespace "declare module.exports")
+            )
+        )
+    else
+      Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
   | ( loc,
       ExportNamedDeclaration
         { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ }
@@ -549,7 +561,7 @@ let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   let info =
     { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] }
   in
-  Base.List.iter ~f:(visit_toplevel_statement cx info) statements;
+  Base.List.iter ~f:(visit_toplevel_statement cx info ~in_declare_namespace:false) statements;
   let module_sig_loc = module_exports_sig_loc info |> Base.Option.value ~default:prog_aloc in
   let module_t =
     let self_reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
@@ -558,3 +570,14 @@ let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
     mk_module_t cx info self_reason exports_reason
   in
   (module_sig_loc, module_t)
+
+let analyze_declare_namespace cx reason statements =
+  let info =
+    { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] }
+  in
+  Base.List.iter ~f:(visit_toplevel_statement cx info ~in_declare_namespace:true) statements;
+  Type_operation_utils.Import_export.get_module_namespace_type
+    cx
+    reason
+    ~is_strict:(Context.is_strict cx)
+    (mk_module_t cx info reason reason)

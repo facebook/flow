@@ -7,3 +7,6 @@
 
 (* Returns the signature location of the module and the module type *)
 val analyze_program : Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t * Type.t
+
+val analyze_declare_namespace :
+  Context.t -> Reason.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list -> Type.t

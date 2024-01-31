@@ -294,8 +294,7 @@ class exports_error_checker ~is_local_use =
         this#add_error (Error_message.EBadExportContext (id, loc))
       | _ -> ignore (super#assignment loc expr)
 
-    (* skip declare module for other visits designed for toplevel exports only *)
-    method! declare_module _loc (m : (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t) =
+    method private check_declare_module_or_declare_namespace_body body =
       let f module_kind (loc, stmt) =
         let open Ast.Statement in
         match (module_kind, stmt) with
@@ -336,9 +335,20 @@ class exports_error_checker ~is_local_use =
           module_kind
         | _ -> module_kind
       in
-      let { Ast.Statement.DeclareModule.body = (_, { Ast.Statement.Block.body; _ }); _ } = m in
       let _module_kind : module_kind = Base.List.fold body ~init:Unknown ~f in
+      ()
+
+    (* skip declare module for other visits designed for toplevel exports only *)
+    method! declare_module _loc (m : (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t) =
+      let { Ast.Statement.DeclareModule.body = (_, { Ast.Statement.Block.body; _ }); _ } = m in
+      this#check_declare_module_or_declare_namespace_body body;
       m
+
+    (* skip declare namespace for other visits designed for toplevel exports only *)
+    method! declare_namespace _loc (ns : (ALoc.t, ALoc.t) Ast.Statement.DeclareNamespace.t) =
+      let { Ast.Statement.DeclareNamespace.body = (_, { Ast.Statement.Block.body; _ }); _ } = ns in
+      this#check_declare_module_or_declare_namespace_body body;
+      ns
 
     method! toplevel_statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
       let open Ast in

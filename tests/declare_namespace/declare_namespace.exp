@@ -1,0 +1,147 @@
+Error ---------------------------------------------------------------------------------------------- binding_test.js:2:6
+
+Cannot declare `conflict_with_type_decl_1` [1] because the name is already bound. [name-already-bound]
+
+   binding_test.js:2:6
+   2| type conflict_with_type_decl_1 = 1; // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   binding_test.js:1:19
+   1| declare namespace conflict_with_type_decl_1 {}
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- binding_test.js:4:19
+
+Cannot declare `conflict_with_type_decl_2` [1] because the name is already bound. [name-already-bound]
+
+   binding_test.js:4:19
+   4| declare namespace conflict_with_type_decl_2 {} // error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   binding_test.js:3:6
+   3| type conflict_with_type_decl_2 = 1;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- binding_test.js:7:19
+
+Cannot declare `const_like` [1] because the name is already bound. [name-already-bound]
+
+   binding_test.js:7:19
+   7| declare namespace const_like {} // error
+                        ^^^^^^^^^^
+
+References:
+   binding_test.js:6:19
+   6| declare namespace const_like {}
+                        ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- binding_test.js:8:1
+
+Cannot reassign constant `const_like` [1]. [reassign-const]
+
+   binding_test.js:8:1
+   8| const_like = 1; // error
+      ^^^^^^^^^^
+
+References:
+   binding_test.js:6:19
+   6| declare namespace const_like {}
+                        ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- binding_test.js:9:7
+
+Cannot declare `const_like` [1] because the name is already bound. [name-already-bound]
+
+   binding_test.js:9:7
+   9| const const_like = 1; // error
+            ^^^^^^^^^^
+
+References:
+   binding_test.js:6:19
+   6| declare namespace const_like {}
+                        ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- typing_test.js:7:1
+
+Cannot cast `both_type_and_value.bar1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typing_test.js:7:1
+   7| both_type_and_value.bar1 as empty; // error: number ~> empty
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:2:30
+   2|   declare export const bar1: number;
+                                   ^^^^^^ [1]
+   typing_test.js:7:29
+   7| both_type_and_value.bar1 as empty; // error: number ~> empty
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- typing_test.js:8:1
+
+Cannot cast `both_type_and_value.bar2` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typing_test.js:8:1
+   8| both_type_and_value.bar2 as empty; // error: boolean ~> empty
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:3:30
+   3|   declare export const bar2: boolean;
+                                   ^^^^^^^ [1]
+   typing_test.js:8:29
+   8| both_type_and_value.bar2 as empty; // error: boolean ~> empty
+                                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:9:29
+
+Cannot resolve name `foo`. [cannot-resolve-name]
+
+   9| both_type_and_value.bar1 as foo.Baz; // error: number ~> string
+                                  ^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:9:29
+
+Cannot use `Baz` as a type because it is an `any`-typed value. Type `Baz` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
+
+   9| both_type_and_value.bar1 as foo.Baz; // error: number ~> string
+                                  ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:12:3
+
+Cannot use `declare module.exports` statements with in `declare namespace`. The statement will be ignored.
+[unsupported-syntax]
+
+   12|   declare module.exports: {foo: string}; // unsupported
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:15:36
+
+Cannot get `unsupported_declare_module_exports.foo` because property `foo` is missing in namespace
+unsupported_declare_module_exports [1]. [prop-missing]
+
+   typing_test.js:15:36
+   15| unsupported_declare_module_exports.foo; // prop-missing because `declare module.exports` is ignored
+                                          ^^^
+
+References:
+   typing_test.js:11:19
+   11| declare namespace unsupported_declare_module_exports {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 11 errors

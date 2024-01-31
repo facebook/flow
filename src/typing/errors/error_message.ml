@@ -803,6 +803,7 @@ and context_dependent_unsupported_statement =
   | ToplevelLibraryImport
   | NonLibdefToplevelDeclareModule
   | UnsupportedStatementInLibdef of string
+  | UnsupportedStatementInDeclareNamespace of string
 
 and lower_kind =
   | Possibly_null
@@ -3144,6 +3145,14 @@ let friendly_message_of_msg loc_of_aloc msg =
           code kind;
           text " statements in a library file. ";
           text "The statement will be ignored.";
+        ]
+      | ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareNamespace kind) ->
+        [
+          text "Cannot use ";
+          code kind;
+          text " statements with in ";
+          code "declare namespace";
+          text ". The statement will be ignored.";
         ]
       | DeclareNamespace ->
         [

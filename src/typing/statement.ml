@@ -1950,10 +1950,18 @@ module Make
       let body =
         (body_loc, { Ast.Statement.Block.body = body_statements; comments = body_comments })
       in
-      let id = Tast_utils.error_mapper#pattern_identifier id in
-      let ns = { Ast.Statement.DeclareNamespace.id; body; comments } in
-      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
-      (AnyT.at (AnyError None) loc, ns)
+      let (t, id) =
+        if Context.namespaces cx then
+          let (name_loc, { Ast.Identifier.name; comments }) = id in
+          let reason = mk_reason (RNamespace name) name_loc in
+          let t = Module_info_analyzer.analyze_declare_namespace cx reason body_statements in
+          (t, ((name_loc, t), { Ast.Identifier.name; comments }))
+        else
+          let id = Tast_utils.error_mapper#pattern_identifier id in
+          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
+          (AnyT.at (AnyError None) loc, id)
+      in
+      (t, { Ast.Statement.DeclareNamespace.id; body; comments })
 
   and object_prop cx ~as_const acc prop =
     let open Ast.Expression.Object in
