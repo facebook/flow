@@ -100,6 +100,13 @@ module AcCompletion = struct
     }
 end
 
+type ac_options = {
+  imports: bool;
+  imports_ranked_usage: bool;
+  imports_ranked_usage_boost_exact_match_min_length: int option;
+  show_ranking_info: bool;
+}
+
 let lsp_completion_of_type =
   let open Ty in
   function
@@ -794,11 +801,9 @@ let append_completion_items_of_autoimports
     ~ast
     ~ac_loc
     ~locals
-    ~imports_ranked_usage
-    ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
     ~edit_locs
     ~locals_rank
+    ac_options
     auto_imports
     token
     items_rev =
@@ -810,7 +815,7 @@ let append_completion_items_of_autoimports
       ~f:(fun i acc { Export_search.search_result = auto_import; score; weight } ->
         let rank =
           (* after builtins *)
-          if imports_ranked_usage then
+          if ac_options.imports_ranked_usage then
             (* set a unique sort text per item *)
             200 + i
           else
@@ -826,7 +831,7 @@ let append_completion_items_of_autoimports
           acc
         else
           let ranking_info =
-            if show_ranking_info then
+            if ac_options.show_ranking_info then
               Some (Printf.sprintf "Score: %d\nUses: %d" score weight)
             else
               None
@@ -845,8 +850,8 @@ let append_completion_items_of_autoimports
           item :: acc)
       auto_imports
   in
-  if imports_ranked_usage then
-    match imports_ranked_usage_boost_exact_match_min_length with
+  if ac_options.imports_ranked_usage then
+    match ac_options.imports_ranked_usage_boost_exact_match_min_length with
     | Some min_length ->
       let (exact_match_auto_imports_rev, other_auto_imports_rev) =
         Base.List.partition_map auto_imports_items_rev ~f:(fun item ->
@@ -883,10 +888,7 @@ let autocomplete_id
     ~include_keywords
     ~include_super
     ~include_this
-    ~imports
-    ~imports_ranked_usage
-    ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
+    ~ac_options
     ~tparams_rev
     ~edit_locs
     ~token
@@ -1000,7 +1002,7 @@ let autocomplete_id
       items_rev
   in
   let (items_rev, is_incomplete, sorted) =
-    if imports then
+    if ac_options.imports then
       let (before, _after) = Autocomplete_sigil.remove token in
       if before = "" then
         (* for empty autocomplete requests (hitting ctrl-space without typing anything),
@@ -1011,7 +1013,10 @@ let autocomplete_id
         let locals = set_of_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) identifiers in
         let { Export_search.results = auto_imports; is_incomplete } =
           let options =
-            { default_autoimport_options with Export_search.weighted = imports_ranked_usage }
+            {
+              default_autoimport_options with
+              Export_search.weighted = ac_options.imports_ranked_usage;
+            }
           in
           Export_search.search_values ~options before env.ServerEnv.exports
         in
@@ -1022,11 +1027,9 @@ let autocomplete_id
             ~ast
             ~ac_loc
             ~locals
-            ~imports_ranked_usage
-            ~imports_ranked_usage_boost_exact_match_min_length
-            ~show_ranking_info
             ~edit_locs
             ~locals_rank:rank
+            ac_options
             auto_imports
             token
             items_rev
@@ -1290,10 +1293,7 @@ let autocomplete_unqualified_type
     ~options
     ~reader
     ~cx
-    ~imports
-    ~imports_ranked_usage
-    ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
+    ~ac_options
     ~allow_react_element_shorthand_completion
     ~tparams_rev
     ~file_sig
@@ -1405,7 +1405,7 @@ let autocomplete_unqualified_type
          (items_rev, errors_to_log)
   in
   let (items_rev, is_incomplete, sorted) =
-    if imports then
+    if ac_options.imports then
       let locals =
         let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
         add_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) value_identifiers set;
@@ -1414,7 +1414,10 @@ let autocomplete_unqualified_type
       let { Export_search.results = auto_imports; is_incomplete } =
         let (before, _after) = Autocomplete_sigil.remove token in
         let options =
-          { default_autoimport_options with Export_search.weighted = imports_ranked_usage }
+          {
+            default_autoimport_options with
+            Export_search.weighted = ac_options.imports_ranked_usage;
+          }
         in
         Export_search.search_types ~options before env.ServerEnv.exports
       in
@@ -1425,11 +1428,9 @@ let autocomplete_unqualified_type
           ~ast
           ~ac_loc
           ~locals
-          ~imports_ranked_usage
-          ~imports_ranked_usage_boost_exact_match_min_length
-          ~show_ranking_info
           ~edit_locs
           ~locals_rank:0
+          ac_options
           auto_imports
           token
           items_rev
@@ -1513,10 +1514,7 @@ let autocomplete_member
     ~file_sig
     ~ast
     ~typed_ast
-    ~imports
-    ~imports_ranked_usage
-    ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
+    ~ac_options
     ~edit_locs
     ~token
     this
@@ -1648,10 +1646,7 @@ let autocomplete_member
             ~options
             ~reader
             ~cx
-            ~imports
-            ~imports_ranked_usage
-            ~imports_ranked_usage_boost_exact_match_min_length
-            ~show_ranking_info
+            ~ac_options
             ~allow_react_element_shorthand_completion:false
             ~tparams_rev
             ~ac_loc:ac_aloc
@@ -1673,10 +1668,7 @@ let autocomplete_member
             ~include_keywords:false
             ~include_super
             ~include_this
-            ~imports
-            ~imports_ranked_usage
-            ~imports_ranked_usage_boost_exact_match_min_length
-            ~show_ranking_info
+            ~ac_options
             ~tparams_rev
             ~edit_locs
             ~token
@@ -1786,10 +1778,7 @@ let autocomplete_jsx_element
     ~file_sig
     ~ast
     ~typed_ast
-    ~imports
-    ~imports_ranked_usage
-    ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
+    ~ac_options
     ~tparams_rev
     ~edit_locs
     ~token
@@ -1807,10 +1796,7 @@ let autocomplete_jsx_element
       ~include_keywords:false
       ~include_super:false
       ~include_this:false
-      ~imports
-      ~imports_ranked_usage
-      ~imports_ranked_usage_boost_exact_match_min_length
-      ~show_ranking_info
+      ~ac_options
       ~tparams_rev
       ~edit_locs
       ~token
@@ -1850,7 +1836,7 @@ let autocomplete_jsx_element
       errors_to_log = errors_to_log_id @ errors_to_log_jsx;
     }
   in
-  if should_autoimport_react ~options ~imports ~file_sig then
+  if should_autoimport_react ~options ~imports:ac_options.imports ~file_sig then
     let open AcCompletion in
     let import_edit =
       let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
@@ -2307,19 +2293,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results
-    ~env
-    ~options
-    ~reader
-    ~cx
-    ~file_sig
-    ~ast
-    ~typed_ast
-    ~imports
-    ~imports_ranked_usage
-    ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
-    trigger_character
-    cursor =
+    ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ac_options trigger_character cursor =
   let open Autocomplete_js in
   match process_location ~trigger_character ~cursor ~typed_ast with
   | None ->
@@ -2432,10 +2406,7 @@ let autocomplete_get_results
             ~include_keywords:true
             ~include_super
             ~include_this
-            ~imports
-            ~imports_ranked_usage
-            ~imports_ranked_usage_boost_exact_match_min_length
-            ~show_ranking_info
+            ~ac_options
             ~tparams_rev
             ~edit_locs
             ~token
@@ -2452,10 +2423,7 @@ let autocomplete_get_results
               ~file_sig
               ~ast
               ~typed_ast
-              ~imports
-              ~imports_ranked_usage
-              ~imports_ranked_usage_boost_exact_match_min_length
-              ~show_ranking_info
+              ~ac_options
               ~edit_locs
               ~token
               t
@@ -2509,10 +2477,7 @@ let autocomplete_get_results
           ~file_sig
           ~ast
           ~typed_ast
-          ~imports
-          ~imports_ranked_usage
-          ~imports_ranked_usage_boost_exact_match_min_length
-          ~show_ranking_info
+          ~ac_options
           ~edit_locs
           ~token
           obj_type
@@ -2533,10 +2498,7 @@ let autocomplete_get_results
           ~file_sig
           ~ast
           ~typed_ast
-          ~imports
-          ~imports_ranked_usage
-          ~imports_ranked_usage_boost_exact_match_min_length
-          ~show_ranking_info
+          ~ac_options
           ~tparams_rev
           ~edit_locs
           ~token
@@ -2562,10 +2524,7 @@ let autocomplete_get_results
              ~options
              ~reader
              ~cx
-             ~imports
-             ~imports_ranked_usage
-             ~imports_ranked_usage_boost_exact_match_min_length
-             ~show_ranking_info
+             ~ac_options
              ~allow_react_element_shorthand_completion:allow_react_element_shorthand
              ~tparams_rev
              ~ac_loc

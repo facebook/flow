@@ -29,6 +29,13 @@ module AcCompletion : sig
   val to_server_prot_completion_t : t -> ServerProt.Response.Completion.t
 end
 
+type ac_options = {
+  imports: bool;
+  imports_ranked_usage: bool;
+  imports_ranked_usage_boost_exact_match_min_length: int option;
+  show_ranking_info: bool;
+}
+
 type ac_result = {
   result: AcCompletion.t;
   errors_to_log: string list;
@@ -47,10 +54,7 @@ val autocomplete_get_results :
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  imports:bool ->
-  imports_ranked_usage:bool ->
-  imports_ranked_usage_boost_exact_match_min_length:int option ->
-  show_ranking_info:bool ->
+  ac_options ->
   string option ->
   Loc.t ->
   string option * ALoc.t option * string * autocomplete_service_result

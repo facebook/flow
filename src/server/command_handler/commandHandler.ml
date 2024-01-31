@@ -332,6 +332,14 @@ let autocomplete
         ) ->
       Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
           let open AutocompleteService_js in
+          let ac_options =
+            {
+              imports;
+              imports_ranked_usage;
+              imports_ranked_usage_boost_exact_match_min_length;
+              show_ranking_info;
+            }
+          in
           let (token_opt, ac_loc, ac_type_string, results_res) =
             autocomplete_get_results
               ~env
@@ -341,10 +349,7 @@ let autocomplete
               ~file_sig
               ~ast
               ~typed_ast
-              ~imports
-              ~imports_ranked_usage
-              ~imports_ranked_usage_boost_exact_match_min_length
-              ~show_ranking_info
+              ac_options
               trigger_character
               cursor_loc
           in
