@@ -55,6 +55,8 @@ val hd : 'a t -> 'a
 
 val tl : 'a t -> 'a list
 
+val last : 'a t -> 'a
+
 val nth : 'a t -> int -> 'a
 
 val dedup : ?compare:('a -> 'a -> int) -> 'a t -> 'a t

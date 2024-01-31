@@ -88,6 +88,8 @@ let reduce f (x, xs) = Base.List.fold_left ~f ~init:x xs
 
 let hd (x, _) = x
 
+let last (x, l) = Base.List.last l |> Base.Option.value ~default:x
+
 let tl (_, xs) = xs
 
 let nth nel n = Base.List.nth_exn (to_list nel) n
