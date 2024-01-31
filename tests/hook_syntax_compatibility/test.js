@@ -11,6 +11,10 @@ declare const useS: {
     <T>(x: T): T;
 }
 
+const bag_o_hooks = {
+    useR() {}
+};
+
 component C(...{ useY }: { useY: () => void}) {
     useY(); // no error
     useX(); // error for calling number but no hook error
@@ -22,5 +26,6 @@ component C(...{ useY }: { useY: () => void}) {
     useT<mixed>(); // no error
     useS(); // no error
     useS<mixed>(); // no error
+    bag_o_hooks.useR(); // no error
     return 42;
 }
