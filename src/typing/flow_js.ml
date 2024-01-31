@@ -1041,6 +1041,43 @@ struct
             cx
             trace
             (DefT (r, FunT (s, { funtype with hook = AnyHook })), OpenT tout)
+        | ( DefT
+              ( rp,
+                PolyT ({ t_out = DefT (r, FunT (s, ({ hook = NonHook; _ } as funtype))); _ } as poly)
+              ),
+            HooklikeT tout
+          ) ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            ( DefT
+                (rp, PolyT { poly with t_out = DefT (r, FunT (s, { funtype with hook = AnyHook })) }),
+              OpenT tout
+            )
+        | (DefT (r, ObjT ({ call_t = Some id; _ } as obj)), HooklikeT tout) ->
+          let t =
+            match Context.find_call cx id with
+            | DefT (rf, FunT (s, ({ hook = NonHook; _ } as funtype))) ->
+              let call = DefT (rf, FunT (s, { funtype with hook = AnyHook })) in
+              let id = Context.make_call_prop cx call in
+              DefT (r, ObjT { obj with call_t = Some id })
+            | DefT
+                ( rp,
+                  PolyT
+                    ({ t_out = DefT (rf, FunT (s, ({ hook = NonHook; _ } as funtype))); _ } as poly)
+                ) ->
+              let call =
+                DefT
+                  ( rp,
+                    PolyT { poly with t_out = DefT (rf, FunT (s, { funtype with hook = AnyHook })) }
+                  )
+              in
+              let id = Context.make_call_prop cx call in
+              DefT (r, ObjT { obj with call_t = Some id })
+            | _ -> l
+          in
+          rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
         | ( (IntersectionT _ | OpaqueT _ | DefT (_, PolyT _)),
             (DeepReadOnlyT (tout, _, _) | HooklikeT tout)
           ) ->
