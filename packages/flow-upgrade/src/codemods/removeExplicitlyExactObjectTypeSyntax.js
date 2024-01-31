@@ -8,13 +8,13 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 
 export default codemod({
   title: 'Remove explicitly exact object type syntax',
-  description:
+  describe:
     'Convert explicitly exact object type syntax `{| |}` to be just be `{ }`. To be done after you turn on `exact_by_default=true` in your `.flowconfig`.',
   transform: context => {
     return {
@@ -25,4 +25,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

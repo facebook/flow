@@ -8,14 +8,14 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 import {t} from 'hermes-transform';
 
 export default codemod({
   title: 'Replace `T: {}` with `T: {...}` in type parameter bounds',
-  description: 'Replace `T: {}` with `T: {...}` in type parameter bounds',
+  describe: 'Replace `T: {}` with `T: {...}` in type parameter bounds',
   transform: context => {
     return {
       TypeParameter(node) {
@@ -48,4 +48,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

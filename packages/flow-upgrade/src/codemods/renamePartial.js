@@ -8,13 +8,13 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 
 export default codemod({
   title: 'Rename `$Partial` to `Partial`',
-  description: 'Renames the `$Partial` type utility to `Partial`.',
+  describe: 'Renames the `$Partial` type utility to `Partial`.',
   transform: context => {
     return {
       'GenericTypeAnnotation[id.name="$Partial"][typeParameters.params.length > 0]'(
@@ -26,4 +26,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

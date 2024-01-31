@@ -16,14 +16,14 @@ import type {
   Statement,
 } from 'hermes-estree';
 import type {DetachedNode} from 'hermes-transform';
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {t} from 'hermes-transform';
 import {codemod} from '../Types';
 
 export default codemod({
   title: 'Collapse Object Initialization',
-  description: 'Converts static object assignments to inline properties',
+  describe: 'Converts static object assignments to inline properties',
   transform: context => {
     function getStatementContainerArray(
       stmtNode: Statement,
@@ -267,4 +267,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

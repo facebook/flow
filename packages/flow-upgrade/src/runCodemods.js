@@ -8,13 +8,13 @@
  * @flow
  */
 
-import type {CliOptions, Codemod} from './Types';
+import type {CliOptions, CodemodModule} from './Types';
 
 import fs from 'fs-extra';
 import {transform} from 'hermes-transform';
 
 export default async function runCodemods(
-  codemods: $ReadOnlyArray<Codemod>,
+  codemods: $ReadOnlyArray<CodemodModule>,
   filePaths: $ReadOnlyArray<string>,
   options: CliOptions,
 ): Promise<void> {

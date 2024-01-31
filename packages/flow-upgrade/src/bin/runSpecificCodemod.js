@@ -9,7 +9,7 @@
  * @flow
  */
 
-import type {CliOptions, Codemod} from '../Types';
+import type {CliOptions, CodemodModule} from '../Types';
 
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -78,7 +78,7 @@ async function main(args: $ReadOnlyArray<string>) {
     const filePaths = await findFlowFilesWithSpinner(directory, options);
 
     // $FlowExpectedError[unsupported-syntax]
-    const {default: upgrade}: {default: Codemod} = await import(
+    const {default: upgrade}: {default: CodemodModule} = await import(
       `${CODEMOD_DIR}/${codemodName}.js`
     );
 
@@ -90,7 +90,7 @@ async function main(args: $ReadOnlyArray<string>) {
       console.log();
       console.log(Styled.upgradeTitle(upgrade.title, 1));
       console.log();
-      console.log(upgrade.description);
+      console.log(upgrade.describe);
       console.log();
       console.log(Styled.divider());
       console.log();

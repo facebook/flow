@@ -151,7 +151,7 @@ directories, in __flowtests__ directories, or files ending in -flowtest.js.
         codemods.forEach((u, i) => {
           log(Styled.upgradeTitle(u.title, i + 1));
           log();
-          log(u.description);
+          log(u.describe);
           log();
           log(Styled.divider());
           log();

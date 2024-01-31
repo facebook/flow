@@ -17,18 +17,18 @@ export type CliOptions = $ReadOnly<{
   yes: boolean,
 }>;
 
-export type Codemod = $ReadOnly<{
+export type CodemodModule = $ReadOnly<{
   kind: 'codemod',
   title: string,
-  description: string,
+  describe: string,
   transform: TransformVisitor,
 }>;
 
 export function codemod(config: {
   title: string,
-  description: string,
+  describe: string,
   transform: TransformVisitor,
-}): Codemod {
+}): CodemodModule {
   return {
     ...config,
     kind: 'codemod',
@@ -37,5 +37,5 @@ export function codemod(config: {
 
 export type Upgrade = $ReadOnly<{
   version: string,
-  upgrades: $ReadOnlyArray<Codemod>,
+  upgrades: $ReadOnlyArray<CodemodModule>,
 }>;

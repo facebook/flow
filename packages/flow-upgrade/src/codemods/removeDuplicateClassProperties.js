@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 import type {
   ClassDeclaration,
   ClassExpression,
@@ -127,7 +127,7 @@ function findDuplicates(
 
 export default codemod({
   title: 'Remove Duplicate Class Properties',
-  description:
+  describe:
     'Removes useless duplicate class properties and fixes bad constructor binding in those classes',
   transform: context => {
     type InstanceMember = $ReadOnly<{
@@ -299,4 +299,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

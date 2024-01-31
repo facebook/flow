@@ -8,13 +8,13 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 
 export default codemod({
   title: 'Make implicitly inexact object types explicitly inexact',
-  description:
+  describe:
     'Convert implicitly inexact object type syntax `{}` to explicitly inexact `{...}`',
   transform: context => {
     return {
@@ -28,4 +28,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

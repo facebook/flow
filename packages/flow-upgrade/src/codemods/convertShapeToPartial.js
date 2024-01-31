@@ -8,13 +8,13 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 
 export default codemod({
   title: 'Convert `$Shape` to `Partial`',
-  description:
+  describe:
     'Converts usage of the `$Shape` utility type to `Partial`. It is possible that this will create type errors that you will have to resolve.',
   transform: context => {
     return {
@@ -27,4 +27,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

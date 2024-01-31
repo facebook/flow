@@ -8,13 +8,13 @@
  * @flow
  */
 
-import type {Codemod} from '../Types';
+import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 
 export default codemod({
   title: 'Remove Annotations In Destructuring',
-  description:
+  describe:
     'Remove annotations nested inside of destructuring. These are not valid Flow syntax.',
   transform: context => {
     return {
@@ -34,4 +34,4 @@ export default codemod({
       },
     };
   },
-}) as Codemod;
+}) as CodemodModule;

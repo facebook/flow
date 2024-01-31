@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {Codemod} from '../src/Types';
+import type {CodemodModule} from '../src/Types';
 import type {TransformContext} from 'hermes-transform';
 
 import {redirectConsole, restoreConsole} from '../src/utils/redirectConsole';
@@ -59,7 +59,7 @@ export type CodemodTestWithConfigWithOutput<
 
 export function testCodemod<TConfig: ?AnyObject, TCliArgs: ?AnyObject>(
   codemodName: string,
-  codemodModule: Codemod,
+  codemodModule: CodemodModule,
   tests: $ReadOnly<{
     ignored: $ReadOnlyArray<CodemodTestWithConfig<TConfig, TCliArgs>>,
     transformed: $ReadOnlyArray<
