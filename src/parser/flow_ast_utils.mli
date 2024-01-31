@@ -41,7 +41,7 @@ val is_super_member_access : ('a, 'b) Flow_ast.Expression.Member.t -> bool
 
 (* Returns Ok () for such statement, and Error kind_of_statement otherwise. *)
 val acceptable_statement_in_declaration_context :
-  ('a, 'b) Flow_ast.Statement.t' -> (unit, string) result
+  in_declare_namespace:bool -> ('a, 'b) Flow_ast.Statement.t' -> (unit, string) result
 
 val negate_number_literal : float * string -> float * string
 

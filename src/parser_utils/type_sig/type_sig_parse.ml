@@ -4727,7 +4727,9 @@ let rec statement opts scope tbls (loc, stmt) =
     let scope = Scope.push_declare_module loc name scope in
     let (_, { S.Block.body = stmts; comments = _ }) = body in
     let visit_statement ((_, stmt') as stmt) =
-      match Flow_ast_utils.acceptable_statement_in_declaration_context stmt' with
+      match
+        Flow_ast_utils.acceptable_statement_in_declaration_context ~in_declare_namespace:false stmt'
+      with
       | Ok () -> statement opts scope tbls stmt
       | Error _ -> ()
     in

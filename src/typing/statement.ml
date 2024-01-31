@@ -1880,7 +1880,11 @@ module Make
 
     let elements_ast = statement_list cx elements in
     Base.List.iter elements_ast ~f:(fun (loc, stmt) ->
-        match Flow_ast_utils.acceptable_statement_in_declaration_context stmt with
+        match
+          Flow_ast_utils.acceptable_statement_in_declaration_context
+            ~in_declare_namespace:false
+            stmt
+        with
         | Ok () -> ()
         | Error kind ->
           Flow_js_utils.add_output

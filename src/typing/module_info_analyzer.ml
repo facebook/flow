@@ -171,10 +171,6 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, Throw _)
   | (_, Try _)
   | (_, With _)
-  | (_, DeclareTypeAlias _)
-  | (_, TypeAlias _)
-  | (_, DeclareOpaqueType _)
-  | (_, OpaqueType _)
   | (_, Switch _)
   | (_, Return _)
   | (_, While _)
@@ -185,20 +181,32 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, Debugger _)
   | (_, FunctionDeclaration _)
   | (_, ComponentDeclaration _)
-  | (_, EnumDeclaration _)
-  | (_, DeclareVariable _)
-  | (_, DeclareFunction _)
   | (_, VariableDeclaration _)
   | (_, ClassDeclaration _)
-  | (_, DeclareClass _)
-  | (_, DeclareComponent _)
-  | (_, DeclareEnum _)
-  | (_, DeclareInterface _)
-  | (_, InterfaceDeclaration _)
   | (_, DeclareModule _)
-  | (_, DeclareNamespace _)
   | (_, ImportDeclaration _) ->
     ()
+  | (_, DeclareTypeAlias { TypeAlias.id; _ })
+  | (_, TypeAlias { TypeAlias.id; _ })
+  | (_, DeclareOpaqueType { OpaqueType.id; _ })
+  | (_, OpaqueType { OpaqueType.id; _ })
+  | (_, DeclareInterface { Interface.id; _ })
+  | (_, InterfaceDeclaration { Interface.id; _ }) ->
+    (* A declared namespace will auto-export all toplevel names *)
+    if in_declare_namespace then
+      let ((name_loc, t), { Ast.Identifier.name; _ }) = id in
+      Module_info.export_type info (OrdinaryName name) ~name_loc t
+  | (_, DeclareVariable { DeclareVariable.id; _ })
+  | (_, DeclareFunction { DeclareFunction.id; _ })
+  | (_, DeclareClass { DeclareClass.id; _ })
+  | (_, DeclareComponent { DeclareComponent.id; _ })
+  | (_, DeclareEnum { EnumDeclaration.id; _ })
+  | (_, EnumDeclaration { EnumDeclaration.id; _ })
+  | (_, DeclareNamespace { DeclareNamespace.id; _ }) ->
+    (* A declared namespace will auto-export all toplevel names *)
+    if in_declare_namespace then
+      let ((name_loc, t), { Ast.Identifier.name; _ }) = id in
+      Module_info.export info (OrdinaryName name) ~name_loc ~is_type_only_export:false t
   | ( _,
       Expression
         {
@@ -319,22 +327,11 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
     Option.iter f declaration;
     let export_kind = Ast.Statement.ExportValue in
     Option.iter (export_specifiers info loc source export_kind) specifiers
-  | ( loc,
+  | ( _,
       DeclareModuleExports
         { Ast.Statement.DeclareModuleExports.annot = (exports_loc, ((_, t), _)); comments = _ }
     ) ->
-    if in_declare_namespace then
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EUnsupportedSyntax
-            ( loc,
-              ContextDependentUnsupportedStatement
-                (UnsupportedStatementInDeclareNamespace "declare module.exports")
-            )
-        )
-    else
-      Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
+    Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
   | ( loc,
       ExportNamedDeclaration
         { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ }
@@ -576,7 +573,9 @@ let analyze_declare_namespace cx reason statements =
     { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] }
   in
   Base.List.iter statements ~f:(fun ((loc, stmt') as stmt) ->
-      match Flow_ast_utils.acceptable_statement_in_declaration_context stmt' with
+      match
+        Flow_ast_utils.acceptable_statement_in_declaration_context ~in_declare_namespace:true stmt'
+      with
       | Ok () -> visit_toplevel_statement cx info ~in_declare_namespace:true stmt
       | Error kind ->
         Flow_js_utils.add_output

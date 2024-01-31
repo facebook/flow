@@ -143,30 +143,64 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:19:3
+Error ---------------------------------------------------------------------------------------------- typing_test.js:23:3
 
 Cannot use `if` statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
 
-   19|   if (true) {} // error
+   23|   if (true) {} // error
          ^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:21:1
+Error ---------------------------------------------------------------------------------------------- typing_test.js:24:3
+
+Cannot use `import declaration` statements with in `declare namespace`. The statement will be ignored.
+[unsupported-syntax]
+
+   24|   import React from 'react'; // unsupported
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:24:21
+
+Cannot resolve module `react`. [cannot-resolve-module]
+
+   24|   import React from 'react'; // unsupported
+                           ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:26:1
 
 Cannot cast `unsupported_statements.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typing_test.js:21:1
-   21| unsupported_statements.a as empty; // error: number ~> empty
+   typing_test.js:26:1
+   26| unsupported_statements.a as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   typing_test.js:18:27
-   18|   declare export const a: number;
-                                 ^^^^^^ [1]
-   typing_test.js:21:29
-   21| unsupported_statements.a as empty; // error: number ~> empty
+   typing_test.js:18:20
+   18|   declare const a: number;
+                          ^^^^^^ [1]
+   typing_test.js:26:29
+   26| unsupported_statements.a as empty; // error: number ~> empty
                                    ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- typing_test.js:28:1
 
-Found 13 errors
+Cannot cast `unsupported_statements.B.D` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typing_test.js:28:1
+   28| unsupported_statements.B.D as empty; // error: enum ~> empty
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:19:8
+   19|   enum B {
+              ^ [1]
+   typing_test.js:28:31
+   28| unsupported_statements.B.D as empty; // error: enum ~> empty
+                                     ^^^^^ [2]
+
+
+
+Found 16 errors

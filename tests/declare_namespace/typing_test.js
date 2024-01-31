@@ -15,7 +15,14 @@ declare namespace unsupported_declare_module_exports {
 unsupported_declare_module_exports.foo; // prop-missing because `declare module.exports` is ignored
 
 declare namespace unsupported_statements {
-  declare export const a: number;
+  declare const a: number;
+  enum B {
+    C,
+    D,
+  }
   if (true) {} // error
+  import React from 'react'; // unsupported
 }
 unsupported_statements.a as empty; // error: number ~> empty
+unsupported_statements.B.C as unsupported_statements.B; // ok
+unsupported_statements.B.D as empty; // error: enum ~> empty
