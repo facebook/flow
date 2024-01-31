@@ -14,8 +14,6 @@
  * a union we need to visit its parts to determine if this is a covered type.
  *
  * Some constructors that we, perhaps controversially, consider concrete are:
- *  - AnyWithLowerBoundT
- *  - AnyWithUpperBoundT
  *  - KeysT
  *
  * In addition to being considered concrete the above constructors are also

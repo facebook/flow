@@ -511,8 +511,6 @@ type ('loc, 'a) annot =
   | TEMPORARY_Boolean of 'loc * bool
   | TEMPORARY_Object of 'a
   | TEMPORARY_Array of 'loc * 'a
-  | AnyWithLowerBound of 'loc * 'a
-  | AnyWithUpperBound of 'loc * 'a
   | PropertyType of {
       loc: 'loc;
       obj: 'a;

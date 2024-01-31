@@ -640,12 +640,6 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_annot_reason RArrayLit loc) in
     let elem_t = merge tps infer_tps file t in
     Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
-  | AnyWithLowerBound (_loc, t) ->
-    let t = merge tps infer_tps file t in
-    Type.AnyT.annot (TypeUtil.reason_of_t t)
-  | AnyWithUpperBound (_loc, t) ->
-    let t = merge tps infer_tps file t in
-    Type.AnyT.annot (TypeUtil.reason_of_t t)
   | PropertyType { loc; obj; prop } ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$PropertyType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
