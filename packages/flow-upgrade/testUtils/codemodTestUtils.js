@@ -116,7 +116,7 @@ export function testCodemod<TConfig: ?AnyObject, TCliArgs: ?AnyObject>(
           '',
           '',
         ].join('\n'),
-        () => {
+        async () => {
           const transform = (() => {
             return (ctx: TransformContext) =>
               // $FlowFixMe[incompatible-call]
@@ -124,7 +124,7 @@ export function testCodemod<TConfig: ?AnyObject, TCliArgs: ?AnyObject>(
               // $FlowFixMe[prop-missing]
               codemodModule.transform(ctx);
           })();
-          const result = hermesTransform(code, transform, prettierConfig);
+          const result = await hermesTransform(code, transform, prettierConfig);
           expect(result.trim()).toEqual(test.output.trim());
         },
       );
