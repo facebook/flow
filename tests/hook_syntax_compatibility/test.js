@@ -12,7 +12,7 @@ declare const useS: {
 }
 
 const bag_o_hooks = {
-    useR() {}
+    useR() { useT(); } // no error
 };
 
 component C(...{ useY }: { useY: () => void}) {
@@ -29,3 +29,12 @@ component C(...{ useY }: { useY: () => void}) {
     bag_o_hooks.useR(); // no error
     return 42;
 }
+
+import * as React from 'react';
+hook useH() { };
+declare function id<T>(x: T): T;
+
+const C1 = () => { useH() }; // no error
+const c1 = () => { useH() }; // error
+const C2 = React.forwardRef<_, mixed, _>(({}: {}, ref: mixed) => { useH() }); // no error
+const C3 = id(({}: {}, ref: mixed) => { useH() }); // error

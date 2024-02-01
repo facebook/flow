@@ -149,6 +149,37 @@ let hook_error cx ~call_loc ~callee_loc kind =
       cx
       (Error_message.EHookRuleViolation { call_loc; callee_loc; hook_rule = kind })
 
+let compatibility_call call =
+  match call with
+  | {
+   Ast.Expression.Call.callee =
+     ( _,
+       Ast.Expression.(
+         ( Identifier (_, { Ast.Identifier.name; _ })
+         | Member
+             {
+               Member._object = (_, Identifier (_, { Ast.Identifier.name = "React"; _ }));
+               property = Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
+               _;
+             } ))
+     );
+   _;
+  } ->
+    name = "forwardRef" || name = "memo"
+  | _ -> false
+
+let componentlike_name name =
+  let rec cln n =
+    if String.length name > n && String.sub name n (n + 1) = "_" then
+      cln (n + 1)
+    else
+      String.length name > n
+      &&
+      let fst = String.sub name n (n + 1) in
+      fst = String.uppercase_ascii fst
+  in
+  cln 0
+
 let rec whole_ast_visitor cx rrid =
   object (this)
     inherit
@@ -156,13 +187,15 @@ let rec whole_ast_visitor cx rrid =
 
     val mutable in_function_component = false
 
+    val mutable declaring_function_component = false
+
     method on_loc_annot l = l
 
     method on_type_annot l = l
 
     method! component_declaration = (component_ast_visitor cx false rrid)#component_declaration
 
-    method! function_declaration fn =
+    method! function_ fn =
       let {
         Ast.Function.id;
         params = (_, { Ast.Function.Params.params = params_list; rest; _ }) as params;
@@ -181,14 +214,10 @@ let rec whole_ast_visitor cx rrid =
       let is_probably_function_component =
         (* Capitalized letter initial name *)
         Base.Option.value_map
-          ~f:(fun (_, { Ast.Identifier.name; _ }) ->
-            String.length name > 0
-            &&
-            let fst = String.sub name 0 1 in
-            fst = String.uppercase_ascii fst && fst <> "_")
+          ~f:(fun (_, { Ast.Identifier.name; _ }) -> componentlike_name name)
           ~default:false
           id
-        && (List.length params_list = 1 || List.length params_list = 2 (* Props and maybe ref *))
+        && List.length params_list <= 2 (* Props and ref *)
         && Base.Option.is_none rest
       in
       if (Context.react_rules_always cx && is_probably_function_component) || hook then
@@ -218,9 +247,15 @@ let rec whole_ast_visitor cx rrid =
         )
       else begin
         let cur_in_function_component = in_function_component in
-        if is_probably_function_component && Context.hooklike_functions cx then
-          in_function_component <- true;
-        let res = super#function_declaration fn in
+        let next_in_function_component =
+          (declaring_function_component
+          || is_probably_function_component
+          || Base.Option.is_some (Flow_ast_utils.hook_function fn)
+          )
+          && Context.hooklike_functions cx
+        in
+        in_function_component <- next_in_function_component;
+        let res = super#function_ fn in
         in_function_component <- cur_in_function_component;
         res
       end
@@ -235,7 +270,66 @@ let rec whole_ast_visitor cx rrid =
           hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
         | _ -> ()
       end;
-      super#call annot expr
+      let cur_declaring = declaring_function_component in
+      declaring_function_component <- compatibility_call expr || cur_declaring;
+      let expr = super#call annot expr in
+      declaring_function_component <- cur_declaring;
+      expr
+
+    method! export_default_declaration_decl decl =
+      let cur_declaring = declaring_function_component in
+      let filename = Context.file cx |> File_key.to_string in
+      let next_declaring =
+        if componentlike_name filename || Flow_ast_utils.hook_name filename then
+          match decl with
+          | Ast.Statement.ExportDefaultDeclaration.Expression
+              (_, Ast.Expression.(ArrowFunction _ | Function _)) ->
+            true
+          | Ast.Statement.ExportDefaultDeclaration.Declaration
+              (_, Ast.Statement.FunctionDeclaration _) ->
+            true
+          | _ -> false
+        else
+          false
+      in
+      declaring_function_component <- next_declaring || cur_declaring;
+      let decl = super#export_default_declaration_decl decl in
+      declaring_function_component <- cur_declaring;
+      decl
+
+    method! object_property (loc, prop) =
+      let cur_declaring = declaring_function_component in
+      let next_declaring =
+        match prop with
+        | Ast.Expression.Object.Property.(
+            Method { key = Identifier (_, { Ast.Identifier.name; _ }); _ }) ->
+          Flow_ast_utils.hook_name name
+        | _ -> false
+      in
+      declaring_function_component <- next_declaring || cur_declaring;
+      let res = super#object_property (loc, prop) in
+      declaring_function_component <- cur_declaring;
+      res
+
+    method! variable_declarator ~kind decl =
+      let (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) = decl in
+      let (_ : (_, _) Ast.Pattern.t) = this#variable_declarator_pattern ~kind id in
+      let cur_declaring = declaring_function_component in
+      let next_declaring =
+        match (id, init) with
+        | ( ( _,
+              Ast.Pattern.Identifier
+                { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+            ),
+            Some (_, Ast.Expression.(ArrowFunction _ | Function _))
+          ) ->
+          Context.hooklike_functions cx && (Flow_ast_utils.hook_name name || componentlike_name name)
+        | _ -> false
+      in
+      declaring_function_component <- next_declaring || cur_declaring;
+      let (_ : _ option) = Base.Option.map ~f:this#expression init in
+      declaring_function_component <- cur_declaring;
+      decl
   end
 
 and component_ast_visitor cx is_hook rrid =
