@@ -8,7 +8,7 @@ f((x) => 3, (x: number) => 3);
 f((x) => {
   const a = (x) => 3; // Required annot
   return 3;
-  // Error, function is not iterable. But no annotation required!
+  // Error, function is not iterable. We should be asking for an annotation too.
 }, ...((x) => 3));
 
 function g(x: number) {}

@@ -68,6 +68,14 @@ References:
                    ^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- call.js:12:9
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   12| }, ...((x) => 3));
+               ^
+
+
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -862,4 +870,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 103 errors
+Found 104 errors

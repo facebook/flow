@@ -2425,26 +2425,26 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       in
       let param_str_list = Base.List.init (List.length arguments) ~f:(fun _ -> None) in
       Base.List.iteri arguments ~f:(fun i arg ->
-          let hints =
-            call_argumemts_hints
-            |> decompose_hints
-                 (Instantiate_Callee
-                    {
-                      Hint.reason = call_reason;
-                      return_hints = lazy return_hints;
-                      targs = lazy targs;
-                      arg_list = lazy arg_list;
-                      arg_index = i;
-                    }
-                 )
-            |> decompose_hints (Decomp_FuncParam (param_str_list, i, None))
-          in
           match arg with
           | Ast.Expression.Expression expr ->
+            let hints =
+              call_argumemts_hints
+              |> decompose_hints
+                   (Instantiate_Callee
+                      {
+                        Hint.reason = call_reason;
+                        return_hints = lazy return_hints;
+                        targs = lazy targs;
+                        arg_list = lazy arg_list;
+                        arg_index = i;
+                      }
+                   )
+              |> decompose_hints (Decomp_FuncParam (param_str_list, i, None))
+            in
             this#visit_expression ~hints ~cond:NonConditionalContext expr
           | Ast.Expression.Spread (_, spread) ->
             this#visit_expression
-              ~hints
+              ~hints:[]
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
       )

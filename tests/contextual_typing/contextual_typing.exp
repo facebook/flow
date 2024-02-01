@@ -80,6 +80,22 @@ References:
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ call_rest.js:5:16
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|     outer(...[(x) => { // TODO okay no annotation required
+                     ^
+
+
+Error ------------------------------------------------------------------------------------------------ call_rest.js:9:22
+
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   9|     outer(...inner([(x) => { // TODO okay no annotation required
+                           ^
+
+
 Error --------------------------------------------------------------------------------- destructuring_assignment.js:7:12
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1205,4 +1221,4 @@ References:
 
 
 
-Found 86 errors
+Found 88 errors
