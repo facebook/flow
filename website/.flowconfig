@@ -16,4 +16,3 @@ all=true
 
 experimental.component_syntax=typing
 experimental.component_syntax.deep_read_only=true
-experimental.renders_type_validation=true

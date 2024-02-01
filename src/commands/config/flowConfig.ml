@@ -543,14 +543,6 @@ module Opts = struct
 
   let hooklike_functions_parser = boolean (fun opts v -> Ok { opts with hooklike_functions = v })
 
-  let renders_type_validation_parser =
-    boolean (fun opts v ->
-        if not v then
-          Error "renders type validation must be enabled."
-        else
-          Ok opts
-    )
-
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
 
@@ -852,7 +844,6 @@ module Opts = struct
       ("experimental.component_syntax.deep_read_only", component_syntax_deep_read_only_parser);
       ("experimental.component_syntax.hooklike_functions", hooklike_functions_parser);
       ("experimental.react_rule", react_rules_parser);
-      ("experimental.renders_type_validation", renders_type_validation_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
