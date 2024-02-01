@@ -384,6 +384,20 @@ References:
             ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:796:5
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:796:5
+   796|     useHook(); // error
+            ^^^^^^^^^
+
+References:
+   rules_of_hooks.js:796:5
+   796|     useHook(); // error
+            ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:807:3
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -527,6 +541,48 @@ References:
             ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:857:3
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:857:3
+   857|   useState(); // error
+          ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:857:3
+   857|   useState(); // error
+          ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:870:3
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:870:3
+   870|   useState();// error
+          ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:870:3
+   870|   useState();// error
+          ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:883:3
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:883:3
+   883|   useState();// error
+          ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:883:3
+   883|   useState();// error
+          ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:890:8
 
 Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
@@ -553,6 +609,20 @@ References:
    rules_of_hooks.js:891:8
    891|   b && useHook2(); // error
                ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:901:5
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:901:5
+   901|     useState(); // error
+            ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:901:5
+   901|     useState(); // error
+            ^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:912:21
@@ -878,4 +948,4 @@ References:
 
 
 
-Found 63 errors
+Found 68 errors

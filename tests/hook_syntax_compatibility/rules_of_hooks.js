@@ -793,7 +793,7 @@ hook useHookInLoops1() {
 hook useLabeledBlock() {
   label: {
     if (a) break label;
-    useHook(); // TODO
+    useHook(); // error
   }
 }
 /* [conditionalError('useHook')] */
@@ -854,7 +854,7 @@ let k;
 // This *must* be invalid.
 hook useHook3() {
   if (a) return;
-  useState(); // TODO
+  useState(); // error
 }
 /* [conditionalError('useState', true)] */
 
@@ -867,7 +867,7 @@ hook useHook4() {
   } else {
     console.log('false');
   }
-  useState(); // TODO
+  useState();// error
 }
 /* [conditionalError('useState', true)] */
 
@@ -880,7 +880,7 @@ hook useHook5() {
     console.log('false');
   }
   if (a) return;
-  useState(); // TODO
+  useState();// error
 }
 /* [conditionalError('useState', true)] */
 
@@ -898,7 +898,7 @@ declare const f: any;
 hook useHook7() {
   try {
     f();
-    useState(); // TODO
+    useState(); // error
   } catch {}
 }
 /* [
