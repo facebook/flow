@@ -54,12 +54,12 @@ References:
            ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:16:5
+Error ----------------------------------------------------------------------------------------------------- test.js:20:5
 
 Cannot call `useX` because number [1] is not a function. [not-a-function]
 
-   test.js:16:5
-   16|     useX(); // error for calling number but no hook error
+   test.js:20:5
+   20|     useX(); // error for calling number but no hook error
            ^^^^
 
 References:
@@ -68,13 +68,13 @@ References:
                     ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:20:5
+Error ----------------------------------------------------------------------------------------------------- test.js:24:5
 
 Cannot call `useV` because a call signature declaring the expected parameter / return type is missing in module
 `./exp2` [1]. [prop-missing]
 
-   test.js:20:5
-   20|     useV(); // error for calling module but no hook error
+   test.js:24:5
+   24|     useV(); // error for calling module but no hook error
            ^^^^
 
 References:
