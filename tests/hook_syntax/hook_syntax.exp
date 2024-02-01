@@ -571,6 +571,34 @@ References:
             ^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- hook_tests.js:109:17
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:109:17
+   109|                 useH(); // error
+                        ^^^^^^
+
+References:
+   hook_tests.js:109:17
+   109|                 useH(); // error
+                        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- hook_tests.js:115:13
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:115:13
+   115|             useH(); // error
+                    ^^^^^^
+
+References:
+   hook_tests.js:115:13
+   115|             useH(); // error
+                    ^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:3:13
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -1362,6 +1390,20 @@ References:
             ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:789:5
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:789:5
+   789|     useHook(); // error
+            ^^^^^^^^^
+
+References:
+   rules_of_hooks.js:789:5
+   789|     useHook(); // error
+            ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:800:3
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -1505,6 +1547,48 @@ References:
             ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:850:3
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:850:3
+   850|   useState(); // error
+          ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:850:3
+   850|   useState(); // error
+          ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:863:3
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:863:3
+   863|   useState(); // error
+          ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:863:3
+   863|   useState(); // error
+          ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:876:3
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:876:3
+   876|   useState(); // error
+          ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:876:3
+   876|   useState(); // error
+          ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:883:8
 
 Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
@@ -1531,6 +1615,20 @@ References:
    rules_of_hooks.js:884:8
    884|   b && useHook2(); // error
                ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:894:5
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   rules_of_hooks.js:894:5
+   894|     useState(); // error
+            ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:894:5
+   894|     useState(); // error
+            ^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:905:21
@@ -2048,4 +2146,4 @@ References:
 
 
 
-Found 138 errors
+Found 145 errors

@@ -99,3 +99,22 @@ hook useC() {
     const useBadName = nonHook;
     useBadName(); // error
 }
+
+{
+    hook useH() { }
+    component C(cond: boolean) {
+        label1: {
+            label2: {
+                if (cond) break label2;
+                useH(); // error
+            }
+            useH(); // no error
+            label3: {
+                if (cond) break label1;
+            }
+            useH(); // error
+        }
+        useH(); // no error
+        return null;
+    }
+}

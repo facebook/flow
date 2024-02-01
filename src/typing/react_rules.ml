@@ -378,6 +378,12 @@ and component_ast_visitor cx is_hook rrid =
 
     val mutable conditional_context = false
 
+    val mutable return_seen = false
+
+    val mutable broken = false
+
+    val mutable label_scopes = SMap.empty
+
     method on_loc_annot l = l
 
     method on_type_annot l = l
@@ -445,8 +451,69 @@ and component_ast_visitor cx is_hook rrid =
         let cur = conditional_context in
         conditional_context <- true;
         let res = f n in
-        conditional_context <- cur;
+        conditional_context <- cur || return_seen || broken;
         res
+
+    method! return r =
+      let res = super#return r in
+      conditional_context <- true;
+      return_seen <- true;
+      res
+
+    method! labeled_statement
+        ({ Ast.Statement.Labeled.label = (_, { Ast.Identifier.name; _ }); _ } as stmt) =
+      let cur = conditional_context in
+      label_scopes <- SMap.add name false label_scopes;
+      let res = super#labeled_statement stmt in
+      let label_broken = SMap.find name label_scopes in
+      label_scopes <- SMap.remove name label_scopes;
+      if label_broken then begin
+        assert (broken && conditional_context);
+        broken <- SMap.fold (fun _ -> ( || )) label_scopes false;
+        conditional_context <- cur || return_seen || broken
+      end;
+      res
+
+    method! break ({ Ast.Statement.Break.label; comments = _ } as stmt) =
+      Base.Option.iter
+        ~f:(fun (_, { Ast.Identifier.name; _ }) ->
+          match SMap.find_opt name label_scopes with
+          | Some false ->
+            broken <- true;
+            label_scopes <- SMap.add name true label_scopes;
+            conditional_context <- true
+          | Some true -> assert (conditional_context && broken)
+          | None -> ())
+        label;
+      stmt
+
+    method try_block ({ Ast.Statement.Block.body; comments = _ } as block) =
+      begin
+        if not (Base.List.is_empty body) then
+          let hd = Base.List.hd_exn body in
+          let tl = Base.List.tl_exn body in
+          let (_ : (_, _) Ast.Statement.t) = this#statement hd in
+          let (_ : _ list) = this#in_conditional this#statement_list tl in
+          ()
+      end;
+      block
+
+    method! try_catch stmt =
+      let { Ast.Statement.Try.block = (_, block); handler; finalizer; comments = _ } = stmt in
+      let cur_ret = return_seen in
+      let (_ : (_, _) Ast.Statement.Block.t) = this#try_block block in
+      let (_ : _ option) =
+        Base.Option.map
+          ~f:(fun (_, handler) -> this#in_conditional this#catch_clause handler)
+          handler
+      in
+      let pre_finalizer_ret = return_seen in
+      return_seen <- cur_ret;
+      let (_ : _ option) =
+        Base.Option.map ~f:(fun (_, finalizer) -> this#block finalizer) finalizer
+      in
+      return_seen <- return_seen || pre_finalizer_ret;
+      stmt
 
     method! if_consequent_statement ~has_else =
       this#in_conditional (super#if_consequent_statement ~has_else)
