@@ -1,3 +1,23 @@
+### 0.228.0
+
+Likely to cause new Flow errors:
+* Some new errors might be raised when using `React.cloneElement` with polymorphic components. Eg. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCAB0oGZGBBKBIAAQAKgJGBIBIASqxlASYJRwgSAOSeZSMgDcWKxSzJ5IAggAeAAqAD4CQoGlA2OSqV4rABhcK4nZ+fnAGDEZAEwW8AlWPUogn5CBwNii4BIzmSuq4KjYQ1UUmamXKAAkAFFSuYVS1jBAYATeTq1RqCfZTFAEDq9VYkcKOVAsc7vEtoNgPdgvRIABQYACUpOl1Ik7s9Fn5PuwfoDQfVEE1YfSkd1+rjBIA9G2CQBVMhsAlhMXUPEEnDqliJos2Ig7dOZnP5sn9tZVjBs9udnspfsQQf0ygjzR47CWpNT1OzizztcdrU5BEEgDucGGpJ4O5Me4JUAgD6xMRA+QmCQcDQEE+QAAxWAATFBADsVjgSASJAA). Note that React.cloneElement is [deprecated](https://react.dev/reference/react/cloneElement)
+* Nested `declare module` is no longer a parser error, but a type checking error
+* `declare module` is now explicitly banned in nested scope and outside of library definition files. It already does nothing under those contexts.
+
+New Features:
+* All kinds of imports are now supported in library definition files
+* We will no longer require annotations on class properties, if the class properties are already initialized with "annotation-like" expressions. e.g. We can now infer the type directly for properties like `prop = (foo: string): number => 3`.
+
+Notable bug fixes:
+* Fixed a bug that causes the first run of `flow check` to always return 0 errors, when some parts of temporary directory is a symlink.
+* Hover type on react elements now show the type of the component and props, instead of just `React$Element`. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCAB0oGZGBBKBIAAQAKgJGBIBIASqxlASYJRwgSAOSeZSMgDcWKxLWMBIACvTGCQADwAFQAfASALwE4BYgkEuGMZAEkUcqDyqyarFItVYpZk8kAYXCuJ2flFEoUDSgbHJVK8VmNIlNFiF-PuwvFEuASM5UD10HsBLw2HMfilBKFTpd4cVkoxIHspigCATAHoxWq02n5fKAHoEgDucGGBJIOQghcp1IkABIAKKlMMSIXc7AQGAE6PQCy8PkC4VJ9IIMVirExED5EwkODQIL5AAMVgATMuAOxWBcgJFAA))
+* For missing annotation on exports, we now correctly say some annotation is missing on an identifier instead of array pattern. e.g. for `export function f(a) {}`, we now say "Missing type annotation at identifier" instead of "Missing type annotation at array pattern".
+
+Parser:
+* Flow can now parse `declare namespace Foo {...}` statements. The body of the declare namespace statement shares the same restrictions of `declare module`.
+* Invalid exports in `declare module` are no longer parse errors. They are now type checker errors.
+
 ### 0.227.0
 
 Likely to cause new Flow errors:
