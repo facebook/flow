@@ -5928,6 +5928,7 @@ struct
     | EnumCastT _
     | ConvertEmptyPropsToMixedT _
     | ArithT _
+    | HooklikeT _
     | SpecializeT _ ->
       false
     | _ -> true

@@ -166,7 +166,7 @@ type import =
       remote: string;
       local: string;
     }
-  | Namespace
+  | Namespace of string
   | Default of string
 
 type generator_annot = {
@@ -281,7 +281,7 @@ module Print = struct
   let string_of_import = function
     | Named { kind; remote; local = _ } ->
       spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
-    | Namespace -> "namespace"
+    | Namespace _ -> "namespace"
     | Default _ -> "default"
 
   let rec on_hint = function
