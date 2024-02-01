@@ -384,6 +384,8 @@ and component_ast_visitor cx is_hook rrid =
 
     val mutable label_scopes = SMap.empty
 
+    val mutable switch_scope = false
+
     method on_loc_annot l = l
 
     method on_type_annot l = l
@@ -469,22 +471,56 @@ and component_ast_visitor cx is_hook rrid =
       label_scopes <- SMap.remove name label_scopes;
       if label_broken then begin
         assert (broken && conditional_context);
-        broken <- SMap.fold (fun _ -> ( || )) label_scopes false;
+        broken <- SMap.fold (fun _ -> ( || )) label_scopes switch_scope;
         conditional_context <- cur || return_seen || broken
       end;
       res
 
+    method! switch stmt =
+      let cur = conditional_context in
+      let cur_switch = switch_scope in
+      switch_scope <- false;
+
+      let { Ast.Statement.Switch.discriminant; cases; comments = _; exhaustive_out = _ } = stmt in
+      let (_ : _ Ast.Expression.t) = this#expression discriminant in
+      let (_ : _ list) =
+        Base.List.mapi
+          ~f:(fun i (_, case) -> this#visit_switch_case ~is_last:(i = List.length cases - 1) case)
+          cases
+      in
+
+      if switch_scope then begin
+        assert (broken && conditional_context);
+        broken <- SMap.fold (fun _ -> ( || )) label_scopes cur_switch;
+        conditional_context <- cur || return_seen || broken
+      end;
+      switch_scope <- cur_switch;
+      stmt
+
+    method visit_switch_case ~is_last ({ Ast.Statement.Switch.Case.test; _ } as case) =
+      if Base.Option.is_some test || not is_last then
+        this#in_conditional this#switch_case case
+      else
+        this#switch_case case
+
     method! break ({ Ast.Statement.Break.label; comments = _ } as stmt) =
-      Base.Option.iter
-        ~f:(fun (_, { Ast.Identifier.name; _ }) ->
+      begin
+        match label with
+        | Some (_, { Ast.Identifier.name; _ }) -> begin
           match SMap.find_opt name label_scopes with
           | Some false ->
-            broken <- true;
             label_scopes <- SMap.add name true label_scopes;
+            broken <- true;
             conditional_context <- true
           | Some true -> assert (conditional_context && broken)
-          | None -> ())
-        label;
+          | None -> ()
+        end
+        | None -> begin
+          switch_scope <- true;
+          broken <- true;
+          conditional_context <- true
+        end
+      end;
       stmt
 
     method try_block ({ Ast.Statement.Block.body; comments = _ } as block) =

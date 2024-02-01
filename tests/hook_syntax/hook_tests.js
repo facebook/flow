@@ -102,7 +102,7 @@ hook useC() {
 
 {
     hook useH() { }
-    component C(cond: boolean) {
+    component C(cond: boolean, s:string) {
         label1: {
             label2: {
                 if (cond) break label2;
@@ -115,6 +115,38 @@ hook useC() {
             useH(); // error
         }
         useH(); // no error
+
+        switch (s) {
+            case 'a':
+                useH(); // error
+                break;
+            default:
+                useH(); // error
+        }
+        useH(); // no error
+        switch (s) {
+            default:
+                useH(); // error
+            case 'a':
+                useH(); // error, even though technically its ok
+        }
+        useH(); // no error
+        switch (s) {
+            case 'a':
+                useH(); // error
+            default:
+                switch (s) {
+                    case 'a':
+                        useH(); // error
+                        break;
+                    default:
+                        useH(); // error
+                }
+                useH(); // no error
+                if (cond) return null;
+        }
+        useH(); // error
+
         return null;
     }
 }
