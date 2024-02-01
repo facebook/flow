@@ -4,7 +4,7 @@
   "range":[0,183],
   "body":[
     {
-      "type":"DeclareFunction",
+      "type":"DeclareHook",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":25}},
       "range":[0,25],
       "id":{
@@ -21,7 +21,6 @@
             "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":24}},
             "range":[16,24],
             "params":[],
-            "this":null,
             "returnType":{
               "type":"VoidTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":24}},
@@ -32,8 +31,7 @@
           }
         },
         "optional":false
-      },
-      "predicate":null
+      }
     },
     {
       "type":"DeclareExportDeclaration",
@@ -41,7 +39,7 @@
       "range":[26,58],
       "default":false,
       "declaration":{
-        "type":"DeclareFunction",
+        "type":"DeclareHook",
         "loc":{"source":null,"start":{"line":2,"column":15},"end":{"line":2,"column":32}},
         "range":[41,58],
         "id":{
@@ -58,7 +56,6 @@
               "loc":{"source":null,"start":{"line":2,"column":23},"end":{"line":2,"column":31}},
               "range":[49,57],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":2,"column":27},"end":{"line":2,"column":31}},
@@ -69,8 +66,7 @@
             }
           },
           "optional":false
-        },
-        "predicate":null
+        }
       },
       "specifiers":[],
       "source":null
@@ -81,7 +77,7 @@
       "range":[59,99],
       "default":true,
       "declaration":{
-        "type":"DeclareFunction",
+        "type":"DeclareHook",
         "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":40}},
         "range":[82,99],
         "id":{
@@ -98,7 +94,6 @@
               "loc":{"source":null,"start":{"line":3,"column":31},"end":{"line":3,"column":39}},
               "range":[90,98],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":3,"column":35},"end":{"line":3,"column":39}},
@@ -109,8 +104,7 @@
             }
           },
           "optional":false
-        },
-        "predicate":null
+        }
       },
       "specifiers":[],
       "source":null
@@ -151,10 +145,6 @@
             }
           ]
         },
-        "async":false,
-        "generator":false,
-        "predicate":null,
-        "expression":false,
         "returnType":null,
         "typeParameters":null
       },
@@ -198,10 +188,6 @@
             }
           ]
         },
-        "async":false,
-        "generator":false,
-        "predicate":null,
-        "expression":false,
         "returnType":null,
         "typeParameters":null
       },

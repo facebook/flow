@@ -668,30 +668,35 @@ with type t = Impl.t = struct
           ~outer:func_comments
           ~inner:(format_internal_comments params_comments)
       in
-      let node_name =
+      let (node_name, nonhook_attrs) =
         if hook then
-          "HookDeclaration"
+          ("HookDeclaration", [])
         else
-          "FunctionDeclaration"
+          ( "FunctionDeclaration",
+            [
+              ("async", bool async);
+              ("generator", bool generator);
+              ("predicate", option predicate predicate_);
+              ("expression", bool false);
+            ]
+          )
       in
       node
         ?comments
         node_name
         loc
-        [
-          (* estree hasn't come around to the idea that function decls can have
-             optional ids, but acorn, babel, espree and esprima all have, so let's
-             do it too. see https://github.com/estree/estree/issues/98 *)
-          ("id", option identifier id);
-          ("params", function_params params);
-          ("body", block body);
-          ("async", bool async);
-          ("generator", bool generator);
-          ("predicate", option predicate predicate_);
-          ("expression", bool false);
-          ("returnType", function_return_type return);
-          ("typeParameters", option type_parameter_declaration tparams);
-        ]
+        ([
+           (* estree hasn't come around to the idea that function decls can have
+              optional ids, but acorn, babel, espree and esprima all have, so let's
+              do it too. see https://github.com/estree/estree/issues/98 *)
+           ("id", option identifier id);
+           ("params", function_params params);
+           ("body", block body);
+           ("returnType", function_return_type return);
+           ("typeParameters", option type_parameter_declaration tparams);
+         ]
+        @ nonhook_attrs
+        )
     and function_expression
         ( loc,
           {
@@ -792,18 +797,24 @@ with type t = Impl.t = struct
     and declare_function
         (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_; comments }) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
+      let (name, predicate) =
+        match annot with
+        | (_, (_, Type.Function { Type.Function.hook = true; _ })) -> ("DeclareHook", [])
+        | _ -> ("DeclareFunction", [("predicate", option predicate predicate_)])
+      in
       node
         ?comments
-        "DeclareFunction"
+        name
         loc
-        [
-          ( "id",
-            pattern_identifier
-              id_loc
-              { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
-          );
-          ("predicate", option predicate predicate_);
-        ]
+        ([
+           ( "id",
+             pattern_identifier
+               id_loc
+               { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
+           );
+         ]
+        @ predicate
+        )
     and declare_class
         (loc, { Statement.DeclareClass.id; tparams; body; extends; implements; mixins; comments }) =
       (* TODO: extends shouldn't return an array *)
@@ -1653,13 +1664,18 @@ with type t = Impl.t = struct
         ?comments
         name
         loc
-        [
-          ("params", array_of_list function_type_param params);
-          ("this", option function_type_this_constraint this_);
-          ("returnType", return_annotation return);
-          ("rest", option function_type_rest rest);
-          ("typeParameters", option type_parameter_declaration tparams);
-        ]
+        ([
+           ("params", array_of_list function_type_param params);
+           ("returnType", return_annotation return);
+           ("rest", option function_type_rest rest);
+           ("typeParameters", option type_parameter_declaration tparams);
+         ]
+        @
+        if hook then
+          []
+        else
+          [("this", option function_type_this_constraint this_)]
+        )
     and function_type_param ?comments (loc, { Type.Function.Param.name; annot; optional }) =
       node
         ?comments
