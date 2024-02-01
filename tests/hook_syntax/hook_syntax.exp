@@ -922,90 +922,6 @@ References:
           ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:484:18
-
-Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
-
-   rules_of_hooks.js:484:18
-   484|     const text = use(query);// no error TODO
-                         ^^^^^^^^^^
-
-References:
-   rules_of_hooks.js:484:18
-   484|     const text = use(query);// no error TODO
-                         ^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:485:18
-
-Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
-
-   rules_of_hooks.js:485:18
-   485|     const data = ReactWithHooks.use(thing);// no error TODO
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   rules_of_hooks.js:485:18
-   485|     const data = ReactWithHooks.use(thing);// no error TODO
-                         ^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:486:19
-
-Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
-
-   rules_of_hooks.js:486:19
-   486|     const data2 = ReactWithHooks.use(thing2);// no error TODO
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   rules_of_hooks.js:486:19
-   486|     const data2 = ReactWithHooks.use(thing2);// no error TODO
-                          ^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:491:37
-
-Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
-
-   rules_of_hooks.js:491:37
-   491|       text={shouldFetchBackupText ? use(backupQuery) : 'Nothing to see here'}// no error TODO
-                                            ^^^^^^^^^^^^^^^^
-
-References:
-   rules_of_hooks.js:491:37
-   491|       text={shouldFetchBackupText ? use(backupQuery) : 'Nothing to see here'}// no error TODO
-                                            ^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:502:18
-
-Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
-
-   rules_of_hooks.js:502:18
-   502|     const text = use(item);// no error TODO
-                         ^^^^^^^^^
-
-References:
-   rules_of_hooks.js:502:18
-   502|     const text = use(item);// no error TODO
-                         ^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:509:34
-
-Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
-
-   rules_of_hooks.js:509:34
-   509|   const data = someCallback(x => use(x)); // no error TODO
-                                         ^^^^^^
-
-References:
-   rules_of_hooks.js:509:34
-   509|   const data = someCallback(x => use(x)); // no error TODO
-                                         ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:518:5
 
 Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
@@ -2132,4 +2048,4 @@ References:
 
 
 
-Found 144 errors
+Found 138 errors

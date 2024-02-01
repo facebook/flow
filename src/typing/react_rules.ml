@@ -180,7 +180,21 @@ let componentlike_name name =
   in
   cln 0
 
-let rec whole_ast_visitor cx rrid =
+let bare_use { Ast.Expression.Call.callee; _ } =
+  let open Ast.Expression in
+  match callee with
+  | (_, Identifier (_, { Flow_ast.Identifier.name = "use"; _ }))
+  | ( _,
+      Member
+        {
+          Member.property = Member.PropertyIdentifier (_, { Flow_ast.Identifier.name = "use"; _ });
+          _;
+        }
+    ) ->
+    true
+  | _ -> false
+
+let rec whole_ast_visitor ~under_component cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -266,7 +280,8 @@ let rec whole_ast_visitor cx rrid =
         match hook_callee cx callee_ty with
         | HookCallee _
         | MaybeHookCallee _
-          when not in_function_component ->
+          when (not in_function_component)
+               && not (Flow_ast_utils.hook_call expr && bare_use expr && under_component) ->
           hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
         | _ -> ()
       end;
@@ -409,7 +424,8 @@ and component_ast_visitor cx is_hook rrid =
         match hook_callee cx callee_ty with
         | HookCallee _ ->
           if Flow_ast_utils.hook_call expr then begin
-            if conditional_context then hook_error Error_message.ConditionalHook
+            if conditional_context && not (bare_use expr) then
+              hook_error Error_message.ConditionalHook
           end else
             hook_error Error_message.HookHasIllegalName
         | MaybeHookCallee { hooks; non_hooks } ->
@@ -480,9 +496,9 @@ and component_ast_visitor cx is_hook rrid =
 
     method function_component_body = super#function_body_any
 
-    method! function_body_any = (whole_ast_visitor cx rrid)#function_body_any
+    method! function_body_any = (whole_ast_visitor ~under_component:true cx rrid)#function_body_any
 
-    method! class_body = (whole_ast_visitor cx rrid)#class_body
+    method! class_body = (whole_ast_visitor ~under_component:true cx rrid)#class_body
   end
 
 let check_react_rules cx ast =
@@ -502,5 +518,5 @@ let check_react_rules cx ast =
       Some opaque_id
     | _ -> None
   in
-  let _ = (whole_ast_visitor cx rrid)#program ast in
+  let _ = (whole_ast_visitor ~under_component:false cx rrid)#program ast in
   ()

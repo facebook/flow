@@ -481,14 +481,14 @@ declare const shouldFetchBackupText: any;
 declare const query: any;
 component App3() {
   if (shouldShowText) {
-    const text = use(query);// no error TODO
-    const data = ReactWithHooks.use(thing);// no error TODO
-    const data2 = ReactWithHooks.use(thing2);// no error TODO
+    const text = use(query);
+    const data = ReactWithHooks.use(thing);
+    const data2 = ReactWithHooks.use(thing2);
     return <Text text={text} />;
   }
   return (
     <Text
-      text={shouldFetchBackupText ? use(backupQuery) : 'Nothing to see here'}// no error TODO
+      text={shouldFetchBackupText ? use(backupQuery) : 'Nothing to see here'}
     />
   );
 }
@@ -499,14 +499,14 @@ declare const item: any;
 component App4() {
   let data = [];
   for (const query of queries) {
-    const text = use(item);// no error TODO
+    const text = use(item);
     data.push(text);
   }
   return <Child data={data} />;
 }
 declare const someCallback: any;
 component App5() {
-  const data = someCallback(x => use(x)); // no error TODO
+  const data = someCallback(x => use(x));
   return <Child data={data} />;
 }
 
