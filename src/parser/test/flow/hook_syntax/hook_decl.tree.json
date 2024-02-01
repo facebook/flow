@@ -22,10 +22,6 @@
         "range":[11,14],
         "body":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":null,
       "typeParameters":null
     }
