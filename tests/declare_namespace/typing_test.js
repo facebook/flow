@@ -26,3 +26,12 @@ declare namespace unsupported_statements {
 unsupported_statements.a as empty; // error: number ~> empty
 unsupported_statements.B.C as unsupported_statements.B; // ok
 unsupported_statements.B.D as empty; // error: enum ~> empty
+
+import {exported_ns} from './exported';
+exported_ns.bar1 as empty; // error: number ~> empty
+exported_ns.bar2 as empty; // error: boolean ~> empty
+exported_ns.bar3 as empty; // error: string ~> empty
+exported_ns.f(3) as empty; // error: number ~> empty
+1 as exported_ns.Baz; // error: number ~> string
+exported_ns.B.C as empty; // error: enum ~> empty
+exported_ns.React; // error: prop-missing

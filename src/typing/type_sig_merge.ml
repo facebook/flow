@@ -66,6 +66,7 @@ let def_reason = function
   | DisabledEnumBinding { id_loc; name; _ }
   | EnumBinding { id_loc; name; _ } ->
     Reason.(mk_reason (REnum name) id_loc)
+  | NamespaceBinding { id_loc; name; _ } -> Reason.(mk_reason (RNamespace name) id_loc)
 
 let remote_ref_reason = function
   | Pack.Import { id_loc; name; _ }
@@ -2088,6 +2089,27 @@ let merge_def file reason = function
     Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members
+  | NamespaceBinding { id_loc = _; name = _; values; types } when Context.namespaces file.cx ->
+    let f ~is_type_only_export smap =
+      SMap.fold
+        (fun name (loc, packed) ->
+          NameUtils.Map.add
+            (Reason.OrdinaryName name)
+            {
+              Type.name_loc = Some loc;
+              preferred_def_locs = None;
+              is_type_only_export;
+              type_ = merge SMap.empty SMap.empty file packed;
+            })
+        smap
+        NameUtils.Map.empty
+    in
+    Flow_js_utils.namespace_type
+      file.cx
+      reason
+      (f ~is_type_only_export:false values)
+      (f ~is_type_only_export:false types)
+  | NamespaceBinding _ -> Type.AnyT.error reason
 
 let merge_export file = function
   | Pack.ExportRef ref

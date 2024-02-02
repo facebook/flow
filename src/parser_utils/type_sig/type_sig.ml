@@ -375,6 +375,12 @@ type ('loc, 'a) def =
       id_loc: 'loc;
       name: string;
     }
+  | NamespaceBinding of {
+      id_loc: 'loc;
+      name: string;
+      values: ('loc * 'a) smap;
+      types: ('loc * 'a) smap;
+    }
 [@@deriving iter, map, show { with_path = false }]
 
 (* These accessors will compile to code that does not have a branch because
@@ -393,6 +399,7 @@ let def_id_loc = function
     id_loc
   | EnumBinding { id_loc; _ } -> id_loc
   | DisabledEnumBinding { id_loc; _ } -> id_loc
+  | NamespaceBinding { id_loc; _ } -> id_loc
 
 let def_name = function
   | TypeAlias { name; _ }
@@ -408,6 +415,7 @@ let def_name = function
     name
   | EnumBinding { name; _ } -> name
   | DisabledEnumBinding { name; _ } -> name
+  | NamespaceBinding { name; _ } -> name
 
 (* The signature extractor relies heavily on annotations, but will extract
  * signatures corresponding to some literal expressions as well. The

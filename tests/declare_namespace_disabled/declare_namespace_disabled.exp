@@ -1,3 +1,14 @@
+Error -------------------------------------------------------------------------------------------------- exported.js:1:1
+
+`declare namespace` statement is not supported yet. The declaration will be ignored. [unsupported-syntax]
+
+      v------------------------------
+   1| declare namespace exported_ns {
+   2|   declare const fff: number;
+   3| }
+      ^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
 `declare namespace` statement is not supported yet. The declaration will be ignored. [unsupported-syntax]
@@ -31,4 +42,4 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 3 errors
+Found 4 errors

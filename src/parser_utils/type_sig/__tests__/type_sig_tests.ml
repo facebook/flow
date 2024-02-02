@@ -5685,6 +5685,60 @@ let%expect_test "builtin_module_export_specifiers" =
                   stars = []; strict = true;
                   platform_availability_set = None}} |}]
 
+let%expect_test "builtin_declare_namespace" =
+  print_builtins [{|
+    declare namespace ns {
+      declare export const bar1: number;
+      declare const bar2: boolean;
+      declare var bar3: boolean;
+      declare function f(): string;
+      declare function f(): number;
+      declare type Baz = string;
+      enum B {
+        C,
+        D,
+      }
+      if (true) {} // unsupported
+      declare module.exports: {foo: string}; // unsupported
+      import React from 'react'; // unsupported
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:23-27]; name = "bar1"; def = (Annot (Number [2:29-35]))}
+    1. Variable {id_loc = [3:16-20]; name = "bar2"; def = (Annot (Boolean [3:22-29]))}
+    2. Variable {id_loc = [4:14-18]; name = "bar3"; def = (Annot (Boolean [4:20-27]))}
+    3. DeclareFun {id_loc = [5:19-20];
+         name = "f"; fn_loc = [5:20-30];
+         def =
+         FunSig {tparams = Mono; params = [];
+           rest_param = None; this_param = None;
+           return = (Annot (String [5:24-30]));
+           predicate = None; hook = NonHook};
+         tail =
+         [([6:19-20], [6:20-30],
+           FunSig {tparams = Mono; params = [];
+             rest_param = None; this_param = None;
+             return = (Annot (Number [6:24-30]));
+             predicate = None; hook = NonHook})
+           ]}
+    4. TypeAlias {id_loc = [7:15-18];
+         name = "Baz"; tparams = Mono;
+         body = (Annot (String [7:21-27]))}
+    5. EnumBinding {id_loc = [8:7-8];
+         name = "B"; rep = StringRep {truthy = true};
+         members = { "C" -> [9:4-5]; "D" -> [10:4-5] };
+         has_unknown_members = false}
+    6. NamespaceBinding {id_loc = [1:18-20];
+         name = "ns";
+         values =
+         { "B" -> ([8:7-8], (Ref LocalRef {ref_loc = [8:7-8]; index = 5}));
+           "bar1" -> ([2:23-27], (Ref LocalRef {ref_loc = [2:23-27]; index = 0}));
+           "bar2" -> ([3:16-20], (Ref LocalRef {ref_loc = [3:16-20]; index = 1}));
+           "bar3" -> ([4:14-18], (Ref LocalRef {ref_loc = [4:14-18]; index = 2}));
+           "f" -> ([5:19-20], (Ref LocalRef {ref_loc = [5:19-20]; index = 3})) };
+         types = { "Baz" -> ([7:15-18], (Ref LocalRef {ref_loc = [7:15-18]; index = 4})) }} |}]
+
 let%expect_test "builtin_pattern" =
   print_builtins [{|
     const o = { p: 0 };

@@ -138,6 +138,14 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
         ignore has_unknown_members;
         SMap.iter (fun _ -> mark_loc ~visit_loc) members
     end
+  | P.NamespaceBinding { id_loc; name = _; values; types } ->
+    mark_loc ~visit_loc id_loc;
+    let f _ (loc, parsed) =
+      mark_loc ~visit_loc loc;
+      mark_parsed ~locs_to_dirtify ~visit_loc parsed
+    in
+    SMap.iter f values;
+    SMap.iter f types
 
 and mark_remote_binding = function
   | P.ImportBinding { id_loc; name = _; mref; remote = _ }

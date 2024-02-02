@@ -367,6 +367,12 @@ and pack_local_binding cx = function
         let members = SMap.map pack_loc members in
         EnumBinding { id_loc; name; rep; members; has_unknown_members }
     end
+  | P.NamespaceBinding { id_loc; name; values; types } ->
+    let id_loc = pack_loc id_loc in
+    let f (loc, parsed) = (pack_loc loc, pack_parsed cx parsed) in
+    let values = SMap.map f values in
+    let types = SMap.map f types in
+    NamespaceBinding { id_loc; name; values; types }
 
 and pack_remote_binding = function
   | P.ImportBinding { id_loc; name; mref; remote } ->

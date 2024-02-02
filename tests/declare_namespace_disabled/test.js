@@ -11,3 +11,6 @@ declare namespace unsupported_declare_module_exports { // error
 }
 
 unsupported_declare_module_exports.foo; // no error, everything is any
+
+require('./exported').exported_ns.fff as empty; // no error, everything is any
+require('./exported').exported_ns.random_do_not_exist as empty; // no error, everything is any

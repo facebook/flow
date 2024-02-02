@@ -140,6 +140,10 @@ and 'loc scope =
       parent: 'loc scope;
       exports: 'loc exports;
     }
+  | DeclareNamespace of {
+      mutable names: 'loc binding_node SMap.t;
+      parent: 'loc scope;
+    }
   | Module of {
       mutable names: 'loc binding_node SMap.t;
       exports: 'loc exports;
@@ -225,6 +229,12 @@ and 'loc local_binding =
       id_loc: 'loc loc_node;
       name: string;
       def: (enum_rep * 'loc loc_node smap * bool) Lazy.t option;
+    }
+  | NamespaceBinding of {
+      id_loc: 'loc loc_node;
+      name: string;
+      values: ('loc loc_node * 'loc parsed) smap;
+      types: ('loc loc_node * 'loc parsed) smap;
     }
 
 and 'loc remote_binding =
@@ -481,6 +491,8 @@ module Scope = struct
 
   let push_lex parent = Lexical { parent; names = SMap.empty }
 
+  let push_declare_namespace parent = DeclareNamespace { parent; names = SMap.empty }
+
   let push_declare_module loc name parent =
     let exports = Exports.create ~strict:true ~platform_availability_set:None in
     begin
@@ -500,7 +512,8 @@ module Scope = struct
   let parent_opt = function
     | DeclareModule { parent; _ }
     | Lexical { parent; _ }
-    | ConditionalTypeExtends { parent; _ } ->
+    | ConditionalTypeExtends { parent; _ }
+    | DeclareNamespace { parent; _ } ->
       Some parent
     | Global _
     | Module _ ->
@@ -509,6 +522,7 @@ module Scope = struct
   let modify_names f = function
     | Global scope -> scope.names <- f scope.names
     | DeclareModule scope -> scope.names <- f scope.names
+    | DeclareNamespace scope -> scope.names <- f scope.names
     | Module scope -> scope.names <- f scope.names
     | Lexical scope -> scope.names <- f scope.names
     | ConditionalTypeExtends _ -> ()
@@ -516,6 +530,7 @@ module Scope = struct
   let modify_exports f = function
     | Module scope -> f scope.exports
     | DeclareModule scope -> f scope.exports
+    | DeclareNamespace _
     | Global _
     | Lexical _
     | ConditionalTypeExtends _ ->
@@ -524,6 +539,7 @@ module Scope = struct
   let builtins_exn = function
     | Global { names; modules } -> (names, modules)
     | DeclareModule _
+    | DeclareNamespace _
     | Module _
     | Lexical _
     | ConditionalTypeExtends _ ->
@@ -533,6 +549,7 @@ module Scope = struct
     | Module { exports; _ } -> exports
     | Global _
     | DeclareModule _
+    | DeclareNamespace _
     | Lexical _
     | ConditionalTypeExtends _ ->
       raise Not_found
@@ -549,7 +566,8 @@ module Scope = struct
     | ComponentBinding _
     | ClassBinding _
     | DeclareClassBinding _
-    | EnumBinding _ ->
+    | EnumBinding _
+    | NamespaceBinding _ ->
       true
 
   let value_binding kind id_loc name def =
@@ -583,6 +601,7 @@ module Scope = struct
       Base.Option.map ~f:(fun binding -> (binding, scope)) (SMap.find_opt name names)
     | ConditionalTypeExtends { parent; _ } -> lookup parent name
     | DeclareModule { parent; names; _ }
+    | DeclareNamespace { parent; names; _ }
     | Lexical { parent; names } ->
       (match SMap.find_opt name names with
       | Some binding -> Some (binding, scope)
@@ -592,6 +611,7 @@ module Scope = struct
     match scope with
     | Global _
     | DeclareModule _
+    | DeclareNamespace _
     | Module _ ->
       scope
     | ConditionalTypeExtends { parent; _ } -> find_host parent b
@@ -605,6 +625,7 @@ module Scope = struct
     match scope with
     | Global _
     | DeclareModule _
+    | DeclareNamespace _
     | Module _ ->
       None
     | Lexical { parent; _ } -> scope_of_infer_name parent name loc
@@ -728,7 +749,8 @@ module Scope = struct
       | DeclareClassBinding _
       | DeclareFunBinding _
       | EnumBinding _
-      | ComponentBinding _ ->
+      | ComponentBinding _
+      | NamespaceBinding _ ->
         def
       | FunBinding fn ->
         let statics = SMap.add prop_name prop fn.statics in
@@ -878,7 +900,8 @@ module Scope = struct
                   | FunBinding _
                   | DeclareFunBinding _
                   | ComponentBinding _
-                  | EnumBinding _ ->
+                  | EnumBinding _
+                  | NamespaceBinding _ ->
                     Exports.cjs_declare_module_set_prop name node exports
                   | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports)
                 | RemoteBinding _ -> ())
@@ -887,11 +910,51 @@ module Scope = struct
       | Exports { kind = CJSDeclareModule _; _ } ->
         (* is already the right kind? shouldn't happen *)
         failwith "only call finalize_declare_module_exports_exn once per DeclareModule")
+    | DeclareNamespace _
     | Global _
     | Module _
     | Lexical _
     | ConditionalTypeExtends _ ->
       failwith "expected DeclareModule to still be the scope"
+
+  (* a `declare namespace` exports every binding. *)
+  let finalize_declare_namespace_exn scope tbls id_loc name =
+    match scope with
+    | DeclareNamespace { names; parent; _ } ->
+      let (values, types) =
+        SMap.fold
+          (fun name binding (values, types) ->
+            match binding with
+            | LocalBinding node ->
+              let local_binding = Local_defs.value node in
+              (match local_binding with
+              | VarBinding { id_loc; _ }
+              | LetConstBinding { id_loc; _ }
+              | ConstRefBinding { id_loc; _ }
+              | ConstFunBinding { id_loc; _ }
+              | ClassBinding { id_loc; _ }
+              | DeclareClassBinding { id_loc; _ }
+              | FunBinding { id_loc; _ }
+              | ComponentBinding { id_loc; _ }
+              | EnumBinding { id_loc; _ }
+              | NamespaceBinding { id_loc; _ } ->
+                (SMap.add name (id_loc, val_ref scope id_loc name) values, types)
+              | DeclareFunBinding { defs_rev; _ } ->
+                let (id_loc, _, _) = Nel.last defs_rev in
+                (SMap.add name (id_loc, val_ref scope id_loc name) values, types)
+              | TypeBinding { id_loc; _ } ->
+                (values, SMap.add name (id_loc, val_ref scope id_loc name) types))
+            | RemoteBinding _ -> (values, types))
+          names
+          (SMap.empty, SMap.empty)
+      in
+      bind_local parent tbls name (NamespaceBinding { id_loc; name; values; types })
+    | _ -> failwith "The scope must be lexical"
+
+  let bind_namespace scope tbls id_loc name ~f =
+    let inner_scope = push_declare_namespace scope in
+    f inner_scope;
+    finalize_declare_namespace_exn inner_scope tbls id_loc name
 end
 
 module ObjAnnotAcc = struct
@@ -4254,6 +4317,27 @@ let declare_class_decl opts scope tbls decl =
   let def = lazy (splice tbls id_loc (fun tbls -> declare_class_def opts scope tbls decl)) in
   Scope.bind_declare_class scope tbls id_loc name def
 
+let namespace_decl
+    opts
+    scope
+    tbls
+    ~visit_statement
+    {
+      Ast.Statement.DeclareNamespace.id = (id_loc, { Ast.Identifier.name; _ });
+      body = (_, { Ast.Statement.Block.body = stmts; comments = _ });
+      comments = _;
+    } =
+  let id_loc = push_loc tbls id_loc in
+  let stmts =
+    Base.List.filter stmts ~f:(fun (_, stmt) ->
+        Flow_ast_utils.acceptable_statement_in_declaration_context ~in_declare_namespace:true stmt
+        |> Base.Result.is_ok
+    )
+  in
+  let scope = Scope.push_declare_namespace scope in
+  List.iter (visit_statement opts scope tbls) stmts;
+  Scope.finalize_declare_namespace_exn scope tbls id_loc name
+
 let import_decl _opts scope tbls decl =
   let module I = Ast.Statement.ImportDeclaration in
   let {
@@ -4741,11 +4825,8 @@ let rec statement opts scope tbls (loc, stmt) =
     in
     List.iter visit_statement stmts;
     Scope.finalize_declare_module_exports_exn scope
-  | S.DeclareNamespace { S.DeclareNamespace.id; body; comments = _ } ->
-    (* TODO(T174946399): namespace support *)
-    ignore id;
-    ignore body;
-    ()
+  | S.DeclareNamespace decl ->
+    namespace_decl opts scope tbls ~visit_statement:statement decl ignore2
   | S.DeclareEnum decl
   | S.EnumDeclaration decl ->
     enum_decl opts scope tbls decl ignore2
