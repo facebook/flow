@@ -946,14 +946,7 @@ module type Instantiation_helper_sig = sig
     Type.t ->
     Type.t
 
-  val reposition :
-    Context.t ->
-    ?trace:Type.trace ->
-    ALoc.t ->
-    ?desc:reason_desc ->
-    ?annot_loc:ALoc.t ->
-    Type.t ->
-    Type.t
+  val reposition : Context.t -> ?trace:Type.trace -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
   val is_subtype : Context.t -> Type.trace -> use_op:use_op -> Type.t * Type.t -> unit
 
@@ -1160,7 +1153,7 @@ let check_nonstrict_import cx is_strict imported_is_strict reason =
 module type Import_export_helper_sig = sig
   type r
 
-  val reposition : Context.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
   val export_named :
     Context.t -> Reason.t * Type.named_symbol NameUtils.Map.t * export_kind -> Type.t -> r
@@ -1876,14 +1869,7 @@ module type Get_prop_helper_sig = sig
     Reason.reason * Type.lookup_kind * Type.propref * use_op * Type.Properties.Set.t ->
     r
 
-  val reposition :
-    Context.t ->
-    ?trace:Type.trace ->
-    ALoc.t ->
-    ?desc:reason_desc ->
-    ?annot_loc:ALoc.t ->
-    Type.t ->
-    Type.t
+  val reposition : Context.t -> ?trace:Type.trace -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
   val mk_react_dro : Context.t -> use_op -> ALoc.t * Type.dro_type -> Type.t -> Type.t
 

@@ -27,7 +27,7 @@ val flow_p :
 
 val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t
 
-val reposition : Context.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
 val reposition_reason : Context.t -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
 

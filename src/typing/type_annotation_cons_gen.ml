@@ -20,8 +20,6 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
         Flow.flow cx (c, SpecializeT (use_op, reason_op, reason_tapp, false, targs, tvar))
     )
 
-  let reposition = reposition ?desc:None
-
   let mixin cx reason i =
     Tvar.mk_where cx reason (fun tout -> Flow.flow cx (i, Type.MixinT (reason, tout)))
 

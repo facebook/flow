@@ -107,24 +107,24 @@ class func_scope_visitor
           (* Convert the return expression's type T to Promise<T>. If the
              * expression type is itself a Promise<T>, ensure we still return
              * a Promise<T> via Promise.resolve. *)
-          let reason = mk_reason (RCustom "async return") loc in
+          let async_return_reason = mk_reason (RCustom "async return") loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
-              reason
+              (mk_reason (desc_of_t t) loc)
               (OrdinaryName "Promise")
               [
-                Tvar.mk_where cx reason (fun tvar ->
-                    let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
+                Tvar.mk_where cx async_return_reason (fun tvar ->
+                    let funt = Flow.get_builtin cx (OrdinaryName "$await") async_return_reason in
                     let callt =
                       mk_functioncalltype
                         ~call_kind:RegularCallKind
-                        reason
+                        async_return_reason
                         None
                         [Arg t]
                         (open_tvar tvar)
                     in
-                    let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
+                    let reason = repos_reason (loc_of_reason (reason_of_t t)) async_return_reason in
                     Flow.flow
                       cx
                       ( funt,
@@ -139,29 +139,39 @@ class func_scope_visitor
                 );
               ]
           in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+          Flow.reposition cx loc t'
         | Generator _ ->
           (* Convert the return expression's type R to Generator<Y,R,N>, where
            * Y and R are internals, installed earlier. *)
-          let reason = mk_reason (RCustom "generator return") loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
-              reason
+              (mk_reason (desc_of_t t) loc)
               (OrdinaryName "Generator")
-              [yield_t; Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar)); next_t]
+              [
+                yield_t;
+                Tvar.mk_where cx (mk_reason (RCustom "generator return") loc) (fun tvar ->
+                    Flow.flow_t cx (t, tvar)
+                );
+                next_t;
+              ]
           in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+          Flow.reposition cx loc t'
         | AsyncGenerator _ ->
-          let reason = mk_reason (RCustom "async generator return") loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
-              reason
+              (mk_reason (desc_of_t t) loc)
               (OrdinaryName "AsyncGenerator")
-              [yield_t; Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar)); next_t]
+              [
+                yield_t;
+                Tvar.mk_where cx (mk_reason (RCustom "async generator return") loc) (fun tvar ->
+                    Flow.flow_t cx (t, tvar)
+                );
+                next_t;
+              ]
           in
-          Flow.reposition cx ~desc:(desc_of_t t) loc t'
+          Flow.reposition cx loc t'
         | _ -> t
       in
       let use_op =
@@ -375,7 +385,6 @@ struct
           let t =
             Flow.reposition
               cx
-              ~desc:(desc_of_t t)
               (type_t_of_annotated_or_inferred return_t |> reason_of_t |> loc_of_reason)
               t
           in
@@ -392,7 +401,6 @@ struct
           let t =
             Flow.reposition
               cx
-              ~desc:(desc_of_t t)
               (type_t_of_annotated_or_inferred return_t |> reason_of_t |> loc_of_reason)
               t
           in

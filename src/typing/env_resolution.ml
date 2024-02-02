@@ -1182,9 +1182,7 @@ let resolve_generator_next cx reason gen =
                 next;
               ]
           in
-          let t =
-            Flow_js.reposition cx ~desc:(desc_of_t t) (reason_of_t return_t |> loc_of_reason) t
-          in
+          let t = Flow_js.reposition cx (reason_of_t return_t |> loc_of_reason) t in
           Flow_js.flow_t cx (t, return_t)
       )
     in

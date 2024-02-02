@@ -239,7 +239,7 @@ struct
 
     let unify cx trace ~use_op (t1, t2) = FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
 
-    let reposition = FlowJs.reposition
+    let reposition = FlowJs.reposition ?desc:None
   end
 
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
@@ -249,7 +249,7 @@ struct
     Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
     type r = Type.t -> unit
 
-    let reposition = FlowJs.reposition ~trace:Trace.dummy_trace
+    let reposition = FlowJs.reposition ~trace:Trace.dummy_trace ?desc:None
 
     let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use Trace.dummy_trace (t, tout)
 
@@ -370,7 +370,7 @@ struct
 
     let enum_proto = enum_proto
 
-    let reposition = FlowJs.reposition
+    let reposition = FlowJs.reposition ?desc:None
 
     let cg_lookup
         cx trace ~obj_t ~method_accessible t (reason_op, lookup_kind, propref, use_op, ids) tout =
@@ -10430,7 +10430,7 @@ let reposition_reason cx reason ?use_desc t = reposition_reason cx reason ?use_d
 
 let filter_optional cx reason opt_t = filter_optional cx reason opt_t
 
-let reposition cx loc ?desc ?annot_loc t = reposition cx loc ?desc ?annot_loc t
+let reposition cx loc ?annot_loc t = reposition cx loc ?desc:None ?annot_loc t
 
 let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts =
   mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts
