@@ -533,14 +533,6 @@ module Opts = struct
             component_syntax_includes = v :: opts.component_syntax_includes;
           })
 
-  let component_syntax_deep_read_only_parser =
-    boolean (fun opts v ->
-        if v then
-          Ok { opts with react_rules = Options.DeepReadOnlyProps :: opts.react_rules }
-        else
-          Ok opts
-    )
-
   let hooklike_functions_parser = boolean (fun opts v -> Ok { opts with hooklike_functions = v })
 
   let automatic_require_default_parser =
@@ -841,7 +833,6 @@ module Opts = struct
       );
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
-      ("experimental.component_syntax.deep_read_only", component_syntax_deep_read_only_parser);
       ("experimental.component_syntax.hooklike_functions", hooklike_functions_parser);
       ("experimental.react_rule", react_rules_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
