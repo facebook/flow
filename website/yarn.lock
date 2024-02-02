@@ -3081,12 +3081,12 @@ babel-plugin-polyfill-regenerator@^0.4.0:
   dependencies:
     "@babel/helper-define-polyfill-provider" "^0.3.2"
 
-babel-plugin-syntax-hermes-parser@0.19.0:
-  version "0.19.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.19.0.tgz#82380749f51eef65533eff7eeb0a02bdd7ac9609"
-  integrity sha512-6kuCqOi8hb95y+UrwANL3mdVJ9/Qo85OK2I/tYRNFU/Ix33mBAAlmbB+mS3owndSJqswXzbeGRGl0nqAsyjAFg==
+babel-plugin-syntax-hermes-parser@0.18.2:
+  version "0.18.2"
+  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.18.2.tgz#4980cfcc1bd02daabe0280a05eba58ea2932690a"
+  integrity sha512-dPSkRrmQFtl5W9qQM/imQ3TBj5ozS9mcYwZ1wUAVW7ysNTcRmupHlmElefi09LTbMxKfV8QtUnBTzOQFvGg8Iw==
   dependencies:
-    hermes-parser "0.19.0"
+    hermes-parser "0.18.2"
 
 bail@^1.0.0:
   version "1.0.5"
@@ -5589,17 +5589,17 @@ heap@^0.2.6:
   resolved "https://registry.yarnpkg.com/heap/-/heap-0.2.7.tgz#1e6adf711d3f27ce35a81fe3b7bd576c2260a8fc"
   integrity sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==
 
-hermes-estree@0.19.0:
-  version "0.19.0"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.19.0.tgz#8f3aa02234b8dbb0862681012a72f413b0a7fb54"
-  integrity sha512-FAiXKtROMOirOJ/koUNFu+28fKSCRQNs7BTx4V3i/yc5BIyS/B3wLquJLd/jgvQoQCu7ZtbB6VOIrFKwWBBq1w==
+hermes-estree@0.18.2:
+  version "0.18.2"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.18.2.tgz#fd450fa1659cf074ceaa2ddeeb21674f3b2342f3"
+  integrity sha512-KoLsoWXJ5o81nit1wSyEZnWUGy9cBna9iYMZBR7skKh7okYAYKqQ9/OczwpMHn/cH0hKDyblulGsJ7FknlfVxQ==
 
-hermes-parser@0.19.0:
-  version "0.19.0"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.19.0.tgz#e5ff1157994d54517b780d8022203434e5ceac91"
-  integrity sha512-jGvGBgiCqd+VwBaTag1zUZRLlAzexWcf069v252k/K+Wm7ohXBt+SN2l9ny2a0zMoOaEi+decoH+gETdanXSOw==
+hermes-parser@0.18.2:
+  version "0.18.2"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.18.2.tgz#50f15e2fcd559a48c68cd7af259d4292298bd14d"
+  integrity sha512-1eQfvib+VPpgBZ2zYKQhpuOjw1tH+Emuib6QmjkJWJMhyjM8xnXMvA+76o9LhF0zOAJDZgPfQhg43cyXEyl5Ew==
   dependencies:
-    hermes-estree "0.19.0"
+    hermes-estree "0.18.2"
 
 history@^4.9.0:
   version "4.10.1"
