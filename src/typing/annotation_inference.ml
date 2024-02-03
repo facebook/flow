@@ -242,8 +242,6 @@ module rec ConsGen : S = struct
 
   let instantiate_poly cx = InstantiationKit.instantiate_poly cx dummy_trace
 
-  let instantiate_poly_with_targs cx = InstantiationKit.instantiate_poly_with_targs cx dummy_trace
-
   let mk_typeapp_of_poly cx = InstantiationKit.mk_typeapp_of_poly cx dummy_trace
 
   (***********)
@@ -537,23 +535,16 @@ module rec ConsGen : S = struct
           targs
       in
       elab_t cx t op
-    | ( DefT
-          ( reason_tapp,
-            PolyT
-              { tparams_loc; tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }
-          ),
+    | ( DefT (_, PolyT { tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }),
         Annot_UseT_TypeT (reason_op, RenderTypeKind)
       ) ->
-      let targs = Nel.to_list ids |> List.map (fun _ -> AnyT.untyped reason_op) in
-      let (t_, _) =
-        instantiate_poly_with_targs
-          cx
-          ~use_op:unknown_use
-          ~reason_op
-          ~reason_tapp
-          (tparams_loc, ids, t)
-          targs
+      let subst_map =
+        Nel.fold_left
+          (fun acc tparam -> Subst_name.Map.add tparam.name (AnyT.untyped reason_op) acc)
+          Subst_name.Map.empty
+          ids
       in
+      let t_ = subst cx subst_map t in
       elab_t cx t_ op
     | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output
