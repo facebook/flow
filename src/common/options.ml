@@ -76,7 +76,7 @@ type t = {
   opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
-  opt_component_syntax_includes: string list;
+  opt_hooklike_functions_includes: string list;
   opt_hooklike_functions: bool;
   opt_react_rules: react_rules list;
   opt_debug: bool;
@@ -181,19 +181,21 @@ let component_syntax opts = opts.opt_component_syntax
 
 let hooklike_functions opts = opts.opt_hooklike_functions
 
-let component_syntax_includes opts = opts.opt_component_syntax_includes
+let hooklike_functions_includes opts = opts.opt_hooklike_functions_includes
 
-let typecheck_component_syntax_in_file opts file =
-  component_syntax opts
-  || File_key.is_lib_file file
+let hooklike_functions_in_file opts file =
+  hooklike_functions opts
   || begin
-       match component_syntax_includes opts with
+       match hooklike_functions_includes opts with
        | [] -> false
        | dirs ->
          let filename = File_key.to_string file in
          let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
          List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
      end
+
+let typecheck_component_syntax_in_file opts file =
+  component_syntax opts || File_key.is_lib_file file
 
 let react_rules opts = opts.opt_react_rules
 

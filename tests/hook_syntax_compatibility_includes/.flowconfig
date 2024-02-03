@@ -1,0 +1,9 @@
+[options]
+experimental.component_syntax=true
+experimental.react_rule=rulesOfHooks
+experimental.component_syntax.hooklike_functions=false
+experimental.component_syntax.hooklike_functions.includes=<PROJECT_ROOT>/include_provider.js
+experimental.component_syntax.hooklike_functions.includes=<PROJECT_ROOT>/include.js
+all=true
+casting_syntax=both
+no_flowlib=false

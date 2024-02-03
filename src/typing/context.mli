@@ -75,7 +75,7 @@ type metadata = {
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
-  component_syntax_includes: string list;
+  hooklike_functions_includes: string list;
   hooklike_functions: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;

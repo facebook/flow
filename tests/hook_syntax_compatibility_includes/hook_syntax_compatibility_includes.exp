@@ -1,0 +1,60 @@
+Error --------------------------------------------------------------------------------------------------- exclude.js:5:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   exclude.js:5:5
+   5|     IP.useFoo(); // error
+          ^^^^^^^^^^^
+
+References:
+   exclude.js:5:5
+   5|     IP.useFoo(); // error
+          ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- exclude.js:7:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   exclude.js:7:5
+   7|     XP.useFoo(); // error
+          ^^^^^^^^^^^
+
+References:
+   exclude.js:7:5
+   7|     XP.useFoo(); // error
+          ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- exclude.js:13:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   exclude.js:13:5
+   13|     IP.useBar(); // error
+           ^^^^^^^^^^^
+
+References:
+   exclude.js:13:5
+   13|     IP.useBar(); // error
+           ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- exclude.js:15:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   exclude.js:15:5
+   15|     XP.useBar(); // error
+           ^^^^^^^^^^^
+
+References:
+   exclude.js:15:5
+   15|     XP.useBar(); // error
+           ^^^^^^^^^ [1]
+
+
+
+Found 4 errors

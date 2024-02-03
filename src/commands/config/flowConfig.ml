@@ -53,8 +53,8 @@ module Opts = struct
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
-    component_syntax_includes: string list;
     hooklike_functions: bool;
+    hooklike_functions_includes: string list;
     react_rules: Options.react_rules list;
     emoji: bool option;
     enable_as_const: bool option;
@@ -178,8 +178,8 @@ module Opts = struct
       channel_mode = None;
       casting_syntax = None;
       component_syntax = false;
-      component_syntax_includes = [];
       hooklike_functions = true;
+      hooklike_functions_includes = [];
       react_rules = [];
       emoji = None;
       enable_as_const = None;
@@ -521,17 +521,12 @@ module Opts = struct
       ]
       (fun opts v -> Ok { opts with react_rules = v :: opts.react_rules })
 
-  let component_syntax_includes_parser =
+  let hooklike_functions_includes_parser =
     string
-      ~init:(fun opts -> { opts with component_syntax_includes = [] })
+      ~init:(fun opts -> { opts with hooklike_functions_includes = [] })
       ~multiple:true
       (fun opts v ->
-        Ok
-          {
-            opts with
-            component_syntax = opts.component_syntax;
-            component_syntax_includes = v :: opts.component_syntax_includes;
-          })
+        Ok { opts with hooklike_functions_includes = v :: opts.hooklike_functions_includes })
 
   let hooklike_functions_parser = boolean (fun opts v -> Ok { opts with hooklike_functions = v })
 
@@ -832,8 +827,10 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
       ("experimental.component_syntax", component_syntax_parser);
-      ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
       ("experimental.component_syntax.hooklike_functions", hooklike_functions_parser);
+      ( "experimental.component_syntax.hooklike_functions.includes",
+        hooklike_functions_includes_parser
+      );
       ("experimental.react_rule", react_rules_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1478,7 +1475,7 @@ let channel_mode c = c.options.Opts.channel_mode
 
 let component_syntax c = c.options.Opts.component_syntax
 
-let component_syntax_includes c = c.options.Opts.component_syntax_includes
+let hooklike_functions_includes c = c.options.Opts.hooklike_functions_includes
 
 let hooklike_functions c = c.options.Opts.hooklike_functions
 

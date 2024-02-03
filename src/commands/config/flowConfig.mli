@@ -84,7 +84,7 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
 
-val component_syntax_includes : config -> string list
+val hooklike_functions_includes : config -> string list
 
 val hooklike_functions : config -> bool
 

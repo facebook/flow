@@ -1,5 +1,0 @@
-[options]
-experimental.component_syntax.typing.includes=<PROJECT_ROOT>/include.js
-all=true
-casting_syntax=both
-no_flowlib=false
