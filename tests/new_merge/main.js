@@ -175,3 +175,6 @@ import {instance_named, instance_computed} from './get_prop_instance';
 instance_named as number; // OK
 instance_named as empty; // ERROR
 instance_computed as empty; // OK (export is error)
+
+import {x as t29} from './union';
+t29 as empty; // okay - this is already an error at the definition site

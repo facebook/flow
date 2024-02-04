@@ -911,6 +911,17 @@ and dump_use_t_ (depth, tvars) cx t =
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT { t_out; _ } -> p ~extra:(use_kid t_out) t
     | UnaryArithT _ -> p t
+    | ValueToTypeReferenceT (use_op, reason, kind, tout) ->
+      p
+        ~extra:
+          (spf
+             "%s, %s, %s, %s"
+             (string_of_use_op use_op)
+             (string_of_reason reason)
+             (string_of_type_t_kind kind)
+             (kid tout)
+          )
+        t
     | VarianceCheckT (_, _, args, pol) ->
       p
         ~extra:

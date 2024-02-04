@@ -349,6 +349,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | WriteComputedObjPropCheckT _
     | PromoteRendersRepresentationT _
     | ConvertEmptyPropsToMixedT _
+    | ValueToTypeReferenceT _
     | TryRenderTypePromotionT _
     | ExitRendersT _
     (* When we have ChoiceKitUseT, we are already stuck. *)

@@ -1423,6 +1423,20 @@ struct
             rec_flow cx trace (t, u);
             TypeAppExpansion.pop cx
           )
+        (***************************************)
+        (* transform values to type references *)
+        (***************************************)
+        | (l, ValueToTypeReferenceT (use_op, reason_op, type_t_kind, tout)) ->
+          let t =
+            Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type
+              cx
+              ~trace
+              ~use_op
+              reason_op
+              type_t_kind
+              l
+          in
+          rec_unify cx trace ~use_op t tout
         (**********************)
         (*    opaque types    *)
         (**********************)
@@ -5972,7 +5986,8 @@ struct
     | ConvertEmptyPropsToMixedT _
     | ArithT _
     | HooklikeT _
-    | SpecializeT _ ->
+    | SpecializeT _
+    | ValueToTypeReferenceT _ ->
       false
     | _ -> true
 
@@ -6519,6 +6534,7 @@ struct
     | UseT (_, ThisTypeAppT _)
     | UseT (_, TypeAppT _)
     | UseT (_, DefT (_, TypeT _))
+    | ValueToTypeReferenceT _
     (* Should never occur, so we just defer to __flow to handle errors *)
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
@@ -9911,7 +9927,7 @@ struct
   and mk_instance_source cx ?(type_t_kind = InstanceKind) ?trace instance_reason ~reason_type c =
     Tvar.mk_where cx instance_reason (fun t ->
         (* this part is similar to making a runtime value *)
-        flow_opt_t cx ?trace ~use_op:unknown_use (c, DefT (reason_type, TypeT (type_t_kind, t)))
+        flow_opt cx ?trace (c, ValueToTypeReferenceT (unknown_use, reason_type, type_t_kind, t))
     )
 
   and mk_instance_raw cx ?type_t_kind ?trace instance_reason ?(use_desc = false) ~reason_type c =

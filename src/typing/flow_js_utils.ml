@@ -1114,6 +1114,87 @@ let substitute_mapped_type_distributive_tparams
     in
     (subst property_type, homomorphic')
 
+module ValueToTypeReferenceTransform = struct
+  (* a component syntax value annotation becomes an element of that component *)
+  let run_on_abstract_component cx reason_component reason_op l =
+    let elem_reason =
+      let desc = react_element_desc_of_component_reason reason_component in
+      let annot_loc = loc_of_reason reason_op in
+      annot_reason ~annot_loc (replace_desc_reason desc reason_op)
+    in
+    let t =
+      Tvar.mk_fully_resolved
+        cx
+        elem_reason
+        (lookup_builtin_strict cx (OrdinaryName "React$Element") elem_reason)
+    in
+    TypeUtil.typeapp ~from_value:false ~use_desc:true elem_reason t [l]
+
+  let run_on_concrete_type cx ~trace ~use_op reason_op kind = function
+    | DefT
+        ( _,
+          PolyT
+            {
+              tparams_loc = _;
+              tparams = ids;
+              t_out = DefT (reason_component, ReactAbstractComponentT _) as t;
+              _;
+            }
+        )
+      when kind = RenderTypeKind ->
+      let subst_map =
+        Nel.fold_left
+          (fun acc tparam -> Subst_name.Map.add tparam.name (AnyT.untyped reason_op) acc)
+          Subst_name.Map.empty
+          ids
+      in
+      let t = subst cx ~use_op subst_map t in
+      run_on_abstract_component cx reason_component reason_op t
+    | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EMissingTypeArgs
+           {
+             reason_op;
+             reason_tapp;
+             reason_arity = mk_poly_arity_reason tparams_loc;
+             min_arity = poly_minimum_arity ids;
+             max_arity = Nel.length ids;
+           }
+        );
+      AnyT.error reason_tapp
+    | DefT (_, ClassT it) ->
+      (* a class value annotation becomes the instance type *)
+      (match it with
+      (* when a this-abstracted class flows to upper bounds, fix the class *)
+      | ThisInstanceT (inst_r, i, this, this_name) ->
+        fix_this_instance cx reason_op (inst_r, i, this, this_name)
+      | _ -> it)
+    | DefT (_, TypeT (_, t)) -> t
+    | DefT (lreason, EnumObjectT enum) ->
+      (* an enum object value annotation becomes the enum type *)
+      mk_enum_type lreason enum
+    | DefT (enum_reason, EnumT _) ->
+      add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason = reason_op; enum_reason });
+      AnyT.error reason_op
+    | DefT (reason_component, ReactAbstractComponentT _) as l ->
+      run_on_abstract_component cx reason_component reason_op l
+    | DefT (r, EmptyT)
+    | AnyT (r, AnyError (Some MissingAnnotation)) ->
+      add_output cx ~trace Error_message.(EValueUsedAsType { reason_use = reason_op });
+      AnyT.error r
+    | AnyT (_, AnyError _) as l ->
+      (* Short-circut as we already error on the unresolved name. *)
+      l
+    | AnyT (r, _) ->
+      add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use = reason_op });
+      AnyT.error r
+    | t ->
+      add_output cx ~trace Error_message.(EValueUsedAsType { reason_use = reason_op });
+      AnyT.error (TypeUtil.reason_of_t t)
+end
+
 (***********)
 (* Imports *)
 (***********)

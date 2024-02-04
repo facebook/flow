@@ -130,6 +130,7 @@ and reason_of_use_t = function
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT { reason; _ } -> reason
   | UnaryArithT { reason; _ } -> reason
+  | ValueToTypeReferenceT (_, reason, _, _) -> reason
   | VarianceCheckT (reason, _, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
   | FilterOptionalT (_, t) -> reason_of_t t
@@ -383,6 +384,8 @@ and mod_reason_of_use_t f = function
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
   | ToStringT { orig_t; reason; t_out } -> ToStringT { orig_t; reason = f reason; t_out }
   | UnaryArithT { reason; result_t; kind } -> UnaryArithT { reason = f reason; result_t; kind }
+  | ValueToTypeReferenceT (use_op, reason, kind, tout) ->
+    ValueToTypeReferenceT (use_op, f reason, kind, tout)
   | VarianceCheckT (reason, tparams, targs, polarity) ->
     VarianceCheckT (f reason, tparams, targs, polarity)
   | TypeCastT (use_op, t) -> TypeCastT (use_op, mod_reason_of_t f t)
@@ -498,6 +501,8 @@ let rec util_use_op_of_use_t :
     util use_op (fun use_op -> PromoteRendersRepresentationT { contents with use_op })
   | TryRenderTypePromotionT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> TryRenderTypePromotionT { contents with use_op })
+  | ValueToTypeReferenceT (use_op, reason, kind, t) ->
+    util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
   | MakeExactT (_, _)
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)

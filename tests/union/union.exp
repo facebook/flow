@@ -120,40 +120,15 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:9:19
 
-`C` [1] is incompatible with `D` [2]. [incompatible-type]
+Cannot use `E` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   union.js:9:19
-   9|   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+   9|   function qux(e: E) { } // error: value-as-type
                         ^
 
-References:
-   union.js:4:7
-   4| class C { }
-            ^ [1]
-   union.js:5:7
-   5| class D { }
-            ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:9:19
-
-`D` [1] is incompatible with `C` [2]. [incompatible-type]
-
-   union.js:9:19
-   9|   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                        ^
-
-References:
-   union.js:5:7
-   5| class D { }
-            ^ [1]
-   union.js:4:7
-   4| class C { }
-            ^ [2]
-
-
-
-Found 9 errors
+Found 8 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -13,6 +13,15 @@ References:
                      ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- intersection.js:13:23
+
+Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   13| declare export var x: c; // error: value-as-type
+                             ^
+
+
 Error ------------------------------------------------------------------------------------------------------ main.js:6:1
 
 Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -882,5 +891,14 @@ References:
                           ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- union.js:13:23
 
-Found 55 errors
+Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   13| declare export var x: c; // error: value-as-type
+                             ^
+
+
+
+Found 57 errors
