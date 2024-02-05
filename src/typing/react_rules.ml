@@ -56,6 +56,11 @@ let check_ref_use cx rrid in_hook var_reason kind t =
   in
   recur_id ISet.empty t
 
+type permissiveness =
+  | Permissive
+  | Strict
+  | Pattern
+
 type hook_result =
   | HookCallee of ALocFuzzySet.t
   | MaybeHookCallee of {
@@ -372,6 +377,54 @@ let rec whole_ast_visitor ~under_component cx rrid =
   end
 
 and component_ast_visitor cx is_hook rrid =
+  let { Loc_env.var_info = { Env_api.env_values; _ } as var_info; _ } = Context.environment cx in
+  let is_initializing loc =
+    match Env_api.write_locs_of_read_loc env_values loc with
+    | exception Not_found -> false
+    | [] -> false
+    | _ :: _ as write_locs ->
+      let open Env_api in
+      let open Refi in
+      let is_nullish t =
+        let rec recur_id seen t =
+          let recur = recur_id seen in
+          let open Type in
+          match t with
+          | OpenT (_, id) when ISet.mem id seen -> false
+          | OpenT (_, id) ->
+            let possible = Flow_js_utils.possible_types cx id in
+            Base.List.for_all possible ~f:(recur_id (ISet.add id seen)) && List.length possible > 0
+          | UnionT (_, rep) -> UnionRep.members rep |> Base.List.for_all ~f:recur
+          | DefT (_, (NullT | VoidT)) -> true
+          | _ -> false
+        in
+        recur_id ISet.empty t
+      in
+      let rec refines_safe refi =
+        match refi with
+        | AndR (l, r) -> refines_safe l || refines_safe r
+        | OrR (l, r) -> refines_safe l && refines_safe r
+        | NotR r -> not (not_refines_safe r)
+        | SentinelR ("current", loc) ->
+          is_nullish
+            (Type_env.find_write cx Env_api.ExpressionLoc (Reason.mk_reason (RCustom "") loc))
+        | PropNullishR { propname = "current"; _ } -> true
+        | _ -> false
+      and not_refines_safe refi =
+        match refi with
+        | AndR (l, r) -> not_refines_safe l && not_refines_safe r
+        | OrR (l, r) -> not_refines_safe l || not_refines_safe r
+        | NotR r -> not (refines_safe r)
+        | PropExistsR { propname = "current"; _ } -> false
+        | _ -> true
+      in
+
+      Base.List.for_all write_locs ~f:(fun write ->
+          let refis = Env_api.refinements_of_write_loc var_info write in
+          Base.List.exists ~f:refines_safe refis
+      )
+  in
+
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -389,6 +442,61 @@ and component_ast_visitor cx is_hook rrid =
     method on_loc_annot l = l
 
     method on_type_annot l = l
+
+    method! member _ = failwith "Call visit_member"
+
+    method! optional_member _ = failwith "Call visit_optional_member"
+
+    method! expression ((_, expr') as expr) =
+      match expr' with
+      | Ast.Expression.Member mem ->
+        this#visit_member mem;
+        expr
+      | Ast.Expression.OptionalMember mem ->
+        this#visit_optional_member mem;
+        expr
+      | _ -> super#expression expr
+
+    method! pattern_expression ((_, expr') as expr) =
+      match expr' with
+      | Ast.Expression.Member mem ->
+        this#visit_member ~permissive:Pattern mem;
+        expr
+      | Ast.Expression.OptionalMember mem ->
+        this#visit_optional_member ~permissive:Pattern mem;
+        expr
+      | _ -> super#expression expr
+
+    method! predicate_expression = this#permissive_expression
+
+    method permissive_expression ((_, expr') as expr) =
+      match expr' with
+      | Ast.Expression.Member mem ->
+        this#visit_member ~permissive:Permissive mem;
+        expr
+      | Ast.Expression.OptionalMember mem ->
+        this#visit_optional_member ~permissive:Permissive mem;
+        expr
+      | Ast.Expression.Unary
+          { Ast.Expression.Unary.operator = Ast.Expression.Unary.Not; argument; comments = _ } ->
+        let (_ : _ Ast.Expression.t) = this#permissive_expression argument in
+        expr
+      | Ast.Expression.Binary
+          {
+            Ast.Expression.Binary.operator =
+              Ast.Expression.Binary.(Equal | StrictEqual | NotEqual | StrictNotEqual);
+            left;
+            right;
+            comments = _;
+          } ->
+        let (_ : _ Ast.Expression.t) = this#permissive_expression left in
+        let (_ : _ Ast.Expression.t) = this#permissive_expression right in
+        expr
+      | Ast.Expression.Logical { Ast.Expression.Logical.operator = _; left; right; comments = _ } ->
+        let (_ : _ Ast.Expression.t) = this#permissive_expression left in
+        let (_ : _ Ast.Expression.t) = this#permissive_expression right in
+        expr
+      | _ -> this#expression expr
 
     method target_expression (((loc, ty), exp) as expr) err_kind =
       let reason =
@@ -414,16 +522,22 @@ and component_ast_visitor cx is_hook rrid =
       in
       (annot, args)
 
-    method! member expr =
-      let { Ast.Expression.Member._object; property; comments = _ } = expr in
+    method visit_optional_member ?permissive { Ast.Expression.OptionalMember.member; _ } =
+      this#visit_member ?permissive member
+
+    method visit_member ?(permissive = Strict) expr =
+      let { Ast.Expression.Member._object = ((loc, _), _) as _object; property; comments = _ } =
+        expr
+      in
       let (_ : (_, _) Ast.Expression.Member.property) = this#member_property property in
       let (_ : (_, _) Ast.Expression.t) =
         match property with
-        | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = "current"; _ }) ->
+        | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = "current"; _ })
+          when permissive = Strict || (permissive = Pattern && not (is_initializing loc)) ->
           this#target_expression _object Error_message.Access
         | _ -> this#expression _object
       in
-      expr
+      ()
 
     method! call ((call_loc, _) as annot) expr =
       let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in

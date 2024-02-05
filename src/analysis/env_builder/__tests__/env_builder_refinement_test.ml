@@ -7235,3 +7235,119 @@ if (x.y == undefined) {
         (9, 2) to (9, 5) => {
           {refinement = Not (Not (Maybe)); writes = projection at (7, 4) to (7, 7)}
         }] |}]
+
+let%expect_test "component type alias" =
+  print_ssa_test {|
+import * as React from 'react';
+import {useRef} from 'react';
+
+component Component() {
+  const ref1 = useRef<?number>(null);
+  if (ref1.current === null) {
+    ref1.current = 42; // ok
+  }
+  ref1.current; // error
+
+  const ref2 = useRef<?number>(null);
+  if (ref2.current === null) {
+    ref2.current; // error
+  }
+
+  const ref3 = useRef<?number>(null);
+  if (ref3.current === null && ref1) {
+    ref3.current = 42; // ok
+  }
+
+  const ref4 = useRef<?number>(null);
+  if (ref4.current === null || ref1) {
+    ref4.current = 42; // error
+  }
+
+  const ref5 = useRef<?number>(null);
+  if (ref5.current == undefined) {
+    ref5.current = 42; // ok
+  }
+
+  const ref6 = useRef<?number>(null);
+  if (!ref6.current) {
+    ref6.current = 42; // ok
+  }
+  return null;
+}
+
+  |};
+    [%expect {|
+      [
+        (6, 15) to (6, 21) => {
+          (3, 8) to (3, 14): (`useRef`)
+        };
+        (7, 6) to (7, 10) => {
+          (6, 8) to (6, 12): (`ref1`)
+        };
+        (8, 4) to (8, 8) => {
+          {refinement = SentinelR current; writes = (6, 8) to (6, 12): (`ref1`)}
+        };
+        (10, 2) to (10, 6) => {
+          (6, 8) to (6, 12): (`ref1`)
+        };
+        (10, 2) to (10, 14) => {
+          (8, 4) to (8, 16): (some property),
+          {refinement = Not (Null); writes = projection at (7, 6) to (7, 18)}
+        };
+        (12, 15) to (12, 21) => {
+          (3, 8) to (3, 14): (`useRef`)
+        };
+        (13, 6) to (13, 10) => {
+          (12, 8) to (12, 12): (`ref2`)
+        };
+        (14, 4) to (14, 8) => {
+          {refinement = SentinelR current; writes = (12, 8) to (12, 12): (`ref2`)}
+        };
+        (14, 4) to (14, 16) => {
+          {refinement = Null; writes = projection at (13, 6) to (13, 18)}
+        };
+        (17, 15) to (17, 21) => {
+          (3, 8) to (3, 14): (`useRef`)
+        };
+        (18, 6) to (18, 10) => {
+          (17, 8) to (17, 12): (`ref3`)
+        };
+        (18, 31) to (18, 35) => {
+          (6, 8) to (6, 12): (`ref1`)
+        };
+        (19, 4) to (19, 8) => {
+          {refinement = SentinelR current; writes = (17, 8) to (17, 12): (`ref3`)}
+        };
+        (22, 15) to (22, 21) => {
+          (3, 8) to (3, 14): (`useRef`)
+        };
+        (23, 6) to (23, 10) => {
+          (22, 8) to (22, 12): (`ref4`)
+        };
+        (23, 31) to (23, 35) => {
+          (6, 8) to (6, 12): (`ref1`)
+        };
+        (24, 4) to (24, 8) => {
+          (22, 8) to (22, 12): (`ref4`)
+        };
+        (27, 15) to (27, 21) => {
+          (3, 8) to (3, 14): (`useRef`)
+        };
+        (28, 6) to (28, 10) => {
+          (27, 8) to (27, 12): (`ref5`)
+        };
+        (28, 22) to (28, 31) => {
+          Global undefined
+        };
+        (29, 4) to (29, 8) => {
+          {refinement = Not (Not (PropNullishR current)); writes = (27, 8) to (27, 12): (`ref5`)}
+        };
+        (32, 15) to (32, 21) => {
+          (3, 8) to (3, 14): (`useRef`)
+        };
+        (33, 7) to (33, 11) => {
+          (32, 8) to (32, 12): (`ref6`)
+        };
+        (34, 4) to (34, 8) => {
+          {refinement = Not (PropExistsR (current)); writes = (32, 8) to (32, 12): (`ref6`)}
+        }] |}]

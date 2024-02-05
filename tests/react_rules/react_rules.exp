@@ -178,5 +178,32 @@ Cannot read `current` from expression [1] because `ref` values may not be read d
                              ^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- exception_for_init.js:9:3
 
-Found 18 errors
+Cannot read `current` from `ref1` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   9|   ref1.current; // error
+        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exception_for_init.js:13:5
+
+Cannot read `current` from `ref2` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   13|     ref2.current; // error
+           ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- exception_for_init.js:23:5
+
+Cannot read `current` from `ref4` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   23|     ref4.current = 42; // error
+           ^^^^ [1]
+
+
+
+Found 21 errors
