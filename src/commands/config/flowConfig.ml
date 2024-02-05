@@ -503,6 +503,28 @@ module Opts = struct
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
 
+  (* TODO: wait until hooks are settled and then remove remaining experimental component
+   * syntax flags *)
+  let component_syntax_prod_parser =
+    boolean (fun opts v ->
+        let open Options in
+        if v then
+          Ok
+            {
+              opts with
+              component_syntax = true;
+              react_rules =
+                [
+                  ValidateRefAccessDuringRender;
+                  DeepReadOnlyProps;
+                  DeepReadOnlyHookReturns;
+                  RulesOfHooks;
+                ];
+            }
+        else
+          Ok opts
+    )
+
   let component_syntax_parser =
     enum (* Compatibility with old enum options *)
       [("parsing", false); ("typing", true); ("true", true); ("false", false)]
@@ -818,6 +840,7 @@ module Opts = struct
       );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("casting_syntax", casting_syntax_parser);
+      ("component_syntax", component_syntax_prod_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
