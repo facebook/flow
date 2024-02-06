@@ -648,6 +648,10 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         in
         reconstruct_ast t ~id_t:c targs
       in
+      let mod_tparam_t_annot_loc ~annot_loc =
+        let mod_reason reason = opt_annot_reason ~annot_loc @@ repos_reason loc reason in
+        TypeUtil.mod_reason_of_t mod_reason
+      in
       begin
         match name with
         | "this" ->
@@ -658,9 +662,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                environment: a this type in class C is bounded by C. *)
             check_type_arg_arity cx loc t_ast targs 0 (fun () ->
                 reconstruct_ast
-                  (ConsGen.reposition
-                     cx
-                     loc
+                  (mod_tparam_t_annot_loc
                      ~annot_loc:loc
                      (Subst_name.Map.find (Subst_name.Name "this") tparams_map)
                   )
@@ -680,9 +682,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let t =
-                ConsGen.reposition
-                  cx
-                  loc
+                mod_tparam_t_annot_loc
                   ~annot_loc:loc
                   (Subst_name.Map.find (Subst_name.Name name) tparams_map)
               in
