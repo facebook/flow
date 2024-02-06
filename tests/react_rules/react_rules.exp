@@ -205,5 +205,14 @@ Cannot read `current` from `ref4` [1] because `ref` values may not be read durin
            ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- pass_to_hook.js:4:5
 
-Found 21 errors
+Cannot read `current` from `ref` [1] because `ref` values may not be read within hooks.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   4|     ref.current; // error
+          ^^^ [1]
+
+
+
+Found 22 errors

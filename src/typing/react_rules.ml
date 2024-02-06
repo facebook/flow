@@ -620,6 +620,8 @@ and component_ast_visitor cx is_hook rrid =
 
     val mutable conditional_state = ConditionalState.init
 
+    val mutable calling_nonhook = false
+
     method on_loc_annot l = l
 
     method on_type_annot l = l
@@ -696,8 +698,9 @@ and component_ast_visitor cx is_hook rrid =
       let (_ : _ list) =
         Base.List.map
           ~f:(function
-            | Ast.Expression.Expression exp ->
+            | Ast.Expression.Expression exp when calling_nonhook ->
               Ast.Expression.Expression (this#target_expression exp Error_message.Argument)
+            | Ast.Expression.Expression exp -> Ast.Expression.Expression (this#expression exp)
             | Ast.Expression.Spread spread -> Ast.Expression.Spread (this#spread_element spread))
           arguments
       in
@@ -723,25 +726,33 @@ and component_ast_visitor cx is_hook rrid =
     method! call ((call_loc, _) as annot) expr =
       let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in
       let hook_error = hook_error cx ~call_loc ~callee_loc in
-      begin
+      let check_args_for_refs =
         match hook_callee cx callee_ty with
         | HookCallee _ ->
-          if Flow_ast_utils.hook_call expr then begin
-            if ConditionalState.conditional conditional_state && not (bare_use expr) then
-              hook_error Error_message.ConditionalHook
-          end else
-            hook_error Error_message.HookHasIllegalName
+          begin
+            if Flow_ast_utils.hook_call expr then begin
+              if ConditionalState.conditional conditional_state && not (bare_use expr) then
+                hook_error Error_message.ConditionalHook
+            end else
+              hook_error Error_message.HookHasIllegalName
+          end;
+          false
         | MaybeHookCallee { hooks; non_hooks } ->
           hook_error
             Error_message.(
               MaybeHook
                 { hooks = ALocFuzzySet.elements hooks; non_hooks = ALocFuzzySet.elements non_hooks }
-            )
+            );
+          false
         | NotHookCallee _ ->
-          if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName
-        | AnyCallee -> ()
-      end;
+          if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName;
+          true
+        | AnyCallee -> false
+      in
+      let cur_calling = calling_nonhook in
+      calling_nonhook <- check_args_for_refs;
       let res = super#call annot expr in
+      calling_nonhook <- cur_calling;
       conditional_state <- ConditionalState.throwable conditional_state;
       res
 

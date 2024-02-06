@@ -1026,6 +1026,45 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ ref.js:6:15
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   ref.js:6:15
+   6|     const x = React.useRef(null); // unrelated error due to useRef not actually being a hook currently
+                    ^^^^^^^^^^^^^^^^^^
+
+References:
+   ref.js:6:15
+   6|     const x = React.useRef(null); // unrelated error due to useRef not actually being a hook currently
+                    ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- ref.js:7:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   ref.js:7:5
+   7|     useFakeHook(x); // error both for calling a fake hook and for escaping ref
+          ^^^^^^^^^^^^^^
+
+References:
+   ref.js:7:5
+   7|     useFakeHook(x); // error both for calling a fake hook and for escaping ref
+          ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ ref.js:7:17
+
+Cannot pass `x` [1] as an argument because `ref` values may not be passed to functions because they could read the ref
+value (`current`) property) during render. (https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   7|     useFakeHook(x); // error both for calling a fake hook and for escaping ref
+                      ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- rules_of_hooks.js:74:3
 
 Unreachable code. [unreachable-code]
@@ -2300,4 +2339,4 @@ References:
 
 
 
-Found 156 errors
+Found 159 errors
