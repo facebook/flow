@@ -78,7 +78,7 @@ module type S = sig
   val mk_instance :
     Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
-  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+  val reposition : Context.t -> ALoc.t -> Type.t -> Type.t
 
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
@@ -217,7 +217,7 @@ module rec ConsGen : S = struct
   (* Repositioning does not seem to have any perceptible impact in annotation
    * inference. Instead of replicating the convoluted implementation of Flow_js
    * here, we just return the same type intact. *)
-  let reposition _cx _loc ?annot_loc:_ t = t
+  let reposition _cx _loc t = t
 
   (*****************)
   (* Instantiation *)
@@ -235,7 +235,7 @@ module rec ConsGen : S = struct
 
     let unify _cx _trace ~use_op:_ (_t1, _t2) = ()
 
-    let reposition cx ?trace:_ loc ?annot_loc:_ t = reposition cx loc t
+    let reposition cx ?trace:_ loc t = reposition cx loc t
   end
 
   module InstantiationKit = Flow_js_utils.Instantiation_kit (Instantiation_helper)
@@ -250,7 +250,7 @@ module rec ConsGen : S = struct
   module Import_export_helper : Flow_js_utils.Import_export_helper_sig with type r = Type.t = struct
     type r = Type.t
 
-    let reposition cx loc ?annot_loc:_ t = reposition cx loc t
+    let reposition cx loc t = reposition cx loc t
 
     let return _cx t = t
 
@@ -310,7 +310,7 @@ module rec ConsGen : S = struct
     (* We will not be doing subtyping checks in annotation inference. *)
     let dict_read_check _ _ ~use_op:_ _ = ()
 
-    let reposition cx ?trace:_ loc ?annot_loc:_ t = reposition cx loc t
+    let reposition cx ?trace:_ loc t = reposition cx loc t
 
     let enum_proto cx ~reason (enum_reason, enum) =
       let enum_t = DefT (enum_reason, EnumT enum) in

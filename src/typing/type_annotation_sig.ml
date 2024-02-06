@@ -25,7 +25,7 @@ module type ConsGen = sig
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
-  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+  val reposition : Context.t -> ALoc.t -> Type.t -> Type.t
 
   val get_builtin : Context.t -> name -> reason -> Type.t
 

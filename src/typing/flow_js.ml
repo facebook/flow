@@ -239,7 +239,7 @@ struct
 
     let unify cx trace ~use_op (t1, t2) = FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
 
-    let reposition = FlowJs.reposition ?desc:None
+    let reposition = FlowJs.reposition ?desc:None ?annot_loc:None
   end
 
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
@@ -249,7 +249,7 @@ struct
     Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
     type r = Type.t -> unit
 
-    let reposition = FlowJs.reposition ~trace:Trace.dummy_trace ?desc:None
+    let reposition = FlowJs.reposition ~trace:Trace.dummy_trace ?desc:None ?annot_loc:None
 
     let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use Trace.dummy_trace (t, tout)
 
@@ -370,7 +370,7 @@ struct
 
     let enum_proto = enum_proto
 
-    let reposition = FlowJs.reposition ?desc:None
+    let reposition = FlowJs.reposition ?desc:None ?annot_loc:None
 
     let cg_lookup
         cx trace ~obj_t ~method_accessible t (reason_op, lookup_kind, propref, use_op, ids) tout =
