@@ -143,7 +143,7 @@ val discriminant_after_negated_cases :
 
 val get_next : Context.t -> ALoc.t -> Type.t
 
-val check_readable : Context.t -> Env_api.def_loc_type -> ALoc.t -> unit
+val checked_find_loc_env_write : Context.t -> Env_api.def_loc_type -> ALoc.t -> Type.t
 
 val resolve_env_entry :
   use_op:Type.use_op ->

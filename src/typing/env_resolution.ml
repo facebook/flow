@@ -186,27 +186,17 @@ let resolve_hint cx loc hint =
   let rec resolve_hint_node = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
     | ValueHint exp -> expression cx exp
-    | ProvidersHint (loc, []) ->
-      let env = Context.environment cx in
-      Type_env.check_readable cx Env_api.OrdinaryNameLoc loc;
-      Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
+    | ProvidersHint (loc, []) -> Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc
     | ProvidersHint (l1, l2 :: rest) ->
-      let env = Context.environment cx in
-      Type_env.check_readable cx Env_api.OrdinaryNameLoc l1;
-      Type_env.check_readable cx Env_api.OrdinaryNameLoc l2;
-      let t1 = Base.Option.value_exn (Loc_env.find_ordinary_write env l1) in
-      let t2 = Base.Option.value_exn (Loc_env.find_ordinary_write env l2) in
+      let t1 = Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc l1 in
+      let t2 = Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc l2 in
       let ts =
         Base.List.map rest ~f:(fun loc ->
-            Type_env.check_readable cx Env_api.OrdinaryNameLoc loc;
-            Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
+            Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc
         )
       in
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
-    | WriteLocHint (kind, loc) ->
-      let env = Context.environment cx in
-      Type_env.check_readable cx kind loc;
-      Base.Option.value_exn (Loc_env.find_write env kind loc)
+    | WriteLocHint (kind, loc) -> Type_env.checked_find_loc_env_write cx kind loc
     | StringLiteralType name ->
       DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
     | BuiltinType name ->
@@ -745,19 +735,12 @@ let resolve_binding cx reason loc b =
     in
     (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
-    let env = Context.environment cx in
     let (elem_t, tuple_view, reason) =
       let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
       if ALocSet.cardinal array_providers > 0 then (
         let ts =
           ALocSet.elements array_providers
-          |> Base.List.map ~f:(fun loc ->
-                 Type_env.check_readable cx Env_api.ArrayProviderLoc loc;
-                 Type_env.t_option_value_exn
-                   cx
-                   loc
-                   (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
-             )
+          |> Base.List.map ~f:(Type_env.checked_find_loc_env_write cx Env_api.ArrayProviderLoc)
         in
         let constrain_t =
           Tvar.mk_where cx element_reason (fun tvar ->

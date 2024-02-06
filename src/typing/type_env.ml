@@ -134,9 +134,6 @@ let enforced_env_read_error_opt cx kind loc =
         None
     | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
 
-let check_readable cx kind loc =
-  enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx)
-
 let checked_find_loc_env_write cx kind loc =
   let get_t () =
     let env = Context.environment cx in
