@@ -735,6 +735,9 @@ let make ~output_dir ~write_root =
       json_filenames: SSet.t;
     }
 
+    (* TODO: build support for saved state for glean indexer *)
+    let init_options o = { o with Options.opt_saved_state_fetcher = Options.Dummy_fetcher }
+
     let check_options o = o
 
     let reporter =

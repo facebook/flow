@@ -45,6 +45,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
 
   let mod_prepass_options options = options
 
+  let init_options options = options
+
   let check_options options = options
 
   let include_dependents_in_prepass = false
