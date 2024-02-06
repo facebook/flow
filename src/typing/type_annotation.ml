@@ -193,10 +193,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
     ((loc, AnyT.at (AnyError None) loc), t_out)
 
-  let var_ref ~lookup_mode cx name loc =
-    let t = Type_env.query_var ~lookup_mode cx name loc in
-    ConsGen.reposition cx loc t
-
   let is_suppress_type cx type_name = SSet.mem type_name (Context.suppress_types cx)
 
   let check_type_arg_arity cx loc t_ast params n f =
@@ -2660,10 +2656,8 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       (tparams, tparams_map, tparams_ast)
 
   and type_identifier cx name loc =
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      Unsoundness.at InferenceHooks loc
-    else
-      var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
+    let t = Type_env.query_var ~lookup_mode:ForType cx (OrdinaryName name) loc in
+    ConsGen.reposition cx loc t
 
   and mk_interface_super
       cx tparams_map infer_tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
