@@ -2662,8 +2662,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
   and type_identifier cx name loc =
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       Unsoundness.at InferenceHooks loc
-    else if name = "undefined" then
-      VoidT.at loc
     else
       var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
