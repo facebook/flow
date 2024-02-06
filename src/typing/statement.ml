@@ -2560,8 +2560,9 @@ module Make
      * purposes. Like we do with other literals. Otherwise we end up pointing to
      * `void` in `core.js`. While possible to re-declare `undefined`, it is
      * unlikely. The tradeoff is worth it. *)
-    | Identifier (id_loc, ({ Ast.Identifier.name = "undefined"; comments = _ } as name)) ->
-      let t = Flow.reposition cx loc ~annot_loc:loc (identifier cx name loc) in
+    | Identifier (id_loc, ({ Ast.Identifier.name = "undefined"; comments = _ } as name))
+      when Type_env.is_global_var cx id_loc ->
+      let t = VoidT.make (mk_reason RVoid loc) in
       ((loc, t), Identifier ((id_loc, t), name))
     | Identifier (id_loc, name) ->
       let t = identifier cx name loc in

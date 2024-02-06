@@ -133,9 +133,9 @@ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean 
             ^^^^^^
 
 References:
-   undefined2.js:24:7
-   24|       undefined,
-             ^^^^^^^^^ [1]
+   undefined2.js:15:21
+   15|     var undefined = 'foo';
+                           ^^^^^ [1]
    undefined2.js:27:14
    27|     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]

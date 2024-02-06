@@ -778,7 +778,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- param_default.js:8:16
 
-Cannot assign `undefined` to `a` because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign undefined to `a` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    param_default.js:8:16
    8| context = (a = undefined) => {(a: number)}; // error: void ~> number

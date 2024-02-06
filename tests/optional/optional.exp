@@ -276,7 +276,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined.js:3:36
 
-Cannot assign `undefined` to `bar` because undefined [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign undefined to `bar` because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    undefined.js:3:36
    3| function foo(bar?: {duck: mixed} = undefined) {
