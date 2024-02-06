@@ -763,8 +763,10 @@ let init_const cx ~use_op t loc = init_entry cx ~use_op t loc
 let init_implicit_const cx ~use_op t loc = init_entry cx ~use_op t loc
 
 let read_declared_type cx reason loc =
-  Tvar.mk_where cx reason (fun t ->
-      unify_write_entry cx ~use_op:unknown_use t Env_api.OrdinaryNameLoc loc
+  Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
+      Base.Option.iter (checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc loc) ~f:(fun w ->
+          Flow_js.unify cx ~use_op:unknown_use w t
+      )
   )
 
 (************************)
