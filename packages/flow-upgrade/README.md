@@ -88,3 +88,8 @@ Part of the upgrade to 0.201
 Converts usages of the deprecated and unsafe `$Shape` utility type to its replacement, [`Partial`](https://flow.org/en/docs/types/utilities/#toc-partial).
 
 Run with `yarn run flow-codemod convertShapeToPartial`.
+
+### Migrate type casts `(x: T)` to `as` expressions `x as T`
+Converts usages of the old casting syntax `(x: T)` to the new casting syntax `x as T`.
+
+Run with `yarn run flow-codemod typeCastToAsExpression`.
