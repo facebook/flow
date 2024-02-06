@@ -116,31 +116,29 @@ let t_option_value_exn cx loc t =
 (* Helpers **************)
 (************************)
 
-let enforced_env_read_error_opt cx kind loc =
-  let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
-  match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
-  | Some Env_api.NonAssigningWrite -> None
-  | _ ->
-    (match Loc_env.find_write env kind loc with
-    | None -> Some Error_message.(EInternal (loc, MissingEnvWrite loc))
-    | Some (OpenT (_, id)) ->
-      if not (Loc_env.is_readable env kind loc) then
-        Some Error_message.(EInternal (loc, ReadOfUnreachedTvar kind))
-      else if not (Env_api.EnvSet.mem (kind, loc) under_resolution) then
-        match Context.find_graph cx id with
-        | Type.Constraint.FullyResolved _ -> None
-        | _ -> Some Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
-      else
-        None
-    | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
-
 let checked_find_loc_env_write_opt cx kind loc =
-  let get_t () =
-    let env = Context.environment cx in
-    Loc_env.find_write env kind loc
-  in
-  enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx);
-  get_t ()
+  let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
+  match
+    (EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries, Loc_env.find_write env kind loc)
+  with
+  | (Some Env_api.NonAssigningWrite, t_opt) -> t_opt
+  | (_, None) ->
+    Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc));
+    None
+  | (_, Some (OpenT (_, id) as t)) ->
+    if not (Loc_env.is_readable env kind loc) then (
+      Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnreachedTvar kind));
+      Some t
+    ) else if not (Env_api.EnvSet.mem (kind, loc) under_resolution) then (
+      match Context.find_graph cx id with
+      | Type.Constraint.FullyResolved _ -> Some t
+      | _ ->
+        Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind));
+        Some t
+    ) else
+      Some t
+  | (_, Some t) ->
+    assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)
 
 let checked_find_loc_env_write cx kind loc =
   checked_find_loc_env_write_opt cx kind loc |> t_option_value_exn cx loc
