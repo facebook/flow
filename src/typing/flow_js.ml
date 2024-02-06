@@ -9847,42 +9847,20 @@ struct
       apply_method_action cx trace value use_op reason_call l action
 
   (* builtins, contd. *)
-  (* get_builtin has different behavior depending on which file you're using it from. If we are
-   * in a lib file, then the builtin lookup will make a fresh entry into the builtins map if
-   * the entry you are searching for does not exist. After the builtins are done being made,
-   * we ensure that every entry receives a write.
-   *
-   * If you are not in a lib file, then this behaves as a strict lookup. We error and return Any
-   * in the case where the builtin is not already in the map *)
-  and get_builtin_tvar_result cx x reason = lookup_builtin_strict_tvar_result cx x reason
 
   and get_builtin_result cx x reason =
-    Env_api.map_result (get_builtin_tvar_result cx x reason) ~f:(fun n -> OpenT (reason, n))
+    Flow_js_utils.lookup_builtin_strict_result cx x reason
+    |> Env_api.map_result ~f:(TypeUtil.mod_reason_of_t (Base.Fn.const reason))
 
   and get_builtin cx x reason =
     get_builtin_result cx x reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
-  and get_builtin_tvar cx x reason =
-    get_builtin_tvar_result cx x reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
-
   and get_builtin_module cx loc mref =
     let m_name = Reason.internal_module_name mref in
     let reason = Reason.(mk_reason (RCustom mref) loc) in
-    (reason, get_builtin_tvar cx m_name reason)
+    get_builtin_result cx m_name reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
-  (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
-   * write later. *)
-  and lookup_builtin_strict_tvar_result cx x reason =
-    let builtin = Flow_js_utils.lookup_builtin_strict_result cx x reason in
-    Env_api.map_result builtin ~f:(fun builtin ->
-        Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
-    )
-
-  and lookup_builtin_strict_tvar cx x reason =
-    lookup_builtin_strict_tvar_result cx x reason
-    |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
-
-  and lookup_builtin_strict cx x reason = OpenT (reason, lookup_builtin_strict_tvar cx x reason)
+  and lookup_builtin_strict cx x reason = get_builtin cx x reason
 
   (* Looks up a builtin and returns the default if it is not found.
    * Does not add an entry that requires a

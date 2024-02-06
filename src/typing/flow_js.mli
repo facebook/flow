@@ -91,7 +91,7 @@ val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
 
 val get_builtin_typeapp : Context.t -> reason -> ?use_desc:bool -> name -> Type.t list -> Type.t
 
-val get_builtin_module : Context.t -> ALoc.t -> string -> Type.tvar
+val get_builtin_module : Context.t -> ALoc.t -> string -> Type.t
 
 val mk_instance :
   Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
