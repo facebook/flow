@@ -10446,7 +10446,7 @@ let reposition_reason cx reason ?use_desc t = reposition_reason cx reason ?use_d
 
 let filter_optional cx reason opt_t = filter_optional cx reason opt_t
 
-let reposition cx loc ?annot_loc t = reposition cx loc ?desc:None ?annot_loc t
+let reposition cx loc t = reposition cx loc ?desc:None ?annot_loc:None t
 
 let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts =
   mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts

@@ -35,8 +35,6 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
     Tvar.mk_no_wrap_where cx op_reason (fun tout ->
         Flow.flow cx (l, GetPropT (use_op, op_reason, None, mk_named_prop ~reason name, tout))
     )
-
-  let reposition = reposition ?annot_loc:None
 end
 
 module Annot : Type_annotation_sig.ConsGen = Annotation_inference.ConsGen
