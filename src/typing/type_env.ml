@@ -134,14 +134,6 @@ let enforced_env_read_error_opt cx kind loc =
         None
     | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
 
-let checked_find_loc_env_write cx kind loc =
-  let get_t () =
-    let env = Context.environment cx in
-    t_option_value_exn cx loc (Loc_env.find_write env kind loc)
-  in
-  enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx);
-  get_t ()
-
 let checked_find_loc_env_write_opt cx kind loc =
   let get_t () =
     let env = Context.environment cx in
@@ -149,6 +141,9 @@ let checked_find_loc_env_write_opt cx kind loc =
   in
   enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx);
   get_t ()
+
+let checked_find_loc_env_write cx kind loc =
+  checked_find_loc_env_write_opt cx kind loc |> t_option_value_exn cx loc
 
 let find_var_opt { Env_api.env_values; _ } loc =
   match ALocMap.find_opt loc env_values with
