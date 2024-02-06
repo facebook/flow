@@ -199,6 +199,195 @@ let bare_use { Ast.Expression.Call.callee; _ } =
     true
   | _ -> false
 
+module ConditionalState : sig
+  type t
+
+  type saved_cond
+
+  type saved_switch
+
+  type saved_try
+
+  val init : t
+
+  val conditional : t -> bool
+
+  val enter_conditional : t -> (t -> unit) -> saved_cond
+
+  val reset_conditional : t -> saved_cond -> t
+
+  val return : t -> t
+
+  val enter_label : t -> (t -> unit) -> string -> saved_cond
+
+  val reset_label : t -> string -> saved_cond -> t
+
+  val enter_switch : t -> (t -> unit) -> saved_cond * saved_switch
+
+  val reset_switch : t -> saved_cond -> saved_switch -> t
+
+  val break : t -> string option -> t
+
+  val merge : t -> t -> t
+
+  val enter_try : t -> (t -> unit) -> saved_cond * saved_try
+
+  val reset_try : t -> saved_cond -> saved_try -> t
+
+  val throwable : t -> t
+end = struct
+  type try_state =
+    | NotInTry
+    | InTry
+    | InTryPostCall
+
+  type t = {
+    conditional_context: bool;
+    broken: bool;
+    return_seen: bool;
+    label_scopes: bool SMap.t;
+    switch_scope: bool;
+    try_state: try_state;
+  }
+
+  type saved_cond = bool
+
+  type saved_switch = bool
+
+  type saved_try = try_state
+
+  let max_try t1 t2 =
+    match (t1, t2) with
+    | (InTryPostCall, _)
+    | (_, InTryPostCall) ->
+      InTryPostCall
+    | (InTry, _)
+    | (_, InTry) ->
+      InTry
+    | (NotInTry, NotInTry) -> NotInTry
+
+  let init =
+    {
+      conditional_context = false;
+      broken = false;
+      return_seen = false;
+      label_scopes = SMap.empty;
+      switch_scope = false;
+      try_state = NotInTry;
+    }
+
+  let conditional { conditional_context; _ } = conditional_context
+
+  let enter_conditional ({ conditional_context; _ } as t) setter =
+    setter { t with conditional_context = true };
+    conditional_context
+
+  let reset_conditional
+      ( {
+          broken;
+          return_seen;
+          try_state;
+          label_scopes = _;
+          switch_scope = _;
+          conditional_context = _;
+        } as t
+      )
+      conditional =
+    {
+      t with
+      conditional_context = broken || return_seen || conditional || try_state = InTryPostCall;
+    }
+
+  let return t = { t with conditional_context = true; return_seen = true }
+
+  let enter_label ({ conditional_context; label_scopes; _ } as t) setter s =
+    setter { t with label_scopes = SMap.add s false label_scopes };
+    conditional_context
+
+  let reset_broken ({ label_scopes; switch_scope; _ } as t) =
+    { t with broken = SMap.fold (fun _ -> ( || )) label_scopes switch_scope }
+
+  let reset_label ({ label_scopes; _ } as t) s conditional =
+    let label_broken = SMap.find s label_scopes in
+    let t = { t with label_scopes = SMap.remove s label_scopes } in
+    if label_broken then
+      let t = reset_broken t in
+      reset_conditional t conditional
+    else
+      t
+
+  let enter_switch ({ conditional_context; switch_scope; _ } as t) setter =
+    setter { t with switch_scope = false };
+    (conditional_context, switch_scope)
+
+  let reset_switch ({ switch_scope; _ } as t) conditional cur_switch =
+    let t = { t with switch_scope = cur_switch } in
+    if switch_scope then
+      let t = reset_broken t in
+      reset_conditional t conditional
+    else
+      t
+
+  let break t s =
+    let ({ label_scopes; _ } as t) = { t with broken = true; conditional_context = true } in
+    match s with
+    | None -> { t with switch_scope = true }
+    | Some s -> { t with label_scopes = SMap.add s true label_scopes }
+
+  let enter_try ({ conditional_context; try_state; _ } as t) setter =
+    setter { t with try_state = max_try try_state InTry };
+    (conditional_context, try_state)
+
+  let reset_try ({ try_state; _ } as t) conditional cur_try_state =
+    let t = { t with try_state = cur_try_state } in
+    if try_state = InTryPostCall then
+      reset_conditional t conditional
+    else
+      t
+
+  let throwable ({ try_state; _ } as t) =
+    if try_state = InTry then
+      { t with conditional_context = true; try_state = InTryPostCall }
+    else
+      t
+
+  let merge
+      {
+        conditional_context = c1;
+        broken = b1;
+        return_seen = r1;
+        label_scopes = l1;
+        switch_scope = s1;
+        try_state = t1;
+      }
+      {
+        conditional_context = c2;
+        broken = b2;
+        return_seen = r2;
+        label_scopes = l2;
+        switch_scope = s2;
+        try_state = t2;
+      } =
+    {
+      conditional_context = c1 || c2;
+      broken = b1 || b2;
+      label_scopes =
+        SMap.merge
+          (fun _ a b ->
+            match (a, b) with
+            | (Some a, Some b) -> Some (a || b)
+            | (Some a, _)
+            | (_, Some a) ->
+              Some a
+            | (None, None) -> None)
+          l1
+          l2;
+      switch_scope = s1 || s2;
+      try_state = max_try t1 t2;
+      return_seen = r1 || r2;
+    }
+end
+
 let rec whole_ast_visitor ~under_component cx rrid =
   object (this)
     inherit
@@ -429,15 +618,7 @@ and component_ast_visitor cx is_hook rrid =
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    val mutable conditional_context = false
-
-    val mutable return_seen = false
-
-    val mutable broken = false
-
-    val mutable label_scopes = SMap.empty
-
-    val mutable switch_scope = false
+    val mutable conditional_state = ConditionalState.init
 
     method on_loc_annot l = l
 
@@ -546,7 +727,7 @@ and component_ast_visitor cx is_hook rrid =
         match hook_callee cx callee_ty with
         | HookCallee _ ->
           if Flow_ast_utils.hook_call expr then begin
-            if conditional_context && not (bare_use expr) then
+            if ConditionalState.conditional conditional_state && not (bare_use expr) then
               hook_error Error_message.ConditionalHook
           end else
             hook_error Error_message.HookHasIllegalName
@@ -560,40 +741,52 @@ and component_ast_visitor cx is_hook rrid =
           if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName
         | AnyCallee -> ()
       end;
-      super#call annot expr
+      let res = super#call annot expr in
+      conditional_state <- ConditionalState.throwable conditional_state;
+      res
+
+    method! new_ expr =
+      let res = super#new_ expr in
+      conditional_state <- ConditionalState.throwable conditional_state;
+      res
+
+    method! throw stmt =
+      let res = super#throw stmt in
+      conditional_state <- ConditionalState.throwable conditional_state;
+      res
 
     method in_conditional : 'a 'b. ('a -> 'b) -> 'a -> 'b =
       fun f n ->
-        let cur = conditional_context in
-        conditional_context <- true;
+        let cur =
+          ConditionalState.enter_conditional conditional_state (fun state ->
+              conditional_state <- state
+          )
+        in
         let res = f n in
-        conditional_context <- cur || return_seen || broken;
+        conditional_state <- ConditionalState.reset_conditional conditional_state cur;
         res
 
     method! return r =
       let res = super#return r in
-      conditional_context <- true;
-      return_seen <- true;
+      conditional_state <- ConditionalState.return conditional_state;
       res
 
     method! labeled_statement
         ({ Ast.Statement.Labeled.label = (_, { Ast.Identifier.name; _ }); _ } as stmt) =
-      let cur = conditional_context in
-      label_scopes <- SMap.add name false label_scopes;
+      let cur =
+        ConditionalState.enter_label
+          conditional_state
+          (fun state -> conditional_state <- state)
+          name
+      in
       let res = super#labeled_statement stmt in
-      let label_broken = SMap.find name label_scopes in
-      label_scopes <- SMap.remove name label_scopes;
-      if label_broken then begin
-        assert (broken && conditional_context);
-        broken <- SMap.fold (fun _ -> ( || )) label_scopes switch_scope;
-        conditional_context <- cur || return_seen || broken
-      end;
+      conditional_state <- ConditionalState.reset_label conditional_state name cur;
       res
 
     method! switch stmt =
-      let cur = conditional_context in
-      let cur_switch = switch_scope in
-      switch_scope <- false;
+      let (cur, cur_switch) =
+        ConditionalState.enter_switch conditional_state (fun state -> conditional_state <- state)
+      in
 
       let { Ast.Statement.Switch.discriminant; cases; comments = _; exhaustive_out = _ } = stmt in
       let (_ : _ Ast.Expression.t) = this#expression discriminant in
@@ -603,12 +796,7 @@ and component_ast_visitor cx is_hook rrid =
           cases
       in
 
-      if switch_scope then begin
-        assert (broken && conditional_context);
-        broken <- SMap.fold (fun _ -> ( || )) label_scopes cur_switch;
-        conditional_context <- cur || return_seen || broken
-      end;
-      switch_scope <- cur_switch;
+      conditional_state <- ConditionalState.reset_switch conditional_state cur cur_switch;
       stmt
 
     method visit_switch_case ~is_last ({ Ast.Statement.Switch.Case.test; _ } as case) =
@@ -618,51 +806,33 @@ and component_ast_visitor cx is_hook rrid =
         this#switch_case case
 
     method! break ({ Ast.Statement.Break.label; comments = _ } as stmt) =
-      begin
-        match label with
-        | Some (_, { Ast.Identifier.name; _ }) -> begin
-          match SMap.find_opt name label_scopes with
-          | Some false ->
-            label_scopes <- SMap.add name true label_scopes;
-            broken <- true;
-            conditional_context <- true
-          | Some true -> assert (conditional_context && broken)
-          | None -> ()
-        end
-        | None -> begin
-          switch_scope <- true;
-          broken <- true;
-          conditional_context <- true
-        end
-      end;
-      stmt
+      let s = Base.Option.map ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) label in
+      conditional_state <- ConditionalState.break conditional_state s;
+      super#break stmt
 
     method try_block ({ Ast.Statement.Block.body; comments = _ } as block) =
-      begin
-        if not (Base.List.is_empty body) then
-          let hd = Base.List.hd_exn body in
-          let tl = Base.List.tl_exn body in
-          let (_ : (_, _) Ast.Statement.t) = this#statement hd in
-          let (_ : _ list) = this#in_conditional this#statement_list tl in
-          ()
-      end;
+      let (cur, cur_try) =
+        ConditionalState.enter_try conditional_state (fun state -> conditional_state <- state)
+      in
+      let (_ : _ list) = this#statement_list body in
+      conditional_state <- ConditionalState.reset_try conditional_state cur cur_try;
       block
 
     method! try_catch stmt =
       let { Ast.Statement.Try.block = (_, block); handler; finalizer; comments = _ } = stmt in
-      let cur_ret = return_seen in
+      let pre_cond = conditional_state in
       let (_ : (_, _) Ast.Statement.Block.t) = this#try_block block in
       let (_ : _ option) =
         Base.Option.map
           ~f:(fun (_, handler) -> this#in_conditional this#catch_clause handler)
           handler
       in
-      let pre_finalizer_ret = return_seen in
-      return_seen <- cur_ret;
+      let post_cond = conditional_state in
+      conditional_state <- pre_cond;
       let (_ : _ option) =
         Base.Option.map ~f:(fun (_, finalizer) -> this#block finalizer) finalizer
       in
-      return_seen <- return_seen || pre_finalizer_ret;
+      conditional_state <- ConditionalState.merge post_cond conditional_state;
       stmt
 
     method! if_consequent_statement ~has_else =

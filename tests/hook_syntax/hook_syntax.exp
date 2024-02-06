@@ -711,6 +711,48 @@ References:
                 ^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- hook_tests.js:158:17
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:158:17
+   158|                 useH(); // error
+                        ^^^^^^
+
+References:
+   hook_tests.js:158:17
+   158|                 useH(); // error
+                        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- hook_tests.js:162:13
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:162:13
+   162|             useH(); // error
+                    ^^^^^^
+
+References:
+   hook_tests.js:162:13
+   162|             useH(); // error
+                    ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- hook_tests.js:166:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:166:9
+   166|         useH(); // error
+                ^^^^^^
+
+References:
+   hook_tests.js:166:9
+   166|         useH(); // error
+                ^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:3:13
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -2258,4 +2300,4 @@ References:
 
 
 
-Found 153 errors
+Found 156 errors

@@ -149,4 +149,21 @@ hook useC() {
 
         return null;
     }
+
+    component D(c: boolean) {
+        try {
+            {
+                42;
+                useH(); // no error
+                useH(); // error
+            }
+            if (c) { return 42 }
+        } catch (e) {
+            useH(); // error
+        } finally {
+            useH(); // no error;
+        }
+        useH(); // error
+        return 42;
+    }
 }
