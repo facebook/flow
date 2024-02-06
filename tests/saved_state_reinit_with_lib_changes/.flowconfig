@@ -3,6 +3,5 @@ libs
 
 [options]
 all=true
-casting_syntax=both
 saved_state.allow_reinit=true
 lazy_mode=true

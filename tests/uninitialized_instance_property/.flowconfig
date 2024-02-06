@@ -3,4 +3,3 @@ uninitialized-instance-property=error
 
 [options]
 all=true
-casting_syntax=both

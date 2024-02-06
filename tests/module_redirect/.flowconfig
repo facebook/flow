@@ -7,5 +7,4 @@ A.js
 
 [options]
 all=true
-casting_syntax=both
 module.system=haste

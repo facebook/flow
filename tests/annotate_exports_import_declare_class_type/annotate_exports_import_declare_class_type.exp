@@ -6,7 +6,7 @@
 
 import type { List } from "./declare-export-class";import { list } from './declare-export-class';
 
-module.exports = (list(): List<number>);
+module.exports = (list() as List<number>);
 
 >>> ./b.js
 // @flow
@@ -20,7 +20,7 @@ module.exports = List;
 
 import type { List } from "./declare-class-export-type";import { list } from './declare-class-export-type';
 
-module.exports = (list(): List<number>);
+module.exports = (list() as List<number>);
 
 >>> Launching report...
 
@@ -57,7 +57,7 @@ Warnings:
 
 import type { List } from "./declare-export-class";import { list } from './declare-export-class';
 
-module.exports = (list(): List<number>);
+module.exports = (list() as List<number>);
 
 >>> ./b.js
 // @flow
@@ -71,7 +71,7 @@ module.exports = List;
 
 import type { List } from "./declare-class-export-type";import { list } from './declare-class-export-type';
 
-module.exports = (list(): List<number>);
+module.exports = (list() as List<number>);
 
 
 === Diff between codemod-ed & autofix-ed ===

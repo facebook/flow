@@ -8,7 +8,7 @@ import type { D, C } from "./lib";import { foo, bar } from "./lib";
 
 const b = require("./b");
 
-module.exports = [(foo(): C), (bar(): D)];
+module.exports = [foo() as C, bar() as D];
 
 >>> ./b.js
 // @flow
@@ -17,7 +17,7 @@ import type { E, C } from "./lib";import { foo, baz } from "./lib";
 
 const c = require("./c");
 
-module.exports = [(foo(): C), (baz(): E)];
+module.exports = [foo() as C, baz() as E];
 
 >>> ./c.js
 // @flow
@@ -27,7 +27,7 @@ import type { E, C } from "./lib";import { foo, baz } from "./lib";
 const a = require("./a");
 
 module.exports = [
-  (0 < 1 ? foo() : baz(): C | E)
+  0 < 1 ? foo() : baz() as C | E
 ];
 
 >>> Launching report...
@@ -67,7 +67,7 @@ import type { D, C } from "./lib";import { foo, bar } from "./lib";
 
 const b = require("./b");
 
-module.exports = [(foo(): C), (bar(): D)];
+module.exports = [foo() as C, bar() as D];
 
 >>> ./b.js
 // @flow
@@ -76,7 +76,7 @@ import type { E, C } from "./lib";import { foo, baz } from "./lib";
 
 const c = require("./c");
 
-module.exports = [(foo(): C), (baz(): E)];
+module.exports = [foo() as C, baz() as E];
 
 >>> ./c.js
 // @flow
@@ -86,7 +86,7 @@ import type { E, C } from "./lib";import { foo, baz } from "./lib";
 const a = require("./a");
 
 module.exports = [
-  (0 < 1 ? foo() : baz(): C | E)
+  0 < 1 ? foo() : baz() as C | E
 ];
 
 >>> ./error-a.js
@@ -100,8 +100,8 @@ import { error_foo, error_bar } from "./error-lib";
 const b = require("./error-b");
 
 module.exports = [
-  (0 < 1 ? foo() : error_foo(): C | C),
-  (0 < 1 ? bar() : error_bar(): D | D),
+  0 < 1 ? foo() : error_foo() as C | C,
+  0 < 1 ? bar() : error_bar() as D | D,
 ];
 
 >>> ./error-b.js
@@ -113,8 +113,8 @@ import { error_foo, error_baz } from "./error-lib";
 const a = require("./error-a");
 
 module.exports = [
-  (0 < 1 ? foo() : error_foo(): C | C),
-  (0 < 1 ? baz() : error_baz(): E | E),
+  0 < 1 ? foo() : error_foo() as C | C,
+  0 < 1 ? baz() : error_baz() as E | E,
 ];
 
 
@@ -124,14 +124,14 @@ module.exports = [
 <   0 < 1 ? foo() : error_foo(),
 <   0 < 1 ? bar() : error_bar(),
 ---
->   (0 < 1 ? foo() : error_foo(): C | C),
->   (0 < 1 ? bar() : error_bar(): D | D),
+>   0 < 1 ? foo() : error_foo() as C | C,
+>   0 < 1 ? bar() : error_bar() as D | D,
 
 >>> ./error-b.js
 9,10c9,10
 <   0 < 1 ? foo() : error_foo(),
 <   0 < 1 ? baz() : error_baz(),
 ---
->   (0 < 1 ? foo() : error_foo(): C | C),
->   (0 < 1 ? baz() : error_baz(): E | E),
+>   0 < 1 ? foo() : error_foo() as C | C,
+>   0 < 1 ? baz() : error_baz() as E | E,
 

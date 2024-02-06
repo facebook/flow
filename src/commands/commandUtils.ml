@@ -1337,7 +1337,7 @@ let make_options
     opt_babel_loose_array_spread =
       Base.Option.value (FlowConfig.babel_loose_array_spread flowconfig) ~default:false;
     opt_casting_syntax =
-      Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Colon;
+      Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Both;
     opt_wait_for_recheck;
     opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
     opt_quiet = options_flags.Options_flags.quiet;

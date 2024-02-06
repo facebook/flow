@@ -9,8 +9,8 @@ import type { C } from "./lib1";import { foo1a } from './lib1';
 import { foo2 } from './lib2';
 
 module.exports = [
-  (foo1a(): C),
-  (foo2(): $IMPORTED_TYPE$_C_1),
+  foo1a() as C,
+  foo2() as $IMPORTED_TYPE$_C_1,
 ]
 
 >>> ./b.js
@@ -21,8 +21,8 @@ import type { C as $IMPORTED_TYPE$_C_1 } from "./lib2";import { foo1b } from './
 import { foo2 } from './lib2';
 
 module.exports = [
-  (foo1b(): C),
-  (foo2(): $IMPORTED_TYPE$_C_1),
+  foo1b() as C,
+  foo2() as $IMPORTED_TYPE$_C_1,
 ]
 
 >>> ./c.js
@@ -32,8 +32,8 @@ import typeof { C as $IMPORTED_TYPEOF$_C_1 } from "./lib1";
 import type { C } from "./lib1";import { foo1a, foo1b } from './lib1';
 
 module.exports = [
-  (foo1a(): C),
-  (foo1b(): $IMPORTED_TYPEOF$_C_1),
+  foo1a() as C,
+  foo1b() as $IMPORTED_TYPEOF$_C_1,
 ]
 
 >>> Launching report...
@@ -74,8 +74,8 @@ import type { C } from "./lib1";import { foo1a } from './lib1';
 import { foo2 } from './lib2';
 
 module.exports = [
-  (foo1a(): C),
-  (foo2(): $IMPORTED_TYPE$_C_1),
+  foo1a() as C,
+  foo2() as $IMPORTED_TYPE$_C_1,
 ]
 
 >>> ./b.js
@@ -86,8 +86,8 @@ import type { C as $IMPORTED_TYPE$_C_1 } from "./lib2";import { foo1b } from './
 import { foo2 } from './lib2';
 
 module.exports = [
-  (foo1b(): C),
-  (foo2(): $IMPORTED_TYPE$_C_1),
+  foo1b() as C,
+  foo2() as $IMPORTED_TYPE$_C_1,
 ]
 
 >>> ./c.js
@@ -97,8 +97,8 @@ import typeof { C as $IMPORTED_TYPEOF$_C_1 } from "./lib1";
 import type { C } from "./lib1";import { foo1a, foo1b } from './lib1';
 
 module.exports = [
-  (foo1a(): C),
-  (foo1b(): $IMPORTED_TYPEOF$_C_1),
+  foo1a() as C,
+  foo1b() as $IMPORTED_TYPEOF$_C_1,
 ]
 
 

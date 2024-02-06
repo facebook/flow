@@ -8,7 +8,7 @@
 
 const o = require('./lib');
 
-module.exports = (o(): O);
+module.exports = (o() as O);
 
 >>> Launching report...
 
@@ -47,7 +47,7 @@ Warnings:
 
 const o = require('./lib');
 
-module.exports = (o(): O);
+module.exports = (o() as O);
 
 
 === Diff between codemod-ed & autofix-ed ===

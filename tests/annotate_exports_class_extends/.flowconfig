@@ -8,5 +8,6 @@
 
 [options]
 all=true
+casting_syntax=colon
 
 [strict]

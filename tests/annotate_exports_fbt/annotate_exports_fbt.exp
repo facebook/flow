@@ -7,7 +7,7 @@
 const React = require("react");
 
 const foo = () => <fbt />;
-module.exports = (foo(): Fbt);
+module.exports = (foo() as Fbt);
 
 >>> Launching report...
 
@@ -45,7 +45,7 @@ Warnings:
 const React = require("react");
 
 const foo = () => <fbt />;
-module.exports = (foo(): Fbt);
+module.exports = (foo() as Fbt);
 
 
 === Diff between codemod-ed & autofix-ed ===

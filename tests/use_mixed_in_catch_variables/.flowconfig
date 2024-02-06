@@ -1,5 +1,4 @@
 [options]
 all=true
-casting_syntax=both
 
 use_mixed_in_catch_variables=true

@@ -393,10 +393,10 @@ module Opts = struct
   let const_assertion_parser =
     boolean (fun opts v ->
         match opts.casting_syntax with
+        | None
         | Some Options.CastingSyntax.As
         | Some Options.CastingSyntax.Both ->
           Ok { opts with enable_as_const = Some v }
-        | None
         | Some Options.CastingSyntax.Colon ->
           Error
             ("Setting \"as_const\" to true requires that \"casting_syntax\" "

@@ -1,6 +1,5 @@
 [options]
 all=false
-casting_syntax=both
 module.system=haste
 
 [libs]

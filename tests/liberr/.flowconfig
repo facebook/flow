@@ -9,6 +9,5 @@ libs/
 
 [options]
 all=true
-casting_syntax=both
 
 [strict]

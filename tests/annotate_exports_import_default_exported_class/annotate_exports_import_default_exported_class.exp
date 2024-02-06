@@ -5,7 +5,7 @@
 // @flow
 
 import type C from "./export";import {foo} from './export';
-module.exports = (foo(): C);
+module.exports = (foo() as C);
 
 >>> Launching report...
 
@@ -41,7 +41,7 @@ Warnings:
 // @flow
 
 import type C from "./export";import {foo} from './export';
-module.exports = (foo(): C);
+module.exports = (foo() as C);
 
 
 === Diff between codemod-ed & autofix-ed ===

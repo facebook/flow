@@ -8,6 +8,5 @@
 
 [options]
 all=true
-casting_syntax=both
 include_warnings=true
 no_flowlib=true

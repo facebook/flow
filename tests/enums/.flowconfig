@@ -7,6 +7,5 @@ lib.js
 
 [options]
 all=true
-casting_syntax=both
 no_flowlib=false
 enums=true

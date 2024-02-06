@@ -1,121 +1,3 @@
-Error -------------------------------------------------------------------------------------------------------- as.js:4:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   4| m as T; // ERROR
-      ^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------------------- as.js:8:6
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   8| b || m as T; // ERROR
-           ^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------------------- as.js:9:6
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   9| b && m as T; // ERROR
-           ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:10:7
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   10| b === m as T; // ERROR
-             ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:13:5
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   13| x = m as T; // ERROR
-           ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:17:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   17| new C as T; // ERROR
-       ^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:20:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   20| n + n as T; // ERROR
-       ^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:22:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   22| n as T + n; // ERROR
-       ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:23:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   23| n as T && n; // ERROR
-       ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:24:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   24| n as T || n; // ERROR
-       ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:25:1
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   25| n as T === n; // ERROR
-       ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------- as.js:27:1
-
-`as const` syntax is not enabled by default. Try adding a type annotation instead. You can cast an expression to a type
-using the form `(<expr>: <type>)`. Alternatively, you can enable experimental support for the feature by setting
-`experimental.as_const=true` in your flow config. [ts-syntax]
-
-   27| n as const; // ERROR
-       ^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------ as.js:31:18
-
-Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
-[invalid-type-cast-syntax]
-
-   31| class A extends (Object as any) { // ERROR
-                        ^^^^^^^^^^^^^
-
-
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
 
 The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [ts-syntax]
@@ -285,7 +167,7 @@ The equivalent of TypeScript's `ReadonlySet` type in Flow is `$ReadOnlySet`. [ts
 
 Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
 
-The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a cast in the form `(<expr>: <type>)`.
+The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a cast in the form `<expr> as <type>`.
 [ts-syntax]
 
    4| m satisfies T; // ERROR
@@ -354,4 +236,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 41 errors
+Found 28 errors

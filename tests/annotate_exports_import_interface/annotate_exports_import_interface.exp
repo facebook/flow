@@ -6,7 +6,7 @@
 
 import type { I } from "./lib";const i = require('./lib');
 
-module.exports = (i(): I);
+module.exports = (i() as I);
 
 >>> Launching report...
 
@@ -43,7 +43,7 @@ Warnings:
 
 import type { I } from "./lib";const i = require('./lib');
 
-module.exports = (i(): I);
+module.exports = (i() as I);
 
 
 === Diff between codemod-ed & autofix-ed ===

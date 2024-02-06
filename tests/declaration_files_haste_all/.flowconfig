@@ -7,4 +7,3 @@
 [options]
 module.system=haste
 all=true
-casting_syntax=both

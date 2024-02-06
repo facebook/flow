@@ -1,19 +1,19 @@
 
 === Okay to print any type
 
->>> non_strict_file.js (#changes: 2)
+>>> non_strict_file.js (#changes: 1)
 // @flow
 
 import { foo } from './any';
 
-module.exports = (foo(): any);
+module.exports = (foo() as any);
 
->>> strict_file.js (#changes: 2)
+>>> strict_file.js (#changes: 1)
 // @flow strict
 
 import { foo } from './any';
 
-module.exports = (foo(): any);
+module.exports = (foo() as any);
 
 >>> Launching report...
 
@@ -45,19 +45,19 @@ Warnings:
 
 === Should print $MyPreferedSuppression instead of the any type
 
->>> non_strict_file.js (#changes: 2)
+>>> non_strict_file.js (#changes: 1)
 // @flow
 
 import { foo } from './any';
 
-module.exports = (foo(): $MyPreferedSuppression);
+module.exports = (foo() as $MyPreferedSuppression);
 
->>> strict_file.js (#changes: 2)
+>>> strict_file.js (#changes: 1)
 // @flow strict
 
 import { foo } from './any';
 
-module.exports = (foo(): $MyPreferedSuppression);
+module.exports = (foo() as $MyPreferedSuppression);
 
 >>> Launching report...
 

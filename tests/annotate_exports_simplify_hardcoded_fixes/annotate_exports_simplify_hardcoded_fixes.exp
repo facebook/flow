@@ -6,7 +6,7 @@
 
 declare function f(): React$Element<'a'> | React$Element<'b'>;
 
-module.exports = (f(): React$MixedElement);
+module.exports = (f() as React$MixedElement);
 
 >>> Launching report...
 
@@ -43,7 +43,7 @@ Warnings:
 
 declare function f(): React$Element<'a'> | React$Element<'b'>;
 
-module.exports = (f(): React$MixedElement);
+module.exports = (f() as React$MixedElement);
 
 
 === Diff between codemod-ed & autofix-ed ===

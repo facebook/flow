@@ -7,9 +7,9 @@
 import type { C } from "./lib";import { foo } from "./lib";
 
 module.exports = {
-  f: (foo(): C),
-  g: (foo(): C),
-  h: (foo(): C)
+  f: foo() as C,
+  g: foo() as C,
+  h: foo() as C
 };
 
 >>> Launching report...
@@ -48,9 +48,9 @@ Warnings:
 import type { C } from "./lib";import { foo } from "./lib";
 
 module.exports = {
-  f: (foo(): C),
-  g: (foo(): C),
-  h: (foo(): C)
+  f: foo() as C,
+  g: foo() as C,
+  h: foo() as C
 };
 
 

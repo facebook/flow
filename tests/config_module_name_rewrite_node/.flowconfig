@@ -6,7 +6,6 @@
 
 [options]
 all=true
-casting_syntax=both
 module.system=node
 
 module.name_mapper='1Doesnt\(Exist\)' -> '\1s'

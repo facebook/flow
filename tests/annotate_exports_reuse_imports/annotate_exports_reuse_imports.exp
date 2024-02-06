@@ -44,16 +44,17 @@ const ImmutableList = Immutable.List;
 declare var immutableList: Immutable.List;
 
 module.exports = {
-  x1: (f1(): A),
+  x1: f1() as A,
   x2: f2(),
-  x3: (f3(): ImportedTypeDefaultClass),
-  x4: (f4(): ImportedTypeDefaultPolyClass<number>),
-  x5: (f5(): B),
-  x6: (f6(): $IMPORTED_TYPEOF$_B_1),
-  typeof_c: (typeof_c(): $IMPORTED_TYPEOF$_C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
-  x7: (f7(): ImportedTypeofDefaultClassFuncall),
-  x8: (f8(): ImportedValueDefaultClassFuncall),
-  x9: (f9(): List),
+  x3: f3() as ImportedTypeDefaultClass,
+  x4: f4() as ImportedTypeDefaultPolyClass<number>,
+  x5: f5() as B,
+  x6: f6() as $IMPORTED_TYPEOF$_B_1,
+  typeof_c: typeof_c() // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+ as $IMPORTED_TYPEOF$_C
+  x7: f7() as ImportedTypeofDefaultClassFuncall,
+  x8: f8() as ImportedValueDefaultClassFuncall,
+  x9: f9() as List,
 };
 
 >>> Launching report...
@@ -129,16 +130,17 @@ const ImmutableList = Immutable.List;
 declare var immutableList: Immutable.List;
 
 module.exports = {
-  x1: (f1(): A),
-  x2: (f2(): P<number>),
-  x3: (f3(): ImportedTypeDefaultClass),
-  x4: (f4(): ImportedTypeDefaultPolyClass<number>),
-  x5: (f5(): B),
-  x6: (f6(): $IMPORTED_TYPEOF$_B_1),
-  typeof_c: (typeof_c(): C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
-  x7: (f7(): ImportedTypeofDefaultClassFuncall),
-  x8: (f8(): ImportedValueDefaultClassFuncall),
-  x9: (f9(): List),
+  x1: f1() as A,
+  x2: f2() as P<number>,
+  x3: f3() as ImportedTypeDefaultClass,
+  x4: f4() as ImportedTypeDefaultPolyClass<number>,
+  x5: f5() as B,
+  x6: f6() as $IMPORTED_TYPEOF$_B_1,
+  typeof_c: typeof_c() // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+ as C
+  x7: f7() as ImportedTypeofDefaultClassFuncall,
+  x8: f8() as ImportedValueDefaultClassFuncall,
+  x9: f9() as List,
 };
 
 
@@ -151,9 +153,9 @@ module.exports = {
 44c44
 <   x2: f2(),
 ---
->   x2: (f2(): P<number>),
-49c49
-<   typeof_c: (typeof_c(): $IMPORTED_TYPEOF$_C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+>   x2: f2() as P<number>,
+50c50
+<  as $IMPORTED_TYPEOF$_C
 ---
->   typeof_c: (typeof_c(): C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
+>  as C
 

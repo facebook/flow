@@ -8,7 +8,7 @@ import type { A as $IMPORTED_TYPE$_A_1 } from "./a2";
 import type { A } from "./a1";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
-module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
+module.exports = [foo1() as A, foo2() as $IMPORTED_TYPE$_A_1]; // duplicate import in different types
 
 >>> ./c.js
 // @flow
@@ -56,7 +56,7 @@ import type { A as $IMPORTED_TYPE$_A_1 } from "./a2";
 import type { A } from "./a1";import { foo as foo1 } from "./a1";
 import { foo as foo2 } from "./a2";
 
-module.exports = [(foo1(): A), (foo2(): $IMPORTED_TYPE$_A_1)]; // duplicate import in different types
+module.exports = [foo1() as A, foo2() as $IMPORTED_TYPE$_A_1]; // duplicate import in different types
 
 >>> ./c.js
 // @flow

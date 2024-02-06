@@ -1094,32 +1094,6 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide quickfix for `as` type cast', [
-      addFile('fix-as-expression.js.ignored', 'fix-as-expression.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
-        textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/fix-as-expression.js',
-        },
-        range: {
-          start: {
-            line: 2,
-            character: 0,
-          },
-          end: {
-            line: 2,
-            character: 14,
-          },
-        },
-        context: {
-          only: ['quickfix'],
-          diagnostics: [],
-        },
-      }).verifyLSPMessageSnapshot(
-        path.join(__dirname, '__snapshots__', 'quickfix-ts-type-cast.json'),
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
     test('provide quickfix for `(x: T)` type cast', [
       addFile('fix-colon-cast.js.ignored', 'fix-colon-cast.js'),
       lspStartAndConnect(),

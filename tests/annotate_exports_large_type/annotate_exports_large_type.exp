@@ -51,7 +51,7 @@ declare function foo(): {
 
 // The expected annotation has size greater than 10 so we expect the type
 // annotation to fail
-module.exports = (foo(): {
+module.exports = (foo() as {
   f0: void,
   f1: void,
   f2: void,
@@ -71,7 +71,7 @@ module.exports = (foo(): {
 20c20,32
 < module.exports = foo();
 ---
-> module.exports = (foo(): {
+> module.exports = (foo() as {
 >   f0: void,
 >   f1: void,
 >   f2: void,

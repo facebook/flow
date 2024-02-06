@@ -9,7 +9,7 @@ type Foo<T = string> = {};
 
 function foo(): Foo<string> { return {}; }
 
-module.exports = (foo(): Foo<>);
+module.exports = (foo() as Foo<>);
 
 >>> Launching report...
 
@@ -49,13 +49,13 @@ type Foo<T = string> = {};
 
 function foo(): Foo<string> { return {}; }
 
-module.exports = (foo(): Foo<string>);
+module.exports = (foo() as Foo<string>);
 
 
 === Diff between codemod-ed & autofix-ed ===
 >>> ./defaults.js
 8c8
-< module.exports = (foo(): Foo<>);
+< module.exports = (foo() as Foo<>);
 ---
-> module.exports = (foo(): Foo<string>);
+> module.exports = (foo() as Foo<string>);
 

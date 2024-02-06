@@ -3,4 +3,3 @@ unnecessary-invariant=error
 
 [options]
 all=true
-casting_syntax=both

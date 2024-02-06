@@ -6,5 +6,4 @@
 
 [options]
 all=true
-casting_syntax=both
 suppress_comment=[

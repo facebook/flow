@@ -3,6 +3,5 @@ lib/
 
 [options]
 all=true
-casting_syntax=both
 exact_by_default=false
 no_flowlib=false

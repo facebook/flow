@@ -2,7 +2,7 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to type cast `(<expr>: <type>)`",
+      "title": "Convert to `as` expression `<expr> as <type>`",
       "kind": "quickfix",
       "diagnostics": [],
       "edit": {
@@ -19,7 +19,7 @@
                   "character": 21
                 }
               },
-              "newText": "(\"foo\": mixed)"
+              "newText": "\"foo\" as mixed"
             }
           ]
         }
@@ -30,7 +30,7 @@
         "arguments": [
           "textDocument/codeAction",
           "convert_satisfies_expression",
-          "Convert to type cast `(<expr>: <type>)`"
+          "Convert to `as` expression `<expr> as <type>`"
         ]
       }
     }

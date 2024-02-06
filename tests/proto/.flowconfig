@@ -4,5 +4,4 @@ lib.js
 [options]
 no_flowlib=false
 all=true
-casting_syntax=both
 exact_by_default=false

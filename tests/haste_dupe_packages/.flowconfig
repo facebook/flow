@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 module.system=haste
 module.system.haste.paths.excludes=<PROJECT_ROOT>/a/.*
 module.system.haste.paths.excludes=<PROJECT_ROOT>/b/.*

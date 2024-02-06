@@ -9,6 +9,5 @@ all=warn
 
 [options]
 all=true
-casting_syntax=both
 
 [strict]

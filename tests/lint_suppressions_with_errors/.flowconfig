@@ -3,5 +3,4 @@ sketchy-null-mixed=warn
 
 [options]
 all=true
-casting_syntax=both
 suppress_type=$FlowFixMe

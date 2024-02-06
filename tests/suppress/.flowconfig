@@ -8,4 +8,3 @@ lib.js
 [options]
 include_warnings=true
 all=true
-casting_syntax=both

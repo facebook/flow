@@ -3,5 +3,4 @@ unused-promise=error
 
 [options]
 all=true
-casting_syntax=both
 no_flowlib=false

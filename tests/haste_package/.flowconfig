@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 module.system=haste
 module.system.haste.paths.excludes=<PROJECT_ROOT>/subdir/node_modules/.*
 module.system.haste.paths.excludes=<PROJECT_ROOT>/subdir/non_haste_pkg/.*

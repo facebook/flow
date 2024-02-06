@@ -1,29 +1,29 @@
 Invalid flowconfig should fail
-.flowconfig:4 Unsupported option specified! (invalid_option1)
+.flowconfig:3 Unsupported option specified! (invalid_option1)
+.flowconfig:4 Unsupported option specified! (invalid_option2)
 .flowconfig:5 Unsupported option specified! (invalid_option2)
-.flowconfig:6 Unsupported option specified! (invalid_option2)
 
 Invalid flowconfig should pass
-.flowconfig:4 Unsupported option specified! (invalid_option1)
+.flowconfig:3 Unsupported option specified! (invalid_option1)
+.flowconfig:4 Unsupported option specified! (invalid_option2)
 .flowconfig:5 Unsupported option specified! (invalid_option2)
-.flowconfig:6 Unsupported option specified! (invalid_option2)
 Found 0 errors
 
 flow config check:
 {
   "errors":[
     {
-      "line":4,
+      "line":3,
       "message":"Unsupported option specified! (invalid_option1)",
       "level":"warning"
     },
     {
-      "line":5,
+      "line":4,
       "message":"Unsupported option specified! (invalid_option2)",
       "level":"warning"
     },
     {
-      "line":6,
+      "line":5,
       "message":"Unsupported option specified! (invalid_option2)",
       "level":"warning"
     }

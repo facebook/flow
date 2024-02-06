@@ -6,7 +6,7 @@
 
 import type { T } from "react-redux";const {foo} = require('react-redux');
 
-module.exports = (foo(): T);
+module.exports = (foo() as T);
 
 >>> ./fileB.js
 // @flow
@@ -14,7 +14,7 @@ module.exports = (foo(): T);
 import type {T} from 'react-redux';
 const {foo} = require('react-redux');
 
-module.exports = (foo(): T);
+module.exports = (foo() as T);
 
 >>> Launching report...
 
@@ -51,7 +51,7 @@ Warnings:
 
 import type { T } from "react-redux";const {foo} = require('react-redux');
 
-module.exports = (foo(): T);
+module.exports = (foo() as T);
 
 >>> ./fileB.js
 // @flow
@@ -59,7 +59,7 @@ module.exports = (foo(): T);
 import type {T} from 'react-redux';
 const {foo} = require('react-redux');
 
-module.exports = (foo(): T);
+module.exports = (foo() as T);
 
 
 === Diff between codemod-ed & autofix-ed ===

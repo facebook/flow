@@ -9,5 +9,4 @@ explicit_lib.js
 
 [options]
 all=true
-casting_syntax=both
 exact_by_default=false

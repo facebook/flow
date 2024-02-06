@@ -6,14 +6,14 @@
 
 import type { T } from "../lib";import {foo} from '../lib';
 
-module.exports = (foo(): T);
+module.exports = (foo() as T);
 
 >>> ./a/b/c/f.js
 // @flow
 
 import type { A } from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
 
-module.exports = (a(): A);
+module.exports = (a() as A);
 
 >>> ./file.js
 // @flow
@@ -23,8 +23,8 @@ import type { T } from "./lib";import {foo} from './lib';
 import {bar} from './lib-flow';
 
 module.exports = {
-  foo: (foo(): T),
-  bar: (bar(): B),
+  foo: foo() as T,
+  bar: bar() as B,
 };
 
 >>> Launching report...
@@ -62,14 +62,14 @@ Warnings:
 
 import type { T } from "../lib";import {foo} from '../lib';
 
-module.exports = (foo(): T);
+module.exports = (foo() as T);
 
 >>> ./a/b/c/f.js
 // @flow
 
 import type { A } from "../../../d/e/lib-e";import {a} from '../../../d/e/lib-e';
 
-module.exports = (a(): A);
+module.exports = (a() as A);
 
 >>> ./file.js
 // @flow
@@ -79,8 +79,8 @@ import type { T } from "./lib";import {foo} from './lib';
 import {bar} from './lib-flow';
 
 module.exports = {
-  foo: (foo(): T),
-  bar: (bar(): B),
+  foo: foo() as T,
+  bar: bar() as B,
 };
 
 

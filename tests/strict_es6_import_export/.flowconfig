@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 experimental.strict_es6_import_export=true
 no_flowlib=false
 

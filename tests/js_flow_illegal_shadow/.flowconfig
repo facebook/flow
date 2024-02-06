@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 module.system=haste
 # get basename
 module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.\(js\|tsx?\)\(\.flow\)?\)$' -> '\1'

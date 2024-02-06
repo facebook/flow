@@ -6,7 +6,6 @@
 
 [options]
 all=true
-casting_syntax=both
 
 [version]
 0.1.0

@@ -1,5 +1,4 @@
 [options]
 all=true
-casting_syntax=both
 module.file_ext=.js.es6
 no_flowlib=false

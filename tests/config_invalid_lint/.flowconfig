@@ -7,4 +7,3 @@ nonexisting-lint=warn
 
 [options]
 all=true
-casting_syntax=both

@@ -14,7 +14,6 @@
   # Spaces before comment is allowed
 [options]
 all=true
-casting_syntax=both
 
 # I can write whatever I like here
   # Spaces before comment is allowed

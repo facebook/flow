@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 
 
 ; Since we run all tests with saved state as well, we don't need any specific

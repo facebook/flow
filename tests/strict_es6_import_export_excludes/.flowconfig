@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 experimental.strict_es6_import_export=true
 experimental.strict_es6_import_export.excludes=<PROJECT_ROOT>/excluded1/.*
 experimental.strict_es6_import_export.excludes=<PROJECT_ROOT>/excluded2/.*

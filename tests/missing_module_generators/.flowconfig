@@ -1,5 +1,4 @@
 [options]
 all=true
-casting_syntax=both
 module.missing_module_generators='.*\.foo$' -> 'make-foo'
 module.missing_module_generators='.*\.bar$' -> 'build bar'

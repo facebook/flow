@@ -7,4 +7,3 @@
 [options]
 no_flowlib=false
 all=true
-casting_syntax=both

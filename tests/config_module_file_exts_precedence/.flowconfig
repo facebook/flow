@@ -1,6 +1,5 @@
 [options]
 all=true
-casting_syntax=both
 ; this ordering determines precedence
 module.file_ext=.zzz
 module.file_ext=.js
