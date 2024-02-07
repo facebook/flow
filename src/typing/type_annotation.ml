@@ -1673,10 +1673,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let (t, properties) =
           convert_object cx tparams_map infer_tparams_map loc ~exact:exact_type properties
         in
-        if (not exact) && (not inexact) && not has_indexer then (
+        if (not exact_by_default) && (not exact) && (not inexact) && not has_indexer then (
           Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
-          if not exact_by_default then
-            Flow_js_utils.add_output cx Error_message.(EImplicitInexactObject loc)
+          Flow_js_utils.add_output cx Error_message.(EImplicitInexactObject loc)
         );
         ((loc, t), Object { Object.exact; properties; inexact; comments }))
     | (loc, Interface { Interface.extends; body; comments }) ->
