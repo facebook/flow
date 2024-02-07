@@ -624,7 +624,7 @@ and 'loc t' =
     }
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
-  | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
+  | ETrivialRecursiveDefinition of 'loc * 'loc virtual_reason
   | EDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc Env_api.annot_loc list) Nel.t
   | ERecursiveDefinition of {
       reason: 'loc virtual_reason;
@@ -1412,7 +1412,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
   | EAnnotationInference (loc, r1, r2, suggestion) ->
     EAnnotationInference (f loc, map_reason r1, map_reason r2, suggestion)
-  | EAnnotationInferenceRecursive (loc, r) -> EAnnotationInferenceRecursive (f loc, map_reason r)
+  | ETrivialRecursiveDefinition (loc, r) -> ETrivialRecursiveDefinition (f loc, map_reason r)
   | EDefinitionCycle elts ->
     let open Env_api in
     EDefinitionCycle
@@ -1722,7 +1722,7 @@ let util_use_op_of_msg nope util = function
   | ERecursiveDefinition _
   | EReferenceInAnnotation _
   | EAnnotationInference _
-  | EAnnotationInferenceRecursive _
+  | ETrivialRecursiveDefinition _
   | EDuplicateClassMember _
   | EEmptyArrayNoProvider _
   | EUnusedPromise _
@@ -1899,7 +1899,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EComponentCase loc
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
-  | EAnnotationInferenceRecursive (loc, _)
+  | ETrivialRecursiveDefinition (loc, _)
   | EInvalidCatchParameterAnnotation loc
   | EInvalidMappedType { loc; _ }
   | EFunPredInvalidIndex loc
@@ -4986,14 +4986,8 @@ let friendly_message_of_msg loc_of_aloc msg =
       @ suggestion
     in
     Normal { features }
-  | EAnnotationInferenceRecursive (_, reason) ->
-    let features =
-      [
-        text "Invalid trivially recursive definition of ";
-        desc reason;
-        text " in an export position. ";
-      ]
-    in
+  | ETrivialRecursiveDefinition (_, reason) ->
+    let features = [text "Invalid trivially recursive definition of "; desc reason; text ". "] in
     Normal { features }
   | ERecursiveDefinition { reason; recursion; annot_locs } ->
     let (itself, tl_recur) =
@@ -5881,7 +5875,7 @@ let error_code_of_message err : error_code option =
   | EHookRuleViolation _ -> Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
-  | EAnnotationInferenceRecursive _ -> Some InvalidExportedAnnotationRecursive
+  | ETrivialRecursiveDefinition _ -> Some RecursiveDefinition
   | EDefinitionCycle _ -> Some DefinitionCycle
   | ERecursiveDefinition _ -> Some RecursiveDefinition
   | EReferenceInAnnotation _ -> Some RecursiveDefinition

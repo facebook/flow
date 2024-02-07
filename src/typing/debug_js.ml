@@ -1874,8 +1874,8 @@ let dump_error_message =
         (string_of_aloc loc)
         (dump_reason cx reason_op)
         (dump_reason cx reason)
-    | EAnnotationInferenceRecursive (loc, reason) ->
-      spf "EAnnotationInferenceRecursive (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
+    | ETrivialRecursiveDefinition (loc, reason) ->
+      spf "ETrivialRecursiveDefinition (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
     | EDefinitionCycle _ -> "EDefinitionCycle"
     | ERecursiveDefinition _ -> "ERecursiveDefinition"
     | EDuplicateClassMember { loc; name; _ } ->

@@ -194,7 +194,7 @@ module rec ConsGen : S = struct
 
   let error_recursive cx reason =
     let loc = Reason.loc_of_reason reason in
-    let msg = Error_message.EAnnotationInferenceRecursive (loc, reason) in
+    let msg = Error_message.ETrivialRecursiveDefinition (loc, reason) in
     (match !dst_cx_ref with
     | None -> assert false
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
