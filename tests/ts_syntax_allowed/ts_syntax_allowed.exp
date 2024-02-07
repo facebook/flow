@@ -1,0 +1,154 @@
+Error ---------------------------------------------------------------------------------------------- tparam_bound.js:2:3
+
+Cannot call `f` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-call]
+
+   tparam_bound.js:2:3
+   2| f(1); // error: number ~> string
+        ^ [1]
+
+References:
+   tparam_bound.js:1:22
+   1| function f<T extends string>(t: T): void {} // ok
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- tparam_bound.js:3:25
+
+Cannot call `require(...).f` because number [1] is incompatible with string [2] in type argument `T`.
+[incompatible-call]
+
+   tparam_bound.js:3:25
+   3| require('./exported').f(1); // error: number ~> string
+                              ^ [1]
+
+References:
+   exported.js:6:29
+   6| export function f<T extends string>(t: T): void {} // ok
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_names.js:3:5
+
+Cannot call `a.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   type_names.js:3:5
+   3|   a.push(4); // error: readonly
+          ^^^^
+
+References:
+   type_names.js:2:12
+   2|   const a: ReadonlyArray<number> = [3]; // ok
+                 ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_names.js:5:5
+
+Cannot call `b.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+
+   type_names.js:5:5
+   5|   b.add(3); // error: readonly
+          ^^^
+
+References:
+   type_names.js:4:12
+   4|   const b: ReadonlySet<number> = new Set([3]); // ok
+                 ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_names.js:7:5
+
+Cannot call `c.add` because property `add` is missing in `$ReadOnlyMap` [1]. [prop-missing]
+
+   type_names.js:7:5
+   7|   c.add(3, ''); // error: readonly
+          ^^^
+
+References:
+   type_names.js:6:12
+   6|   const c: ReadonlyMap<number, string> = new Map([[3, '']]); // ok
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_names.js:9:7
+
+Cannot assign `null` to `d` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   type_names.js:9:7
+   9|   d = null; // error: nonnull
+            ^^^^ [1]
+
+References:
+   type_names.js:8:22
+   8|   let d: NonNullable<string | null> = ''; // ok
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- type_names.js:11:5
+
+Cannot assign empty string to `e.foo` because property `foo` is not writable. [cannot-write]
+
+   11|   e.foo = ''; // error: readonly
+           ^^^
+
+
+Error ---------------------------------------------------------------------------------------------- type_names.js:16:32
+
+Cannot call `exported_with_ts_typenames.a.push` because property `push` is missing in `$ReadOnlyArray` [1].
+[prop-missing]
+
+   type_names.js:16:32
+   16|   exported_with_ts_typenames.a.push(4); // error: readonly
+                                      ^^^^
+
+References:
+   exported.js:1:17
+    1| export const a: ReadonlyArray<number> = [3]; // ok
+                       ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- type_names.js:17:32
+
+Cannot call `exported_with_ts_typenames.b.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+
+   type_names.js:17:32
+   17|   exported_with_ts_typenames.b.add(3); // error: readonly
+                                      ^^^
+
+References:
+   exported.js:2:17
+    2| export const b: ReadonlySet<number> = new Set([3]); // ok
+                       ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- type_names.js:18:32
+
+Cannot call `exported_with_ts_typenames.c.add` because property `add` is missing in `$ReadOnlyMap` [1]. [prop-missing]
+
+   type_names.js:18:32
+   18|   exported_with_ts_typenames.c.add(3, ''); // error: readonly
+                                      ^^^
+
+References:
+   exported.js:3:17
+    3| export const c: ReadonlyMap<number, string> = new Map([[3, '']]); // ok
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- type_names.js:19:30
+
+Cannot assign `null` to `exported_with_ts_typenames.d` because property `d` is not writable. [cannot-write]
+
+   19|   exported_with_ts_typenames.d = null; // error: nonnull
+                                    ^
+
+
+Error ---------------------------------------------------------------------------------------------- type_names.js:20:32
+
+Cannot assign empty string to `exported_with_ts_typenames.e.foo` because property `foo` is not writable. [cannot-write]
+
+   20|   exported_with_ts_typenames.e.foo = ''; // error: readonly
+                                      ^^^
+
+
+
+Found 12 errors

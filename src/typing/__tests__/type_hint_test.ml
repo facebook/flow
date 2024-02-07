@@ -58,6 +58,7 @@ let metadata =
     strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
+    ts_syntax = true;
     typeof_with_type_arguments = true;
     use_mixed_in_catch_variables = false;
   }
@@ -194,6 +195,7 @@ end = struct
         exact_by_default = true;
         enable_enums = true;
         enable_component_syntax = true;
+        enable_ts_syntax = true;
         hooklike_functions = true;
         casting_syntax = Options.CastingSyntax.Both;
         for_builtins = true;

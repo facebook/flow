@@ -72,6 +72,7 @@ module SignatureVerification = struct
         exact_by_default = Options.exact_by_default options;
         enable_enums = Options.enums options;
         enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
+        enable_ts_syntax = Options.ts_syntax options;
         enable_relay_integration = Options.enable_relay_integration options;
         casting_syntax = Options.casting_syntax options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;

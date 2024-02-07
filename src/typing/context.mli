@@ -104,6 +104,7 @@ type metadata = {
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
+  ts_syntax: bool;
   typeof_with_type_arguments: bool;
   use_mixed_in_catch_variables: bool;
 }
@@ -248,6 +249,8 @@ val should_munge_underscores : t -> bool
 val should_strip_root : t -> bool
 
 val suppress_types : t -> SSet.t
+
+val ts_syntax : t -> bool
 
 val type_graph : t -> Graph_explorer.graph
 

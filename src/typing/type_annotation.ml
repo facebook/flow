@@ -636,7 +636,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       in
 
       let use_op reason = Op (TypeApplication { type_ = reason }) in
-      let local_generic_type () =
+      let local_generic_type ?(name = name) () =
         let reason = mk_reason (RType (OrdinaryName name)) loc in
         let c = type_identifier cx name name_loc in
         let (t, targs) =
@@ -1285,37 +1285,68 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep
         (* TS Types *)
         | "Readonly" ->
-          error_type
-            cx
-            loc
-            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonly })
-            t_ast
-        | "ReadonlyArray" ->
-          error_type
-            cx
-            loc
-            Error_message.(
-              EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyArray }
+          if Context.ts_syntax cx then
+            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+                let (ts, targs) = convert_type_params () in
+                let t = List.hd ts in
+                let reason = mk_reason RReadOnlyType loc in
+                reconstruct_ast
+                  (mk_type_destructor cx (use_op reason) reason t ReadOnlyType (mk_eval_id cx loc))
+                  targs
             )
-            t_ast
-        | "ReadonlyMap" ->
+          else
+            error_type
+              cx
+              loc
+              Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonly })
+              t_ast
+        | "ReadonlyArray" ->
+          if Context.ts_syntax cx then
+            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+                let (elemts, targs) = convert_type_params () in
+                let elemt = List.hd elemts in
+                reconstruct_ast
+                  (DefT (mk_annot_reason RROArrayType loc, ArrT (ROArrayAT (elemt, None))))
+                  targs
+            )
+          else
+            error_type
+              cx
+              loc
+              Error_message.(
+                EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyArray }
+              )
+              t_ast
+        | "ReadonlyMap" when not (Context.ts_syntax cx) ->
           error_type
             cx
             loc
             Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyMap })
             t_ast
-        | "ReadonlySet" ->
+        | "ReadonlySet" when not (Context.ts_syntax cx) ->
           error_type
             cx
             loc
             Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlySet })
             t_ast
         | "NonNullable" ->
-          error_type
-            cx
-            loc
-            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSNonNullable })
-            t_ast
+          if Context.ts_syntax cx then
+            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+                let (ts, targs) = convert_type_params () in
+                let t = List.hd ts in
+                let reason = mk_reason (RType (OrdinaryName "NonNullable")) loc in
+                reconstruct_ast
+                  (mk_type_destructor cx (use_op reason) reason t NonMaybeType (mk_eval_id cx loc))
+                  targs
+            )
+          else
+            error_type
+              cx
+              loc
+              Error_message.(
+                EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSNonNullable }
+              )
+              t_ast
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end
@@ -2552,7 +2583,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
       let polarity = polarity cx variance in
       (match bound_kind with
-      | Ast.Type.TypeParam.Extends when not from_infer_type ->
+      | Ast.Type.TypeParam.Extends when not (from_infer_type || Context.ts_syntax cx) ->
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.TSTypeParamExtends; loc });

@@ -128,6 +128,7 @@ module Opts = struct
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     traces: int;
+    ts_syntax: bool;
     typeof_with_type_arguments: bool;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
@@ -254,6 +255,7 @@ module Opts = struct
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       traces = 0;
+      ts_syntax = false;
       typeof_with_type_arguments = false;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
@@ -872,6 +874,7 @@ module Opts = struct
       );
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
       ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
+      ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ("experimenta.precise_dependents", precise_dependents_parser);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -1653,6 +1656,8 @@ let strict_mode c = c.strict_mode
 let suppress_types c = c.options.Opts.suppress_types
 
 let traces c = c.options.Opts.traces
+
+let ts_syntax c = c.options.Opts.ts_syntax
 
 let typeof_with_type_arguments c = c.options.Opts.typeof_with_type_arguments
 

@@ -239,6 +239,8 @@ val suppress_types : config -> SSet.t
 
 val traces : config -> int
 
+val ts_syntax : config -> bool
+
 val typeof_with_type_arguments : config -> bool
 
 val use_mixed_in_catch_variables : config -> bool option

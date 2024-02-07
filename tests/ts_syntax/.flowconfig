@@ -1,2 +1,5 @@
+[libs]
+unused_ts_shim.js
+
 [options]
 all=true

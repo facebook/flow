@@ -67,6 +67,7 @@ type metadata = {
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
+  ts_syntax: bool;
   typeof_with_type_arguments: bool;
   use_mixed_in_catch_variables: bool;
 }
@@ -280,6 +281,7 @@ let metadata_of_options options =
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
+    ts_syntax = Options.ts_syntax options;
     typeof_with_type_arguments = Options.typeof_with_type_arguments options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
@@ -562,6 +564,8 @@ let should_munge_underscores cx = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
 
 let suppress_types cx = cx.metadata.suppress_types
+
+let ts_syntax cx = cx.metadata.ts_syntax
 
 let literal_subtypes cx = cx.ccx.literal_subtypes
 

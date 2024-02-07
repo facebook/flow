@@ -147,6 +147,7 @@ type t = {
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_traces: int;
+  opt_ts_syntax: bool;
   opt_typeof_with_type_arguments: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
@@ -337,6 +338,8 @@ let strict_mode opts = opts.opt_strict_mode
 let suppress_types opts = opts.opt_suppress_types
 
 let temp_dir opts = opts.opt_temp_dir
+
+let ts_syntax opts = opts.opt_ts_syntax
 
 let typeof_with_type_arguments opts = opts.opt_typeof_with_type_arguments
 

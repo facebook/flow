@@ -213,6 +213,7 @@ let sig_options
     ?(exact_by_default = false)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
+    ?(enable_ts_syntax = true)
     ?(hooklike_functions = true)
     ?(enable_relay_integration = false)
     ?(casting_syntax = Options.CastingSyntax.Colon)
@@ -229,6 +230,7 @@ let sig_options
     exact_by_default;
     enable_enums;
     enable_component_syntax;
+    enable_ts_syntax;
     hooklike_functions;
     enable_relay_integration;
     casting_syntax;

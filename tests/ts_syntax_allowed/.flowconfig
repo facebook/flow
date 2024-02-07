@@ -1,6 +1,4 @@
-[libs]
-shim.js
-
 [options]
+experimental.ts_syntax=true
 all=true
 no_flowlib=false
