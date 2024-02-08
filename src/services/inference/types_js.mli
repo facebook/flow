@@ -20,6 +20,14 @@ val calc_deps :
   FilenameSet.t ->
   File_key.t Nel.t list Lwt.t
 
+val ensure_parsed_or_trigger_recheck :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  workers:MultiWorkerLwt.worker list option ->
+  reader:Mutator_state_reader.t ->
+  FilenameSet.t ->
+  unit Lwt.t
+
 (* incremental typecheck entry point *)
 val recheck :
   profiling:Profiling_js.running ->

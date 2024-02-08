@@ -311,6 +311,14 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
           let get_dependent_files _ _ _ = Lwt.return FilenameSet.empty in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
+        let%lwt () =
+          Types_js.ensure_parsed_or_trigger_recheck
+            ~options
+            ~profiling
+            ~workers
+            ~reader
+            files_to_merge
+        in
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
@@ -405,6 +413,14 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
               Lwt.return FilenameSet.empty
           in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
+        in
+        let%lwt () =
+          Types_js.ensure_parsed_or_trigger_recheck
+            ~options
+            ~profiling
+            ~workers
+            ~reader
+            files_to_merge
         in
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
