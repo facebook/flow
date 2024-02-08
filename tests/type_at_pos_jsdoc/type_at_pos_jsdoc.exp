@@ -1255,6 +1255,7 @@ Flags: --strip-root --pretty
 imports.js:23:4
 Flags: --strip-root --pretty
 {
+  "documentation":"ε is a component",
   "types":{"unevaluated":{"type":"component Epsilon"},"evaluated":null},
   "reasons":[],
   "loc":{
