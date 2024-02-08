@@ -232,7 +232,7 @@ let mk_check ~visit ~iteration ~reader ~options ~metadata () =
   in
   (fun file -> check file |> post_check ~visit ~iteration ~reader ~options ~metadata file)
 
-let mk_next ~options ~workers roots =
+let mk_next_for_check ~options ~workers roots =
   Job_utils.mk_next
     ~intermediate_result_callback:(fun _ -> ())
     ~max_size:(Options.max_files_checked_per_worker options)
@@ -326,7 +326,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         Hh_logger.info "Merging done.";
         Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
         let options = C.check_options options in
-        let (next, merge) = mk_next ~options ~workers roots in
+        let (next, merge) = mk_next_for_check ~options ~workers roots in
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
@@ -442,7 +442,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         Hh_logger.info "Storing pre-checking results Done";
         Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
         let options = C.check_options options in
-        let (next, merge) = mk_next ~options ~workers roots in
+        let (next, merge) = mk_next_for_check ~options ~workers roots in
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
