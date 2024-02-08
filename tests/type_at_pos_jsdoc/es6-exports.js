@@ -28,3 +28,6 @@ export function gamma() {};
 
 /** delta is a function */
 export default function delta() {};
+
+/** ε is a component */
+export component Epsilon() { return '' }

@@ -1109,8 +1109,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":3,"offset":187},
-    "end":{"line":7,"column":5,"offset":190}
+    "start":{"line":7,"column":3,"offset":196},
+    "end":{"line":7,"column":5,"offset":199}
   },
   "path":"imports.js",
   "line":7,
@@ -1128,8 +1128,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":3,"offset":199},
-    "end":{"line":9,"column":5,"offset":202}
+    "start":{"line":9,"column":3,"offset":208},
+    "end":{"line":9,"column":5,"offset":211}
   },
   "path":"imports.js",
   "line":9,
@@ -1147,8 +1147,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":3,"offset":211},
-    "end":{"line":11,"column":5,"offset":214}
+    "start":{"line":11,"column":3,"offset":220},
+    "end":{"line":11,"column":5,"offset":223}
   },
   "path":"imports.js",
   "line":11,
@@ -1166,8 +1166,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":3,"offset":223},
-    "end":{"line":13,"column":7,"offset":228}
+    "start":{"line":13,"column":3,"offset":232},
+    "end":{"line":13,"column":7,"offset":237}
   },
   "path":"imports.js",
   "line":13,
@@ -1185,8 +1185,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":15,"column":3,"offset":236},
-    "end":{"line":15,"column":6,"offset":240}
+    "start":{"line":15,"column":3,"offset":245},
+    "end":{"line":15,"column":6,"offset":249}
   },
   "path":"imports.js",
   "line":15,
@@ -1204,8 +1204,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":17,"column":3,"offset":248},
-    "end":{"line":17,"column":7,"offset":253}
+    "start":{"line":17,"column":3,"offset":257},
+    "end":{"line":17,"column":7,"offset":262}
   },
   "path":"imports.js",
   "line":17,
@@ -1223,8 +1223,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":3,"offset":261},
-    "end":{"line":19,"column":7,"offset":266}
+    "start":{"line":19,"column":3,"offset":270},
+    "end":{"line":19,"column":7,"offset":275}
   },
   "path":"imports.js",
   "line":19,
@@ -1242,8 +1242,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":3,"offset":274},
-    "end":{"line":21,"column":9,"offset":281}
+    "start":{"line":21,"column":3,"offset":283},
+    "end":{"line":21,"column":9,"offset":290}
   },
   "path":"imports.js",
   "line":21,
@@ -1255,18 +1255,36 @@ Flags: --strip-root --pretty
 imports.js:23:4
 Flags: --strip-root --pretty
 {
+  "types":{"unevaluated":{"type":"component Epsilon"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"imports.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":3,"offset":298},
+    "end":{"line":23,"column":9,"offset":305}
+  },
+  "path":"imports.js",
+  "line":23,
+  "endline":23,
+  "start":3,
+  "end":9
+}
+
+imports.js:25:4
+Flags: --strip-root --pretty
+{
   "documentation":"this is a lambda",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"imports.js",
     "type":"SourceFile",
-    "start":{"line":23,"column":3,"offset":289},
-    "end":{"line":23,"column":6,"offset":293}
+    "start":{"line":25,"column":3,"offset":313},
+    "end":{"line":25,"column":6,"offset":317}
   },
   "path":"imports.js",
-  "line":23,
-  "endline":23,
+  "line":25,
+  "endline":25,
   "start":3,
   "end":6
 }
