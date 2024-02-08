@@ -157,8 +157,6 @@ module Annotate_exports_command = struct
 
       let reporter = string_reporter (module Acc)
 
-      let init_options o = o
-
       let check_options o = o
 
       let visit =
@@ -234,8 +232,6 @@ module Annotate_optional_properties_command = struct
       type accumulator = Acc.t
 
       let reporter = string_reporter (module Acc)
-
-      let init_options o = o
 
       let check_options o = o
 

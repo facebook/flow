@@ -21,8 +21,6 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
-  val init_options : Options.t -> Options.t
-
   val check_options : Options.t -> Options.t
 
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
@@ -41,8 +39,6 @@ module type UNTYPED_FLOW_INIT_RUNNER_CONFIG = sig
 
   val init : reader:State_reader.t -> unit
 
-  val init_options : Options.t -> Options.t
-
   val reporter : accumulator Codemod_report.t
 
   val visit : (accumulator, Codemod_context.UntypedFlowInit.t) abstract_visitor
@@ -60,8 +56,6 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
   val prepass_init : unit -> prepass_state
 
   val mod_prepass_options : Options.t -> Options.t
-
-  val init_options : Options.t -> Options.t
 
   val check_options : Options.t -> Options.t
 

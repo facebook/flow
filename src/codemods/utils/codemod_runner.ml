@@ -73,8 +73,6 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
-  val init_options : Options.t -> Options.t
-
   val check_options : Options.t -> Options.t
 
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
@@ -94,8 +92,6 @@ module type UNTYPED_FLOW_INIT_RUNNER_CONFIG = sig
   (* Runner init function which is called after Types_js.init but before any of the
    * jobs. This is useful to setup/populate any shared memory for the jobs. *)
   val init : reader:State_reader.t -> unit
-
-  val init_options : Options.t -> Options.t
 
   val reporter : accumulator Codemod_report.t
 
@@ -256,8 +252,6 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val mod_prepass_options : Options.t -> Options.t
 
-  val init_options : Options.t -> Options.t
-
   val check_options : Options.t -> Options.t
 
   val include_dependents_in_prepass : bool
@@ -282,8 +276,6 @@ module type TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
-  val init_options : Options.t -> Options.t
-
   val merge_and_check :
     ServerEnv.env ->
     MultiWorkerLwt.worker list option ->
@@ -299,8 +291,6 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
   type accumulator = C.accumulator
 
   let reporter = C.reporter
-
-  let init_options = C.init_options
 
   let merge_and_check env workers options profiling roots ~iteration =
     Transaction.with_transaction "codemod" (fun transaction ->
@@ -360,8 +350,6 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
   type accumulator = C.accumulator
 
   let reporter = C.reporter
-
-  let init_options = C.init_options
 
   let pre_check_job ~reader ~options roots =
     let state = C.prepass_init () in
@@ -473,7 +461,6 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
 
   let init_run genv roots =
     let { ServerEnv.options; workers } = genv in
-    let options = TypedRunnerConfig.init_options options in
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         extract_flowlibs_or_exit options;
@@ -498,7 +485,6 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
   (* The roots that are passed in here have already been filtered by earlier iterations. *)
   let recheck_run genv env ~iteration roots =
     let { ServerEnv.workers; options } = genv in
-    let options = TypedRunnerConfig.init_options options in
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         (* Diff heaps are not cleared like the rest of the heaps during recheck
@@ -645,7 +631,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         (* Parse all files (even non @flow files) *)
-        let options = C.init_options { options with Options.opt_all = true } in
+        let options = { options with Options.opt_all = true } in
         extract_flowlibs_or_exit options;
         let%lwt (_libs_ok, env) = Types_js.init ~profiling ~workers options in
 

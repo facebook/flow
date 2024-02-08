@@ -735,8 +735,6 @@ let make ~output_dir ~write_root =
       json_filenames: SSet.t;
     }
 
-    let init_options o = o
-
     let check_options o = o
 
     let reporter =
