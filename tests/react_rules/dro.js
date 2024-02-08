@@ -41,3 +41,4 @@ component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<str
 }
 
 component A(x: {bar: number}) { return <A x={x} />; }; // ok
+

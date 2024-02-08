@@ -14,6 +14,23 @@ let check_ref_use cx rrid in_hook var_reason kind t =
     let recur = recur_id seen in
     let open Type in
     match t with
+    | DefT
+        ( _,
+          ObjT
+            {
+              flags = { react_dro = Some (_, (HookReturn | HookArg | Props)); _ };
+              call_t = None;
+              props_tmap;
+              _;
+            }
+        )
+      when kind = Error_message.Access ->
+      let props = Context.find_props cx props_tmap in
+      if NameUtils.Map.cardinal props = 1 then
+        (* Catch only cases that look like { current: T } *)
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EReactRefInRender { usage = var_reason; kind; in_hook })
     | OpaqueT (_, { opaque_id; _ })
       when Base.Option.value_map ~default:false ~f:(( = ) opaque_id) rrid ->
       Flow_js_utils.add_output

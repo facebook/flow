@@ -1699,7 +1699,10 @@ react_api.js:19:10
 Flags: --strip-root --pretty
 {
   "documentation":"`createRef` creates a ref object which can contain arbitrary value.\n\n`createRef` is mostly used for class components.\nFunction components typically rely on `useRef` instead.\n\n**@see** https://react.dev/reference/react/createRef",
-  "types":{"unevaluated":{"type":"<T>() => {current: (null | T)}"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"<T>() => React$RefObject<(T | null)>"},
+    "evaluated":null
+  },
   "reasons":[],
   "loc":{
     "source":"react_api.js",

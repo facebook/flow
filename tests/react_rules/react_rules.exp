@@ -214,5 +214,14 @@ Cannot read `current` from `ref` [1] because `ref` values may not be read within
           ^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- ref_read_different_type.js:2:5
 
-Found 22 errors
+Cannot read `current` from `otherRef` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   2|     otherRef.current; // error
+          ^^^^^^^^ [1]
+
+
+
+Found 23 errors
