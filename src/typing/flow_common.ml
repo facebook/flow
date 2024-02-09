@@ -113,8 +113,6 @@ module type BUILTINS = sig
 
   val lookup_builtin_strict : Context.t -> name -> reason -> Type.t
 
-  val lookup_builtin_with_default : Context.t -> name -> Type.t -> Type.t
-
   val perform_read_prop_action :
     Context.t ->
     Type.trace ->

@@ -9874,13 +9874,6 @@ struct
 
   and lookup_builtin_strict cx x reason = get_builtin cx x reason
 
-  (* Looks up a builtin and returns the default if it is not found.
-   * Does not add an entry that requires a
-   * write later. *)
-  and lookup_builtin_with_default cx x default =
-    let builtin = Flow_js_utils.lookup_builtin_with_default cx x default in
-    Tvar.mk_where cx (reason_of_t default) (fun t -> flow_t cx (builtin, t))
-
   and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
     let t = get_builtin cx x reason in
     typeapp ~from_value:false ~use_desc reason t targs
