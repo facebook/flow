@@ -73,6 +73,8 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
+  val expand_roots : env:ServerEnv.env -> FilenameSet.t -> FilenameSet.t
+
   val check_options : Options.t -> Options.t
 
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
@@ -248,6 +250,8 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
+  val expand_roots : env:ServerEnv.env -> FilenameSet.t -> FilenameSet.t
+
   val prepass_init : unit -> prepass_state
 
   val mod_prepass_options : Options.t -> Options.t
@@ -276,6 +280,8 @@ module type TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
+  val expand_roots : env:ServerEnv.env -> FilenameSet.t -> FilenameSet.t
+
   val merge_and_check :
     ServerEnv.env ->
     MultiWorkerLwt.worker list option ->
@@ -291,6 +297,8 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
   type accumulator = C.accumulator
 
   let reporter = C.reporter
+
+  let expand_roots = C.expand_roots
 
   let merge_and_check env workers options profiling roots ~iteration =
     Transaction.with_transaction "codemod" (fun transaction ->
@@ -350,6 +358,8 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
   type accumulator = C.accumulator
 
   let reporter = C.reporter
+
+  let expand_roots = C.expand_roots
 
   let pre_check_job ~reader ~options roots =
     let state = C.prepass_init () in
@@ -473,6 +483,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
             ~all:(Options.all options)
             roots
         in
+        let roots = TypedRunnerConfig.expand_roots ~env roots in
         (* Discard uparseable files *)
         let roots = FilenameSet.inter roots env.ServerEnv.files in
         log_input_files roots;

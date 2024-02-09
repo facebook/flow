@@ -159,6 +159,8 @@ module Annotate_exports_command = struct
 
       let check_options o = o
 
+      let expand_roots ~env:_ files = files
+
       let visit =
         let mapper = Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
@@ -232,6 +234,8 @@ module Annotate_optional_properties_command = struct
       type accumulator = Acc.t
 
       let reporter = string_reporter (module Acc)
+
+      let expand_roots ~env:_ files = files
 
       let check_options o = o
 

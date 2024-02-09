@@ -1,2 +1,3 @@
 import {a} from './a';
-export const b = a;
+import {c} from './re-export';
+export const d = a + c;

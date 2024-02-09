@@ -1,8 +1,15 @@
+Indexing 1 file without saved state
 >>> Launching report...
 
 Wrote facts about 1 JavaScript files.
 
+Indexing 1 file with saved state
 >>> Launching report...
 
 Wrote facts about 1 JavaScript files.
+
+Indexing 1 file + its direct deps (a.js, re-export.js) with saved state
+>>> Launching report...
+
+Wrote facts about 3 JavaScript files.
 

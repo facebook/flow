@@ -12,5 +12,10 @@ echo "" > .flow.saved_state_file_changes
 "$FLOW" stop
 mkdir test1
 mkdir test2
+mkdir test3
+echo "Indexing 1 file without saved state"
 "$FLOW" glean --output-dir test1 --write-root test1 test.js
+echo "Indexing 1 file with saved state"
 "$FLOW" glean --output-dir test2 --write-root test2 --saved-state-fetcher local --saved-state-no-fallback test.js
+echo "Indexing 1 file + its direct deps (a.js, re-export.js) with saved state"
+"$FLOW" glean --output-dir test3 --write-root test3 --saved-state-fetcher local --saved-state-no-fallback --include-direct-deps test.js

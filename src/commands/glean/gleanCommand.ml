@@ -20,11 +20,15 @@ let spec =
       |> codemod_flags
       |> flag "--output-dir" (optional string) ~doc:"Name of directory to output the JSON into"
       |> flag "--write-root" (optional string) ~doc:"Prefix to attach to file names (e.g. www)"
+      |> flag
+           "--include-direct-deps"
+           truthy
+           ~doc:"Additionally index direct dependencies of input files"
       |> flag "--schema-version" truthy ~doc:"Show schema version used by the indexer"
       );
   }
 
-let main codemod_flags output_dir_opt write_root_opt show_schema_version () =
+let main codemod_flags output_dir_opt write_root_opt include_direct_deps show_schema_version () =
   if show_schema_version then
     print_endline (Int.to_string GleanRunner.all_schema_version)
   else
@@ -35,7 +39,10 @@ let main codemod_flags output_dir_opt write_root_opt show_schema_version () =
       else if Array.length (Sys.readdir output_dir) <> 0 then
         failwith "Output directory is nonempty. Empty it."
       else
-        CodemodCommand.main (GleanRunner.make ~output_dir ~write_root) codemod_flags ()
+        CodemodCommand.main
+          (GleanRunner.make ~output_dir ~write_root ~include_direct_deps)
+          codemod_flags
+          ()
     | _ -> failwith "--output-dir and --write-root are required."
 
 let command = CommandSpec.command spec main

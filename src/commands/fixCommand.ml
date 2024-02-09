@@ -92,6 +92,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
     let empty = () in
     Codemod_report.{ report; combine; empty }
 
+  let expand_roots ~env:_ files = files
+
   let visit =
     Codemod_utils.make_visitor
       (Codemod_utils.Mapper
