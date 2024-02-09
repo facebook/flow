@@ -1,1 +1,11 @@
-Found 0 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:3:10
+
+Please write this object type as explicitly exact (use `{|` and `|}` instead of `{` and `}`) or as explicitly inexact
+(add `...` to the end of the list of properties). [ambiguous-object-type]
+
+   3| const x: {} = {}; // Lint
+               ^^
+
+
+
+Found 1 error
