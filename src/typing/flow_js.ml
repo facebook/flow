@@ -531,6 +531,15 @@ struct
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
+        (*****************)
+        (* Predicate NoP *)
+        (*****************)
+        | (_, PredicateT (NoP, u))
+        | (_, PredicateT (NotP NoP, u)) ->
+          (* When the predicate is a no-op, we'd like to behave as close as possible
+           * to not having created the PredicateT constraint at all. We forward the
+           * lower-bound as is. *)
+          rec_flow_t ~use_op:unknown_use cx trace (l, OpenT u)
         (************************)
         (* Full type resolution *)
         (************************)
@@ -8063,6 +8072,9 @@ struct
         ( fun_t,
           CallLatentPredT { use_op; reason; targs; argts; sense = false; idx; tin = l; tout = t }
         )
+    | NoP
+    | NotP NoP ->
+      rec_flow_t cx trace ~use_op:unknown_use (l, OpenT t)
 
   and prop_exists_test cx trace key reason sense obj result =
     prop_exists_test_generic key reason cx trace result obj sense (ExistsP, NotP ExistsP) obj

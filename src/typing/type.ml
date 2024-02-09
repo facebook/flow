@@ -1093,6 +1093,7 @@ module rec TypeTerm : sig
        of the function in type [t]. We also include information for all type arguments
        and argument types of the call, to enable polymorphic calls. *)
     | LatentP of pred_funcall_info Lazy.t * index
+    | NoP
 
   and substitution = Key.t SMap.t
 
@@ -4208,6 +4209,7 @@ let rec string_of_predicate = function
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
   | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+  | NoP -> "NoP"
 
 let string_of_type_t_kind = function
   | TypeAliasKind -> "TypeAliasKind"
