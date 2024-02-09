@@ -2688,7 +2688,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
 
   and type_identifier cx name loc =
     let t = Type_env.query_var ~lookup_mode:ForType cx (OrdinaryName name) loc in
-    ConsGen.reposition cx loc t
+    TypeUtil.mod_reason_of_t (repos_reason loc) t
 
   and mk_interface_super
       cx tparams_map infer_tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
