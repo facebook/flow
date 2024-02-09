@@ -2477,7 +2477,7 @@ struct
           | (Some (None, _), _) ->
             (* Already an unsupported-syntax error on the definition side of the function. *)
             rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
-          | (Some (Some name, _), PredBased (_, pmap, nmap)) ->
+          | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
             let key = (OrdinaryName name, []) in
             let preds =
               if sense then

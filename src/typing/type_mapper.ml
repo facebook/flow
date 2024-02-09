@@ -756,13 +756,13 @@ class virtual ['a] t =
           TypeGuardBased { param_name; type_guard = t' }
 
     method private predicate_maps cx map_cx predicate =
-      let (reason, pmap, nmap) = predicate in
+      let (reason, (lazy (pmap, nmap))) = predicate in
       let pmap' = Key_map.ident_map (self#predicate cx map_cx) pmap in
       let nmap' = Key_map.ident_map (self#predicate cx map_cx) nmap in
       if pmap == pmap' && nmap == nmap' then
         predicate
       else
-        (reason, pmap', nmap')
+        (reason, lazy (pmap', nmap'))
 
     method virtual exports : Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
 

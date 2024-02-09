@@ -7238,9 +7238,9 @@ module Make
       match pred_synth with
       | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> begin
         match Type_env.predicate_refinement_maps cx ret_loc with
-        | Some (expr_reason, pmap, nmap) ->
+        | Some (expr_reason, maps) ->
           let reason = update_desc_reason (fun d -> RPredicateOf d) expr_reason in
-          Func.Predicate (PredBased (reason, pmap, nmap))
+          Func.Predicate (PredBased (reason, maps))
         | None -> Func.Ordinary
       end
       | Name_def.FunctionSynthesizable
@@ -7457,7 +7457,7 @@ module Make
         let bindings = Pattern_helper.bindings_of_params params in
         let matching_binding = SMap.find_opt (snd param_name) bindings in
         type_guard_based_checks param_name type_guard matching_binding
-      | PredBased (expr_reason, p_map, _) ->
+      | PredBased (expr_reason, (lazy (p_map, _))) ->
         let required_bindings =
           Base.List.filter_map (Key_map.keys p_map) ~f:(function
               | (OrdinaryName name, _) -> Some name

@@ -120,8 +120,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* Already an unsupported-syntax error on the definition side of the function. *)
         ()
       | Ok map ->
-        let (lreason, pmap1, _nmap1) = pred1 in
-        let (ureason, pmap2, nmap2) = pred2 in
+        let (lreason, (lazy (pmap1, _nmap1))) = pred1 in
+        let (ureason, (lazy (pmap2, nmap2))) = pred2 in
         if SMap.is_empty map then (
           if not (TypeUtil.pred_map_implies pmap1 pmap2) then
             add_output

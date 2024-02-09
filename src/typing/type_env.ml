@@ -501,7 +501,7 @@ and predicate_refinement_maps cx loc =
   match ALocMap.find_opt loc predicate_refinement_maps with
   | None -> None
   | Some (expr_reason, p_map, n_map) ->
-    Some (expr_reason, to_predicate_key_map p_map, to_predicate_key_map n_map)
+    Some (expr_reason, lazy (to_predicate_key_map p_map, to_predicate_key_map n_map))
 
 and type_guard_at_return cx reason ~param_loc ~return_loc write_locs =
   let rec is_invalid (acc_result, acc_locs) write_loc =

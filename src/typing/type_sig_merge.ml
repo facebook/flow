@@ -1727,12 +1727,12 @@ and merge_predicate tps infer_tps file (loc, p) =
         keys
   in
   let reason = Reason.(mk_reason (RPredicateOf (RCustom "return")) loc) in
-  let (m_pos, m_neg) =
+  let maps =
     match p with
-    | None -> (Key_map.empty, Key_map.empty)
-    | Some p -> pred p
+    | None -> lazy (Key_map.empty, Key_map.empty)
+    | Some p -> lazy (pred p)
   in
-  (reason, m_pos, m_neg)
+  (reason, maps)
 
 and merge_fun
     ?(is_method = false)

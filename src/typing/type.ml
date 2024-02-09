@@ -1167,7 +1167,7 @@ module rec TypeTerm : sig
     | AnyHook
 
   and fun_predicate =
-    | PredBased of (reason * predicate Key_map.t * predicate Key_map.t)
+    | PredBased of (reason * (predicate Key_map.t * predicate Key_map.t) Lazy.t)
     | TypeGuardBased of {
         param_name: ALoc.t * string;
         type_guard: t;

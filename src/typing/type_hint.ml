@@ -284,7 +284,7 @@ and type_of_hint_decomposition cx op reason t =
     in
     let predicate =
       Base.Option.map pred ~f:(function
-          | PredKind -> PredBased (reason, Key_map.empty, Key_map.empty)
+          | PredKind -> PredBased (reason, lazy (Key_map.empty, Key_map.empty))
           | TypeGuardKind (param_loc, param_name) ->
             TypeGuardBased
               {
