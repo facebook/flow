@@ -156,9 +156,6 @@ val resolve_env_entry :
   ALoc.t ->
   unit
 
-val unify_write_entry :
-  Context.t -> use_op:Type.use_op -> Type.t -> Env_api.def_loc_type -> ALoc.t -> unit
-
 val provider_type_for_def_loc :
   ?intersect:bool -> Context.t -> Loc_env.t -> Env_api.Provider_api.L.t -> Type.t
 

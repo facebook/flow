@@ -719,18 +719,6 @@ let constraining_type ~default cx loc =
 (*  Writing  *)
 (*************)
 
-(* Unifies `t` with the entry in the loc_env's map. This allows it to be looked up for Write
- * entries reported by the name_resolver as well as providers for the provider analysis *)
-let unify_write_entry cx ~use_op t def_loc_type loc =
-  Debug_js.Verbose.print_if_verbose
-    cx
-    [spf "writing to %s %s" (Env_api.show_def_loc_type def_loc_type) (Reason.string_of_aloc loc)];
-  match checked_find_loc_env_write_opt cx def_loc_type loc with
-  | None ->
-    (* If we don't see a spot for this write, it's because it's never read from. *)
-    ()
-  | Some w -> Flow_js.unify cx ~use_op w t
-
 (* Subtypes the given type against the providers for a def loc. Should be used on assignments to
  * non-import value bindings *)
 let subtype_against_providers cx ~use_op ?potential_global_name t loc =
@@ -789,16 +777,23 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
         in
         Context.add_post_inference_subtyping_check cx t use_op general
 
+(* Resolve `t` with the entry in the loc_env's map. This allows it to be looked up for Write
+ * entries reported by the name_resolver as well as providers for the provider analysis *)
 let resolve_env_entry ~use_op ~update_reason cx t kind loc =
-  unify_write_entry cx ~use_op t kind loc;
-  let env = Context.environment cx in
-  let env =
-    if update_reason then
-      Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t)
-    else
-      env
-  in
-  Context.set_environment cx env
+  Debug_js.Verbose.print_if_verbose
+    cx
+    [spf "writing to %s %s" (Env_api.show_def_loc_type kind) (Reason.string_of_aloc loc)];
+  (match checked_find_loc_env_write_opt cx kind loc with
+  | None ->
+    (* If we don't see a spot for this write, it's because it's never read from. *)
+    ()
+  | Some w -> Flow_js.unify cx ~use_op w t);
+  if update_reason then
+    let env = Context.environment cx in
+    let env = Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t) in
+    Context.set_environment cx env
+  else
+    ()
 
 let subtype_entry cx ~use_op t loc =
   let env = Context.environment cx in
@@ -824,23 +819,23 @@ let set_var cx ~use_op name t loc =
   subtype_against_providers cx ~use_op ~potential_global_name:name t loc
 
 let bind_function_param cx t loc =
-  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.FunctionParamLoc loc
 
 let bind_function_this cx t loc =
   if Context.typing_mode cx = Context.CheckingMode then
-    unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
+    resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.FunctionThisLoc loc
 
 let bind_class_instance_this cx t loc =
-  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceThisLoc loc
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassInstanceThisLoc loc
 
 let bind_class_static_this cx t loc =
-  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticThisLoc loc
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassStaticThisLoc loc
 
 let bind_class_instance_super cx t loc =
-  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassInstanceSuperLoc loc
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassInstanceSuperLoc loc
 
 let bind_class_static_super cx t loc =
-  unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticSuperLoc loc
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassStaticSuperLoc loc
 
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 
