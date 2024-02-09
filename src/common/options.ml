@@ -69,6 +69,7 @@ type t = {
   opt_any_propagation: bool;
   opt_autocomplete_lazy_docs: bool;
   opt_autoimports: bool;
+  opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
   opt_autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
   opt_automatic_require_default: bool;
@@ -164,6 +165,8 @@ let any_propagation opts = opts.opt_any_propagation
 let autocomplete_lazy_docs opts = opts.opt_autocomplete_lazy_docs
 
 let autoimports opts = opts.opt_autoimports
+
+let autoimports_min_characters opts = opts.opt_autoimports_min_characters
 
 let autoimports_ranked_by_usage opts = opts.opt_autoimports_ranked_by_usage
 

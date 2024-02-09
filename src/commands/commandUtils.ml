@@ -1441,6 +1441,8 @@ let make_options
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
+    opt_autoimports_min_characters =
+      Base.Option.value (FlowConfig.autoimports_min_characters flowconfig) ~default:0;
     opt_autoimports_ranked_by_usage =
       Base.Option.value (FlowConfig.autoimports_ranked_by_usage flowconfig) ~default:false;
     opt_autoimports_ranked_by_usage_boost_exact_match_min_length =

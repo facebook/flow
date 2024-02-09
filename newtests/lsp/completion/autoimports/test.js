@@ -63,6 +63,56 @@ module.exports = (suite(
     ]).flowConfig('_flowconfig_ranked'),
 
     test(
+      'textDocument/completion with min number of characters to get auto imports',
+      [
+        addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+        addCode(`f`),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/completion', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+          position: {line: 2, character: 1},
+          context: {triggerKind: 1},
+        }).verifyLSPMessageSnapshot(
+          path.join(
+            __dirname,
+            '__snapshots__',
+            'completion_with_require_min_chars_one_char.json',
+          ),
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+      ],
+    ).flowConfig('_flowconfig_require_min_chars'),
+
+    test(
+      'textDocument/completion with min number of characters to get auto imports',
+      [
+        addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+        addCode(`foo`),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/completion', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+          position: {line: 2, character: 3},
+          context: {triggerKind: 1},
+        }).verifyLSPMessageSnapshot(
+          path.join(
+            __dirname,
+            '__snapshots__',
+            'completion_with_require_min_chars_three_char.json',
+          ),
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+      ],
+    ).flowConfig('_flowconfig_require_min_chars'),
+
+    test(
       'textDocument/completion with ranked autoimports boosting exact match imports',
       [
         addFiles('actor.js'),

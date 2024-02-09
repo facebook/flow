@@ -280,6 +280,7 @@ let autocomplete
     ~input
     ~cursor
     ~imports
+    ~imports_min_characters
     ~imports_ranked_usage
     ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info =
@@ -335,6 +336,7 @@ let autocomplete
           let ac_options =
             {
               AutocompleteService_js.imports;
+              imports_min_characters;
               imports_ranked_usage;
               imports_ranked_usage_boost_exact_match_min_length;
               show_ranking_info;
@@ -1014,6 +1016,7 @@ let handle_autocomplete
     ~input
     ~cursor
     ~imports
+    ~imports_min_characters
     ~imports_ranked_usage
     ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info =
@@ -1028,6 +1031,7 @@ let handle_autocomplete
           ~input
           ~cursor
           ~imports
+          ~imports_min_characters
           ~imports_ranked_usage
           ~imports_ranked_usage_boost_exact_match_min_length
           ~show_ranking_info
@@ -1347,6 +1351,7 @@ let get_ephemeral_handler genv command =
         imports_ranked_usage;
         show_ranking_info;
       } ->
+    let imports_min_characters = Options.autoimports_min_characters options in
     let imports_ranked_usage_boost_exact_match_min_length =
       Options.autoimports_ranked_by_usage_boost_exact_match_min_length options
     in
@@ -1360,6 +1365,7 @@ let get_ephemeral_handler genv command =
          ~input
          ~cursor
          ~imports
+         ~imports_min_characters
          ~imports_ranked_usage
          ~imports_ranked_usage_boost_exact_match_min_length
          ~show_ranking_info
@@ -2068,6 +2074,7 @@ let handle_persistent_autocomplete_lsp
     && Options.autoimports options
   in
   let imports_ranked_usage = rank_autoimports_by_usage ~options client in
+  let imports_min_characters = Options.autoimports_min_characters options in
   let imports_ranked_usage_boost_exact_match_min_length =
     Options.autoimports_ranked_by_usage_boost_exact_match_min_length options
   in
@@ -2084,6 +2091,7 @@ let handle_persistent_autocomplete_lsp
       ~input:file_input
       ~cursor:(line, char)
       ~imports
+      ~imports_min_characters
       ~imports_ranked_usage
       ~imports_ranked_usage_boost_exact_match_min_length
       ~show_ranking_info

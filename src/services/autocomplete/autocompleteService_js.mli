@@ -31,6 +31,7 @@ end
 
 type ac_options = {
   imports: bool;
+  imports_min_characters: int;
   imports_ranked_usage: bool;
   imports_ranked_usage_boost_exact_match_min_length: int option;
   show_ranking_info: bool;

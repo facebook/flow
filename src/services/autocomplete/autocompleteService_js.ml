@@ -102,6 +102,7 @@ end
 
 type ac_options = {
   imports: bool;
+  imports_min_characters: int;
   imports_ranked_usage: bool;
   imports_ranked_usage_boost_exact_match_min_length: int option;
   show_ranking_info: bool;
@@ -967,6 +968,11 @@ let autocomplete_id
            don't include any autoimport results, but do set `is_incomplete` so that
            it queries again when you type something. *)
         (items_rev, true, false)
+      else if String.length before < ac_options.imports_min_characters then
+        (* Similarly, if the user typed too few characters, we do not attempt to search
+         * through the autoimport index, since it's unlikely to narrow down to useful
+         * results, and might hurt performance. *)
+        (items_rev, true, false)
       else
         let locals = set_of_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) identifiers in
         let { Export_search.results = auto_imports; is_incomplete } =
@@ -1346,7 +1352,13 @@ let autocomplete_unqualified_type
          (items_rev, errors_to_log)
   in
   let (items_rev, is_incomplete, sorted) =
-    if ac_options.imports then
+    let (before, _after) = Autocomplete_sigil.remove token in
+    if String.length before < ac_options.imports_min_characters then
+      (* Similarly, if the user typed too few characters, we do not attempt to search
+       * through the autoimport index, since it's unlikely to narrow down to useful
+       * results, and might hurt performance. *)
+      (items_rev, true, false)
+    else if ac_options.imports then
       let locals =
         let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
         add_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) value_identifiers set;

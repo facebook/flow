@@ -46,6 +46,7 @@ module Opts = struct
     all: bool option;
     autocomplete_lazy_docs: bool option;
     autoimports: bool option;
+    autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool option;
     autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
     automatic_require_default: bool option;
@@ -172,6 +173,7 @@ module Opts = struct
       all = None;
       autoimports = None;
       autocomplete_lazy_docs = None;
+      autoimports_min_characters = None;
       autoimports_ranked_by_usage = None;
       autoimports_ranked_by_usage_boost_exact_match_min_length = None;
       automatic_require_default = None;
@@ -829,6 +831,14 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with autocomplete_lazy_docs = Some v })
       );
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
+      ( "autoimports.min_characters",
+        uint (fun opts v ->
+            if opts.autoimports = Some false then
+              Error "Cannot be configured unless autoimport is enabled."
+            else
+              Ok { opts with autoimports_min_characters = Some v }
+        )
+      );
       ( "autoimports_ranked_by_usage",
         boolean (fun opts v -> Ok { opts with autoimports_ranked_by_usage = Some v })
       );
@@ -1485,6 +1495,8 @@ let all c = c.options.Opts.all
 let autocomplete_lazy_docs c = c.options.Opts.autocomplete_lazy_docs
 
 let autoimports c = c.options.Opts.autoimports
+
+let autoimports_min_characters c = c.options.Opts.autoimports_min_characters
 
 let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
 
