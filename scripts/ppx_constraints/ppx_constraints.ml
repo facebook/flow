@@ -72,24 +72,52 @@ let rec do_use_t u =
   | {
    ppat_desc =
      Ppat_construct
-       ( ({ txt = Lident ("UseT" | "IntersectionPreprocessKitT"); _ } as id),
+       ( ({ txt = Lident "PreprocessKitT"; _ } as id),
          Some
            ( _,
-             ({ ppat_desc = Ppat_tuple [ { ppat_desc = _; _ }; p2 ]; _ } as p1)
-           ) );
+             ( {
+                 ppat_desc =
+                   Ppat_tuple
+                     [
+                       _;
+                       ( {
+                           ppat_desc =
+                             Ppat_construct
+                               (({ txt = Lident "ConcretizeTypes"; _ } as id2), Some (_, p3));
+                           _;
+                         } as p2
+                       );
+                     ];
+                 _;
+               } as p1
+             )
+           )
+       );
    _;
   } ->
-      let p2' = do_type p2 in
-      let p1' = { p1 with ppat_desc = Ppat_tuple [ Pat.any (); p2' ] } in
-      { u with ppat_desc = Ppat_construct (id, Some ([], p1')) }
-  | { ppat_desc = Ppat_construct ({ txt = Lident x; loc }, _); _ } ->
+    let p3' = do_type p3 in
+    let p1' =
       {
-        u with
+        p1 with
         ppat_desc =
-          Ppat_construct ({ txt = Lident x; loc }, Some ([], Pat.any ()));
+          Ppat_tuple [Pat.any (); { p2 with ppat_desc = Ppat_construct (id2, Some ([], p3')) }];
       }
-  | { ppat_desc = Ppat_or (p1, p2); _ } ->
-      { u with ppat_desc = Ppat_or (do_use_t p1, do_use_t p2) }
+    in
+    { u with ppat_desc = Ppat_construct (id, Some ([], p1')) }
+  | {
+   ppat_desc =
+     Ppat_construct
+       ( ({ txt = Lident ("UseT" | "PreprocessKitT"); _ } as id),
+         Some (_, ({ ppat_desc = Ppat_tuple [_; p2]; _ } as p1))
+       );
+   _;
+  } ->
+    let p2' = do_type p2 in
+    let p1' = { p1 with ppat_desc = Ppat_tuple [Pat.any (); p2'] } in
+    { u with ppat_desc = Ppat_construct (id, Some ([], p1')) }
+  | { ppat_desc = Ppat_construct ({ txt = Lident x; loc }, _); _ } ->
+    { u with ppat_desc = Ppat_construct ({ txt = Lident x; loc }, Some ([], Pat.any ())) }
+  | { ppat_desc = Ppat_or (p1, p2); _ } -> { u with ppat_desc = Ppat_or (do_use_t p1, do_use_t p2) }
   | { ppat_desc = Ppat_alias (p, _); _ } -> do_type p
   | _ -> u
 
@@ -98,7 +126,7 @@ let rec do_pattern pattern =
   match ppat_desc with
   (* type, use *)
   | Ppat_tuple [ lhs; rhs ] ->
-      [ { pattern with ppat_desc = Ppat_tuple [ do_type lhs; do_type rhs ] } ]
+      [ { pattern with ppat_desc = Ppat_tuple [ do_type lhs; do_use_t rhs ] } ]
       (* type, type *)
   | Ppat_alias (p, _) -> do_pattern p
   | Ppat_or (p1, p2) -> do_pattern p1 @ do_pattern p2
