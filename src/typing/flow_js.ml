@@ -9849,8 +9849,6 @@ struct
     let reason = Reason.(mk_reason (RCustom mref) loc) in
     get_builtin_result cx m_name reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
-  and lookup_builtin_strict cx x reason = get_builtin cx x reason
-
   and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
     let t = get_builtin cx x reason in
     typeapp ~from_value:false ~use_desc reason t targs
