@@ -176,7 +176,7 @@ let pp_builtins
   pp_remote_refs pp_loc fmt remote_refs;
   pp_pattern_defs pp_loc fmt pattern_defs [||];
   pp_patterns pp_loc fmt patterns;
-  SMap.iter (fun name _ -> fprintf fmt "@.Builtin global %s" name) globals;
+  SMap.iter (fun name _ -> fprintf fmt "@.Builtin global %s@?" name) globals;
   SMap.iter
     (fun name m ->
       fprintf fmt "@.Builtin module %s:@." name;
@@ -5292,7 +5292,8 @@ let%expect_test "builtins" =
          name = "x"; def = (TyRef (Unqualified LocalRef {ref_loc = [1:15-16]; index = 1}))}
     1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))}
 
-    Builtin global T |}]
+    Builtin global T
+    Builtin global x |}]
 
 let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
   print_builtins [{|
@@ -5335,7 +5336,8 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
 
     Builtin global $ReadOnly
     Builtin global Array
-    Builtin global T1 |}]
+    Builtin global T1
+    Builtin global T2 |}]
 
 let%expect_test "builtin_cjs_module" =
   print_builtins [{|
@@ -5739,7 +5741,9 @@ let%expect_test "builtin_declare_namespace" =
            "bar2" -> ([3:16-20], (Ref LocalRef {ref_loc = [3:16-20]; index = 1}));
            "bar3" -> ([4:14-18], (Ref LocalRef {ref_loc = [4:14-18]; index = 2}));
            "f" -> ([5:19-20], (Ref LocalRef {ref_loc = [5:19-20]; index = 3})) };
-         types = { "Baz" -> ([7:15-18], (Ref LocalRef {ref_loc = [7:15-18]; index = 4})) }} |}]
+         types = { "Baz" -> ([7:15-18], (Ref LocalRef {ref_loc = [7:15-18]; index = 4})) }}
+
+    Builtin global ns |}]
 
 let%expect_test "builtin_pattern" =
   print_builtins [{|
@@ -5766,7 +5770,8 @@ let%expect_test "builtin_pattern" =
     0. (PDef 0)
     1. PropP {id_loc = [2:7-8]; name = "p"; def = 0}
 
-    Builtin global o |}]
+    Builtin global o
+    Builtin global p |}]
 
 let%expect_test "this_param_1" =
   print_sig {|
