@@ -774,11 +774,6 @@ module rec TypeTerm : sig
         is_strict: bool;
         legacy_interop: bool;
       }
-    | ImportModuleNsT of {
-        reason: reason;
-        t: t;
-        is_strict: bool;  (** callee is @flow strict *)
-      }
     | AssertImportIsValueT of reason * string
     (* Module export handling *)
     | CJSExtractNamedExportsT of
@@ -4151,7 +4146,6 @@ let string_of_use_ctor = function
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | ImplementsT _ -> "ImplementsT"
-  | ImportModuleNsT _ -> "ImportModuleNsT"
   | PreprocessKitT (_, tool) ->
     spf
       "PreprocessKitT %s"

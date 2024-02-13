@@ -813,18 +813,9 @@ struct
             ~use_op:unknown_use
             trace
             (CJSRequireTKit.on_ModuleT cx (reason, is_strict, legacy_interop) m, t_out)
-        | (ModuleT m, ImportModuleNsT { reason; t = tout; is_strict }) ->
-          FlowJs.rec_flow_t
-            cx
-            ~use_op:unknown_use
-            trace
-            (ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m, tout)
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)
-        | (AnyT (lreason, _), ImportModuleNsT { reason; t; is_strict = _ }) ->
-          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
         (*****************)
         (* Import checks *)
         (*****************)
@@ -6502,7 +6493,6 @@ struct
     | FilterMaybeT _
     | DeepReadOnlyT _
     | HooklikeT _
-    | ImportModuleNsT _
     | PreprocessKitT _
     | ResolveUnionT _
     | LookupT _
