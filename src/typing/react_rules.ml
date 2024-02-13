@@ -133,6 +133,10 @@ let hook_callee cx t =
       |> Base.List.fold ~init:AnyCallee ~f:merge
     | UnionT (_, rep) ->
       UnionRep.members rep |> Base.List.fold ~init:AnyCallee ~f:(fun acc t -> merge (recur t) acc)
+    | IntersectionT _ when Context.hooklike_functions cx ->
+      (* We can't easily handle intersections with the HooklikeT destructor, so if we're
+         in compatibility mode, let's just punt on enforcement *)
+      AnyCallee
     | IntersectionT (rs, rep) ->
       (* Not tracking locations of hooks through unions *)
       let inv_merge l r =
@@ -486,7 +490,18 @@ let rec whole_ast_visitor ~under_component cx rrid =
       end
 
     method! call ((call_loc, _) as annot) expr =
-      let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in
+      let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), callee_exp); _ } = expr in
+      let callee_ty =
+        match callee_exp with
+        | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
+          when Context.hooklike_functions cx && name <> "require" ->
+          (* If we're in compatibility mode, we want to bail on intersections. But
+             the typed AST records the type of the overload we've selected, so we
+             never see the intersection to realize we need to bail! Instead in this
+             case we read from the environment. *)
+          Type_env.var_ref cx (Reason.OrdinaryName name) callee_loc
+        | _ -> callee_ty
+      in
       begin
         match hook_callee cx callee_ty with
         | HookCallee _
@@ -741,7 +756,18 @@ and component_ast_visitor cx is_hook rrid =
       ()
 
     method! call ((call_loc, _) as annot) expr =
-      let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in
+      let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), callee_exp); _ } = expr in
+      let callee_ty =
+        match callee_exp with
+        | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
+          when Context.hooklike_functions cx && name <> "require" ->
+          (* If we're in compatibility mode, we want to bail on intersections. But
+             the typed AST records the type of the overload we've selected, so we
+             never see the intersection to realize we need to bail! Instead in this
+             case we read from the environment. *)
+          Type_env.var_ref cx (Reason.OrdinaryName name) callee_loc
+        | _ -> callee_ty
+      in
       let hook_error = hook_error cx ~call_loc ~callee_loc in
       let check_args_for_refs =
         match hook_callee cx callee_ty with

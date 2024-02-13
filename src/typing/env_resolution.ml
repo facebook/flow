@@ -66,7 +66,7 @@ let make_hooklike cx t =
   else
     t
 
-let resolve_annotation cx tparams_map ?(react_deep_read_only = None) ?(hook_like = false) anno =
+let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
@@ -92,12 +92,6 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) ?(hook_like
       else
         t
     | _ -> t
-  in
-  let t =
-    if hook_like then
-      make_hooklike cx t
-    else
-      t
   in
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
@@ -404,10 +398,12 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
 
 let rec binding_has_annot = function
   | Root (Annotation _) -> true
-  | Select { parent = (_, b); _ } -> binding_has_annot b
+  | Hooklike b
+  | Select { parent = (_, b); _ } ->
+    binding_has_annot b
   | _ -> false
 
-let resolve_binding cx reason loc b =
+let rec resolve_binding cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
   | Root
@@ -419,7 +415,6 @@ let resolve_binding cx reason loc b =
           param_loc;
           annot;
           react_deep_read_only;
-          hook_like;
           concrete = _;
         }
         ) ->
@@ -432,7 +427,6 @@ let resolve_binding cx reason loc b =
           | (Some param_loc, Some Comp) -> Some (param_loc, Props)
           | (Some param_loc, Some Hook) -> Some (param_loc, HookArg)
           | _ -> None)
-        ~hook_like
         annot
     in
     Base.Option.iter param_loc ~f:(Type_env.bind_function_param cx t);
@@ -451,11 +445,6 @@ let resolve_binding cx reason loc b =
     (t, use_op)
   | Root (Value { hints = _; expr }) ->
     let t = expression cx expr in
-    let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
-    (t, use_op)
-  | Root (HooklikeValue { hints = _; expr }) ->
-    let t = expression cx expr in
-    let t = make_hooklike cx t in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op)
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
@@ -637,12 +626,11 @@ let resolve_binding cx reason loc b =
           statics;
           arrow;
           tparams_map;
-          hook_like;
         }
         ) ->
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
-    let { Ast.Function.sig_loc; async; generator; params; body; hook; _ } = function_ in
+    let { Ast.Function.sig_loc; async; generator; params; body; _ } = function_ in
     let reason_fun =
       func_reason
         ~async
@@ -675,12 +663,6 @@ let resolve_binding cx reason loc b =
     let t =
       Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig
     in
-    let t =
-      if (not hook) && hook_like then
-        make_hooklike cx t
-      else
-        t
-    in
     Node_cache.set_function_sig cache sig_loc sig_data;
     (t, Op (AssignVar { var = Some reason; init = reason_fun }))
   | Root
@@ -693,10 +675,9 @@ let resolve_binding cx reason loc b =
           statics;
           arrow;
           tparams_map = _;
-          hook_like;
         }
         ) ->
-    let { Ast.Function.id; async; generator; sig_loc; hook; _ } = function_ in
+    let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
     let reason_fun =
       func_reason
         ~async
@@ -728,12 +709,6 @@ let resolve_binding cx reason loc b =
     in
     Node_cache.set_expression cache expr;
     let use_op = Op (AssignVar { var = Some reason; init = reason_fun }) in
-    let func_type =
-      if (not hook) && hook_like then
-        make_hooklike cx func_type
-      else
-        func_type
-    in
     (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let (elem_t, tuple_view, reason) =
@@ -859,27 +834,24 @@ let resolve_binding cx reason loc b =
       | Of { await } -> Statement.for_of_elemt cx right_t reason await
     in
     (t, mk_use_op t)
+  | Hooklike binding ->
+    let (t, use_op) = resolve_binding cx reason loc binding in
+    (make_hooklike cx t, use_op)
   | Select { selector; parent = (parent_loc, binding) } ->
-    let (refined_type, hooklike) =
+    let refined_type =
       match selector with
       | Name_def.Prop { prop; prop_loc; _ } ->
         (* The key is used to generate a reason for read,
            and only the last prop in the chain matters. *)
         let key = (internal_name "_", [Key.Prop prop]) in
-        (Type_env.get_refinement cx key prop_loc, Flow_ast_utils.hook_name prop)
-      | _ -> (None, false)
+        Type_env.get_refinement cx key prop_loc
+      | _ -> None
     in
     (match refined_type with
     | Some t ->
       (* When we can get a refined value on a destructured property,
          we must be in an assignment position and the type must have been resolved. *)
-      ( ( if hooklike then
-          make_hooklike cx t
-        else
-          t
-        ),
-        mk_use_op t
-      )
+      (t, mk_use_op t)
     | None ->
       let t =
         Type_env.t_option_value_exn
@@ -889,29 +861,23 @@ let resolve_binding cx reason loc b =
       in
       let has_anno = binding_has_annot binding in
       let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
-      let kind =
-        if has_anno then
-          DestructAnnot
-        else
-          DestructInfer
-      in
       let t =
-        Tvar.mk_no_wrap_where cx reason (fun tout ->
-            Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-        )
-      in
-      let t =
+        let kind =
+          if has_anno then
+            DestructAnnot
+          else
+            DestructInfer
+        in
+        let t =
+          Tvar.mk_no_wrap_where cx reason (fun tout ->
+              Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+          )
+        in
         if has_default then
           let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
           Tvar.mk_no_wrap_where cx reason (fun tout ->
               Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
           )
-        else
-          t
-      in
-      let t =
-        if hooklike then
-          make_hooklike cx t
         else
           t
       in
@@ -1262,7 +1228,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
 let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
   let acc = EnvSet.singleton (kind, loc) in
-  let add_from_bindings acc = function
+  let rec add_from_bindings acc = function
     | Root (UnannotatedParameter r) -> EnvSet.add (Env_api.FunctionParamLoc, loc_of_reason r) acc
     | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
     | Root (Contextual { reason; _ }) ->
@@ -1280,6 +1246,7 @@ let entries_of_def graph (kind, loc) =
       EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
     | Root (ObjectValue { synthesizable = ObjectSynthesizable { this_write_locs }; _ }) ->
       EnvSet.union this_write_locs acc
+    | Hooklike bind -> add_from_bindings acc bind
     | Root _ -> acc
     | Select _ -> acc
   in

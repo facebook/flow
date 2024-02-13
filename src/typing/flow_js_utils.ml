@@ -1973,10 +1973,13 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some t ->
       let loc = loc_of_reason ureason in
       let t =
-        match (react_dro, propref) with
-        | (Some dro, _) when not (is_exception_to_react_dro propref) ->
-          F.mk_react_dro cx use_op dro t
-        | (_, Named { name = OrdinaryName name; _ })
+        match react_dro with
+        | Some dro when not (is_exception_to_react_dro propref) -> F.mk_react_dro cx use_op dro t
+        | _ -> t
+      in
+      let t =
+        match propref with
+        | Named { name = OrdinaryName name; _ }
           when Context.hooklike_functions cx && Flow_ast_utils.hook_name name ->
           F.mk_hooklike cx use_op t
         | _ -> t

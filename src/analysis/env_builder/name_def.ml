@@ -18,7 +18,7 @@ module Destructure : sig
     (ALoc.t, ALoc.t) Ast.Pattern.t -> (ALoc.t, ALoc.t) Ast.Type.annotation option
 
   val fold_pattern :
-    record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> 'a) ->
+    record_identifier:(ALoc.t -> string -> binding -> 'a) ->
     record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
     visit_default_expression:(hints:ast_hints -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     join:('a -> 'a -> 'a) ->
@@ -28,7 +28,7 @@ module Destructure : sig
     'a
 
   val pattern :
-    record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> unit) ->
+    record_identifier:(ALoc.t -> string -> binding -> unit) ->
     record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
     visit_default_expression:(hints:ast_hints -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     binding ->
@@ -83,7 +83,7 @@ end = struct
     | Property.BigIntLiteral _ -> (acc, xs, false)
 
   let identifier ~record_identifier acc (name_loc, { Ast.Identifier.name; _ }) =
-    record_identifier name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) acc
+    record_identifier name_loc name acc
 
   let rec fold_pattern
       ~record_identifier
@@ -665,8 +665,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       this#add_binding (Env_api.PatternLoc, loc) (mk_reason RDestructuring loc) (Binding binding)
 
     method add_destructure_bindings root pattern =
-      let record_identifier loc reason binding =
-        this#add_ordinary_binding loc reason (Binding binding)
+      let record_identifier loc name binding =
+        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
+        this#add_ordinary_binding
+          loc
+          (mk_reason (RIdentifier (OrdinaryName name)) loc)
+          (Binding binding)
       in
       Destructure.pattern
         ~record_identifier
@@ -674,6 +678,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
         (Root root)
         pattern
+
+    method mk_hooklike_if_necessary hooklike binding =
+      if hooklike then begin
+        Hooklike binding
+      end else
+        binding
 
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
@@ -977,74 +987,31 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         | (Some init, _) -> Some (Value { hints = []; expr = init })
         | (None, _) -> None
       in
-      match (init, id) with
-      | ( Some _,
-          ( _,
-            Ast.Pattern.Identifier
-              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
+      let (source, hints) =
+        match Destructure.type_of_pattern id with
+        | Some annot ->
+          ( Some
+              (Annotation
+                 {
+                   tparams_map = ALocMap.empty;
+                   optional = false;
+                   has_default_expression = false;
+                   react_deep_read_only = None;
+                   param_loc = None;
+                   annot;
+                   concrete;
+                 }
+              ),
+            [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
           )
-        )
-        when Flow_ast_utils.hook_name name ->
-        let (source, hints) =
-          match (Destructure.type_of_pattern id, concrete) with
-          | (Some annot, _) ->
-            ( Some
-                (Annotation
-                   {
-                     tparams_map = ALocMap.empty;
-                     optional = false;
-                     has_default_expression = false;
-                     react_deep_read_only = None;
-                     hook_like = true;
-                     param_loc = None;
-                     annot;
-                     concrete;
-                   }
-                ),
-              [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
-            )
-          | (None, Some (Value value)) -> (Some (HooklikeValue value), [])
-          | _ -> (concrete, [])
-        in
-        Base.Option.iter
-          ~f:(fun acc ->
-            this#add_ordinary_binding
-              id_loc
-              (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-              (Binding (Root acc)))
-          source;
-        ignore @@ this#variable_declarator_pattern ~kind id;
-        Base.Option.iter init ~f:(fun init ->
-            this#visit_expression ~hints ~cond:NonConditionalContext init
-        );
-        decl
-      | _ ->
-        let (source, hints) =
-          match Destructure.type_of_pattern id with
-          | Some annot ->
-            ( Some
-                (Annotation
-                   {
-                     tparams_map = ALocMap.empty;
-                     optional = false;
-                     has_default_expression = false;
-                     react_deep_read_only = None;
-                     hook_like = false;
-                     param_loc = None;
-                     annot;
-                     concrete;
-                   }
-                ),
-              [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
-            )
-          | None -> (concrete, [])
-        in
-        Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
-        ignore @@ this#variable_declarator_pattern ~kind id;
-        Base.Option.iter init ~f:(fun init ->
-            this#visit_expression ~hints ~cond:NonConditionalContext init
-        );
-        decl
+        | None -> (concrete, [])
+      in
+      Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
+      ignore @@ this#variable_declarator_pattern ~kind id;
+      Base.Option.iter init ~f:(fun init ->
+          this#visit_expression ~hints ~cond:NonConditionalContext init
+      );
+      decl
 
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
@@ -1054,18 +1021,20 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
         (Binding
-           (Root
-              (Annotation
-                 {
-                   tparams_map = ALocMap.empty;
-                   optional = false;
-                   has_default_expression = false;
-                   react_deep_read_only = None;
-                   hook_like;
-                   param_loc = None;
-                   annot;
-                   concrete = None;
-                 }
+           (this#mk_hooklike_if_necessary
+              hook_like
+              (Root
+                 (Annotation
+                    {
+                      tparams_map = ALocMap.empty;
+                      optional = false;
+                      has_default_expression = false;
+                      react_deep_read_only = None;
+                      param_loc = None;
+                      annot;
+                      concrete = None;
+                    }
+                 )
               )
            )
         );
@@ -1117,7 +1086,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 else
                   None
                 );
-              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1138,8 +1106,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           this#record_hint param_loc hints;
           Contextual { reason; hints; optional; default_expression }
       in
-      let record_identifier loc reason binding =
-        this#add_ordinary_binding loc reason (Binding binding);
+      let record_identifier loc name binding =
+        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
+        this#add_ordinary_binding
+          loc
+          (mk_reason (RIdentifier (OrdinaryName name)) loc)
+          (Binding binding);
         true
       in
       if
@@ -1181,7 +1153,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 else
                   None
                 );
-              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1218,7 +1189,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    optional = false;
                    has_default_expression = false;
                    react_deep_read_only = None;
-                   hook_like = false;
                    param_loc = None;
                    annot;
                    concrete = None;
@@ -1247,7 +1217,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 optional = false;
                 has_default_expression = false;
                 react_deep_read_only = None;
-                hook_like = false;
                 param_loc = None;
                 annot;
                 concrete = None;
@@ -1348,7 +1317,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               optional;
               has_default_expression = Base.Option.is_some default_expression;
               react_deep_read_only = Some Comp;
-              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1368,8 +1336,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           in
           UnannotatedParameter reason
       in
-      let record_identifier loc reason binding =
-        this#add_ordinary_binding loc reason (Binding binding);
+      let record_identifier loc name binding =
+        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
+        this#add_ordinary_binding
+          loc
+          (mk_reason (RIdentifier (OrdinaryName name)) loc)
+          (Binding binding);
         true
       in
       if
@@ -1412,7 +1384,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               optional;
               has_default_expression = false;
               react_deep_read_only = Some Comp;
-              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1429,8 +1400,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           in
           UnannotatedParameter reason
       in
-      let record_identifier loc reason binding =
-        this#add_ordinary_binding loc reason (Binding binding);
+      let record_identifier loc name binding =
+        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
+        this#add_ordinary_binding
+          loc
+          (mk_reason (RIdentifier (OrdinaryName name)) loc)
+          (Binding binding);
         true
       in
       if
@@ -1482,25 +1457,25 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           this#visit_function ~scope_kind ~func_hints expr;
           (match var_assigned_to with
           | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+            let binding =
+              Root
+                (FunctionValue
+                   {
+                     hints = func_hints;
+                     synthesizable_from_annotation = func_is_synthesizable_from_annotation expr;
+                     function_loc;
+                     function_ = expr;
+                     statics;
+                     arrow;
+                     tparams_map = tparams;
+                   }
+                )
+            in
+            let binding = this#mk_hooklike_if_necessary hooklike binding in
             this#add_ordinary_binding
               name_loc
               (mk_reason (RIdentifier (OrdinaryName name)) name_loc)
-              (Binding
-                 (Root
-                    (FunctionValue
-                       {
-                         hints = func_hints;
-                         synthesizable_from_annotation = func_is_synthesizable_from_annotation expr;
-                         function_loc;
-                         function_ = expr;
-                         statics;
-                         arrow;
-                         tparams_map = tparams;
-                         hook_like = hooklike;
-                       }
-                    )
-                 )
-              )
+              (Binding binding)
           | None -> ());
           let add_def binding_loc =
             let reason =
@@ -1857,18 +1832,20 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           id_loc
           (func_reason ~async:false ~generator:false loc)
           (Binding
-             (Root
-                (Annotation
-                   {
-                     tparams_map = ALocMap.empty;
-                     optional = false;
-                     has_default_expression = false;
-                     react_deep_read_only = None;
-                     hook_like = Flow_ast_utils.hook_name name;
-                     param_loc = None;
-                     annot;
-                     concrete = None;
-                   }
+             (this#mk_hooklike_if_necessary
+                (Flow_ast_utils.hook_name name)
+                (Root
+                   (Annotation
+                      {
+                        tparams_map = ALocMap.empty;
+                        optional = false;
+                        has_default_expression = false;
+                        react_deep_read_only = None;
+                        param_loc = None;
+                        annot;
+                        concrete = None;
+                      }
+                   )
                 )
              )
           );
@@ -2067,7 +2044,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   optional = false;
                   has_default_expression = false;
                   react_deep_read_only = None;
-                  hook_like = false;
                   param_loc = None;
                   annot;
                   concrete = Some forof;
@@ -2104,7 +2080,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   optional = false;
                   has_default_expression = false;
                   react_deep_read_only = None;
-                  hook_like = false;
                   param_loc = None;
                   annot;
                   concrete = Some forin;

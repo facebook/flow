@@ -45,3 +45,24 @@ function myHOC2() {
         useH(); // no error
     }
 }
+
+declare const useXA: ((() => void) & () => number)
+
+const [useXB, {w: useXC}] = ((42: any): [() => void, { w: () => void }])
+
+
+{
+    component AC(
+        useNodeActionItems: number => Array<string>,
+        useValidator?: string => boolean,
+        w: { useXD: () => void}
+      ) {
+        const actionItems = useNodeActionItems(1); // no error
+        const validator = useValidator?.(""); // no error
+        useXA(); // no error
+        useXB(); // no error
+        useXC(); // no error
+        w.useXD(); // no error
+        return null;
+      }
+}
