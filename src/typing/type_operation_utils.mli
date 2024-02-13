@@ -12,6 +12,8 @@ module Ast = Flow_ast
 open Reason
 
 module Import_export : sig
+  val get_module_t : Context.t -> ?perform_platform_validation:bool -> ALoc.t * string -> Type.t
+
   val import_named_specifier_type :
     Context.t ->
     reason ->

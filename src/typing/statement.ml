@@ -18,6 +18,7 @@ open Reason
 open Type
 open TypeUtil
 open Func_class_sig_types
+open Type_operation_utils
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
 module Make
@@ -716,7 +717,7 @@ module Make
     let mref = Base.String.drop_prefix value prefix_len in
     let module_t = Import_export.get_module_t cx (loc, mref) in
     let require_t =
-      Type_operation_utils.Import_export.cjs_require_type
+      Import_export.cjs_require_type
         cx
         (mk_reason (RCommonJSExports mref) loc)
         ~legacy_interop
@@ -869,7 +870,7 @@ module Make
         | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
           let source_ns_t =
             let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
-            Type_operation_utils.Import_export.get_module_namespace_type cx reason module_t
+            Import_export.get_module_namespace_type cx reason module_t
           in
           export_from source_ns_t
         | None -> export_ref
@@ -880,7 +881,7 @@ module Make
     | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let ns_t = Type_operation_utils.Import_export.get_module_namespace_type cx reason module_t in
+      let ns_t = Import_export.get_module_namespace_type cx reason module_t in
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) ->
@@ -1654,7 +1655,7 @@ module Make
                    in
                    let import_kind = Base.Option.value ~default:import_kind kind in
                    let (remote_name_def_loc, imported_t) =
-                     Type_operation_utils.Import_export.import_named_specifier_type
+                     Import_export.import_named_specifier_type
                        cx
                        import_reason
                        import_kind
@@ -1696,7 +1697,7 @@ module Make
               mk_reason import_reason_desc local_loc
             in
             let t =
-              Type_operation_utils.Import_export.import_namespace_specifier_type
+              Import_export.import_namespace_specifier_type
                 cx
                 import_reason
                 import_kind
@@ -1719,7 +1720,7 @@ module Make
             } ->
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let (remote_default_name_def_loc, imported_t) =
-            Type_operation_utils.Import_export.import_default_specifier_type
+            Import_export.import_default_specifier_type
               cx
               import_reason
               import_kind
@@ -2967,7 +2968,7 @@ module Make
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
           Import_export.get_module_t cx (loc, module_name)
-          |> Type_operation_utils.Import_export.cjs_require_type
+          |> Import_export.cjs_require_type
                cx
                (mk_reason (RCommonJSExports module_name) loc)
                ~legacy_interop:false
@@ -3185,7 +3186,7 @@ module Make
         let ns_t =
           let reason = mk_reason (RModule (OrdinaryName module_name)) loc in
           Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation:true
-          |> Type_operation_utils.Import_export.get_module_namespace_type cx reason
+          |> Import_export.get_module_namespace_type cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
         Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [ns_t]
@@ -3317,7 +3318,7 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
-              |> Type_operation_utils.Import_export.cjs_require_type
+              |> Import_export.cjs_require_type
                    cx
                    (mk_reason (RCommonJSExports module_name) loc)
                    ~legacy_interop:false
@@ -3357,7 +3358,7 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
-              |> Type_operation_utils.Import_export.cjs_require_type
+              |> Import_export.cjs_require_type
                    cx
                    (mk_reason (RCommonJSExports module_name) loc)
                    ~legacy_interop:false

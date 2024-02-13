@@ -10,6 +10,7 @@ open Type
 open Reason
 open Loc_collections
 open Utils_js
+open Type_operation_utils
 module Ast = Flow_ast
 module EnvMap = Env_api.EnvMap
 module Statement = Fix_statement.Statement_
@@ -1029,7 +1030,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
     | Name_def.Named { kind; remote; local } ->
       let import_kind = Base.Option.value ~default:import_kind kind in
       let (_, t) =
-        Type_operation_utils.Import_export.import_named_specifier_type
+        Import_export.import_named_specifier_type
           cx
           import_reason
           import_kind
@@ -1044,7 +1045,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         t
     | Namespace name ->
       let t =
-        Type_operation_utils.Import_export.import_namespace_specifier_type
+        Import_export.import_namespace_specifier_type
           cx
           import_reason
           import_kind
@@ -1058,7 +1059,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         t
     | Default local_name ->
       let (_, t) =
-        Type_operation_utils.Import_export.import_default_specifier_type
+        Import_export.import_default_specifier_type
           cx
           import_reason
           import_kind
