@@ -2324,20 +2324,24 @@ let merge_builtins
       )
   in
 
-  NameUtils.Map.empty
-  |> SMap.fold
-       (fun s _ acc ->
-         let name = Reason.InternalModuleName s in
-         let t = SMap.find s (Lazy.force file_and_dependency_map_rec |> snd) in
-         NameUtils.Map.add name t acc)
-       modules
-  |> SMap.fold
-       (fun s i acc ->
-         let name = Reason.OrdinaryName s in
-         let t =
-           Lazy.map
-             (fun (_, _, t) -> t)
-             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
-         in
-         NameUtils.Map.add name t acc)
-       globals
+  let builtin_names =
+    SMap.fold
+      (fun name i acc ->
+        let t =
+          Lazy.map
+            (fun (_, _, t) -> t)
+            (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+        in
+        SMap.add name t acc)
+      globals
+      SMap.empty
+  in
+  let builtin_modules =
+    SMap.fold
+      (fun name _ acc ->
+        let t = SMap.find name (Lazy.force file_and_dependency_map_rec |> snd) in
+        SMap.add name t acc)
+      modules
+      SMap.empty
+  in
+  (builtin_names, builtin_modules)

@@ -7,12 +7,13 @@
 
 type t
 
-val builtin_set : t -> NameUtils.Set.t
+val builtin_ordinary_name_set : t -> SSet.t
 
 val get_builtin_name_opt : t -> string -> Type.t option
 
 val get_builtin_module_opt : t -> string -> Type.t option
 
-val of_name_map : mapper:(Type.t_out -> Type.t_out) -> Type.t_out lazy_t NameUtils.Map.t -> t
+val of_name_map :
+  mapper:(Type.t_out -> Type.t_out) -> Type.t_out lazy_t SMap.t -> Type.t_out lazy_t SMap.t -> t
 
 val empty : unit -> t

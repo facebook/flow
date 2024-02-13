@@ -21,14 +21,14 @@ module type S = sig
   val program_with_scope :
     cx ->
     ?lib:bool ->
-    ?exclude_syms:NameUtils.Set.t ->
+    ?exclude_syms:SSet.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
     abrupt_kind option * Env_api.env_info
 
   val program :
     cx ->
     ?lib:bool ->
-    ?exclude_syms:NameUtils.Set.t ->
+    ?exclude_syms:SSet.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
     Env_api.values * (int -> Env_api.refinement)
 end
