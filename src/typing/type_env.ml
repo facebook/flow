@@ -616,7 +616,7 @@ let find_write cx kind reason =
   let loc = Reason.loc_of_reason reason in
   match checked_find_loc_env_write_opt cx kind loc with
   | Some t -> t
-  | None -> Tvar.mk cx reason
+  | None -> AnyT.error reason
 
 let get_refinement cx key loc =
   let reason = mk_reason (Key.reason_desc key) loc in
