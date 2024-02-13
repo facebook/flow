@@ -382,9 +382,6 @@ val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
 
 val run_in_hint_eval_mode : t -> (unit -> 'a) -> 'a
 
-val add_global_value_cache_entry :
-  t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
-
 val add_env_cache_entry :
   t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
 
@@ -469,9 +466,6 @@ val find_root : t -> Type.ident -> Type.ident * Type.Constraint.node * Type.Cons
 val find_root_id : t -> Type.ident -> Type.ident
 
 val find_resolved : t -> Type.t -> Type.t option
-
-val global_value_cache_find_opt :
-  t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
 
 val env_cache_find_opt :
   t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
