@@ -1144,9 +1144,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | _ -> Val.merge v1 v2)
         | None -> Val.merge v1 v2
 
-      method private is_excluded name = NameUtils.Set.mem name env_state.exclude_syms
-
-      method private is_excluded_ordinary_name name = this#is_excluded (OrdinaryName name)
+      method private is_excluded_ordinary_name name =
+        NameUtils.Set.mem (OrdinaryName name) env_state.exclude_syms
 
       method private new_id () =
         let new_id = env_state.curr_id in
