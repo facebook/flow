@@ -226,6 +226,7 @@ let phi cx reason ts =
             Nel.to_list errs)
         ts
     in
+    Tvar_resolver.resolve cx tvar;
     (match errs with
     | [] -> Ok tvar
     | hd :: tl -> Error (tvar, (hd, tl)))
