@@ -827,6 +827,9 @@ let bind_class_instance_super cx t loc =
 let bind_class_static_super cx t loc =
   resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassStaticSuperLoc loc
 
+let bind_class_self_type cx t loc =
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassSelfLoc loc
+
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 
 let init_let cx ~use_op t loc = init_entry cx ~use_op t loc

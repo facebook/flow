@@ -901,8 +901,7 @@ let resolve_class cx id_loc reason class_loc class_ =
     Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason class_
   in
   Node_cache.set_class_sig cache class_loc sig_info;
-  let self = Type_env.read_class_self_type cx class_loc in
-  Flow_js.unify cx self class_t_internal;
+  Type_env.bind_class_self_type cx class_t_internal class_loc;
   (class_t, unknown_use)
 
 let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
