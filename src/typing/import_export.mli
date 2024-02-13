@@ -5,9 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val get_module_t :
-  Context.t ->
-  ?declare_module:bool ->
-  ?perform_platform_validation:bool ->
-  ALoc.t * string ->
-  Type.t
+val get_module_t : Context.t -> ?perform_platform_validation:bool -> ALoc.t * string -> Type.t

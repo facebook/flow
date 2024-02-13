@@ -238,7 +238,6 @@ type def =
       import: import;
       source: string;
       source_loc: ALoc.t;
-      declare_module: bool;
     }
   | GeneratorNext of generator_annot option
   | DeclaredNamespace of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareNamespace.t
@@ -360,7 +359,7 @@ module Print = struct
     | DeclaredNamespace
         (_, { Ast.Statement.DeclareNamespace.id = (loc, { Ast.Identifier.name; _ }); _ }) ->
       spf "declare namespace %s %s" name (ALoc.debug_to_string loc)
-    | Import { import_kind; source; import; source_loc = _; declare_module = _ } ->
+    | Import { import_kind; source; import; source_loc = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
     | MissingThisAnnot -> "this (missing)"
 end

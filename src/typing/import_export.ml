@@ -31,8 +31,8 @@ let check_platform_availability cx reason imported_module_available_platforms =
       in
       Flow_js_utils.add_output cx message
 
-let get_module_t cx ?(declare_module = false) ?(perform_platform_validation = false) (loc, mref) =
-  if declare_module || Context.in_declare_module cx then
+let get_module_t cx ?(perform_platform_validation = false) (loc, mref) =
+  if Context.in_declare_module cx then
     Flow.get_builtin_module cx loc mref
   else
     let reason = Reason.(mk_reason (RCustom mref) loc) in

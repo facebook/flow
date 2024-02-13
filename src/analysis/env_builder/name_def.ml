@@ -645,8 +645,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
 
     val mutable return_hint_stack : ast_hints list = []
 
-    val mutable in_declare_module : bool = false
-
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
     method record_hint loc hint =
@@ -2195,10 +2193,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       this#in_new_tparams_env (fun () -> super#interface loc interface)
 
     method! declare_module loc (m : ('loc, 'loc) Ast.Statement.DeclareModule.t) =
-      in_declare_module <- true;
-      let ret = this#in_scope (super#declare_module loc) DeclareModule m in
-      in_declare_module <- false;
-      ret
+      this#in_scope (super#declare_module loc) DeclareModule m
 
     method! declare_namespace loc (n : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
       let {
@@ -2256,7 +2251,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                      source;
                      source_loc;
                      import = Named { kind; remote; local = name };
-                     declare_module = in_declare_module;
                    }
                 ))
             specifiers
@@ -2273,15 +2267,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           this#add_ordinary_binding
             id_loc
             import_reason
-            (Import
-               {
-                 import_kind;
-                 source;
-                 source_loc;
-                 import = Namespace name;
-                 declare_module = in_declare_module;
-               }
-            )
+            (Import { import_kind; source; source_loc; import = Namespace name })
         | None -> ()
       end;
       Base.Option.iter
@@ -2294,15 +2280,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           this#add_ordinary_binding
             id_loc
             import_reason
-            (Import
-               {
-                 import_kind;
-                 source;
-                 source_loc;
-                 import = Default name;
-                 declare_module = in_declare_module;
-               }
-            ))
+            (Import { import_kind; source; source_loc; import = Default name }))
         default;
       super#import_declaration loc decl
 

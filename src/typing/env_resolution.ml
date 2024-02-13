@@ -1022,9 +1022,8 @@ let resolve_opaque_type cx loc opaque =
   Node_cache.set_opaque cache loc (t, ast);
   (t, unknown_use)
 
-let resolve_import cx id_loc import_reason import_kind module_name source_loc import declare_module
-    =
-  let source_module_t = Import_export.get_module_t cx ~declare_module (source_loc, module_name) in
+let resolve_import cx id_loc import_reason import_kind module_name source_loc import =
+  let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
   let t =
     match import with
     | Name_def.Named { kind; remote; local } ->
@@ -1231,8 +1230,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
     | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
     | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque
-    | Import { import_kind; source; source_loc; import; declare_module } ->
-      resolve_import cx id_loc def_reason import_kind source source_loc import declare_module
+    | Import { import_kind; source; source_loc; import } ->
+      resolve_import cx id_loc def_reason import_kind source source_loc import
     | Interface (loc, inter) -> resolve_interface cx loc inter
     | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
     | DeclaredComponent (loc, comp) -> resolve_declare_component cx loc comp
