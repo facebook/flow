@@ -1470,7 +1470,7 @@ let make_options
         options_flags.long_lived_workers
         ~default:(FlowConfig.long_lived_workers flowconfig);
     opt_autocomplete_lazy_docs =
-      Base.Option.value (FlowConfig.autocomplete_lazy_docs flowconfig) ~default:false;
+      Base.Option.value (FlowConfig.autocomplete_lazy_docs flowconfig) ~default:true;
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
   }
