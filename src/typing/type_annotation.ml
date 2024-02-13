@@ -1283,6 +1283,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep
+        | "$Flow$EnforceOptimized" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              Context.set_union_opt cx loc t;
+              reconstruct_ast t targs
+          )
         (* TS Types *)
         | "Readonly" ->
           if Context.ts_syntax cx then

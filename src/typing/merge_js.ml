@@ -155,6 +155,12 @@ let detect_unused_promises cx =
         ))
     (Context.maybe_unused_promises cx)
 
+let enforce_optimize cx loc t =
+  let reason = Reason.mk_reason (Reason.RCustom "$Flow$EnforceOptimized") loc in
+  Flow_js.flow_t cx (Type.InternalT (Type.EnforceUnionOptimized reason), t)
+
+let check_union_opt cx = Context.iter_union_opt cx ~f:(enforce_optimize cx)
+
 let detect_import_export_errors cx program metadata =
   Strict_es6_import_export.detect_errors cx program metadata;
   Module_exports_checker.check_program program
@@ -599,7 +605,8 @@ let post_merge_checks cx ast tast metadata =
   detect_import_export_errors cx ast metadata;
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;
-  detect_unused_promises cx
+  detect_unused_promises cx;
+  check_union_opt cx
 
 (* Check will lazily create types for the checked file's dependencies. These
  * types are created in the dependency's context and need to be copied into the

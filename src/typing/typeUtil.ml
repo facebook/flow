@@ -24,6 +24,7 @@ let rec reason_of_t = function
   | ExactT (reason, _) -> reason
   | GenericT { reason; _ } -> reason
   | InternalT (ExtendsT (reason, _, _)) -> reason
+  | InternalT (EnforceUnionOptimized reason) -> reason
   | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
@@ -187,6 +188,7 @@ let rec mod_reason_of_t f = function
   | ExactT (reason, t) -> ExactT (f reason, t)
   | GenericT ({ reason; _ } as generic) -> GenericT { generic with reason = f reason }
   | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
+  | InternalT (EnforceUnionOptimized reason) -> InternalT (EnforceUnionOptimized (f reason))
   | FunProtoApplyT reason -> FunProtoApplyT (f reason)
   | FunProtoT reason -> FunProtoT (f reason)
   | FunProtoBindT reason -> FunProtoBindT (f reason)

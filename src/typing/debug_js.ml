@@ -361,6 +361,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
+    | InternalT (EnforceUnionOptimized _) -> p t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =
@@ -1920,6 +1921,9 @@ let dump_error_message =
         (string_of_aloc loc)
         (SSet.to_string available_platforms)
         (SSet.to_string required_platforms)
+    | EUnionOptimization { loc } -> spf "EUnionOptimization (%s)" (string_of_aloc loc)
+    | EUnionOptimizationOnNonUnion { loc; _ } ->
+      spf "EUnionOptimizationOnNonUnion (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let print_if_verbose_lazy

@@ -202,6 +202,8 @@ type component_t = {
   mutable monomorphized_components: Type.t Type.Properties.Map.t;
   (* Signature help *)
   mutable signature_help_callee: Type.t ALocMap.t;
+  (* Union optimization checks *)
+  mutable union_opt: Type.t ALocMap.t;
 }
 [@@warning "-69"]
 
@@ -395,6 +397,7 @@ let make_ccx () =
     allow_method_unbinding = ALocSet.empty;
     monomorphized_components = Type.Properties.Map.empty;
     signature_help_callee = ALocMap.empty;
+    union_opt = ALocMap.empty;
   }
 
 let make ccx metadata file aloc_table resolve_require mk_builtins =
@@ -745,6 +748,10 @@ let set_signature_help_callee cx loc t =
   cx.ccx.signature_help_callee <- ALocMap.add loc t cx.ccx.signature_help_callee
 
 let get_signature_help_callee cx loc = ALocMap.find_opt loc cx.ccx.signature_help_callee
+
+let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
+
+let iter_union_opt cx ~f = ALocMap.iter f cx.ccx.union_opt
 
 let add_exists_check cx loc t =
   let tset =

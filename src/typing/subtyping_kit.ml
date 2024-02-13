@@ -2329,6 +2329,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (FunProtoBindT reason, _)
     | (FunProtoCallT reason, _) ->
       rec_flow_t cx trace ~use_op (FunProtoT reason, u)
+    | (InternalT (EnforceUnionOptimized reason), _) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EUnionOptimizationOnNonUnion
+           { loc = loc_of_reason reason; arg = reason_of_t u }
+        )
     | (_, _) ->
       add_output
         cx

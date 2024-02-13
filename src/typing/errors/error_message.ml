@@ -690,6 +690,11 @@ and 'loc t' =
       available_platforms: SSet.t;
       required_platforms: SSet.t;
     }
+  | EUnionOptimization of { loc: 'loc }
+  | EUnionOptimizationOnNonUnion of {
+      loc: 'loc;
+      arg: 'loc virtual_reason;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1479,6 +1484,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EInvalidTypeCastSyntax { loc = f loc; enabled_casting_syntax }
   | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->
     EMissingPlatformSupport { loc = f loc; available_platforms; required_platforms }
+  | EUnionOptimization { loc } -> EUnionOptimization { loc = f loc }
+  | EUnionOptimizationOnNonUnion { loc; arg } ->
+    EUnionOptimizationOnNonUnion { loc = f loc; arg = map_reason arg }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1744,7 +1752,9 @@ let util_use_op_of_msg nope util = function
   | ERefComponentProp _
   | EInvalidRendersTypeArgument _
   | EInvalidTypeCastSyntax _
-  | EMissingPlatformSupport _ ->
+  | EMissingPlatformSupport _
+  | EUnionOptimization _
+  | EUnionOptimizationOnNonUnion _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1909,7 +1919,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDuplicateComponentProp { spread = loc; _ }
   | ERefComponentProp { spread = loc; _ }
   | ETypeGuardIncompatibleWithFunctionKind { loc; _ }
-  | EMissingPlatformSupport { loc; _ } ->
+  | EMissingPlatformSupport { loc; _ }
+  | EUnionOptimization { loc }
+  | EUnionOptimizationOnNonUnion { loc; _ } ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -5572,6 +5584,14 @@ let friendly_message_of_msg loc_of_aloc msg =
       @ [text " is missing."]
     in
     Normal { features }
+  | EUnionOptimization { loc = _ } ->
+    let features = [text "Union could not be optimized internally."] in
+    Normal { features }
+  | EUnionOptimizationOnNonUnion { loc = _; arg } ->
+    let features =
+      [text "Invalid use of $Flow$EnforceOptimized on non-union type "; ref arg; text "."]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -5913,3 +5933,5 @@ let error_code_of_message err : error_code option =
   | ETSSyntax _ -> Some TSSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
   | EMissingPlatformSupport _ -> Some MissingPlatformSupport
+  | EUnionOptimization _ -> Some UnionUnoptimizable
+  | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable

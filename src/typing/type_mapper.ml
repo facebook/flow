@@ -169,6 +169,7 @@ class virtual ['a] t =
         else
           InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
+      | InternalT (EnforceUnionOptimized _) -> t
       | CustomFunT (r, kind) ->
         let kind' = self#custom_fun_kind cx map_cx kind in
         if kind' == kind then

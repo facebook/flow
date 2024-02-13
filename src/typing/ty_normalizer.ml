@@ -1601,7 +1601,8 @@ module Make (I : INPUT) : S = struct
       Type.(
         function
         | ChoiceKitT _
-        | ExtendsT _ ->
+        | ExtendsT _
+        | EnforceUnionOptimized _ ->
           terr ~kind:BadInternalT (Some t)
       )
 

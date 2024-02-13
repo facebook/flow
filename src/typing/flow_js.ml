@@ -6691,7 +6691,8 @@ struct
     | UnionT _
     | IntersectionT _
     | CustomFunT (_, DebugPrint)
-    | ThisTypeAppT _ ->
+    | ThisTypeAppT _
+    | InternalT (EnforceUnionOptimized _) ->
       false
     (* Should never occur as the lower bound of any *)
     | InternalT (ChoiceKitT _)

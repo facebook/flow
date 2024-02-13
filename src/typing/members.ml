@@ -578,6 +578,7 @@ let rec extract_type cx this_t =
   | MatchingPropT (_, _, _)
   | DefT (_, EmptyT)
   | InternalT (ExtendsT _)
+  | InternalT (EnforceUnionOptimized _)
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _

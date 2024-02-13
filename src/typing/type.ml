@@ -312,6 +312,8 @@ module rec TypeTerm : sig
     | ChoiceKitT of reason * choice_tool
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
+    (* $Flow$EnforceOptimized *)
+    | EnforceUnionOptimized of reason
 
   and 'loc virtual_root_use_op =
     | ObjectSpread of { op: 'loc virtual_reason }
@@ -2348,6 +2350,19 @@ and UnionRep : sig
       returns the physically-identical rep. *)
   val ident_map : ?always_keep_source:bool -> (TypeTerm.t -> TypeTerm.t) -> t -> t
 
+  (* Optimization *)
+
+  module UnionEnumMap : WrappedMap.S with type key = UnionEnum.t
+
+  type finally_optimized_rep =
+    | EnumUnion of UnionEnumSet.t
+    | PartiallyOptimizedUnionEnum of UnionEnumSet.t
+    | DisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
+    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
+    | Empty
+    | Singleton of TypeTerm.t
+    | Unoptimized
+
   val optimize :
     t ->
     reasonless_eq:(TypeTerm.t -> TypeTerm.t -> bool) ->
@@ -2355,6 +2370,16 @@ and UnionRep : sig
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property NameUtils.Map.t) ->
     unit
+
+  val optimize_ :
+    t ->
+    reasonless_eq:(TypeTerm.t -> TypeTerm.t -> bool) ->
+    flatten:(TypeTerm.t list -> TypeTerm.t list) ->
+    find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
+    find_props:(Properties.id -> TypeTerm.property NameUtils.Map.t) ->
+    finally_optimized_rep option
+
+  val set_optimize : t -> finally_optimized_rep option -> unit
 
   val optimize_enum_only : t -> flatten:(TypeTerm.t list -> TypeTerm.t list) -> unit
 
@@ -2381,6 +2406,8 @@ and UnionRep : sig
     quick_mem_result
 
   val check_enum : t -> UnionEnumSet.t option
+
+  val string_of_specialization_ : finally_optimized_rep option -> string
 
   val string_of_specialization : t -> string
 
@@ -2646,17 +2673,25 @@ end = struct
         else
           DisjointUnion map
 
-  let optimize rep ~reasonless_eq ~flatten ~find_resolved ~find_props =
+  let optimize_ rep ~reasonless_eq ~flatten ~find_resolved ~find_props =
     let ts = flatten (members rep) in
     if contains_only_flattened_types ts then
       let opt = enum_optimize ts in
-      let opt =
-        match opt with
-        | Unoptimized -> disjoint_union_optimize ~reasonless_eq ~find_resolved ~find_props ts
-        | _ -> opt
-      in
-      let (_, _, _, _, specialization) = rep in
-      specialization := Some opt
+      match opt with
+      | Unoptimized -> Some (disjoint_union_optimize ~reasonless_eq ~find_resolved ~find_props ts)
+      | _ -> Some opt
+    else
+      None
+
+  let set_optimize rep opt =
+    Base.Option.iter opt ~f:(fun opt ->
+        let (_, _, _, _, specialization) = rep in
+        specialization := Some opt
+    )
+
+  let optimize rep ~reasonless_eq ~flatten ~find_resolved ~find_props =
+    let opt = optimize_ rep ~reasonless_eq ~flatten ~find_resolved ~find_props in
+    set_optimize rep opt
 
   let optimize_enum_only rep ~flatten =
     let ts = flatten (members rep) in
@@ -2770,8 +2805,7 @@ end = struct
     | Some (EnumUnion enums) -> Some enums
     | _ -> None
 
-  let string_of_specialization (_, _, _, _, spec) =
-    match !spec with
+  let string_of_specialization_ = function
     | Some (EnumUnion _) -> "Enum"
     | Some Empty -> "Empty"
     | Some Unoptimized -> "Unoptimized"
@@ -2780,6 +2814,8 @@ end = struct
     | Some (DisjointUnion _) -> "Disjoint Union"
     | Some (PartiallyOptimizedUnionEnum _) -> "Partially Optimized Enum"
     | None -> "No Specialization"
+
+  let string_of_specialization (_, _, _, _, spec) = string_of_specialization_ !spec
 end
 
 (* We encapsulate IntersectionT's internal structure.
@@ -3936,6 +3972,7 @@ let string_of_ctor = function
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
   | InternalT (ExtendsT _) -> "ExtendsT"
+  | InternalT (EnforceUnionOptimized _) -> "EnforceUnionOptimizedT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
