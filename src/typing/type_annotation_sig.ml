@@ -20,8 +20,6 @@ module type ConsGen = sig
     Type.t list Base.Option.t ->
     Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
-
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 

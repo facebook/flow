@@ -761,19 +761,6 @@ module rec TypeTerm : sig
     | ElemT of use_op * reason * t * elem_action
     (* exact ops *)
     | MakeExactT of reason * cont
-    (*
-     * Module import handling
-     *
-     * Why do the following have a is_strict flag, when that's already present in the context
-     * local metadata? Because when checking cycles, during the merge we use the context of the
-     * "leader" module, and thus the is_strict flag in the context won't be accurate.
-     *)
-    | CJSRequireT of {
-        reason: reason;
-        t_out: t;
-        is_strict: bool;
-        legacy_interop: bool;
-      }
     | AssertImportIsValueT of reason * string
     (* Module export handling *)
     | CJSExtractNamedExportsT of
@@ -3278,6 +3265,13 @@ module AConstraint = struct
     | Annot_ImportModuleNsT of Reason.t * bool
     | Annot_ImportTypeofT of Reason.reason * string
     | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
+    (*
+     * Module import handling
+     *
+     * Why do the following have a is_strict flag, when that's already present in the context
+     * local metadata? Because when checking cycles, during the merge we use the context of the
+     * "leader" module, and thus the is_strict flag in the context won't be accurate.
+     *)
     | Annot_CJSRequireT of {
         reason: Reason.t;
         is_strict: bool;
@@ -4117,7 +4111,6 @@ let string_of_use_ctor = function
         | TryFlow _ -> "TryFlow"
       end
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
-  | CJSRequireT _ -> "CJSRequireT"
   | ComparatorT _ -> "ComparatorT"
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"

@@ -113,4 +113,17 @@ module Import_export = struct
       ~import_kind
       ~remote_name:"default"
       ~local_name
+
+  let cjs_require_type cx reason ~legacy_interop source_module_t =
+    let is_strict = Context.is_strict cx in
+    match concretize_module_type cx reason source_module_t with
+    | Ok m ->
+      Flow_js_utils.CJSRequireTKit.on_ModuleT
+        cx
+        ~reposition:Flow.reposition
+        (reason, is_strict, legacy_interop)
+        m
+    | Error (lreason, any_source) ->
+      Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
+      AnyT (lreason, any_source)
 end

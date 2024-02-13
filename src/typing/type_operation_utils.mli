@@ -14,7 +14,7 @@ open Reason
 module Import_export : sig
   val import_named_specifier_type :
     Context.t ->
-    t ->
+    reason ->
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
@@ -26,7 +26,7 @@ module Import_export : sig
 
   val import_namespace_specifier_type :
     Context.t ->
-    t ->
+    reason ->
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
@@ -35,10 +35,12 @@ module Import_export : sig
 
   val import_default_specifier_type :
     Context.t ->
-    t ->
+    reason ->
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
     local_name:string ->
     ALoc.t option * Type.t
+
+  val cjs_require_type : Context.t -> reason -> legacy_interop:bool -> Type.t -> Type.t
 end

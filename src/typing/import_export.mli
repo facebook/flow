@@ -11,5 +11,3 @@ val get_module_t :
   ?perform_platform_validation:bool ->
   ALoc.t * string ->
   Type.t
-
-val require : Context.t -> legacy_interop:bool -> ALoc.t -> string -> Type.t -> Type.t

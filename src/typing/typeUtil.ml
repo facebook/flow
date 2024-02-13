@@ -65,7 +65,6 @@ and reason_of_use_t = function
   | CallT { reason; _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
-  | CJSRequireT { reason; _ } -> reason
   | ComparatorT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
@@ -264,8 +263,6 @@ and mod_reason_of_use_t f = function
     CallT { use_op; reason = f reason; call_action; return_hint }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
-  | CJSRequireT { reason; t_out; is_strict; legacy_interop } ->
-    CJSRequireT { reason = f reason; t_out; is_strict; legacy_interop }
   | ComparatorT ({ reason; _ } as x) -> ComparatorT { x with reason = f reason }
   | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
     ConstructorT { use_op; reason = f reason; targs; args; tout; return_hint }
@@ -534,7 +531,6 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
-  | CJSRequireT _
   | AssertImportIsValueT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)

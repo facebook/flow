@@ -715,7 +715,13 @@ module Make
     let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
     let mref = Base.String.drop_prefix value prefix_len in
     let module_t = Import_export.get_module_t cx (loc, mref) in
-    let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
+    let require_t =
+      Type_operation_utils.Import_export.cjs_require_type
+        cx
+        (mk_reason (RCommonJSExports mref) loc)
+        ~legacy_interop
+        module_t
+    in
     let reason = mk_reason (RCustom "module reference") loc in
     let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
     (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
@@ -2961,7 +2967,10 @@ module Make
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
           Import_export.get_module_t cx (loc, module_name)
-          |> Import_export.require cx loc module_name ~legacy_interop:false
+          |> Type_operation_utils.Import_export.cjs_require_type
+               cx
+               (mk_reason (RCommonJSExports module_name) loc)
+               ~legacy_interop:false
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason (RCustom "graphql tag") loc in
@@ -3308,7 +3317,10 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
-              |> Import_export.require cx loc module_name ~legacy_interop:false
+              |> Type_operation_utils.Import_export.cjs_require_type
+                   cx
+                   (mk_reason (RCommonJSExports module_name) loc)
+                   ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
           | ( None,
@@ -3345,7 +3357,10 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
-              |> Import_export.require cx loc module_name ~legacy_interop:false
+              |> Type_operation_utils.Import_export.cjs_require_type
+                   cx
+                   (mk_reason (RCommonJSExports module_name) loc)
+                   ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
           | (Some _, arguments) ->

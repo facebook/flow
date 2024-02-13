@@ -803,24 +803,6 @@ struct
           CopyTypeExportsTKit.on_AnyT cx lreason (reason, target_module) t
         | (_, CJSExtractNamedExportsT (reason, local_module, t_out)) ->
           CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) l t_out
-        (******************)
-        (* Module imports *)
-        (******************)
-        | (ModuleT m, CJSRequireT { reason; t_out; is_strict; legacy_interop }) ->
-          FlowJs.rec_flow_t
-            cx
-            ~use_op:unknown_use
-            trace
-            ( CJSRequireTKit.on_ModuleT
-                cx
-                ~reposition:(FlowJs.reposition ~trace:Trace.dummy_trace ?desc:None ?annot_loc:None)
-                (reason, is_strict, legacy_interop)
-                m,
-              t_out
-            )
-        | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
-          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)
         (*****************)
         (* Import checks *)
         (*****************)
@@ -6470,7 +6452,6 @@ struct
     | CallLatentPredT _
     | ChoiceKitUseT _
     | CJSExtractNamedExportsT _
-    | CJSRequireT _
     | CondT _
     | ConstructorT _
     | CopyNamedExportsT _

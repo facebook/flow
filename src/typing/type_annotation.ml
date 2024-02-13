@@ -946,12 +946,16 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     }
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
-                let desc = RModule (OrdinaryName value) in
-                let reason = mk_annot_reason desc loc in
+                let reason = mk_annot_reason (RCommonJSExports value) loc in
                 let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
                 let str_t = mk_singleton_string str_loc value in
                 reconstruct_ast
-                  (ConsGen.cjs_require cx remote_module_t reason (Context.is_strict cx) false)
+                  (Type_operation_utils.Import_export.cjs_require_type
+                     cx
+                     reason
+                     ~legacy_interop:false
+                     remote_module_t
+                  )
                   (Some
                      ( targs_loc,
                        {
