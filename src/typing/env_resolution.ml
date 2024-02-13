@@ -831,6 +831,7 @@ let resolve_binding cx reason loc b =
     (t, mk_use_op t)
   | Root (UnannotatedParameter reason) ->
     let t = AnyT (reason, AnyError (Some MissingAnnotation)) in
+    Type_env.bind_function_param cx t (loc_of_reason reason);
     Flow_js.add_output
       cx
       (Error_message.EMissingLocalAnnotation
