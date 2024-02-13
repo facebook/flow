@@ -863,11 +863,7 @@ module Make
         | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
           let source_ns_t =
             let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
-            Type_operation_utils.Import_export.get_module_namespace_type
-              cx
-              reason
-              ~is_strict:(Context.is_strict cx)
-              module_t
+            Type_operation_utils.Import_export.get_module_namespace_type cx reason module_t
           in
           export_from source_ns_t
         | None -> export_ref
@@ -878,13 +874,7 @@ module Make
     | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let ns_t =
-        Type_operation_utils.Import_export.get_module_namespace_type
-          cx
-          reason
-          ~is_strict:(Context.is_strict cx)
-          module_t
-      in
+      let ns_t = Type_operation_utils.Import_export.get_module_namespace_type cx reason module_t in
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) ->
@@ -3186,10 +3176,7 @@ module Make
         let ns_t =
           let reason = mk_reason (RModule (OrdinaryName module_name)) loc in
           Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation:true
-          |> Type_operation_utils.Import_export.get_module_namespace_type
-               cx
-               reason
-               ~is_strict:(Context.is_strict cx)
+          |> Type_operation_utils.Import_export.get_module_namespace_type cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
         Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [ns_t]

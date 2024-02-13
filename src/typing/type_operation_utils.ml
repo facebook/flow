@@ -81,7 +81,8 @@ module Import_export = struct
       ~remote_name
       ~local_name
 
-  let get_module_namespace_type cx reason ~is_strict source_module_t =
+  let get_module_namespace_type cx reason source_module_t =
+    let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
     | Ok m -> Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
     | Error (lreason, any_source) ->
@@ -91,16 +92,15 @@ module Import_export = struct
   let import_namespace_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
     let open Ast.Statement in
-    let is_strict = Context.is_strict cx in
     match import_kind with
     | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
     | ImportDeclaration.ImportTypeof ->
-      let module_ns_t = get_module_namespace_type cx import_reason ~is_strict source_module_t in
+      let module_ns_t = get_module_namespace_type cx import_reason source_module_t in
       let bind_reason = repos_reason local_loc import_reason in
       Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-      get_module_namespace_type cx reason ~is_strict source_module_t
+      get_module_namespace_type cx reason source_module_t
 
   let import_default_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_name =

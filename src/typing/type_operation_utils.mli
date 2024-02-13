@@ -22,7 +22,7 @@ module Import_export : sig
     local_name:string ->
     ALoc.t option * Type.t
 
-  val get_module_namespace_type : Context.t -> reason -> is_strict:bool -> Type.t -> Type.t
+  val get_module_namespace_type : Context.t -> reason -> Type.t -> Type.t
 
   val import_namespace_specifier_type :
     Context.t ->
