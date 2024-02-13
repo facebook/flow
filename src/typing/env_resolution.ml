@@ -853,12 +853,7 @@ let rec resolve_binding cx reason loc b =
          we must be in an assignment position and the type must have been resolved. *)
       (t, mk_use_op t)
     | None ->
-      let t =
-        Type_env.t_option_value_exn
-          cx
-          parent_loc
-          (Loc_env.find_write (Context.environment cx) Env_api.PatternLoc parent_loc)
-      in
+      let t = Type_env.checked_find_loc_env_write cx Env_api.PatternLoc parent_loc in
       let has_anno = binding_has_annot binding in
       let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
       let t =
