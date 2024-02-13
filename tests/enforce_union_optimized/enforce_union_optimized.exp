@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- file.js:24:15
 
-Union could not be optimized internally. [union-unoptimizable]
+Union could not be optimized internally. The union needs to include in its members at least one of: object type, string
+literal, numeric literal, boolean literal, void or null types. [union-unoptimizable]
 
    24| type Error1 = $Flow$EnforceOptimized<number | string>; // error not object candidates
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +9,7 @@ Union could not be optimized internally. [union-unoptimizable]
 
 Error ---------------------------------------------------------------------------------------------------- file.js:26:15
 
-Union could not be optimized internally. [union-unoptimizable]
+Union could not be optimized internally. There are no common keys among the members of the union. [union-unoptimizable]
 
                      v----------------------------------------------
    26| type Error2 = $Flow$EnforceOptimized< // error no common keys
@@ -20,8 +21,10 @@ Union could not be optimized internally. [union-unoptimizable]
 
 Error ---------------------------------------------------------------------------------------------------- file.js:31:15
 
-Union could not be optimized internally. [union-unoptimizable]
+Union could not be optimized internally. The form of `$ReadOnly` [1] is not supported for optimization. Try replacing
+this type with a simpler alternative. [union-unoptimizable]
 
+   file.js:31:15
                      v--------------------------------------------------------
    31| type Error3 = $Flow$EnforceOptimized< // error unsupported form (EvalT)
    32|   | $ReadOnly<{ f: 1 }>
@@ -29,11 +32,18 @@ Union could not be optimized internally. [union-unoptimizable]
    34| >;
        ^
 
+References:
+   file.js:32:5
+   32|   | $ReadOnly<{ f: 1 }>
+           ^^^^^^^^^^^^^^^^^^^ [1]
+
 
 Error ---------------------------------------------------------------------------------------------------- file.js:37:15
 
-Union could not be optimized internally. [union-unoptimizable]
+Union could not be optimized internally. The form of `Foo` [1] is not supported for optimization. Try replacing this
+type with a simpler alternative. [union-unoptimizable]
 
+   file.js:37:15
                      v-----------------------------------------------------------
    37| type Error4 = $Flow$EnforceOptimized< // error unsupported form (TypeAppT)
    38|   | Foo<1, 2>
@@ -41,17 +51,38 @@ Union could not be optimized internally. [union-unoptimizable]
    40| >;
        ^
 
+References:
+   file.js:38:5
+   38|   | Foo<1, 2>
+           ^^^^^^^^^ [1]
+
 
 Error ---------------------------------------------------------------------------------------------------- file.js:42:15
 
-Union could not be optimized internally. [union-unoptimizable]
+Union could not be optimized internally. The following keys have non-unique values:
+ - Key `f` has value `1.000000` in both object type [1] and object type [2].
+ - Key `g` has value ``a`` in both object type [1] and object type [2].
+ - Key `h` has value `true` in both object type [1] and object type [2].
+ - Key `k` has value `undefined` in both object type [1] and object type [2].
+ - Key `l` has value `null` in both object type [1] and object type [2].
+ - Key `m` has value `1n` in both object type [1] and object type [2].
+ [union-unoptimizable]
 
+   file.js:42:15
                      v----------------------------------------------
    42| type Error5 = $Flow$EnforceOptimized< // error no unique keys
    43|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
    44|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
    45| >;
        ^
+
+References:
+   file.js:44:5
+   44|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:43:5
+   43|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- file.js:47:16

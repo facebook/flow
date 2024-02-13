@@ -1921,7 +1921,7 @@ let dump_error_message =
         (string_of_aloc loc)
         (SSet.to_string available_platforms)
         (SSet.to_string required_platforms)
-    | EUnionOptimization { loc } -> spf "EUnionOptimization (%s)" (string_of_aloc loc)
+    | EUnionOptimization { loc; _ } -> spf "EUnionOptimization (%s)" (string_of_aloc loc)
     | EUnionOptimizationOnNonUnion { loc; _ } ->
       spf "EUnionOptimizationOnNonUnion (%s)" (string_of_aloc loc)
 

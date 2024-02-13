@@ -766,31 +766,27 @@ module Make (Flow : INPUT) : OUTPUT = struct
   *)
   and optimize_spec_try_shortcut cx trace reason_op = function
     | UnionCases (_use_op, InternalT (EnforceUnionOptimized reason), rep, _ts) ->
-      let open Type.UnionRep in
       let specialization =
         UnionRep.optimize_
           rep
+          ~reason_of_t:TypeUtil.reason_of_t
           ~reasonless_eq:(Concrete_type_eq.eq cx)
           ~flatten:(Type_mapper.union_flatten cx)
           ~find_resolved:(Context.find_resolved cx)
           ~find_props:(Context.find_props cx)
       in
-      (match specialization with
-      | None
-      | Some Unoptimized ->
-        add_output cx ~trace (Error_message.EUnionOptimization { loc = loc_of_reason reason })
-      | Some (EnumUnion _)
-      | Some (PartiallyOptimizedUnionEnum _)
-      | Some (DisjointUnion _)
-      | Some (PartiallyOptimizedDisjointUnion _)
-      | Some Empty
-      | Some (Singleton _) ->
-        ());
+      Base.Result.iter_error specialization ~f:(fun kind ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EUnionOptimization { loc = loc_of_reason reason; kind })
+      );
       true
     | UnionCases (use_op, l, rep, _ts) ->
       if not (UnionRep.is_optimized_finally rep) then
         UnionRep.optimize
           rep
+          ~reason_of_t:TypeUtil.reason_of_t
           ~reasonless_eq:(Concrete_type_eq.eq cx)
           ~flatten:(Type_mapper.union_flatten cx)
           ~find_resolved:(Context.find_resolved cx)

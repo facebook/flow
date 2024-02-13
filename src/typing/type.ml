@@ -2361,10 +2361,16 @@ and UnionRep : sig
     | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
     | Empty
     | Singleton of TypeTerm.t
-    | Unoptimized
+
+  type 'loc optimized_error =
+    | ContainsUnresolved of 'loc virtual_reason
+    | NoCandidateMembers (* E.g. `number | string` *)
+    | NoCommonKeys
+    | NonUniqueKeys of (UnionEnum.t * 'loc virtual_reason * 'loc virtual_reason) NameUtils.Map.t
 
   val optimize :
     t ->
+    reason_of_t:(TypeTerm.t -> ALoc.t virtual_reason) ->
     reasonless_eq:(TypeTerm.t -> TypeTerm.t -> bool) ->
     flatten:(TypeTerm.t list -> TypeTerm.t list) ->
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
@@ -2373,13 +2379,14 @@ and UnionRep : sig
 
   val optimize_ :
     t ->
+    reason_of_t:(TypeTerm.t -> reason) ->
     reasonless_eq:(TypeTerm.t -> TypeTerm.t -> bool) ->
     flatten:(TypeTerm.t list -> TypeTerm.t list) ->
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property NameUtils.Map.t) ->
-    finally_optimized_rep option
+    (finally_optimized_rep, ALoc.t optimized_error) result
 
-  val set_optimize : t -> finally_optimized_rep option -> unit
+  val set_optimize : t -> (finally_optimized_rep, 'loc optimized_error) result -> unit
 
   val optimize_enum_only : t -> flatten:(TypeTerm.t list -> TypeTerm.t list) -> unit
 
@@ -2410,8 +2417,6 @@ and UnionRep : sig
   val string_of_specialization_ : finally_optimized_rep option -> string
 
   val string_of_specialization : t -> string
-
-  val contains_only_flattened_types : TypeTerm.t list -> bool
 end = struct
   (* canonicalize a type w.r.t. enum membership *)
   let canon =
@@ -2459,7 +2464,12 @@ end = struct
     | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
     | Empty
     | Singleton of TypeTerm.t
-    | Unoptimized
+
+  type 'loc optimized_error =
+    | ContainsUnresolved of 'loc virtual_reason
+    | NoCandidateMembers
+    | NoCommonKeys
+    | NonUniqueKeys of (UnionEnum.t * 'loc virtual_reason * 'loc virtual_reason) NameUtils.Map.t
 
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
@@ -2535,24 +2545,30 @@ end = struct
 
   (* Private helper, must be called after full resolution. Ideally would be returned as a bit by
      TypeTerm.union_flatten, and kept in sync there. *)
-  let contains_only_flattened_types =
-    List.for_all
-      TypeTerm.(
-        function
-        (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
-        | OpenT _
-        (* some types may not be evaluated yet; TODO *)
-        | EvalT _
-        | TypeAppT _
-        | KeysT _
-        | IntersectionT _
-        (* other types might wrap parts that are accessible directly *)
-        | OpaqueT _
-        | DefT (_, InstanceT _)
-        | DefT (_, PolyT _) ->
-          false
-        | _ -> true
-      )
+  let has_unflattened_types ts =
+    let open TypeTerm in
+    let exception Found of TypeTerm.t in
+    try
+      List.iter
+        (fun t ->
+          match t with
+          (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
+          | OpenT _
+          (* some types may not be evaluated yet; TODO *)
+          | EvalT _
+          | TypeAppT _
+          | KeysT _
+          | IntersectionT _
+          (* other types might wrap parts that are accessible directly *)
+          | OpaqueT _
+          | DefT (_, InstanceT _)
+          | DefT (_, PolyT _) ->
+            raise (Found t)
+          | _ -> ())
+        ts;
+      None
+    with
+    | Found t -> Some t
 
   let enum_optimize =
     let split_enum =
@@ -2564,17 +2580,17 @@ end = struct
         (UnionEnumSet.empty, false)
     in
     function
-    | [] -> Empty
-    | [t] -> Singleton t
+    | [] -> Ok Empty
+    | [t] -> Ok (Singleton t)
     | ts ->
       let (tset, partial) = split_enum ts in
       if partial then
         if UnionEnumSet.is_empty tset then
-          Unoptimized
+          Error NoCandidateMembers
         else
-          PartiallyOptimizedUnionEnum tset
+          Ok (PartiallyOptimizedUnionEnum tset)
       else
-        EnumUnion tset
+        Ok (EnumUnion tset)
 
   let canon_prop find_resolved p = Base.Option.(Property.read_t p >>= find_resolved >>= canon)
 
@@ -2594,17 +2610,22 @@ end = struct
 
   let disjoint_union_optimize =
     let base_props_of find_resolved find_props t =
-      Base.Option.(
-        props_of find_props t >>| fun prop_map ->
-        NameUtils.Map.fold
-          (fun key p acc ->
-            match base_prop find_resolved p with
-            | Some enum -> NameUtils.Map.add key (enum, t) acc
-            | _ -> acc)
-          prop_map
-          NameUtils.Map.empty
+      Base.Option.map (props_of find_props t) ~f:(fun prop_map ->
+          NameUtils.Map.fold
+            (fun key p acc ->
+              match base_prop find_resolved p with
+              | Some enum -> NameUtils.Map.add key (enum, t) acc
+              | None -> acc)
+            prop_map
+            NameUtils.Map.empty
       )
     in
+    (* Returns a tuple of (candidates, partial):
+     *  - [candidates] is a list that contains a candidate for each union member.
+     *    A candidate is a mapping from keys in that object to a UnionEnum value.
+     *    Properties that do not have a UnionEnum representation are ignored.
+     *  - [partial] is true iff there exist non-object-like members in the union
+     *)
     let split_disjoint_union find_resolved find_props ts =
       List.fold_left
         (fun (candidates, partial) t ->
@@ -2615,89 +2636,96 @@ end = struct
         ts
     in
     let unique_values =
-      let rec unique_values ~reasonless_eq idx = function
-        | [] -> Some idx
+      let rec unique_values ~reason_of_t ~reasonless_eq idx = function
+        | [] -> Ok idx
         | (enum, t) :: values -> begin
           match UnionEnumMap.find_opt enum idx with
-          | None -> unique_values ~reasonless_eq (UnionEnumMap.add enum t idx) values
+          | None -> unique_values ~reason_of_t ~reasonless_eq (UnionEnumMap.add enum t idx) values
           | Some t' ->
             if reasonless_eq t t' then
-              unique_values ~reasonless_eq idx values
+              (* This corresponds to the case
+               * type T = { f: "a" };
+               * type Union = T | T;
+               *)
+              unique_values ~reason_of_t ~reasonless_eq idx values
             else
-              None
+              Error (enum, reason_of_t t, reason_of_t t')
         end
       in
       unique_values UnionEnumMap.empty
     in
-    let unique ~reasonless_eq idx =
+    let unique ~reason_of_t ~reasonless_eq idx =
       NameUtils.Map.fold
-        (fun key values acc ->
-          match unique_values ~reasonless_eq values with
-          | None -> acc
-          | Some idx -> NameUtils.Map.add key idx acc)
+        (fun key values (acc, err_acc) ->
+          match unique_values ~reason_of_t ~reasonless_eq values with
+          | Error err -> (acc, NameUtils.Map.add key err err_acc)
+          | Ok idx -> (NameUtils.Map.add key idx acc, err_acc))
         idx
-        NameUtils.Map.empty
+        (NameUtils.Map.empty, NameUtils.Map.empty)
     in
-    let index ~reasonless_eq candidates =
-      match candidates with
-      | [] -> NameUtils.Map.empty
-      | base_props :: candidates ->
-        (* Compute the intersection of properties of objects that have singleton types *)
-        let init = NameUtils.Map.map (fun enum_t -> [enum_t]) base_props in
-        let idx =
-          List.fold_left
-            (fun acc base_props ->
-              NameUtils.Map.merge
-                (fun _key enum_t_opt values_opt ->
-                  Base.Option.(
-                    both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values
-                  ))
-                base_props
-                acc)
-            init
-            candidates
-        in
-        (* Ensure that enums map to unique types *)
-        unique ~reasonless_eq idx
+    let intersect_props (base_props, candidates) =
+      (* Compute the intersection of properties of objects that have singleton types *)
+      let init = NameUtils.Map.map (fun enum_t -> [enum_t]) base_props in
+      List.fold_left
+        (fun acc base_props ->
+          NameUtils.Map.merge
+            (fun _key enum_t_opt values_opt ->
+              Base.Option.(
+                both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values
+              ))
+            base_props
+            acc)
+        init
+        candidates
     in
-    fun ~reasonless_eq ~find_resolved ~find_props -> function
-      | [] -> Empty
-      | [t] -> Singleton t
+    fun ~reason_of_t ~reasonless_eq ~find_resolved ~find_props -> function
+      | [] -> Ok Empty
+      | [t] -> Ok (Singleton t)
       | ts ->
         let (candidates, partial) = split_disjoint_union find_resolved find_props ts in
-        let map = index ~reasonless_eq candidates in
-        if NameUtils.Map.is_empty map then
-          Unoptimized
-        else if partial then
-          PartiallyOptimizedDisjointUnion map
-        else
-          DisjointUnion map
+        begin
+          match candidates with
+          | [] -> Error NoCandidateMembers
+          | c :: cs ->
+            let idx = intersect_props (c, cs) in
+            if NameUtils.Map.is_empty idx then
+              Error NoCommonKeys
+            else
+              (* Ensure that enums map to unique types *)
+              let (map, err_map) = unique ~reason_of_t ~reasonless_eq idx in
+              if NameUtils.Map.is_empty map then
+                Error (NonUniqueKeys err_map)
+              else if partial then
+                Ok (PartiallyOptimizedDisjointUnion map)
+              else
+                Ok (DisjointUnion map)
+        end
 
-  let optimize_ rep ~reasonless_eq ~flatten ~find_resolved ~find_props =
+  let optimize_ rep ~reason_of_t ~reasonless_eq ~flatten ~find_resolved ~find_props =
     let ts = flatten (members rep) in
-    if contains_only_flattened_types ts then
+    match has_unflattened_types ts with
+    | None ->
       let opt = enum_optimize ts in
-      match opt with
-      | Unoptimized -> Some (disjoint_union_optimize ~reasonless_eq ~find_resolved ~find_props ts)
-      | _ -> Some opt
-    else
-      None
+      (match opt with
+      | Error _ -> disjoint_union_optimize ~reason_of_t ~reasonless_eq ~find_resolved ~find_props ts
+      | _ -> opt)
+    | Some t -> Error (ContainsUnresolved (reason_of_t t))
 
   let set_optimize rep opt =
-    Base.Option.iter opt ~f:(fun opt ->
+    Base.Result.iter opt ~f:(fun opt ->
         let (_, _, _, _, specialization) = rep in
         specialization := Some opt
     )
 
-  let optimize rep ~reasonless_eq ~flatten ~find_resolved ~find_props =
-    let opt = optimize_ rep ~reasonless_eq ~flatten ~find_resolved ~find_props in
+  let optimize rep ~reason_of_t ~reasonless_eq ~flatten ~find_resolved ~find_props =
+    let opt = optimize_ rep ~reason_of_t ~reasonless_eq ~flatten ~find_resolved ~find_props in
     set_optimize rep opt
 
   let optimize_enum_only rep ~flatten =
     let ts = flatten (members rep) in
-    if contains_only_flattened_types ts then
+    if Base.Option.is_none (has_unflattened_types ts) then
       match enum_optimize ts with
-      | EnumUnion _ as opt ->
+      | Ok (EnumUnion _ as opt) ->
         let (_, _, _, _, specialization) = rep in
         specialization := Some opt
       | _ -> ()
@@ -2728,7 +2756,6 @@ end = struct
     | Some tcanon -> begin
       match !specialization with
       | None -> Unknown
-      | Some Unoptimized -> Unknown
       | Some Empty -> No
       | Some (Singleton t) ->
         if quick_subtype l t then
@@ -2785,7 +2812,6 @@ end = struct
     | Some prop_map -> begin
       match !specialization with
       | None -> Unknown
-      | Some Unoptimized -> Unknown
       | Some Empty -> No
       | Some (Singleton t) ->
         if quick_subtype l t then
@@ -2808,7 +2834,6 @@ end = struct
   let string_of_specialization_ = function
     | Some (EnumUnion _) -> "Enum"
     | Some Empty -> "Empty"
-    | Some Unoptimized -> "Unoptimized"
     | Some (Singleton _) -> "Singleton"
     | Some (PartiallyOptimizedDisjointUnion _) -> "Partially Optimized Disjoint Union"
     | Some (DisjointUnion _) -> "Disjoint Union"
