@@ -420,7 +420,7 @@ and type_of_hint_decomposition cx op reason t =
             SpeculationFlow.resolved_lower_flow_t_unsafe
               cx
               reason
-              (Flow_js.get_builtin_typeapp cx reason (OrdinaryName "Promise") [t], tout)
+              (Flow_js.get_builtin_typeapp cx reason "Promise" [t], tout)
         )
       | Decomp_CallNew ->
         (* For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
@@ -496,7 +496,7 @@ and type_of_hint_decomposition cx op reason t =
               reason
               (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
-      | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason (OrdinaryName "React$Ref") [t]
+      | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason "React$Ref" [t]
       | Decomp_MethodElem ->
         SpeculationFlow.get_method_type_unsafe
           cx
@@ -619,7 +619,7 @@ and type_of_hint_decomposition cx op reason t =
             SpeculationFlow.resolved_lower_flow_t_unsafe
               cx
               reason
-              (t, Flow_js.get_builtin_typeapp cx reason (OrdinaryName "Promise") [inner_t]);
+              (t, Flow_js.get_builtin_typeapp cx reason "Promise" [inner_t]);
             SpeculationFlow.resolved_lower_flow_t_unsafe cx reason (t, inner_t)
         )
   )

@@ -927,7 +927,7 @@ let check_react_rules cx ast =
     in
 
     let builtins = Context.builtins cx in
-    let lhs = Builtins.get_builtin_opt builtins (OrdinaryName "React$RefObject") in
+    let lhs = Builtins.get_builtin_name_opt builtins "React$RefObject" in
     match Base.Option.map ~f:(get_t cx) lhs with
     | Some (DefT (_, PolyT { t_out = DefT (_, TypeT (_, OpaqueT (_, { opaque_id; _ }))); _ })) ->
       Some opaque_id

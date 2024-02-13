@@ -249,11 +249,10 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   resolved_requires :=
     SMap.mapi
       (fun mref _locs ->
-        let m_name = Reason.internal_module_name mref in
         let builtins = Context.builtins cx in
-        match Builtins.get_builtin_opt builtins m_name with
+        match Builtins.get_builtin_module_opt builtins mref with
         | Some t -> Ok t
-        | None -> Error m_name)
+        | None -> Error (Reason.internal_module_name mref))
       (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

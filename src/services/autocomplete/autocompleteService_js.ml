@@ -1653,7 +1653,7 @@ let autocomplete_jsx_intrinsic ~typing ~ac_loc ~tparams_rev ~edit_locs =
   let intrinsics_t =
     let open Reason in
     let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) ac_loc in
-    Flow_js.get_builtin_type typing.cx reason (OrdinaryName "$JSXIntrinsics")
+    Flow_js.get_builtin_type typing.cx reason "$JSXIntrinsics"
   in
   let (items, errors_to_log) =
     match members_of_type ~typing ~exclude_proto_members:true ~tparams_rev intrinsics_t with

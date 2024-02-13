@@ -947,7 +947,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
                 let reason = mk_annot_reason (RCommonJSExports value) loc in
-                let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
+                let remote_module_t = ConsGen.get_builtin_module cx value reason in
                 let str_t = mk_singleton_string str_loc value in
                 reconstruct_ast
                   (Type_operation_utils.Import_export.cjs_require_type
@@ -1185,7 +1185,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                        (RIdentifier (OrdinaryName "React$Node"))
                        3
                    in
-                   ConsGen.get_builtin_type cx ~use_desc:true reason (OrdinaryName "React$Node")
+                   ConsGen.get_builtin_type cx ~use_desc:true reason "React$Node"
                   )
             in
             reconstruct_ast
@@ -1843,7 +1843,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     in
     let reason = mk_reason reason_desc loc in
     let renders_reason = reason_of_t t in
-    let node = ConsGen.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
+    let node = ConsGen.get_builtin_type cx renders_reason "React$Node" in
     let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
     Context.add_post_inference_subtyping_check cx t use_op node;
     let renders_variant =
@@ -3074,7 +3074,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let ren_reason = mk_reason RReturn loc in
-            let t = ConsGen.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
+            let t = ConsGen.get_builtin_type cx ren_reason "React$Node" in
             let renders_t = TypeUtil.mk_renders_type ren_reason RendersNormal t in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in

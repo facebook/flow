@@ -137,9 +137,7 @@ module Make
        * TODO(jmbrown): This check can be skipped if we track whether or not the renders type was
        * explicitly annotated *)
       let renders_reason = TypeUtil.reason_of_t renders_t in
-      let t =
-        Flow.get_builtin_type cx (TypeUtil.reason_of_t renders_t) (OrdinaryName "React$Node")
-      in
+      let t = Flow.get_builtin_type cx (TypeUtil.reason_of_t renders_t) "React$Node" in
       let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
       Context.add_post_inference_subtyping_check cx renders_t use_op t
     in

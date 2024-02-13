@@ -710,7 +710,7 @@ module Make
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
-    Flow.get_builtin_type cx reason (OrdinaryName "RegExp")
+    Flow.get_builtin_type cx reason "RegExp"
 
   let module_ref_literal cx loc lit =
     let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
@@ -724,7 +724,7 @@ module Make
         module_t
     in
     let reason = mk_reason (RCustom "module reference") loc in
-    let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
+    let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
     (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
 
   let check_const_assertion cx (loc, e) =
@@ -2999,9 +2999,7 @@ module Make
       (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
       let call_t =
         let args =
-          let quasi_t =
-            Flow.get_builtin_type cx reason_array (OrdinaryName "TaggedTemplateLiteralArray")
-          in
+          let quasi_t = Flow.get_builtin_type cx reason_array "TaggedTemplateLiteralArray" in
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
         in
@@ -3176,7 +3174,7 @@ module Make
           comments;
         } ->
       let reason = mk_reason (RCustom "import.meta") loc in
-      let t = Flow.get_builtin_type cx reason (OrdinaryName "Import$Meta") in
+      let t = Flow.get_builtin_type cx reason "Import$Meta" in
       ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
     | MetaProperty _ ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
@@ -3189,7 +3187,7 @@ module Make
           |> Import_export.get_module_namespace_type cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
-        Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [ns_t]
+        Flow.get_builtin_typeapp cx reason "Promise" [ns_t]
       in
       (match argument with
       | Ast.Expression.StringLiteral ({ Ast.StringLiteral.value = module_name; _ } as lit) ->
@@ -5237,7 +5235,7 @@ module Make
       match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) expr_loc in
-        Flow.get_builtin_type cx reason (OrdinaryName "React$FragmentType")
+        Flow.get_builtin_type cx reason "React$FragmentType"
       | Options.ReactRuntimeClassic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
@@ -5277,7 +5275,7 @@ module Make
           (_, Some custom_jsx_type)
         ) ->
         let fbt_reason = mk_reason RFbt loc_element in
-        let t = Flow.get_builtin_type cx fbt_reason (OrdinaryName custom_jsx_type) in
+        let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
         (* TODO check attribute types against an fbt API *)
         let (_, attributes, _, children) =
           jsx_mk_props
@@ -7215,7 +7213,7 @@ module Make
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let ret_reason = mk_reason RReturn loc in
-            let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
+            let t = Flow.get_builtin_type cx ret_reason "React$Node" in
             let renders_t = TypeUtil.mk_renders_type ret_reason RendersNormal t in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
@@ -7573,7 +7571,7 @@ module Make
                 let reason =
                   mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason ret_reason)
                 in
-                Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
+                Flow.get_builtin_typeapp cx reason "Promise" [void_t]
               else
                 void_t
             in

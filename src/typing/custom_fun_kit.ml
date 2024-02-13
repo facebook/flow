@@ -170,11 +170,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
           (* Create the expected type for our element with a fresh tvar in the
            * component position. *)
           let expected_element =
-            get_builtin_typeapp
-              cx
-              (reason_of_t element)
-              (OrdinaryName "React$Element")
-              [Tvar.mk cx reason_op]
+            get_builtin_typeapp cx (reason_of_t element) "React$Element" [Tvar.mk cx reason_op]
           in
           (* Flow the element arg to our expected element. *)
           rec_flow_t ~use_op cx trace (elt, expected_element);
@@ -192,9 +188,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
         let f element =
           (* Create a tvar for our component. *)
           Tvar.mk_where cx reason_op (fun component ->
-              let expected_element =
-                get_builtin_typeapp cx reason_op (OrdinaryName "React$Element") [component]
-              in
+              let expected_element = get_builtin_typeapp cx reason_op "React$Element" [component] in
               (* Flow the element arg to the element type we expect. *)
               rec_flow_t ~use_op cx trace (element, expected_element)
           )

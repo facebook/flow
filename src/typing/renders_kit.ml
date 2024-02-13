@@ -93,9 +93,7 @@ module Make (Flow : INPUT) = struct
       | RendersNormal
       | RendersMaybe ->
         let renders_star = reconstruct_render_type reasonl l in
-        let roa =
-          Flow.get_builtin_typeapp cx reasonl Reason.(OrdinaryName "$ReadOnlyArray") [renders_star]
-        in
+        let roa = Flow.get_builtin_typeapp cx reasonl "$ReadOnlyArray" [renders_star] in
         rec_flow_t cx trace ~use_op (roa, reconstruct_render_type reasonu u)
       | RendersStar -> ());
       rec_renders

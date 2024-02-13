@@ -202,7 +202,7 @@ let resolve_hint cx loc hint =
       DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
     | BuiltinType name ->
       let reason = mk_reason (RCustom name) loc in
-      Flow_js.get_builtin_type cx reason (OrdinaryName name)
+      Flow_js.get_builtin_type cx reason name
     | AnyErrorHint reason -> AnyT.error reason
     | ComposedArrayPatternHint (loc, elements) ->
       let reason = mk_reason RDestructuring loc in
@@ -1146,12 +1146,10 @@ let resolve_generator_next cx reason gen =
       t
     in
     let gen_name =
-      OrdinaryName
-        ( if async then
-          "AsyncGenerator"
-        else
-          "Generator"
-        )
+      if async then
+        "AsyncGenerator"
+      else
+        "Generator"
     in
     let next_t =
       Tvar.mk_where cx reason (fun next ->

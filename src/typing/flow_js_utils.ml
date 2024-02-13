@@ -731,20 +731,16 @@ let apply_env_errors cx loc = function
 let lookup_builtin_strict cx x reason =
   lookup_builtin_strict_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
 
-let lookup_builtin_with_default cx x default =
+let lookup_builtin_name_opt cx x =
   let builtins = Context.builtins cx in
-  Base.Option.value ~default (Builtins.get_builtin_opt builtins x)
-
-let lookup_builtin_opt cx x =
-  let builtins = Context.builtins cx in
-  Builtins.get_builtin_opt builtins x
+  Builtins.get_builtin_name_opt builtins x
 
 let lookup_builtin_typeapp cx reason x targs =
-  let t = lookup_builtin_strict cx x reason in
+  let t = lookup_builtin_strict cx (OrdinaryName x) reason in
   typeapp ~from_value:false ~use_desc:false reason t targs
 
 let builtin_promise_class_id cx =
-  let promise_t = lookup_builtin_opt cx (OrdinaryName "Promise") in
+  let promise_t = lookup_builtin_name_opt cx "Promise" in
   match promise_t with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -768,7 +764,7 @@ let builtin_promise_class_id cx =
   | _ -> None
 
 let is_builtin_iterable_class_id class_id cx =
-  let t = lookup_builtin_opt cx (OrdinaryName "$Iterable") in
+  let t = lookup_builtin_name_opt cx "$Iterable" in
   match t with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -795,7 +791,7 @@ let is_builtin_iterable_class_id class_id cx =
   | _ -> false
 
 let builtin_react_element_opaque_id cx =
-  let t_opt = lookup_builtin_opt cx (OrdinaryName "React$Element") in
+  let t_opt = lookup_builtin_name_opt cx "React$Element" in
   match t_opt with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in

@@ -1017,7 +1017,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         else
           false
       in
-      let node = get_builtin_type cx ~use_desc:true renders_r (OrdinaryName "React$Node") in
+      let node = get_builtin_type cx ~use_desc:true renders_r "React$Node" in
       if union_contains_instantiable_tvars || not (speculative_subtyping_succeeds cx node u) then
         SpeculationKit.try_union cx trace use_op l r rep
     | (_, UnionT (r, rep)) ->
@@ -1347,7 +1347,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
       (* Ensure this is a function component *)
-      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl (OrdinaryName "React$Node"));
+      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl "React$Node");
 
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders);
@@ -1513,7 +1513,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         )
     (* Exiting the renders world *)
     | (DefT (r, RendersT (NominalRenders _)), u) ->
-      let mixed_element = get_builtin_type cx r (OrdinaryName "React$MixedElement") in
+      let mixed_element = get_builtin_type cx r "React$MixedElement" in
       rec_flow_t cx trace ~use_op (mixed_element, u)
     | ( DefT
           ( r,
@@ -1956,10 +1956,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
     | (DefT (_, InstanceT _), DefT (r2, ArrT (ArrayAT { elem_t; _ }))) ->
-      let arrt = get_builtin_typeapp cx r2 (OrdinaryName "Array") [elem_t] in
+      let arrt = get_builtin_typeapp cx r2 "Array" [elem_t] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     | (DefT (_, InstanceT _), DefT (r2, ArrT (ROArrayAT (elemt, _)))) ->
-      let arrt = get_builtin_typeapp cx r2 (OrdinaryName "$ReadOnlyArray") [elemt] in
+      let arrt = get_builtin_typeapp cx r2 "$ReadOnlyArray" [elemt] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -1990,7 +1990,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let annot_loc = loc_of_reason r in
           annot_reason ~annot_loc (replace_desc_reason desc r)
         in
-        get_builtin_typeapp cx ~use_desc:true elem_reason (OrdinaryName "React$Element") [l]
+        get_builtin_typeapp cx ~use_desc:true elem_reason "React$Element" [l]
       in
       rec_unify cx trace ~use_op elem t
     (* non-class/function values used in annotations are errors *)
@@ -2298,19 +2298,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx reason ~use_desc "Object" in
       rec_flow_t cx trace ~use_op (obj_proto, u)
     | (_, ObjProtoT reason) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx reason ~use_desc "Object" in
       rec_flow_t cx trace ~use_op (l, obj_proto)
     | (FunProtoT reason, _) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx reason ~use_desc "Function" in
       rec_flow_t cx trace ~use_op (fun_proto, u)
     | (_, FunProtoT reason) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx reason ~use_desc "Function" in
       rec_flow_t cx trace ~use_op (l, fun_proto)
     | (DefT (lreason, MixedT Mixed_function), DefT (ureason, FunT _)) ->
       add_output

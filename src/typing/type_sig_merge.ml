@@ -162,7 +162,7 @@ let async_void_return file loc =
   Flow_js_utils.lookup_builtin_typeapp
     file.cx
     Reason.(mk_reason (RCustom "async return") loc)
-    (Reason.OrdinaryName "Promise")
+    "Promise"
     [Type.VoidT.at loc]
 
 let add_default_constructor reason extends props =
@@ -500,20 +500,12 @@ let rec merge ?(in_renders_arg = false) ?(hooklike = false) tps infer_tps file =
     let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
     let ns_t = import_ns file ns_reason loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
-    let t =
-      Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
-    in
+    let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
     make_hooklike file hooklike t
   | Pack.ModuleRef { loc; index; legacy_interop } ->
     let t = require file loc index ~legacy_interop in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
-    let t =
-      Flow_js_utils.lookup_builtin_typeapp
-        file.cx
-        reason
-        (Reason.OrdinaryName "$Flow$ModuleRef")
-        [t]
-    in
+    let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     make_hooklike file hooklike t
 
 and merge_annot ?(in_renders_arg = false) tps infer_tps file = function

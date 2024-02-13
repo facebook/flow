@@ -343,11 +343,7 @@ struct
     let enum_object_t = DefT (enum_reason, EnumObjectT enum) in
     let enum_t = DefT (enum_reason, EnumT enum) in
     let { representation_t; _ } = enum in
-    FlowJs.get_builtin_typeapp
-      cx
-      reason
-      (OrdinaryName "$EnumProto")
-      [enum_object_t; enum_t; representation_t]
+    FlowJs.get_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_t; representation_t]
 
   let mk_react_dro cx use_op dro t =
     let id = Eval.generate_id () in
@@ -2138,7 +2134,7 @@ struct
                   get_builtin_typeapp
                     cx
                     (replace_desc_new_reason (RCustom "Array-like object expected for apply") reason)
-                    (OrdinaryName "$ArrayLike")
+                    "$ArrayLike"
                     [elem_t]
                 | `Iterable ->
                   let targs =
@@ -2151,7 +2147,7 @@ struct
                   get_builtin_typeapp
                     cx
                     (replace_desc_new_reason (RCustom "Iterable expected for spread") reason)
-                    (OrdinaryName "$Iterable")
+                    "$Iterable"
                     targs
                 | `Array ->
                   DefT
@@ -2834,9 +2830,7 @@ struct
         | ( DefT (r, ReactAbstractComponentT _),
             (TestPropT _ | GetPropT _ | SetPropT _ | GetElemT _ | SetElemT _)
           ) ->
-          let statics =
-            get_builtin_type cx ~trace r (OrdinaryName "React$AbstractComponentStatics")
-          in
+          let statics = get_builtin_type cx ~trace r "React$AbstractComponentStatics" in
           rec_flow cx trace (statics, u)
         (* Render Type Promotion *)
         (* A named AbstractComponent is turned into its corresponding render type *)
@@ -2925,7 +2919,7 @@ struct
               let top_abstract_component =
                 let config = EmptyT.why reason in
                 let instance = MixedT.why reason in
-                let renders = get_builtin_type cx reason (OrdinaryName "React$Node") in
+                let renders = get_builtin_type cx reason "React$Node" in
                 DefT
                   ( reason,
                     ReactAbstractComponentT
@@ -2934,11 +2928,7 @@ struct
               in
               if speculative_subtyping_succeeds cx component_t top_abstract_component then
                 let render_type =
-                  get_builtin_typeapp
-                    cx
-                    (reason_of_t l)
-                    (OrdinaryName "React$ComponentRenders")
-                    [component_t]
+                  get_builtin_typeapp cx (reason_of_t l) "React$ComponentRenders" [component_t]
                 in
                 rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
               else
@@ -3041,7 +3031,7 @@ struct
               ~use_op:unknown_use
               cx
               trace
-              (return_t, get_builtin_type cx reason_op (OrdinaryName "React$Node"))
+              (return_t, get_builtin_type cx reason_op "React$Node")
         | ( DefT (r, FunT _),
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) ->
@@ -5001,9 +4991,9 @@ struct
         | (_, AssertIterableT { use_op; reason; async; targs }) ->
           let iterable =
             if async then
-              get_builtin_typeapp cx reason (OrdinaryName "$AsyncIterable") targs
+              get_builtin_typeapp cx reason "$AsyncIterable" targs
             else
-              get_builtin_typeapp cx reason (OrdinaryName "$Iterable") targs
+              get_builtin_typeapp cx reason "$Iterable" targs
           in
           rec_flow_t cx trace ~use_op (l, iterable)
         (**************************************)
@@ -5450,11 +5440,11 @@ struct
              model Object.prototype as a ObjProtoT, as an optimization against a
              possible deluge of shadow properties on Object.prototype, since it
              is shared by every object. **)
-          rec_flow cx trace (get_builtin_type cx ~trace reason_op (OrdinaryName "Object"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
         | (FunProtoT _, LookupT { reason = reason_op; propref = Named { name; _ }; _ })
           when is_function_prototype name ->
           (* TODO: Ditto above comment for Function.prototype *)
-          rec_flow cx trace (get_builtin_type cx ~trace reason_op (OrdinaryName "Function"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
         | ( (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
               {
@@ -5628,9 +5618,7 @@ struct
         (* Render Type Misc Uses *)
         | (DefT (_, RendersT (NominalRenders _)), ExitRendersT { renders_reason; u })
         | (DefT (renders_reason, RendersT (NominalRenders _)), u) ->
-          let mixed_element =
-            get_builtin_type cx ~trace renders_reason (OrdinaryName "React$MixedElement")
-          in
+          let mixed_element = get_builtin_type cx ~trace renders_reason "React$MixedElement" in
           rec_flow cx trace (mixed_element, u)
         | ( DefT
               ( r,
@@ -5644,21 +5632,21 @@ struct
           let u' = ExitRendersT { renders_reason = r; u } in
           rec_flow cx trace (t, u')
         | (_, ExitRendersT { renders_reason; u }) ->
-          let node = get_builtin_type cx ~trace renders_reason (OrdinaryName "React$Node") in
+          let node = get_builtin_type cx ~trace renders_reason "React$Node" in
           rec_flow cx trace (node, u)
         (***********************)
         (* Object library call *)
         (***********************)
         | (ObjProtoT reason, _) ->
           let use_desc = true in
-          let obj_proto = get_builtin_type cx ~trace reason ~use_desc (OrdinaryName "Object") in
+          let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
           rec_flow cx trace (obj_proto, u)
         (*************************)
         (* Function library call *)
         (*************************)
         | (FunProtoT reason, _) ->
           let use_desc = true in
-          let fun_proto = get_builtin_type cx ~trace reason ~use_desc (OrdinaryName "Function") in
+          let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
           rec_flow cx trace (fun_proto, u)
         | (_, ExtendsUseT (use_op, _, [], t, tc)) ->
           let (reason_l, reason_u) = FlowError.ordered_reasons (reason_of_t t, reason_of_t tc) in
@@ -5682,7 +5670,7 @@ struct
         | ( DefT (reason, ArrT (ArrayAT { elem_t; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
-          rec_flow cx trace (get_builtin_typeapp cx reason (OrdinaryName "Array") [elem_t], u)
+          rec_flow cx trace (get_builtin_typeapp cx reason "Array" [elem_t], u)
         (*************************)
         (* Tuple "length" access *)
         (*************************)
@@ -5694,32 +5682,32 @@ struct
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
           let t = elemt_of_arrtype arrtype in
-          rec_flow cx trace (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t], u)
+          rec_flow cx trace (get_builtin_typeapp cx reason "$ReadOnlyArray" [t], u)
         (***********************)
         (* String library call *)
         (***********************)
         | (DefT (reason, StrT _), u) when primitive_promoting_use_t u ->
-          rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "String"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason "String", u)
         (***********************)
         (* Number library call *)
         (***********************)
         | (DefT (reason, NumT _), u) when primitive_promoting_use_t u ->
-          rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "Number"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason "Number", u)
         (***********************)
         (* Boolean library call *)
         (***********************)
         | (DefT (reason, BoolT _), u) when primitive_promoting_use_t u ->
-          rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "Boolean"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean", u)
         (***********************)
         (* BigInt library call *)
         (***********************)
         | (DefT (reason, BigIntT _), u) when primitive_promoting_use_t u ->
-          rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "BigInt"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason "BigInt", u)
         (***********************)
         (* Symbol library call *)
         (***********************)
         | (DefT (reason, SymbolT), u) when primitive_promoting_use_t u ->
-          rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "Symbol"), u)
+          rec_flow cx trace (get_builtin_type cx ~trace reason "Symbol", u)
         (*****************************************************)
         (* Nice error messages for mixed function refinement *)
         (*****************************************************)
@@ -8134,12 +8122,12 @@ struct
     | (true, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = extends_type r arr a in
-      let arrt = get_builtin_typeapp cx reason (OrdinaryName "Array") [elemt] in
+      let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       rec_flow cx trace (arrt, PredicateT (LeftP (InstanceofTest, right), result))
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = extends_type r arr a in
-      let arrt = get_builtin_typeapp cx reason (OrdinaryName "Array") [elemt] in
+      let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
       rec_flow cx trace (arrt, PredicateT (pred, result))
     (* Suppose that we have an instance x of class C, and we check whether x is
@@ -8171,10 +8159,10 @@ struct
     (* If we are checking `instanceof Object` or `instanceof Function`, objects
        with `ObjProtoT` or `FunProtoT` should pass. *)
     | (true, ObjProtoT reason, (InternalT (ExtendsT _) as right)) ->
-      let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
       rec_flow cx trace (obj_proto, PredicateT (LeftP (InstanceofTest, right), result))
     | (true, FunProtoT reason, (InternalT (ExtendsT _) as right)) ->
-      let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
       rec_flow cx trace (fun_proto, PredicateT (LeftP (InstanceofTest, right), result))
     (* We hit the root class, so C is not a subclass of A **)
     | (true, DefT (_, NullT), InternalT (ExtendsT (r, _, a))) ->
@@ -9850,7 +9838,7 @@ struct
     get_builtin_result cx m_name reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
   and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
-    let t = get_builtin cx x reason in
+    let t = get_builtin cx (OrdinaryName x) reason in
     typeapp ~from_value:false ~use_desc reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
@@ -10071,7 +10059,7 @@ struct
     recurse IMap.empty t
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
-    let t = get_builtin cx x reason in
+    let t = get_builtin cx (OrdinaryName x) reason in
     mk_instance cx ?trace reason ~use_desc t
 
   and flow_all_in_union cx trace rep u =

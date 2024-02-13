@@ -20,19 +20,20 @@ type check_file =
   * (FindRefsTypes.single_ref list, string) result
 
 let unknown_module_t cx _mref m =
-  let m_name = Reason.internal_module_name (Modulename.to_string m) in
+  let module_name = Modulename.to_string m in
   let builtins = Context.builtins cx in
-  match Builtins.get_builtin_opt builtins m_name with
+  match Builtins.get_builtin_module_opt builtins module_name with
   | Some t -> Ok t
-  | None -> Error m_name
+  | None -> Error (Reason.internal_module_name module_name)
 
 let unchecked_module_t cx file_key mref =
   let desc = Reason.RUntypedModule mref in
-  let m_name = Reason.internal_module_name mref in
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
   let reason = Reason.mk_reason desc loc in
-  let default = Type.(AnyT (reason, Untyped)) in
-  Flow_js_utils.lookup_builtin_with_default cx m_name default
+  let builtins = Context.builtins cx in
+  Base.Option.value
+    ~default:Type.(AnyT (reason, Untyped))
+    (Builtins.get_builtin_module_opt builtins mref)
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in

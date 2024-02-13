@@ -541,19 +541,18 @@ let rec extract_type cx this_t =
   | DefT (reason, SingletonStrT _)
   | DefT (reason, StrT _)
   | DefT (reason, NumericStrKeyT _) ->
-    get_builtin_type cx reason (OrdinaryName "String") |> extract_type cx
+    get_builtin_type cx reason "String" |> extract_type cx
   | DefT (reason, SingletonNumT _)
   | DefT (reason, NumT _) ->
-    get_builtin_type cx reason (OrdinaryName "Number") |> extract_type cx
+    get_builtin_type cx reason "Number" |> extract_type cx
   | DefT (reason, SingletonBoolT _)
   | DefT (reason, BoolT _) ->
-    get_builtin_type cx reason (OrdinaryName "Boolean") |> extract_type cx
+    get_builtin_type cx reason "Boolean" |> extract_type cx
   | DefT (reason, SingletonBigIntT _)
   | DefT (reason, BigIntT _) ->
-    get_builtin_type cx reason (OrdinaryName "BigInt") |> extract_type cx
-  | DefT (reason, SymbolT) -> get_builtin_type cx reason (OrdinaryName "Symbol") |> extract_type cx
-  | DefT (reason, CharSetT _) ->
-    get_builtin_type cx reason (OrdinaryName "String") |> extract_type cx
+    get_builtin_type cx reason "BigInt" |> extract_type cx
+  | DefT (reason, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
+  | DefT (reason, CharSetT _) -> get_builtin_type cx reason "String" |> extract_type cx
   | DefT (_, ReactAbstractComponentT _) as t -> Success t
   | DefT (_, RendersT _) as t -> Success t
   | OpaqueT (_, { underlying_t = Some t; _ })
@@ -638,7 +637,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
       Success (AugmentableSMap.augment super_flds ~with_bindings:members)
   | Success (DefT (_, ObjT { props_tmap = flds; proto_t = proto; _ })) ->
     let proto_reason = reason_of_t proto in
-    let rep = InterRep.make proto (get_builtin_type cx proto_reason (OrdinaryName "Object")) [] in
+    let rep = InterRep.make proto (get_builtin_type cx proto_reason "Object") [] in
     let proto_t = IntersectionT (proto_reason, rep) in
     let prot_members =
       if exclude_proto_members then
@@ -693,11 +692,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
         SMap.empty
       else
         let proto =
-          get_builtin_typeapp
-            cx
-            enum_reason
-            (OrdinaryName "$EnumProto")
-            [enum_object_t; enum_t; representation_t]
+          get_builtin_typeapp cx enum_reason "$EnumProto" [enum_object_t; enum_t; representation_t]
         in
         (* `$EnumProto` has a null proto, so we set `exclude_proto_members` to true *)
         extract_members_as_map ~exclude_proto_members:true cx proto

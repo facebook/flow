@@ -23,9 +23,9 @@ module type ConsGen = sig
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
-  val get_builtin : Context.t -> name -> reason -> Type.t
+  val get_builtin_module : Context.t -> string -> reason -> Type.t
 
-  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> string -> Type.t
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 

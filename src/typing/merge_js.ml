@@ -423,12 +423,7 @@ let validate_renders_type_arguments cx =
         Flow_js.FlowJs.speculative_subtyping_succeeds
           cx
           t
-          (Flow_js.get_builtin_typeapp
-             cx
-             r
-             (OrdinaryName "$Iterable")
-             [AnyT.error r; AnyT.error r; AnyT.error r]
-          )
+          (Flow_js.get_builtin_typeapp cx r "$Iterable" [AnyT.error r; AnyT.error r; AnyT.error r])
       then
         Some (r, `InvalidRendersIterable)
       else (

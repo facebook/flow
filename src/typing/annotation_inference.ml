@@ -69,7 +69,7 @@ let get_fully_resolved_type cx id =
     failwith "unexpected unresolved constraint in annotation inference"
 
 let get_builtin_typeapp cx reason x targs =
-  let t = Flow_js_utils.lookup_builtin_strict cx x reason in
+  let t = Flow_js_utils.lookup_builtin_strict cx (OrdinaryName x) reason in
   TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
@@ -85,9 +85,9 @@ module type S = sig
 
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
 
-  val get_builtin : Context.t -> name -> reason -> Type.t
+  val get_builtin_module : Context.t -> string -> reason -> Type.t
 
-  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> string -> Type.t
 
   val qualify_type :
     Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
@@ -315,7 +315,7 @@ module rec ConsGen : S = struct
     let enum_proto cx ~reason (enum_reason, enum) =
       let enum_t = DefT (enum_reason, EnumT enum) in
       let { representation_t; _ } = enum in
-      get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
+      get_builtin_typeapp cx reason "$EnumProto" [enum_t; representation_t]
 
     let cg_lookup cx _trace ~obj_t ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
         =
@@ -571,7 +571,7 @@ module rec ConsGen : S = struct
       reposition cx (loc_of_reason reason) it
     | ((DefT (_, ReactAbstractComponentT _) as l), Annot_UseT_TypeT (reason, _)) ->
       (* a component syntax value annotation becomes an element of that component *)
-      get_builtin_typeapp cx reason (OrdinaryName "React$Element") [l]
+      get_builtin_typeapp cx reason "React$Element" [l]
     | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
     | (DefT (lreason, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
@@ -1133,11 +1133,11 @@ module rec ConsGen : S = struct
     (****************************************)
     | (ObjProtoT reason, _) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx reason ~use_desc "Object" in
       elab_t cx obj_proto op
     | (FunProtoT reason, _) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx reason ~use_desc "Function" in
       elab_t cx fun_proto op
     (*************)
     (* ToStringT *)
@@ -1148,7 +1148,7 @@ module rec ConsGen : S = struct
     (* GetPropT *)
     (************)
     | (DefT (reason, ArrT (ArrayAT { elem_t; _ })), (Annot_GetPropT _ | Annot_LookupT _)) ->
-      let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [elem_t] in
+      let arr = get_builtin_typeapp cx reason "Array" [elem_t] in
       elab_t cx arr op
     | ( DefT (reason, ArrT (TupleAT { arity; _ })),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })
@@ -1158,21 +1158,21 @@ module rec ConsGen : S = struct
         (Annot_GetPropT _ | Annot_LookupT _)
       ) ->
       let t = elemt_of_arrtype arrtype in
-      elab_t cx (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t]) op
+      elab_t cx (get_builtin_typeapp cx reason "$ReadOnlyArray" [t]) op
     (************************)
     (* Promoting primitives *)
     (************************)
     | (DefT (reason, StrT _), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "String") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
     | (DefT (reason, NumT _), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Number") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "Number" in
       elab_t cx builtin op
     | (DefT (reason, BoolT _), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Boolean") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "Boolean" in
       elab_t cx builtin op
     | (DefT (reason, SymbolT), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Symbol") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "Symbol" in
       elab_t cx builtin op
     | (DefT (lreason, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->
       elab_t cx (FunProtoT lreason) op
@@ -1186,11 +1186,11 @@ module rec ConsGen : S = struct
       AnyT.error reason_op
 
   and get_builtin_type cx reason ?(use_desc = false) name =
-    let t = Flow_js_utils.lookup_builtin_strict cx name reason in
+    let t = Flow_js_utils.lookup_builtin_strict cx (OrdinaryName name) reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
 
-  and get_builtin cx x reason =
-    let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
+  and get_builtin_module cx x reason =
+    let builtin = Flow_js_utils.lookup_builtin_strict cx (InternalModuleName x) reason in
     let f id = resolve_id cx reason id builtin in
     mk_lazy_tvar cx reason f
 
