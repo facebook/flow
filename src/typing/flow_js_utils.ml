@@ -718,7 +718,9 @@ let lookup_builtin_strict_error cx x reason =
 
 let lookup_builtin_strict_result cx x reason =
   let builtins = Context.builtins cx in
-  Builtins.get_builtin builtins x ~on_missing:(fun () -> lookup_builtin_strict_error cx x reason)
+  match Builtins.get_builtin_opt builtins x with
+  | Some t -> Ok t
+  | None -> lookup_builtin_strict_error cx x reason
 
 let apply_env_errors cx loc = function
   | Ok t -> t
@@ -731,8 +733,7 @@ let lookup_builtin_strict cx x reason =
 
 let lookup_builtin_with_default cx x default =
   let builtins = Context.builtins cx in
-  let builtin = Builtins.get_builtin builtins x ~on_missing:(fun () -> Ok default) in
-  Base.Result.ok_exn builtin
+  Base.Option.value ~default (Builtins.get_builtin_opt builtins x)
 
 let lookup_builtin_opt cx x =
   let builtins = Context.builtins cx in

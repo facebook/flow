@@ -25,11 +25,6 @@ let get_builtin_opt { original; mapper; mapped } name =
       Hashtbl.add mapped name v;
       Some v)
 
-let get_builtin builtins name ~on_missing =
-  match get_builtin_opt builtins name with
-  | None -> on_missing ()
-  | Some t -> Ok t
-
 let of_name_map ~mapper original = { original; mapper; mapped = Hashtbl.create 0 }
 
 let empty () : t = of_name_map ~mapper:Base.Fn.id NameUtils.Map.empty

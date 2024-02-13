@@ -22,7 +22,9 @@ type check_file =
 let unknown_module_t cx _mref m =
   let m_name = Reason.internal_module_name (Modulename.to_string m) in
   let builtins = Context.builtins cx in
-  Builtins.get_builtin builtins m_name ~on_missing:(fun () -> Error m_name)
+  match Builtins.get_builtin_opt builtins m_name with
+  | Some t -> Ok t
+  | None -> Error m_name
 
 let unchecked_module_t cx file_key mref =
   let desc = Reason.RUntypedModule mref in

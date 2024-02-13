@@ -251,7 +251,9 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
       (fun mref _locs ->
         let m_name = Reason.internal_module_name mref in
         let builtins = Context.builtins cx in
-        Builtins.get_builtin builtins m_name ~on_missing:(fun () -> Error m_name))
+        match Builtins.get_builtin_opt builtins m_name with
+        | Some t -> Ok t
+        | None -> Error m_name)
       (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
