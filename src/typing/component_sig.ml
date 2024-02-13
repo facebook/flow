@@ -141,7 +141,7 @@ module Make
         Flow.get_builtin_type cx (TypeUtil.reason_of_t renders_t) (OrdinaryName "React$Node")
       in
       let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
-      Flow.flow cx (renders_t, UseT (use_op, t))
+      Context.add_post_inference_subtyping_check cx renders_t use_op t
     in
     let component_kind =
       match id_opt with
