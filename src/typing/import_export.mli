@@ -13,5 +13,3 @@ val get_module_t :
   Type.t
 
 val require : Context.t -> legacy_interop:bool -> ALoc.t -> string -> Type.t -> Type.t
-
-val import_ns : Context.t -> Reason.t -> Type.t -> Type.t

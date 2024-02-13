@@ -58,9 +58,3 @@ let require cx ~legacy_interop require_loc module_ref module_t =
   Tvar.mk_where cx reason (fun t_out ->
       Flow.flow cx (module_t, CJSRequireT { reason; t_out; is_strict; legacy_interop })
   )
-
-let import_ns cx reason module_t =
-  let is_strict = Context.is_strict cx in
-  Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (module_t, ImportModuleNsT { reason; t; is_strict })
-  )
