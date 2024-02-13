@@ -282,7 +282,6 @@ struct
       )
   end
 
-  module CJSRequireTKit = CJSRequireT_kit (Import_export_helper)
   module AssertExportIsTypeTKit = AssertExportIsTypeT_kit (Import_export_helper)
   module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = CopyTypeExportsT_kit (Import_export_helper)
@@ -812,7 +811,13 @@ struct
             cx
             ~use_op:unknown_use
             trace
-            (CJSRequireTKit.on_ModuleT cx (reason, is_strict, legacy_interop) m, t_out)
+            ( CJSRequireTKit.on_ModuleT
+                cx
+                ~reposition:(FlowJs.reposition ~trace:Trace.dummy_trace ?desc:None ?annot_loc:None)
+                (reason, is_strict, legacy_interop)
+                m,
+              t_out
+            )
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)

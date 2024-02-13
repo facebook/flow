@@ -273,7 +273,7 @@ module rec ConsGen : S = struct
 
   let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
-  module CJSRequireTKit = Flow_js_utils.CJSRequireT_kit (Import_export_helper)
+  module CJSRequireTKit = Flow_js_utils.CJSRequireTKit
   module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsTKit
   module ImportDefaultTKit = Flow_js_utils.ImportDefaultTKit
   module ImportNamedTKit = Flow_js_utils.ImportNamedTKit
@@ -619,7 +619,11 @@ module rec ConsGen : S = struct
     (* Module imports *)
     (******************)
     | (ModuleT m, Annot_CJSRequireT { reason; is_strict; legacy_interop }) ->
-      CJSRequireTKit.on_ModuleT cx (reason, is_strict, legacy_interop) m
+      CJSRequireTKit.on_ModuleT
+        cx
+        ~reposition:(fun _ _ t -> t)
+        (reason, is_strict, legacy_interop)
+        m
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
       ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->

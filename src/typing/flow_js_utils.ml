@@ -1367,9 +1367,9 @@ module ImportTypeofTKit = struct
       DefT (reason, TypeT (ImportTypeofKind, typeof_t))
 end
 
-module CJSRequireT_kit (F : Import_export_helper_sig) = struct
+module CJSRequireTKit = struct
   (* require('SomeModule') *)
-  let on_ModuleT cx (reason, is_strict, legacy_interop) module_ =
+  let on_ModuleT cx ~reposition (reason, is_strict, legacy_interop) module_ =
     let {
       module_reason;
       module_export_types = exports;
@@ -1383,7 +1383,7 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
     | Some t ->
       (* reposition the export to point at the require(), like the object
          we create below for non-CommonJS exports *)
-      F.reposition cx (loc_of_reason reason) t
+      reposition cx (loc_of_reason reason) t
     | None ->
       (* Use default export if option is enabled and module is not lib *)
       let automatic_require_default =
