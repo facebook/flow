@@ -57,7 +57,7 @@ module Import_export = struct
         match Context.find_require cx mref with
         | Ok t -> t
         | Error m_name ->
-          Flow_js_utils.lookup_builtin_strict_error cx m_name reason
+          Flow_js_utils.lookup_builtin_error cx m_name reason
           |> Flow_js_utils.apply_env_errors cx loc
       in
       ( if perform_platform_validation && Context.((metadata cx).file_options.Files.multi_platform)

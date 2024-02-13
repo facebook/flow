@@ -432,8 +432,7 @@ let res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                Ok Type.(AnyT.make (AnyError None) reason)
              | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
                find_refi var_info refinement_id |> Base.Option.some |> res_of_state writes write_id
-             | (Env_api.With_ALoc.Global name, _) ->
-               Flow_js.get_builtin_result cx (Reason.OrdinaryName name) reason
+             | (Env_api.With_ALoc.Global name, _) -> Flow_js.get_builtin_name_result cx name reason
              | (Env_api.With_ALoc.GlobalThis reason, _) -> Ok (ObjProtoT reason)
              | (Env_api.With_ALoc.IllegalThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
@@ -731,8 +730,9 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
   | Some (Env_api.GlobalWrite _) ->
     if is_provider cx loc then
       Base.Option.iter potential_global_name ~f:(fun name ->
-          let name = Reason.OrdinaryName name in
-          let (_ : Type.t) = Flow_js.get_builtin cx name (mk_reason (RIdentifier name) loc) in
+          let (_ : Type.t) =
+            Flow_js.get_builtin_name cx name (mk_reason (RIdentifier (OrdinaryName name)) loc)
+          in
           ()
       )
   | _ ->

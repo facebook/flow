@@ -69,7 +69,7 @@ let get_fully_resolved_type cx id =
     failwith "unexpected unresolved constraint in annotation inference"
 
 let get_builtin_typeapp cx reason x targs =
-  let t = Flow_js_utils.lookup_builtin_strict cx (OrdinaryName x) reason in
+  let t = Flow_js_utils.lookup_builtin_name cx x reason in
   TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
@@ -873,9 +873,7 @@ module rec ConsGen : S = struct
     (* React Abstract Components *)
     (*****************************)
     | (DefT (r, ReactAbstractComponentT _), (Annot_GetPropT _ | Annot_GetElemT _)) ->
-      let statics =
-        Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "React$AbstractComponentStatics") r
-      in
+      let statics = Flow_js_utils.lookup_builtin_name cx "React$AbstractComponentStatics" r in
       elab_t cx statics op
     (****************)
     (* Custom types *)
@@ -1113,10 +1111,10 @@ module rec ConsGen : S = struct
     (***************)
     | (ObjProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_object_prototype_method name ->
-      Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Object") reason_op
+      Flow_js_utils.lookup_builtin_name cx "Object" reason_op
     | (FunProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_function_prototype name ->
-      Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
+      Flow_js_utils.lookup_builtin_name cx "Function" reason_op
     | ( (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
         Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ }, _)
       ) ->
@@ -1184,7 +1182,7 @@ module rec ConsGen : S = struct
       AnyT.error reason_op
 
   and get_builtin_type cx reason ?(use_desc = false) name =
-    let t = Flow_js_utils.lookup_builtin_strict cx (OrdinaryName name) reason in
+    let t = Flow_js_utils.lookup_builtin_name cx name reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
 
   and specialize cx t use_op reason_op reason_tapp ts =

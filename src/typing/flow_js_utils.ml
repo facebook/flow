@@ -702,7 +702,7 @@ let emit_cacheable_env_error cx loc err =
   in
   add_output cx err
 
-let lookup_builtin_strict_error cx x reason =
+let lookup_builtin_error cx x reason =
   let potential_generator =
     Context.missing_module_generators cx
     |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
@@ -716,11 +716,11 @@ let lookup_builtin_strict_error cx x reason =
         )
     )
 
-let lookup_builtin_strict_result cx x reason =
+let lookup_builtin_name_result cx x reason =
   let builtins = Context.builtins cx in
-  match Builtins.get_builtin_opt builtins x with
+  match Builtins.get_builtin_name_opt builtins x with
   | Some t -> Ok t
-  | None -> lookup_builtin_strict_error cx x reason
+  | None -> lookup_builtin_error cx (OrdinaryName x) reason
 
 let apply_env_errors cx loc = function
   | Ok t -> t
@@ -728,15 +728,15 @@ let apply_env_errors cx loc = function
     Nel.iter (emit_cacheable_env_error cx loc) errs;
     t
 
-let lookup_builtin_strict cx x reason =
-  lookup_builtin_strict_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
+let lookup_builtin_name cx x reason =
+  lookup_builtin_name_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
 
 let lookup_builtin_name_opt cx x =
   let builtins = Context.builtins cx in
   Builtins.get_builtin_name_opt builtins x
 
 let lookup_builtin_typeapp cx reason x targs =
-  let t = lookup_builtin_strict cx (OrdinaryName x) reason in
+  let t = lookup_builtin_name cx x reason in
   typeapp ~from_value:false ~use_desc:false reason t targs
 
 let get_builtin_module cx module_name reason =
@@ -744,7 +744,7 @@ let get_builtin_module cx module_name reason =
   let result =
     match Builtins.get_builtin_module_opt builtins module_name with
     | Some t -> Ok t
-    | None -> lookup_builtin_strict_error cx (InternalModuleName module_name) reason
+    | None -> lookup_builtin_error cx (InternalModuleName module_name) reason
   in
   apply_env_errors cx (loc_of_reason reason) result
 
@@ -1129,10 +1129,7 @@ module ValueToTypeReferenceTransform = struct
       annot_reason ~annot_loc (replace_desc_reason desc reason_op)
     in
     let t =
-      Tvar.mk_fully_resolved
-        cx
-        elem_reason
-        (lookup_builtin_strict cx (OrdinaryName "React$Element") elem_reason)
+      Tvar.mk_fully_resolved cx elem_reason (lookup_builtin_name cx "React$Element" elem_reason)
     in
     TypeUtil.typeapp ~from_value:false ~use_desc:true elem_reason t [l]
 

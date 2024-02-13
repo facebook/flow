@@ -13,8 +13,6 @@ module Flow_js = struct end
 [@@@warning "+60"]
 
 module Normalizer = Ty_normalizer.Make (struct
-  open Reason
-
   let eval _ ~should_eval:_ ~cont:_ ~default:_ ~non_eval (t, Type.TypeDestructorT (_, _, d), _) =
     non_eval t d
 
@@ -27,17 +25,17 @@ module Normalizer = Ty_normalizer.Make (struct
 
   let builtin cx ~cont reason x =
     let t =
-      match Flow_js_utils.lookup_builtin_strict_result cx (OrdinaryName x) reason with
+      match Flow_js_utils.lookup_builtin_name_result cx x reason with
       | Ok t -> t
       | Error (t, _) -> t
     in
     cont t
 
   let builtin_type cx ~cont reason x =
-    (* TODO the pattern matching on the result of lookup_builtin_strict_result might need
+    (* TODO the pattern matching on the result of lookup_builtin_name_result might need
      * some refinement. This is replacing what mk_instance would do. *)
     let t =
-      match Flow_js_utils.lookup_builtin_strict_result cx (OrdinaryName x) reason with
+      match Flow_js_utils.lookup_builtin_name_result cx x reason with
       | Ok (Type.DefT (_, Type.TypeT (_, t))) -> t
       | Ok t -> t
       | Error (t, _) -> t

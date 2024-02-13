@@ -340,7 +340,7 @@ let merge_ref : 'a. _ -> (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -
     f t ~ref_loc ~def_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
     let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
-    let t = Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName name) reason in
+    let t = Flow_js_utils.lookup_builtin_name file.cx name reason in
     f t ~ref_loc ~def_loc:(t |> TypeUtil.reason_of_t |> Reason.def_loc_of_reason) name
 
 let rec merge_tyref file f = function
@@ -909,7 +909,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
            ConsGen.mk_instance
              file.cx
              reason
-             (Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "React$Node") reason)
+             (Flow_js_utils.lookup_builtin_name file.cx "React$Node" reason)
           )
         renders
     in

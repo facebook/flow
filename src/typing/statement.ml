@@ -4490,7 +4490,7 @@ module Make
          Promise is done.
       *)
       let reason = mk_reason (RCustom "await") loc in
-      let await = Flow.get_builtin cx (OrdinaryName "$await") reason in
+      let await = Flow.get_builtin_name cx "$await" reason in
       let (((_, arg), _) as argument_ast) = expression cx argument in
       let use_op =
         Op
@@ -5954,7 +5954,7 @@ module Make
         )
       in
       let (pmap, properties) = prop_map_of_object cx properties in
-      let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
+      let propdesc_type = Flow.get_builtin_name cx "PropertyDescriptor" reason in
       let props =
         NameUtils.Map.fold
           (fun x p acc ->
@@ -6096,7 +6096,7 @@ module Make
         | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
       in
       let loc = loc_of_reason reason in
-      let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
+      let propdesc_type = Flow.get_builtin_name cx "PropertyDescriptor" reason in
       let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [ty] in
       let (((_, o), _) as e_ast) = expression cx e in
       let key_ast = expression cx key in
@@ -6143,7 +6143,7 @@ module Make
       error_on_this_uses_in_object_methods cx properties;
       let (((_, o), _) as e_ast) = expression cx e in
       let (pmap, properties) = prop_map_of_object cx properties in
-      let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
+      let propdesc_type = Flow.get_builtin_name cx "PropertyDescriptor" reason in
       pmap
       |> NameUtils.Map.iter (fun x p ->
              match Property.read_t p with

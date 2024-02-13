@@ -9,8 +9,6 @@ type t
 
 val builtin_set : t -> NameUtils.Set.t
 
-val get_builtin_opt : t -> Reason.name -> Type.t option
-
 val get_builtin_name_opt : t -> string -> Type.t option
 
 val get_builtin_module_opt : t -> string -> Type.t option
