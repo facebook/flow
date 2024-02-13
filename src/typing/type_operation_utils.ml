@@ -49,10 +49,10 @@ module Import_export = struct
         Flow_js_utils.add_output cx message
 
   let get_module_t cx ?(perform_platform_validation = false) (loc, mref) =
+    let reason = Reason.(mk_reason (RCustom mref) loc) in
     if Context.in_declare_module cx then
-      Flow.get_builtin_module cx loc mref
+      Flow_js_utils.get_builtin_module cx mref reason
     else
-      let reason = Reason.(mk_reason (RCustom mref) loc) in
       let module_t =
         match Context.find_require cx mref with
         | Ok t -> t

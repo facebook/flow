@@ -739,6 +739,15 @@ let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx (OrdinaryName x) reason in
   typeapp ~from_value:false ~use_desc:false reason t targs
 
+let get_builtin_module cx module_name reason =
+  let builtins = Context.builtins cx in
+  let result =
+    match Builtins.get_builtin_module_opt builtins module_name with
+    | Some t -> Ok t
+    | None -> lookup_builtin_strict_error cx (InternalModuleName module_name) reason
+  in
+  apply_env_errors cx (loc_of_reason reason) result
+
 let builtin_promise_class_id cx =
   let promise_t = lookup_builtin_name_opt cx "Promise" in
   match promise_t with

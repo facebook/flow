@@ -109,8 +109,6 @@ module type BUILTINS = sig
 
   val get_builtin_typeapp : Context.t -> reason -> ?use_desc:bool -> string -> Type.t list -> Type.t
 
-  val get_builtin_module : Context.t -> ALoc.t -> string -> Type.t
-
   val perform_read_prop_action :
     Context.t ->
     Type.trace ->

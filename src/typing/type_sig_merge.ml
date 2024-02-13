@@ -743,8 +743,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
-    let m_name = Reason.internal_module_name ref in
-    let module_t = Flow_js_utils.lookup_builtin_strict file.cx m_name reason in
+    let module_t = Flow_js_utils.get_builtin_module file.cx ref reason in
     ConsGen.cjs_require file.cx module_t reason false false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }

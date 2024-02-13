@@ -12,9 +12,6 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
   open Type
   open TypeUtil
 
-  let get_builtin_module cx name reason =
-    Flow.get_builtin cx (Reason.InternalModuleName name) reason
-
   let specialize cx c use_op reason_op reason_tapp targs =
     let open Type in
     let open TypeUtil in

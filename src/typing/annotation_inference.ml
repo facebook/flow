@@ -85,8 +85,6 @@ module type S = sig
 
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
 
-  val get_builtin_module : Context.t -> string -> reason -> Type.t
-
   val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> string -> Type.t
 
   val qualify_type :
@@ -1188,11 +1186,6 @@ module rec ConsGen : S = struct
   and get_builtin_type cx reason ?(use_desc = false) name =
     let t = Flow_js_utils.lookup_builtin_strict cx (OrdinaryName name) reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
-
-  and get_builtin_module cx x reason =
-    let builtin = Flow_js_utils.lookup_builtin_strict cx (InternalModuleName x) reason in
-    let f id = resolve_id cx reason id builtin in
-    mk_lazy_tvar cx reason f
 
   and specialize cx t use_op reason_op reason_tapp ts =
     elab_t cx t (Annot_SpecializeT (use_op, reason_op, reason_tapp, ts))
