@@ -45,7 +45,10 @@ type 'loc parsed =
       targs: 'loc parsed list;
     }
   | AsyncVoidReturn of 'loc loc_node
-  | ValRef of 'loc ref
+  | ValRef of {
+      type_only: bool;
+      ref: 'loc ref;
+    }
   | Err of 'loc loc_node * 'loc loc_node errno
   | BuiltinTyRef of {
       ref_loc: 'loc loc_node;
@@ -132,24 +135,29 @@ and 'loc exports =
  * For implementation files, the top-level scope will be a Module. *)
 and 'loc scope =
   | Global of {
-      mutable names: 'loc binding_node SMap.t;
+      mutable values: 'loc binding_node SMap.t;
+      mutable types: 'loc binding_node SMap.t;
       mutable modules: ('loc loc_node * 'loc exports) SMap.t;
     }
   | DeclareModule of {
-      mutable names: 'loc binding_node SMap.t;
+      mutable values: 'loc binding_node SMap.t;
+      mutable types: 'loc binding_node SMap.t;
       parent: 'loc scope;
       exports: 'loc exports;
     }
   | DeclareNamespace of {
-      mutable names: 'loc binding_node SMap.t;
+      mutable values: 'loc binding_node SMap.t;
+      mutable types: 'loc binding_node SMap.t;
       parent: 'loc scope;
     }
   | Module of {
-      mutable names: 'loc binding_node SMap.t;
+      mutable values: 'loc binding_node SMap.t;
+      mutable types: 'loc binding_node SMap.t;
       exports: 'loc exports;
     }
   | Lexical of {
-      mutable names: 'loc binding_node SMap.t;
+      mutable values: 'loc binding_node SMap.t;
+      mutable types: 'loc binding_node SMap.t;
       parent: 'loc scope;
     }
   | ConditionalTypeExtends of 'loc conditional_type_extends
@@ -354,7 +362,8 @@ let polarity = function
 
 let id_name (_, { Ast.Identifier.name; comments = _ }) = name
 
-let val_ref scope ref_loc name = ValRef (Ref { ref_loc; name; scope; resolved = None })
+let val_ref ~type_only scope ref_loc name =
+  ValRef { type_only; ref = Ref { ref_loc; name; scope; resolved = None } }
 
 let merge_accessors a b =
   match (a, b) with
@@ -484,14 +493,20 @@ module Exports = struct
 end
 
 module Scope = struct
-  let create_global () = Global { names = SMap.empty; modules = SMap.empty }
+  let create_global () = Global { values = SMap.empty; types = SMap.empty; modules = SMap.empty }
 
   let create_module ~strict ~platform_availability_set =
-    Module { names = SMap.empty; exports = Exports.create ~strict ~platform_availability_set }
+    Module
+      {
+        values = SMap.empty;
+        types = SMap.empty;
+        exports = Exports.create ~strict ~platform_availability_set;
+      }
 
-  let push_lex parent = Lexical { parent; names = SMap.empty }
+  let push_lex parent = Lexical { parent; values = SMap.empty; types = SMap.empty }
 
-  let push_declare_namespace parent = DeclareNamespace { parent; names = SMap.empty }
+  let push_declare_namespace parent =
+    DeclareNamespace { parent; values = SMap.empty; types = SMap.empty }
 
   let push_declare_module loc name parent =
     let exports = Exports.create ~strict:true ~platform_availability_set:None in
@@ -507,7 +522,7 @@ module Scope = struct
             g.modules
       | _ -> ()
     end;
-    DeclareModule { names = SMap.empty; exports; parent }
+    DeclareModule { values = SMap.empty; types = SMap.empty; exports; parent }
 
   let parent_opt = function
     | DeclareModule { parent; _ }
@@ -519,14 +534,6 @@ module Scope = struct
     | Module _ ->
       None
 
-  let modify_names f = function
-    | Global scope -> scope.names <- f scope.names
-    | DeclareModule scope -> scope.names <- f scope.names
-    | DeclareNamespace scope -> scope.names <- f scope.names
-    | Module scope -> scope.names <- f scope.names
-    | Lexical scope -> scope.names <- f scope.names
-    | ConditionalTypeExtends _ -> ()
-
   let modify_exports f = function
     | Module scope -> f scope.exports
     | DeclareModule scope -> f scope.exports
@@ -537,7 +544,7 @@ module Scope = struct
       ()
 
   let builtins_exn = function
-    | Global { names; modules } -> (names, modules)
+    | Global { values; types; modules } -> (values, types, modules)
     | DeclareModule _
     | DeclareNamespace _
     | Module _
@@ -592,20 +599,71 @@ module Scope = struct
     | ID.ImportTypeof -> ImportTypeofNsBinding { id_loc; name; mref }
     | ID.ImportType -> failwith "unexpected import type *"
 
-  let bind scope name f = modify_names (SMap.update name f) scope
+  let bind ~type_only scope name f =
+    let bind_value values types =
+      match SMap.find_opt name values with
+      | Some _ -> SMap.update name f values
+      | None ->
+        (match SMap.find_opt name types with
+        | None -> SMap.update name f values
+        | Some _ -> values)
+    in
+    let bind_type values types =
+      match SMap.find_opt name types with
+      | Some _ -> SMap.update name f types
+      | None ->
+        (match SMap.find_opt name values with
+        | None -> SMap.update name f types
+        | Some _ -> types)
+    in
+    if type_only then
+      match scope with
+      | Global scope -> scope.types <- bind_type scope.values scope.types
+      | DeclareModule scope -> scope.types <- bind_type scope.values scope.types
+      | DeclareNamespace scope -> scope.types <- bind_type scope.values scope.types
+      | Module scope -> scope.types <- bind_type scope.values scope.types
+      | Lexical scope -> scope.types <- bind_type scope.values scope.types
+      | ConditionalTypeExtends _ -> ()
+    else
+      match scope with
+      | Global scope -> scope.values <- bind_value scope.values scope.types
+      | DeclareModule scope -> scope.values <- bind_value scope.values scope.types
+      | DeclareNamespace scope -> scope.values <- bind_value scope.values scope.types
+      | Module scope -> scope.values <- bind_value scope.values scope.types
+      | Lexical scope -> scope.values <- bind_value scope.values scope.types
+      | ConditionalTypeExtends _ -> ()
 
-  let rec lookup scope name =
+  let rec lookup_value scope name =
     match scope with
-    | Global { names; _ }
-    | Module { names; _ } ->
-      Base.Option.map ~f:(fun binding -> (binding, scope)) (SMap.find_opt name names)
-    | ConditionalTypeExtends { parent; _ } -> lookup parent name
-    | DeclareModule { parent; names; _ }
-    | DeclareNamespace { parent; names; _ }
-    | Lexical { parent; names } ->
-      (match SMap.find_opt name names with
+    | Global { values; _ }
+    | Module { values; _ } ->
+      Base.Option.map ~f:(fun binding -> (binding, scope)) (SMap.find_opt name values)
+    | ConditionalTypeExtends { parent; _ } -> lookup_value parent name
+    | DeclareModule { parent; values; _ }
+    | DeclareNamespace { parent; values; _ }
+    | Lexical { parent; values; types = _ } ->
+      (match SMap.find_opt name values with
       | Some binding -> Some (binding, scope)
-      | None -> lookup parent name)
+      | None -> lookup_value parent name)
+
+  let rec lookup_type scope name =
+    let lookup_scope name values types =
+      match SMap.find_opt name types with
+      | Some _ as v -> v
+      | _ -> SMap.find_opt name values
+    in
+    match scope with
+    | Global { values; types; _ } ->
+      Base.Option.map ~f:(fun binding -> (binding, scope)) (lookup_scope name values types)
+    | Module { values; types; _ } ->
+      Base.Option.map ~f:(fun binding -> (binding, scope)) (lookup_scope name values types)
+    | ConditionalTypeExtends { parent; _ } -> lookup_type parent name
+    | DeclareModule { parent; values; types; _ }
+    | DeclareNamespace { parent; values; types }
+    | Lexical { parent; values; types } ->
+      (match lookup_scope name values types with
+      | Some binding -> Some (binding, scope)
+      | None -> lookup_type parent name)
 
   let rec find_host scope b =
     match scope with
@@ -652,22 +710,23 @@ module Scope = struct
           Some (RemoteBinding node)
         )
 
-  let bind_type scope tbls id_loc name def = bind_local scope tbls name (TypeBinding { id_loc; def })
+  let bind_type scope tbls id_loc name def =
+    bind_local ~type_only:true scope tbls name (TypeBinding { id_loc; def })
 
   let bind_class scope tbls id_loc name def =
-    bind_local scope tbls name (ClassBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name (ClassBinding { id_loc; name; def })
 
   let bind_declare_class scope tbls id_loc name def =
-    bind_local scope tbls name (DeclareClassBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name (DeclareClassBinding { id_loc; name; def })
 
   let bind_enum scope tbls id_loc name def =
-    bind_local scope tbls name (EnumBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name (EnumBinding { id_loc; name; def })
 
   (* Function declarations preceded by declared functions are taken to have the
    * type of the declared functions. This is a weird special case aimed to
    * support overloaded signatures. *)
   let bind_function scope tbls id_loc fn_loc name ~async ~generator ~hook:_ def k =
-    bind scope name (fun binding_opt ->
+    bind ~type_only:false scope name (fun binding_opt ->
         match binding_opt with
         | None ->
           let statics = SMap.empty in
@@ -690,7 +749,7 @@ module Scope = struct
    * don't need to walk the scope chain since the scope argument is certainly
    * the host scope. *)
   let bind_declare_function scope tbls id_loc fn_loc name def k =
-    bind scope name (fun binding_opt ->
+    bind ~type_only:false scope name (fun binding_opt ->
         match binding_opt with
         | None ->
           let defs_rev = Nel.one (id_loc, fn_loc, def) in
@@ -711,21 +770,22 @@ module Scope = struct
     )
 
   let bind_component scope tbls id_loc fn_loc name def =
-    bind_local scope tbls name (ComponentBinding { id_loc; fn_loc; name; def })
+    bind_local ~type_only:false scope tbls name (ComponentBinding { id_loc; fn_loc; name; def })
 
   let bind_var scope tbls kind id_loc name def =
-    bind_local scope tbls name (value_binding kind id_loc name def)
+    bind_local ~type_only:false scope tbls name (value_binding kind id_loc name def)
 
   let bind_const scope tbls id_loc name def =
-    bind_local scope tbls name (LetConstBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name (LetConstBinding { id_loc; name; def })
 
   let bind_const_ref scope tbls id_loc name ref_loc ref_name ref_scope =
     let ref = Ref { ref_loc; name = ref_name; scope = ref_scope; resolved = None } in
-    bind_local scope tbls name (ConstRefBinding { id_loc; name; ref })
+    bind_local ~type_only:false scope tbls name (ConstRefBinding { id_loc; name; ref })
 
   let bind_const_fun scope tbls id_loc name loc ~async ~generator def =
     let statics = SMap.empty in
     bind_local
+      ~type_only:false
       scope
       tbls
       name
@@ -733,11 +793,27 @@ module Scope = struct
 
   let bind_import scope tbls kind id_loc ~local ~remote mref =
     let mref = push_module_ref tbls mref in
-    bind_remote scope tbls local (import_binding kind id_loc local mref ~remote)
+    let type_only =
+      let open Ast.Statement.ImportDeclaration in
+      match kind with
+      | ImportValue -> false
+      | ImportType
+      | ImportTypeof ->
+        true
+    in
+    bind_remote ~type_only scope tbls local (import_binding kind id_loc local mref ~remote)
 
   let bind_import_ns scope tbls kind id_loc name mref =
     let mref = push_module_ref tbls mref in
-    bind_remote scope tbls name (import_ns_binding kind id_loc name mref)
+    let type_only =
+      let open Ast.Statement.ImportDeclaration in
+      match kind with
+      | ImportValue -> false
+      | ImportType
+      | ImportTypeof ->
+        true
+    in
+    bind_remote ~type_only scope tbls name (import_ns_binding kind id_loc name mref)
 
   let rec assign_binding =
     let f prop_name prop def =
@@ -763,7 +839,7 @@ module Scope = struct
         def
     in
     fun prop_name prop ref_name scope ->
-      match lookup scope ref_name with
+      match lookup_value scope ref_name with
       | None -> ()
       | Some (RemoteBinding _, _) -> ()
       | Some (LocalBinding node, found_scope) ->
@@ -776,7 +852,7 @@ module Scope = struct
     | Value (FunExpr fn) ->
       let statics = SMap.add prop_name prop fn.statics in
       Value (FunExpr { fn with statics })
-    | ValRef (Ref { name = ref_name; scope; _ }) as vref ->
+    | ValRef { type_only = false; ref = Ref { name = ref_name; scope; _ } } as vref ->
       assign_binding prop_name prop ref_name scope;
       vref
     | x -> x
@@ -863,7 +939,7 @@ module Scope = struct
   (* a `declare module` that has no explicit exports via `declare module.exports =` or
      `declare exports` defaults to exporting everything as CJS named properties. *)
   let finalize_declare_module_exports_exn = function
-    | DeclareModule { names; exports; parent = _ } as scope ->
+    | DeclareModule { values; types; exports; parent = _ } as scope ->
       (match exports with
       | Exports { kind = ESModule _; _ } ->
         (* has explicit exports so do nothing here *)
@@ -880,7 +956,7 @@ module Scope = struct
                   | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
                   | _ -> ())
                 | RemoteBinding _ -> ())
-              names)
+              types)
           scope
       | Exports { kind = UnknownModule; _ } ->
         (* add a CJS export for each declared binding *)
@@ -903,9 +979,32 @@ module Scope = struct
                   | EnumBinding _
                   | NamespaceBinding _ ->
                     Exports.cjs_declare_module_set_prop name node exports
+                  | TypeBinding _ -> ())
+                | RemoteBinding _ -> ())
+              values)
+          scope;
+        modify_exports
+          (fun exports ->
+            SMap.iter
+              (fun name binding ->
+                match binding with
+                | LocalBinding node ->
+                  (match Local_defs.value node with
+                  | VarBinding _
+                  | LetConstBinding _
+                  | ConstRefBinding _
+                  | ConstFunBinding _
+                  | ClassBinding _
+                  | DeclareClassBinding _
+                  | FunBinding _
+                  | DeclareFunBinding _
+                  | ComponentBinding _
+                  | EnumBinding _
+                  | NamespaceBinding _ ->
+                    ()
                   | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports)
                 | RemoteBinding _ -> ())
-              names)
+              types)
           scope
       | Exports { kind = CJSDeclareModule _; _ } ->
         (* is already the right kind? shouldn't happen *)
@@ -920,10 +1019,10 @@ module Scope = struct
   (* a `declare namespace` exports every binding. *)
   let finalize_declare_namespace_exn scope tbls id_loc name =
     match scope with
-    | DeclareNamespace { names; parent; _ } ->
-      let (values, types) =
+    | DeclareNamespace { values; types; parent; _ } ->
+      let values =
         SMap.fold
-          (fun name binding (values, types) ->
+          (fun name binding acc ->
             match binding with
             | LocalBinding node ->
               let local_binding = Local_defs.value node in
@@ -938,17 +1037,41 @@ module Scope = struct
               | ComponentBinding { id_loc; _ }
               | EnumBinding { id_loc; _ }
               | NamespaceBinding { id_loc; _ } ->
-                (SMap.add name (id_loc, val_ref scope id_loc name) values, types)
+                SMap.add name (id_loc, val_ref ~type_only:false scope id_loc name) acc
               | DeclareFunBinding { defs_rev; _ } ->
                 let (id_loc, _, _) = Nel.last defs_rev in
-                (SMap.add name (id_loc, val_ref scope id_loc name) values, types)
-              | TypeBinding { id_loc; _ } ->
-                (values, SMap.add name (id_loc, val_ref scope id_loc name) types))
-            | RemoteBinding _ -> (values, types))
-          names
-          (SMap.empty, SMap.empty)
+                SMap.add name (id_loc, val_ref ~type_only:false scope id_loc name) acc
+              | TypeBinding _ -> acc)
+            | RemoteBinding _ -> acc)
+          values
+          SMap.empty
       in
-      bind_local parent tbls name (NamespaceBinding { id_loc; name; values; types })
+      let types =
+        SMap.fold
+          (fun name binding acc ->
+            match binding with
+            | LocalBinding node ->
+              let local_binding = Local_defs.value node in
+              (match local_binding with
+              | VarBinding _
+              | LetConstBinding _
+              | ConstRefBinding _
+              | ConstFunBinding _
+              | ClassBinding _
+              | DeclareClassBinding _
+              | FunBinding _
+              | ComponentBinding _
+              | EnumBinding _
+              | NamespaceBinding _
+              | DeclareFunBinding _ ->
+                acc
+              | TypeBinding { id_loc; _ } ->
+                SMap.add name (id_loc, val_ref ~type_only:true scope id_loc name) acc)
+            | RemoteBinding _ -> acc)
+          types
+          SMap.empty
+      in
+      bind_local ~type_only:false parent tbls name (NamespaceBinding { id_loc; name; values; types })
     | _ -> failwith "The scope must be lexical"
 
   let bind_namespace scope tbls id_loc name ~f =
@@ -1415,7 +1538,7 @@ and typeof =
     | T.Typeof.Target.Unqualified id ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
       let id_loc = push_loc tbls id_loc in
-      let t = val_ref scope id_loc name in
+      let t = val_ref ~type_only:false scope id_loc name in
       finish opts scope tbls xs typeof_loc t [name] targs chain
   in
   (fun opts scope tbls xs typeof_loc expr targs -> loop opts scope tbls xs typeof_loc targs [] expr)
@@ -2065,7 +2188,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   | name when SSet.mem name xs ->
     (* TODO: error if targs <> None *)
     Annot (Bound { ref_loc; name })
-  | name when (not opts.for_builtins) && Option.is_some (Scope.lookup scope name) ->
+  | name when (not opts.for_builtins) && Option.is_some (Scope.lookup_type scope name) ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs
   | "Array" -> begin
@@ -2803,7 +2926,7 @@ let rec expression opts scope tbls (loc, expr) =
   | E.Identifier id ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in
-    val_ref scope id_loc name
+    val_ref ~type_only:false scope id_loc name
   | E.Member { E.Member._object; property; comments = _ } ->
     member opts scope tbls _object loc property
   | E.Class c -> begin
@@ -2813,7 +2936,7 @@ let rec expression opts scope tbls (loc, expr) =
       let scope = Scope.push_lex scope in
       let def = lazy (splice tbls id_loc (fun tbls -> class_def opts scope tbls c)) in
       Scope.bind_class scope tbls id_loc name def ignore2;
-      val_ref scope id_loc name
+      val_ref ~type_only:false scope id_loc name
     | None ->
       let def = class_def opts scope tbls c in
       Value (ClassExpr (loc, def))
@@ -2830,7 +2953,7 @@ let rec expression opts scope tbls (loc, expr) =
           lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty loc f))
         in
         Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook:false def ignore2;
-        val_ref scope id_loc name
+        val_ref ~type_only:false scope id_loc name
       | None ->
         let def = function_def opts scope tbls SSet.empty loc f in
         let statics = SMap.empty in
@@ -3066,7 +3189,7 @@ and member =
     match expr with
     | E.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
       let id_loc = push_loc tbls id_loc in
-      let t = val_ref scope id_loc name in
+      let t = val_ref ~type_only:false scope id_loc name in
       finish opts scope tbls t chain
     | E.Member { E.Member._object; property; comments = _ } ->
       let loc = push_loc tbls loc in
@@ -3921,7 +4044,7 @@ let rec member_expr_of_generic_id scope tbls chain =
     let ref_loc = push_loc tbls ref_loc in
     List.fold_left
       (fun t (loc, name) -> Eval (loc, t, GetProp name))
-      (val_ref scope ref_loc name)
+      (val_ref ~type_only:true scope ref_loc name)
       chain
 
 let declare_class_def =
@@ -4659,7 +4782,7 @@ let assignment =
               }
           )
       )
-      when Scope.lookup scope object_name = None ->
+      when Scope.lookup_value scope object_name = None ->
       let t = expression opts scope tbls right in
       Scope.cjs_clobber scope t
     (* exports.foo = ... *)
@@ -4697,7 +4820,7 @@ let assignment =
               }
           )
       )
-      when Scope.lookup scope object_name = None ->
+      when Scope.lookup_value scope object_name = None ->
       let id_loc = push_loc tbls id_loc in
       let t = expression opts scope tbls right in
       Scope.cjs_set_prop scope name (id_loc, t)

@@ -25,8 +25,9 @@ module Builtins = struct
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
     pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t;
     patterns: 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t;
-    globals: Type_sig_collections.Local_defs.index SMap.t;
-    modules: 'loc module_def SMap.t;
+    global_values: Type_sig_collections.Local_defs.index SMap.t;
+    global_types: Type_sig_collections.Local_defs.index SMap.t;
+    global_modules: 'loc module_def SMap.t;
   }
 
   and 'loc module_def = {

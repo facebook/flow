@@ -250,7 +250,7 @@ let rec pack_parsed cx = function
     let err = map_errno pack_loc err in
     cx.errs <- err :: cx.errs;
     Err loc
-  | P.ValRef ref -> Ref (pack_ref ref)
+  | P.ValRef { type_only = _; ref } -> Ref (pack_ref ref)
   | P.Pattern p -> Pattern (Patterns.index_exn p)
   | P.Eval (loc, t, op) -> Eval (pack_loc loc, pack_parsed cx t, pack_op cx op)
   | P.Require { loc; mref } ->

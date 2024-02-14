@@ -2171,8 +2171,9 @@ let merge_builtins
     remote_refs;
     pattern_defs;
     patterns;
-    globals;
-    modules;
+    global_values;
+    global_types;
+    global_modules;
   } =
     builtins
   in
@@ -2302,7 +2303,7 @@ let merge_builtins
                  )
              in
              SMap.add s lazy_t acc)
-           modules
+           global_modules
            SMap.empty
        in
        let map_module_ref s : Context.resolved_require Lazy.t =
@@ -2325,23 +2326,32 @@ let merge_builtins
   in
 
   let builtin_names =
-    SMap.fold
-      (fun name i acc ->
-        let t =
-          Lazy.map
-            (fun (_, _, t) -> t)
-            (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
-        in
-        SMap.add name t acc)
-      globals
-      SMap.empty
+    SMap.empty
+    |> SMap.fold
+         (fun name i acc ->
+           let t =
+             Lazy.map
+               (fun (_, _, t) -> t)
+               (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+           in
+           SMap.add name t acc)
+         global_values
+    |> SMap.fold
+         (fun name i acc ->
+           let t =
+             Lazy.map
+               (fun (_, _, t) -> t)
+               (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+           in
+           SMap.add name t acc)
+         global_types
   in
   let builtin_modules =
     SMap.fold
       (fun name _ acc ->
         let t = SMap.find name (Lazy.force file_and_dependency_map_rec |> snd) in
         SMap.add name t acc)
-      modules
+      global_modules
       SMap.empty
   in
   (builtin_names, builtin_modules)
