@@ -1,3 +1,23 @@
+### 0.229.0
+
+Likely to cause new Flow errors:
+* `invalid-recursive-exported-annotation` will now have error code of `recursive-definition`.
+* Previously we would emit confusing errors when you try to use a value that has union types as a type. Now it will consistently emit `value-as-type` errors. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAIsdccQBhACMOOAAB0oDicTBkDjhCIZgBuSlIymUzG4bF4rkEwkAJjJlOptJx9lMUAQLKgbKglNs9jxOIAvDipDIcQB+ImkukC6UtYw4gCCKrxTJxAHpLTjavk4BA4rhaDj0pARI5-GhSqsjSZKBBKLx6RAAO50wq4GSNDDAw24-2BykxED5EwkB1QIL5AAMVn5-IA7FYcyAkUA)).
+* Unsupported statements like loops within `declare module` will no longer cause parse errors. Instead, they will be errored on during type checking.
+* `declare export type` and `declare export interface` statements in toplevel are no longer parser errors. Instead, they will now be errored during type checking.
+* Previous `toplevel-library-import` errors and `unsupported-statement-in-lib` errors will all have `unsupported-syntax` error code now.
+
+New Features:
+* We introduced `experimental.ts_syntax` flag that you can set to `true`. When this flag is on, Flow will no longer complain about certain TypeScript syntax, and will automatically turn them into the closest Flow equivalent types. Initially, we support the following: `Readonly`, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`, `NonNullable`, and using `extends` to specify type parameter bounds. In the future, more kinds of types that we currently parse but error on might be added. (e.g. keyof). Please note that the support here is best effort. We make no guarantee that these types have the same semantics as those in TypeScript 100% of the time, but for common cases, it might be good enough for you.
+
+Notable bug fixes:
+* We now allow the use of saved state for [glean](https://glean.software/) indexer, if saved state is enabled in flowoconfig or CLI arguments.
+* Improved the way we compute contextual hints for spread arguments of calls (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAJjjiqDRaAAhIQwH6UZA4gCC1DopPJJgA3AAdKAAZSk6QQVhglHCAGEclQBRANAAKKxS2lE3n8kTinYAdxxAFV0hIABwyujiwn0skUgCUJqZOIA9OacUroAByCQ4kz8ygEqC0HEiCAsGIgfImEhwaBBfIABisACZwwB2KwhkBIoA)).
+* In `declare module`, all the values will be auto-exported if we cannot decide whether the module is in CJS or ESM. However, support for `declare const` and `declare let` was missing. This has now been fixed.
+
+Misc:
+* Make `both` the default value for the .flowconfig `casting_syntax` option, if not supplied.
+
 ### 0.228.0
 
 Likely to cause new Flow errors:
