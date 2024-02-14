@@ -11,6 +11,7 @@ type worker
 
 val call :
   worker list option ->
+  blocking:bool ->
   job:('a -> 'b) ->
   merge:('b -> 'c -> 'c) ->
   neutral:'c ->
@@ -19,13 +20,19 @@ val call :
 
 val fold :
   worker list option ->
+  blocking:bool ->
   job:('b -> 'a -> 'b) ->
   merge:('b -> 'b -> 'b) ->
   neutral:'b ->
   next:'a list Hh_bucket.next ->
   'b Lwt.t
 
-val iter : worker list option -> job:('a -> unit) -> next:'a list Hh_bucket.next -> unit Lwt.t
+val iter :
+  worker list option ->
+  blocking:bool ->
+  job:('a -> unit) ->
+  next:'a list Hh_bucket.next ->
+  unit Lwt.t
 
 val next :
   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->

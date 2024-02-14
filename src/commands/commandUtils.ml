@@ -882,6 +882,7 @@ module Options_flags = struct
     include_suppressions: bool;
     estimate_recheck_time: bool option;
     long_lived_workers: bool option;
+    blocking_worker_communication: bool option;
     distributed: bool;
   }
 end
@@ -948,6 +949,7 @@ let options_flags =
       include_suppressions
       estimate_recheck_time
       long_lived_workers
+      blocking_worker_communication
       distributed =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
@@ -976,6 +978,7 @@ let options_flags =
         include_suppressions;
         estimate_recheck_time;
         long_lived_workers;
+        blocking_worker_communication;
         distributed;
       }
   in
@@ -1025,6 +1028,11 @@ let options_flags =
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
+      |> flag
+           "--blocking_worker_communication"
+           (optional bool)
+           ~doc:""
+           ~env:"FLOW_BLOCKING_WORKER_COMMUNICATION"
       |> flag "--distributed" truthy ~doc:""
     )
 
@@ -1473,6 +1481,10 @@ let make_options
       Base.Option.value (FlowConfig.autocomplete_lazy_docs flowconfig) ~default:true;
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
+    opt_blocking_worker_communication =
+      Option.value
+        options_flags.blocking_worker_communication
+        ~default:(FlowConfig.blocking_worker_communication flowconfig);
   }
 
 let make_env flowconfig flowconfig_name connect_flags root =

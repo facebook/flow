@@ -80,6 +80,8 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
+val blocking_worker_communication : config -> bool
+
 val casting_syntax : config -> Options.CastingSyntax.t option
 
 val channel_mode : config -> [ `pipe | `socket ] option

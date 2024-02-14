@@ -14,6 +14,7 @@ let multi_worker_list workers () =
     Lwt_main.run
       (MultiWorkerLwt.fold
          (Some workers)
+         ~blocking:false
          ~job:( + )
          ~merge:( + )
          ~neutral:0
@@ -37,7 +38,8 @@ let multi_worker_bucket workers () =
   in
   let expected = buckets * (buckets + 1) / 2 in
   let result =
-    Lwt_main.run (MultiWorkerLwt.call (Some workers) ~job:Fun.id ~merge:( + ) ~neutral:0 ~next)
+    Lwt_main.run
+      (MultiWorkerLwt.call (Some workers) ~blocking:false ~job:Fun.id ~merge:( + ) ~neutral:0 ~next)
   in
   Printf.printf "Got %d\n" result;
   result = expected
@@ -55,6 +57,7 @@ let multi_worker_of_n_buckets workers () =
       Lwt_main.run
         (MultiWorkerLwt.call
            (Some workers)
+           ~blocking:false
            ~job:do_work
            ~merge:( + )
            ~neutral:0

@@ -98,9 +98,17 @@ let calc_unchanged_dependents =
     List.iter iter_m ms;
     !acc
   in
-  fun workers changed_modules ->
+  fun ~blocking_worker_communication workers changed_modules ->
     let next = MultiWorkerLwt.next workers (Modulename.Set.elements changed_modules) in
-    let%lwt dependent_sets = MultiWorkerLwt.call workers ~job ~merge:List.cons ~neutral:[] ~next in
+    let%lwt dependent_sets =
+      MultiWorkerLwt.call
+        workers
+        ~blocking:blocking_worker_communication
+        ~job
+        ~merge:List.cons
+        ~neutral:[]
+        ~next
+    in
     Lwt.return (List.fold_left FilenameSet.union FilenameSet.empty dependent_sets)
 
 (* Calculate module dependencies. Since this involves a lot of reading from
@@ -145,7 +153,7 @@ let file_dependencies ~reader file =
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
-let calc_partial_dependency_graph ~reader workers files ~parsed =
+let calc_partial_dependency_graph ~reader ~blocking_worker_communication workers files ~parsed =
   let job dependency_info file =
     let dependencies = file_dependencies ~reader file in
     FilenameMap.add file dependencies dependency_info
@@ -153,6 +161,7 @@ let calc_partial_dependency_graph ~reader workers files ~parsed =
   let%lwt dependency_graph =
     MultiWorkerLwt.fold
       workers
+      ~blocking:blocking_worker_communication
       ~job
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
@@ -166,6 +175,8 @@ let calc_partial_dependency_graph ~reader workers files ~parsed =
   in
   Lwt.return dependency_graph
 
-let calc_dependency_info ~reader workers ~parsed =
-  let%lwt dependency_graph = calc_partial_dependency_graph ~reader workers parsed ~parsed in
+let calc_dependency_info ~reader ~blocking_worker_communication workers ~parsed =
+  let%lwt dependency_graph =
+    calc_partial_dependency_graph ~reader ~blocking_worker_communication workers parsed ~parsed
+  in
   Lwt.return (Dependency_info.of_map dependency_graph)
