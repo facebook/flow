@@ -830,6 +830,7 @@ let commit_modules ~workers ~options dirty_modules =
   let%lwt (unchanged, duplicate_providers) =
     MultiWorkerLwt.fold
       workers
+      ~blocking:(Options.blocking_worker_communication options)
       ~job
       ~neutral:(Modulename.Set.empty, SMap.empty)
       ~merge:(fun (a1, a2) (b1, b2) -> (Modulename.Set.union a1 b1, SMap.union a2 b2))

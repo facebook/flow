@@ -473,7 +473,15 @@ let parse
       ~noflow
       ~exported_module
   in
-  let%lwt results = MultiWorkerLwt.fold workers ~job ~neutral:empty_result ~merge ~next in
+  let%lwt results =
+    MultiWorkerLwt.fold
+      workers
+      ~blocking:(Options.blocking_worker_communication options)
+      ~job
+      ~neutral:empty_result
+      ~merge
+      ~next
+  in
   if Options.should_profile options then
     let t2 = Unix.gettimeofday () in
     let num_parsed = FilenameSet.cardinal results.parsed in
@@ -556,6 +564,7 @@ let ensure_parsed ~reader options workers files =
   let%lwt files_missing_asts =
     MultiWorkerLwt.fold
       workers
+      ~blocking:(Options.blocking_worker_communication options)
       ~job
       ~merge:FilenameSet.union
       ~neutral:FilenameSet.empty

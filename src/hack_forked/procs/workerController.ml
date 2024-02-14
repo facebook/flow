@@ -161,7 +161,7 @@ let make ~worker_mode ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~
   !made_workers
 
 (** Sends a request to call `f x` on `worker` *)
-let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
+let send_blocking worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
   let outfd = Lwt_unix.unix_file_descr outfd_lwt in
   let request = Request (fun { send } -> send (f x)) in
   try%lwt
@@ -199,7 +199,69 @@ let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
       raise (Worker_failed_to_send_job (Worker_already_exited None)))
 
-let read (type result) worker_pid infd_lwt : (result * Measure.record_data) option Lwt.t =
+(** Sends a request to call `f x` on `worker`
+ *
+ * If we start sending a job, we must complete that work. Workers will treat a partial job as a
+ * fatal error and exit.
+ *
+ * First we call `wait_write` to cancel quickly in the common case where we have not yet sent a
+ * single byte.
+ *
+ * Note that Lwt.protected does not wait for the inner promise to resolve when it is canceled. We
+ * use the `sent_request` ref to synchronize with the inner promise from the Canceled exception
+ * handler.
+ *)
+let send_non_blocking worker worker_pid infd outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
+  let request = Request (fun { send } -> send (f x)) in
+  let sent_request = ref false in
+  try%lwt
+    let%lwt () = Lwt_unix.wait_write outfd in
+    Lwt.protected
+      ( (* This write must happen first, to synchronize with the Canceled exception handler. *)
+        sent_request := true;
+        let%lwt _ =
+          Marshal_tools_lwt.to_fd_with_preamble ~flags:[Stdlib.Marshal.Closures] outfd request
+        in
+        Lwt.return_unit
+      )
+  with
+  | Lwt.Canceled as exn ->
+    (* Cancel request while sending a job to the worker. *)
+    let exn = Exception.wrap exn in
+
+    (* Each worker might call this but that's ok *)
+    WorkerCancel.stop_workers ();
+
+    (* If we sent the request, we need to wait for the response and drain the pipe. Note that
+       workers may send a full response, so handle the `Some _` case as well. *)
+    let%lwt () =
+      if !sent_request then
+        (* We should not be canceled again at this point, but just in case prevent this operation
+           from being canceled. We will re-raise the Canceled exception anyway. *)
+        Lwt.no_cancel
+          (match%lwt Marshal_tools_lwt.from_fd_with_preamble infd with
+          | None -> Lwt.return_unit
+          | Some _ ->
+            let%lwt _ = Marshal_tools_lwt.from_fd_with_preamble infd in
+            Lwt.return_unit)
+      else
+        Lwt.return_unit
+    in
+
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Hh_logger.error ~exn "Failed to send request to worker #%d" (worker_id worker);
+
+    (* Failed to send the job to the worker. Is it because the worker is dead or is it
+     * something else? *)
+    (match%lwt Lwt_unix.waitpid [Unix.WNOHANG] worker_pid with
+    | (0, _) -> raise (Worker_failed_to_send_job (Other_send_job_failure exn))
+    | (_, status) -> raise (Worker_failed_to_send_job (Worker_already_exited (Some status)))
+    | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
+      raise (Worker_failed_to_send_job (Worker_already_exited None)))
+
+let read_blocking (type result) worker_pid infd_lwt : (result * Measure.record_data) option Lwt.t =
   let infd = Lwt_unix.unix_file_descr infd_lwt in
   try%lwt
     (* Wait in an lwt-friendly manner for the worker to finish the job *)
@@ -261,18 +323,109 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) opti
       let () = Stdlib.Printf.eprintf "Subprocess(%d): gone\n%!" worker_pid in
       raise (Worker_failed (worker_pid, Worker_quit None)))
 
+(** Reads a response from the worker
+ *
+ * If we start reading a response, we must complete that work. Otherwise, we will leave bytes on the 
+ * pipe, causing the next read to be corrupted.
+ *
+ * First we call `wait_read` to cancel quickly in the common case where we have not yet read a
+ * single byte.
+ *
+ * Note that Lwt.protected does not wait for the inner promise to resolve when it is canceled. We
+ * use the `read_response` ref to synchronize with the inner promise from the Canceled exception
+ * handler.
+ *)
+let read_non_blocking (type result) worker_pid infd : (result * Measure.record_data) option Lwt.t =
+  let read_response = ref false in
+  try%lwt
+    (* Ensure we finish reading a response if we get one. If we cancel while reading, then the pipe
+       will still contain the unread junk which will cause the next read to fail. The call to
+       `wait_read` is outside the protected block so we can quickly cancelin the common case where
+       we have not yet read a single byte. *)
+    let%lwt () = Lwt_unix.wait_read infd in
+    Lwt.protected
+      ( (* This write must happen first, to synchronize with the Canceled exception handler. *)
+        read_response := true;
+        let%lwt (data : result option) = Marshal_tools_lwt.from_fd_with_preamble infd in
+        match data with
+        | None -> Lwt.return_none
+        | Some data ->
+          let%lwt (stats : Measure.record_data) = Marshal_tools_lwt.from_fd_with_preamble infd in
+          Lwt.return (Some (data, stats))
+      )
+  with
+  | Lwt.Canceled as exn ->
+    (* Worker is handling a job but we're cancelling *)
+    let exn = Exception.wrap exn in
+
+    (* Each worker might call this but that's ok *)
+    WorkerCancel.stop_workers ();
+
+    (* We need to wait for the response and drain the pipe. Note that workers may send a full
+       response, so handle the `Some _` case as well. *)
+    let%lwt () =
+      if !read_response then
+        Lwt.return_unit
+      else
+        (* We should not be canceled again at this point, but just in case prevent this operation
+           from being canceled. We will re-raise the Canceled exception anyway. *)
+        Lwt.no_cancel
+          (match%lwt Marshal_tools_lwt.from_fd_with_preamble infd with
+          | None -> Lwt.return_unit
+          | Some _ ->
+            let%lwt _ = Marshal_tools_lwt.from_fd_with_preamble infd in
+            Lwt.return_unit)
+    in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    (match%lwt Lwt_unix.waitpid [Unix.WNOHANG] worker_pid with
+    | (0, _)
+    | (_, Unix.WEXITED 0) ->
+      (* The worker is still running or exited normally. It's odd that we failed to read
+       * the response, so just raise that exception *)
+      Exception.reraise exn
+    | (_, Unix.WEXITED i) ->
+      (match Exit.error_type_opt i with
+      | Some Exit.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
+      | Some Exit.Hash_table_full -> raise SharedMem.Hash_table_full
+      | Some Exit.Heap_full -> raise SharedMem.Heap_full
+      | _ ->
+        let () = Stdlib.Printf.eprintf "Subprocess(%d): fail %d\n%!" worker_pid i in
+        raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WEXITED i)))))
+    | (_, Unix.WSTOPPED i) ->
+      let () = Stdlib.Printf.eprintf "Subprocess(%d): stopped %d\n%!" worker_pid i in
+      raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSTOPPED i))))
+    | (_, Unix.WSIGNALED i) ->
+      let () = Stdlib.Printf.eprintf "Subprocess(%d): signaled %d\n%!" worker_pid i in
+      raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSIGNALED i))))
+    | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
+      let () = Stdlib.Printf.eprintf "Subprocess(%d): gone\n%!" worker_pid in
+      raise (Worker_failed (worker_pid, Worker_quit None)))
+
 (** Send a job to a worker
 
     This is basically an lwt thread that writes a job to the worker, waits for the response, and
     then returns the result. *)
-let call w (f : 'a -> 'b) (x : 'a) : 'b option Lwt.t =
+let call ~blocking w (f : 'a -> 'b) (x : 'a) : 'b option Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
   let { Daemon.pid = worker_pid; channels = (inc, outc) } = w.handle in
   let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel inc) in
   let outfd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel outc) in
-  (let%lwt () = send w worker_pid outfd f x in
-   match%lwt read worker_pid infd with
+  (let%lwt () =
+     if blocking then
+       send_blocking w worker_pid outfd f x
+     else
+       send_non_blocking w worker_pid infd outfd f x
+   in
+   let%lwt result =
+     if blocking then
+       read_blocking worker_pid infd
+     else
+       read_non_blocking worker_pid infd
+   in
+   match result with
    | None -> Lwt.return_none
    | Some (data, stats) ->
      Measure.merge (Measure.deserialize stats);

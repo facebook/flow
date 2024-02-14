@@ -552,6 +552,7 @@ let merge_runner
   let%lwt ret =
     MultiWorkerLwt.call
       workers
+      ~blocking:(Options.blocking_worker_communication options)
       ~job:(merge_job ~mutator ~reader ~options ~for_find_all_refs ~job)
       ~neutral:[]
       ~merge:(Merge_stream.merge stream)
