@@ -2325,26 +2325,29 @@ let merge_builtins
       )
   in
 
-  let builtin_names =
-    SMap.empty
-    |> SMap.fold
-         (fun name i acc ->
-           let t =
-             Lazy.map
-               (fun (_, _, t) -> t)
-               (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
-           in
-           SMap.add name t acc)
-         global_values
-    |> SMap.fold
-         (fun name i acc ->
-           let t =
-             Lazy.map
-               (fun (_, _, t) -> t)
-               (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
-           in
-           SMap.add name t acc)
-         global_types
+  let builtin_values =
+    SMap.fold
+      (fun name i acc ->
+        let t =
+          Lazy.map
+            (fun (_, _, t) -> t)
+            (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+        in
+        SMap.add name t acc)
+      global_values
+      SMap.empty
+  in
+  let builtin_types =
+    SMap.fold
+      (fun name i acc ->
+        let t =
+          Lazy.map
+            (fun (_, _, t) -> t)
+            (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+        in
+        SMap.add name t acc)
+      global_types
+      SMap.empty
   in
   let builtin_modules =
     SMap.fold
@@ -2354,4 +2357,4 @@ let merge_builtins
       global_modules
       SMap.empty
   in
-  (builtin_names, builtin_modules)
+  (builtin_values, builtin_types, builtin_modules)

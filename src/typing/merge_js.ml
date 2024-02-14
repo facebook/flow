@@ -732,8 +732,8 @@ let mk_builtins metadata master_cx =
         (fun mref -> Error (Reason.InternalModuleName mref))
         (fun _ -> !builtins_ref)
     in
-    let (global_names, global_modules) =
+    let (values, types, modules) =
       Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
     in
-    builtins_ref := Builtins.of_name_map ~mapper:Base.Fn.id global_names global_modules;
-    (fun dst_cx -> Builtins.of_name_map ~mapper:(copied dst_cx cx) global_names global_modules)
+    builtins_ref := Builtins.of_name_map ~mapper:Base.Fn.id ~values ~types ~modules;
+    (fun dst_cx -> Builtins.of_name_map ~mapper:(copied dst_cx cx) ~values ~types ~modules)

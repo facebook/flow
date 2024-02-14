@@ -722,6 +722,18 @@ let lookup_builtin_name_result cx x reason =
   | Some t -> Ok t
   | None -> lookup_builtin_error cx (OrdinaryName x) reason
 
+let lookup_builtin_value_result cx x reason =
+  let builtins = Context.builtins cx in
+  match Builtins.get_builtin_value_opt builtins x with
+  | Some t -> Ok t
+  | None -> lookup_builtin_error cx (OrdinaryName x) reason
+
+let lookup_builtin_type_result cx x reason =
+  let builtins = Context.builtins cx in
+  match Builtins.get_builtin_type_opt builtins x with
+  | Some t -> Ok t
+  | None -> lookup_builtin_error cx (OrdinaryName x) reason
+
 let apply_env_errors cx loc = function
   | Ok t -> t
   | Error (t, errs) ->
@@ -735,8 +747,22 @@ let lookup_builtin_name_opt cx x =
   let builtins = Context.builtins cx in
   Builtins.get_builtin_name_opt builtins x
 
+let lookup_builtin_value cx x reason =
+  lookup_builtin_value_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
+
+let lookup_builtin_type cx x reason =
+  lookup_builtin_type_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
+
+let lookup_builtin_value_opt cx x =
+  let builtins = Context.builtins cx in
+  Builtins.get_builtin_value_opt builtins x
+
+let lookup_builtin_type_opt cx x =
+  let builtins = Context.builtins cx in
+  Builtins.get_builtin_type_opt builtins x
+
 let lookup_builtin_typeapp cx reason x targs =
-  let t = lookup_builtin_name cx x reason in
+  let t = lookup_builtin_type cx x reason in
   typeapp ~from_value:false ~use_desc:false reason t targs
 
 let get_builtin_module cx module_name reason =
@@ -749,7 +775,7 @@ let get_builtin_module cx module_name reason =
   apply_env_errors cx (loc_of_reason reason) result
 
 let builtin_promise_class_id cx =
-  let promise_t = lookup_builtin_name_opt cx "Promise" in
+  let promise_t = lookup_builtin_value_opt cx "Promise" in
   match promise_t with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -773,7 +799,7 @@ let builtin_promise_class_id cx =
   | _ -> None
 
 let is_builtin_iterable_class_id class_id cx =
-  let t = lookup_builtin_name_opt cx "$Iterable" in
+  let t = lookup_builtin_type_opt cx "$Iterable" in
   match t with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -800,7 +826,7 @@ let is_builtin_iterable_class_id class_id cx =
   | _ -> false
 
 let builtin_react_element_opaque_id cx =
-  let t_opt = lookup_builtin_name_opt cx "React$Element" in
+  let t_opt = lookup_builtin_type_opt cx "React$Element" in
   match t_opt with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -1129,7 +1155,7 @@ module ValueToTypeReferenceTransform = struct
       annot_reason ~annot_loc (replace_desc_reason desc reason_op)
     in
     let t =
-      Tvar.mk_fully_resolved cx elem_reason (lookup_builtin_name cx "React$Element" elem_reason)
+      Tvar.mk_fully_resolved cx elem_reason (lookup_builtin_type cx "React$Element" elem_reason)
     in
     TypeUtil.typeapp ~from_value:false ~use_desc:true elem_reason t [l]
 

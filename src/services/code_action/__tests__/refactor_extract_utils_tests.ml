@@ -82,8 +82,8 @@ let dummy_context () =
     let desc = Reason.RCustom "Explicit any used in refactor_extract_functioon tests" in
     Reason.mk_reason desc loc
   in
-  let builtins_names =
-    (* Add builtins that will be used by tests. *)
+  (* Add builtins that will be used by tests. *)
+  let builtins_values =
     SMap.empty
     |> SMap.add "console" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "Object" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
@@ -94,6 +94,9 @@ let dummy_context () =
     |> SMap.add "Promise" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "promise" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "$await" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+  in
+  let builtin_types =
+    SMap.empty
     |> SMap.add
          "$AsyncIterable"
          (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
@@ -104,7 +107,11 @@ let dummy_context () =
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let resolve_require _ = Ok (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))) in
   Context.make ccx metadata dummy_filename aloc_table resolve_require (fun _ ->
-      Builtins.of_name_map ~mapper:Base.Fn.id builtins_names SMap.empty
+      Builtins.of_name_map
+        ~mapper:Base.Fn.id
+        ~values:builtins_values
+        ~types:builtin_types
+        ~modules:SMap.empty
   )
 
 let typed_ast_of_ast cx ast =

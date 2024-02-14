@@ -25,7 +25,7 @@ module Normalizer = Ty_normalizer.Make (struct
 
   let builtin cx ~cont reason x =
     let t =
-      match Flow_js_utils.lookup_builtin_name_result cx x reason with
+      match Flow_js_utils.lookup_builtin_value_result cx x reason with
       | Ok t -> t
       | Error (t, _) -> t
     in
@@ -35,7 +35,7 @@ module Normalizer = Ty_normalizer.Make (struct
     (* TODO the pattern matching on the result of lookup_builtin_name_result might need
      * some refinement. This is replacing what mk_instance would do. *)
     let t =
-      match Flow_js_utils.lookup_builtin_name_result cx x reason with
+      match Flow_js_utils.lookup_builtin_type_result cx x reason with
       | Ok (Type.DefT (_, Type.TypeT (_, t))) -> t
       | Ok t -> t
       | Error (t, _) -> t
