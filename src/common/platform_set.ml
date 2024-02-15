@@ -7,6 +7,13 @@
 
 type t = Bitset.t [@@deriving show]
 
+let available_platforms_to_bitset ~multi_platform_extensions available_platforms =
+  let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
+  Base.List.iteri multi_platform_extensions ~f:(fun i ext ->
+      if Base.List.exists available_platforms ~f:(fun p -> ext = "." ^ p) then Bitset.set bitset i
+  );
+  bitset
+
 let available_platforms ~file_options ~filename ~explicit_available_platforms : t option =
   let open Files in
   if not file_options.multi_platform then
@@ -22,12 +29,7 @@ let available_platforms ~file_options ~filename ~explicit_available_platforms : 
       (match explicit_available_platforms with
       | None -> Some (Bitset.all_one (Base.List.length multi_platform_extensions))
       | Some explicit_available_platforms ->
-        let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
-        Base.List.iteri multi_platform_extensions ~f:(fun i ext ->
-            if Base.List.exists explicit_available_platforms ~f:(fun p -> ext = "." ^ p) then
-              Bitset.set bitset i
-        );
-        Some bitset)
+        Some (available_platforms_to_bitset ~multi_platform_extensions explicit_available_platforms))
 
 let is_subset = Bitset.is_subset
 
