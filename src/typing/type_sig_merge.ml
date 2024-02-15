@@ -909,7 +909,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
            ConsGen.mk_instance
              file.cx
              reason
-             (Flow_js_utils.lookup_builtin_name file.cx "React$Node" reason)
+             (Flow_js_utils.lookup_builtin_type file.cx "React$Node" reason)
           )
         renders
     in
