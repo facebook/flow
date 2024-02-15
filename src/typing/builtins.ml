@@ -46,8 +46,6 @@ let get_builtin_type_opt builtins name =
   | None -> get_builtin_value_opt builtins name
   | v_opt -> v_opt
 
-let get_builtin_name_opt = get_builtin_type_opt
-
 let get_builtin_module_opt { original_global_modules; mapper; mapped_global_modules; _ } name =
   match Hashtbl.find_opt mapped_global_modules name with
   | Some v -> Some v
