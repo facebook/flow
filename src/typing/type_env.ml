@@ -732,7 +732,10 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
     if is_provider cx loc then
       Base.Option.iter potential_global_name ~f:(fun name ->
           let (_ : Type.t) =
-            Flow_js.get_builtin_name cx name (mk_reason (RIdentifier (OrdinaryName name)) loc)
+            Flow_js_utils.lookup_builtin_name
+              cx
+              name
+              (mk_reason (RIdentifier (OrdinaryName name)) loc)
           in
           ()
       )

@@ -561,10 +561,10 @@ let rec extract_type cx this_t =
   | DefT (reason, ArrT arrtype) ->
     let (builtin, elem_t) =
       match arrtype with
-      | ArrayAT { elem_t; _ } -> (get_builtin_name cx "Array" reason, elem_t)
+      | ArrayAT { elem_t; _ } -> (Flow_js_utils.lookup_builtin_value cx "Array" reason, elem_t)
       | TupleAT { elem_t; _ }
       | ROArrayAT (elem_t, _) ->
-        (get_builtin_name cx "$ReadOnlyArray" reason, elem_t)
+        (Flow_js_utils.lookup_builtin_type cx "$ReadOnlyArray" reason, elem_t)
     in
     let array_t = resolve_type cx builtin in
     Some [elem_t] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx

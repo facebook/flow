@@ -115,7 +115,7 @@ class func_scope_visitor
               "Promise"
               [
                 Tvar.mk_where cx async_return_reason (fun tvar ->
-                    let funt = Flow.get_builtin_name cx "$await" async_return_reason in
+                    let funt = Flow_js_utils.lookup_builtin_value cx "$await" async_return_reason in
                     let callt =
                       mk_functioncalltype
                         ~call_kind:RegularCallKind

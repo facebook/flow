@@ -1496,7 +1496,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       f ()
 
   let run_ref_extractor cx ~use_op ~reason t =
-    let lhs = Flow.get_builtin_name cx "React$RefSetter" reason in
+    let lhs = Flow_js_utils.lookup_builtin_type cx "React$RefSetter" reason in
     match get_t cx lhs with
     | DefT (_, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
       let poly_t = (tparams_loc, ids, t_out) in

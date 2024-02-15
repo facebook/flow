@@ -743,10 +743,6 @@ let apply_env_errors cx loc = function
 let lookup_builtin_name cx x reason =
   lookup_builtin_name_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
 
-let lookup_builtin_name_opt cx x =
-  let builtins = Context.builtins cx in
-  Builtins.get_builtin_name_opt builtins x
-
 let lookup_builtin_value cx x reason =
   lookup_builtin_value_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
 

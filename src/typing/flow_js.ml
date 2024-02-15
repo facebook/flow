@@ -4508,7 +4508,7 @@ struct
           in
           rec_flow_t cx trace ~use_op:unknown_use (t, tout)
         | (_, MapTypeT (use_op, reason, TupleMap funt, tout)) ->
-          let iter = get_builtin_name cx "$iterate" reason in
+          let iter = Flow_js_utils.lookup_builtin_value cx "$iterate" reason in
           let elemt =
             EvalT
               ( iter,
@@ -9825,13 +9825,8 @@ struct
 
   (* builtins, contd. *)
 
-  and get_builtin_name cx x reason =
-    Flow_js_utils.lookup_builtin_name_result cx x reason
-    |> Env_api.map_result ~f:(TypeUtil.mod_reason_of_t (Base.Fn.const reason))
-    |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
-
   and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
-    let t = get_builtin_name cx x reason in
+    let t = Flow_js_utils.lookup_builtin_type cx x reason in
     typeapp ~from_value:false ~use_desc reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
@@ -10052,7 +10047,7 @@ struct
     recurse IMap.empty t
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
-    let t = get_builtin_name cx x reason in
+    let t = Flow_js_utils.lookup_builtin_type cx x reason in
     mk_instance cx ?trace reason ~use_desc t
 
   and flow_all_in_union cx trace rep u =
