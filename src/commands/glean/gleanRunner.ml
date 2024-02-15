@@ -143,7 +143,7 @@ let source_of_type_exports ~root ~write_root ~file ~reader ~loc_source ~type_sig
     | RemoteRef { index; _ } ->
       let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
       source_of_remote_ref remote_ref
-    | BuiltinRef { ref_loc; name } ->
+    | BuiltinRef { ref_loc; type_ref = _; name } ->
       let loc = loc_of_index ~loc_source ~reader ref_loc in
       let source = SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc } in
       return source
@@ -390,7 +390,7 @@ let source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_modules 
       let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
       let%bind source = source_of_remote_ref remote_ref in
       return source
-    | BuiltinRef { ref_loc; name } ->
+    | BuiltinRef { ref_loc; type_ref = _; name } ->
       let loc = loc_of_index ~loc_source ~reader ref_loc in
       let source = SourceOfExport.Declaration Declaration.{ name; loc } in
       return source

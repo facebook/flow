@@ -338,9 +338,14 @@ let merge_ref : 'a. _ -> (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -
     let (lazy (def_loc, name, t)) = Remote_refs.get file.remote_refs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ~ref_loc ~def_loc name
-  | Pack.BuiltinRef { ref_loc; name } ->
+  | Pack.BuiltinRef { ref_loc; type_ref; name } ->
     let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
-    let t = Flow_js_utils.lookup_builtin_name file.cx name reason in
+    let t =
+      if type_ref then
+        Flow_js_utils.lookup_builtin_type file.cx name reason
+      else
+        Flow_js_utils.lookup_builtin_value file.cx name reason
+    in
     f t ~ref_loc ~def_loc:(t |> TypeUtil.reason_of_t |> Reason.def_loc_of_reason) name
 
 let rec merge_tyref file f = function

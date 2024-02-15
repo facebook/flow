@@ -126,7 +126,7 @@ let edge_import_ns edge dep_edge file index =
 let visit_ref edge file = function
   | P.LocalRef { ref_loc = _; index } -> edge_local_def edge file index
   | P.RemoteRef { ref_loc = _; index } -> edge_remote_ref edge file index
-  | P.BuiltinRef { ref_loc = _; name = _ } ->
+  | P.BuiltinRef { ref_loc = _; type_ref = _; name = _ } ->
     (* If the builtins change, we will restart anyway, so there is no need to do
      * any hashing here. *)
     ()

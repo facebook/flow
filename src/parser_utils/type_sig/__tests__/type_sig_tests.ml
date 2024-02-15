@@ -1849,8 +1849,9 @@ let%expect_test "scope_extrusion_nested" =
                    (ObjValueField ([11:19-20], (
                       Ref LocalRef {ref_loc = [11:19-20]; index = 1}), Polarity.Neutral));
                    "y" ->
-                   (ObjValueField ([11:22-23], (
-                      Ref BuiltinRef {ref_loc = [11:22-23]; name = "y"}), Polarity.Neutral)) }}));
+                   (ObjValueField ([11:22-23],
+                      (Ref BuiltinRef {ref_loc = [11:22-23]; type_ref = false; name = "y"}),
+                      Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = []; strict = true;
@@ -2184,7 +2185,8 @@ let%expect_test "reference_expression1" =
   [%expect {|
     CJSModule {type_exports = [||];
       exports =
-      (Some (Eval ([1:17-27], (Ref BuiltinRef {ref_loc = [1:17-23]; name = "Number"}),
+      (Some (Eval ([1:17-27],
+               (Ref BuiltinRef {ref_loc = [1:17-23]; type_ref = false; name = "Number"}),
                (GetProp "NaN"))));
       info =
       CJSModuleInfo {type_export_keys = [||];
@@ -2215,7 +2217,7 @@ let%expect_test "member_expression" =
   [%expect {|
     CJSModule {type_exports = [||];
       exports =
-      (Some (Eval ([1:17-21], (Ref BuiltinRef {ref_loc = [1:17-18]; name = "a"}),
+      (Some (Eval ([1:17-21], (Ref BuiltinRef {ref_loc = [1:17-18]; type_ref = false; name = "a"}),
                (GetElem (Value (NumberLit ([1:19-20], 0., "0")))))));
       info =
       CJSModuleInfo {type_export_keys = [||];
@@ -2515,7 +2517,9 @@ let%expect_test "fbt_empty_open_close" =
   |};
   [%expect {|
     CJSModule {type_exports = [||];
-      exports = (Some (TyRef (Unqualified BuiltinRef {ref_loc = [1:18-21]; name = "FbtElement"})));
+      exports =
+      (Some (TyRef
+               (Unqualified BuiltinRef {ref_loc = [1:18-21]; type_ref = true; name = "FbtElement"})));
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = []; strict = true;
@@ -2528,7 +2532,9 @@ let%expect_test "fbt_empty_open" =
   |};
   [%expect {|
     CJSModule {type_exports = [||];
-      exports = (Some (TyRef (Unqualified BuiltinRef {ref_loc = [1:18-21]; name = "FbtElement"})));
+      exports =
+      (Some (TyRef
+               (Unqualified BuiltinRef {ref_loc = [1:18-21]; type_ref = true; name = "FbtElement"})));
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = []; strict = true;
@@ -2542,7 +2548,9 @@ let%expect_test "fbt_with_child" =
   |};
   [%expect {|
     CJSModule {type_exports = [||];
-      exports = (Some (TyRef (Unqualified BuiltinRef {ref_loc = [2:18-21]; name = "FbtElement"})));
+      exports =
+      (Some (TyRef
+               (Unqualified BuiltinRef {ref_loc = [2:18-21]; type_ref = true; name = "FbtElement"})));
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = []; strict = true;
@@ -2810,7 +2818,10 @@ let%expect_test "function_predicates_2" =
            (Some (Predicate ([3:2-16],
                     (Some (LatentP ((
                              Ref LocalRef {ref_loc = [3:9-12]; index = 0}), None,
-                             [(Arg (Ref BuiltinRef {ref_loc = [3:13-14]; name = "x"}))],
+                             [(Arg
+                                 (Ref
+                                    BuiltinRef {ref_loc = [3:13-14]; type_ref = false; name = "x"}))
+                               ],
                              (("x", 0), []))))
                     )));
            hook = NonHook};
@@ -2850,7 +2861,10 @@ let%expect_test "function_predicates_3" =
            (Some (Predicate ([2:47-62],
                     (Some (LatentP ((
                              Ref LocalRef {ref_loc = [2:55-58]; index = 0}), None,
-                             [(Arg (Ref BuiltinRef {ref_loc = [2:59-60]; name = "x"}))],
+                             [(Arg
+                                 (Ref
+                                    BuiltinRef {ref_loc = [2:59-60]; type_ref = false; name = "x"}))
+                               ],
                              (("x", 0), []))))
                     )));
            hook = NonHook};
@@ -2993,7 +3007,9 @@ let%expect_test "function_predicates_7_latent_with_targs" =
                              Ref LocalRef {ref_loc = [4:9-13]; index = 1}),
                              (Some [(ExplicitArg (Annot (Number [4:14-20])));
                                     (ImplicitArg [4:22-23])]),
-                             [(Arg (Ref BuiltinRef {ref_loc = [4:25-26]; name = "x"}));
+                             [(Arg
+                                 (Ref
+                                    BuiltinRef {ref_loc = [4:25-26]; type_ref = false; name = "x"}));
                                (Arg (Ref LocalRef {ref_loc = [4:28-29]; index = 0}))],
                              (("x", 0), []))))
                     )));
@@ -3337,12 +3353,17 @@ let%expect_test "object_annot_call_poly" =
                             []));
                          params =
                          [FunParam {name = None;
-                            t = (TyRef (Unqualified BuiltinRef {ref_loc = [1:22-23]; name = "X"}))}
+                            t =
+                            (TyRef
+                               (Unqualified
+                                  BuiltinRef {ref_loc = [1:22-23]; type_ref = true; name = "X"}))}
                            ];
                          rest_param = None;
                          this_param = None;
                          return =
-                         (TyRef (Unqualified BuiltinRef {ref_loc = [1:26-27]; name = "X"}));
+                         (TyRef
+                            (Unqualified
+                               BuiltinRef {ref_loc = [1:26-27]; type_ref = true; name = "X"}));
                          predicate = None;
                          hook = NonHook}
                        ))),
@@ -3412,7 +3433,7 @@ let%expect_test "destruct_object_shared" =
     2. Variable {id_loc = [1:24-25]; name = "d"; def = (Pattern 4)}
 
     Pattern defs:
-    0. (Ref BuiltinRef {ref_loc = [1:30-31]; name = "e"})
+    0. (Ref BuiltinRef {ref_loc = [1:30-31]; type_ref = false; name = "e"})
 
     Patterns:
     0. (PDef 0)
@@ -3441,7 +3462,7 @@ let%expect_test "destruct_array_shared" =
     3. Variable {id_loc = [1:24-25]; name = "d"; def = (Pattern 5)}
 
     Pattern defs:
-    0. (Ref BuiltinRef {ref_loc = [1:30-31]; name = "e"})
+    0. (Ref BuiltinRef {ref_loc = [1:30-31]; type_ref = false; name = "e"})
 
     Patterns:
     0. (PDef 0)
@@ -3610,7 +3631,8 @@ let%expect_test "typeof loc" =
               qname = ["q"; "p"; "o"];
               t =
               (Eval ([1:25-26],
-                 (Eval ([1:23-24], (Ref BuiltinRef {ref_loc = [1:21-22]; name = "o"}),
+                 (Eval ([1:23-24],
+                    (Ref BuiltinRef {ref_loc = [1:21-22]; type_ref = false; name = "o"}),
                     (GetProp "p"))),
                  (GetProp "q")));
               targs = None})} |}]
@@ -3637,8 +3659,10 @@ let%expect_test "qualified_generic_typeapp_loc" =
              qualification =
              Qualified {loc = [1:22-25];
                id_loc = [1:24-25]; name = "P";
-               qualification = (Unqualified BuiltinRef {ref_loc = [1:22-23]; name = "O"})}};
-           targs = [(TyRef (Unqualified BuiltinRef {ref_loc = [1:28-29]; name = "T"}))]}} |}]
+               qualification =
+               (Unqualified BuiltinRef {ref_loc = [1:22-23]; type_ref = true; name = "O"})}};
+           targs =
+           [(TyRef (Unqualified BuiltinRef {ref_loc = [1:28-29]; type_ref = true; name = "T"}))]}} |}]
 
 let%expect_test "temporary_object_annot" =
   print_sig {|
@@ -4893,12 +4917,22 @@ let%expect_test "predicate_latent" =
                     (Some (AndP (
                              (LatentP ((
                                 Ref LocalRef {ref_loc = [8:10-11]; index = 0}), None,
-                                [(Arg (Ref BuiltinRef {ref_loc = [8:12-13]; name = "a"}))],
+                                [(Arg
+                                    (
+                                    Ref
+                                    BuiltinRef {ref_loc = [8:12-13]; type_ref = false; name = "a"}))
+                                  ],
                                 (("a", 0), []))),
                              (LatentP ((
                                 Ref LocalRef {ref_loc = [8:18-19]; index = 1}), None,
-                                [(Arg (Ref BuiltinRef {ref_loc = [8:20-21]; name = "a"}));
-                                  (Arg (Ref BuiltinRef {ref_loc = [8:23-24]; name = "b"}))],
+                                [(Arg
+                                    (
+                                    Ref
+                                    BuiltinRef {ref_loc = [8:20-21]; type_ref = false; name = "a"}));
+                                  (Arg
+                                    (Ref
+                                    BuiltinRef {ref_loc = [8:23-24]; type_ref = false; name = "b"}))
+                                  ],
                                 (("b", 1), [("a", 0)])))
                              )))
                     )));
@@ -4946,7 +4980,9 @@ let%expect_test "predicate_latent_non_param_identifiers" =
            (Some (Predicate ([4:2-19],
                     (Some (LatentP ((
                              Ref LocalRef {ref_loc = [4:9-12]; index = 1}), None,
-                             [(Arg (Ref BuiltinRef {ref_loc = [4:13-14]; name = "x"}));
+                             [(Arg
+                                 (Ref
+                                    BuiltinRef {ref_loc = [4:13-14]; type_ref = false; name = "x"}));
                                (Arg (Ref LocalRef {ref_loc = [4:16-17]; index = 0}))],
                              (("x", 0), []))))
                     )));
@@ -5319,7 +5355,9 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
                     props =
                     { "foo" ->
                       (ObjAnnotField ([2:21-24],
-                         (TyRef (Unqualified BuiltinRef {ref_loc = [2:26-29]; name = "bar"})),
+                         (TyRef
+                            (Unqualified
+                               BuiltinRef {ref_loc = [2:26-29]; type_ref = true; name = "bar"})),
                          Polarity.Neutral)) };
                     proto = ObjAnnotImplicitProto})
                )))}
@@ -5522,7 +5560,9 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            renders =
            (Annot
               (Renders ([9:25],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [9:25]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [9:25]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
     6. EnumBinding {id_loc = [10:15-16];
          name = "A"; rep = StringRep {truthy = true};
@@ -5648,7 +5688,8 @@ let%expect_test "builtin_toplevel_import" =
     Local defs:
     0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
     1. Variable {id_loc = [6:21-22];
-         name = "y"; def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; name = "x"}))}
+         name = "y";
+         def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; type_ref = true; name = "x"}))}
 
     Builtin module bar:
     [5:15-18] ESModule {type_exports = [||];
@@ -5972,7 +6013,10 @@ let%expect_test "optional_indexed_access" =
                    (Annot
                       OptionalIndexedAccessNonMaybeType {
                         loc = [1:16-26];
-                        obj = (TyRef (Unqualified BuiltinRef {ref_loc = [1:16-19]; name = "Obj"}));
+                        obj =
+                        (TyRef
+                           (Unqualified
+                              BuiltinRef {ref_loc = [1:16-19]; type_ref = true; name = "Obj"}));
                         index = (Annot (SingletonString ([1:22-25], "a")))});
                    elem = (Annot (SingletonString ([1:27-30], "b")))});
               void_loc = [1:16-26]})}
@@ -6406,7 +6450,9 @@ let%expect_test "component" =
            renders =
            (Annot
               (Renders ([1:15],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [1:15]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
 
   |}]
@@ -6455,7 +6501,9 @@ let%expect_test "component2" =
            renders =
            (Annot
               (Renders ([2:40],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [2:40]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
 
   |}]
@@ -6492,7 +6540,9 @@ let%expect_test "component3" =
            renders =
            (Annot
               (Renders ([1:19],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [1:19]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-69];
@@ -6504,7 +6554,9 @@ let%expect_test "component3" =
              ];
            rest_param =
            (Some ComponentRestParam {
-                   t = (TyRef (Unqualified BuiltinRef {ref_loc = [2:48-52]; name = "Rest"}))});
+                   t =
+                   (TyRef
+                      (Unqualified BuiltinRef {ref_loc = [2:48-52]; type_ref = true; name = "Rest"}))});
            renders =
            (Annot
               (Renders ([2:54-69], (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0})),
@@ -6577,7 +6629,9 @@ let%expect_test "component_5" =
            renders =
            (Annot
               (Renders ([1:23],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [1:23]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
     1. ComponentBinding {id_loc = [2:25-28];
          name = "Bar"; fn_loc = [2:15-31];
@@ -6588,7 +6642,9 @@ let%expect_test "component_5" =
            renders =
            (Annot
               (Renders ([2:31],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [2:31]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
 
   |}]
@@ -6660,7 +6716,9 @@ let%expect_test "declare_component" =
            renders =
            (Annot
               (Renders ([1:31],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:31]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [1:31]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}}
     1. ComponentBinding {id_loc = [2:33-36];
          name = "Bar"; fn_loc = [2:23-40];
@@ -6671,7 +6729,9 @@ let%expect_test "declare_component" =
            renders =
            (Annot
               (Renders ([2:39],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:39]; name = "React$Node"})),
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [2:39]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}} |}]
 
 let%expect_test "declare_component_disabled" =
@@ -6744,7 +6804,9 @@ let%expect_test "component_type" =
                  renders =
                  (Annot
                     (Renders ([4:28],
-                       (TyRef (Unqualified BuiltinRef {ref_loc = [4:28]; name = "React$Node"})),
+                       (TyRef
+                          (Unqualified
+                             BuiltinRef {ref_loc = [4:28]; type_ref = true; name = "React$Node"})),
                        Flow_ast.Type.Renders.Normal)))}
                )))} |}]
 

@@ -432,8 +432,10 @@ let res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                Ok Type.(AnyT.make (AnyError None) reason)
              | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
                find_refi var_info refinement_id |> Base.Option.some |> res_of_state writes write_id
-             | (Env_api.With_ALoc.Global name, _) ->
-               Flow_js_utils.lookup_builtin_name_result cx name reason
+             | (Env_api.With_ALoc.Global name, (ForValue | ForTypeof)) ->
+               Flow_js_utils.lookup_builtin_value_result cx name reason
+             | (Env_api.With_ALoc.Global name, ForType) ->
+               Flow_js_utils.lookup_builtin_type_result cx name reason
              | (Env_api.With_ALoc.GlobalThis reason, _) -> Ok (ObjProtoT reason)
              | (Env_api.With_ALoc.IllegalThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
