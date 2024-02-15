@@ -719,19 +719,19 @@ let lookup_builtin_error cx x reason =
 let lookup_builtin_name_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_name_opt builtins x with
-  | Some t -> Ok t
+  | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
   | None -> lookup_builtin_error cx (OrdinaryName x) reason
 
 let lookup_builtin_value_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_value_opt builtins x with
-  | Some t -> Ok t
+  | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
   | None -> lookup_builtin_error cx (OrdinaryName x) reason
 
 let lookup_builtin_type_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_type_opt builtins x with
-  | Some t -> Ok t
+  | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
   | None -> lookup_builtin_error cx (OrdinaryName x) reason
 
 let apply_env_errors cx loc = function
