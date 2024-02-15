@@ -175,8 +175,6 @@ module type INPUT = sig
     Type.t list ->
     'a
 
-  val builtin : Context.t -> cont:(Type.t -> 'a) -> Reason.t -> string -> 'a
-
   val builtin_type : Context.t -> cont:(Type.t -> 'a) -> Reason.t -> string -> 'a
 
   val builtin_typeapp :
@@ -2395,7 +2393,14 @@ module Make (I : INPUT) : S = struct
       let cont =
         type__ ~env ~inherited ~source:(Ty.PrimitiveProto builtin) ~imode:IMInstance ?id:None
       in
-      I.builtin (Env.get_cx env) ~cont r builtin
+      let t =
+        match a with
+        | T.ArrayAT _ -> Flow_js_utils.lookup_builtin_value (Env.get_cx env) "Array" r
+        | T.ROArrayAT _
+        | T.TupleAT _ ->
+          Flow_js_utils.lookup_builtin_type (Env.get_cx env) "$ReadOnlyArray" r
+      in
+      cont t
 
     and member_expand_object ~env ~inherited ~source super implements inst =
       let { T.own_props; proto_props; _ } = inst in

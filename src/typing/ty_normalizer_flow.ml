@@ -49,10 +49,6 @@ module Normalizer = Ty_normalizer.Make (struct
     in
     cont t
 
-  let builtin cx ~cont reason name =
-    let t = Flow_js_utils.lookup_builtin_name cx name reason in
-    cont t
-
   let builtin_type cx ~cont reason name =
     let t = Flow_js.get_builtin_type cx reason name in
     cont t
