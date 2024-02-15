@@ -102,9 +102,6 @@ module type BUILTINS = sig
   val get_builtin_type :
     Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> string -> Type.t
 
-  val get_builtin_name_result :
-    Context.t -> string -> reason -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result
-
   val get_builtin_name : Context.t -> string -> reason -> Type.t
 
   val get_builtin_typeapp : Context.t -> reason -> ?use_desc:bool -> string -> Type.t list -> Type.t

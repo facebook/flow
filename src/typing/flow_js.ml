@@ -9825,12 +9825,10 @@ struct
 
   (* builtins, contd. *)
 
-  and get_builtin_name_result cx x reason =
+  and get_builtin_name cx x reason =
     Flow_js_utils.lookup_builtin_name_result cx x reason
     |> Env_api.map_result ~f:(TypeUtil.mod_reason_of_t (Base.Fn.const reason))
-
-  and get_builtin_name cx x reason =
-    get_builtin_name_result cx x reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
+    |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
   and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
     let t = get_builtin_name cx x reason in
