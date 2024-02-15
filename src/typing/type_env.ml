@@ -731,13 +731,14 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
   | Some (Env_api.GlobalWrite _) ->
     if is_provider cx loc then
       Base.Option.iter potential_global_name ~f:(fun name ->
-          let (_ : Type.t) =
-            Flow_js_utils.lookup_builtin_name
+          if Base.Option.is_none (Flow_js_utils.lookup_builtin_value_opt cx name) then
+            let name = OrdinaryName name in
+            Flow_js_utils.add_output
               cx
-              name
-              (mk_reason (RIdentifier (OrdinaryName name)) loc)
-          in
-          ()
+              Error_message.(
+                EBuiltinLookupFailed
+                  { reason = mk_reason (RIdentifier name) loc; potential_generator = None; name }
+              )
       )
   | _ ->
     if not (is_provider cx loc) then
