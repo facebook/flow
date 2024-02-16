@@ -190,8 +190,15 @@ let compatibility_call call =
              } ))
      );
    _;
+  }
+    when name = "forwardRef" || name = "memo" ->
+    true
+  | {
+   Ast.Expression.Call.callee =
+     (_, Ast.Expression.(Identifier (_, { Ast.Identifier.name = "renderHook"; _ })));
+   _;
   } ->
-    name = "forwardRef" || name = "memo"
+    true
   | _ -> false
 
 let componentlike_name name =
@@ -543,8 +550,15 @@ let rec whole_ast_visitor ~under_component cx rrid =
       let next_declaring =
         match prop with
         | Ast.Expression.Object.Property.(
-            Method { key = Identifier (_, { Ast.Identifier.name; _ }); _ }) ->
-          Flow_ast_utils.hook_name name
+            Method { key = Identifier (_, { Ast.Identifier.name; _ }); _ })
+        | Ast.Expression.Object.Property.(
+            Init
+              {
+                key = Identifier (_, { Ast.Identifier.name; _ });
+                value = (_, Ast.Expression.(ArrowFunction _ | Function _));
+                _;
+              }) ->
+          Flow_ast_utils.hook_name name || name = "render"
         | _ -> false
       in
       declaring_function_component <- next_declaring;

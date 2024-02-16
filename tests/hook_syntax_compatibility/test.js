@@ -66,3 +66,13 @@ const [useXB, {w: useXC}] = ((42: any): [() => void, { w: () => void }])
         return null;
       }
 }
+
+{
+    const tests = {
+        render() {
+            const x = useH(); // no error
+        }
+    }
+    declare const renderHook: any;
+    renderHook(() => useH()); // no error
+}
