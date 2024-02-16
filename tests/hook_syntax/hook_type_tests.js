@@ -71,3 +71,7 @@ hook useC() {
     const useBadName = nonHook;
     useBadName(); // error
 }
+
+declare const R: ReturnType<typeof useC>;
+R as empty; // error;
+R as void; // ok;

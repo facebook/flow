@@ -980,6 +980,23 @@ References:
            ^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:76:1
+
+Cannot cast `R` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   hook_type_tests.js:76:1
+   76| R as empty; // error;
+       ^
+
+References:
+   hook_type_tests.js:75:18
+   75| declare const R: ReturnType<typeof useC>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hook_type_tests.js:76:6
+   76| R as empty; // error;
+            ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
 
 Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -2339,4 +2356,4 @@ References:
 
 
 
-Found 159 errors
+Found 160 errors
