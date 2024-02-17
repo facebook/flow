@@ -780,7 +780,7 @@ let rec resolve_binding cx reason loc b =
       | DecompositionError
       | EncounteredPlaceholder ->
         if has_hint then
-          Flow_js.add_output
+          Flow_js_utils.add_output
             cx
             (Error_message.EMissingLocalAnnotation
                { reason; hint_available = true; from_generic_function = false }
@@ -790,7 +790,7 @@ let rec resolve_binding cx reason loc b =
     let () =
       match hints with
       | [] ->
-        Flow_js.add_output
+        Flow_js_utils.add_output
           cx
           (Error_message.EMissingLocalAnnotation
              { reason; hint_available = false; from_generic_function = false }
@@ -808,7 +808,7 @@ let rec resolve_binding cx reason loc b =
   | Root (UnannotatedParameter reason) ->
     let t = AnyT (reason, AnyError (Some MissingAnnotation)) in
     Type_env.bind_function_param cx t (loc_of_reason reason);
-    Flow_js.add_output
+    Flow_js_utils.add_output
       cx
       (Error_message.EMissingLocalAnnotation
          { reason; hint_available = false; from_generic_function = false }
@@ -1063,7 +1063,7 @@ let resolve_enum cx id_loc enum_reason enum_loc name enum =
     let enum_t = Statement.mk_enum cx ~enum_reason id_loc name enum in
     (DefT (enum_reason, EnumObjectT enum_t), unknown_use)
   else (
-    Flow_js.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
+    Flow_js_utils.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
     (AnyT.error enum_reason, unknown_use)
   )
 
