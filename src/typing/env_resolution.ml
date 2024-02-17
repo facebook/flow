@@ -748,9 +748,8 @@ let rec resolve_binding cx reason loc b =
         Context.add_post_inference_subtyping_check cx elem_t use_op constrain_t;
         (elem_t, None, reason)
       ) else
-        let elem_t = Tvar.mk cx element_reason in
-        Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-        Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc), elem_t);
+        let elem_t = EmptyT.make (mk_reason REmptyArrayElement loc) in
+        Flow_js_utils.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
         (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)
     in
     let t = DefT (reason, ArrT (ArrayAT { elem_t; tuple_view; react_dro = None })) in
