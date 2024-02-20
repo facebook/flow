@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------------------ component.js:1:63
+
+Cannot resolve name `bar`. [cannot-resolve-name]
+
+   1| export component ComponentWithTypeof(bar: string, baz: typeof bar, boz: {boz: typeof baz}) { return } // error: name-not-bound
+                                                                    ^^^
+
+
+Error ------------------------------------------------------------------------------------------------ component.js:1:86
+
+Cannot resolve name `baz`. [cannot-resolve-name]
+
+   1| export component ComponentWithTypeof(bar: string, baz: typeof bar, boz: {boz: typeof baz}) { return } // error: name-not-bound
+                                                                                           ^^^
+
+
 Error ------------------------------------------------------------------------------------------------- function.js:1:22
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -207,5 +223,95 @@ References:
             ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:20:24
 
-Found 13 errors
+Cannot call `functionWithTypeof` with `3` bound to `baz` because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   test.js:20:24
+   20| functionWithTypeof('', 3, {boz: 3}); // error: number ~> string
+                              ^ [1]
+
+References:
+   function.js:3:54
+    3| export function functionWithTypeof(bar: string, baz: typeof bar, {boz}: {boz: typeof baz}) {}
+                                                            ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:20:33
+
+Cannot call `functionWithTypeof` with object literal bound to the third parameter because number [1] is incompatible
+with string [2] in property `boz`. [incompatible-call]
+
+   test.js:20:33
+   20| functionWithTypeof('', 3, {boz: 3}); // error: number ~> string
+                                       ^ [1]
+
+References:
+   function.js:3:79
+    3| export function functionWithTypeof(bar: string, baz: typeof bar, {boz}: {boz: typeof baz}) {}
+                                                                                     ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:52
+
+Cannot call `functionWithTypeofAndDestructuring` with empty string bound to `y` because string [1] is incompatible with
+number [2]. [incompatible-call]
+
+   test.js:21:52
+   21| functionWithTypeofAndDestructuring({x: [], y: ''}, '', 3); // error: number ~> string, string ~> number
+                                                          ^^ [1]
+
+References:
+   function.js:7:6
+    7|   y: typeof x1,
+            ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:56
+
+Cannot call `functionWithTypeofAndDestructuring` with `3` bound to `z` because number [1] is incompatible with
+string [2]. [incompatible-call]
+
+   test.js:21:56
+   21| functionWithTypeofAndDestructuring({x: [], y: ''}, '', 3); // error: number ~> string, string ~> number
+                                                              ^ [1]
+
+References:
+   function.js:8:6
+    8|   z: typeof x2,
+            ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:22:34
+
+Cannot call `functionWithTypeofAndOptional` with empty string bound to `y` because string [1] is incompatible with
+number [2]. [incompatible-call]
+
+   test.js:22:34
+   22| functionWithTypeofAndOptional(1, ''); // error: string, string ~> number
+                                        ^^ [1]
+
+References:
+   function.js:11:66
+   11| export function functionWithTypeofAndOptional(x?: number = 1, y: typeof x) {}
+                                                                        ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:42
+
+Cannot call `functionWithTypeofAndOptional` with empty string bound to `y` because string [1] is incompatible with
+number [2]. [incompatible-call]
+
+   test.js:23:42
+   23| functionWithTypeofAndOptional(undefined, ''); // error: string, string ~> number
+                                                ^^ [1]
+
+References:
+   function.js:11:66
+   11| export function functionWithTypeofAndOptional(x?: number = 1, y: typeof x) {}
+                                                                        ^^^^^^^^ [2]
+
+
+
+Found 21 errors

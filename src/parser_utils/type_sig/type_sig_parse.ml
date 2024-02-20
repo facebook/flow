@@ -3277,7 +3277,7 @@ and member =
   in
   (fun opts scope tbls obj loc prop -> loop ~toplevel_loc:loc opts scope tbls [(loc, prop)] obj)
 
-and param opts scope tbls xs loc patt default =
+and param opts scope tbls xs loc patt ~bind_names default =
   let module P = Ast.Pattern in
   match patt with
   | P.Identifier { P.Identifier.name = id; annot = t; optional } ->
@@ -3293,36 +3293,68 @@ and param opts scope tbls xs loc patt default =
         xs
         t
     in
+    let name_t =
+      if optional && default = None then
+        Annot (Optional t)
+      else
+        t
+    in
     let t =
       if optional || default <> None then
         Annot (Optional t)
       else
         t
     in
-    (Some name, t)
+    let scope =
+      if bind_names then (
+        let scope = Scope.push_lex scope in
+        Scope.bind_var scope tbls Ast.Variable.Let loc name (lazy name_t) ignore2;
+        scope
+      ) else
+        scope
+    in
+    (Some name, scope, t)
   | P.Object { P.Object.annot = t; properties = _; comments = _ }
   | P.Array { P.Array.annot = t; elements = _; comments = _ } ->
+    let patt_with_loc = (loc, patt) in
     let loc = push_loc tbls loc in
-    let t =
-      annot_or_hint
-        ~err_loc:(Some loc)
-        ~sort:
-          (match patt with
-          | P.Object _ -> Expected_annotation_sort.ObjectPattern
-          | _ -> Expected_annotation_sort.ArrayPattern)
-        opts
-        scope
-        tbls
-        xs
-        t
+    let lazy_t =
+      lazy
+        (annot_or_hint
+           ~err_loc:(Some loc)
+           ~sort:
+             (match patt with
+             | P.Object _ -> Expected_annotation_sort.ObjectPattern
+             | _ -> Expected_annotation_sort.ArrayPattern)
+           opts
+           scope
+           tbls
+           xs
+           t
+        )
     in
+    let scope =
+      if bind_names then (
+        let scope = Scope.push_lex scope in
+        let f id_loc name p =
+          let def = lazy (Pattern p) in
+          Scope.bind_var scope tbls Ast.Variable.Let id_loc name def ignore2
+        in
+        let pattern_def = Lazy.map (push_pattern_def tbls) lazy_t in
+        let def = push_pattern tbls (PDef pattern_def) in
+        pattern opts scope tbls f def patt_with_loc;
+        scope
+      ) else
+        scope
+    in
+    let t = Lazy.force lazy_t in
     let t =
       if default <> None then
         Annot (Optional t)
       else
         t
     in
-    (None, t)
+    (None, scope, t)
   | P.Expression _ -> failwith "unexpected expression pattern"
 
 and rest_param opts scope tbls xs param_loc p =
@@ -3377,7 +3409,7 @@ and function_def_helper =
     | [] -> List.rev acc
     | p :: ps ->
       let (loc, { F.Param.argument = (_, patt); default }) = p in
-      let (name, t) = param opts scope tbls xs loc patt default in
+      let (name, scope, t) = param opts scope tbls xs loc patt ~bind_names:true default in
       let p = FunParam { name; t } in
       params opts scope tbls xs (p :: acc) ps
   in
@@ -3518,7 +3550,7 @@ and component_def =
         (name, loc)
     in
     let name_loc = push_loc tbls name_loc in
-    let (_, t) = param opts scope tbls xs loc patt default in
+    let (_, _, t) = param opts scope tbls xs loc patt ~bind_names:false default in
     ComponentParam { name; name_loc; t }
   in
   let rec params opts scope tbls xs acc = function

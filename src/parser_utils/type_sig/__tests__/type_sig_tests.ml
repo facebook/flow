@@ -616,10 +616,10 @@ let%expect_test "function_param_default_check" =
 
   |}]
 
-let%expect_test "function_param_typeof_reference_inconsistant_with_local_check" =
+let%expect_test "function_param_typeof_reference" =
   print_sig {|
     declare const bar: string;
-    export default function(bar: string, baz: typeof bar) {}
+    export default function(bar: typeof bar, baz: typeof bar, {boz}: {boz: typeof baz}) {}
   |};
   [%expect {|
     ESModule {type_exports = [||];
@@ -627,22 +627,44 @@ let%expect_test "function_param_typeof_reference_inconsistant_with_local_check" 
       [|ExportDefault {default_loc = [2:7-14];
           def =
           (Value
-             FunExpr {loc = [2:15-56];
+             FunExpr {loc = [2:15-86];
                async = false; generator = false;
                def =
                FunSig {tparams = Mono;
                  params =
-                 [FunParam {name = (Some "bar"); t = (Annot (String [2:29-35]))};
+                 [FunParam {name = (Some "bar");
+                    t =
+                    (Annot
+                       Typeof {loc = [2:29-39];
+                         qname = ["bar"];
+                         t = (Ref LocalRef {ref_loc = [2:36-39]; index = 0});
+                         targs = None})};
                    FunParam {name = (Some "baz");
                      t =
                      (Annot
-                        Typeof {loc = [2:42-52];
+                        Typeof {loc = [2:46-56];
                           qname = ["bar"];
-                          t = (Ref LocalRef {ref_loc = [2:49-52]; index = 0});
-                          targs = None})}
+                          t = (Ref LocalRef {ref_loc = [2:53-56]; index = 1});
+                          targs = None})};
+                   FunParam {name = None;
+                     t =
+                     (Annot
+                        ObjAnnot {loc = [2:65-82];
+                          obj_kind = InexactObj;
+                          props =
+                          { "boz" ->
+                            (ObjAnnotField ([2:66-69],
+                               (Annot
+                                  Typeof {
+                                    loc = [2:71-81];
+                                    qname = ["baz"];
+                                    t = (Ref LocalRef {ref_loc = [2:78-81]; index = 2});
+                                    targs = None}),
+                               Polarity.Neutral)) };
+                          proto = ObjAnnotImplicitProto})}
                    ];
                  rest_param = None; this_param = None;
-                 return = (Annot (Void [2:53]));
+                 return = (Annot (Void [2:83]));
                  predicate = None; hook = NonHook};
                statics = {}})}
         |];
@@ -653,6 +675,84 @@ let%expect_test "function_param_typeof_reference_inconsistant_with_local_check" 
 
     Local defs:
     0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
+    1. Variable {id_loc = [2:24-27];
+         name = "bar";
+         def =
+         (Annot
+            Typeof {loc = [2:29-39];
+              qname = ["bar"]; t = (Ref LocalRef {ref_loc = [2:36-39]; index = 0});
+              targs = None})}
+    2. Variable {id_loc = [2:41-44];
+         name = "baz";
+         def =
+         (Annot
+            Typeof {loc = [2:46-56];
+              qname = ["bar"]; t = (Ref LocalRef {ref_loc = [2:53-56]; index = 1});
+              targs = None})}
+
+  |}]
+
+let%expect_test "component_param_typeof_reference" =
+  print_sig {|
+    declare const bar: string;
+    export component C(bar: typeof bar, baz: typeof bar, booz as {boz}: {boz: typeof baz}) {}
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"C"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
+    1. ComponentBinding {id_loc = [2:17-18];
+         name = "C"; fn_loc = [2:7-86];
+         def =
+         ComponentSig {params_loc = [2:18-86];
+           tparams = Mono;
+           params =
+           [ComponentParam {name = "bar";
+              name_loc = [2:19-22];
+              t =
+              (Annot
+                 Typeof {loc = [2:24-34];
+                   qname = ["bar"]; t = (Ref LocalRef {ref_loc = [2:31-34]; index = 0});
+                   targs = None})};
+             ComponentParam {name = "baz";
+               name_loc = [2:36-39];
+               t =
+               (Annot
+                  Typeof {loc = [2:41-51];
+                    qname = ["bar"];
+                    t = (Ref LocalRef {ref_loc = [2:48-51]; index = 0});
+                    targs = None})};
+             ComponentParam {name = "booz";
+               name_loc = [2:53-57];
+               t =
+               (Annot
+                  ObjAnnot {loc = [2:68-85];
+                    obj_kind = InexactObj;
+                    props =
+                    { "boz" ->
+                      (ObjAnnotField ([2:69-72],
+                         (Annot
+                            Typeof {loc = [2:74-84];
+                              qname = ["baz"];
+                              t =
+                              (Ref BuiltinRef {ref_loc = [2:81-84]; type_ref = false; name = "baz"});
+                              targs = None}),
+                         Polarity.Neutral)) };
+                    proto = ObjAnnotImplicitProto})}
+             ];
+           rest_param = None;
+           renders =
+           (Annot
+              (Renders ([2:86],
+                 (TyRef
+                    (Unqualified
+                       BuiltinRef {ref_loc = [2:86]; type_ref = true; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
 
   |}]
 
