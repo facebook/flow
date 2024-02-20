@@ -3169,6 +3169,78 @@ let rec expression opts scope tbls (loc, expr) =
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Yield))
       )
 
+and pattern opts scope tbls f def (_, p) =
+  let module P = Ast.Pattern in
+  match p with
+  | P.Identifier { P.Identifier.name = id; annot = _; optional = _ } ->
+    let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+    let id_loc = push_loc tbls id_loc in
+    f id_loc name def
+  | P.Object { P.Object.properties; annot = _; comments = _ } ->
+    object_pattern opts scope tbls f def properties
+  | P.Array { P.Array.elements; annot = _; comments = _ } ->
+    array_pattern opts scope tbls f def elements
+  | P.Expression _ -> failwith "unexpected expression pattern"
+
+and object_pattern =
+  let module O = Ast.Pattern.Object in
+  let prop opts scope tbls f def xs = function
+    | O.Property (_, { O.Property.key; pattern = p; default = _; shorthand = _ }) ->
+      let (xs, def) =
+        match key with
+        | O.Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
+        | O.Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
+          let id_loc = push_loc tbls id_loc in
+          let def = push_pattern tbls (PropP { id_loc; name; def }) in
+          (name :: xs, def)
+        | O.Property.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ }) ->
+          let t = expression opts scope tbls expr in
+          let elem = push_pattern_def tbls t in
+          let def = push_pattern tbls (ComputedP { elem; def }) in
+          (xs, def)
+        | O.Property.NumberLiteral (loc, _)
+        | O.Property.BigIntLiteral (loc, _) ->
+          let loc = push_loc tbls loc in
+          let def = push_pattern tbls (UnsupportedLiteralP loc) in
+          (xs, def)
+      in
+      pattern opts scope tbls f def p;
+      xs
+    | O.RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
+      let loc = push_loc tbls loc in
+      let def = push_pattern tbls (ObjRestP { loc; xs; def }) in
+      pattern opts scope tbls f def p;
+      xs
+  in
+  let rec loop opts scope tbls f def xs = function
+    | [] -> ()
+    | p :: ps ->
+      let xs = prop opts scope tbls f def xs p in
+      loop opts scope tbls f def xs ps
+  in
+  (fun opts scope tbls f def props -> loop opts scope tbls f def [] props)
+
+and array_pattern =
+  let module A = Ast.Pattern.Array in
+  let elem opts scope tbls f def i = function
+    | A.Hole _ -> ()
+    | A.Element (loc, { A.Element.argument = p; default = _ }) ->
+      let loc = push_loc tbls loc in
+      let def = push_pattern tbls (IndexP { loc; i; def }) in
+      pattern opts scope tbls f def p
+    | A.RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
+      let loc = push_loc tbls loc in
+      let def = push_pattern tbls (ArrRestP { loc; i; def }) in
+      pattern opts scope tbls f def p
+  in
+  let rec loop opts scope tbls f def i = function
+    | [] -> ()
+    | e :: es ->
+      elem opts scope tbls f def i e;
+      loop opts scope tbls f def (succ i) es
+  in
+  (fun opts scope tbls f def elems -> loop opts scope tbls f def 0 elems)
+
 and member =
   let module E = Ast.Expression in
   let module M = E.Member in
@@ -4106,78 +4178,6 @@ let declare_class_def =
     Acc.empty
     |> declare_class_props opts scope tbls xs properties
     |> Acc.declare_class_def tparams extends mixins implements
-
-let rec pattern opts scope tbls f def (_, p) =
-  let module P = Ast.Pattern in
-  match p with
-  | P.Identifier { P.Identifier.name = id; annot = _; optional = _ } ->
-    let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let id_loc = push_loc tbls id_loc in
-    f id_loc name def
-  | P.Object { P.Object.properties; annot = _; comments = _ } ->
-    object_pattern opts scope tbls f def properties
-  | P.Array { P.Array.elements; annot = _; comments = _ } ->
-    array_pattern opts scope tbls f def elements
-  | P.Expression _ -> failwith "unexpected expression pattern"
-
-and object_pattern =
-  let module O = Ast.Pattern.Object in
-  let prop opts scope tbls f def xs = function
-    | O.Property (_, { O.Property.key; pattern = p; default = _; shorthand = _ }) ->
-      let (xs, def) =
-        match key with
-        | O.Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-        | O.Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
-          let id_loc = push_loc tbls id_loc in
-          let def = push_pattern tbls (PropP { id_loc; name; def }) in
-          (name :: xs, def)
-        | O.Property.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ }) ->
-          let t = expression opts scope tbls expr in
-          let elem = push_pattern_def tbls t in
-          let def = push_pattern tbls (ComputedP { elem; def }) in
-          (xs, def)
-        | O.Property.NumberLiteral (loc, _)
-        | O.Property.BigIntLiteral (loc, _) ->
-          let loc = push_loc tbls loc in
-          let def = push_pattern tbls (UnsupportedLiteralP loc) in
-          (xs, def)
-      in
-      pattern opts scope tbls f def p;
-      xs
-    | O.RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-      let loc = push_loc tbls loc in
-      let def = push_pattern tbls (ObjRestP { loc; xs; def }) in
-      pattern opts scope tbls f def p;
-      xs
-  in
-  let rec loop opts scope tbls f def xs = function
-    | [] -> ()
-    | p :: ps ->
-      let xs = prop opts scope tbls f def xs p in
-      loop opts scope tbls f def xs ps
-  in
-  (fun opts scope tbls f def props -> loop opts scope tbls f def [] props)
-
-and array_pattern =
-  let module A = Ast.Pattern.Array in
-  let elem opts scope tbls f def i = function
-    | A.Hole _ -> ()
-    | A.Element (loc, { A.Element.argument = p; default = _ }) ->
-      let loc = push_loc tbls loc in
-      let def = push_pattern tbls (IndexP { loc; i; def }) in
-      pattern opts scope tbls f def p
-    | A.RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-      let loc = push_loc tbls loc in
-      let def = push_pattern tbls (ArrRestP { loc; i; def }) in
-      pattern opts scope tbls f def p
-  in
-  let rec loop opts scope tbls f def i = function
-    | [] -> ()
-    | e :: es ->
-      elem opts scope tbls f def i e;
-      loop opts scope tbls f def (succ i) es
-  in
-  (fun opts scope tbls f def elems -> loop opts scope tbls f def 0 elems)
 
 let type_alias_decl opts scope tbls decl =
   let {
