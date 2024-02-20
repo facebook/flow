@@ -616,6 +616,46 @@ let%expect_test "function_param_default_check" =
 
   |}]
 
+let%expect_test "function_param_typeof_reference_inconsistant_with_local_check" =
+  print_sig {|
+    declare const bar: string;
+    export default function(bar: string, baz: typeof bar) {}
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports =
+      [|ExportDefault {default_loc = [2:7-14];
+          def =
+          (Value
+             FunExpr {loc = [2:15-56];
+               async = false; generator = false;
+               def =
+               FunSig {tparams = Mono;
+                 params =
+                 [FunParam {name = (Some "bar"); t = (Annot (String [2:29-35]))};
+                   FunParam {name = (Some "baz");
+                     t =
+                     (Annot
+                        Typeof {loc = [2:42-52];
+                          qname = ["bar"];
+                          t = (Ref LocalRef {ref_loc = [2:49-52]; index = 0});
+                          targs = None})}
+                   ];
+                 rest_param = None; this_param = None;
+                 return = (Annot (Void [2:53]));
+                 predicate = None; hook = NonHook};
+               statics = {}})}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
+
+  |}]
+
 let%expect_test "export_object_literal_property_literal" =
   print_sig {|
     export default { p: 0 };
