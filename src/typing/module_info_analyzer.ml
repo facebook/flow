@@ -27,7 +27,7 @@ module Module_info = struct
         star: (ALoc.t * Type.t) list;
       }
 
-  let export info name ~name_loc ~is_type_only_export type_ =
+  let export_value info name ~name_loc type_ =
     match info.kind with
     | Unknown ->
       info.kind <-
@@ -39,7 +39,7 @@ module Module_info = struct
                 {
                   Type.preferred_def_locs = None;
                   name_loc = Some name_loc;
-                  is_type_only_export;
+                  is_type_only_export = false;
                   type_;
                 };
             star = [];
@@ -54,7 +54,7 @@ module Module_info = struct
                 {
                   Type.preferred_def_locs = None;
                   name_loc = Some name_loc;
-                  is_type_only_export;
+                  is_type_only_export = false;
                   type_;
                 }
                 named;
@@ -115,14 +115,14 @@ let export_specifiers info loc source export_kind =
     match export_kind with
     | Ast.Statement.ExportType -> Module_info.export_type info remote_name ~name_loc:loc local_type
     | Ast.Statement.ExportValue ->
-      Module_info.export info remote_name ~name_loc:loc ~is_type_only_export:false local_type
+      Module_info.export_value info remote_name ~name_loc:loc local_type
   in
   (* [declare] export [type] {foo [as bar]} from 'module' *)
   let export_from loc local_type remote_name =
     match export_kind with
     | Ast.Statement.ExportType -> Module_info.export_type info remote_name ~name_loc:loc local_type
     | Ast.Statement.ExportValue ->
-      Module_info.export info remote_name ~name_loc:loc ~is_type_only_export:false local_type
+      Module_info.export_value info remote_name ~name_loc:loc local_type
   in
   let export_specifier export (_, { E.ExportSpecifier.local; exported }) =
     let ((local_loc, local_type), { Ast.Identifier.name = local_name; comments = _ }) = local in
@@ -145,12 +145,11 @@ let export_specifiers info loc source export_kind =
   (* [declare] export [type] * as id from "source"; *)
   | E.ExportBatchSpecifier (_, Some (_, { Ast.Identifier.name; _ })) ->
     let ((_, module_t), _) = Base.Option.value_exn source in
-    let is_type_only_export =
-      match export_kind with
-      | Ast.Statement.ExportValue -> false
-      | Ast.Statement.ExportType -> true
-    in
-    Module_info.export info (OrdinaryName name) ~name_loc:loc ~is_type_only_export module_t
+    (match export_kind with
+    | Ast.Statement.ExportValue ->
+      Module_info.export_type info (OrdinaryName name) ~name_loc:loc module_t
+    | Ast.Statement.ExportType ->
+      Module_info.export_value info (OrdinaryName name) ~name_loc:loc module_t)
   (* [declare] export [type] * from "source"; *)
   | E.ExportBatchSpecifier (_, None) ->
     let ((_, module_t), _) = Base.Option.value_exn source in
@@ -206,7 +205,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
     (* A declared namespace will auto-export all toplevel names *)
     if in_declare_namespace then
       let ((name_loc, t), { Ast.Identifier.name; _ }) = id in
-      Module_info.export info (OrdinaryName name) ~name_loc ~is_type_only_export:false t
+      Module_info.export_value info (OrdinaryName name) ~name_loc t
   | ( _,
       Expression
         {
@@ -290,30 +289,20 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
     let export_maybe_default_binding id =
       let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
       match default with
-      | None -> Module_info.export info (OrdinaryName name) ~name_loc ~is_type_only_export:false t
+      | None -> Module_info.export_value info (OrdinaryName name) ~name_loc t
       | Some default_loc ->
-        Module_info.export
-          info
-          (OrdinaryName "default")
-          ~name_loc:default_loc
-          ~is_type_only_export:false
-          t
+        Module_info.export_value info (OrdinaryName "default") ~name_loc:default_loc t
     in
     let f = function
       | D.Variable (_, { DeclareVariable.id; _ }) ->
         let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
-        Module_info.export info (OrdinaryName name) ~name_loc ~is_type_only_export:false t
+        Module_info.export_value info (OrdinaryName name) ~name_loc t
       | D.Function (_, f) -> export_maybe_default_binding f.DeclareFunction.id
       | D.Class (_, c) -> export_maybe_default_binding c.DeclareClass.id
       | D.Component (_, c) -> export_maybe_default_binding c.DeclareComponent.id
       | D.DefaultType ((_, t), _) ->
         let default_loc = Base.Option.value_exn default in
-        Module_info.export
-          info
-          (OrdinaryName "default")
-          ~name_loc:default_loc
-          ~is_type_only_export:true
-          t
+        Module_info.export_type info (OrdinaryName "default") ~name_loc:default_loc t
       | D.NamedType (_, { TypeAlias.id; _ })
       | D.NamedOpaqueType (_, { OpaqueType.id; _ })
       | D.Interface (_, { Interface.id; _ }) ->
@@ -322,7 +311,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
       | D.Enum (_, { EnumDeclaration.id; _ }) ->
         let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
         if Context.enable_enums cx then
-          Module_info.export info (OrdinaryName name) ~name_loc ~is_type_only_export:false t
+          Module_info.export_value info (OrdinaryName name) ~name_loc t
     in
     Option.iter f declaration;
     let export_kind = Ast.Statement.ExportValue in
@@ -338,8 +327,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
     ) ->
     let export_id ((name_loc, t), { Ast.Identifier.name; comments = _ }) =
       match export_kind with
-      | Ast.Statement.ExportValue ->
-        Module_info.export info (OrdinaryName name) ~name_loc ~is_type_only_export:false t
+      | Ast.Statement.ExportValue -> Module_info.export_value info (OrdinaryName name) ~name_loc t
       | Ast.Statement.ExportType -> Module_info.export_type info (OrdinaryName name) ~name_loc t
     in
     let () =
@@ -381,12 +369,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
         | _ -> loc)
       | D.Expression ((loc, _), _) -> loc
     in
-    Module_info.export
-      info
-      (OrdinaryName "default")
-      ~name_loc:export_loc
-      ~is_type_only_export:false
-      t
+    Module_info.export_value info (OrdinaryName "default") ~name_loc:export_loc t
 
 (* A best effort way to pick a location as the signature location of the module.
  * - For cjs, we will first try to pick the location of module.exports, then
