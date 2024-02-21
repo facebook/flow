@@ -22,6 +22,7 @@ type options = {
   module_resource_exts: SSet.t;
   multi_platform: bool;
   multi_platform_extensions: string list;
+  multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
   node_resolver_dirnames: string list;
 }
 

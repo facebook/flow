@@ -195,6 +195,9 @@ val multi_platform : config -> bool option
 
 val multi_platform_extensions : config -> string list
 
+val multi_platform_ambient_supports_platform_directory_overrides :
+  config -> (string * string list) list
+
 val munge_underscores : config -> bool
 
 val namespaces : config -> bool

@@ -710,6 +710,11 @@ let file_options =
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
       multi_platform = FlowConfig.multi_platform flowconfig |> Base.Option.value ~default:false;
       multi_platform_extensions = FlowConfig.multi_platform_extensions flowconfig;
+      multi_platform_ambient_supports_platform_directory_overrides =
+        FlowConfig.multi_platform_ambient_supports_platform_directory_overrides flowconfig
+        |> Base.List.map ~f:(fun (path, platforms) ->
+               (Files.expand_project_root_token ~root path, platforms)
+           );
       node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
     }
 

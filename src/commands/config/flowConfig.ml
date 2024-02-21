@@ -108,6 +108,7 @@ module Opts = struct
     modules_are_use_strict: bool;
     multi_platform: bool option;
     multi_platform_extensions: string list;
+    multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
     namespaces: bool;
     no_flowlib: bool;
@@ -237,6 +238,7 @@ module Opts = struct
       modules_are_use_strict = false;
       multi_platform = None;
       multi_platform_extensions = [];
+      multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
       namespaces = false;
       no_flowlib = false;
@@ -687,6 +689,30 @@ module Opts = struct
         else
           Ok { opts with multi_platform_extensions = v :: opts.multi_platform_extensions })
 
+  let multi_platform_ambient_supports_platform_directory_overrides_parser =
+    mapping
+      ~multiple:true
+      (fun v -> Ok v)
+      (fun opts (path, platforms) ->
+        let platforms = Base.String.split ~on:',' platforms |> Base.List.map ~f:String.trim in
+        match
+          Base.List.find_map platforms ~f:(fun p ->
+              if Base.List.mem opts.multi_platform_extensions ("." ^ p) ~equal:String.equal then
+                None
+              else
+                Some ("Unknown platform '" ^ p ^ "'.")
+          )
+        with
+        | Some e -> Error e
+        | None ->
+          Ok
+            {
+              opts with
+              multi_platform_ambient_supports_platform_directory_overrides =
+                (path, platforms)
+                :: opts.multi_platform_ambient_supports_platform_directory_overrides;
+            })
+
   let name_mapper_parser =
     mapping
       ~multiple:true
@@ -888,6 +914,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
       );
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
+      ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
+        multi_platform_ambient_supports_platform_directory_overrides_parser
+      );
       ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ("experimenta.precise_dependents", precise_dependents_parser);
@@ -1626,6 +1655,9 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let multi_platform c = c.options.Opts.multi_platform
 
 let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
+
+let multi_platform_ambient_supports_platform_directory_overrides c =
+  c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
 
