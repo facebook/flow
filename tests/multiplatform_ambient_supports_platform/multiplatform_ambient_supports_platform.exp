@@ -1,0 +1,45 @@
+Error --------------------------------------------------------------------------------- desktop-only/desktop.js.flow:0:1
+
+Cannot resolve platform-specific implementation module `./desktop.mac`. All platform-specific implementations must exist
+for this interface. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
+
+
+
+Error --------------------------------------------------------------------- desktop-only/use-mobile-from-desktop.js:1:19
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the following platforms: `mac`, `windows`. Support for the following platforms: `mac`, `windows` is missing.
+[missing-platform-support]
+
+   1| import {foo} from 'mobile' // error
+                        ^^^^^^^^
+
+
+Error ---------------------------------------------------------------- not-desktop-only/not-actually-desktop.js.flow:0:1
+
+Cannot resolve platform-specific implementation module `./not-actually-desktop.android`. All platform-specific
+implementations must exist for this interface. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
+
+
+
+Error -------------------------------------------------------------------------------------- windows-only.windows.js:4:1
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   windows-only.windows.js:4:1
+   4| foo as string; // error: doesn't resolve to resolves to mobile-and-win.js.flow
+      ^^^
+
+References:
+   mobile-and-win.windows.js:1:27
+   1| declare export const foo: number; // doesn't conflict with common interface file, because it doesn't include windows
+                                ^^^^^^ [1]
+   windows-only.windows.js:4:8
+   4| foo as string; // error: doesn't resolve to resolves to mobile-and-win.js.flow
+             ^^^^^^ [2]
+
+
+
+Found 4 errors
