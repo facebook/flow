@@ -5683,6 +5683,9 @@ let defered_in_speculation = function
   | EAmbiguousObjectType _
   | EEnumNotAllChecked { default_case = Some _; _ }
   | EUninitializedInstanceProperty _
+  | ETrivialRecursiveDefinition _
+  | EAnyValueUsedAsType _
+  | EValueUsedAsType _
   | EUnusedPromise _
   | EImplicitInstantiationUnderconstrainedError _ ->
     true
