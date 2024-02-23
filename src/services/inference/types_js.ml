@@ -1632,7 +1632,7 @@ let recheck_impl
     stats
   in
   (* Collate errors after transaction has completed. *)
-  let (collated_errors, time_to_resolve_all_errors) =
+  let (collated_errors, error_resolution_stat) =
     Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
         let focused_to_check = CheckedSet.focused to_check in
         let dependents_to_check = CheckedSet.dependents to_check in
@@ -1647,7 +1647,7 @@ let recheck_impl
              ~checked_files:env.ServerEnv.checked_files
              ~all_suppressions
              new_errors
-        |> ErrorCollator.update_timestamp_start_of_non_zero_errors
+        |> ErrorCollator.update_error_state_timestamps
     )
   in
 
@@ -1665,7 +1665,14 @@ let recheck_impl
       ~check_skip_count
       ~slowest_file
       ~num_slow_files
-      ~time_to_resolve_all_errors
+      ~time_to_resolve_all_type_errors:
+        error_resolution_stat.ErrorCollator.time_to_resolve_all_type_errors
+      ~time_to_resolve_all_type_errors_in_one_file:
+        error_resolution_stat.ErrorCollator.time_to_resolve_all_type_errors_in_one_file
+      ~time_to_resolve_all_subtyping_errors:
+        error_resolution_stat.ErrorCollator.time_to_resolve_all_subtyping_errors
+      ~time_to_resolve_all_subtyping_errors_in_one_file:
+        error_resolution_stat.ErrorCollator.time_to_resolve_all_subtyping_errors_in_one_file
       ~first_internal_error
       ~scm_changed_mergebase:changed_mergebase
       ~profiling;
@@ -2076,7 +2083,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       suppressions
       local_errors
       Collated_errors.empty
-    |> ErrorCollator.update_timestamp_start_of_non_zero_errors
+    |> ErrorCollator.update_error_state_timestamps
   in
 
   let env =
@@ -2251,7 +2258,7 @@ let init_from_scratch ~profiling ~workers options =
       suppressions
       local_errors
       Collated_errors.empty
-    |> ErrorCollator.update_timestamp_start_of_non_zero_errors
+    |> ErrorCollator.update_error_state_timestamps
   in
 
   let errors =
@@ -2529,7 +2536,7 @@ let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~me
               ~all_suppressions:updated_suppressions
               errors
               collated_errors
-            |> ErrorCollator.update_timestamp_start_of_non_zero_errors
+            |> ErrorCollator.update_error_state_timestamps
         )
       in
       let env =
