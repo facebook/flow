@@ -407,34 +407,22 @@ let documentation_and_tags_of_jsdoc jsdoc =
   (docs, tags)
 
 let documentation_and_tags_of_member typing info =
-  let f typing info =
-    jsdoc_of_member typing info
+  lazy
+    (jsdoc_of_member typing info
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
-  in
-  if Options.autocomplete_lazy_docs typing.options then
-    lazy (f typing info)
-  else
-    Lazy.from_val (f typing info)
+    )
 
 let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
-  let f ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
-    jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
+  lazy
+    (jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
-  in
-  if Options.autocomplete_lazy_docs options then
-    lazy (f ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc)
-  else
-    Lazy.from_val (f ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc)
+    )
 
-let documentation_and_tags_of_def_loc ~options typing def_loc =
-  let f typing def_loc =
-    jsdoc_of_def_loc typing def_loc
+let documentation_and_tags_of_def_loc typing def_loc =
+  lazy
+    (jsdoc_of_def_loc typing def_loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
-  in
-  if Options.autocomplete_lazy_docs options then
-    lazy (f typing def_loc)
-  else
-    Lazy.from_val (f typing def_loc)
+    )
 
 let members_of_type
     ~typing
@@ -1802,7 +1790,7 @@ let autocomplete_jsx_attribute
 
 let autocomplete_module_exports
     ~typing ~tparams_rev ~edit_locs ~token ~kind ?filter_name module_type =
-  let { options; cx; file_sig; typed_ast; _ } = typing in
+  let { cx; file_sig; typed_ast; _ } = typing in
   let scheme = Type.TypeScheme.{ tparams_rev; type_ = module_type } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
@@ -1811,7 +1799,7 @@ let autocomplete_module_exports
       ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       scheme
   in
-  let documentation_and_tags_of_module_member = documentation_and_tags_of_def_loc ~options typing in
+  let documentation_and_tags_of_module_member = documentation_and_tags_of_def_loc typing in
   let (items, errors_to_log) =
     match module_ty_res with
     | Error err -> ([], [Ty_normalizer.error_to_string err])

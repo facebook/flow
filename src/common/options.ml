@@ -67,7 +67,6 @@ type t = {
   opt_all: bool;
   opt_as_const: bool;
   opt_any_propagation: bool;
-  opt_autocomplete_lazy_docs: bool;
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
@@ -162,8 +161,6 @@ let all opts = opts.opt_all
 let as_const opts = opts.opt_as_const
 
 let any_propagation opts = opts.opt_any_propagation
-
-let autocomplete_lazy_docs opts = opts.opt_autocomplete_lazy_docs
 
 let autoimports opts = opts.opt_autoimports
 

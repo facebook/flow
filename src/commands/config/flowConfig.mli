@@ -66,8 +66,6 @@ val enabled_rollouts : config -> string SMap.t
 (* options *)
 val all : config -> bool option
 
-val autocomplete_lazy_docs : config -> bool option
-
 val autoimports : config -> bool option
 
 val autoimports_min_characters : config -> int option

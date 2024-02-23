@@ -44,7 +44,6 @@ module Opts = struct
 
   type t = {
     all: bool option;
-    autocomplete_lazy_docs: bool option;
     autoimports: bool option;
     autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool option;
@@ -174,7 +173,6 @@ module Opts = struct
     {
       all = None;
       autoimports = None;
-      autocomplete_lazy_docs = None;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = None;
       autoimports_ranked_by_usage_boost_exact_match_min_length = None;
@@ -855,9 +853,6 @@ module Opts = struct
   let parsers =
     [
       ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
-      ( "autocomplete_lazy_docs",
-        boolean (fun opts v -> Ok { opts with autocomplete_lazy_docs = Some v })
-      );
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ( "autoimports.min_characters",
         uint (fun opts v ->
@@ -1525,8 +1520,6 @@ let libs config = config.libs
 (* options *)
 
 let all c = c.options.Opts.all
-
-let autocomplete_lazy_docs c = c.options.Opts.autocomplete_lazy_docs
 
 let autoimports c = c.options.Opts.autoimports
 
