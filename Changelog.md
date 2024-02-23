@@ -1,3 +1,8 @@
+### 0.229.2
+
+Misc:
+* Fixed a potential crash under the experimental flag `experimental.blocking_worker_communication=false`.
+
 ### 0.229.1
 
 Misc:
