@@ -106,7 +106,7 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
                 let base =
                   File_key.chop_suffix file platform_ext |> File_key.to_string |> Filename.basename
                 in
-                Some ("./" ^ base)
+                Some ("./" ^ base ^ ".js")
               else
                 None
           )
