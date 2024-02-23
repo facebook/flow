@@ -325,7 +325,7 @@ let read_blocking (type result) worker_pid infd_lwt : (result * Measure.record_d
 
 (** Reads a response from the worker
  *
- * If we start reading a response, we must complete that work. Otherwise, we will leave bytes on the 
+ * If we start reading a response, we must complete that work. Otherwise, we will leave bytes on the
  * pipe, causing the next read to be corrupted.
  *
  * First we call `wait_read` to cancel quickly in the common case where we have not yet read a
@@ -337,6 +337,7 @@ let read_blocking (type result) worker_pid infd_lwt : (result * Measure.record_d
  *)
 let read_non_blocking (type result) worker_pid infd : (result * Measure.record_data) option Lwt.t =
   let read_response = ref false in
+  let (wait_for_read_to_finish, signal_finished_read) = Lwt.wait () in
   try%lwt
     (* Ensure we finish reading a response if we get one. If we cancel while reading, then the pipe
        will still contain the unread junk which will cause the next read to fail. The call to
@@ -348,9 +349,12 @@ let read_non_blocking (type result) worker_pid infd : (result * Measure.record_d
         read_response := true;
         let%lwt (data : result option) = Marshal_tools_lwt.from_fd_with_preamble infd in
         match data with
-        | None -> Lwt.return_none
+        | None ->
+          Lwt.wakeup signal_finished_read ();
+          Lwt.return_none
         | Some data ->
           let%lwt (stats : Measure.record_data) = Marshal_tools_lwt.from_fd_with_preamble infd in
+          Lwt.wakeup signal_finished_read ();
           Lwt.return (Some (data, stats))
       )
   with
@@ -365,6 +369,7 @@ let read_non_blocking (type result) worker_pid infd : (result * Measure.record_d
        response, so handle the `Some _` case as well. *)
     let%lwt () =
       if !read_response then
+        let%lwt () = wait_for_read_to_finish in
         Lwt.return_unit
       else
         (* We should not be canceled again at this point, but just in case prevent this operation
