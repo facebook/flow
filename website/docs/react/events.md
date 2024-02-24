@@ -16,7 +16,7 @@ function MyComponent(): React.Node {
 
   const handleClick = (event: SyntheticEvent<HTMLButtonElement>) => {
     // To access your button instance use `event.currentTarget`.
-    (event.currentTarget: HTMLButtonElement);
+    event.currentTarget as HTMLButtonElement;
 
     setState(prevState => ({
       count: prevState.count + 1,

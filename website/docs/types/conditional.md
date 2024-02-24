@@ -90,7 +90,7 @@ When doing extractions like the above example, you usually want the conditional 
 type ExtractReturnTypeNoValidation<T> =
   T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
 
-(1: ExtractReturnTypeNoValidation<string>); // no error :(
+1 as ExtractReturnTypeNoValidation<string>; // no error :(
 ```
 
 Instead, you might want Flow to error when the input is not a function type. This can be accomplished by adding constraints to the type parameter:
@@ -99,8 +99,8 @@ Instead, you might want Flow to error when the input is not a function type. Thi
 type ReturnType<T: (...args: $ReadOnlyArray<empty>) => mixed> =
   T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
 
-(1: ReturnType<(string) => number>);
-(1: ReturnType<string>);
+1 as ReturnType<(string) => number>;
+1 as ReturnType<string>;
 ```
 
 ## Distributive Conditional Types {#toc-distributive-conditional-type}

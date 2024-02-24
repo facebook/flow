@@ -7,12 +7,12 @@ In JavaScript there are many types of values: numbers, strings, booleans,
 functions, objects, and more.
 
 ```js flow-check
-(1234: number);
-("hi": string);
-(true: boolean);
-([1, 2]: Array<number>);
-({prop: "value"}: {prop: string});
-(function func(s: string) {}: string => void);
+1234 as number;
+"hi" as string;
+true as boolean;
+[1, 2] as Array<number>;
+({prop: "value"}) as {prop: string};
+(function func(s: string) {}) as string => void;
 ```
 
 These values can be used in many different ways:

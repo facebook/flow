@@ -100,9 +100,9 @@ Distributive mapped types will also distribute over `null` and `undefined`:
 type Distributive<O: ?{...}> = {[key in keyof O]: O[key]};
 type Obj = {foo: number};
 type MaybeMapped = Distributive<?Obj>;// = ?{foo: number}
-(null: MaybeMapped); // OK
-(undefined: MaybeMapped); // OK
-({foo: 3}: MaybeMapped); // OK
+null as MaybeMapped; // OK
+undefined as MaybeMapped; // OK
+({foo: 3}) as MaybeMapped; // OK
 ```
 
 ## Property Modifiers {#toc-property-modifiers}

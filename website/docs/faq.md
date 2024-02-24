@@ -55,7 +55,7 @@ function f() {
 
 if (typeof x === 'string') {
   f();
-  (x: string);
+  x as string;
 }
 ```
 
@@ -72,8 +72,8 @@ function f(x: T): number {
 
 if (typeof x === 'string') {
   const xUpdated = f(x);
-  (xUpdated: number);
-  (x: string);
+  xUpdated as number;
+  x as string;
 }
 ```
 
