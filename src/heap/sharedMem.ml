@@ -192,7 +192,7 @@ external hash_stats : unit -> table_stats = "hh_hash_stats"
 external get_next_version : unit -> int = "hh_next_version" [@@noalloc]
 
 (* Any entities which were advanced since the last commit will be committed
- * after this. Committing the transaction requries synchronization with readers
+ * after this. Committing the transaction requires synchronization with readers
  * and writers. *)
 external commit_transaction : unit -> unit = "hh_commit_transaction"
 
@@ -649,7 +649,7 @@ module NewAPI = struct
    * Is 56 bits enough space to store the serialized size and decompress
    * capacity?
    *
-   * In the worst case, we try to compress uncompressible input of
+   * In the worst case, we try to compress incompressible input of
    * LZ4_MAX_INPUT_SIZE, consuming the entire compress bound. That would be
    * 0x7E7E7E8E bytes compressed size.
    *

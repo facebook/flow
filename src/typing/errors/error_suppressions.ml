@@ -134,7 +134,7 @@ end = struct
         let used_universal_suppressions =
           SpanMap.add orig_loc universal used_universal_suppressions
         in
-        (* Using a univeral suppression to suppress a single code should remove it from the map, but
+        (* Using a universal suppression to suppress a single code should remove it from the map, but
            we need to mark the codes it suppressed in the past *)
         (SpanMap.remove loc suppressions, used_universal_suppressions)
       | (_, All _) -> (SpanMap.remove loc suppressions, used_universal_suppressions)

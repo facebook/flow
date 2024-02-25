@@ -1110,7 +1110,7 @@ let object_rest
       ~exact_reason:(Some r1)
       ~invalidate_aliases:true
       ~interface:None
-        (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
+        (* Keep the reachable targs from o1, because we don't know whether all appearances of them were removed *)
       ~reachable_targs
       flags
       call

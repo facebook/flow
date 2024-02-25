@@ -12,7 +12,7 @@ module Env = Ty_normalizer_env
 module T = Type
 module File_sig = File_sig
 
-(* The type normalizer converts infered types (of type `Type.t`) under a context
+(* The type normalizer converts inferred types (of type `Type.t`) under a context
    cx to the simplified form of type `Ty.t`. It is called by various modules,
    e.g. type-at-pos, coverage, dump-types, and so is parameterized by a
    configuration struct, instantiated by the client.
@@ -72,7 +72,7 @@ let error_to_string (kind, msg) = spf "[%s] %s" (error_kind_to_string kind) msg
 
 (* Utility that determines the next immediate concrete constructor, ie. reads
  * through OpenTs and AnnotTs. This is useful in determining, for example, the
- * toplevel cosntructor and adjusting the logic accordingly. *)
+ * toplevel constructor and adjusting the logic accordingly. *)
 module Lookahead = struct
   type t =
     | Recursive
@@ -268,10 +268,10 @@ module Make (I : INPUT) : S = struct
     | EvalKey id -> Type.EvalIdSet.mem id state.State.rec_eval_ids
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
-     1. T appears in env and for its first occurence locations match. This means it
+     1. T appears in env and for its first occurrence locations match. This means it
         is not shadowed by another parameter with the same name. In this case
         return the type parameter.
-     2. T appears in env but is not the first occurence. This means that some other
+     2. T appears in env but is not the first occurrence. This means that some other
         type parameter shadows it. We split cases depending on the value of
         Config.opt_flag_shadowed_type_params:
         - true: flag a warning, since the type is not well-formed in this context.
@@ -1017,7 +1017,7 @@ module Make (I : INPUT) : S = struct
 
     and obj_prop_t =
       (* Value-level object types should not have properties of type type alias. For
-         convience reasons it is possible for a non-module-like Type.ObjT to include
+         convenience reasons it is possible for a non-module-like Type.ObjT to include
          such types as properties. Here we explicitly filter them out, since we
          cannot use type__ to normalize them.
       *)

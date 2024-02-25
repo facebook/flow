@@ -4,7 +4,7 @@
  *                                                                     *
  *                           Objective Caml                            *
  *                                                                     *
- *            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *
+ *            Xavier Leroy, project Cristal, INRIA Rocquencourt        *
  *                                                                     *
  *  Copyright 1996 Institut National de Recherche en Informatique et   *
  *  en Automatique.  All rights reserved.  This file is distributed    *

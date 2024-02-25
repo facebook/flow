@@ -31,10 +31,10 @@ end
 (** A loop that sends the Server's busy status to a waiting connection every 0.5 seconds *)
 module StatusLoop (Writer : STATUS_WRITER) = struct
   let rec run conn =
-    (* it is important that we not yield between wait_for_signficant_status and the
+    (* it is important that we not yield between wait_for_significant_status and the
        next iteration of this loop, where we wait again. if we are not waiting when
        a status is sent, we'll miss it! *)
-    let%lwt status = StatusStream.wait_for_signficant_status ~timeout:0.5 in
+    let%lwt status = StatusStream.wait_for_significant_status ~timeout:0.5 in
     if not (Writer.write status conn) then
       (* The connection closed its write stream, likely it is closed or closing *)
       Lwt.return_unit

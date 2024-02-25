@@ -171,7 +171,7 @@ let list
     ?(inline = (false, false))
     ?(indent = 2)
     items =
-  let add_seperator is_last item =
+  let add_separator is_last item =
     fuse
       [
         item;
@@ -197,7 +197,7 @@ let list
         fst wrap;
         Sequence
           ( { break; inline; indent },
-            List.mapi (fun i item -> add_seperator (i = items_count) item) items
+            List.mapi (fun i item -> add_separator (i = items_count) item) items
           );
         snd wrap;
       ]

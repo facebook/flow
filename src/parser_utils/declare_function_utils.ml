@@ -6,7 +6,7 @@
  *)
 
 (* Transform predicate declare functions to functions whose body is the
-   predicate declared for the funcion *)
+   predicate declared for the function *)
 (* Also returns a function for reversing this process, for the sake of
    typed AST construction. *)
 (* TODO: Would be better to handle declared functions directly rather than

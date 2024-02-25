@@ -832,7 +832,7 @@ class TestBuilder {
       };
 
       // It's unavoidably racey whether the async logger does its work before
-      // or after we get the first successfull checkStatus
+      // or after we get the first successful checkStatus
       this.log('Waiting up to %dms for %s LSP status', timeoutMs, expected);
 
       // Test whether we're okay already?
@@ -879,7 +879,7 @@ class TestBuilder {
       };
 
       // It's unavoidably racey whether the async logger does its work before
-      // or after we get the first successfull checkStatus
+      // or after we get the first successful checkStatus
       this.log('Waiting up to %dms for %s server status', timeoutMs, expected);
 
       // Test whether we're okay already?

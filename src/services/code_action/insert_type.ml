@@ -391,7 +391,7 @@ let normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme =
   Query_types.(
     match insert_type_normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme with
     | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
-    | FailureUnparseable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
+    | FailureUnparsable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
     | Success (_, ty) -> ty
   )
 

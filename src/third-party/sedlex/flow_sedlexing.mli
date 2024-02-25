@@ -1,5 +1,5 @@
 
-(** This is a module provides the minimal Sedlexing suppport
+(** This is a module provides the minimal Sedlexing support
   It is mostly a subset of Sedlexing with two functions for performance reasons:
   - Utf8.lexeme_to_buffer
   - Utf8.lexeme_to_buffer2

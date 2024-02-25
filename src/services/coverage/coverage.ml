@@ -99,7 +99,7 @@ let visitor =
      *
      *     type X = X | number
      *              ^
-     *   we consider the recursive occurence as uncovered (Any). This case should
+     *   we consider the recursive occurrence as uncovered (Any). This case should
      *   be rare and it's arguable if we should be allowing it in the first place,
      *   so we assign the value that corresponds to the fewest guarantees.
      *)

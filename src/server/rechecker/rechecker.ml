@@ -73,7 +73,7 @@ let start_parallelizable_workloads genv env =
   (* Allow this stop function to be called multiple times for the same loop *)
   let already_woken = ref false in
   fun () ->
-    (* Tell the loop to cancel at its earliest convinience *)
+    (* Tell the loop to cancel at its earliest convenience *)
     if not !already_woken then Lwt.wakeup wakener ();
     already_woken := true;
 

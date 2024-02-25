@@ -87,7 +87,7 @@ CAMLprim value hh_sysinfo_uptime(value unit) {
  * more than one handle that points to a single process (unlike
  * pids, where there is a single pid for a process).
  *
- * This isn't a problem normally, since functons like Unix.waitpid()
+ * This isn't a problem normally, since functions like Unix.waitpid()
  * will take the process handle on Windows. But if you want to print
  * or log the pid, then you need to dereference the handle and get
  * the pid. And that's what this function does.

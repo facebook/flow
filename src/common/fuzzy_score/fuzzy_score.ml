@@ -40,7 +40,7 @@ let length x = Base.Int.min (String.length x) max_len
 (** Determines if the chars in [pattern] exist, in order, in [word].
 
     If [min_word_match_pos] is passed, it is updated (in place) with
-    the index of the first occurence of each pattern char in [word].
+    the index of the first occurrence of each pattern char in [word].
     The caller must ensure that the array is the same length as
     [pattern]. *)
 let fuzzy_match ?min_word_match_pos ~char_equal ?(pattern_start = 0) ~pattern ?(word_start = 0) word

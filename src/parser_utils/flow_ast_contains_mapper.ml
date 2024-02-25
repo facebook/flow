@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* This mapper prunes expression and statements that are not relevent
+(* This mapper prunes expression and statements that are not relevant
    to a target from being mapped over and rebuilt. It doesn't prune the
    space as much as is possible, but doing so results in a much less
    maintainable piece of code. *)

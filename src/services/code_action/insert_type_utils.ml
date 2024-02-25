@@ -542,7 +542,7 @@ end
 (** WARNING! Hard-coded fixes ahead!
   *
   * The level of Flow_ast.Type.t nodes: These involve fixes without which the
-  * generated types might be unparseable.
+  * generated types might be unparsable.
   *
   * This fix may be possible to avoid if we fix either the pretty printer
   * or the parser. Not sure which would actually need to be changed.

@@ -327,7 +327,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      resolved, and id is an identifier that serves as an index for that job.
 
      We don't try to fully resolve unresolved tvars that are not annotation
-     sources or heads of type applications, since in general they don't satify the
+     sources or heads of type applications, since in general they don't satisfy the
      0->1 property. Instead:
 
      (1) When we're expecting them, e.g., when we're looking at inferred types, we

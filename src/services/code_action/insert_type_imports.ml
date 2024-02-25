@@ -302,7 +302,7 @@ end = struct
     }
 
     let to_local_name ~iteration ~reserved_names index use_mode name =
-      (* If the name does not appear in the program and this is the first occurence
+      (* If the name does not appear in the program and this is the first occurrence
        * that we are introducing and in the first iteration, then it's fine to reuse
        * the original import name. *)
       if (not (SSet.mem name reserved_names)) && index = 0 && iteration = 0 then

@@ -15,7 +15,7 @@
  *    building a cross-platform feature, you'll need a Windows-specific implementation. For example,
  *    Timeout uses select instead of timers to implement timeouts on Windows.
  * 2. Timer is built using signals, which can cause your Unix calls to error with EINTR, since
- *    you are interupting them. Not a huge deal, just worth being aware of.
+ *    you are interrupting them. Not a huge deal, just worth being aware of.
  *)
 
 type t

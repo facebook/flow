@@ -10,7 +10,7 @@ open Typed_ast_utils
 
 type 'a result =
   | FailureNoMatch
-  | FailureUnparseable of Loc.t * Type.t * string
+  | FailureUnparsable of Loc.t * Type.t * string
   | Success of Loc.t * 'a
 
 let concretize_loc_pairs pair_list =
@@ -20,7 +20,7 @@ let sort_loc_pairs pair_list = List.sort (fun (a, _) (b, _) -> Loc.compare a b) 
 
 let result_of_normalizer_error loc scheme err =
   let msg = Ty_normalizer.error_to_string err in
-  FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
+  FailureUnparsable (loc, scheme.Type.TypeScheme.type_, msg)
 
 let max_size_of_evaluated_type = 100
 

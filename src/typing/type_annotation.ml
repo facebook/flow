@@ -613,7 +613,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             comments;
           }
       ) as t_ast ->
-      (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
+      (* Comments are unnecessary, so they can be stripped to meet the generic requirements *)
       let ident = (name_loc, name, id_comments) in
       let convert_type_params () =
         match targs with

@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:14
 
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    classes.js:15:14
    15|       return typeof x === 'number'; // error param write reaching this return
@@ -633,7 +633,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:140:10
 
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    consistency.js:140:10
    140|   return x instanceof A; // error 'x' is written to
@@ -650,7 +650,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:145:10
 
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    consistency.js:145:10
    145|   return x instanceof B; // error 'x' is written to
@@ -667,7 +667,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:151:12
 
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    consistency.js:151:12
    151|     return x instanceof B; // error 'x' is written to (1st loc)
@@ -684,7 +684,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:154:12
 
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    consistency.js:154:12
    154|     return x instanceof B; // error 'x' is written to (2nd loc)
@@ -909,7 +909,7 @@ Cannot declare a type guard on a(n) constructor function. [function-predicate]
 
 Error ------------------------------------------------------------------------------------------------- objects.js:14:14
 
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    objects.js:14:14
    14|       return typeof x === 'number'; // error write reaches return

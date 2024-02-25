@@ -1493,7 +1493,7 @@ module.exports = (suite(
         ),
         requestSelectionRange(
           '<PLACEHOLDER_PROJECT_URL>/class.js',
-          [{line: 11, character: 7}], // in bar identifer
+          [{line: 11, character: 7}], // in bar identifier
         )
           // TODO: should include signature
           .verifyAllLSPMessagesInStep(

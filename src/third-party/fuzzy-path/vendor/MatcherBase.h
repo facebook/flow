@@ -62,7 +62,7 @@ public:
     /**
      * True if this was a match against lastQuery_.
      * Since the most common use case for this library is for typeaheads,
-     * we can often avoid a ton of work by skiping past negatives.
+     * we can often avoid a ton of work by skipping past negatives.
      * We'll use this only if the new query strictly extends lastQuery_.
      */
     bool last_match;

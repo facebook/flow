@@ -42,7 +42,7 @@ let in_sandbox_cx cx t ~f =
         let has_new_non_lint_errors =
           Context.errors cx
           |> Flow_error.ErrorSet.filter (fun e ->
-                 e |> Flow_error.msg_of_error |> Error_message.defered_in_speculation |> not
+                 e |> Flow_error.msg_of_error |> Error_message.deferred_in_speculation |> not
              )
           |> Flow_error.ErrorSet.is_empty
         in

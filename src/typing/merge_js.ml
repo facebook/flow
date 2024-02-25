@@ -494,7 +494,7 @@ let check_multiplatform_conformance cx ast tast =
     let open Type in
     (match Context.find_require cx imported_interface_module_name with
     | Error _ ->
-      (* It's ok if a platform speicific implementation file doesn't have an interface.
+      (* It's ok if a platform specific implementation file doesn't have an interface.
        * It just makes the module non-importable without platform extension. *)
       ()
     | Ok interface_module_t ->

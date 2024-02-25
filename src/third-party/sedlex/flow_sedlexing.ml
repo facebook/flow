@@ -28,7 +28,7 @@ type lexbuf = {
   mutable pos: int;
   (* bol is the index in the input stream but not buffer *)
   mutable curr_bol: int;
-  (* start from 1, if it is 0, we would not track postion info for you *)
+  (* start from 1, if it is 0, we would not track position info for you *)
   mutable curr_line: int;
   (* First char we need to keep visible *)
   mutable start_pos: int;

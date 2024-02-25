@@ -133,7 +133,7 @@ struct env {
  * The pipes are only used signal the other thread that something is ready. So
  * writing '.' to the pipe is sufficient. In theory, you could get away with
  * only having pipes and not using the linked lists at all. pthreads can
- * automically write to and read from pipes up to N bytes (which I think is
+ * automatically write to and read from pipes up to N bytes (which I think is
  * usually 512). In the case where we have large paths, though, it gets a
  * little tricker, and I like writing lockless data structures :P
  */
@@ -169,7 +169,7 @@ static void clear_pipe(int fd) {
 }
 
 /**
- * This callback is called whenver an FSEvents watch is triggered
+ * This callback is called whenever an FSEvents watch is triggered
  */
 static void watch_callback(
     ConstFSEventStreamRef streamRef,

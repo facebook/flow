@@ -37,7 +37,7 @@ let rec_trace ~max lower upper parent =
   ([Step { lower; upper; parent }], parent_depth + 1)
 
 (* Join a list of traces. If the maximum depth of traces is configured to 0, then
-   agressively throw away traces and only compute the updated depth. *)
+   aggressively throw away traces and only compute the updated depth. *)
 let concat_trace ~max ts =
   let d = List.fold_left (fun acc (_, d) -> Base.Int.max acc d) 0 ts in
   let steps =

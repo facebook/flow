@@ -748,7 +748,7 @@ CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
   /* The info page contains (1) size information describing the layout of the
    * rest of the shared file; (2) values which are atomically updated by
    * workers, like the heap pointer; and (3) various configuration which is
-   * conventient to stick here, like the log level. */
+   * convenient to stick here, like the log level. */
   map_info_page(page_bsize);
   memfd_reserve((char*)info, (char*)info, page_bsize);
 
@@ -928,7 +928,7 @@ CAMLprim value hh_check_should_cancel(value unit) {
  * another slice.
  *
  * Because the program can modify the heap between slices of mark and sweep, we
- * need to be careful that all reachable objects are marked. We use a shapshot-
+ * need to be careful that all reachable objects are marked. We use a snapshot-
  * at-the-beginning approach, which ensures that all reachable objects at the
  * beginning of GC pass are marked. We also use an "allocate black" strategy,
  * meaning that any new objects allocated during a collection are considered
@@ -1518,7 +1518,7 @@ CAMLprim value hh_store_ocaml(value v, value tag_val) {
   // have 56 bits to store the serialized size and compressed size. Is it
   // enough?
   //
-  // In the worst case, we try to compress uncompressible input of
+  // In the worst case, we try to compress incompressible input of
   // LZ4_MAX_INPUT_SIZE, consuming the entire compress bound. That would be
   // 0x7E7E7E8E bytes compressed size.
   //
@@ -1767,7 +1767,7 @@ CAMLprim value hh_remove(value key) {
 /*****************************************************************************/
 /* Blits an OCaml string representation into the shared heap.
  *
- * Note that, like OCaml's heap, the shared heap is word-addressible. Like
+ * Note that, like OCaml's heap, the shared heap is word-addressable. Like
  * OCaml's strings, strings in the shared heap are encoded with a header
  * containing the size in words, where the last byte of the last word contains
  * an offset used to calculate the exact bytes size. */

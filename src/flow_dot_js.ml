@@ -384,7 +384,7 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
     begin
       match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
-      | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
+      | FailureUnparsable (loc, _, _) -> (loc, Error "Unparsable")
       | Success (loc, result) ->
         (loc, Ok (Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result))
     end

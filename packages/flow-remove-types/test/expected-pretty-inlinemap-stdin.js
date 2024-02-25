@@ -137,7 +137,7 @@ new Event();
 var union;
 var intersection;
 
-// Test generic async arrow funcion
+// Test generic async arrow function
 const f = async() => {};
 
 // Comment type annotations are preserved

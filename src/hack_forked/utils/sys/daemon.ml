@@ -17,7 +17,7 @@ type ('in_, 'out) handle = {
 }
 
 (* Windows: ensure that the serialize/deserialize functions
-   for the custom block of "Unix.file_descr" are registred. *)
+   for the custom block of "Unix.file_descr" are registered. *)
 let () = Lazy.force Handle.init
 
 let to_channel : 'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool -> 'a -> unit =
@@ -141,7 +141,7 @@ let exec entry param ic oc =
    * process image has been replaced. We're using "exec" here to mean
    * running the proper entry.
    *
-   * Since Linux's "exec" has already completed, we can actaully set
+   * Since Linux's "exec" has already completed, we can actually set
    * FD_CLOEXEC on the opened channels.
    *)
   let () = Unix.set_close_on_exec (descr_of_in_channel ic) in

@@ -38,10 +38,10 @@ let type_at_pos
       in
       match result with
       | FailureNoMatch -> (json_data_of_result "FAILURE_NO_MATCH" [], Loc.none, None)
-      | FailureUnparseable (loc, gt, msg) ->
+      | FailureUnparsable (loc, gt, msg) ->
         let json_data =
           []
-          |> json_data_of_result "FAILURE_UNPARSEABLE"
+          |> json_data_of_result "FAILURE_UNPARSABLE"
           |> json_data_of_error msg
           |> json_data_of_loc loc
           |> json_data_of_type "type" (Type.string_of_ctor gt)

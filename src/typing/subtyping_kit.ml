@@ -876,7 +876,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (OpaqueT (_, { super_t = Some (UnionT _ as l); _ }), UnionT _)
       when union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype l u ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via an opaque type)"
-    (* Optimization to treat maybe and optional types as special unions for subset comparision *)
+    (* Optimization to treat maybe and optional types as special unions for subset comparison *)
     | (UnionT (reason, rep), MaybeT (r, maybe)) ->
       let quick_subtype = TypeUtil.quick_subtype in
       let void = VoidT.why r in
@@ -2001,7 +2001,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output cx ~trace Error_message.(EValueUsedAsType { reason_use });
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t)
       | AnyT (_, AnyError _) ->
-        (* Short-circut as we already error on the unresolved name. *)
+        (* Short-circuit as we already error on the unresolved name. *)
         rec_flow_t cx ~use_op:unknown_use trace (l, t)
       | AnyT _ ->
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);

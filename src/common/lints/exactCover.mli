@@ -15,7 +15,7 @@
  * ExactCover.t is a read-only structure for efficient querying.
  *
  * ExactCover.builder is a write-only structure for efficient construction
- * (under some assuptions) that can be baked into an ExactCover.t.
+ * (under some assumptions) that can be baked into an ExactCover.t.
  *)
 
 open Lints
@@ -60,7 +60,7 @@ val new_builder : File_key.t -> 'a -> 'a builder
  * that has no overlap with the provided range. If the provided range is
  * completely contained within a range in the builder, the range in the builder
  * is split into three ranges: one that matches the provided range and two that
- * have no overlap wth the provided range. *)
+ * have no overlap with the provided range. *)
 val update_range : Loc.t -> ('a -> 'a) -> 'a builder -> 'a builder
 
 (* Change the settings in the provided range by adding the provided settings list.

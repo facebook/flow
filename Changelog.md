@@ -2695,7 +2695,7 @@ Notable bug fixes:
 Misc:
 * Added `--evaluate-type-destructors` to `type-at-pos` command.
 * Added `--evaluate-type-destructors` and `--expand-type-aliases` to `dump-types` command (thanks @goodmind!)
-* Changed `proceses.env` values from `?string` to `string|void` (thanks @FireyFly!)
+* Changed `processes.env` values from `?string` to `string|void` (thanks @FireyFly!)
 * Improved detection of rebases when using watchman file watcher
 * Improved positions for error messages involving the deprecated `*` type
 

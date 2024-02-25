@@ -210,7 +210,7 @@ module Make
 
   let snd_fst ((_, x), _) = x
 
-  let translate_identifer_or_literal_key t =
+  let translate_identifier_or_literal_key t =
     let module P = Ast.Expression.Object.Property in
     function
     | P.Identifier (loc, name) -> P.Identifier ((loc, t), name)
@@ -1991,14 +1991,14 @@ module Make
         let (acc, key, value) =
           if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
             let t = Unsoundness.at InferenceHooks loc in
-            let key = translate_identifer_or_literal_key t key in
+            let key = translate_identifier_or_literal_key t key in
             (* don't add `name` to `acc` because `name` is the autocomplete token *)
             let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
             let (((_, _t), _) as value) = expression cx ~as_const v in
             (acc, key, value)
           else
             let (((_, t), _) as value) = expression cx ~as_const v in
-            let key = translate_identifer_or_literal_key t key in
+            let key = translate_identifier_or_literal_key t key in
             let acc =
               ObjectExpressionAcc.add_prop
                 (Properties.add_field (OrdinaryName name) Polarity.Neutral ~key_loc:(Some loc) t)
@@ -2031,7 +2031,7 @@ module Make
           Property
             ( prop_loc,
               Property.Method
-                { key = translate_identifer_or_literal_key t key; value = (fn_loc, func) }
+                { key = translate_identifier_or_literal_key t key; value = (fn_loc, func) }
             )
         ))
     (* We enable some unsafe support for getters and setters. The main unsafe bit
@@ -2069,7 +2069,7 @@ module Make
             ( loc,
               Property.Get
                 {
-                  key = translate_identifer_or_literal_key return_t key;
+                  key = translate_identifier_or_literal_key return_t key;
                   value = (vloc, func);
                   comments;
                 }
@@ -2107,7 +2107,7 @@ module Make
             ( loc,
               Property.Set
                 {
-                  key = translate_identifer_or_literal_key param_t key;
+                  key = translate_identifier_or_literal_key param_t key;
                   value = (vloc, func);
                   comments;
                 }
@@ -2270,7 +2270,7 @@ module Make
                 ( prop_loc,
                   Property.Init
                     {
-                      key = translate_identifer_or_literal_key vt key;
+                      key = translate_identifier_or_literal_key vt key;
                       value = v;
                       shorthand = false;
                     }

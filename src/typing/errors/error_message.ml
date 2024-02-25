@@ -3053,7 +3053,7 @@ let friendly_message_of_msg loc_of_aloc msg =
           [
             text "Cannot use ";
             ref type_guard_reason;
-            text " because at this return point it is writen to ";
+            text " because at this return point it is written to ";
           ]
           @ loc_str
           @ [text "."];
@@ -5664,7 +5664,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     in
     Normal { features }
 
-let defered_in_speculation = function
+let deferred_in_speculation = function
   | EUntypedTypeImport _
   | EUntypedImport _
   | ENonstrictImport _

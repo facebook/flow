@@ -44,7 +44,7 @@ type event = {
 external raw_init : Unix.file_descr -> fsenv = "caml_fsnotify_init"
 
 (* [raw_add_watch out_fd dir] creates a thread that monitor [dir] and
-   push a single charactes into the pipe 'out_fd' whenever a events is
+   push a single characters into the pipe 'out_fd' whenever a events is
    ready to be read with [raw_read_events].
 
    The return value is an opaque `watcher_id`, currently it contains

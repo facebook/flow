@@ -136,7 +136,7 @@ end = struct
         case, we exclude declarations--declare_locs and def_locs should be disjoint.
       * provider_locs are the candidate providers we're calculating in this module, and can be either declares or defs.
         Initially, in this module, 'locs will be instantiated as `write_state L.LMap.t`, recording what kind
-        of write an indvidual candidate provider is. Later on, in provider_api, this will be simplified and filtered
+        of write an individual candidate provider is. Later on, in provider_api, this will be simplified and filtered
         into a single `L.LSet.t` of providers
 
         We expect that the keys/elements of provider_locs are a subset of the union of def_locs and declare_locs.

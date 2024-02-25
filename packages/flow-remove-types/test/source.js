@@ -175,7 +175,7 @@ new Event<number>();
 var union: | T | U;
 var intersection: & T & U;
 
-// Test generic async arrow funcion
+// Test generic async arrow function
 const f = async <T>(): T => {};
 
 // Comment type annotations are preserved

@@ -19,7 +19,7 @@ val symbols_of_type : Ty.t -> Ty_symbol.symbol list
 
 val elt_equal : Ty.elt -> Ty.elt -> bool
 
-(** Utility useful for codemods/type insertion. When the element we infered is a
+(** Utility useful for codemods/type insertion. When the element we inferred is a
     declaration we can't directly print/insert in code. This utility helps convert
     it to an equivalent type. For example it will convert `class C` to `typeof C`,
     `enum E` to `typeof E`. *)
