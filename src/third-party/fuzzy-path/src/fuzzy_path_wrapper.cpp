@@ -24,8 +24,8 @@ matcher_t *matcher_create()
   MatcherBase *obj;
 
   p = malloc(sizeof(*m));
-  if (p == NULL) {
-    return NULL;
+  if (p == nullptr) {
+    return nullptr;
   }
 
   obj = new MatcherBase();
@@ -38,10 +38,10 @@ matcher_t *matcher_create()
 
 match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t options) {
   MatcherBase *obj;
-  if (m == NULL) {
+  if (m == nullptr) {
   return {
       0,
-      0
+      nullptr
     };
   }
   obj = static_cast<MatcherBase *>(m->obj);
@@ -72,7 +72,7 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
 
 void matcher_add_candidate(matcher_t *m, const char *candidate, int weight) {
   MatcherBase *obj;
-  if (m == NULL) {
+  if (m == nullptr) {
   return;
   }
   obj = static_cast<MatcherBase *>(m->obj);
@@ -83,7 +83,7 @@ void matcher_add_candidate(matcher_t *m, const char *candidate, int weight) {
 
 void matcher_remove_candidate(matcher_t *m, const char *candidate) {
   MatcherBase *obj;
-  if (m == NULL) {
+  if (m == nullptr) {
   return;
   }
   obj = static_cast<MatcherBase *>(m->obj);
@@ -94,7 +94,7 @@ void matcher_remove_candidate(matcher_t *m, const char *candidate) {
 
 void matcher_clear(matcher_t *m) {
   MatcherBase *obj;
-  if (m == NULL) {
+  if (m == nullptr) {
   return;
   }
   obj = static_cast<MatcherBase *>(m->obj);
@@ -103,7 +103,7 @@ void matcher_clear(matcher_t *m) {
 
 void matcher_reserve(matcher_t *m, size_t n) {
   MatcherBase *obj;
-  if (m == NULL) {
+  if (m == nullptr) {
   return;
   }
   obj = static_cast<MatcherBase *>(m->obj);
@@ -112,7 +112,7 @@ void matcher_reserve(matcher_t *m, size_t n) {
 
 size_t matcher_size(matcher_t *m) {
   MatcherBase *obj;
-  if (m == NULL) {
+  if (m == nullptr) {
   return 0;
   }
   obj = static_cast<MatcherBase *>(m->obj);
