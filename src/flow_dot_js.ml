@@ -121,7 +121,9 @@ let stub_metadata ~root ~checked =
     component_syntax = true;
     hooklike_functions = true;
     hooklike_functions_includes = [];
-    react_rules = [];
+    react_rules =
+      Options.
+        [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];
     react_rules_always = false;
     enable_as_const = false;
     enable_const_params = false;
