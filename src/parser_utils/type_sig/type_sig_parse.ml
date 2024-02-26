@@ -1073,11 +1073,6 @@ module Scope = struct
       in
       bind_local ~type_only:false parent tbls name (NamespaceBinding { id_loc; name; values; types })
     | _ -> failwith "The scope must be lexical"
-
-  let bind_namespace scope tbls id_loc name ~f =
-    let inner_scope = push_declare_namespace scope in
-    f inner_scope;
-    finalize_declare_namespace_exn inner_scope tbls id_loc name
 end
 
 module ObjAnnotAcc = struct
