@@ -1,3 +1,11 @@
+Error ---------------------------------------------------------------------------------- android_only_use.android.js:1:9
+
+Cannot resolve module `./android_only`. [cannot-resolve-module]
+
+   1| require('./android_only'); // ok
+              ^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------- bad_supports_platform.js:3:4
 
 Invalid `@supportsPlatform` declaration. `random` is not configured in `experimental.multi_platform.extensions` in your
@@ -247,4 +255,4 @@ Cannot resolve module `./allow_no_interface`. [cannot-resolve-module]
 
 
 
-Found 17 errors
+Found 18 errors
