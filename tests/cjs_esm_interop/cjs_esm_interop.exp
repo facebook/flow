@@ -15,5 +15,23 @@ References:
             ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:11:14
 
-Found 1 error
+Cannot import `T1` because there is no `T1` export in `./cjs_spreading_type_exports`. Did you mean
+`import T1 from "..."`? [missing-export]
+
+   11| import type {T1, T2} from './cjs_spreading_type_exports'; // error
+                    ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:18
+
+Cannot import `T2` because there is no `T2` export in `./cjs_spreading_type_exports`. Did you mean
+`import T2 from "..."`? [missing-export]
+
+   11| import type {T1, T2} from './cjs_spreading_type_exports'; // error
+                        ^^
+
+
+
+Found 3 errors

@@ -582,7 +582,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let qid_reason = mk_reason (RType (OrdinaryName (qualified_name qid))) qid_loc in
       let use_op = Op (GetProperty qid_reason) in
       let t_unapplied =
-        ConsGen.get_prop cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
+        ConsGen.qualify_type cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
       in
       let (t, targs) =
         mk_nominal_type cx ~in_renders_arg reason tparams_map infer_tparams_map (t_unapplied, targs)
@@ -1791,10 +1791,14 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let { Ast.Identifier.name; comments = _ } = id_name in
       let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
       let id_reason = mk_reason desc id_loc in
-      let use_op =
-        Op (GetProperty (mk_reason (RType (OrdinaryName (qualified_name qualified))) loc))
+      let op_reason = mk_reason (RType (OrdinaryName (qualified_name qualified))) loc in
+      let use_op = Op (GetProperty op_reason) in
+      let t =
+        if lookup_mode = ForType then
+          ConsGen.qualify_type cx use_op id_reason ~op_reason (OrdinaryName name) m
+        else
+          ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m
       in
-      let t = ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m in
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
       let t = Type_env.get_var ~lookup_mode cx name loc in

@@ -36,12 +36,7 @@ module Module_info = struct
             named =
               NameUtils.Map.singleton
                 name
-                {
-                  Type.preferred_def_locs = None;
-                  name_loc = Some name_loc;
-                  is_type_only_export = false;
-                  type_;
-                };
+                { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ };
             star = [];
           }
     | ES { named; star } ->
@@ -51,12 +46,7 @@ module Module_info = struct
             named =
               NameUtils.Map.add
                 name
-                {
-                  Type.preferred_def_locs = None;
-                  name_loc = Some name_loc;
-                  is_type_only_export = false;
-                  type_;
-                }
+                { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ }
                 named;
             star;
           }
@@ -76,12 +66,7 @@ module Module_info = struct
     info.type_named <-
       NameUtils.Map.add
         name
-        {
-          Type.preferred_def_locs = None;
-          name_loc = Some name_loc;
-          is_type_only_export = true;
-          type_;
-        }
+        { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ }
         info.type_named
 
   let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
@@ -430,7 +415,8 @@ let mk_module_t =
         module_reason = reason;
         module_export_types =
           {
-            exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+            value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+            type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
             cjs_export = None;
             has_every_named_export = false;
           };
@@ -479,7 +465,8 @@ let mk_module_t =
     in
     let module_export_types =
       {
-        exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+        value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+        type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
         cjs_export = Some export_t;
         has_every_named_export = false;
       }
@@ -516,25 +503,28 @@ let mk_module_t =
     in
     Module_info.fold_star2 copy_named_exports copy_type_exports module_t exports
   in
-  let export_named cx reason kind named module_t =
+  let export_named cx reason export_kind value_exports_tmap type_exports_tmap module_t =
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-        Flow_js.flow cx (module_t, ExportNamedT (reason, named, kind, tout))
+        Flow_js.flow
+          cx
+          ( module_t,
+            ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
+          )
     )
   in
   fun cx info self_reason exports_reason ->
     match info.kind with
     | Unknown ->
       mk_commonjs_module_t cx self_reason exports_reason (CJSExportNames SMap.empty)
-      |> export_named cx self_reason ExportType info.type_named
+      |> export_named cx self_reason DirectExport NameUtils.Map.empty info.type_named
       |> copy_star_exports cx self_reason ([], info.type_star)
     | CJS cjs_exports_state ->
       mk_commonjs_module_t cx self_reason exports_reason cjs_exports_state
-      |> export_named cx self_reason ExportType info.type_named
+      |> export_named cx self_reason DirectExport NameUtils.Map.empty info.type_named
       |> copy_star_exports cx self_reason ([], info.type_star)
     | ES { named; star } ->
       mk_esm_module_t cx self_reason
-      |> export_named cx self_reason ExportValue named
-      |> export_named cx self_reason ExportType info.type_named
+      |> export_named cx self_reason DirectExport named info.type_named
       |> copy_star_exports cx self_reason (star, info.type_star)
 
 let mk_namespace_t cx info reason =

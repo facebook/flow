@@ -319,7 +319,7 @@ class ['a] t =
       self#type_ cx pole acc t
 
     method exports cx pole acc id =
-      let visit acc { name_loc = _; preferred_def_locs = _; is_type_only_export = _; type_ } =
+      let visit acc { name_loc = _; preferred_def_locs = _; type_ } =
         self#type_ cx pole acc type_
       in
       Context.find_exports cx id |> self#namemap visit acc
@@ -445,8 +445,9 @@ class ['a] t =
       acc
 
     method private export_types cx pole acc e =
-      let { exports_tmap; cjs_export; has_every_named_export = _ } = e in
-      let acc = self#exports cx pole acc exports_tmap in
+      let { value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export = _ } = e in
+      let acc = self#exports cx pole acc value_exports_tmap in
+      let acc = self#exports cx pole acc type_exports_tmap in
       let acc = self#opt (self#type_ cx pole) acc cjs_export in
       acc
 

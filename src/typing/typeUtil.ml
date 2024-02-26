@@ -78,7 +78,7 @@ and reason_of_use_t = function
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | EqT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
-  | ExportNamedT (reason, _, _, _) -> reason
+  | ExportNamedT { reason; _ } -> reason
   | ExportTypeT { reason; _ } -> reason
   | ImplicitVoidReturnT { reason; _ } -> reason
   | AssertExportIsTypeT (reason, _, _) -> reason
@@ -296,8 +296,8 @@ and mod_reason_of_use_t f = function
         false_t;
         tout;
       }
-  | ExportNamedT (reason, tmap, export_kind, t_out) ->
-    ExportNamedT (f reason, tmap, export_kind, t_out)
+  | ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout } ->
+    ExportNamedT { reason = f reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
   | ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout } ->
     ExportTypeT
       { reason = f reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
@@ -544,7 +544,8 @@ let rec util_use_op_of_use_t :
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)
   | CheckUntypedImportT (_, _)
-  | ExportNamedT (_, _, _, _)
+  | ExportNamedT
+      { reason = _; value_exports_tmap = _; type_exports_tmap = _; export_kind = _; tout = _ }
   | ExportTypeT
       {
         reason = _;

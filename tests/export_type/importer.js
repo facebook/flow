@@ -33,8 +33,7 @@ var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
 
 import {clsInstance} from './values_as_type_exports';
 
-// Should be an error, but currently isn't
-import {Cls as ClsValue} from './values_as_type_exports';
+import {Cls as ClsValue} from './values_as_type_exports'; // error: type as value
 new ClsValue();
 
 import type {Cls as ClsType} from './values_as_type_exports';

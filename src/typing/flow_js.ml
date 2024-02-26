@@ -253,12 +253,23 @@ struct
 
     let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use Trace.dummy_trace (t, tout)
 
-    let export_named cx (reason, named, kind) module_t tout =
-      FlowJs.rec_flow cx Trace.dummy_trace (module_t, Type.ExportNamedT (reason, named, kind, tout))
+    let export_named cx (reason, value_exports_tmap, type_exports_tmap, export_kind) module_t tout =
+      FlowJs.rec_flow
+        cx
+        Trace.dummy_trace
+        ( module_t,
+          Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
+        )
 
-    let export_named_fresh_var cx (reason, named, kind) module_t =
-      Tvar.mk_where cx reason (fun t ->
-          FlowJs.rec_flow cx Trace.dummy_trace (module_t, Type.ExportNamedT (reason, named, kind, t))
+    let export_named_fresh_var
+        cx (reason, value_exports_tmap, type_exports_tmap, export_kind) module_t =
+      Tvar.mk_where cx reason (fun tout ->
+          FlowJs.rec_flow
+            cx
+            Trace.dummy_trace
+            ( module_t,
+              Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
+            )
       )
 
     let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
@@ -776,8 +787,10 @@ struct
         (******************)
         (* Module exports *)
         (******************)
-        | (ModuleT m, ExportNamedT (_reason, tmap, export_kind, tout)) ->
-          ExportNamedTKit.mod_ModuleT cx (tmap, export_kind) m;
+        | ( ModuleT m,
+            ExportNamedT { reason = _; value_exports_tmap; type_exports_tmap; export_kind; tout }
+          ) ->
+          ExportNamedTKit.mod_ModuleT cx (value_exports_tmap, type_exports_tmap, export_kind) m;
           rec_flow_t cx ~use_op:unknown_use trace (l, tout)
         | (_, AssertExportIsTypeT (_, name, t_out)) ->
           AssertExportIsTypeTKit.on_concrete_type cx name l t_out
@@ -1406,6 +1419,50 @@ struct
             rec_flow cx trace (t, u);
             TypeAppExpansion.pop cx
           )
+        (* Namespace and type qualification *)
+        | ( NamespaceT { values_type; types_tmap },
+            GetTypeFromNamespaceT
+              { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name); tout }
+          ) ->
+          (match
+             NameUtils.Map.find_opt prop_name (Context.find_props cx types_tmap)
+             |> Base.Option.bind ~f:Type.Property.read_t
+           with
+          | Some prop ->
+            let t = reposition cx ~trace (loc_of_reason reason_op) prop in
+            rec_flow_t cx ~use_op trace (t, OpenT tout)
+          | None ->
+            rec_flow
+              cx
+              trace
+              ( values_type,
+                GetPropT
+                  ( use_op,
+                    reason_op,
+                    None,
+                    Named
+                      { reason = prop_ref_reason; name = prop_name; from_indexed_access = false },
+                    tout
+                  )
+              ))
+        | ( _,
+            GetTypeFromNamespaceT
+              { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name); tout }
+          ) ->
+          rec_flow
+            cx
+            trace
+            ( l,
+              GetPropT
+                ( use_op,
+                  reason_op,
+                  None,
+                  Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false },
+                  tout
+                )
+            )
+        (* unwrap namespace type into object type, drop all information about types in the namespace *)
+        | (NamespaceT { values_type; types_tmap = _ }, _) -> rec_flow cx trace (values_type, u)
         (***************************************)
         (* transform values to type references *)
         (***************************************)

@@ -358,10 +358,9 @@ let rec merge_tyref file f = function
       let qname = String.concat "." (List.rev (Nel.to_list names)) in
       let name = Reason.OrdinaryName name in
       let id_reason = Reason.(mk_reason (RType name) id_loc) in
-      let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
-      let use_op = Type.Op (Type.GetProperty reason_op) in
-      let propname = (id_reason, name) in
-      let t = ConsGen.qualify_type file.cx use_op reason_op propname t in
+      let op_reason = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
+      let use_op = Type.Op (Type.GetProperty op_reason) in
+      let t = ConsGen.qualify_type file.cx use_op id_reason ~op_reason name t in
       f t loc names
     in
     merge_tyref file f qualification
@@ -370,22 +369,23 @@ let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
     let f t ~ref_loc:_ ~def_loc name =
       let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-      { Type.name_loc = Some def_loc; preferred_def_locs = None; is_type_only_export = true; type_ }
+      { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ }
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
     let (lazy (loc, name, t)) = Local_defs.get file.local_defs index in
     let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportTypeFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
 let mk_commonjs_module_t cx module_reason module_is_strict module_available_platforms t =
   let open Type in
   let module_export_types =
     {
-      exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+      value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+      type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       cjs_export = Some t;
       has_every_named_export = false;
     }
@@ -404,7 +404,8 @@ let merge_exports =
     let open Type in
     let module_export_types =
       {
-        exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
+        value_exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
+        type_exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
         cjs_export = None;
         has_every_named_export = false;
       }
@@ -443,7 +444,7 @@ let merge_exports =
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
       mk_commonjs_module_t file.cx reason strict platform_availability_set exports
-      |> ConsGen.export_named file.cx reason Type.ExportType type_exports
+      |> ConsGen.export_named file.cx reason Type.DirectExport NameUtils.Map.empty type_exports
       |> copy_star_exports file reason ([], type_stars)
     | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set } ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
@@ -451,8 +452,7 @@ let merge_exports =
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       mk_es_module_t file reason strict platform_availability_set
-      |> ConsGen.export_named file.cx reason Type.ExportValue exports
-      |> ConsGen.export_named file.cx reason Type.ExportType type_exports
+      |> ConsGen.export_named file.cx reason Type.DirectExport exports type_exports
       |> copy_star_exports file reason (stars, type_stars)
 
 let make_hooklike file hooklike t =
@@ -2086,7 +2086,7 @@ let merge_def file reason = function
   | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members
   | NamespaceBinding { id_loc = _; name = _; values; types } when Context.namespaces file.cx ->
-    let f ~is_type_only_export smap =
+    let f smap =
       SMap.fold
         (fun name (loc, packed) ->
           NameUtils.Map.add
@@ -2094,17 +2094,12 @@ let merge_def file reason = function
             {
               Type.name_loc = Some loc;
               preferred_def_locs = None;
-              is_type_only_export;
               type_ = merge SMap.empty SMap.empty file packed;
             })
         smap
         NameUtils.Map.empty
     in
-    Flow_js_utils.namespace_type
-      file.cx
-      reason
-      (f ~is_type_only_export:false values)
-      (f ~is_type_only_export:false types)
+    Flow_js_utils.namespace_type file.cx reason (f values) (f types)
   | NamespaceBinding _ -> Type.AnyT.error reason
 
 let merge_export file = function
@@ -2113,30 +2108,20 @@ let merge_export file = function
     merge_ref
       file
       (fun type_ ~ref_loc:_ ~def_loc _ ->
-        {
-          Type.name_loc = Some def_loc;
-          preferred_def_locs = None;
-          is_type_only_export = false;
-          type_;
-        })
+        { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ })
       ref
   | Pack.ExportBinding index ->
     let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefault { default_loc; def } ->
     let type_ = merge SMap.empty SMap.empty file def in
-    {
-      Type.name_loc = Some default_loc;
-      preferred_def_locs = None;
-      is_type_only_export = false;
-      type_;
-    }
+    { Type.name_loc = Some default_loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefaultBinding { default_loc = _; index } ->
     let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
 let merge_resource_module_t cx file_key filename =
   let exports_t =

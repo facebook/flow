@@ -341,22 +341,25 @@ let rec dump_t_ (depth, tvars) cx t =
     | ModuleT
         {
           module_reason = _;
-          module_export_types = { exports_tmap; _ };
+          module_export_types = { value_exports_tmap; type_exports_tmap; _ };
           module_is_strict = _;
           module_available_platforms = _;
         } ->
+      let exports_tmap_to_string exports_tmap =
+        Context.find_exports cx exports_tmap
+        |> NameUtils.Map.bindings
+        |> Base.List.map ~f:(fun (name, { preferred_def_locs = _; name_loc = _; type_ }) ->
+               kid type_ |> spf "%s: %s" (display_string_of_name name)
+           )
+        |> String.concat ", "
+      in
       p
         t
         ~extra:
-          (Context.find_exports cx exports_tmap
-          |> NameUtils.Map.bindings
-          |> Base.List.map
-               ~f:(fun
-                    (name, { preferred_def_locs = _; name_loc = _; is_type_only_export = _; type_ })
-                  -> kid type_ |> spf "%s: %s" (display_string_of_name name)
-             )
-          |> String.concat ", "
-          |> spf "[%s]"
+          (spf
+             "[%s] [%s]"
+             (exports_tmap_to_string value_exports_tmap)
+             (exports_tmap_to_string type_exports_tmap)
           )
     | NamespaceT { values_type; types_tmap } ->
       p t ~extra:(spf "values=%s, types=%s" (kid values_type) (Properties.string_of_id types_tmap))
@@ -735,20 +738,21 @@ and dump_use_t_ (depth, tvars) cx t =
              (tvar tout_id)
           )
         t
-    | ExportNamedT (_, tmap, _export_kind, arg) ->
+    | ExportNamedT
+        { reason = _; value_exports_tmap; type_exports_tmap; export_kind = _; tout = arg } ->
+      let tmap_to_string tmap =
+        String.concat
+          "; "
+          (Base.List.map ~f:(fun (x, _) -> display_string_of_name x) (NameUtils.Map.bindings tmap))
+      in
       p
         t
         ~extra:
           (spf
-             "%s, {%s}"
+             "%s, {%s}, {%s}"
              (kid arg)
-             (String.concat
-                "; "
-                (Base.List.map
-                   ~f:(fun (x, _) -> display_string_of_name x)
-                   (NameUtils.Map.bindings tmap)
-                )
-             )
+             (tmap_to_string value_exports_tmap)
+             (tmap_to_string type_exports_tmap)
           )
     | ExportTypeT _ -> p t
     | ImplicitVoidReturnT _ -> p t

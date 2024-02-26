@@ -89,7 +89,7 @@ module type S = sig
   val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> string -> Type.t
 
   val qualify_type :
-    Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
+    Context.t -> Type.use_op -> Reason.t -> op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
@@ -101,6 +101,7 @@ module type S = sig
     Context.t ->
     Reason.reason ->
     Type.export_kind ->
+    Type.named_symbol NameUtils.Map.t ->
     Type.named_symbol NameUtils.Map.t ->
     Type.t ->
     Type.t
@@ -253,7 +254,8 @@ module rec ConsGen : S = struct
 
     let return _cx t = t
 
-    let export_named cx (reason, named, kind) t = ConsGen.export_named cx reason kind named t
+    let export_named cx (reason, values, types, kind) t =
+      ConsGen.export_named cx reason kind values types t
 
     let export_named_fresh_var = export_named
 
@@ -594,8 +596,10 @@ module rec ConsGen : S = struct
     (******************)
     (* Module exports *)
     (******************)
-    | (ModuleT m, Annot_ExportNamedT (_reason, tmap, export_kind)) ->
-      ExportNamedTKit.mod_ModuleT cx (tmap, export_kind) m;
+    | ( ModuleT m,
+        Annot_ExportNamedT { reason = _; value_exports_tmap; type_exports_tmap; export_kind }
+      ) ->
+      ExportNamedTKit.mod_ModuleT cx (value_exports_tmap, type_exports_tmap, export_kind) m;
       ModuleT m
     | (_, Annot_AssertExportIsTypeT (_, name)) -> AssertExportIsTypeTKit.on_concrete_type cx name t
     | (ModuleT m, Annot_CopyNamedExportsT (reason, target_module_t)) ->
@@ -987,6 +991,44 @@ module rec ConsGen : S = struct
       Obj_type.mk_with_proto cx reason ~obj_kind:Exact t
     | (DefT (_, (NullT | VoidT)), Annot_ObjRestT (reason, _)) ->
       Obj_type.mk ~obj_kind:Exact cx reason
+    (************************************)
+    (* Namespace and type qualification *)
+    (************************************)
+    | ( NamespaceT { values_type; types_tmap },
+        Annot_GetTypeFromNamespaceT
+          { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name) }
+      ) ->
+      (match
+         NameUtils.Map.find_opt prop_name (Context.find_props cx types_tmap)
+         |> Base.Option.bind ~f:Type.Property.read_t
+       with
+      | Some prop -> prop
+      | None ->
+        elab_t
+          cx
+          ~seen
+          values_type
+          (Annot_GetPropT
+             ( reason_op,
+               use_op,
+               Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
+             )
+          ))
+    | (NamespaceT { values_type; types_tmap = _ }, _) -> elab_t cx ~seen values_type op
+    | ( _,
+        Annot_GetTypeFromNamespaceT
+          { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name) }
+      ) ->
+      elab_t
+        cx
+        ~seen
+        t
+        (Annot_GetPropT
+           ( reason_op,
+             use_op,
+             Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
+           )
+        )
     (************)
     (* GetPropT *)
     (************)
@@ -1223,14 +1265,19 @@ module rec ConsGen : S = struct
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
-  and qualify_type cx use_op reason (reason_name, name) t =
+  and qualify_type cx use_op reason ~op_reason prop_name t =
     let f id =
       let t =
-        elab_t cx t (Annot_GetPropT (reason, use_op, mk_named_prop ~reason:reason_name name))
+        elab_t
+          cx
+          t
+          (Annot_GetTypeFromNamespaceT
+             { reason = op_reason; use_op; prop_ref = (reason, prop_name) }
+          )
       in
-      resolve_id cx reason id t
+      resolve_id cx op_reason id t
     in
-    mk_lazy_tvar cx reason f
+    mk_lazy_tvar cx op_reason f
 
   and assert_export_is_type cx reason name t =
     let f id =
@@ -1242,7 +1289,8 @@ module rec ConsGen : S = struct
   and cjs_require cx t reason is_strict legacy_interop =
     elab_t cx t (Annot_CJSRequireT { reason; is_strict; legacy_interop })
 
-  and export_named cx reason kind named t = elab_t cx t (Annot_ExportNamedT (reason, named, kind))
+  and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =
+    elab_t cx t (Annot_ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind })
 
   and cjs_extract_named_exports cx reason local_module t =
     elab_t cx t (Annot_CJSExtractNamedExportsT (reason, local_module))

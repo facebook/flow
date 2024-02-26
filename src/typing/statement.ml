@@ -844,7 +844,12 @@ module Make
       let reason = mk_reason (RIdentifier local_name) loc in
       Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
           let use_t =
-            GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
+            match export_kind with
+            | Ast.Statement.ExportType ->
+              GetTypeFromNamespaceT
+                { use_op = unknown_use; reason; prop_ref = (reason, local_name); tout }
+            | Ast.Statement.ExportValue ->
+              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
           in
           Flow.flow cx (source_ns_t, use_t)
       )
@@ -1910,7 +1915,8 @@ module Make
           module_reason = reason;
           module_export_types =
             {
-              exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+              value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+              type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
               cjs_export = None;
               has_every_named_export = false;
             };

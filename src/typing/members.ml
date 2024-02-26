@@ -11,9 +11,10 @@ open TypeUtil
 open Reason
 open Flow_js
 
-type ('success, 'success_module) generic_t =
+type ('success, 'success_module, 'success_namespace) generic_t =
   | Success of 'success
   | SuccessModule of 'success_module
+  | SuccessNamespace of 'success_namespace
   | FailureNullishType
   | FailureAnyType
   | FailureUnhandledType of Type.t
@@ -23,7 +24,9 @@ type t =
   ( (* Success *)
   (ALoc.t Nel.t option * Type.t) SMap.t,
     (* SuccessModule *)
-  (ALoc.t Nel.t option * Type.t) SMap.t * Type.t option
+  (ALoc.t Nel.t option * Type.t) SMap.t * Type.t option,
+    (* SuccessNamespace *)
+  (ALoc.t Nel.t option * Type.t) SMap.t
   )
   generic_t
 
@@ -438,6 +441,7 @@ and instantiate_type = function
 let string_of_extracted_type = function
   | Success t -> Printf.sprintf "Success (%s)" (Type.string_of_ctor t)
   | SuccessModule t -> Printf.sprintf "SuccessModule (%s)" (Type.string_of_ctor t)
+  | SuccessNamespace t -> Printf.sprintf "SuccessNamespace (%s)" (Type.string_of_ctor t)
   | FailureNullishType -> "FailureNullishType"
   | FailureAnyType -> "FailureAnyType"
   | FailureUnhandledType t -> Printf.sprintf "FailureUnhandledType (%s)" (Type.string_of_ctor t)
@@ -446,6 +450,7 @@ let string_of_extracted_type = function
 
 let to_command_result = function
   | Success map
+  | SuccessNamespace map
   | SuccessModule (map, None) ->
     Ok map
   | SuccessModule (named_exports, Some cjs_export) ->
@@ -514,7 +519,7 @@ let rec extract_type cx this_t =
   | ExactT (_, t) -> extract_type cx t
   | GenericT { bound; _ } -> extract_type cx bound
   | ModuleT _ as t -> SuccessModule t
-  | NamespaceT { values_type; _ } -> extract_type cx values_type
+  | NamespaceT _ as t -> SuccessNamespace t
   | ThisTypeAppT (_, c, _, ts_opt) ->
     let c = resolve_type cx c in
     let inst_t = instantiate_poly_t cx c ts_opt in
@@ -660,12 +665,17 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
       (ModuleT
         {
           module_reason = _;
-          module_export_types = { exports_tmap; cjs_export; has_every_named_export = _ };
+          module_export_types =
+            { value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export = _ };
           module_is_strict = _;
           module_available_platforms = _;
         }
         ) ->
-    let named_exports = Context.find_exports cx exports_tmap in
+    let named_exports =
+      NameUtils.Map.union
+        (Context.find_exports cx value_exports_tmap)
+        (Context.find_exports cx type_exports_tmap)
+    in
     let cjs_export =
       match cjs_export with
       | Some t -> Some (resolve_type cx t)
@@ -673,7 +683,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     in
     let named_exports =
       NameUtils.display_smap_of_namemap named_exports
-      |> SMap.map (fun { name_loc; preferred_def_locs; is_type_only_export = _; type_ } ->
+      |> SMap.map (fun { name_loc; preferred_def_locs; type_ } ->
              let def_locs =
                match preferred_def_locs with
                | Some _ -> preferred_def_locs
@@ -683,6 +693,17 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
          )
     in
     SuccessModule (named_exports, cjs_export)
+  | SuccessNamespace (NamespaceT { values_type; types_tmap }) ->
+    let members =
+      SMap.fold
+        (fun x p acc ->
+          match Property.read_t p with
+          | Some t -> SMap.add x (Property.def_locs p, t) acc
+          | None -> acc)
+        (Context.find_props cx types_tmap |> NameUtils.display_smap_of_namemap)
+        (extract_members_as_map ~exclude_proto_members cx values_type)
+    in
+    SuccessNamespace members
   | Success (DefT (_, FunT (static, _))) ->
     Success (extract_members_as_map ~exclude_proto_members cx static)
   | Success (DefT (enum_reason, EnumObjectT enum) as enum_object_t) ->
@@ -729,7 +750,8 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     in
     Success members
   | Success t
-  | SuccessModule t ->
+  | SuccessModule t
+  | SuccessNamespace t ->
     FailureUnhandledMembers t
 
 and extract ?exclude_proto_members cx = extract_type cx %> extract_members ?exclude_proto_members cx

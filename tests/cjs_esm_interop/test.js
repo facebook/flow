@@ -6,6 +6,6 @@ import type {Bar} from './cjs_require_default_exported_with_types';
 declare var bar: Bar;
 (bar: string); // error: number ~> string
 
-// Spreading a namespace import with type exports happens to work now,
-// but it should be banned.
-import type {T1, T2} from './cjs_spreading_type_exports';
+// Spreading a namespace import with type exports will downgrade the namespace to the value part,
+// erasing all type exports.
+import type {T1, T2} from './cjs_spreading_type_exports'; // error

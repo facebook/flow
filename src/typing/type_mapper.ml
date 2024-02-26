@@ -365,13 +365,26 @@ class virtual ['a] t =
         else
           TypeDestructorT (u, r, d')
 
-    method export_types cx map_cx ({ exports_tmap; cjs_export; has_every_named_export } as t) =
-      let exports_tmap' = self#exports cx map_cx exports_tmap in
+    method export_types
+        cx
+        map_cx
+        ({ value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export } as t) =
+      let value_exports_tmap' = self#exports cx map_cx value_exports_tmap in
+      let type_exports_tmap' = self#exports cx map_cx type_exports_tmap in
       let cjs_export' = OptionUtils.ident_map (self#type_ cx map_cx) cjs_export in
-      if exports_tmap == exports_tmap' && cjs_export == cjs_export' then
+      if
+        value_exports_tmap == value_exports_tmap'
+        && type_exports_tmap == type_exports_tmap'
+        && cjs_export == cjs_export'
+      then
         t
       else
-        { exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export }
+        {
+          value_exports_tmap = value_exports_tmap';
+          type_exports_tmap = type_exports_tmap';
+          cjs_export = cjs_export';
+          has_every_named_export;
+        }
 
     method fun_type
         cx
