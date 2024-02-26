@@ -1017,22 +1017,6 @@ module Make (I : INPUT) : S = struct
       { Ty.obj_def_loc; obj_kind; obj_frozen; obj_literal; obj_props }
 
     and obj_prop_t =
-      (* Value-level object types should not have properties of type type alias. For
-         convience reasons it is possible for a non-module-like Type.ObjT to include
-         such types as properties. Here we explicitly filter them out, since we
-         cannot use type__ to normalize them.
-      *)
-      let is_type_alias = function
-        | T.DefT (_, T.TypeT _)
-        | T.DefT (_, T.PolyT { t_out = T.DefT (_, T.TypeT _); _ }) ->
-          true
-        | _ -> false
-      in
-      let keep_field ~env t =
-        match Lookahead.peek (Env.get_cx env) t with
-        | Lookahead.LowerBounds [t] -> not (is_type_alias t)
-        | _ -> true
-      in
       let def_locs ~fallback_t p =
         match T.Property.def_locs p with
         | None -> [TypeUtil.loc_of_t fallback_t]
@@ -1041,16 +1025,13 @@ module Make (I : INPUT) : S = struct
       fun ~env ?(inherited = false) ?(source = Ty.Other) (x, p) ->
         match p with
         | T.Field { preferred_def_locs = _; key_loc = _; type_; polarity } ->
-          if keep_field ~env type_ then
-            let polarity = type_polarity polarity in
-            let%map (t, optional) = opt_t ~env type_ in
-            let prop = Ty.Field { t; polarity; optional } in
-            [
-              Ty.NamedProp
-                { name = x; prop; inherited; source; def_locs = def_locs ~fallback_t:type_ p };
-            ]
-          else
-            return []
+          let polarity = type_polarity polarity in
+          let%map (t, optional) = opt_t ~env type_ in
+          let prop = Ty.Field { t; polarity; optional } in
+          [
+            Ty.NamedProp
+              { name = x; prop; inherited; source; def_locs = def_locs ~fallback_t:type_ p };
+          ]
         | T.Method { key_loc = _; type_ = t } ->
           let%map tys = method_ty ~env t in
           Base.List.map
