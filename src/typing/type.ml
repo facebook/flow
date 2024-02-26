@@ -172,6 +172,8 @@ module rec TypeTerm : sig
     | OpaqueT of reason * opaquetype
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of moduletype
+    (* Stores both values and types in the same namespace*)
+    | NamespaceT of namespace_type
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
     (* types that should never appear in signatures *)
@@ -583,6 +585,12 @@ module rec TypeTerm : sig
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * write_ctx * t * t option
+    | GetTypeFromNamespaceT of {
+        use_op: use_op;
+        reason: reason;
+        prop_ref: reason * name;
+        tout: tvar;
+      }
     | GetPropT of use_op * reason * ident option * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
@@ -1321,6 +1329,11 @@ module rec TypeTerm : sig
     | ObjAssign of { assert_exact: bool }
     (* Obj.assign(target, ...source) *)
     | ObjSpreadAssign
+
+  and namespace_type = {
+    values_type: t;
+    types_tmap: Properties.id;
+  }
 
   and cont =
     | Lower of use_op * t
@@ -3294,6 +3307,11 @@ module AConstraint = struct
     | Annot_SpecializeT of TypeTerm.use_op * Reason.t * Reason.t * TypeTerm.t list option
     | Annot_ThisSpecializeT of Reason.t * TypeTerm.t
     | Annot_UseT_TypeT of Reason.t * TypeTerm.type_t_kind
+    | Annot_GetTypeFromNamespaceT of {
+        use_op: TypeTerm.use_op;
+        reason: Reason.t;
+        prop_ref: Reason.t * name;
+      }
     | Annot_GetPropT of Reason.t * TypeTerm.use_op * TypeTerm.propref
     | Annot_GetElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* key *)
     | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
@@ -3393,6 +3411,7 @@ module AConstraint = struct
     | Annot_AssertExportIsTypeT _ -> "Annot_AssertExportIsTypeT"
     | Annot_CopyNamedExportsT _ -> "Annot_CopyNamedExportsT"
     | Annot_CopyTypeExportsT _ -> "Annot_CopyTypeExportsT"
+    | Annot_GetTypeFromNamespaceT _ -> "Annot_GetTypeFromNamespaceT"
     | Annot_GetPropT _ -> "Annot_GetPropT"
     | Annot_GetElemT _ -> "Annot_GetElemT"
     | Annot_ElemT _ -> "Annot_ElemT"
@@ -3429,6 +3448,7 @@ module AConstraint = struct
     | Annot_AssertExportIsTypeT (r, _)
     | Annot_CopyNamedExportsT (r, _)
     | Annot_CopyTypeExportsT (r, _)
+    | Annot_GetTypeFromNamespaceT { reason = r; _ }
     | Annot_GetPropT (r, _, _)
     | Annot_GetElemT (r, _, _)
     | Annot_ElemT (r, _, _)
@@ -3453,6 +3473,7 @@ module AConstraint = struct
 
   let use_op_of_operation = function
     | Annot_SpecializeT (use_op, _, _, _)
+    | Annot_GetTypeFromNamespaceT { use_op; _ }
     | Annot_GetPropT (_, use_op, _)
     | Annot_GetElemT (_, use_op, _)
     | Annot_ElemT (_, use_op, _)
@@ -3994,6 +4015,7 @@ let string_of_ctor = function
   | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
+  | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
   | MatchingPropT _ -> "MatchingPropT"
@@ -4132,6 +4154,7 @@ let string_of_use_ctor = function
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
   | GetDictValuesT _ -> "GetDictValuesT"
+  | GetTypeFromNamespaceT _ -> "GetTypeFromNamespaceT"
   | GetPropT _ -> "GetPropT"
   | GetPrivatePropT _ -> "GetPrivatePropT"
   | GetProtoT _ -> "GetProtoT"

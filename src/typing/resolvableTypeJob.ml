@@ -171,6 +171,15 @@ and collect_of_type ?log_unresolved cx acc = function
     in
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, PolyT { t_out = t; _ }) -> collect_of_type ?log_unresolved cx acc t
+  | NamespaceT { values_type; types_tmap } ->
+    let acc = collect_of_type ?log_unresolved cx acc values_type in
+    let acc =
+      NameUtils.Map.fold
+        (collect_of_property ?log_unresolved cx)
+        (Context.find_props cx types_tmap)
+        acc
+    in
+    acc
   (* TODO: The following kinds of types are not walked out of laziness. It's
      not immediately clear what we'd gain (or lose) by walking them. *)
   | InternalT (ChoiceKitT (_, _))

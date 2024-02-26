@@ -70,6 +70,7 @@ class ['a] t =
             module_available_platforms = _;
           } ->
         self#export_types cx pole acc exporttypes
+      | NamespaceT namespace_t -> self#namespace_type cx pole acc namespace_t
       | InternalT (ExtendsT (_, t1, t2)) ->
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
@@ -379,6 +380,12 @@ class ['a] t =
       let acc = self#props cx pole acc props_tmap in
       let acc = self#type_ cx pole acc proto_t in
       let acc = self#opt (self#call_prop cx pole) acc call_t in
+      acc
+
+    method private namespace_type cx pole acc ns =
+      let { values_type; types_tmap } = ns in
+      let acc = self#type_ cx pole acc values_type in
+      let acc = self#props cx pole acc types_tmap in
       acc
 
     method private arr_type cx pole acc =

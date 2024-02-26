@@ -283,6 +283,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetElemT _
     | SetElemT _
     | CallElemT _
+    | GetTypeFromNamespaceT _
     | GetPropT _
     | GetPrivatePropT _
     | TestPropT _

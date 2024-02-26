@@ -161,6 +161,12 @@ class virtual ['a] t =
               module_is_strict;
               module_available_platforms;
             }
+      | NamespaceT namespace_t ->
+        let namespace_t' = self#namespace_type cx map_cx namespace_t in
+        if namespace_t' == namespace_t then
+          t
+        else
+          NamespaceT namespace_t'
       | InternalT (ExtendsT (r, t1, t2)) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -811,6 +817,15 @@ class virtual ['a] t =
           call_t = call_t';
           reachable_targs = reachable_targs';
         }
+
+    method namespace_type cx map_cx t =
+      let { values_type; types_tmap } = t in
+      let values_type' = self#type_ cx map_cx values_type in
+      let types_tmap' = self#props cx map_cx types_tmap in
+      if values_type' == values_type && types_tmap' == types_tmap then
+        t
+      else
+        { values_type = values_type'; types_tmap = types_tmap' }
 
     method virtual call_prop : Context.t -> 'a -> int -> int
 

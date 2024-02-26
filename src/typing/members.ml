@@ -514,6 +514,7 @@ let rec extract_type cx this_t =
   | ExactT (_, t) -> extract_type cx t
   | GenericT { bound; _ } -> extract_type cx bound
   | ModuleT _ as t -> SuccessModule t
+  | NamespaceT { values_type; _ } -> extract_type cx values_type
   | ThisTypeAppT (_, c, _, ts_opt) ->
     let c = resolve_type cx c in
     let inst_t = instantiate_poly_t cx c ts_opt in

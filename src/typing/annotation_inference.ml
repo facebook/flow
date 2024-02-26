@@ -43,6 +43,7 @@ let object_like_op = function
   | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
     false
+  | Annot_GetTypeFromNamespaceT _
   | Annot_GetPropT _
   | Annot_GetElemT _
   | Annot_LookupT _

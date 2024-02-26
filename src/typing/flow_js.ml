@@ -6458,6 +6458,7 @@ struct
     | GetKeysT _
     | GetPrivatePropT _
     | GetPropT _
+    | GetTypeFromNamespaceT _
     | GetProtoT _
     | GetStaticsT _
     | GetValuesT _
@@ -6661,7 +6662,8 @@ struct
     (* Should never occur as the lower bound of any *)
     | InternalT (ChoiceKitT _)
     | InternalT (ExtendsT _)
-    | ModuleT _ ->
+    | ModuleT _
+    | NamespaceT _ ->
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | CustomFunT (_, ReactElementFactory _)

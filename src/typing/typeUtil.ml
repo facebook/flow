@@ -31,6 +31,7 @@ let rec reason_of_t = function
   | FunProtoCallT reason -> reason
   | KeysT (reason, _) -> reason
   | ModuleT { module_reason = reason; _ } -> reason
+  | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
@@ -86,6 +87,7 @@ and reason_of_use_t = function
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
   | GetDictValuesT (reason, _) -> reason
+  | GetTypeFromNamespaceT { reason; _ } -> reason
   | GetPropT (_, reason, _, _, _) -> reason
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
@@ -200,6 +202,8 @@ let rec mod_reason_of_t f = function
         module_is_strict;
         module_available_platforms;
       }
+  | NamespaceT { values_type; types_tmap } ->
+    NamespaceT { values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
@@ -306,6 +310,8 @@ and mod_reason_of_use_t f = function
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
   | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
+  | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
+    GetTypeFromNamespaceT { use_op; reason = f reason; prop_ref; tout }
   | GetPropT (use_op, reason, id, n, t) -> GetPropT (use_op, f reason, id, n, t)
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
@@ -453,6 +459,8 @@ let rec util_use_op_of_use_t :
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
   | SetPrivatePropT (op, r, s, m, c, b, x, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, x, t, tp))
+  | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
+    util use_op (fun use_op -> GetTypeFromNamespaceT { use_op; reason; prop_ref; tout })
   | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))

@@ -358,6 +358,8 @@ let rec dump_t_ (depth, tvars) cx t =
           |> String.concat ", "
           |> spf "[%s]"
           )
+    | NamespaceT { values_type; types_tmap } ->
+      p t ~extra:(spf "values=%s, types=%s" (kid values_type) (Properties.string_of_id types_tmap))
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
@@ -790,6 +792,17 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(spf "(%s), (%s, %s)" prop (string_of_reason preason) (tvar ptvar)) t
     | GetProtoT (_, (_, arg)) -> p ~extra:(tvar arg) t
     | GetStaticsT (_, arg) -> p ~extra:(tvar arg) t
+    | GetTypeFromNamespaceT { use_op; reason = _; prop_ref = (_, name); tout = (preason, ptvar) } ->
+      p
+        ~extra:
+          (spf
+             "%s, (%s), (%s, %s)"
+             (string_of_use_op use_op)
+             (display_string_of_name name)
+             (string_of_reason preason)
+             (tvar ptvar)
+          )
+        t
     | GuardT (pred, result, sink) ->
       p
         ~reason:false

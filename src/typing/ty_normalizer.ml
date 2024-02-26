@@ -775,6 +775,7 @@ module Make (I : INPUT) : S = struct
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
+      | NamespaceT { values_type; types_tmap = _ } -> cont ~env ?id values_type
       | DefT (_, MixedT _) -> return Ty.Top
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, VoidT) -> return Ty.Void
