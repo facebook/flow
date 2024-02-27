@@ -1730,6 +1730,7 @@ module rec TypeTerm : sig
 
   and concretization_target =
     | ConcretizeIntersectionT of t list * t list * reason * InterRep.t * use_t
+    | ConcretizeForImportsExports of ident
     (* The purpose of this utility is to concretize a resolved type for the purpose
      * of type inspection. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)

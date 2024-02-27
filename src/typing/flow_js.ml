@@ -1419,6 +1419,10 @@ struct
             rec_flow cx trace (t, u);
             TypeAppExpansion.pop cx
           )
+        (* Concretize types for type inspection purpose up to this point. The rest are
+           recorded as lower bound to the target tvar. *)
+        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForImportsExports tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (* Namespace and type qualification *)
         | ( NamespaceT { values_type; types_tmap },
             GetTypeFromNamespaceT
@@ -10398,6 +10402,9 @@ module rec FlowJs : Flow_common.S = struct
     | [] -> EmptyT.make reason
     | [t] -> t
     | t1 :: t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
+
+  let possible_concrete_types_for_imports_exports =
+    possible_concrete_types (fun ident -> ConcretizeForImportsExports ident)
 
   let possible_concrete_types_for_computed_props =
     possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)

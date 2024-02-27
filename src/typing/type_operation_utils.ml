@@ -68,6 +68,12 @@ module Import_export = struct
       );
       module_t
 
+  let singleton_concretize_type_for_imports_exports cx r t =
+    match Flow.possible_concrete_types_for_imports_exports cx r t with
+    | [] -> EmptyT.why r
+    | [t] -> t
+    | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
+
   let get_imported_t
       cx ~import_reason ~module_name ~source_module_t ~import_kind ~remote_name ~local_name =
     let is_strict = Context.is_strict cx in
@@ -79,7 +85,9 @@ module Import_export = struct
           ~trace:Trace.dummy_trace
           (export_t, AssertImportIsValueT (reason, name))
       in
-      let with_concretized_type cx r f t = f (Flow.singleton_concrete_type_for_inspection cx r t) in
+      let with_concretized_type cx r f t =
+        f (singleton_concretize_type_for_imports_exports cx r t)
+      in
       match concretize_module_type cx import_reason source_module_t with
       | Ok m ->
         let (name_loc_opt, t) =
