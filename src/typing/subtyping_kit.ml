@@ -1223,32 +1223,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, ThisInstanceT (r, i, this, this_name)) ->
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_instance cx reason (r, i, this, this_name)))
-    | ( DefT (_, PolyT { tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }),
-        DefT (_, TypeT (RenderTypeKind, _))
-      ) ->
-      let reason_op = reason_of_t u in
-      let subst_map =
-        Nel.fold_left
-          (fun acc tparam -> Subst_name.Map.add tparam.name (AnyT.untyped reason_op) acc)
-          Subst_name.Map.empty
-          ids
-      in
-      let t_ = Type_subst.subst cx subst_map t in
-      rec_flow_t cx trace ~use_op (t_, u)
-    | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), DefT (_, TypeT (_, t))) ->
-      rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason_tapp, t);
-      add_output
-        cx
-        ~trace
-        (Error_message.EMissingTypeArgs
-           {
-             reason_op = reason_of_t u;
-             reason_tapp;
-             reason_arity = mk_poly_arity_reason tparams_loc;
-             min_arity = poly_minimum_arity ids;
-             max_arity = Nel.length ids;
-           }
-        )
     (*
      * This rule is hit when a polymorphic type appears outside a
      * type application expression - i.e. not followed by a type argument list
@@ -1972,46 +1946,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (********************************************************)
     (* runtime types derive static types through annotation *)
     (********************************************************)
-    | (DefT (_, ClassT it), DefT (r, TypeT (_, t))) ->
-      (* a class value annotation becomes the instance type *)
-      let it = reposition ~trace cx (loc_of_reason r) it in
-      rec_unify cx trace ~use_op:unknown_use ~unify_any:true it t
-    | (DefT (_, TypeT (_, l)), DefT (_, TypeT (_, u))) ->
-      rec_unify cx trace ~use_op ~unify_any:true l u
-    | (DefT (lreason, EnumObjectT enum), DefT (_r, TypeT (_, t))) ->
-      (* an enum object value annotation becomes the enum type *)
-      let enum_type = mk_enum_type lreason enum in
-      rec_unify cx trace ~use_op enum_type t
-    | (DefT (enum_reason, EnumT _), DefT (reason, TypeT (_, t))) ->
-      rec_unify cx trace ~use_op (AnyT.error reason) t;
-      add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
-    | (DefT (reasonl, ReactAbstractComponentT _), DefT (r, TypeT (_, t))) ->
-      (* a component syntax value annotation becomes an element of that component *)
-      let elem =
-        let elem_reason =
-          let desc = react_element_desc_of_component_reason reasonl in
-          let annot_loc = loc_of_reason r in
-          annot_reason ~annot_loc (replace_desc_reason desc r)
-        in
-        get_builtin_typeapp cx ~use_desc:true elem_reason "React$Element" [l]
-      in
-      rec_unify cx trace ~use_op elem t
-    (* non-class/function values used in annotations are errors *)
-    | (_, DefT (reason_use, TypeT (_, t))) ->
-      (match l with
-      | DefT (_, EmptyT)
-      | AnyT (_, AnyError (Some MissingAnnotation)) ->
-        add_output cx ~trace Error_message.(EValueUsedAsType { reason_use });
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t)
-      | AnyT (_, AnyError _) ->
-        (* Short-circut as we already error on the unresolved name. *)
-        rec_flow_t cx ~use_op:unknown_use trace (l, t)
-      | AnyT _ ->
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
-        add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
-      | _ ->
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
-        add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
     | (DefT (rl, ClassT l), DefT (_, ClassT u)) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason rl) l, UseT (use_op, u))
     | (DefT (_, FunT (static1, _)), DefT (_, ClassT (DefT (_, InstanceT { static = static2; _ }))))

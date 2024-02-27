@@ -6662,8 +6662,7 @@ struct
       (* Keys cannot be tainted by any *)
       true
     | DefT (_, ClassT t)
-    | DefT (_, ArrT (ROArrayAT (t, _)))
-    | DefT (_, TypeT (_, t)) ->
+    | DefT (_, ArrT (ROArrayAT (t, _))) ->
       covariant_flow ~use_op t;
       true
     | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
