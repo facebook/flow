@@ -267,6 +267,60 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace = function
   | Flow_ast.Statement.TypeAlias _ ->
     Ok ()
 
+let rec is_type_only_declaration_statement (_, stmt') =
+  let open Flow_ast.Statement in
+  let is_type_only_declaration_statement' = function
+    | DeclareInterface _
+    | DeclareOpaqueType _
+    | DeclareTypeAlias _
+    | Empty _
+    | InterfaceDeclaration _
+    | OpaqueType _
+    | TypeAlias _ ->
+      true
+    | DeclareExportDeclaration
+        DeclareExportDeclaration.
+          { declaration = Some (NamedType _ | NamedOpaqueType _ | Interface _); _ } ->
+      true
+    | DeclareNamespace { DeclareNamespace.body = (_, { Block.body; _ }); _ } ->
+      List.for_all is_type_only_declaration_statement body
+    | Block _
+    | Break _
+    | ClassDeclaration _
+    | ComponentDeclaration _
+    | Continue _
+    | Debugger _
+    | DoWhile _
+    | EnumDeclaration _
+    | ExportDefaultDeclaration _
+    | ExportNamedDeclaration _
+    | Expression _
+    | For _
+    | ForIn _
+    | ForOf _
+    | FunctionDeclaration _
+    | If _
+    | Labeled _
+    | Return _
+    | Switch _
+    | Throw _
+    | Try _
+    | VariableDeclaration _
+    | While _
+    | With _
+    | ImportDeclaration _
+    | DeclareClass _
+    | DeclareComponent _
+    | DeclareEnum _
+    | DeclareExportDeclaration _
+    | DeclareFunction _
+    | DeclareModule _
+    | DeclareModuleExports _
+    | DeclareVariable _ ->
+      false
+  in
+  is_type_only_declaration_statement' stmt'
+
 let loc_of_statement = fst
 
 let loc_of_expression = fst

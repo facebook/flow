@@ -43,6 +43,8 @@ val is_super_member_access : ('a, 'b) Flow_ast.Expression.Member.t -> bool
 val acceptable_statement_in_declaration_context :
   in_declare_namespace:bool -> ('a, 'b) Flow_ast.Statement.t' -> (unit, string) result
 
+val is_type_only_declaration_statement : ('a, 'b) Flow_ast.Statement.t -> bool
+
 val negate_number_literal : float * string -> float * string
 
 val negate_bigint_literal : int64 option * string -> int64 option * string
