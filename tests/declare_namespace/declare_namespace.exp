@@ -42,7 +42,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- binding_test.js:8:1
 
-Cannot use type `const_like` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+Cannot use type-only namespace `const_like` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
+[type-as-value]
 
    binding_test.js:8:1
    8| const_like = 1; // error
@@ -105,7 +106,8 @@ Cannot use `import declaration` statements with in `declare namespace`. The stat
 
 Error ------------------------------------------------------------------------------------------------- exported.js:22:3
 
-Cannot use type `empty` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+Cannot use type-only namespace `empty` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
+[type-as-value]
 
    exported.js:22:3
    22|   empty, // error: empty is type-only
@@ -590,7 +592,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:52:3
 
-Cannot use type `type_only` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+Cannot use type-only namespace `type_only` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
+[type-as-value]
 
    typing_test.js:52:3
    52|   type_only; // error: type-as-value

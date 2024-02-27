@@ -806,11 +806,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | (Bindings.Enum, AssignmentWrite) ->
         Some
           Error_message.(EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc))
-      | (Bindings.Type { imported }, AssignmentWrite) ->
+      | (Bindings.Type { imported; type_only_namespace }, AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError
-              (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
+              ( ETypeInValuePosition { imported; type_only_namespace; name },
+                assignment_loc,
+                OrdinaryName name,
+                def_loc
+              )
           )
       | ( Bindings.(Parameter | ComponentParameter),
           ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding

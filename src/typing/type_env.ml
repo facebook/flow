@@ -542,11 +542,19 @@ let read_entry ~lookup_mode cx loc reason =
   | Error loc -> Error loc
   | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
     (match (val_kind, name, def_loc, lookup_mode) with
-    | (Some (Env_api.Type { imported }), Some name, Some def_loc, (ForValue | ForTypeof)) ->
+    | ( Some (Env_api.Type { imported; type_only_namespace }),
+        Some name,
+        Some def_loc,
+        (ForValue | ForTypeof)
+      ) ->
       Flow_js.add_output
         cx
         (Error_message.EBindingError
-           (Error_message.ETypeInValuePosition { imported; name }, loc, OrdinaryName name, def_loc)
+           ( Error_message.ETypeInValuePosition { imported; type_only_namespace; name },
+             loc,
+             OrdinaryName name,
+             def_loc
+           )
         );
       Ok (AnyT.at (AnyError None) loc)
     | _ -> Ok (type_of_state ~lookup_mode cx env loc reason write_locs id None))
@@ -653,7 +661,7 @@ let intrinsic_ref cx ?desc name loc =
     | Error loc -> Error loc
     | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
       (match (val_kind, name, def_loc) with
-      | (Some (Env_api.Type { imported = _ }), Some _, Some _)
+      | (Some (Env_api.Type { imported = _; type_only_namespace = _ }), Some _, Some _)
       | (_, _, None) ->
         Error loc
       | (_, _, Some def_loc) ->

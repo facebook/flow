@@ -330,7 +330,8 @@ let simplify def_loc binding_kind_opt name value =
   let write_locs = simplify_val value in
   let val_kind =
     match binding_kind_opt with
-    | Some (Bindings.Type { imported }) -> Some (Env_api.Type { imported })
+    | Some (Bindings.Type { imported; type_only_namespace }) ->
+      Some (Env_api.Type { imported; type_only_namespace })
     | Some _ -> Some Env_api.Value
     | None -> None
   in

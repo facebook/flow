@@ -15,7 +15,10 @@ type kind =
   | DeclaredVar
   | DeclaredLet
   | DeclaredConst
-  | Type of { imported: bool }
+  | Type of {
+      imported: bool;
+      type_only_namespace: bool;
+    }
   | Enum
   | Function
   | Class

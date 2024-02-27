@@ -233,7 +233,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
           Flow_ast_utils.is_type_only_declaration_statement
             (loc, Ast.Statement.DeclareNamespace namespace)
         then
-          Bindings.Type { imported = false }
+          Bindings.Type { imported = false; type_only_namespace = true }
         else
           Bindings.DeclaredConst
       in
@@ -250,7 +250,7 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
     method private add_var_binding entry = this#update_acc Bindings.(add (entry, Bindings.Var))
 
     method private add_type_binding ~imported entry =
-      this#update_acc Bindings.(add (entry, Bindings.Type { imported }))
+      this#update_acc Bindings.(add (entry, Bindings.Type { imported; type_only_namespace = false }))
 
     method! private add_const_binding ?kind entry =
       if lexical then super#add_const_binding ?kind entry
