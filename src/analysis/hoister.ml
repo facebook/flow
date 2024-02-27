@@ -225,10 +225,19 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       if enable_enums then this#add_const_binding ~kind:Bindings.Enum id;
       enum
 
-    method! declare_namespace _loc (namespace : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
+    method! declare_namespace loc (namespace : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
       let open Ast.Statement.DeclareNamespace in
       let { id; _ } = namespace in
-      this#update_acc Bindings.(add (id, Bindings.DeclaredConst));
+      let kind =
+        if
+          Flow_ast_utils.is_type_only_declaration_statement
+            (loc, Ast.Statement.DeclareNamespace namespace)
+        then
+          Bindings.Type { imported = false }
+        else
+          Bindings.DeclaredConst
+      in
+      this#update_acc Bindings.(add (id, kind));
       namespace
   end
 

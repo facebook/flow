@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- binding_test.js:8:1
 
-Cannot reassign constant `const_like` [1]. [reassign-const]
+Cannot use type `const_like` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
    binding_test.js:8:1
    8| const_like = 1; // error
@@ -103,125 +103,185 @@ Cannot use `import declaration` statements with in `declare namespace`. The stat
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:11:21
+Error ------------------------------------------------------------------------------------------------- exported.js:22:3
 
-Cannot resolve module `react`. [cannot-resolve-module]
+Cannot use type `empty` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
-   11|   import React from 'react'; // unsupported
-                           ^^^^^^^
+   exported.js:22:3
+   22|   empty, // error: empty is type-only
+         ^^^^^
+
+References:
+   exported.js:14:19
+   14| declare namespace empty {}
+                         ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:16:1
+Error ------------------------------------------------------------------------------------------------- exported.js:27:1
 
 Cannot cast `exported_ns.bar1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:16:1
-   16| exported_ns.bar1 as empty; // error: number ~> empty
+   exported.js:27:1
+   27| exported_ns.bar1 as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:2:30
     2|   declare export const bar1: number;
                                     ^^^^^^ [1]
-   exported.js:16:21
-   16| exported_ns.bar1 as empty; // error: number ~> empty
+   exported.js:27:21
+   27| exported_ns.bar1 as empty; // error: number ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:17:1
+Error ------------------------------------------------------------------------------------------------- exported.js:28:1
 
 Cannot cast `exported_ns.bar2` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:17:1
-   17| exported_ns.bar2 as empty; // error: boolean ~> empty
+   exported.js:28:1
+   28| exported_ns.bar2 as empty; // error: boolean ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:3:23
     3|   declare const bar2: boolean;
                              ^^^^^^^ [1]
-   exported.js:17:21
-   17| exported_ns.bar2 as empty; // error: boolean ~> empty
+   exported.js:28:21
+   28| exported_ns.bar2 as empty; // error: boolean ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:18:1
+Error ------------------------------------------------------------------------------------------------- exported.js:29:1
 
 Cannot cast `exported_ns.bar3` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:18:1
-   18| exported_ns.bar3 as empty; // error: string ~> empty
+   exported.js:29:1
+   29| exported_ns.bar3 as empty; // error: string ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:4:21
     4|   declare var bar3: string;
                            ^^^^^^ [1]
-   exported.js:18:21
-   18| exported_ns.bar3 as empty; // error: string ~> empty
+   exported.js:29:21
+   29| exported_ns.bar3 as empty; // error: string ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:19:1
+Error ------------------------------------------------------------------------------------------------- exported.js:30:1
 
 Cannot cast `exported_ns.f(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:19:1
-   19| exported_ns.f(3) as empty; // error: number ~> empty
+   exported.js:30:1
+   30| exported_ns.f(3) as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:6:31
     6|   declare function f(number): number;
                                      ^^^^^^ [1]
-   exported.js:19:21
-   19| exported_ns.f(3) as empty; // error: number ~> empty
+   exported.js:30:21
+   30| exported_ns.f(3) as empty; // error: number ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:20:1
+Error ------------------------------------------------------------------------------------------------- exported.js:31:1
 
 Cannot cast `1` to `Baz` because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   exported.js:20:1
-   20| 1 as exported_ns.Baz; // error: number ~> string
+   exported.js:31:1
+   31| 1 as exported_ns.Baz; // error: number ~> string
        ^ [1]
 
 References:
-   exported.js:20:6
-   20| 1 as exported_ns.Baz; // error: number ~> string
+   exported.js:31:6
+   31| 1 as exported_ns.Baz; // error: number ~> string
             ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:21:1
+Error ------------------------------------------------------------------------------------------------- exported.js:32:1
 
 Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:21:1
-   21| exported_ns.B.C as empty; // error: enum ~> empty
+   exported.js:32:1
+   32| exported_ns.B.C as empty; // error: enum ~> empty
        ^^^^^^^^^^^^^^^
 
 References:
    exported.js:8:8
     8|   enum B { C, D }
               ^ [1]
-   exported.js:21:20
-   21| exported_ns.B.C as empty; // error: enum ~> empty
+   exported.js:32:20
+   32| exported_ns.B.C as empty; // error: enum ~> empty
                           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:22:13
+Error ------------------------------------------------------------------------------------------------ exported.js:33:13
 
 Cannot get `exported_ns.React` because property `React` is missing in namespace exported_ns [1]. [prop-missing]
 
-   exported.js:22:13
-   22| exported_ns.React; // error: prop-missing
+   exported.js:33:13
+   33| exported_ns.React; // error: prop-missing
                    ^^^^^
 
 References:
    exported.js:1:19
     1| declare namespace exported_ns {
                          ^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- type_only_react_namespace.js:3:3
+
+Cannot resolve name `React`. [cannot-resolve-name]
+
+   3|   React; // error
+        ^^^^^
+
+
+Error --------------------------------------------------------------------------------- type_only_react_namespace.js:5:3
+
+Cannot cast `new HTMLAnchorElement()` to `Node` because: [incompatible-cast]
+ - Either `HTMLAnchorElement` [1] is incompatible with `React.Element` [2].
+ - Or `HTMLAnchorElement` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in `HTMLAnchorElement` [1] but exists in `$Iterable` [4].
+
+   type_only_react_namespace.js:5:3
+    5|   new HTMLAnchorElement() as React.Node; // error
+         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------- type_only_react_namespace.js:12:3
+
+Cannot cast `new HTMLAnchorElement()` to `Node` because: [incompatible-cast]
+ - Either `HTMLAnchorElement` [1] is incompatible with `React.Element` [2].
+ - Or `HTMLAnchorElement` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in `HTMLAnchorElement` [1] but exists in `$Iterable` [4].
+
+   type_only_react_namespace.js:12:3
+   12|   new HTMLAnchorElement() as React.Node; // error
+         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- typing_test.js:7:1
@@ -314,14 +374,6 @@ Cannot use `import declaration` statements with in `declare namespace`. The stat
 
    24|   import React from 'react'; // unsupported
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------- typing_test.js:24:21
-
-Cannot resolve module `react`. [cannot-resolve-module]
-
-   24|   import React from 'react'; // unsupported
-                           ^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:26:1
@@ -471,5 +523,101 @@ References:
                          ^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- typing_test.js:41:1
 
-Found 35 errors
+Cannot use type `exported_ns_type_only` [1] as a value. Types are erased and don't exist at runtime. If the exported
+binding can also be used as a value, try importing it using `import exported_ns_type_only` instead of
+`import type exported_ns_type_only` and `import {exported_ns_type_only}` instead of
+`import type {exported_ns_type_only}`. [type-as-value]
+
+   typing_test.js:41:1
+   41| exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:40:51
+   40| import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
+                                                         ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:41:24
+
+Cannot use type `exported_ns_type_only2` [1] as a value. Types are erased and don't exist at runtime. If the exported
+binding can also be used as a value, try importing it using `import exported_ns_type_only2` instead of
+`import type exported_ns_type_only2` and `import {exported_ns_type_only2}` instead of
+`import type {exported_ns_type_only2}`. [type-as-value]
+
+   typing_test.js:41:24
+   41| exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
+                              ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:40:27
+   40| import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
+                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:45:3
+
+Cannot cast `1` to `B` because number [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   typing_test.js:45:3
+   45|   1 as exported_ns_type_only.B; // error: number ~> enum
+         ^ [1]
+
+References:
+   typing_test.js:45:8
+   45|   1 as exported_ns_type_only.B; // error: number ~> enum
+              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:47:3
+
+Cannot cast `exported_ns.B.C` to `T` because `B` [1] is incompatible with number [2]. [incompatible-cast]
+
+   typing_test.js:47:3
+   47|   exported_ns.B.C as exported_ns_type_only2.T; // error: enum ~> number
+         ^^^^^^^^^^^^^^^
+
+References:
+   exported.js:8:8
+    8|   enum B { C, D }
+              ^ [1]
+   typing_test.js:47:22
+   47|   exported_ns.B.C as exported_ns_type_only2.T; // error: enum ~> number
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:52:3
+
+Cannot use type `type_only` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   typing_test.js:52:3
+   52|   type_only; // error: type-as-value
+         ^^^^^^^^^
+
+References:
+   typing_test.js:49:21
+   49|   declare namespace type_only {
+                           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:54:3
+
+Cannot cast `1` to `Bar` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   typing_test.js:54:3
+   54|   1 as type_only.Bar; // error: number ~> string
+         ^ [1]
+
+References:
+   typing_test.js:54:8
+   54|   1 as type_only.Bar; // error: number ~> string
+              ^^^^^^^^^^^^^ [2]
+
+
+
+Found 43 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

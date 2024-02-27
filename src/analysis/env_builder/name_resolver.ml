@@ -5517,8 +5517,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         env_state <- { env_state with exclude_syms = saved_exclude_syms };
         m
 
-      method! declare_namespace _loc ({ Ast.Statement.DeclareNamespace.id; body; _ } as m) =
-        ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
+      method! declare_namespace loc ({ Ast.Statement.DeclareNamespace.id; body; _ } as m) =
+        if Flow_ast_utils.is_type_only_declaration_statement (loc, Ast.Statement.DeclareNamespace m)
+        then
+          ignore @@ this#binding_type_identifier id
+        else
+          ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let bindings =
           let hoist =
