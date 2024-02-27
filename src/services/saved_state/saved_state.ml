@@ -601,13 +601,20 @@ end = struct
       parsed_heaps
 
   (* Denormalize the data for all the unparsed files *)
-  let denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps =
+  let denormalize_unparsed_heaps
+      ~workers ~blocking_worker_communication ~root ~progress_fn unparsed_heaps =
     let next = MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers unparsed_heaps in
     let job acc (relative_fn, unparsed_file_data) =
       let fn = denormalize_file_key_nocache ~root relative_fn in
       (fn, unparsed_file_data) :: acc
     in
-    MultiWorkerLwt.fold workers ~job ~neutral:[] ~merge:List.rev_append ~next
+    MultiWorkerLwt.fold
+      workers
+      ~blocking:blocking_worker_communication
+      ~job
+      ~neutral:[]
+      ~merge:List.rev_append
+      ~next
 
   let denormalize_package_heaps ~denormalizer package_heaps =
     Base.List.map
@@ -651,7 +658,12 @@ end = struct
     Hh_logger.info "Denormalizing the data for the unparsed files";
     let%lwt unparsed_heaps =
       let progress_fn = progress_fn (List.length unparsed_heaps) in
-      denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
+      denormalize_unparsed_heaps
+        ~blocking_worker_communication:(Options.blocking_worker_communication options)
+        ~workers
+        ~root
+        ~progress_fn
+        unparsed_heaps
     in
     let ordered_non_flowlib_libs =
       Base.List.map ~f:(FileDenormalizer.denormalize_path denormalizer) ordered_non_flowlib_libs

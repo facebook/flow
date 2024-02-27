@@ -270,21 +270,40 @@ module Node = struct
           );
       ]
 
-  let resolve_relative ~options ~reader ?phantom_acc root_path rel_path =
+  let resolve_relative ~options ~reader ?phantom_acc ~source root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     (* We do not try resource file extensions here. So while you can write
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
     let file_exts = Files.module_file_exts file_options in
-    lazy_seq
-      [
-        lazy (path_if_exists ~reader ~file_options phantom_acc path);
-        lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
-        lazy (resolve_package ~options ~reader ?phantom_acc path);
-      ]
+    match
+      Files.platform_specific_extension_opt ~options:file_options (File_key.to_string source)
+    with
+    | None ->
+      lazy_seq
+        [
+          lazy (path_if_exists ~reader ~file_options phantom_acc path);
+          lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
+          lazy (resolve_package ~options ~reader ?phantom_acc path);
+        ]
+    | Some platform_ext ->
+      lazy_seq
+        [
+          lazy (path_if_exists ~reader ~file_options phantom_acc path);
+          lazy
+            (path_if_exists_with_file_exts
+               ~reader
+               ~file_options
+               phantom_acc
+               (path ^ platform_ext)
+               file_exts
+            );
+          lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
+          lazy (resolve_package ~options ~reader ?phantom_acc path);
+        ]
 
-  let rec node_module ~options ~reader node_modules_containers file ?phantom_acc dir r =
+  let rec node_module ~options ~reader node_modules_containers file ?phantom_acc ~source dir r =
     let file_options = Options.file_options options in
     lazy_seq
       [
@@ -300,6 +319,7 @@ module Node = struct
                            ~options
                            ~reader
                            ?phantom_acc
+                           ~source
                            dir
                            (spf "%s%s%s" dirname Filename.dir_sep r)
                        else
@@ -319,6 +339,7 @@ module Node = struct
                node_modules_containers
                file
                ?phantom_acc
+               ~source
                (Filename.dirname dir)
                r
           );
@@ -328,7 +349,7 @@ module Node = struct
    * to resolve requires like `require('foo/bar.js')` relative to the project
    * root directory. This is something bundlers like Webpack can be configured
    * to do. *)
-  let resolve_root_relative ~options ~reader ?phantom_acc import_str =
+  let resolve_root_relative ~options ~reader ?phantom_acc ~source import_str =
     if Options.node_resolver_allow_root_relative options then
       let dirnames = Options.node_resolver_root_relative_dirnames options in
       let root = Options.root options |> File_path.to_string in
@@ -339,7 +360,7 @@ module Node = struct
           else
             Filename.concat root dirname
         in
-        lazy (resolve_relative ~options ~reader ?phantom_acc root import_str)
+        lazy (resolve_relative ~options ~reader ?phantom_acc ~source root import_str)
       in
       lazy_seq (Base.List.map ~f dirnames)
     else
@@ -349,12 +370,22 @@ module Node = struct
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     if is_relative_or_absolute import_str then
-      resolve_relative ~options ~reader ?phantom_acc dir import_str
+      resolve_relative ~options ~reader ?phantom_acc ~source:f dir import_str
     else
       lazy_seq
         [
-          lazy (resolve_root_relative ~options ~reader ?phantom_acc import_str);
-          lazy (node_module ~options ~reader node_modules_containers f ?phantom_acc dir import_str);
+          lazy (resolve_root_relative ~options ~reader ?phantom_acc ~source:f import_str);
+          lazy
+            (node_module
+               ~options
+               ~reader
+               node_modules_containers
+               f
+               ?phantom_acc
+               ~source:f
+               dir
+               import_str
+            );
         ]
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
@@ -455,7 +486,7 @@ module Haste : MODULE_SYSTEM = struct
     else
       None
 
-  let resolve_haste_module ~options ~reader ?phantom_acc ~dir r =
+  let resolve_haste_module ~options ~reader ?phantom_acc ~source ~dir r =
     let (name, subpath) =
       match String.split_on_char '/' r with
       | [] -> (r, [])
@@ -475,7 +506,7 @@ module Haste : MODULE_SYSTEM = struct
         record_phantom_dependency mname dependency phantom_acc;
 
         let path = Files.construct_path package_dir subpath in
-        Node.resolve_relative ~options ~reader ?phantom_acc dir path
+        Node.resolve_relative ~options ~reader ?phantom_acc ~source dir path
       | (None, []) -> dependency
       | (None, _ :: _) ->
         (* if r = foo/bar and foo is a regular module, don't resolve.
@@ -490,8 +521,8 @@ module Haste : MODULE_SYSTEM = struct
       None
 
   let resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-      ~options ~reader ?phantom_acc ~dir r =
-    let dependency = resolve_haste_module ~options ~reader ?phantom_acc ~dir r in
+      ~options ~reader ?phantom_acc ~dir ~source r =
+    let dependency = resolve_haste_module ~options ~reader ?phantom_acc ~source ~dir r in
     let file_options = Options.file_options options in
     if file_options.Files.multi_platform then
       match Option.map Parsing_heaps.read_dependency dependency with
@@ -513,15 +544,25 @@ module Haste : MODULE_SYSTEM = struct
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     if is_relative_or_absolute r then
-      Node.resolve_relative ~options ~reader ?phantom_acc dir r
+      Node.resolve_relative ~options ~reader ?phantom_acc ~source:f dir r
     else
       let file_options = Options.file_options options in
       if not file_options.Files.multi_platform then
         lazy_seq
           [
-            lazy (resolve_haste_module ~options ~reader ?phantom_acc ~dir r);
-            lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
-            lazy (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+            lazy (resolve_haste_module ~options ~reader ?phantom_acc ~source:f ~dir r);
+            lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
+            lazy
+              (Node.node_module
+                 ~options
+                 ~reader
+                 node_modules_containers
+                 file
+                 ?phantom_acc
+                 ~source:f
+                 dir
+                 r
+              );
           ]
       else
         match Files.platform_specific_extension_opt ~options:file_options file with
@@ -533,28 +574,48 @@ module Haste : MODULE_SYSTEM = struct
                    ~options
                    ~reader
                    ?phantom_acc
+                   ~source:f
                    ~dir
                    r
                 );
-              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
+              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
               lazy
-                (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+                (Node.node_module
+                   ~options
+                   ~reader
+                   node_modules_containers
+                   file
+                   ?phantom_acc
+                   ~source:f
+                   dir
+                   r
+                );
             ]
         | Some ext ->
           lazy_seq
             [
-              lazy (resolve_haste_module ~options ~reader ?phantom_acc ~dir (r ^ ext));
+              lazy (resolve_haste_module ~options ~reader ?phantom_acc ~source:f ~dir (r ^ ext));
               lazy
                 (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
                    ~options
                    ~reader
                    ?phantom_acc
+                   ~source:f
                    ~dir
                    r
                 );
-              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
+              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
               lazy
-                (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+                (Node.node_module
+                   ~options
+                   ~reader
+                   node_modules_containers
+                   file
+                   ?phantom_acc
+                   ~source:f
+                   dir
+                   r
+                );
             ]
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
@@ -830,6 +891,7 @@ let commit_modules ~workers ~options dirty_modules =
   let%lwt (unchanged, duplicate_providers) =
     MultiWorkerLwt.fold
       workers
+      ~blocking:(Options.blocking_worker_communication options)
       ~job
       ~neutral:(Modulename.Set.empty, SMap.empty)
       ~merge:(fun (a1, a2) (b1, b2) -> (Modulename.Set.union a1 b1, SMap.union a2 b2))

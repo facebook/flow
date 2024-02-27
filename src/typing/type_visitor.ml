@@ -25,6 +25,7 @@ class ['a] t =
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, t) -> self#def_type cx pole acc t
       | InternalT (ChoiceKitT (_, Trigger)) -> acc
+      | InternalT (EnforceUnionOptimized _) -> acc
       | FunProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _
@@ -69,6 +70,7 @@ class ['a] t =
             module_available_platforms = _;
           } ->
         self#export_types cx pole acc exporttypes
+      | NamespaceT namespace_t -> self#namespace_type cx pole acc namespace_t
       | InternalT (ExtendsT (_, t1, t2)) ->
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
@@ -317,7 +319,7 @@ class ['a] t =
       self#type_ cx pole acc t
 
     method exports cx pole acc id =
-      let visit acc { name_loc = _; preferred_def_locs = _; is_type_only_export = _; type_ } =
+      let visit acc { name_loc = _; preferred_def_locs = _; type_ } =
         self#type_ cx pole acc type_
       in
       Context.find_exports cx id |> self#namemap visit acc
@@ -380,6 +382,12 @@ class ['a] t =
       let acc = self#opt (self#call_prop cx pole) acc call_t in
       acc
 
+    method private namespace_type cx pole acc ns =
+      let { values_type; types_tmap } = ns in
+      let acc = self#type_ cx pole acc values_type in
+      let acc = self#props cx pole acc types_tmap in
+      acc
+
     method private arr_type cx pole acc =
       function
       | ArrayAT { elem_t; tuple_view = None; react_dro = _ } -> self#type_ cx P.Neutral acc elem_t
@@ -437,8 +445,9 @@ class ['a] t =
       acc
 
     method private export_types cx pole acc e =
-      let { exports_tmap; cjs_export; has_every_named_export = _ } = e in
-      let acc = self#exports cx pole acc exports_tmap in
+      let { value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export = _ } = e in
+      let acc = self#exports cx pole acc value_exports_tmap in
+      let acc = self#exports cx pole acc type_exports_tmap in
       let acc = self#opt (self#type_ cx pole) acc cjs_export in
       acc
 

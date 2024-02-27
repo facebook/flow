@@ -960,7 +960,6 @@ struct
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
-        | HooklikeValue { hints; expr }
         | Value { hints; expr } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
@@ -1041,7 +1040,6 @@ struct
               statics;
               arrow = _;
               tparams_map;
-              hook_like = _;
             } ->
           depends_of_fun synthesizable_from_annotation tparams_map ~hints ~statics function_ state
         | EmptyArray { array_providers; _ } ->
@@ -1112,7 +1110,7 @@ struct
             EnvMap.empty
         | Some e -> depends_of_expression ~for_expression_writes:true e EnvMap.empty
       in
-      let depends_of_binding bind =
+      let rec depends_of_binding bind =
         let state =
           if kind = Env_api.PatternLoc || kind = Env_api.FunctionParamLoc then
             EnvMap.empty
@@ -1121,6 +1119,7 @@ struct
         in
         match bind with
         | Root root -> depends_of_root state root
+        | Hooklike bind -> depends_of_binding bind
         | Select { selector; parent = (parent_loc, _) } ->
           let state = depends_of_selector state selector in
           depends_of_node
@@ -1210,12 +1209,11 @@ struct
         | Root (UnannotatedParameter _) -> true
         | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
-        | Root
-            ( For _ | Value _ | HooklikeValue _ | FunctionValue _ | Contextual _ | EmptyArray _
-            | ObjectValue _ ) ->
+        | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
           false
         | Select { selector = Computed _; _ } -> false
         | Select { parent = (_, binding); _ } -> bind_loop binding
+        | Hooklike binding -> bind_loop binding
       in
       let rec expression_resolvable (_, expr) =
         (* A variable read or member expression is assumed to be recursively resolvable if the
@@ -1281,7 +1279,7 @@ struct
   end
 
   let annotation_locs scopes providers kind loc =
-    let bind_loop b =
+    let rec bind_loop b =
       match b with
       | Root CatchUnannotated
       | Root (UnannotatedParameter _)
@@ -1317,9 +1315,8 @@ struct
           with
           | Scope_api.With_ALoc.Missing_def _ -> functions
         end
-      | Root
-          ( For _ | Value _ | HooklikeValue _ | FunctionValue _ | Contextual _ | EmptyArray _
-          | ObjectValue _ ) -> begin
+      | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
+      begin
         try
           let { Provider_api.state; _ } =
             Base.Option.value_exn (Provider_api.providers_of_def providers loc)
@@ -1334,6 +1331,7 @@ struct
         with
         | Scope_api.With_ALoc.Missing_def _ -> []
       end
+      | Hooklike bind -> bind_loop bind
       | Select _ -> []
     in
     function

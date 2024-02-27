@@ -108,6 +108,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | SetPropT (_, _, _, _, _, _, topt)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, topt) ->
     map_opt resolve topt
+  | GetTypeFromNamespaceT { tout = tvar; _ }
   | GetPropT (_, _, _, _, tvar)
   | GetPrivatePropT (_, _, _, _, _, tvar)
   | TestPropT (_, _, _, _, tvar) ->
@@ -168,16 +169,13 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | GetValuesT (_, t) -> resolve t
   | ElemT (_, _, _, action) -> resolve_elem_action action
   | MakeExactT (_, k) -> resolve_cont k
-  | CJSRequireT { t_out = t; _ }
-  | ImportModuleNsT { t; _ } ->
-    resolve t
   | AssertImportIsValueT _ -> ()
   | CJSExtractNamedExportsT (_, _, t)
   | CopyNamedExportsT (_, _, t)
   | CopyTypeExportsT (_, _, t) ->
     resolve t
   | CheckUntypedImportT _ -> ()
-  | ExportNamedT (_, _, _, t)
+  | ExportNamedT { tout = t; _ }
   | ExportTypeT { tout = t; _ }
   | AssertExportIsTypeT (_, _, t)
   | MapTypeT (_, _, _, t)

@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let detect_sketchy_null_checks cx =
+let detect_sketchy_null_checks cx tast =
+  Exists_marker.mark cx tast;
   let add_error ~loc ~null_loc kind falsy_loc =
     Error_message.ESketchyNullLint { kind; loc; null_loc; falsy_loc } |> Flow_js.add_output cx
   in
@@ -154,6 +155,12 @@ let detect_unused_promises cx =
             { reason = Reason.mk_reason (Reason.RCustom "unused promise lint") loc; async }
         ))
     (Context.maybe_unused_promises cx)
+
+let enforce_optimize cx loc t =
+  let reason = Reason.mk_reason (Reason.RCustom "$Flow$EnforceOptimized") loc in
+  Flow_js.flow_t cx (Type.InternalT (Type.EnforceUnionOptimized reason), t)
+
+let check_union_opt cx = Context.iter_union_opt cx ~f:(enforce_optimize cx)
 
 let detect_import_export_errors cx program metadata =
   Strict_es6_import_export.detect_errors cx program metadata;
@@ -332,8 +339,6 @@ let check_general_post_inference_validations cx =
 
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
-let check_exists_marker cx tast = Exists_marker.mark cx tast
-
 let validate_renders_type_arguments cx =
   let open Type in
   let open Reason in
@@ -417,12 +422,7 @@ let validate_renders_type_arguments cx =
         Flow_js.FlowJs.speculative_subtyping_succeeds
           cx
           t
-          (Flow_js.get_builtin_typeapp
-             cx
-             r
-             (OrdinaryName "$Iterable")
-             [AnyT.error r; AnyT.error r; AnyT.error r]
-          )
+          (Flow_js.get_builtin_typeapp cx r "$Iterable" [AnyT.error r; AnyT.error r; AnyT.error r])
       then
         Some (r, `InvalidRendersIterable)
       else (
@@ -577,29 +577,38 @@ let get_lint_severities metadata strict_mode lint_severities =
   else
     lint_severities
 
-(* Post-merge errors.
+(* Post-component errors.
  *
- * At this point, all dependencies have been merged and the component has been
- * linked together. Any constraints should have already been evaluated, which
- * means we can complain about things that either haven't happened yet, or
- * which require complete knowledge of tvar bounds.
+ * At this point, all the types in the components we have checked so far should have been
+ * fully resolved, so we can freely inspect them and run some checks that are not relevant
+ * for deciding a type of a write.
  *)
-let post_merge_checks cx ast tast metadata =
-  check_react_rules cx tast;
-  check_multiplatform_conformance cx ast tast;
-  check_exists_marker cx tast;
+let post_component_checks cx =
   check_polarity cx;
   check_general_post_inference_validations cx;
   validate_renders_type_arguments cx;
-  detect_sketchy_null_checks cx;
-  detect_non_voidable_properties cx;
-  detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
+  detect_unused_promises cx;
+  check_union_opt cx
+
+(* Post-merge errors.
+ *
+ * At this point, we have visited the entire typed-AST.
+ *
+ * Any constraints should have already been evaluated, which means we can complain about
+ * things that either haven't happened yet, or which require complete knowledge of tvar bounds.
+ *)
+let post_merge_checks cx ast tast metadata =
+  post_component_checks cx;
+  check_react_rules cx tast;
+  check_multiplatform_conformance cx ast tast;
+  detect_sketchy_null_checks cx tast;
+  detect_non_voidable_properties cx;
+  detect_test_prop_misses cx;
   detect_import_export_errors cx ast metadata;
   detect_matching_props_violations cx;
-  detect_literal_subtypes cx;
-  detect_unused_promises cx
+  detect_literal_subtypes cx
 
 (* Check will lazily create types for the checked file's dependencies. These
  * types are created in the dependency's context and need to be copied into the
@@ -730,8 +739,8 @@ let mk_builtins metadata master_cx =
         (fun mref -> Error (Reason.InternalModuleName mref))
         (fun _ -> !builtins_ref)
     in
-    let global_names =
+    let (values, types, modules) =
       Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
     in
-    builtins_ref := Builtins.of_name_map ~mapper:Base.Fn.id global_names;
-    (fun dst_cx -> Builtins.of_name_map ~mapper:(copied dst_cx cx) global_names)
+    builtins_ref := Builtins.of_name_map ~mapper:Base.Fn.id ~values ~types ~modules;
+    (fun dst_cx -> Builtins.of_name_map ~mapper:(copied dst_cx cx) ~values ~types ~modules)

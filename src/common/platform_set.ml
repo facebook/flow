@@ -7,6 +7,13 @@
 
 type t = Bitset.t [@@deriving show]
 
+let available_platforms_to_bitset ~multi_platform_extensions available_platforms =
+  let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
+  Base.List.iteri multi_platform_extensions ~f:(fun i ext ->
+      if Base.List.exists available_platforms ~f:(fun p -> ext = "." ^ p) then Bitset.set bitset i
+  );
+  bitset
+
 let available_platforms ~file_options ~filename ~explicit_available_platforms : t option =
   let open Files in
   if not file_options.multi_platform then
@@ -20,14 +27,25 @@ let available_platforms ~file_options ~filename ~explicit_available_platforms : 
       Some bitset
     | None ->
       (match explicit_available_platforms with
-      | None -> Some (Bitset.all_one (Base.List.length multi_platform_extensions))
+      | None ->
+        let match_directory_override (path, platform) =
+          let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+          Base.Option.some_if (Base.String.is_prefix ~prefix:path normalized_filename) platform
+        in
+        (match
+           Base.List.find_map
+             file_options.multi_platform_ambient_supports_platform_directory_overrides
+             ~f:match_directory_override
+         with
+        | None -> Some (Bitset.all_one (Base.List.length multi_platform_extensions))
+        | Some supported_platforms_from_directory_overrides ->
+          Some
+            (available_platforms_to_bitset
+               ~multi_platform_extensions
+               supported_platforms_from_directory_overrides
+            ))
       | Some explicit_available_platforms ->
-        let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
-        Base.List.iteri multi_platform_extensions ~f:(fun i ext ->
-            if Base.List.exists explicit_available_platforms ~f:(fun p -> ext = "." ^ p) then
-              Bitset.set bitset i
-        );
-        Some bitset)
+        Some (available_platforms_to_bitset ~multi_platform_extensions explicit_available_platforms))
 
 let is_subset = Bitset.is_subset
 

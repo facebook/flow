@@ -6697,11 +6697,7 @@ foo.bar;
         }] |}]
 
 let%expect_test "exclude_syms" =
-  let exclude_syms =
-    NameUtils.Set.empty
-    |> NameUtils.Set.add (Reason.OrdinaryName "foo")
-    |> NameUtils.Set.add (Reason.OrdinaryName "Bar")
-  in
+  let exclude_syms = SSet.empty |> SSet.add "foo" |> SSet.add "Bar" in
   (* Ensure that defs and writes on excluded names have no effect. *)
   print_ssa_test ~exclude_syms {|
 let foo1 = 0

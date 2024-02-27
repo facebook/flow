@@ -122,9 +122,9 @@ element. For an intrinsic element, `typeof Component` will be the string literal
 for the intrinsic you used. Here are a few examples with DOM intrinsics:
 
 ```js
-(<div />: React.Element<'div'>); // OK
-(<span />: React.Element<'span'>); // OK
-(<div />: React.Element<'span'>); // Error: div is not a span.
+<div /> as React.Element<'div'>; // OK
+<span /> as React.Element<'span'>; // OK
+<div /> as React.Element<'span'>; // Error: div is not a span.
 ```
 
 `typeof Component` can also be your React class component or function component.
@@ -133,9 +133,9 @@ for the intrinsic you used. Here are a few examples with DOM intrinsics:
 function Foo(props: {}) {}
 class Bar extends React.Component<{}> {}
 
-(<Foo />: React.Element<typeof Foo>); // OK
-(<Bar />: React.Element<typeof Bar>); // OK
-(<Foo />: React.Element<typeof Bar>); // Error: Foo is not Bar
+<Foo /> as React.Element<typeof Foo>; // OK
+<Bar /> as React.Element<typeof Bar>; // OK
+<Foo /> as React.Element<typeof Bar>; // Error: Foo is not Bar
 ```
 
 Take note of the `typeof`, it is required! We want to get the
@@ -258,10 +258,10 @@ class MyComponent extends React.Component<{foo: number}> {
 }
 
 // `React.ElementProps<>` requires `foo` even though it has a `defaultProp`.
-({foo: 42}: React.ElementProps<typeof MyComponent>);
+({foo: 42}) as React.ElementProps<typeof MyComponent>;
 
 // `React.ElementConfig<>` does not require `foo` since it has a `defaultProp`.
-({}: React.ElementConfig<typeof MyComponent>);
+({}) as React.ElementConfig<typeof MyComponent>;
 ```
 
 Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the

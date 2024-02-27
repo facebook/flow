@@ -112,10 +112,10 @@ class func_scope_visitor
             Flow.get_builtin_typeapp
               cx
               (mk_reason (desc_of_t t) loc)
-              (OrdinaryName "Promise")
+              "Promise"
               [
                 Tvar.mk_where cx async_return_reason (fun tvar ->
-                    let funt = Flow.get_builtin cx (OrdinaryName "$await") async_return_reason in
+                    let funt = Flow_js_utils.lookup_builtin_value cx "$await" async_return_reason in
                     let callt =
                       mk_functioncalltype
                         ~call_kind:RegularCallKind
@@ -147,7 +147,7 @@ class func_scope_visitor
             Flow.get_builtin_typeapp
               cx
               (mk_reason (desc_of_t t) loc)
-              (OrdinaryName "Generator")
+              "Generator"
               [
                 yield_t;
                 Tvar.mk_where cx (mk_reason (RCustom "generator return") loc) (fun tvar ->
@@ -162,7 +162,7 @@ class func_scope_visitor
             Flow.get_builtin_typeapp
               cx
               (mk_reason (desc_of_t t) loc)
-              (OrdinaryName "AsyncGenerator")
+              "AsyncGenerator"
               [
                 yield_t;
                 Tvar.mk_where cx (mk_reason (RCustom "async generator return") loc) (fun tvar ->
@@ -375,13 +375,7 @@ struct
           | _ -> failwith "Bad kind"
         in
         let () =
-          let t =
-            Flow.get_builtin_typeapp
-              cx
-              reason
-              (OrdinaryName iterable)
-              [yield_t; return_targ; next_t]
-          in
+          let t = Flow.get_builtin_typeapp cx reason iterable [yield_t; return_targ; next_t] in
           let t =
             Flow.reposition
               cx
@@ -391,13 +385,7 @@ struct
           Flow.flow_t cx (type_t_of_annotated_or_inferred return_t, t)
         in
         let () =
-          let t =
-            Flow.get_builtin_typeapp
-              cx
-              reason
-              (OrdinaryName generator)
-              [yield_t; return_targ; next_t]
-          in
+          let t = Flow.get_builtin_typeapp cx reason generator [yield_t; return_targ; next_t] in
           let t =
             Flow.reposition
               cx
@@ -464,7 +452,7 @@ struct
           | Async ->
             let reason = mk_annot_reason (RType (OrdinaryName "Promise")) loc in
             let void_t = VoidT.at loc in
-            let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t] in
+            let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
             let use_op =
               Op
                 (FunImplicitReturn
@@ -476,13 +464,7 @@ struct
           | Generator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "Generator")) loc in
             let void_t = VoidT.at loc in
-            let t =
-              Flow.get_builtin_typeapp
-                cx
-                reason
-                (OrdinaryName "Generator")
-                [yield_t; void_t; next_t]
-            in
+            let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
             let use_op =
               Op
                 (FunImplicitReturn
@@ -494,13 +476,7 @@ struct
           | AsyncGenerator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "AsyncGenerator")) loc in
             let void_t = VoidT.at loc in
-            let t =
-              Flow.get_builtin_typeapp
-                cx
-                reason
-                (OrdinaryName "AsyncGenerator")
-                [yield_t; void_t; next_t]
-            in
+            let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
             let use_op =
               Op
                 (FunImplicitReturn

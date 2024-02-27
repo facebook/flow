@@ -13,8 +13,6 @@ module Flow_js = struct end
 [@@@warning "+60"]
 
 module Normalizer = Ty_normalizer.Make (struct
-  open Reason
-
   let eval _ ~should_eval:_ ~cont:_ ~default:_ ~non_eval (t, Type.TypeDestructorT (_, _, d), _) =
     non_eval t d
 
@@ -25,19 +23,11 @@ module Normalizer = Ty_normalizer.Make (struct
     let targs = Base.List.map ~f:type_ targs in
     app c targs
 
-  let builtin cx ~cont reason x =
-    let t =
-      match Flow_js_utils.lookup_builtin_strict_result cx (OrdinaryName x) reason with
-      | Ok t -> t
-      | Error (t, _) -> t
-    in
-    cont t
-
   let builtin_type cx ~cont reason x =
-    (* TODO the pattern matching on the result of lookup_builtin_strict_result might need
+    (* TODO the pattern matching on the result of lookup_builtin_type_result might need
      * some refinement. This is replacing what mk_instance would do. *)
     let t =
-      match Flow_js_utils.lookup_builtin_strict_result cx (OrdinaryName x) reason with
+      match Flow_js_utils.lookup_builtin_type_result cx x reason with
       | Ok (Type.DefT (_, Type.TypeT (_, t))) -> t
       | Ok t -> t
       | Error (t, _) -> t
@@ -45,7 +35,12 @@ module Normalizer = Ty_normalizer.Make (struct
     cont t
 
   let builtin_typeapp cx ~cont ~type_ ~app reason name targs =
-    let c = builtin cx ~cont reason name in
+    let t =
+      match Flow_js_utils.lookup_builtin_type_result cx name reason with
+      | Ok t -> t
+      | Error (t, _) -> t
+    in
+    let c = cont t in
     let targs = Base.List.map ~f:type_ targs in
     app c targs
 end)

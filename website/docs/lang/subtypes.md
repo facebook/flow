@@ -127,9 +127,9 @@ declare function f1(1 | 2): "A" | "B" | "C";
 declare function f2(1 | null): "A" | "B";
 declare function f3(1 | 2 | 3): "A";
 
-(f1: FuncType); // Error
-(f2: FuncType); // Error
-(f3: FuncType); // Works!
+f1 as FuncType; // Error
+f2 as FuncType; // Error
+f3 as FuncType; // Works!
 ```
 
 - `f1` can return a value that `FuncType` never does, so code that relies on `FuncType`

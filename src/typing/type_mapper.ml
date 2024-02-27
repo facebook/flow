@@ -161,6 +161,12 @@ class virtual ['a] t =
               module_is_strict;
               module_available_platforms;
             }
+      | NamespaceT namespace_t ->
+        let namespace_t' = self#namespace_type cx map_cx namespace_t in
+        if namespace_t' == namespace_t then
+          t
+        else
+          NamespaceT namespace_t'
       | InternalT (ExtendsT (r, t1, t2)) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -169,6 +175,7 @@ class virtual ['a] t =
         else
           InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
+      | InternalT (EnforceUnionOptimized _) -> t
       | CustomFunT (r, kind) ->
         let kind' = self#custom_fun_kind cx map_cx kind in
         if kind' == kind then
@@ -358,13 +365,26 @@ class virtual ['a] t =
         else
           TypeDestructorT (u, r, d')
 
-    method export_types cx map_cx ({ exports_tmap; cjs_export; has_every_named_export } as t) =
-      let exports_tmap' = self#exports cx map_cx exports_tmap in
+    method export_types
+        cx
+        map_cx
+        ({ value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export } as t) =
+      let value_exports_tmap' = self#exports cx map_cx value_exports_tmap in
+      let type_exports_tmap' = self#exports cx map_cx type_exports_tmap in
       let cjs_export' = OptionUtils.ident_map (self#type_ cx map_cx) cjs_export in
-      if exports_tmap == exports_tmap' && cjs_export == cjs_export' then
+      if
+        value_exports_tmap == value_exports_tmap'
+        && type_exports_tmap == type_exports_tmap'
+        && cjs_export == cjs_export'
+      then
         t
       else
-        { exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export }
+        {
+          value_exports_tmap = value_exports_tmap';
+          type_exports_tmap = type_exports_tmap';
+          cjs_export = cjs_export';
+          has_every_named_export;
+        }
 
     method fun_type
         cx
@@ -810,6 +830,15 @@ class virtual ['a] t =
           call_t = call_t';
           reachable_targs = reachable_targs';
         }
+
+    method namespace_type cx map_cx t =
+      let { values_type; types_tmap } = t in
+      let values_type' = self#type_ cx map_cx values_type in
+      let types_tmap' = self#props cx map_cx types_tmap in
+      if values_type' == values_type && types_tmap' == types_tmap then
+        t
+      else
+        { values_type = values_type'; types_tmap = types_tmap' }
 
     method virtual call_prop : Context.t -> 'a -> int -> int
 

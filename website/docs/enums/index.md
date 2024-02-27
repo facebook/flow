@@ -79,7 +79,7 @@ Read more about the  [other methods enums provide](./using-enums/#toc-methods), 
 Cast an enum type to its representation type (must be done explicitly):
 
 ```js
-(status: string)
+status as string
 ```
 Checks of enums in `switch` statements are exhaustive - we ensure you check all members:
 ```js flow-check

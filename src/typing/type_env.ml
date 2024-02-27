@@ -22,14 +22,6 @@ end
 
 open LookupMode
 
-let get_global_value_type cx name reason =
-  match Context.global_value_cache_find_opt cx name with
-  | Some t -> t
-  | None ->
-    let t = Flow_js.get_builtin_result cx name reason in
-    Context.add_global_value_cache_entry cx name t;
-    t
-
 let get_class_entries cx =
   let { Loc_env.class_stack; class_bindings; _ } = Context.environment cx in
   Base.List.fold
@@ -226,6 +218,7 @@ let phi cx reason ts =
             Nel.to_list errs)
         ts
     in
+    Tvar_resolver.resolve cx tvar;
     (match errs with
     | [] -> Ok tvar
     | hd :: tl -> Error (tvar, (hd, tl)))
@@ -439,8 +432,10 @@ let res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                Ok Type.(AnyT.make (AnyError None) reason)
              | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
                find_refi var_info refinement_id |> Base.Option.some |> res_of_state writes write_id
-             | (Env_api.With_ALoc.Global name, _) ->
-               get_global_value_type cx (Reason.OrdinaryName name) reason
+             | (Env_api.With_ALoc.Global name, (ForValue | ForTypeof)) ->
+               Flow_js_utils.lookup_builtin_value_result cx name reason
+             | (Env_api.With_ALoc.Global name, ForType) ->
+               Flow_js_utils.lookup_builtin_type_result cx name reason
              | (Env_api.With_ALoc.GlobalThis reason, _) -> Ok (ObjProtoT reason)
              | (Env_api.With_ALoc.IllegalThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
@@ -624,7 +619,7 @@ let find_write cx kind reason =
   let loc = Reason.loc_of_reason reason in
   match checked_find_loc_env_write_opt cx kind loc with
   | Some t -> t
-  | None -> Tvar.mk cx reason
+  | None -> AnyT.error reason
 
 let get_refinement cx key loc =
   let reason = mk_reason (Key.reason_desc key) loc in
@@ -738,12 +733,14 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
   | Some (Env_api.GlobalWrite _) ->
     if is_provider cx loc then
       Base.Option.iter potential_global_name ~f:(fun name ->
-          let name = Reason.OrdinaryName name in
-          let (_ : Type.t) =
-            get_global_value_type cx name (mk_reason (RIdentifier name) loc)
-            |> Flow_js_utils.apply_env_errors cx loc
-          in
-          ()
+          if Base.Option.is_none (Flow_js_utils.lookup_builtin_value_opt cx name) then
+            let name = OrdinaryName name in
+            Flow_js_utils.add_output
+              cx
+              Error_message.(
+                EBuiltinLookupFailed
+                  { reason = mk_reason (RIdentifier name) loc; potential_generator = None; name }
+              )
       )
   | _ ->
     if not (is_provider cx loc) then
@@ -836,6 +833,9 @@ let bind_class_instance_super cx t loc =
 
 let bind_class_static_super cx t loc =
   resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassStaticSuperLoc loc
+
+let bind_class_self_type cx t loc =
+  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassSelfLoc loc
 
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 

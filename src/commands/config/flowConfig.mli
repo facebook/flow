@@ -66,8 +66,6 @@ val enabled_rollouts : config -> string SMap.t
 (* options *)
 val all : config -> bool option
 
-val autocomplete_lazy_docs : config -> bool option
-
 val autoimports : config -> bool option
 
 val autoimports_min_characters : config -> int option
@@ -79,6 +77,8 @@ val autoimports_ranked_by_usage_boost_exact_match_min_length : config -> int opt
 val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
+
+val blocking_worker_communication : config -> bool
 
 val casting_syntax : config -> Options.CastingSyntax.t option
 
@@ -192,6 +192,9 @@ val modules_are_use_strict : config -> bool
 val multi_platform : config -> bool option
 
 val multi_platform_extensions : config -> string list
+
+val multi_platform_ambient_supports_platform_directory_overrides :
+  config -> (string * string list) list
 
 val munge_underscores : config -> bool
 

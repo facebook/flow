@@ -194,9 +194,9 @@ You can optionally annotate it with exactly [`mixed`](../../types/mixed) or `any
 try {
 } catch (e: mixed) {
   if (e instanceof TypeError) {
-    (e: TypeError); // OK
+    e as TypeError; // OK
   } else if (e instanceof Error) {
-    (e: Error); // OK
+    e as Error; // OK
   } else {
     throw e;
   }

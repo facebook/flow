@@ -154,13 +154,13 @@ const a: PartialPerson = {}; // OK
 const b: PartialPerson = {name: 'George'}; // OK
 const c: PartialPerson = {name: 'George', age: 123}; // OK
 
-(c: Person); // ERROR: `PersonDetails` is not a `Person` (unlike with `$Shape`)
+c as Person; // ERROR: `PersonDetails` is not a `Person` (unlike with `$Shape`)
 ```
 
 For tuples:
 ```js flow-check
 type AllRequired = [number, string];
-([]: Partial<AllRequired>); // OK: like `[a?: number, b?: string]` now
+[] as Partial<AllRequired>; // OK: like `[a?: number, b?: string]` now
 ```
 
 A object or tuple of type `T` cannot be supplied to `Partial<T>`, due to mutability. You can resolve this by making the object [read-only](#toc-readonly):
@@ -210,7 +210,7 @@ const b: Person = {age: 123}; // ERROR: missing `name` property
 For tuples:
 ```js flow-check
 type AllOptional = [a?: number, b?: string];
-([]: Required<AllOptional>); // ERROR: like `[a: number, b: string]` now
+[] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
 ```
 
 ## `ReturnType<F>` <SinceVersion version="0.209" /> {#toc-return-type}
@@ -220,8 +220,8 @@ This utility type extracts the return type from a given function type.
 ```js flow-check
 declare function f(s: string, n: number): boolean;
 type Bool = ReturnType<typeof f>;
-(true: Bool);
-(1: Bool); // Error: number is not boolean
+true as Bool;
+1 as Bool; // Error: number is not boolean
 ```
 
 ## `Parameters<F>` <SinceVersion version="0.209" /> {#toc-parameters}
@@ -231,9 +231,9 @@ This utility type extracts the parameter types from a given function type into a
 ```js flow-check
 declare function f(s: string, n: number): boolean;
 type Tuple = Parameters<typeof f>; // Evaluates to [string, number]
-('s': Tuple[0]);
-(1: Tuple[1]);
-(false: Tuple[2]); // Error: tuple type only has two elements
+'s' as Tuple[0];
+1 as Tuple[1];
+false as Tuple[2]; // Error: tuple type only has two elements
 ```
 
 ## `Exclude<T, U>` <SinceVersion version="0.209" /> {#toc-exclude}
@@ -242,10 +242,10 @@ This utility type excludes all subtypes of `U` from `T`.
 
 ```js flow-check
 type T = Exclude<1 | 2 | 3 | 4, 1 | 3>; // evaluates to 2 | 4
-(1: T); // error
-(2: T); // ok
-(3: T); // error
-(4: T); // ok
+1 as T; // error
+2 as T; // ok
+3 as T; // error
+4 as T; // ok
 ```
 
 ## `Extract<T, U>` <SinceVersion version="0.209" /> {#toc-extract}
@@ -258,9 +258,9 @@ declare class Animal {}
 declare class Dog extends Animal {}
 declare class Cat extends Animal {}
 type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
-(new Car(): T); // error
-(new Dog(): T); // ok
-(new Cat(): T); // ok
+new Car() as T; // error
+new Dog() as T; // ok
+new Cat() as T; // ok
 ```
 
 ## `ThisParameterType<F>` <SinceVersion version="0.209" /> {#toc-this-parameter-type}
@@ -269,8 +269,8 @@ This utility type extracts the type of the `this` parameter of a given function 
 
 ```js flow-check
 type T = ThisParameterType<(this: number, bar: string) => void>; // Evaluates to number
-('1': T); // error
-(2: T); // ok
+'1' as T; // error
+2 as T; // ok
 ```
 
 ## `OmitThisParameter<F>` <SinceVersion version="0.209" /> {#toc-omit-this-parameter-type}
@@ -298,8 +298,8 @@ type FooAndBar = Pick<O, 'foo' | 'bar'>;
 
 declare const fooAndBar: FooAndBar;
 fooAndBar.baz; // error: baz is missing
-(fooAndBar.foo: number); // ok
-(fooAndBar.bar: string); // ok
+fooAndBar.foo as number; // ok
+fooAndBar.bar as string; // ok
 ```
 
 ## `Omit<O, Keys>` <SinceVersion version="0.211" /> {#toc-omit}
@@ -311,7 +311,7 @@ type O = {foo: number, bar: string, baz: boolean};
 type JustBaz= Omit<O, 'foo' | 'bar'>;
 
 declare const justBaz: JustBaz;
-(justBaz.baz: boolean); // ok
+justBaz.baz as boolean; // ok
 justBaz.foo; // error: missing foo
 justBaz.bar; // error: missing bar
 ```
@@ -323,8 +323,8 @@ This utility type allows you to generate an object type from a union of keys wit
 ```js flow-check
 type NumberRecord = Record<'foo' | 'bar', number>;
 declare const numberRecord: NumberRecord;
-(numberRecord.foo: number); // ok
-(numberRecord.bar: number); // ok
+numberRecord.foo as number; // ok
+numberRecord.bar as number; // ok
 numberRecord.baz; // error
 ```
 
@@ -422,7 +422,7 @@ type Props = {name: string, age: number};
 
 const props: Props = {name: 'Jon', age: 42};
 const {age, ...otherProps} = props;
-(otherProps: $Rest<Props, {age: number}>);
+otherProps as $Rest<Props, {age: number}>;
 otherProps.age;  // Error!
 ```
 
@@ -440,10 +440,10 @@ In other words, the values of `$NonMaybeType<T>` are the values of `T` except fo
 type MaybeName = ?string;
 type Name = $NonMaybeType<MaybeName>;
 
-('Gabriel': MaybeName); // Works
-(null: MaybeName); // Works
-('Gabriel': Name); // Works
-(null: Name); // Error! `null` can't be annotated as Name because Name is not a maybe type
+'Gabriel' as MaybeName; // Works
+null as MaybeName; // Works
+'Gabriel' as Name; // Works
+null as Name; // Error! `null` can't be annotated as Name because Name is not a maybe type
 ```
 
 ## `$KeyMirror<O>` {#toc-keymirror}
@@ -452,7 +452,7 @@ type Name = $NonMaybeType<MaybeName>;
 function type, ie. `<K>(K) => K`. In other words, it maps each property of an object
 to the type of the property key. Instead of writing `$ObjMapi<Obj, <K>(K) => K>`,
 you can write `$KeyMirror<Obj>`. For example:
-```js
+```js flow-check
 const obj = {
   a: true,
   b: 'foo'
@@ -463,8 +463,8 @@ declare function run<O: {...}>(o: O): $KeyMirror<O>;
 // newObj is of type {a: 'a', b: 'b'}
 const newObj = run(obj);
 
-(newObj.a: 'a'); // Works
-(newObj.b: 'a'); // Error! String 'b' is incompatible with 'a'
+newObj.a as 'a'; // Works
+newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
 ```
 
 Tip: Prefer using `$KeyMirror` instead of `$ObjMapi` (if possible) to fix certain
@@ -487,9 +487,9 @@ function run<A, I: Array<() => A>>(iter: I): $TupleMap<I, ExtractReturnType> {
 }
 
 const arr = [() => 'foo', () => 'bar'];
-(run(arr)[0]: string); // Works
-(run(arr)[1]: string); // Works
-(run(arr)[1]: boolean); // Error!
+run(arr)[0] as string; // Works
+run(arr)[1] as string; // Works
+run(arr)[1] as boolean; // Error!
 ```
 
 ## `Class<T>` {#toc-class}
@@ -506,9 +506,9 @@ function makeStore(storeClass: Class<Store>) {
   return new storeClass();
 }
 
-(makeStore(Store): Store);
-(makeStore(ExtendedStore): Store);
-(makeStore(Model): Model); // Error!
+makeStore(Store) as Store;
+makeStore(ExtendedStore) as Store;
+makeStore(Model) as Model; // Error!
 ```
 
 For classes that take type parameters, you must also provide the parameter. For example:
@@ -521,8 +521,8 @@ class ParamStore<T> {
 function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStore<T> {
   return new storeClass(data);
 }
-(makeParamStore(ParamStore, 1): ParamStore<number>);
-(makeParamStore(ParamStore, 1): ParamStore<boolean>); // Error!
+makeParamStore(ParamStore, 1) as ParamStore<number>;
+makeParamStore(ParamStore, 1) as ParamStore<boolean>; // Error!
 ```
 
 ## `$Exports<T>` {#toc-exports}
@@ -595,13 +595,13 @@ contexts. For example in
 
 ```js
 const personShape: PersonDetails = {age: 28};
-(personShape: Person);
+personShape as Person;
 ```
 Flow will unsoundly allow this last cast to succeed.
 
 It is also not equivalent to itself in some contexts:
 
-```js flow-check
+```js
 function f<T>(input: $Shape<T>): $Shape<T> {
   return input; // ERROR: `T` is incompatible with `$Shape` of `T`
 }
@@ -624,8 +624,8 @@ type Obj = {prop: number};
 type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
 type Nope = $Call<ExtractPropType, {nope: number}>;  // Error! Argument doesn't match `Obj`.
 
-(5: PropType); // Works
-(true: PropType);  // Error! PropType is a number
+5 as PropType; // Works
+true as PropType;  // Error! PropType is a number
 ```
 
 ```js flow-check
@@ -634,8 +634,8 @@ type ExtractReturnType = <R>(() => R) => R;
 type Fn = () => number;
 type ReturnType = $Call<ExtractReturnType, Fn>;
 
-(5: ReturnType);  // Works
-(true: ReturnType);  // Error! ReturnType is a number
+5 as ReturnType;  // Works
+true as ReturnType;  // Error! ReturnType is a number
 ```
 
 `$Call` can be very powerful because it allows you to make calls in type-land that you would otherwise have to do at runtime.
@@ -653,16 +653,16 @@ function getFirstValue<V>(map: Map<string, V>): ?V {
 // Using $Call, we can get the actual return type of the function above:
 type Value = $Call<typeof getFirstValue, Map<string, number>>;
 
-(5: Value);
-(true: Value);  // Error! Value is a `number`
+5 as Value;
+true as Value;  // Error! Value is a `number`
 
 // We could generalize it further:
 type GetMapValue<M> =
   $Call<typeof getFirstValue, M>;
 
-(5: GetMapValue<Map<string, number>>);
-(true: GetMapValue<Map<string, boolean>>);
-(true: GetMapValue<Map<string, number>>);  // Error! value is a `number`
+5 as GetMapValue<Map<string, number>>;
+true as GetMapValue<Map<string, boolean>>;
+true as GetMapValue<Map<string, number>>;  // Error! value is a `number`
 ```
 
 ### `$ObjMap<T, F>` {#toc-objmap}
@@ -700,9 +700,9 @@ const o = {
   b: () => 'foo'
 };
 
-(run(o).a: boolean); // Works
-(run(o).b: string);  // Works
-(run(o).b: boolean); // Error! `b` is a string
+run(o).a as boolean; // Works
+run(o).b as string;  // Works
+run(o).b as boolean; // Error! `b` is a string
 run(o).c;            // Error! `c` was not in the original object
 ```
 
@@ -717,8 +717,8 @@ declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O
 
 const promises = {a: Promise.resolve(42)};
 props(promises).then(o => {
-  (o.a: 42); // Works
-  (o.a: 43); // Error! Flow knows it's 42
+  o.a as 42; // Works
+  o.a as 43; // Error! Flow knows it's 42
 });
 ```
 
@@ -739,10 +739,10 @@ type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
 
 declare function run<O: {...}>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
 
-(run(o).a: {k: 'a', v: boolean}); // Works
-(run(o).b: {k: 'b', v: string});  // Works
-(run(o).a: {k: 'b', v: boolean}); // Error! `a.k` is "a"
-(run(o).b: {k: 'b', v: number});  // Error! `b.v` is a string
+run(o).a as {k: 'a', v: boolean}; // Works
+run(o).b as {k: 'b', v: string};  // Works
+run(o).a as {k: 'b', v: boolean}; // Error! `a.k` is "a"
+run(o).b as {k: 'b', v: number};  // Error! `b.v` is a string
 run(o).c;                         // Error! `c` was not in the original object
 ```
 
@@ -752,7 +752,7 @@ NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- pleas
 `$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
 function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
 can write `$ObjMapConst<Obj, T>`. For example:
-```js
+```js flow-check
 const obj = {
   a: true,
   b: 'foo'
@@ -763,8 +763,8 @@ declare function run<O: {...}>(o: O): $ObjMapConst<O, number>;
 // newObj is of type {a: number, b: number}
 const newObj = run(obj);
 
-(newObj.a: number); // Works
-(newObj.b: string); // Error! Property `b` is a number
+newObj.a as number; // Works
+newObj.b as string; // Error! Property `b` is a number
 ```
 
 Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain

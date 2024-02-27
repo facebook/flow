@@ -263,8 +263,7 @@ function identity<T: number>(value: T): T {
 
 let one: 1 = identity(1);
 let two: 2 = identity(2);
-// $ExpectError
-let three: "three" = identity("three");
+let three: "three" = identity("three"); // Error!
 ```
 
 ### Generic types act as bounds {#toc-generic-types-act-as-bounds}
@@ -288,7 +287,6 @@ function identity(val: string): string {
 }
 
 let foo: 'foo' = 'foo';           // Works!
-// $ExpectError
 let bar: 'bar' = identity('bar'); // Error!
 ```
 
@@ -378,8 +376,8 @@ class Item {
   prop: string;
 }
 
-(Item.prototype: HasProp<string>); // Works!
-(Item.prototype: HasProp); // Error!
+Item.prototype as HasProp<string>; // Works!
+Item.prototype as HasProp; // Error!
 ```
 
 ### Adding defaults to parameterized generics {#toc-adding-defaults-to-parameterized-generics}
@@ -414,8 +412,8 @@ For example, you may want this relationship to hold:
 ```js flow-check
 type GenericBox<+T> = T;
 
-var x: GenericBox<number> = 3;
-(x: GenericBox<number| string>);
+const x: GenericBox<number> = 3;
+x as GenericBox<number| string>;
 ```
 
 The example above could not be accomplished without the `+` variance sigil:
@@ -423,8 +421,8 @@ The example above could not be accomplished without the `+` variance sigil:
 ```js flow-check
 type GenericBoxError<T> = T;
 
-var x: GenericBoxError<number> = 3;
-(x: GenericBoxError<number| string>); // number | string is not compatible with number.
+const x: GenericBoxError<number> = 3;
+x as GenericBoxError<number| string>; // number | string is not compatible with number.
 ```
 
 Note that if you annotate your generic with variance sigils then Flow will

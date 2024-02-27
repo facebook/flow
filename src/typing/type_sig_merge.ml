@@ -162,7 +162,7 @@ let async_void_return file loc =
   Flow_js_utils.lookup_builtin_typeapp
     file.cx
     Reason.(mk_reason (RCustom "async return") loc)
-    (Reason.OrdinaryName "Promise")
+    "Promise"
     [Type.VoidT.at loc]
 
 let add_default_constructor reason extends props =
@@ -338,9 +338,14 @@ let merge_ref : 'a. _ -> (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -
     let (lazy (def_loc, name, t)) = Remote_refs.get file.remote_refs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ~ref_loc ~def_loc name
-  | Pack.BuiltinRef { ref_loc; name } ->
+  | Pack.BuiltinRef { ref_loc; type_ref; name } ->
     let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
-    let t = Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName name) reason in
+    let t =
+      if type_ref then
+        Flow_js_utils.lookup_builtin_type file.cx name reason
+      else
+        Flow_js_utils.lookup_builtin_value file.cx name reason
+    in
     f t ~ref_loc ~def_loc:(t |> TypeUtil.reason_of_t |> Reason.def_loc_of_reason) name
 
 let rec merge_tyref file f = function
@@ -353,10 +358,9 @@ let rec merge_tyref file f = function
       let qname = String.concat "." (List.rev (Nel.to_list names)) in
       let name = Reason.OrdinaryName name in
       let id_reason = Reason.(mk_reason (RType name) id_loc) in
-      let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
-      let use_op = Type.Op (Type.GetProperty reason_op) in
-      let propname = (id_reason, name) in
-      let t = ConsGen.qualify_type file.cx use_op reason_op propname t in
+      let op_reason = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
+      let use_op = Type.Op (Type.GetProperty op_reason) in
+      let t = ConsGen.qualify_type file.cx use_op id_reason ~op_reason name t in
       f t loc names
     in
     merge_tyref file f qualification
@@ -365,22 +369,23 @@ let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
     let f t ~ref_loc:_ ~def_loc name =
       let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-      { Type.name_loc = Some def_loc; preferred_def_locs = None; is_type_only_export = true; type_ }
+      { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ }
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
     let (lazy (loc, name, t)) = Local_defs.get file.local_defs index in
     let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportTypeFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
 let mk_commonjs_module_t cx module_reason module_is_strict module_available_platforms t =
   let open Type in
   let module_export_types =
     {
-      exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+      value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+      type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       cjs_export = Some t;
       has_every_named_export = false;
     }
@@ -399,7 +404,8 @@ let merge_exports =
     let open Type in
     let module_export_types =
       {
-        exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
+        value_exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
+        type_exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
         cjs_export = None;
         has_every_named_export = false;
       }
@@ -438,7 +444,7 @@ let merge_exports =
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
       mk_commonjs_module_t file.cx reason strict platform_availability_set exports
-      |> ConsGen.export_named file.cx reason Type.ExportType type_exports
+      |> ConsGen.export_named file.cx reason Type.DirectExport NameUtils.Map.empty type_exports
       |> copy_star_exports file reason ([], type_stars)
     | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set } ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
@@ -446,8 +452,7 @@ let merge_exports =
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       mk_es_module_t file reason strict platform_availability_set
-      |> ConsGen.export_named file.cx reason Type.ExportValue exports
-      |> ConsGen.export_named file.cx reason Type.ExportType type_exports
+      |> ConsGen.export_named file.cx reason Type.DirectExport exports type_exports
       |> copy_star_exports file reason (stars, type_stars)
 
 let make_hooklike file hooklike t =
@@ -500,20 +505,12 @@ let rec merge ?(in_renders_arg = false) ?(hooklike = false) tps infer_tps file =
     let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
     let ns_t = import_ns file ns_reason loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
-    let t =
-      Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
-    in
+    let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
     make_hooklike file hooklike t
   | Pack.ModuleRef { loc; index; legacy_interop } ->
     let t = require file loc index ~legacy_interop in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
-    let t =
-      Flow_js_utils.lookup_builtin_typeapp
-        file.cx
-        reason
-        (Reason.OrdinaryName "$Flow$ModuleRef")
-        [t]
-    in
+    let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     make_hooklike file hooklike t
 
 and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
@@ -751,8 +748,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
-    let m_name = Reason.internal_module_name ref in
-    let module_t = Flow_js_utils.lookup_builtin_strict file.cx m_name reason in
+    let module_t = Flow_js_utils.get_builtin_module file.cx ref reason in
     ConsGen.cjs_require file.cx module_t reason false false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
@@ -918,7 +914,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
            ConsGen.mk_instance
              file.cx
              reason
-             (Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "React$Node") reason)
+             (Flow_js_utils.lookup_builtin_type file.cx "React$Node" reason)
           )
         renders
     in
@@ -2090,7 +2086,7 @@ let merge_def file reason = function
   | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members
   | NamespaceBinding { id_loc = _; name = _; values; types } when Context.namespaces file.cx ->
-    let f ~is_type_only_export smap =
+    let f smap =
       SMap.fold
         (fun name (loc, packed) ->
           NameUtils.Map.add
@@ -2098,17 +2094,12 @@ let merge_def file reason = function
             {
               Type.name_loc = Some loc;
               preferred_def_locs = None;
-              is_type_only_export;
               type_ = merge SMap.empty SMap.empty file packed;
             })
         smap
         NameUtils.Map.empty
     in
-    Flow_js_utils.namespace_type
-      file.cx
-      reason
-      (f ~is_type_only_export:false values)
-      (f ~is_type_only_export:false types)
+    Flow_js_utils.namespace_type file.cx reason (f values) (f types)
   | NamespaceBinding _ -> Type.AnyT.error reason
 
 let merge_export file = function
@@ -2117,30 +2108,20 @@ let merge_export file = function
     merge_ref
       file
       (fun type_ ~ref_loc:_ ~def_loc _ ->
-        {
-          Type.name_loc = Some def_loc;
-          preferred_def_locs = None;
-          is_type_only_export = false;
-          type_;
-        })
+        { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ })
       ref
   | Pack.ExportBinding index ->
     let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefault { default_loc; def } ->
     let type_ = merge SMap.empty SMap.empty file def in
-    {
-      Type.name_loc = Some default_loc;
-      preferred_def_locs = None;
-      is_type_only_export = false;
-      type_;
-    }
+    { Type.name_loc = Some default_loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefaultBinding { default_loc = _; index } ->
     let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
 let merge_resource_module_t cx file_key filename =
   let exports_t =
@@ -2180,8 +2161,9 @@ let merge_builtins
     remote_refs;
     pattern_defs;
     patterns;
-    globals;
-    modules;
+    global_values;
+    global_types;
+    global_modules;
   } =
     builtins
   in
@@ -2311,7 +2293,7 @@ let merge_builtins
                  )
              in
              SMap.add s lazy_t acc)
-           modules
+           global_modules
            SMap.empty
        in
        let map_module_ref s : Context.resolved_require Lazy.t =
@@ -2333,20 +2315,36 @@ let merge_builtins
       )
   in
 
-  NameUtils.Map.empty
-  |> SMap.fold
-       (fun s _ acc ->
-         let name = Reason.InternalModuleName s in
-         let t = SMap.find s (Lazy.force file_and_dependency_map_rec |> snd) in
-         NameUtils.Map.add name t acc)
-       modules
-  |> SMap.fold
-       (fun s i acc ->
-         let name = Reason.OrdinaryName s in
-         let t =
-           Lazy.map
-             (fun (_, _, t) -> t)
-             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
-         in
-         NameUtils.Map.add name t acc)
-       globals
+  let builtin_values =
+    SMap.fold
+      (fun name i acc ->
+        let t =
+          Lazy.map
+            (fun (_, _, t) -> t)
+            (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+        in
+        SMap.add name t acc)
+      global_values
+      SMap.empty
+  in
+  let builtin_types =
+    SMap.fold
+      (fun name i acc ->
+        let t =
+          Lazy.map
+            (fun (_, _, t) -> t)
+            (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+        in
+        SMap.add name t acc)
+      global_types
+      SMap.empty
+  in
+  let builtin_modules =
+    SMap.fold
+      (fun name _ acc ->
+        let t = SMap.find name (Lazy.force file_and_dependency_map_rec |> snd) in
+        SMap.add name t acc)
+      global_modules
+      SMap.empty
+  in
+  (builtin_values, builtin_types, builtin_modules)

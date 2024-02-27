@@ -690,6 +690,14 @@ and 'loc t' =
       available_platforms: SSet.t;
       required_platforms: SSet.t;
     }
+  | EUnionOptimization of {
+      loc: 'loc;
+      kind: 'loc Type.UnionRep.optimized_error;
+    }
+  | EUnionOptimizationOnNonUnion of {
+      loc: 'loc;
+      arg: 'loc virtual_reason;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1479,6 +1487,20 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EInvalidTypeCastSyntax { loc = f loc; enabled_casting_syntax }
   | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->
     EMissingPlatformSupport { loc = f loc; available_platforms; required_platforms }
+  | EUnionOptimization { loc; kind } ->
+    let kind =
+      let open UnionRep in
+      match kind with
+      | ContainsUnresolved r -> ContainsUnresolved (map_reason r)
+      | NoCandidateMembers -> NoCandidateMembers
+      | NoCommonKeys -> NoCommonKeys
+      | NonUniqueKeys map ->
+        NonUniqueKeys
+          (NameUtils.Map.map (fun (enum, r1, r2) -> (enum, map_reason r1, map_reason r2)) map)
+    in
+    EUnionOptimization { loc = f loc; kind }
+  | EUnionOptimizationOnNonUnion { loc; arg } ->
+    EUnionOptimizationOnNonUnion { loc = f loc; arg = map_reason arg }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1744,7 +1766,9 @@ let util_use_op_of_msg nope util = function
   | ERefComponentProp _
   | EInvalidRendersTypeArgument _
   | EInvalidTypeCastSyntax _
-  | EMissingPlatformSupport _ ->
+  | EMissingPlatformSupport _
+  | EUnionOptimization _
+  | EUnionOptimizationOnNonUnion _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1909,7 +1933,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDuplicateComponentProp { spread = loc; _ }
   | ERefComponentProp { spread = loc; _ }
   | ETypeGuardIncompatibleWithFunctionKind { loc; _ }
-  | EMissingPlatformSupport { loc; _ } ->
+  | EMissingPlatformSupport { loc; _ }
+  | EUnionOptimization { loc; _ }
+  | EUnionOptimizationOnNonUnion { loc; _ } ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -5572,6 +5598,71 @@ let friendly_message_of_msg loc_of_aloc msg =
       @ [text " is missing."]
     in
     Normal { features }
+  | EUnionOptimization { loc = _; kind } ->
+    let string_of_union_enum =
+      let open Type.UnionEnum in
+      function
+      | Str s -> code (spf "`%s`" (display_string_of_name s))
+      | Num f -> code (spf "%f" f)
+      | Bool b -> code (spf "%b" b)
+      | BigInt (_, b) -> code b
+      | Void -> code "undefined"
+      | Null -> code "null"
+    in
+    let string_of_non_unique_key (name, (enum, r, r')) =
+      [
+        text "Key ";
+        code (display_string_of_name name);
+        text " has value ";
+        string_of_union_enum enum;
+        text " in both ";
+        ref r;
+        text " and ";
+        ref r';
+        text ".";
+      ]
+    in
+    let kind =
+      let open Type.UnionRep in
+      match kind with
+      | ContainsUnresolved r ->
+        [
+          text "The form of ";
+          ref r;
+          text " is not supported for optimization. ";
+          text "Try replacing this type with a simpler alternative.";
+        ]
+      | NoCandidateMembers ->
+        [
+          text "The union needs to include in its members ";
+          text "at least one of: ";
+          text "object type, string literal, numeric literal, ";
+          text "boolean literal, void or null types.";
+        ]
+      | NoCommonKeys -> [text "There are no common keys among the members of the union."]
+      | NonUniqueKeys map ->
+        let bindings = NameUtils.Map.bindings map in
+        begin
+          match bindings with
+          | [] -> [text ""]
+          | [x] -> string_of_non_unique_key x
+          | xs ->
+            let keys =
+              xs
+              |> Base.List.map ~f:string_of_non_unique_key
+              |> Base.List.map ~f:(fun x -> [text " - "] @ x @ [text "\n"])
+              |> Base.List.concat
+            in
+            text "The following keys have non-unique values:\n" :: keys
+        end
+    in
+    let features = text "Union could not be optimized internally. " :: kind in
+    Normal { features }
+  | EUnionOptimizationOnNonUnion { loc = _; arg } ->
+    let features =
+      [text "Invalid use of $Flow$EnforceOptimized on non-union type "; ref arg; text "."]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -5592,6 +5683,9 @@ let defered_in_speculation = function
   | EAmbiguousObjectType _
   | EEnumNotAllChecked { default_case = Some _; _ }
   | EUninitializedInstanceProperty _
+  | ETrivialRecursiveDefinition _
+  | EAnyValueUsedAsType _
+  | EValueUsedAsType _
   | EUnusedPromise _
   | EImplicitInstantiationUnderconstrainedError _ ->
     true
@@ -5913,3 +6007,5 @@ let error_code_of_message err : error_code option =
   | ETSSyntax _ -> Some TSSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
   | EMissingPlatformSupport _ -> Some MissingPlatformSupport
+  | EUnionOptimization _ -> Some UnionUnoptimizable
+  | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable

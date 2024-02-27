@@ -10,12 +10,14 @@ val parse_libs :
   (Loc.t, Loc.t) Flow_ast.Program.t list ->
   Loc.t Type_sig_parse.tables
   * ( Loc.t Type_sig_parse.binding_node SMap.t
+    * Loc.t Type_sig_parse.binding_node SMap.t
     * (Loc.t Type_sig_parse.loc_node * Loc.t Type_sig_parse.exports) SMap.t
     )
 
 val pack_builtins :
   Loc.t Type_sig_parse.tables
   * ( Loc.t Type_sig_parse.binding_node SMap.t
+    * Loc.t Type_sig_parse.binding_node SMap.t
     * (Loc.t Type_sig_parse.loc_node * Loc.t Type_sig_parse.exports) SMap.t
     ) ->
   Type_sig_collections.Locs.index Type_sig.errno list

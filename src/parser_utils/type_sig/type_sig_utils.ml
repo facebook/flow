@@ -27,11 +27,12 @@ let parse_libs opts ordered_asts =
   List.iter (parse_lib opts scope tbls) ordered_asts;
   (tbls, Scope.builtins_exn scope)
 
-let pack_builtins (tbls, (globals, modules)) =
+let pack_builtins (tbls, (global_values, global_types, global_modules)) =
   let { Parse.locs; module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
   (* mark *)
-  SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) globals;
-  SMap.iter (fun _ m -> Mark.mark_builtin_module m) modules;
+  SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) global_values;
+  SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) global_types;
+  SMap.iter (fun _ m -> Mark.mark_builtin_module m) global_modules;
   (* compact *)
   let locs = Locs.compact locs in
   let module_refs = Module_refs.Interned.compact module_refs in
@@ -47,13 +48,14 @@ let pack_builtins (tbls, (globals, modules)) =
   let (remote_refs, _) = Remote_refs.copy Pack.pack_remote_binding remote_refs in
   let (pattern_defs, _) = Pattern_defs.copy (Pack.pack_parsed cx) pattern_defs in
   let (patterns, _) = Patterns.copy Pack.pack_pattern patterns in
-  let globals = SMap.map Pack.pack_builtin globals in
-  let modules =
+  let global_values = SMap.map Pack.pack_builtin global_values in
+  let global_types = SMap.map Pack.pack_builtin global_types in
+  let global_modules =
     SMap.mapi
       (fun name m ->
         let (loc, module_kind) = Pack.pack_builtin_module cx name m in
         { Packed_type_sig.Builtins.loc; module_kind })
-      modules
+      global_modules
   in
   ( cx.Pack.errs,
     locs,
@@ -63,8 +65,9 @@ let pack_builtins (tbls, (globals, modules)) =
       remote_refs;
       pattern_defs;
       patterns;
-      globals;
-      modules;
+      global_values;
+      global_types;
+      global_modules;
     }
   )
 

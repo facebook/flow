@@ -98,33 +98,41 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- importer.js:41:5
+Error ------------------------------------------------------------------------------------------------- importer.js:36:9
+
+Cannot import the type `Cls` as a value. Use `import type` instead. [import-type-as-value]
+
+   36| import {Cls as ClsValue} from './values_as_type_exports'; // error: type as value
+               ^^^
+
+
+Error ------------------------------------------------------------------------------------------------- importer.js:40:5
 
 Cannot use type `ClsType` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also
 be used as a value, try importing it using `import ClsType` instead of `import type ClsType` and `import {ClsType}`
 instead of `import type {ClsType}`. [type-as-value]
 
-   importer.js:41:5
-   41| new ClsType();
+   importer.js:40:5
+   40| new ClsType();
            ^^^^^^^
 
 References:
-   importer.js:40:21
-   40| import type {Cls as ClsType} from './values_as_type_exports';
+   importer.js:39:21
+   39| import type {Cls as ClsType} from './values_as_type_exports';
                            ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- importer.js:43:1
+Error ------------------------------------------------------------------------------------------------- importer.js:42:1
 
 Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2]. [incompatible-cast]
 
-   importer.js:43:1
-   43| 5 as ClsType;
+   importer.js:42:1
+   42| 5 as ClsType;
        ^ [1]
 
 References:
-   importer.js:43:6
-   43| 5 as ClsType;
+   importer.js:42:6
+   42| 5 as ClsType;
             ^^^^^^^ [2]
 
 
@@ -173,4 +181,4 @@ Cannot export the value `fun` as a type. [export-value-as-type]
 
 
 
-Found 13 errors
+Found 14 errors

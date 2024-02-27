@@ -62,7 +62,7 @@ as regular [type aliases](../aliases/) do.
 ```js flow-check
 opaque type NumberAlias = number;
 
-(0: NumberAlias);
+0 as NumberAlias;
 
 function add(x: NumberAlias, y: NumberAlias): NumberAlias {
     return x + y;
@@ -88,7 +88,7 @@ export opaque type NumberAlias = number;
 ```js
 import type {NumberAlias} from './exports';
 
-(0: NumberAlias) // Error: 0 is not a NumberAlias!
+0 as NumberAlias; // Error: 0 is not a NumberAlias!
 
 function convert(x: NumberAlias): number {
   return x; // Error: x is not a number!

@@ -54,7 +54,8 @@ let rec mark_parsed ~locs_to_dirtify ~visit_loc = function
     Signature_error.iter (mark_loc ~visit_loc) err;
     mark_loc ~visit_loc loc
   | P.Err (loc, _) -> mark_loc ~visit_loc loc
-  | P.ValRef ref -> resolve_ref ~locs_to_dirtify ~visit_loc ref
+  | P.ValRef { type_only = false; ref } -> resolve_value_ref ~locs_to_dirtify ~visit_loc ref
+  | P.ValRef { type_only = true; ref } -> resolve_type_ref ~locs_to_dirtify ~visit_loc ref
   | P.Pattern p ->
     Patterns.mark p (mark_and_report_should_be_dirtified ~locs_to_dirtify mark_pattern)
   | P.Eval (loc, t, op) ->
@@ -68,7 +69,7 @@ let rec mark_parsed ~locs_to_dirtify ~visit_loc = function
     mark_mref mref
 
 and mark_tyname ~locs_to_dirtify ~visit_loc = function
-  | P.Unqualified ref -> resolve_ref ~locs_to_dirtify ~visit_loc ref
+  | P.Unqualified ref -> resolve_type_ref ~locs_to_dirtify ~visit_loc ref
   | P.Qualified { loc; id_loc; name = _; qualification } ->
     mark_loc ~visit_loc loc;
     mark_loc ~visit_loc id_loc;
@@ -87,7 +88,7 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
     mark_parsed ~locs_to_dirtify ~visit_loc (Lazy.force def)
   | P.ConstRefBinding { id_loc; name = _; ref } ->
     mark_loc ~visit_loc id_loc;
-    resolve_ref ~locs_to_dirtify ~visit_loc ref
+    resolve_value_ref ~locs_to_dirtify ~visit_loc ref
   | P.ConstFunBinding { id_loc; name = _; loc; async = _; generator = _; def; statics } ->
     mark_loc ~visit_loc id_loc;
     mark_loc ~visit_loc loc;
@@ -195,17 +196,26 @@ and mark_declare_class ~locs_to_dirtify ~visit_loc def =
 
 and mark_op ~locs_to_dirtify ~visit_loc op = iter_op (mark_parsed ~locs_to_dirtify ~visit_loc) op
 
-and resolve_ref ~locs_to_dirtify ~visit_loc (P.Ref ({ ref_loc; name; scope; resolved = _ } as ref))
-    =
+and resolve_value_ref
+    ~locs_to_dirtify ~visit_loc (P.Ref ({ ref_loc; name; scope; resolved = _ } as ref)) =
   mark_loc ~visit_loc ref_loc;
-  match P.Scope.lookup scope name with
+  match P.Scope.lookup_value scope name with
+  | Some (binding, _) ->
+    mark_binding ~locs_to_dirtify binding;
+    ref.resolved <- Some binding
+  | None -> ref.resolved <- None
+
+and resolve_type_ref
+    ~locs_to_dirtify ~visit_loc (P.Ref ({ ref_loc; name; scope; resolved = _ } as ref)) =
+  mark_loc ~visit_loc ref_loc;
+  match P.Scope.lookup_type scope name with
   | Some (binding, _) ->
     mark_binding ~locs_to_dirtify binding;
     ref.resolved <- Some binding
   | None -> ref.resolved <- None
 
 let mark_export ~locs_to_dirtify = function
-  | P.ExportRef ref -> resolve_ref ~locs_to_dirtify ~visit_loc:ignore ref
+  | P.ExportRef ref -> resolve_value_ref ~locs_to_dirtify ~visit_loc:ignore ref
   | P.ExportBinding binding ->
     Local_defs.mark binding (mark_and_report_should_be_dirtified ~locs_to_dirtify mark_local_binding)
   | P.ExportDefaultBinding { default_loc; name = _; binding } ->
@@ -217,7 +227,7 @@ let mark_export ~locs_to_dirtify = function
   | P.ExportFrom ref -> Remote_refs.mark ref (mark_and_report_not_dirty mark_remote_binding)
 
 let mark_export_type ~locs_to_dirtify = function
-  | P.ExportTypeRef ref -> resolve_ref ~locs_to_dirtify ~visit_loc:ignore ref
+  | P.ExportTypeRef ref -> resolve_type_ref ~locs_to_dirtify ~visit_loc:ignore ref
   | P.ExportTypeBinding binding ->
     Local_defs.mark binding (mark_and_report_should_be_dirtified ~locs_to_dirtify mark_local_binding)
   | P.ExportTypeFrom ref -> Remote_refs.mark ref (mark_and_report_not_dirty mark_remote_binding)

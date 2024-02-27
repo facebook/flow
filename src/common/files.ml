@@ -22,6 +22,7 @@ type options = {
   module_resource_exts: SSet.t;
   multi_platform: bool;
   multi_platform_extensions: string list;
+  multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
   node_resolver_dirnames: string list;
 }
 
@@ -37,6 +38,7 @@ let default_options =
     module_resource_exts = SSet.empty;
     multi_platform = false;
     multi_platform_extensions = [];
+    multi_platform_ambient_supports_platform_directory_overrides = [];
     node_resolver_dirnames = ["node_modules"];
   }
 
@@ -104,7 +106,7 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
                 let base =
                   File_key.chop_suffix file platform_ext |> File_key.to_string |> Filename.basename
                 in
-                Some ("./" ^ base)
+                Some ("./" ^ base ^ ".js")
               else
                 None
           )

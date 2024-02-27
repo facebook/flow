@@ -441,19 +441,21 @@ let of_module type_sig : t = type_sig |> Export_sig.of_module |> of_sig
 
 let of_builtins
     {
-      Packed_type_sig.Builtins.modules;
+      Packed_type_sig.Builtins.global_modules;
       module_refs;
       local_defs;
       remote_refs;
       pattern_defs;
       patterns;
-      globals;
+      global_values;
+      global_types;
     } =
   let global_sig =
     Export_sig.of_builtins ~module_refs ~local_defs ~remote_refs ~pattern_defs ~patterns
   in
   []
-  |> SMap.fold (add_global global_sig) globals
+  |> SMap.fold (add_global global_sig) global_values
+  |> SMap.fold (add_global global_sig) global_types
   |> SMap.fold
        (fun name { Packed_type_sig.Builtins.loc = _; module_kind } acc ->
          let export_sig =
@@ -466,6 +468,6 @@ let of_builtins
              ~patterns
          in
          Module (name, of_sig export_sig) :: acc)
-       modules
+       global_modules
 
 let empty = []

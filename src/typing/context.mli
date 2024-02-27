@@ -374,14 +374,13 @@ val set_environment : t -> Loc_env.t -> unit
 
 val set_signature_help_callee : t -> ALoc.t -> Type.t -> unit
 
+val set_union_opt : t -> ALoc.t -> Type.t -> unit
+
 val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
 val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
 
 val run_in_hint_eval_mode : t -> (unit -> 'a) -> 'a
-
-val add_global_value_cache_entry :
-  t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
 
 val add_env_cache_entry :
   t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
@@ -468,9 +467,6 @@ val find_root_id : t -> Type.ident -> Type.ident
 
 val find_resolved : t -> Type.t -> Type.t option
 
-val global_value_cache_find_opt :
-  t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
-
 val env_cache_find_opt :
   t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
 
@@ -518,6 +514,8 @@ val find_avar_opt : t -> int -> Type.AConstraint.t option
 val find_monomorphized_component : t -> Type.Properties.id -> Type.t option
 
 val get_signature_help_callee : t -> ALoc.t -> Type.t option
+
+val iter_union_opt : t -> f:(ALocMap.key -> Type.t -> unit) -> unit
 
 val remove_avar : t -> int -> unit
 

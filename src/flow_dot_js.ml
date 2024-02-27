@@ -121,7 +121,9 @@ let stub_metadata ~root ~checked =
     component_syntax = true;
     hooklike_functions = true;
     hooklike_functions_includes = [];
-    react_rules = [];
+    react_rules =
+      Options.
+        [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];
     react_rules_always = false;
     enable_as_const = false;
     enable_const_params = false;
@@ -249,9 +251,10 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   resolved_requires :=
     SMap.mapi
       (fun mref _locs ->
-        let m_name = Reason.internal_module_name mref in
         let builtins = Context.builtins cx in
-        Builtins.get_builtin builtins m_name ~on_missing:(fun () -> Error m_name))
+        match Builtins.get_builtin_module_opt builtins mref with
+        | Some t -> Ok t
+        | None -> Error (Reason.internal_module_name mref))
       (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

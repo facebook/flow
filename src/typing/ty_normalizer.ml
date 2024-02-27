@@ -175,8 +175,6 @@ module type INPUT = sig
     Type.t list ->
     'a
 
-  val builtin : Context.t -> cont:(Type.t -> 'a) -> Reason.t -> string -> 'a
-
   val builtin_type : Context.t -> cont:(Type.t -> 'a) -> Reason.t -> string -> 'a
 
   val builtin_typeapp :
@@ -777,6 +775,7 @@ module Make (I : INPUT) : S = struct
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
+      | NamespaceT { values_type; types_tmap = _ } -> cont ~env ?id values_type
       | DefT (_, MixedT _) -> return Ty.Top
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, VoidT) -> return Ty.Void
@@ -1018,22 +1017,6 @@ module Make (I : INPUT) : S = struct
       { Ty.obj_def_loc; obj_kind; obj_frozen; obj_literal; obj_props }
 
     and obj_prop_t =
-      (* Value-level object types should not have properties of type type alias. For
-         convience reasons it is possible for a non-module-like Type.ObjT to include
-         such types as properties. Here we explicitly filter them out, since we
-         cannot use type__ to normalize them.
-      *)
-      let is_type_alias = function
-        | T.DefT (_, T.TypeT _)
-        | T.DefT (_, T.PolyT { t_out = T.DefT (_, T.TypeT _); _ }) ->
-          true
-        | _ -> false
-      in
-      let keep_field ~env t =
-        match Lookahead.peek (Env.get_cx env) t with
-        | Lookahead.LowerBounds [t] -> not (is_type_alias t)
-        | _ -> true
-      in
       let def_locs ~fallback_t p =
         match T.Property.def_locs p with
         | None -> [TypeUtil.loc_of_t fallback_t]
@@ -1042,16 +1025,13 @@ module Make (I : INPUT) : S = struct
       fun ~env ?(inherited = false) ?(source = Ty.Other) (x, p) ->
         match p with
         | T.Field { preferred_def_locs = _; key_loc = _; type_; polarity } ->
-          if keep_field ~env type_ then
-            let polarity = type_polarity polarity in
-            let%map (t, optional) = opt_t ~env type_ in
-            let prop = Ty.Field { t; polarity; optional } in
-            [
-              Ty.NamedProp
-                { name = x; prop; inherited; source; def_locs = def_locs ~fallback_t:type_ p };
-            ]
-          else
-            return []
+          let polarity = type_polarity polarity in
+          let%map (t, optional) = opt_t ~env type_ in
+          let prop = Ty.Field { t; polarity; optional } in
+          [
+            Ty.NamedProp
+              { name = x; prop; inherited; source; def_locs = def_locs ~fallback_t:type_ p };
+          ]
         | T.Method { key_loc = _; type_ = t } ->
           let%map tys = method_ty ~env t in
           Base.List.map
@@ -1601,7 +1581,8 @@ module Make (I : INPUT) : S = struct
       Type.(
         function
         | ChoiceKitT _
-        | ExtendsT _ ->
+        | ExtendsT _
+        | EnforceUnionOptimized _ ->
           terr ~kind:BadInternalT (Some t)
       )
 
@@ -2153,8 +2134,9 @@ module Make (I : INPUT) : S = struct
             } ->
           let%map m = module_t ~env reason exports in
           Ty.Decl m
-        | DefT (r, ObjT o) when Reason_utils.is_module_reason r ->
-          let%map (name, exports, default) = module_of_object ~env r o in
+        | NamespaceT { values_type = DefT (r, ObjT o); types_tmap }
+          when Reason_utils.is_module_reason r ->
+          let%map (name, exports, default) = module_of_namespace ~env r o types_tmap in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
         | DefT (_, ClassT (ThisInstanceT (r, { static; super; inst; _ }, _, _)))
@@ -2212,15 +2194,21 @@ module Make (I : INPUT) : S = struct
             Some t)
       in
       let from_exports_tmap ~env exports_tmap =
-        let step (x, { name_loc = _; preferred_def_locs = _; is_type_only_export = _; type_ = t }) =
+        let step (x, { name_loc = _; preferred_def_locs = _; type_ = t }) =
           match%map toplevel ~env t with
           | Ty.Decl d -> d
           | Ty.Type t -> Ty.VariableDecl (x, t)
         in
-        Context.find_exports (Env.get_cx env) exports_tmap |> NameUtils.Map.bindings |> mapM step
+        exports_tmap |> NameUtils.Map.bindings |> mapM step
       in
-      fun ~env reason { exports_tmap; cjs_export; _ } ->
+      fun ~env reason { value_exports_tmap; type_exports_tmap; cjs_export; _ } ->
         let%bind name = Reason_utils.module_symbol_opt env reason in
+        let exports_tmap =
+          let cx = Env.get_cx env in
+          NameUtils.Map.union
+            (Context.find_exports cx value_exports_tmap)
+            (Context.find_exports cx type_exports_tmap)
+        in
         let%bind exports = from_exports_tmap ~env exports_tmap in
         let%map default = from_cjs_export ~env cjs_export in
         Ty.ModuleDecl { name; exports; default }
@@ -2249,6 +2237,30 @@ module Make (I : INPUT) : S = struct
       fun ~env reason o ->
         let%bind name = Reason_utils.module_symbol_opt env reason in
         let%map (exports, default) = obj_module_props ~env o.T.props_tmap in
+        (name, exports, default)
+
+    and module_of_namespace =
+      let step ~env decls (x, t, _pol) =
+        match%map toplevel ~env t with
+        | Ty.Type t -> Ty.VariableDecl (x, t) :: decls
+        | Ty.Decl d -> d :: decls
+      in
+      let rec loop ~env acc xs =
+        match xs with
+        | [] -> return acc
+        | (x, T.Field { type_; polarity; _ }) :: tl ->
+          let%bind acc' = step ~env acc (x, type_, polarity) in
+          loop ~env acc' tl
+        | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"namespace-prop" None
+      in
+      fun ~env reason values_type types_tmap ->
+        let%bind (name, exports, default) = module_of_object ~env reason values_type in
+        let%map exports =
+          types_tmap
+          |> Context.find_props (Env.get_cx env)
+          |> NameUtils.Map.bindings
+          |> loop ~env exports
+        in
         (name, exports, default)
 
     let convert_toplevel = toplevel
@@ -2394,7 +2406,14 @@ module Make (I : INPUT) : S = struct
       let cont =
         type__ ~env ~inherited ~source:(Ty.PrimitiveProto builtin) ~imode:IMInstance ?id:None
       in
-      I.builtin (Env.get_cx env) ~cont r builtin
+      let t =
+        match a with
+        | T.ArrayAT _ -> Flow_js_utils.lookup_builtin_value (Env.get_cx env) "Array" r
+        | T.ROArrayAT _
+        | T.TupleAT _ ->
+          Flow_js_utils.lookup_builtin_type (Env.get_cx env) "$ReadOnlyArray" r
+      in
+      cont t
 
     and member_expand_object ~env ~inherited ~source super implements inst =
       let { T.own_props; proto_props; _ } = inst in

@@ -67,13 +67,13 @@ type t = {
   opt_all: bool;
   opt_as_const: bool;
   opt_any_propagation: bool;
-  opt_autocomplete_lazy_docs: bool;
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
   opt_autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
+  opt_blocking_worker_communication: bool;
   opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
@@ -162,8 +162,6 @@ let as_const opts = opts.opt_as_const
 
 let any_propagation opts = opts.opt_any_propagation
 
-let autocomplete_lazy_docs opts = opts.opt_autocomplete_lazy_docs
-
 let autoimports opts = opts.opt_autoimports
 
 let autoimports_min_characters opts = opts.opt_autoimports_min_characters
@@ -176,6 +174,8 @@ let autoimports_ranked_by_usage_boost_exact_match_min_length opts =
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
+
+let blocking_worker_communication opts = opts.opt_blocking_worker_communication
 
 let casting_syntax opts = opts.opt_casting_syntax
 

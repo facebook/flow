@@ -131,7 +131,8 @@ let skip_list_test workers _ctxt =
         else
           Bucket.Done
     in
-    (fun job -> MultiWorkerLwt.call (Some workers) ~job ~merge ~neutral ~next:(mk_next ()))
+    fun job ->
+      MultiWorkerLwt.call (Some workers) ~blocking:false ~job ~merge ~neutral ~next:(mk_next ())
   in
 
   let check_list expected_size =

@@ -143,7 +143,7 @@ let source_of_type_exports ~root ~write_root ~file ~reader ~loc_source ~type_sig
     | RemoteRef { index; _ } ->
       let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
       source_of_remote_ref remote_ref
-    | BuiltinRef { ref_loc; name } ->
+    | BuiltinRef { ref_loc; type_ref = _; name } ->
       let loc = loc_of_index ~loc_source ~reader ref_loc in
       let source = SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc } in
       return source
@@ -390,7 +390,7 @@ let source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_modules 
       let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
       let%bind source = source_of_remote_ref remote_ref in
       return source
-    | BuiltinRef { ref_loc; name } ->
+    | BuiltinRef { ref_loc; type_ref = _; name } ->
       let loc = loc_of_index ~loc_source ~reader ref_loc in
       let source = SourceOfExport.Declaration Declaration.{ name; loc } in
       return source
@@ -728,7 +728,7 @@ let all_schema_version = 7
 
 let flow_schema_version = 3
 
-let make ~output_dir ~write_root ~include_direct_deps =
+let make ~output_dir ~write_root ~include_direct_deps ~include_transitive_deps =
   (module Codemod_runner.MakeSimpleTypedRunner (struct
     type accumulator = {
       files_analyzed: int;
@@ -738,7 +738,11 @@ let make ~output_dir ~write_root ~include_direct_deps =
     let check_options o = o
 
     let expand_roots ~env files =
-      if include_direct_deps then
+      if include_transitive_deps then
+        Pure_dep_graph_operations.calc_all_dependencies
+          (Dependency_info.implementation_dependency_graph env.ServerEnv.dependency_info)
+          files
+      else if include_direct_deps then
         Pure_dep_graph_operations.calc_direct_dependencies
           (Dependency_info.implementation_dependency_graph env.ServerEnv.dependency_info)
           files

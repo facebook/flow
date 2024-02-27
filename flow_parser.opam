@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flow_parser"
-version: "0.228.0"
+version: "0.229.2"
 maintainer: "flow@fb.com"
 authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
@@ -10,7 +10,9 @@ license: "MIT"
 build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
   "ocaml" {>= "4.14.0"}
-  "dune" {>= "3.0"}
+  "dune" {>= "3.2"}
+  "base" {>= "v0.14.1"}
+  "ppxlib" {>= "0.26.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
   "wtf8"

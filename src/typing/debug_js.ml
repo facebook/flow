@@ -341,26 +341,32 @@ let rec dump_t_ (depth, tvars) cx t =
     | ModuleT
         {
           module_reason = _;
-          module_export_types = { exports_tmap; _ };
+          module_export_types = { value_exports_tmap; type_exports_tmap; _ };
           module_is_strict = _;
           module_available_platforms = _;
         } ->
+      let exports_tmap_to_string exports_tmap =
+        Context.find_exports cx exports_tmap
+        |> NameUtils.Map.bindings
+        |> Base.List.map ~f:(fun (name, { preferred_def_locs = _; name_loc = _; type_ }) ->
+               kid type_ |> spf "%s: %s" (display_string_of_name name)
+           )
+        |> String.concat ", "
+      in
       p
         t
         ~extra:
-          (Context.find_exports cx exports_tmap
-          |> NameUtils.Map.bindings
-          |> Base.List.map
-               ~f:(fun
-                    (name, { preferred_def_locs = _; name_loc = _; is_type_only_export = _; type_ })
-                  -> kid type_ |> spf "%s: %s" (display_string_of_name name)
-             )
-          |> String.concat ", "
-          |> spf "[%s]"
+          (spf
+             "[%s] [%s]"
+             (exports_tmap_to_string value_exports_tmap)
+             (exports_tmap_to_string type_exports_tmap)
           )
+    | NamespaceT { values_type; types_tmap } ->
+      p t ~extra:(spf "values=%s, types=%s" (kid values_type) (Properties.string_of_id types_tmap))
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
+    | InternalT (EnforceUnionOptimized _) -> p t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =
@@ -696,7 +702,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | ChoiceKitUseT (_, TryFlow (_, spec)) -> p ~extra:(try_flow spec) t
     | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
     | CJSExtractNamedExportsT _ -> p t
-    | CJSRequireT _ -> p t
     | ComparatorT { arg; _ } -> p ~extra:(kid arg) t
     | ConstructorT _ -> p t
     | CopyNamedExportsT _ -> p t
@@ -733,20 +738,21 @@ and dump_use_t_ (depth, tvars) cx t =
              (tvar tout_id)
           )
         t
-    | ExportNamedT (_, tmap, _export_kind, arg) ->
+    | ExportNamedT
+        { reason = _; value_exports_tmap; type_exports_tmap; export_kind = _; tout = arg } ->
+      let tmap_to_string tmap =
+        String.concat
+          "; "
+          (Base.List.map ~f:(fun (x, _) -> display_string_of_name x) (NameUtils.Map.bindings tmap))
+      in
       p
         t
         ~extra:
           (spf
-             "%s, {%s}"
+             "%s, {%s}, {%s}"
              (kid arg)
-             (String.concat
-                "; "
-                (Base.List.map
-                   ~f:(fun (x, _) -> display_string_of_name x)
-                   (NameUtils.Map.bindings tmap)
-                )
-             )
+             (tmap_to_string value_exports_tmap)
+             (tmap_to_string type_exports_tmap)
           )
     | ExportTypeT _ -> p t
     | ImplicitVoidReturnT _ -> p t
@@ -790,13 +796,23 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(spf "(%s), (%s, %s)" prop (string_of_reason preason) (tvar ptvar)) t
     | GetProtoT (_, (_, arg)) -> p ~extra:(tvar arg) t
     | GetStaticsT (_, arg) -> p ~extra:(tvar arg) t
+    | GetTypeFromNamespaceT { use_op; reason = _; prop_ref = (_, name); tout = (preason, ptvar) } ->
+      p
+        ~extra:
+          (spf
+             "%s, (%s), (%s, %s)"
+             (string_of_use_op use_op)
+             (display_string_of_name name)
+             (string_of_reason preason)
+             (tvar ptvar)
+          )
+        t
     | GuardT (pred, result, sink) ->
       p
         ~reason:false
         ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (tout sink))
         t
     | HasOwnPropT _ -> p t
-    | ImportModuleNsT { is_strict; _ } -> p ~extra:(spf "is_strict=%b" is_strict) t
     | PreprocessKitT _ -> p t
     | InvariantT _ -> p t
     | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->
@@ -1920,6 +1936,9 @@ let dump_error_message =
         (string_of_aloc loc)
         (SSet.to_string available_platforms)
         (SSet.to_string required_platforms)
+    | EUnionOptimization { loc; _ } -> spf "EUnionOptimization (%s)" (string_of_aloc loc)
+    | EUnionOptimizationOnNonUnion { loc; _ } ->
+      spf "EUnionOptimizationOnNonUnion (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let print_if_verbose_lazy

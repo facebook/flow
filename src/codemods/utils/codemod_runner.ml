@@ -338,7 +338,15 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
-        let%lwt result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~blocking:(Options.blocking_worker_communication options)
+            ~job
+            ~neutral:[]
+            ~merge
+            ~next
+        in
         Hh_logger.info "Done";
         Lwt.return result
     )
@@ -441,6 +449,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         let%lwt result =
           MultiWorkerLwt.call
             workers
+            ~blocking:(Options.blocking_worker_communication options)
             ~job:(pre_check_job ~reader ~options)
             ~neutral:FilenameMap.empty
             ~merge:FilenameMap.union
@@ -456,7 +465,15 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
-        let%lwt result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~blocking:(Options.blocking_worker_communication options)
+            ~job
+            ~neutral:[]
+            ~merge
+            ~next
+        in
         Hh_logger.info "Checking+Codemodding Done";
         Lwt.return result
     )
@@ -606,6 +623,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
             let%lwt result =
               MultiWorkerLwt.call
                 workers
+                ~blocking:(Options.blocking_worker_communication options)
                 ~job:(untyped_runner_job ~mk_ccx ~visit ~abstract_reader)
                 ~neutral:[]
                 ~merge:List.rev_append
@@ -665,6 +683,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
         let%lwt result =
           MultiWorkerLwt.call
             workers
+            ~blocking:(Options.blocking_worker_communication options)
             ~job:(untyped_runner_job ~visit ~mk_ccx ~abstract_reader)
             ~neutral:[]
             ~merge:List.rev_append

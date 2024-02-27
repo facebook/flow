@@ -1,0 +1,189 @@
+Error ---------------------------------------------------------------------------------------------------- file.js:24:15
+
+Union could not be optimized internally. The union needs to include in its members at least one of: object type, string
+literal, numeric literal, boolean literal, void or null types. [union-unoptimizable]
+
+   24| type Error1 = $Flow$EnforceOptimized<number | string>; // error not object candidates
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:26:15
+
+Union could not be optimized internally. There are no common keys among the members of the union. [union-unoptimizable]
+
+                     v----------------------------------------------
+   26| type Error2 = $Flow$EnforceOptimized< // error no common keys
+   27|   | { f: 1 }
+   28|   | { h: 0 }
+   29| >;
+       ^
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:31:15
+
+Union could not be optimized internally. The form of `$ReadOnly` [1] is not supported for optimization. Try replacing
+this type with a simpler alternative. [union-unoptimizable]
+
+   file.js:31:15
+                     v--------------------------------------------------------
+   31| type Error3 = $Flow$EnforceOptimized< // error unsupported form (EvalT)
+   32|   | $ReadOnly<{ f: 1 }>
+   33|   | $ReadOnly<{ f: 2 }>
+   34| >;
+       ^
+
+References:
+   file.js:32:5
+   32|   | $ReadOnly<{ f: 1 }>
+           ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:37:15
+
+Union could not be optimized internally. The form of `Foo` [1] is not supported for optimization. Try replacing this
+type with a simpler alternative. [union-unoptimizable]
+
+   file.js:37:15
+                     v-----------------------------------------------------------
+   37| type Error4 = $Flow$EnforceOptimized< // error unsupported form (TypeAppT)
+   38|   | Foo<1, 2>
+   39|   | Foo<1, 3>
+   40| >;
+       ^
+
+References:
+   file.js:38:5
+   38|   | Foo<1, 2>
+           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:42:15
+
+Union could not be optimized internally. The following keys have non-unique values:
+ - Key `f` has value `1.000000` in both object type [1] and object type [2].
+ - Key `g` has value ``a`` in both object type [1] and object type [2].
+ - Key `h` has value `true` in both object type [1] and object type [2].
+ - Key `k` has value `undefined` in both object type [1] and object type [2].
+ - Key `l` has value `null` in both object type [1] and object type [2].
+ - Key `m` has value `1n` in both object type [1] and object type [2].
+ [union-unoptimizable]
+
+   file.js:42:15
+                     v----------------------------------------------
+   42| type Error5 = $Flow$EnforceOptimized< // error no unique keys
+   43|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+   44|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+   45| >;
+       ^
+
+References:
+   file.js:44:5
+   44|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:43:5
+   43|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:47:16
+
+Invalid use of $Flow$EnforceOptimized on non-union type number literal `1` [1]. [union-unoptimizable]
+
+   file.js:47:16
+   47| type Error6a = $Flow$EnforceOptimized<1>; // error non-union argument
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   file.js:47:39
+   47| type Error6a = $Flow$EnforceOptimized<1>; // error non-union argument
+                                             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:48:16
+
+Invalid use of $Flow$EnforceOptimized on non-union type explicit 'any' [1]. [union-unoptimizable]
+
+   file.js:48:16
+   48| type Error6c = $Flow$EnforceOptimized<any>; // error non-union argument
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   file.js:48:39
+   48| type Error6c = $Flow$EnforceOptimized<any>; // error non-union argument
+                                             ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:49:16
+
+Invalid use of $Flow$EnforceOptimized on non-union type empty [1]. [union-unoptimizable]
+
+   file.js:49:16
+   49| type Error6d = $Flow$EnforceOptimized<empty>; // error non-union argument
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   file.js:49:39
+   49| type Error6d = $Flow$EnforceOptimized<empty>; // error non-union argument
+                                             ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:50:16
+
+Invalid use of $Flow$EnforceOptimized on non-union type function type [1]. [union-unoptimizable]
+
+   file.js:50:16
+   50| type Error6e = $Flow$EnforceOptimized<() => void>; // error non-union argument
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   file.js:50:39
+   50| type Error6e = $Flow$EnforceOptimized<() => void>; // error non-union argument
+                                             ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:52:16
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   52| type Error7a = $Flow$EnforceOptimized<>; // error no arg
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:53:16
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   53| type Error7b = $Flow$EnforceOptimized<1 | 2, 1 | 2>; // error too many args
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:4:1
+
+Cannot cast `3` to `T1` because number [1] is incompatible with literal union [2]. [incompatible-cast]
+
+   import.js:4:1
+   4| 3 as T1; // error 3 ~> 1 | 2
+      ^ [1]
+
+References:
+   import.js:4:6
+   4| 3 as T1; // error 3 ~> 1 | 2
+           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:6:2
+
+Cannot cast object literal to `T2` because object literal [1] is incompatible with `T2` [2]. [incompatible-cast]
+
+   import.js:6:2
+   6| ({f: 3} as T2); // error {f: 3} ~> {f: 1} | {f: 2}
+       ^^^^^^ [1]
+
+References:
+   import.js:6:12
+   6| ({f: 3} as T2); // error {f: 3} ~> {f: 1} | {f: 2}
+                 ^^ [2]
+
+
+
+Found 13 errors

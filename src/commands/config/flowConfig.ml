@@ -44,13 +44,13 @@ module Opts = struct
 
   type t = {
     all: bool option;
-    autocomplete_lazy_docs: bool option;
     autoimports: bool option;
     autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool option;
     autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    blocking_worker_communication: bool;
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
@@ -107,6 +107,7 @@ module Opts = struct
     modules_are_use_strict: bool;
     multi_platform: bool option;
     multi_platform_extensions: string list;
+    multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
     namespaces: bool;
     no_flowlib: bool;
@@ -172,12 +173,12 @@ module Opts = struct
     {
       all = None;
       autoimports = None;
-      autocomplete_lazy_docs = None;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = None;
       autoimports_ranked_by_usage_boost_exact_match_min_length = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      blocking_worker_communication = true;
       channel_mode = None;
       casting_syntax = None;
       component_syntax = false;
@@ -235,6 +236,7 @@ module Opts = struct
       modules_are_use_strict = false;
       multi_platform = None;
       multi_platform_extensions = [];
+      multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
       namespaces = false;
       no_flowlib = false;
@@ -685,6 +687,30 @@ module Opts = struct
         else
           Ok { opts with multi_platform_extensions = v :: opts.multi_platform_extensions })
 
+  let multi_platform_ambient_supports_platform_directory_overrides_parser =
+    mapping
+      ~multiple:true
+      (fun v -> Ok v)
+      (fun opts (path, platforms) ->
+        let platforms = Base.String.split ~on:',' platforms |> Base.List.map ~f:String.trim in
+        match
+          Base.List.find_map platforms ~f:(fun p ->
+              if Base.List.mem opts.multi_platform_extensions ("." ^ p) ~equal:String.equal then
+                None
+              else
+                Some ("Unknown platform '" ^ p ^ "'.")
+          )
+        with
+        | Some e -> Error e
+        | None ->
+          Ok
+            {
+              opts with
+              multi_platform_ambient_supports_platform_directory_overrides =
+                (path, platforms)
+                :: opts.multi_platform_ambient_supports_platform_directory_overrides;
+            })
+
   let name_mapper_parser =
     mapping
       ~multiple:true
@@ -827,9 +853,6 @@ module Opts = struct
   let parsers =
     [
       ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
-      ( "autocomplete_lazy_docs",
-        boolean (fun opts v -> Ok { opts with autocomplete_lazy_docs = Some v })
-      );
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ( "autoimports.min_characters",
         uint (fun opts v ->
@@ -858,6 +881,9 @@ module Opts = struct
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
       ("as_const", const_assertion_parser);
+      ( "experimental.blocking_worker_communication",
+        boolean (fun opts v -> Ok { opts with blocking_worker_communication = v })
+      );
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
@@ -883,6 +909,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
       );
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
+      ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
+        multi_platform_ambient_supports_platform_directory_overrides_parser
+      );
       ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ("experimenta.precise_dependents", precise_dependents_parser);
@@ -1492,8 +1521,6 @@ let libs config = config.libs
 
 let all c = c.options.Opts.all
 
-let autocomplete_lazy_docs c = c.options.Opts.autocomplete_lazy_docs
-
 let autoimports c = c.options.Opts.autoimports
 
 let autoimports_min_characters c = c.options.Opts.autoimports_min_characters
@@ -1506,6 +1533,8 @@ let autoimports_ranked_by_usage_boost_exact_match_min_length c =
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let blocking_worker_communication c = c.options.Opts.blocking_worker_communication
 
 let casting_syntax c = c.options.Opts.casting_syntax
 
@@ -1619,6 +1648,9 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let multi_platform c = c.options.Opts.multi_platform
 
 let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
+
+let multi_platform_ambient_supports_platform_directory_overrides c =
+  c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
 

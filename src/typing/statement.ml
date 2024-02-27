@@ -18,6 +18,7 @@ open Reason
 open Type
 open TypeUtil
 open Func_class_sig_types
+open Type_operation_utils
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
 module Make
@@ -709,15 +710,21 @@ module Make
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
-    Flow.get_builtin_type cx reason (OrdinaryName "RegExp")
+    Flow.get_builtin_type cx reason "RegExp"
 
   let module_ref_literal cx loc lit =
     let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
     let mref = Base.String.drop_prefix value prefix_len in
     let module_t = Import_export.get_module_t cx (loc, mref) in
-    let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
+    let require_t =
+      Import_export.cjs_require_type
+        cx
+        (mk_reason (RCommonJSExports mref) loc)
+        ~legacy_interop
+        module_t
+    in
     let reason = mk_reason (RCustom "module reference") loc in
-    let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
+    let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
     (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
 
   let check_const_assertion cx (loc, e) =
@@ -837,7 +844,12 @@ module Make
       let reason = mk_reason (RIdentifier local_name) loc in
       Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
           let use_t =
-            GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
+            match export_kind with
+            | Ast.Statement.ExportType ->
+              GetTypeFromNamespaceT
+                { use_op = unknown_use; reason; prop_ref = (reason, local_name); tout }
+            | Ast.Statement.ExportValue ->
+              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
           in
           Flow.flow cx (source_ns_t, use_t)
       )
@@ -863,7 +875,7 @@ module Make
         | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
           let source_ns_t =
             let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
-            Import_export.import_ns cx reason module_t
+            Import_export.get_module_namespace_type cx reason module_t
           in
           export_from source_ns_t
         | None -> export_ref
@@ -874,7 +886,7 @@ module Make
     | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let ns_t = Import_export.import_ns cx reason module_t in
+      let ns_t = Import_export.get_module_namespace_type cx reason module_t in
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) ->
@@ -1648,7 +1660,7 @@ module Make
                    in
                    let import_kind = Base.Option.value ~default:import_kind kind in
                    let (remote_name_def_loc, imported_t) =
-                     Type_operation_utils.Import_export.import_named_specifier_type
+                     Import_export.import_named_specifier_type
                        cx
                        import_reason
                        import_kind
@@ -1690,7 +1702,7 @@ module Make
               mk_reason import_reason_desc local_loc
             in
             let t =
-              Type_operation_utils.Import_export.import_namespace_specifier_type
+              Import_export.import_namespace_specifier_type
                 cx
                 import_reason
                 import_kind
@@ -1713,7 +1725,7 @@ module Make
             } ->
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let (remote_default_name_def_loc, imported_t) =
-            Type_operation_utils.Import_export.import_default_specifier_type
+            Import_export.import_default_specifier_type
               cx
               import_reason
               import_kind
@@ -1903,7 +1915,8 @@ module Make
           module_reason = reason;
           module_export_types =
             {
-              exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+              value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+              type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
               cjs_export = None;
               has_every_named_export = false;
             };
@@ -2961,7 +2974,10 @@ module Make
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
           Import_export.get_module_t cx (loc, module_name)
-          |> Import_export.require cx loc module_name ~legacy_interop:false
+          |> Import_export.cjs_require_type
+               cx
+               (mk_reason (RCommonJSExports module_name) loc)
+               ~legacy_interop:false
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason (RCustom "graphql tag") loc in
@@ -2989,9 +3005,7 @@ module Make
       (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
       let call_t =
         let args =
-          let quasi_t =
-            Flow.get_builtin_type cx reason_array (OrdinaryName "TaggedTemplateLiteralArray")
-          in
+          let quasi_t = Flow.get_builtin_type cx reason_array "TaggedTemplateLiteralArray" in
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
         in
@@ -3166,7 +3180,7 @@ module Make
           comments;
         } ->
       let reason = mk_reason (RCustom "import.meta") loc in
-      let t = Flow.get_builtin_type cx reason (OrdinaryName "Import$Meta") in
+      let t = Flow.get_builtin_type cx reason "Import$Meta" in
       ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
     | MetaProperty _ ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
@@ -3176,10 +3190,10 @@ module Make
         let ns_t =
           let reason = mk_reason (RModule (OrdinaryName module_name)) loc in
           Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation:true
-          |> Import_export.import_ns cx reason
+          |> Import_export.get_module_namespace_type cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
-        Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [ns_t]
+        Flow.get_builtin_typeapp cx reason "Promise" [ns_t]
       in
       (match argument with
       | Ast.Expression.StringLiteral ({ Ast.StringLiteral.value = module_name; _ } as lit) ->
@@ -3308,7 +3322,10 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
-              |> Import_export.require cx loc module_name ~legacy_interop:false
+              |> Import_export.cjs_require_type
+                   cx
+                   (mk_reason (RCommonJSExports module_name) loc)
+                   ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
           | ( None,
@@ -3345,7 +3362,10 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
-              |> Import_export.require cx loc module_name ~legacy_interop:false
+              |> Import_export.cjs_require_type
+                   cx
+                   (mk_reason (RCommonJSExports module_name) loc)
+                   ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
           | (Some _, arguments) ->
@@ -4476,7 +4496,7 @@ module Make
          Promise is done.
       *)
       let reason = mk_reason (RCustom "await") loc in
-      let await = Flow.get_builtin cx (OrdinaryName "$await") reason in
+      let await = Flow_js_utils.lookup_builtin_value cx "$await" reason in
       let (((_, arg), _) as argument_ast) = expression cx argument in
       let use_op =
         Op
@@ -5221,7 +5241,7 @@ module Make
       match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) expr_loc in
-        Flow.get_builtin_type cx reason (OrdinaryName "React$FragmentType")
+        Flow.get_builtin_type cx reason "React$FragmentType"
       | Options.ReactRuntimeClassic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
@@ -5261,7 +5281,7 @@ module Make
           (_, Some custom_jsx_type)
         ) ->
         let fbt_reason = mk_reason RFbt loc_element in
-        let t = Flow.get_builtin_type cx fbt_reason (OrdinaryName custom_jsx_type) in
+        let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
         (* TODO check attribute types against an fbt API *)
         let (_, attributes, _, children) =
           jsx_mk_props
@@ -5940,7 +5960,7 @@ module Make
         )
       in
       let (pmap, properties) = prop_map_of_object cx properties in
-      let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
+      let propdesc_type = Flow_js_utils.lookup_builtin_type cx "PropertyDescriptor" reason in
       let props =
         NameUtils.Map.fold
           (fun x p acc ->
@@ -6082,7 +6102,7 @@ module Make
         | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
       in
       let loc = loc_of_reason reason in
-      let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
+      let propdesc_type = Flow_js_utils.lookup_builtin_type cx "PropertyDescriptor" reason in
       let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [ty] in
       let (((_, o), _) as e_ast) = expression cx e in
       let key_ast = expression cx key in
@@ -6129,7 +6149,7 @@ module Make
       error_on_this_uses_in_object_methods cx properties;
       let (((_, o), _) as e_ast) = expression cx e in
       let (pmap, properties) = prop_map_of_object cx properties in
-      let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
+      let propdesc_type = Flow_js_utils.lookup_builtin_type cx "PropertyDescriptor" reason in
       pmap
       |> NameUtils.Map.iter (fun x p ->
              match Property.read_t p with
@@ -7199,7 +7219,7 @@ module Make
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let ret_reason = mk_reason RReturn loc in
-            let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
+            let t = Flow.get_builtin_type cx ret_reason "React$Node" in
             let renders_t = TypeUtil.mk_renders_type ret_reason RendersNormal t in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
@@ -7557,7 +7577,7 @@ module Make
                 let reason =
                   mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason ret_reason)
                 in
-                Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
+                Flow.get_builtin_typeapp cx reason "Promise" [void_t]
               else
                 void_t
             in

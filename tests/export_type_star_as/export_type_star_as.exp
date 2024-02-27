@@ -22,7 +22,8 @@ Cannot import `nope` because there is no `nope` export in `./forward_only`. [mis
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:9
 
-Cannot import `aNum` because there is no `aNum` export in `./forward_only`. [missing-export]
+Cannot import `aNum` because there is no `aNum` export in `./forward_only`. Did you mean `import aNum from "..."`?
+[missing-export]
 
    6| import {aNum} from "./forward_only"; // error
               ^^^^

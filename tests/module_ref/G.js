@@ -35,3 +35,6 @@ JSResourceReference.loadAll(
     F as string; // Error - F exports number
   },
 );
+
+'m#E' as string; // Error
+'m#E' as empty; // Error

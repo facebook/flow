@@ -1017,7 +1017,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         else
           false
       in
-      let node = get_builtin_type cx ~use_desc:true renders_r (OrdinaryName "React$Node") in
+      let node = get_builtin_type cx ~use_desc:true renders_r "React$Node" in
       if union_contains_instantiable_tvars || not (speculative_subtyping_succeeds cx node u) then
         SpeculationKit.try_union cx trace use_op l r rep
     | (_, UnionT (r, rep)) ->
@@ -1223,32 +1223,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, ThisInstanceT (r, i, this, this_name)) ->
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_instance cx reason (r, i, this, this_name)))
-    | ( DefT (_, PolyT { tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }),
-        DefT (_, TypeT (RenderTypeKind, _))
-      ) ->
-      let reason_op = reason_of_t u in
-      let subst_map =
-        Nel.fold_left
-          (fun acc tparam -> Subst_name.Map.add tparam.name (AnyT.untyped reason_op) acc)
-          Subst_name.Map.empty
-          ids
-      in
-      let t_ = Type_subst.subst cx subst_map t in
-      rec_flow_t cx trace ~use_op (t_, u)
-    | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), DefT (_, TypeT (_, t))) ->
-      rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason_tapp, t);
-      add_output
-        cx
-        ~trace
-        (Error_message.EMissingTypeArgs
-           {
-             reason_op = reason_of_t u;
-             reason_tapp;
-             reason_arity = mk_poly_arity_reason tparams_loc;
-             min_arity = poly_minimum_arity ids;
-             max_arity = Nel.length ids;
-           }
-        )
     (*
      * This rule is hit when a polymorphic type appears outside a
      * type application expression - i.e. not followed by a type argument list
@@ -1347,7 +1321,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
       (* Ensure this is a function component *)
-      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl (OrdinaryName "React$Node"));
+      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl "React$Node");
 
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders);
@@ -1513,7 +1487,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         )
     (* Exiting the renders world *)
     | (DefT (r, RendersT (NominalRenders _)), u) ->
-      let mixed_element = get_builtin_type cx r (OrdinaryName "React$MixedElement") in
+      let mixed_element = get_builtin_type cx r "React$MixedElement" in
       rec_flow_t cx trace ~use_op (mixed_element, u)
     | ( DefT
           ( r,
@@ -1684,6 +1658,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, DefT (reason, CharSetT _)) -> rec_flow_t cx trace ~use_op (l, StrT.why reason)
     (* Custom functions are still functions, so they have all the prototype properties *)
     | (CustomFunT (r, _), AnyT _) -> rec_flow_t cx trace ~use_op (FunProtoT r, u)
+    (* unwrap namespace type into object type, drop all information about types in the namespace *)
+    | (NamespaceT { values_type; types_tmap = _ }, _) -> rec_flow_t cx trace ~use_op (values_type, u)
+    | (l, NamespaceT { values_type; types_tmap = _ }) -> rec_flow_t cx trace ~use_op (l, values_type)
     (*********************************************)
     (* object types deconstruct into their parts *)
     (*********************************************)
@@ -1956,10 +1933,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
     | (DefT (_, InstanceT _), DefT (r2, ArrT (ArrayAT { elem_t; _ }))) ->
-      let arrt = get_builtin_typeapp cx r2 (OrdinaryName "Array") [elem_t] in
+      let arrt = get_builtin_typeapp cx r2 "Array" [elem_t] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     | (DefT (_, InstanceT _), DefT (r2, ArrT (ROArrayAT (elemt, _)))) ->
-      let arrt = get_builtin_typeapp cx r2 (OrdinaryName "$ReadOnlyArray") [elemt] in
+      let arrt = get_builtin_typeapp cx r2 "$ReadOnlyArray" [elemt] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -1969,46 +1946,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (********************************************************)
     (* runtime types derive static types through annotation *)
     (********************************************************)
-    | (DefT (_, ClassT it), DefT (r, TypeT (_, t))) ->
-      (* a class value annotation becomes the instance type *)
-      let it = reposition ~trace cx (loc_of_reason r) it in
-      rec_unify cx trace ~use_op:unknown_use ~unify_any:true it t
-    | (DefT (_, TypeT (_, l)), DefT (_, TypeT (_, u))) ->
-      rec_unify cx trace ~use_op ~unify_any:true l u
-    | (DefT (lreason, EnumObjectT enum), DefT (_r, TypeT (_, t))) ->
-      (* an enum object value annotation becomes the enum type *)
-      let enum_type = mk_enum_type lreason enum in
-      rec_unify cx trace ~use_op enum_type t
-    | (DefT (enum_reason, EnumT _), DefT (reason, TypeT (_, t))) ->
-      rec_unify cx trace ~use_op (AnyT.error reason) t;
-      add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
-    | (DefT (reasonl, ReactAbstractComponentT _), DefT (r, TypeT (_, t))) ->
-      (* a component syntax value annotation becomes an element of that component *)
-      let elem =
-        let elem_reason =
-          let desc = react_element_desc_of_component_reason reasonl in
-          let annot_loc = loc_of_reason r in
-          annot_reason ~annot_loc (replace_desc_reason desc r)
-        in
-        get_builtin_typeapp cx ~use_desc:true elem_reason (OrdinaryName "React$Element") [l]
-      in
-      rec_unify cx trace ~use_op elem t
-    (* non-class/function values used in annotations are errors *)
-    | (_, DefT (reason_use, TypeT (_, t))) ->
-      (match l with
-      | DefT (_, EmptyT)
-      | AnyT (_, AnyError (Some MissingAnnotation)) ->
-        add_output cx ~trace Error_message.(EValueUsedAsType { reason_use });
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t)
-      | AnyT (_, AnyError _) ->
-        (* Short-circut as we already error on the unresolved name. *)
-        rec_flow_t cx ~use_op:unknown_use trace (l, t)
-      | AnyT _ ->
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
-        add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
-      | _ ->
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
-        add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
     | (DefT (rl, ClassT l), DefT (_, ClassT u)) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason rl) l, UseT (use_op, u))
     | (DefT (_, FunT (static1, _)), DefT (_, ClassT (DefT (_, InstanceT { static = static2; _ }))))
@@ -2298,19 +2235,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx reason ~use_desc "Object" in
       rec_flow_t cx trace ~use_op (obj_proto, u)
     | (_, ObjProtoT reason) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx reason ~use_desc "Object" in
       rec_flow_t cx trace ~use_op (l, obj_proto)
     | (FunProtoT reason, _) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx reason ~use_desc "Function" in
       rec_flow_t cx trace ~use_op (fun_proto, u)
     | (_, FunProtoT reason) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx reason ~use_desc "Function" in
       rec_flow_t cx trace ~use_op (l, fun_proto)
     | (DefT (lreason, MixedT Mixed_function), DefT (ureason, FunT _)) ->
       add_output
@@ -2329,6 +2266,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (FunProtoBindT reason, _)
     | (FunProtoCallT reason, _) ->
       rec_flow_t cx trace ~use_op (FunProtoT reason, u)
+    | (InternalT (EnforceUnionOptimized reason), _) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EUnionOptimizationOnNonUnion
+           { loc = loc_of_reason reason; arg = reason_of_t u }
+        )
     | (_, _) ->
       add_output
         cx

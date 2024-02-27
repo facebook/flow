@@ -217,7 +217,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ReactElementConfigType ->
         merge_lower_or_upper_bounds r (OpenT tout)
         |> bind_use_t_result ~f:(fun config ->
-               let react_node = Flow.get_builtin_type cx r (OrdinaryName "React$Node") in
+               let react_node = Flow.get_builtin_type cx r "React$Node" in
                UpperT
                  (DefT
                     ( r,
@@ -283,6 +283,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetElemT _
     | SetElemT _
     | CallElemT _
+    | GetTypeFromNamespaceT _
     | GetPropT _
     | GetPrivatePropT _
     | TestPropT _
@@ -299,8 +300,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetValuesT _
     | GetDictValuesT _
     (* Import-export related upper bounds won't appear during implicit instantiation. *)
-    | CJSRequireT _
-    | ImportModuleNsT _
     | AssertImportIsValueT _
     | AssertNonComponentLikeT _
     | CJSExtractNamedExportsT _
@@ -1498,7 +1497,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       f ()
 
   let run_ref_extractor cx ~use_op ~reason t =
-    let lhs = Flow.get_builtin cx (OrdinaryName "React$RefSetter") reason in
+    let lhs = Flow_js_utils.lookup_builtin_type cx "React$RefSetter" reason in
     match get_t cx lhs with
     | DefT (_, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
       let poly_t = (tparams_loc, ids, t_out) in

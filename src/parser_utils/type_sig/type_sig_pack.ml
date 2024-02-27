@@ -93,6 +93,7 @@ type 'loc packed_ref =
     }
   | BuiltinRef of {
       ref_loc: 'loc;
+      type_ref: bool;
       name: string;
     }
 [@@deriving map, show { with_path = false }]
@@ -244,13 +245,13 @@ let rec pack_parsed cx = function
   | P.TyRefApp { loc; name; targs } -> pack_tyapp cx loc name targs
   | P.AsyncVoidReturn loc -> AsyncVoidReturn (pack_loc loc)
   | P.BuiltinTyRef { ref_loc; name } ->
-    TyRef (Unqualified (BuiltinRef { ref_loc = pack_loc ref_loc; name }))
+    TyRef (Unqualified (BuiltinRef { ref_loc = pack_loc ref_loc; type_ref = true; name }))
   | P.Err (loc, err) ->
     let loc = pack_loc loc in
     let err = map_errno pack_loc err in
     cx.errs <- err :: cx.errs;
     Err loc
-  | P.ValRef ref -> Ref (pack_ref ref)
+  | P.ValRef { type_only; ref } -> Ref (pack_ref ~type_ref:type_only ref)
   | P.Pattern p -> Pattern (Patterns.index_exn p)
   | P.Eval (loc, t, op) -> Eval (pack_loc loc, pack_parsed cx t, pack_op cx op)
   | P.Require { loc; mref } ->
@@ -273,17 +274,17 @@ and pack_tyapp cx loc name targs =
   TyRefApp { loc; name; targs }
 
 and pack_tyname cx = function
-  | P.Unqualified ref -> Unqualified (pack_ref ref)
+  | P.Unqualified ref -> Unqualified (pack_ref ~type_ref:true ref)
   | P.Qualified { loc; id_loc; name; qualification } ->
     let loc = pack_loc loc in
     let id_loc = pack_loc id_loc in
     let qualification = pack_tyname cx qualification in
     Qualified { loc; id_loc; name; qualification }
 
-and pack_ref (P.Ref { ref_loc; name; scope = _; resolved }) =
+and pack_ref ~type_ref (P.Ref { ref_loc; name; scope = _; resolved }) =
   let ref_loc = pack_loc ref_loc in
   match resolved with
-  | None -> BuiltinRef { ref_loc; name }
+  | None -> BuiltinRef { ref_loc; type_ref; name }
   | Some (P.LocalBinding b) ->
     let index = Local_defs.index_exn b in
     LocalRef { ref_loc; index }
@@ -300,7 +301,7 @@ and pack_local_binding cx = function
     Variable { id_loc; name; def }
   | P.ConstRefBinding { id_loc; name; ref } ->
     let id_loc = pack_loc id_loc in
-    let def = Ref (pack_ref ref) in
+    let def = Ref (pack_ref ~type_ref:false ref) in
     Variable { id_loc; name; def }
   | P.ConstFunBinding { id_loc; name; loc; async; generator; def; statics } ->
     let id_loc = pack_loc id_loc in
@@ -476,7 +477,7 @@ and pack_exports
 
 and pack_export cx = function
   | P.ExportRef ref ->
-    let ref = pack_ref ref in
+    let ref = pack_ref ~type_ref:false ref in
     ExportRef ref
   | P.ExportBinding binding ->
     let index = Local_defs.index_exn binding in
@@ -495,7 +496,7 @@ and pack_export cx = function
 
 and pack_type_export = function
   | P.ExportTypeRef ref ->
-    let ref = pack_ref ref in
+    let ref = pack_ref ~type_ref:true ref in
     ExportTypeRef ref
   | P.ExportTypeBinding binding ->
     let index = Local_defs.index_exn binding in

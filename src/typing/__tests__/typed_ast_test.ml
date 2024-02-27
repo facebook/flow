@@ -97,10 +97,13 @@ let before_and_after_stmts file_name =
     in
     Builtins.of_name_map
       ~mapper:Base.Fn.id
-      (NameUtils.Map.singleton
-         (Reason.OrdinaryName "Object")
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-      )
+      ~values:
+        (SMap.singleton
+           "Object"
+           (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+        )
+      ~types:SMap.empty
+      ~modules:SMap.empty
   in
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in

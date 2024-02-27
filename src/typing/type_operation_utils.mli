@@ -12,9 +12,11 @@ module Ast = Flow_ast
 open Reason
 
 module Import_export : sig
+  val get_module_t : Context.t -> ?perform_platform_validation:bool -> ALoc.t * string -> Type.t
+
   val import_named_specifier_type :
     Context.t ->
-    t ->
+    reason ->
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
@@ -22,11 +24,11 @@ module Import_export : sig
     local_name:string ->
     ALoc.t option * Type.t
 
-  val get_module_namespace_type : Context.t -> reason -> is_strict:bool -> Type.t -> Type.t
+  val get_module_namespace_type : Context.t -> reason -> Type.t -> Type.t
 
   val import_namespace_specifier_type :
     Context.t ->
-    t ->
+    reason ->
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
@@ -35,10 +37,12 @@ module Import_export : sig
 
   val import_default_specifier_type :
     Context.t ->
-    t ->
+    reason ->
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
     local_name:string ->
     ALoc.t option * Type.t
+
+  val cjs_require_type : Context.t -> reason -> legacy_interop:bool -> Type.t -> Type.t
 end

@@ -57,13 +57,13 @@ enum Status {
 }
 
 const s: string = Status.Active; // Error: 'Status' is not compatible with 'string'
-const statusString: string = (Status.Active: string);
+const statusString: string = Status.Active as string;
 ```
 
 To convert from a nullable enum type to nullable string, you can do:
 ```js
 const maybeStatus: ?Status = ....;
-const maybeStatusString: ?string = maybeStatus && (maybeStatus: string);
+const maybeStatusString: ?string = maybeStatus && (maybeStatus as string);
 ```
 
 If you want to convert from the representation type (e.g. `string`) to an enum type (if valid), check out the [cast method](#toc-cast).

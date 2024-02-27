@@ -10,7 +10,7 @@ For example, in the function below `value` is a [union](../../types/unions) of `
 ```js flow-check
 function func(value: "A" | "B") {
   if (value === "A") {
-    (value: "A");
+    value as "A";
   }
 }
 ```
@@ -26,9 +26,9 @@ Next we'll add an `else` block to our if statement.
 ```js flow-check
 function func(value: "A" | "B") {
   if (value === "A") {
-    (value: "A");
+    value as "A";
   } else {
-    (value: "B");
+    value as "B";
   }
 }
 ```
@@ -48,12 +48,12 @@ Keep in mind that the `typeof` operator will return `"object"` for objects, but 
 ```js flow-check
 function func(value: mixed) {
   if (typeof value === "string") {
-    (value: string);
+    value as string;
   } else if (typeof value === "boolean") {
-    (value: boolean);
+    value as boolean;
   } else if (typeof value === "object") {
     // `value` could be null, an array, or an object
-    (value: null | interface {} | $ReadOnlyArray<mixed>);
+    value as null | interface {} | $ReadOnlyArray<mixed>;
   }
 }
 ```
@@ -63,7 +63,7 @@ To check for `null`, use a `value === null` [equality](#equality-checks) check.
 ```js flow-check
 function func(value: mixed) {
   if (value === null) {
-    (value: null); // `value` is null
+    value as null; // `value` is null
   }
 }
 ```
@@ -73,7 +73,7 @@ To check for [arrays](../../types/arrays), use `Array.isArray`:
 ```js flow-check
 function func(value: mixed) {
   if (Array.isArray(value)) {
-    (value: $ReadOnlyArray<mixed>); // `value` is an array
+    value as $ReadOnlyArray<mixed>; // `value` is an array
   }
 }
 ```
@@ -86,20 +86,20 @@ This also applies to equality checks made in `switch` statements.
 ```js flow-check
 function func(value: "A" | "B" | "C") {
   if (value === "A") {
-    (value: "A");
+    value as "A";
   } else {
-    (value: "B" | "C");
+    value as "B" | "C";
   }
 
   switch (value) {
     case "A":
-      (value: "A");
+      value as "A";
       break;
     case "B":
-      (value: "B");
+      value as "B";
       break;
     case "C":
-      (value: "C");
+      value as "C";
       break;
   }
 }
@@ -112,9 +112,9 @@ This works well with Flow's [maybe](../../types/maybe) types, which create a uni
 ```js flow-check
 function func(value: ?string) {
   if (value != null) {
-    (value: string);
+    value as string;
   } else {
-    (value: null | void);
+    value as null | void;
   }
 }
 ```
@@ -128,10 +128,10 @@ type B = {type: "B", n: number};
 function func(value: A | B) {
   if (value.type === "A") {
     // `value` is A
-    (value.s: string); // Works
+    value.s as string; // Works
   } else {
     // `value` is B
-    (value.n: number); // Works
+    value.n as number; // Works
   }
 }
 ```
@@ -145,9 +145,9 @@ Other values will coerce to `true` (and so are considered "truthy").
 ```js flow-check
 function func(value: ?string) {
   if (value) {
-    (value: string); // Works
+    value as string; // Works
   } else {
-    (value: null | void); // Error! Could still be the empty string ""
+    value as null | void; // Error! Could still be the empty string ""
   }
 }
 ```
@@ -203,12 +203,12 @@ declare const b: boolean;
 
 let x: ?string = b ? "str" : null;
 
-(x: ?string);
+x as ?string;
 
 x = "hi";
 
 // We know `x` must now be a string after the assignment
-(x: string); // Works
+x as string; // Works
 ```
 
 ### Type Guards
@@ -222,7 +222,7 @@ function nonMaybe<T>(x: ?T): x is T {
 
 function func(value: ?string) {
   if (nonMaybe(value)) {
-    (value: string); // Works!
+    value as string; // Works!
   }
 }
 ```

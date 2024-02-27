@@ -20,14 +20,13 @@ module type ConsGen = sig
     Type.t list Base.Option.t ->
     Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
-
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
-  val get_builtin : Context.t -> name -> reason -> Type.t
+  val qualify_type :
+    Context.t -> Type.use_op -> Reason.t -> op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
-  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> string -> Type.t
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 

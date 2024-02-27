@@ -1,0 +1,17 @@
+[options]
+all=true
+module.system=haste
+module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.\(jsx?\)\(\.flow\)?\)$' -> '\1'
+module.system.haste.name_reducers='^\(.*\)\.\(jsx?\)\(\.flow\)?$' -> '\1'
+
+; Simulate a project that's by default mobile only, but has opt-in directories for desktop code
+experimental.multi_platform=true
+experimental.multi_platform.extensions=.ios
+experimental.multi_platform.extensions=.android
+experimental.multi_platform.extensions=.windows
+experimental.multi_platform.extensions=.mac
+
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>/desktop-only' -> 'windows,mac'
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>' -> 'ios, android'
+; order sentitive
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>/not-desktop-only' -> 'windows,mac'

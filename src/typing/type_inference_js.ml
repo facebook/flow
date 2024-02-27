@@ -352,7 +352,7 @@ module Statement = Fix_statement.Statement_
 (* Driver *)
 (**********)
 
-let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplevel_scope_kind =
+let initialize_env ~lib ?(exclude_syms = SSet.empty) cx aloc_ast toplevel_scope_kind =
   try
     let (_abrupt_completion, info) =
       NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
@@ -509,7 +509,7 @@ let infer_lib_file ~lint_severities cx file_key loc_comments aloc_ast =
   let validator_visitor = new lib_def_loc_mapper_and_validator cx in
   let filtered_aloc_ast = validator_visitor#program aloc_ast in
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
-  let exclude_syms = cx |> Context.builtins |> Builtins.builtin_set in
+  let exclude_syms = cx |> Context.builtins |> Builtins.builtin_ordinary_name_set in
   initialize_env ~lib:true ~exclude_syms cx filtered_aloc_ast Name_def.Global;
   let (severity_cover, suppressions, suppression_errors) =
     scan_for_suppressions ~in_libdef:true lint_severities [(file_key, loc_comments)]

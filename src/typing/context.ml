@@ -179,8 +179,6 @@ type component_t = {
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
   mutable renders_type_argument_validations:
     (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list;
-  mutable global_value_cache:
-    (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
   mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   mutable env_type_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
@@ -202,6 +200,8 @@ type component_t = {
   mutable monomorphized_components: Type.t Type.Properties.Map.t;
   (* Signature help *)
   mutable signature_help_callee: Type.t ALocMap.t;
+  (* Union optimization checks *)
+  mutable union_opt: Type.t ALocMap.t;
 }
 [@@warning "-69"]
 
@@ -365,7 +365,6 @@ let make_ccx () =
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
     renders_type_argument_validations = [];
-    global_value_cache = NameUtils.Map.empty;
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     missing_local_annot_lower_bounds = ALocFuzzyMap.empty;
@@ -395,6 +394,7 @@ let make_ccx () =
     allow_method_unbinding = ALocSet.empty;
     monomorphized_components = Type.Properties.Map.empty;
     signature_help_callee = ALocMap.empty;
+    union_opt = ALocMap.empty;
   }
 
 let make ccx metadata file aloc_table resolve_require mk_builtins =
@@ -575,8 +575,6 @@ let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
 
 let renders_type_argument_validations cx = cx.ccx.renders_type_argument_validations
 
-let global_value_cache_find_opt cx name = NameUtils.Map.find_opt name cx.ccx.global_value_cache
-
 let env_cache_find_opt cx ~for_value id =
   let cache =
     if for_value then
@@ -693,9 +691,6 @@ let add_renders_type_argument_validation cx ~allow_generic_t loc variant t =
   cx.ccx.renders_type_argument_validations <-
     (loc, variant, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
 
-let add_global_value_cache_entry cx name t =
-  cx.ccx.global_value_cache <- NameUtils.Map.add name t cx.ccx.global_value_cache
-
 let add_env_cache_entry cx ~for_value id t =
   if for_value then
     cx.ccx.env_value_cache <- IMap.add id t cx.ccx.env_value_cache
@@ -745,6 +740,10 @@ let set_signature_help_callee cx loc t =
   cx.ccx.signature_help_callee <- ALocMap.add loc t cx.ccx.signature_help_callee
 
 let get_signature_help_callee cx loc = ALocMap.find_opt loc cx.ccx.signature_help_callee
+
+let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
+
+let iter_union_opt cx ~f = ALocMap.iter f cx.ccx.union_opt
 
 let add_exists_check cx loc t =
   let tset =

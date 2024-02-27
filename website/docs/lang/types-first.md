@@ -82,7 +82,7 @@ To resolve this, you can add an annotation like the following:
 
 ```js
 declare function foo<T>(x: T): T;
-module.exports = (foo(1): number);
+module.exports = foo(1) as number;
 ```
 
 > Note: As of version 0.134, types-first is the default mode. This mode automatically

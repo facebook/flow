@@ -15,7 +15,7 @@ import * as React from 'react';
 
 function MyComponent() {
   const buttonRef = useRef<null | HTMLButtonElement>(null);
-  (buttonRef: {current: null | HTMLButtonElement}); // useRef wraps the ref value in an object
+  buttonRef as {current: null | HTMLButtonElement}; // useRef wraps the ref value in an object
   return <button ref={buttonRef}>Toggle</button>;
 }
 ```

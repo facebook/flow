@@ -9,3 +9,16 @@ import { type O } from './import-type5';
 (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
 (o: O); // error: number (property x) <~/~> string
 (o.y: O); // error: number (property x) <~/~> string
+
+import {
+  functionWithTypeof,
+  functionWithTypeofAndDestructuring,
+  functionWithTypeofAndOptional,
+} from './function';
+import {ComponentWithTypeof} from './component';
+import React from 'react';
+functionWithTypeof('', 3, {boz: 3}); // error: number ~> string
+functionWithTypeofAndDestructuring({x: [], y: ''}, '', 3); // error: number ~> string, string ~> number
+functionWithTypeofAndOptional(1, ''); // error: string, string ~> number
+functionWithTypeofAndOptional(undefined, ''); // error: string, string ~> number
+<ComponentWithTypeof bar="" baz={3} boz={{boz: 3}} />; // no error: baz and boz are any

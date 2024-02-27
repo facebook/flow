@@ -1,0 +1,37 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+
+Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:7:2
+   7| (bar: string); // error: number ~> string
+       ^^^
+
+References:
+   test.js:6:18
+   6| declare var bar: Bar;
+                       ^^^ [1]
+   test.js:7:7
+   7| (bar: string); // error: number ~> string
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:14
+
+Cannot import `T1` because there is no `T1` export in `./cjs_spreading_type_exports`. Did you mean
+`import T1 from "..."`? [missing-export]
+
+   11| import type {T1, T2} from './cjs_spreading_type_exports'; // error
+                    ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:18
+
+Cannot import `T2` because there is no `T2` export in `./cjs_spreading_type_exports`. Did you mean
+`import T2 from "..."`? [missing-export]
+
+   11| import type {T1, T2} from './cjs_spreading_type_exports'; // error
+                        ^^
+
+
+
+Found 3 errors

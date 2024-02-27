@@ -8,10 +8,14 @@
 open Utils_js
 
 val calc_unchanged_dependents :
-  MultiWorkerLwt.worker list option -> Modulename.Set.t -> FilenameSet.t Lwt.t
+  blocking_worker_communication:bool ->
+  MultiWorkerLwt.worker list option ->
+  Modulename.Set.t ->
+  FilenameSet.t Lwt.t
 
 val calc_dependency_info :
   reader:Mutator_state_reader.t ->
+  blocking_worker_communication:bool ->
   MultiWorkerLwt.worker list option ->
   parsed:(* workers *)
          FilenameSet.t ->
@@ -19,6 +23,7 @@ val calc_dependency_info :
 
 val calc_partial_dependency_graph :
   reader:Mutator_state_reader.t ->
+  blocking_worker_communication:bool ->
   MultiWorkerLwt.worker list option ->
   (* workers *)
   FilenameSet.t ->

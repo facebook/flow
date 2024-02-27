@@ -43,6 +43,7 @@ let object_like_op = function
   | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
     false
+  | Annot_GetTypeFromNamespaceT _
   | Annot_GetPropT _
   | Annot_GetElemT _
   | Annot_LookupT _
@@ -69,7 +70,7 @@ let get_fully_resolved_type cx id =
     failwith "unexpected unresolved constraint in annotation inference"
 
 let get_builtin_typeapp cx reason x targs =
-  let t = Flow_js_utils.lookup_builtin_strict cx x reason in
+  let t = Flow_js_utils.lookup_builtin_type cx x reason in
   TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
@@ -85,12 +86,10 @@ module type S = sig
 
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
 
-  val get_builtin : Context.t -> name -> reason -> Type.t
-
-  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> string -> Type.t
 
   val qualify_type :
-    Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
+    Context.t -> Type.use_op -> Reason.t -> op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
@@ -102,6 +101,7 @@ module type S = sig
     Context.t ->
     Reason.reason ->
     Type.export_kind ->
+    Type.named_symbol NameUtils.Map.t ->
     Type.named_symbol NameUtils.Map.t ->
     Type.t ->
     Type.t
@@ -254,7 +254,8 @@ module rec ConsGen : S = struct
 
     let return _cx t = t
 
-    let export_named cx (reason, named, kind) t = ConsGen.export_named cx reason kind named t
+    let export_named cx (reason, values, types, kind) t =
+      ConsGen.export_named cx reason kind values types t
 
     let export_named_fresh_var = export_named
 
@@ -273,7 +274,7 @@ module rec ConsGen : S = struct
 
   let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
-  module CJSRequireTKit = Flow_js_utils.CJSRequireT_kit (Import_export_helper)
+  module CJSRequireTKit = Flow_js_utils.CJSRequireTKit
   module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsTKit
   module ImportDefaultTKit = Flow_js_utils.ImportDefaultTKit
   module ImportNamedTKit = Flow_js_utils.ImportNamedTKit
@@ -315,7 +316,7 @@ module rec ConsGen : S = struct
     let enum_proto cx ~reason (enum_reason, enum) =
       let enum_t = DefT (enum_reason, EnumT enum) in
       let { representation_t; _ } = enum in
-      get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
+      get_builtin_typeapp cx reason "$EnumProto" [enum_t; representation_t]
 
     let cg_lookup cx _trace ~obj_t ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
         =
@@ -571,7 +572,7 @@ module rec ConsGen : S = struct
       reposition cx (loc_of_reason reason) it
     | ((DefT (_, ReactAbstractComponentT _) as l), Annot_UseT_TypeT (reason, _)) ->
       (* a component syntax value annotation becomes an element of that component *)
-      get_builtin_typeapp cx reason (OrdinaryName "React$Element") [l]
+      get_builtin_typeapp cx reason "React$Element" [l]
     | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
     | (DefT (lreason, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
@@ -595,8 +596,10 @@ module rec ConsGen : S = struct
     (******************)
     (* Module exports *)
     (******************)
-    | (ModuleT m, Annot_ExportNamedT (_reason, tmap, export_kind)) ->
-      ExportNamedTKit.mod_ModuleT cx (tmap, export_kind) m;
+    | ( ModuleT m,
+        Annot_ExportNamedT { reason = _; value_exports_tmap; type_exports_tmap; export_kind }
+      ) ->
+      ExportNamedTKit.mod_ModuleT cx (value_exports_tmap, type_exports_tmap, export_kind) m;
       ModuleT m
     | (_, Annot_AssertExportIsTypeT (_, name)) -> AssertExportIsTypeTKit.on_concrete_type cx name t
     | (ModuleT m, Annot_CopyNamedExportsT (reason, target_module_t)) ->
@@ -619,7 +622,11 @@ module rec ConsGen : S = struct
     (* Module imports *)
     (******************)
     | (ModuleT m, Annot_CJSRequireT { reason; is_strict; legacy_interop }) ->
-      CJSRequireTKit.on_ModuleT cx (reason, is_strict, legacy_interop) m
+      CJSRequireTKit.on_ModuleT
+        cx
+        ~reposition:(fun _ _ t -> t)
+        (reason, is_strict, legacy_interop)
+        m
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
       ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
@@ -871,9 +878,7 @@ module rec ConsGen : S = struct
     (* React Abstract Components *)
     (*****************************)
     | (DefT (r, ReactAbstractComponentT _), (Annot_GetPropT _ | Annot_GetElemT _)) ->
-      let statics =
-        Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "React$AbstractComponentStatics") r
-      in
+      let statics = Flow_js_utils.lookup_builtin_type cx "React$AbstractComponentStatics" r in
       elab_t cx statics op
     (****************)
     (* Custom types *)
@@ -986,6 +991,44 @@ module rec ConsGen : S = struct
       Obj_type.mk_with_proto cx reason ~obj_kind:Exact t
     | (DefT (_, (NullT | VoidT)), Annot_ObjRestT (reason, _)) ->
       Obj_type.mk ~obj_kind:Exact cx reason
+    (************************************)
+    (* Namespace and type qualification *)
+    (************************************)
+    | ( NamespaceT { values_type; types_tmap },
+        Annot_GetTypeFromNamespaceT
+          { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name) }
+      ) ->
+      (match
+         NameUtils.Map.find_opt prop_name (Context.find_props cx types_tmap)
+         |> Base.Option.bind ~f:Type.Property.read_t
+       with
+      | Some prop -> prop
+      | None ->
+        elab_t
+          cx
+          ~seen
+          values_type
+          (Annot_GetPropT
+             ( reason_op,
+               use_op,
+               Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
+             )
+          ))
+    | (NamespaceT { values_type; types_tmap = _ }, _) -> elab_t cx ~seen values_type op
+    | ( _,
+        Annot_GetTypeFromNamespaceT
+          { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name) }
+      ) ->
+      elab_t
+        cx
+        ~seen
+        t
+        (Annot_GetPropT
+           ( reason_op,
+             use_op,
+             Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
+           )
+        )
     (************)
     (* GetPropT *)
     (************)
@@ -1111,10 +1154,10 @@ module rec ConsGen : S = struct
     (***************)
     | (ObjProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_object_prototype_method name ->
-      Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Object") reason_op
+      Flow_js_utils.lookup_builtin_value cx "Object" reason_op
     | (FunProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_function_prototype name ->
-      Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
+      Flow_js_utils.lookup_builtin_value cx "Function" reason_op
     | ( (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
         Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ }, _)
       ) ->
@@ -1129,11 +1172,11 @@ module rec ConsGen : S = struct
     (****************************************)
     | (ObjProtoT reason, _) ->
       let use_desc = true in
-      let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+      let obj_proto = get_builtin_type cx reason ~use_desc "Object" in
       elab_t cx obj_proto op
     | (FunProtoT reason, _) ->
       let use_desc = true in
-      let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+      let fun_proto = get_builtin_type cx reason ~use_desc "Function" in
       elab_t cx fun_proto op
     (*************)
     (* ToStringT *)
@@ -1144,7 +1187,7 @@ module rec ConsGen : S = struct
     (* GetPropT *)
     (************)
     | (DefT (reason, ArrT (ArrayAT { elem_t; _ })), (Annot_GetPropT _ | Annot_LookupT _)) ->
-      let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [elem_t] in
+      let arr = get_builtin_typeapp cx reason "Array" [elem_t] in
       elab_t cx arr op
     | ( DefT (reason, ArrT (TupleAT { arity; _ })),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })
@@ -1154,21 +1197,21 @@ module rec ConsGen : S = struct
         (Annot_GetPropT _ | Annot_LookupT _)
       ) ->
       let t = elemt_of_arrtype arrtype in
-      elab_t cx (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t]) op
+      elab_t cx (get_builtin_typeapp cx reason "$ReadOnlyArray" [t]) op
     (************************)
     (* Promoting primitives *)
     (************************)
     | (DefT (reason, StrT _), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "String") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
     | (DefT (reason, NumT _), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Number") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "Number" in
       elab_t cx builtin op
     | (DefT (reason, BoolT _), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Boolean") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "Boolean" in
       elab_t cx builtin op
     | (DefT (reason, SymbolT), _) when primitive_promoting_op op ->
-      let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Symbol") in
+      let builtin = get_builtin_type cx reason ~use_desc:true "Symbol" in
       elab_t cx builtin op
     | (DefT (lreason, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->
       elab_t cx (FunProtoT lreason) op
@@ -1182,13 +1225,8 @@ module rec ConsGen : S = struct
       AnyT.error reason_op
 
   and get_builtin_type cx reason ?(use_desc = false) name =
-    let t = Flow_js_utils.lookup_builtin_strict cx name reason in
+    let t = Flow_js_utils.lookup_builtin_type cx name reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
-
-  and get_builtin cx x reason =
-    let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
-    let f id = resolve_id cx reason id builtin in
-    mk_lazy_tvar cx reason f
 
   and specialize cx t use_op reason_op reason_tapp ts =
     elab_t cx t (Annot_SpecializeT (use_op, reason_op, reason_tapp, ts))
@@ -1227,14 +1265,19 @@ module rec ConsGen : S = struct
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
-  and qualify_type cx use_op reason (reason_name, name) t =
+  and qualify_type cx use_op reason ~op_reason prop_name t =
     let f id =
       let t =
-        elab_t cx t (Annot_GetPropT (reason, use_op, mk_named_prop ~reason:reason_name name))
+        elab_t
+          cx
+          t
+          (Annot_GetTypeFromNamespaceT
+             { reason = op_reason; use_op; prop_ref = (reason, prop_name) }
+          )
       in
-      resolve_id cx reason id t
+      resolve_id cx op_reason id t
     in
-    mk_lazy_tvar cx reason f
+    mk_lazy_tvar cx op_reason f
 
   and assert_export_is_type cx reason name t =
     let f id =
@@ -1246,7 +1289,8 @@ module rec ConsGen : S = struct
   and cjs_require cx t reason is_strict legacy_interop =
     elab_t cx t (Annot_CJSRequireT { reason; is_strict; legacy_interop })
 
-  and export_named cx reason kind named t = elab_t cx t (Annot_ExportNamedT (reason, named, kind))
+  and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =
+    elab_t cx t (Annot_ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind })
 
   and cjs_extract_named_exports cx reason local_module t =
     elab_t cx t (Annot_CJSExtractNamedExportsT (reason, local_module))

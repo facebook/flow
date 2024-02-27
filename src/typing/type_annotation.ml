@@ -582,7 +582,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let qid_reason = mk_reason (RType (OrdinaryName (qualified_name qid))) qid_loc in
       let use_op = Op (GetProperty qid_reason) in
       let t_unapplied =
-        ConsGen.get_prop cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
+        ConsGen.qualify_type cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
       in
       let (t, targs) =
         mk_nominal_type cx ~in_renders_arg reason tparams_map infer_tparams_map (t_unapplied, targs)
@@ -946,12 +946,16 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     }
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
-                let desc = RModule (OrdinaryName value) in
-                let reason = mk_annot_reason desc loc in
-                let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
+                let reason = mk_annot_reason (RCommonJSExports value) loc in
+                let remote_module_t = Flow_js_utils.get_builtin_module cx value reason in
                 let str_t = mk_singleton_string str_loc value in
                 reconstruct_ast
-                  (ConsGen.cjs_require cx remote_module_t reason (Context.is_strict cx) false)
+                  (Type_operation_utils.Import_export.cjs_require_type
+                     cx
+                     reason
+                     ~legacy_interop:false
+                     remote_module_t
+                  )
                   (Some
                      ( targs_loc,
                        {
@@ -1181,7 +1185,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                        (RIdentifier (OrdinaryName "React$Node"))
                        3
                    in
-                   ConsGen.get_builtin_type cx ~use_desc:true reason (OrdinaryName "React$Node")
+                   ConsGen.get_builtin_type cx ~use_desc:true reason "React$Node"
                   )
             in
             reconstruct_ast
@@ -1283,6 +1287,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep
+        | "$Flow$EnforceOptimized" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              Context.set_union_opt cx loc t;
+              reconstruct_ast t targs
+          )
         (* TS Types *)
         | "Readonly" ->
           if Context.ts_syntax cx then
@@ -1780,10 +1791,14 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let { Ast.Identifier.name; comments = _ } = id_name in
       let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
       let id_reason = mk_reason desc id_loc in
-      let use_op =
-        Op (GetProperty (mk_reason (RType (OrdinaryName (qualified_name qualified))) loc))
+      let op_reason = mk_reason (RType (OrdinaryName (qualified_name qualified))) loc in
+      let use_op = Op (GetProperty op_reason) in
+      let t =
+        if lookup_mode = ForType then
+          ConsGen.qualify_type cx use_op id_reason ~op_reason (OrdinaryName name) m
+        else
+          ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m
       in
-      let t = ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m in
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
       let t = Type_env.get_var ~lookup_mode cx name loc in
@@ -1832,7 +1847,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     in
     let reason = mk_reason reason_desc loc in
     let renders_reason = reason_of_t t in
-    let node = ConsGen.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
+    let node = ConsGen.get_builtin_type cx renders_reason "React$Node" in
     let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
     Context.add_post_inference_subtyping_check cx t use_op node;
     let renders_variant =
@@ -3063,7 +3078,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let ren_reason = mk_reason RReturn loc in
-            let t = ConsGen.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
+            let t = ConsGen.get_builtin_type cx ren_reason "React$Node" in
             let renders_t = TypeUtil.mk_renders_type ren_reason RendersNormal t in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in

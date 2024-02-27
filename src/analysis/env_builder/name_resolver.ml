@@ -40,14 +40,14 @@ module type S = sig
   val program_with_scope :
     cx ->
     ?lib:bool ->
-    ?exclude_syms:NameUtils.Set.t ->
+    ?exclude_syms:SSet.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
     abrupt_kind option * Env_api.env_info
 
   val program :
     cx ->
     ?lib:bool ->
-    ?exclude_syms:NameUtils.Set.t ->
+    ?exclude_syms:SSet.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
     Env_api.values * (int -> Env_api.refinement)
 end
@@ -622,7 +622,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
        when we are checking libdef code. In libdefs, this set represents a list of names that we
        have already added to the globals. When we read a name in this set, we will ignore the local
        file binding and treat it as a read of global. *)
-    exclude_syms: NameUtils.Set.t;
+    exclude_syms: SSet.t;
     (* When an abrupt completion is raised, it falls through any subsequent
        straight-line code, until it reaches a merge point in the control-flow
        graph. At that point, it can be re-raised if and only if all other reaching
@@ -851,25 +851,20 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
            in
            SMap.add name entry acc)
          unbound_names
-    |> NameUtils.Set.fold
+    |> SSet.fold
          (fun name acc ->
-           match name with
-           | OrdinaryName name ->
-             let global_val = Val.global name in
-             let entry =
-               {
-                 val_ref = ref global_val;
-                 havoc = global_val;
-                 writes_by_closure_provider_val = None;
-                 def_loc = None;
-                 heap_refinements = ref HeapRefinementMap.empty;
-                 kind = Bindings.Var;
-               }
-             in
-             SMap.add name entry acc
-           | InternalName _
-           | InternalModuleName _ ->
-             acc)
+           let global_val = Val.global name in
+           let entry =
+             {
+               val_ref = ref global_val;
+               havoc = global_val;
+               writes_by_closure_provider_val = None;
+               def_loc = None;
+               heap_refinements = ref HeapRefinementMap.empty;
+               kind = Bindings.Var;
+             }
+           in
+           SMap.add name entry acc)
          exclude_syms
     (* this has to come later, since this can be thought to be unbound names in SSA builder when it's used as a type. *)
     |> (let v = program_loc |> mk_reason (RCustom "global object") |> Val.global_this in
@@ -1144,9 +1139,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | _ -> Val.merge v1 v2)
         | None -> Val.merge v1 v2
 
-      method private is_excluded name = NameUtils.Set.mem name env_state.exclude_syms
-
-      method private is_excluded_ordinary_name name = this#is_excluded (OrdinaryName name)
+      method private is_excluded_ordinary_name name = SSet.mem name env_state.exclude_syms
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -5519,7 +5512,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           hoist#eval hoist#statement_list statements
         in
         let saved_exclude_syms = env_state.exclude_syms in
-        env_state <- { env_state with exclude_syms = NameUtils.Set.empty };
+        env_state <- { env_state with exclude_syms = SSet.empty };
         ignore @@ this#statements_with_bindings block_loc bindings statements;
         env_state <- { env_state with exclude_syms = saved_exclude_syms };
         m
@@ -5534,7 +5527,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           hoist#eval hoist#statement_list statements
         in
         let saved_exclude_syms = env_state.exclude_syms in
-        env_state <- { env_state with exclude_syms = NameUtils.Set.empty };
+        env_state <- { env_state with exclude_syms = SSet.empty };
         ignore @@ this#statements_with_bindings block_loc bindings statements;
         env_state <- { env_state with exclude_syms = saved_exclude_syms };
         m
@@ -5768,7 +5761,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         super#lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body
     end
 
-  let program_with_scope cx ?(lib = false) ?(exclude_syms = NameUtils.Set.empty) program =
+  let program_with_scope cx ?(lib = false) ?(exclude_syms = SSet.empty) program =
     let (loc, _) = program in
     let jsx_ast =
       match Context.jsx cx with

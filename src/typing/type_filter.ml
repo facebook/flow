@@ -704,6 +704,7 @@ and tag_of_t cx t =
     tag_of_t cx t
   | OpaqueT (_, { super_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)
+  | NamespaceT { values_type; _ } -> tag_of_t cx values_type
   | EvalT _
   | GenericT _
   | ThisTypeAppT _

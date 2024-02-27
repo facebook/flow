@@ -29,7 +29,7 @@ So in the following example, `obj2` is a _subtype_ of `obj1`.
 ```js flow-check
 let obj1: {foo: string, ...}  = {foo: 'test'};
 let obj2 = {foo: 'test', bar: 42};
-(obj2: {foo: string, ...});
+obj2 as {foo: string, ...};
 ```
 
 However, it's often useful to know that a property is definitely absent.
@@ -37,7 +37,7 @@ However, it's often useful to know that a property is definitely absent.
 ```js flow-check
 function func(obj: {foo: string, ...} | {bar: number, ...}) {
   if (obj.foo) {
-    (obj.foo: string); // Error!
+    obj.foo as string; // Error!
   }
 }
 ```
@@ -53,7 +53,7 @@ You can use [exact object types](../../types/objects/#exact-and-inexact-object-t
 ```js flow-check
 function func(obj: {foo: string} | {bar: number}) {
   if (obj.foo) {
-    (obj.foo: string); // Works!
+    obj.foo as string; // Works!
   }
 }
 ```

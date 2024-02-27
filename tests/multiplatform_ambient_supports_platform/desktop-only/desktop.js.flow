@@ -1,0 +1,2 @@
+// missing mac impl
+export const foo = 1;

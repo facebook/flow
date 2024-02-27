@@ -23,17 +23,22 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
   let mixin cx reason i =
     Tvar.mk_where cx reason (fun tout -> Flow.flow cx (i, Type.MixinT (reason, tout)))
 
-  let cjs_require cx remote_module_t reason is_strict legacy_interop =
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t_out ->
-        Flow.flow cx (remote_module_t, CJSRequireT { reason; t_out; is_strict; legacy_interop })
-    )
-
   let obj_test_proto cx reason t =
     Tvar.mk_where cx reason (fun tout -> Flow.flow cx (t, ObjTestProtoT (reason, tout)))
 
   let get_prop cx use_op reason ?(op_reason = reason) name l =
     Tvar.mk_no_wrap_where cx op_reason (fun tout ->
         Flow.flow cx (l, GetPropT (use_op, op_reason, None, mk_named_prop ~reason name, tout))
+    )
+
+  let qualify_type cx use_op reason ~op_reason prop_name l =
+    Tvar.mk_no_wrap_where cx op_reason (fun tout ->
+        Flow.flow
+          cx
+          ( l,
+            GetTypeFromNamespaceT
+              { use_op; reason = op_reason; prop_ref = (reason, prop_name); tout }
+          )
     )
 end
 

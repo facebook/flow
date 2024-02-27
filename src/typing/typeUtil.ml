@@ -24,12 +24,14 @@ let rec reason_of_t = function
   | ExactT (reason, _) -> reason
   | GenericT { reason; _ } -> reason
   | InternalT (ExtendsT (reason, _, _)) -> reason
+  | InternalT (EnforceUnionOptimized reason) -> reason
   | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
   | KeysT (reason, _) -> reason
   | ModuleT { module_reason = reason; _ } -> reason
+  | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
@@ -64,7 +66,6 @@ and reason_of_use_t = function
   | CallT { reason; _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
-  | CJSRequireT { reason; _ } -> reason
   | ComparatorT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
@@ -77,7 +78,7 @@ and reason_of_use_t = function
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | EqT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
-  | ExportNamedT (reason, _, _, _) -> reason
+  | ExportNamedT { reason; _ } -> reason
   | ExportTypeT { reason; _ } -> reason
   | ImplicitVoidReturnT { reason; _ } -> reason
   | AssertExportIsTypeT (reason, _, _) -> reason
@@ -86,6 +87,7 @@ and reason_of_use_t = function
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
   | GetDictValuesT (reason, _) -> reason
+  | GetTypeFromNamespaceT { reason; _ } -> reason
   | GetPropT (_, reason, _, _, _) -> reason
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
@@ -93,7 +95,6 @@ and reason_of_use_t = function
   | GuardT (_, _, (r, _)) -> r
   | HasOwnPropT (_, reason, _) -> reason
   | ImplementsT (_, t) -> reason_of_t t
-  | ImportModuleNsT { reason; _ } -> reason
   | PreprocessKitT (reason, _) -> reason
   | InvariantT reason -> reason
   | LookupT { reason; _ } -> reason
@@ -187,6 +188,7 @@ let rec mod_reason_of_t f = function
   | ExactT (reason, t) -> ExactT (f reason, t)
   | GenericT ({ reason; _ } as generic) -> GenericT { generic with reason = f reason }
   | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
+  | InternalT (EnforceUnionOptimized reason) -> InternalT (EnforceUnionOptimized (f reason))
   | FunProtoApplyT reason -> FunProtoApplyT (f reason)
   | FunProtoT reason -> FunProtoT (f reason)
   | FunProtoBindT reason -> FunProtoBindT (f reason)
@@ -200,6 +202,8 @@ let rec mod_reason_of_t f = function
         module_is_strict;
         module_available_platforms;
       }
+  | NamespaceT { values_type; types_tmap } ->
+    NamespaceT { values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
@@ -263,8 +267,6 @@ and mod_reason_of_use_t f = function
     CallT { use_op; reason = f reason; call_action; return_hint }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
-  | CJSRequireT { reason; t_out; is_strict; legacy_interop } ->
-    CJSRequireT { reason = f reason; t_out; is_strict; legacy_interop }
   | ComparatorT ({ reason; _ } as x) -> ComparatorT { x with reason = f reason }
   | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
     ConstructorT { use_op; reason = f reason; targs; args; tout; return_hint }
@@ -294,8 +296,8 @@ and mod_reason_of_use_t f = function
         false_t;
         tout;
       }
-  | ExportNamedT (reason, tmap, export_kind, t_out) ->
-    ExportNamedT (f reason, tmap, export_kind, t_out)
+  | ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout } ->
+    ExportNamedT { reason = f reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
   | ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout } ->
     ExportTypeT
       { reason = f reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
@@ -308,6 +310,8 @@ and mod_reason_of_use_t f = function
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
   | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
+  | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
+    GetTypeFromNamespaceT { use_op; reason = f reason; prop_ref; tout }
   | GetPropT (use_op, reason, id, n, t) -> GetPropT (use_op, f reason, id, n, t)
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
@@ -316,7 +320,6 @@ and mod_reason_of_use_t f = function
   | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
   | HasOwnPropT (use_op, reason, t) -> HasOwnPropT (use_op, f reason, t)
   | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
-  | ImportModuleNsT { reason; t; is_strict } -> ImportModuleNsT { reason = f reason; t; is_strict }
   | PreprocessKitT (reason, tool) -> PreprocessKitT (f reason, tool)
   | InvariantT reason -> InvariantT (f reason)
   | LookupT
@@ -456,6 +459,8 @@ let rec util_use_op_of_use_t :
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
   | SetPrivatePropT (op, r, s, m, c, b, x, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, x, t, tp))
+  | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
+    util use_op (fun use_op -> GetTypeFromNamespaceT { use_op; reason; prop_ref; tout })
   | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
@@ -534,14 +539,13 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
-  | CJSRequireT _
-  | ImportModuleNsT { reason = _; t = _; is_strict = _ }
   | AssertImportIsValueT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)
   | CheckUntypedImportT (_, _)
-  | ExportNamedT (_, _, _, _)
+  | ExportNamedT
+      { reason = _; value_exports_tmap = _; type_exports_tmap = _; export_kind = _; tout = _ }
   | ExportTypeT
       {
         reason = _;

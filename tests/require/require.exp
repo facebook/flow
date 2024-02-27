@@ -8,10 +8,16 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------- require-type-error.js:4:8
 
-Cannot import the type `MyType` as a value. Use `import type` instead. [import-type-as-value]
+Property `MyType` is missing in module `./exports-type` [1]. [prop-missing]
 
+   require-type-error.js:4:8
    4| const {MyType} = require('./exports-type');
              ^^^^^^
+
+References:
+   require-type-error.js:4:18
+   4| const {MyType} = require('./exports-type');
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- require.js:9:14
