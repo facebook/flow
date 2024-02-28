@@ -723,9 +723,9 @@ and binding_error =
   | EReferencedBeforeDeclaration
   | ETypeInValuePosition of {
       imported: bool;
+      type_only_namespace: bool;
       name: string;
     }
-  | ETypeAliasInValuePosition
   | EConstReassigned
   | EConstParamReassigned
   | EImportReassigned
@@ -3262,13 +3262,21 @@ let friendly_message_of_msg loc_of_aloc msg =
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (ALoc.to_loc_exn entry_loc) in
     let ref_x = Flow_errors_utils.Friendly.ref x in
-    let type_as_value_msg () =
-      [
-        text "Cannot use type ";
-        ref_x;
-        text " as a value. ";
-        text "Types are erased and don't exist at runtime.";
-      ]
+    let type_as_value_msg ~type_only_namespace =
+      if type_only_namespace then
+        [
+          text "Cannot use type-only namespace ";
+          ref_x;
+          text " as a value. ";
+          text "Type-only namespaces are erased and don't exist at runtime.";
+        ]
+      else
+        [
+          text "Cannot use type ";
+          ref_x;
+          text " as a value. ";
+          text "Types are erased and don't exist at runtime.";
+        ]
     in
     let features =
       match binding_error with
@@ -3292,8 +3300,8 @@ let friendly_message_of_msg loc_of_aloc msg =
             text " because the declaration ";
             text "either comes later or was skipped.";
           ]
-      | ETypeInValuePosition { imported = true; name } ->
-        type_as_value_msg ()
+      | ETypeInValuePosition { imported = true; type_only_namespace; name } ->
+        type_as_value_msg ~type_only_namespace
         @ [
             text " If the exported binding can also be used as a value, try importing it using ";
             code (spf "import %s" name);
@@ -3305,9 +3313,8 @@ let friendly_message_of_msg loc_of_aloc msg =
             code (spf "import type {%s}" name);
             text ".";
           ]
-      | ETypeInValuePosition { imported = false; name = _ }
-      | ETypeAliasInValuePosition ->
-        type_as_value_msg ()
+      | ETypeInValuePosition { imported = false; type_only_namespace; name = _ } ->
+        type_as_value_msg ~type_only_namespace
       | EConstReassigned
       | EConstParamReassigned ->
         [text "Cannot reassign constant "; ref_x; text "."]
@@ -5765,9 +5772,7 @@ let error_code_of_message err : error_code option =
     | ENameAlreadyBound -> Some NameAlreadyBound
     | EVarRedeclaration -> Some NameAlreadyBound
     | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
-    | ETypeInValuePosition _
-    | ETypeAliasInValuePosition ->
-      Some TypeAsValue
+    | ETypeInValuePosition _ -> Some TypeAsValue
     | EConstReassigned
     | EConstParamReassigned ->
       Some ReassignConst

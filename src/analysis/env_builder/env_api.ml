@@ -96,7 +96,10 @@ module type S = sig
   and write_locs = write_loc list
 
   type val_kind =
-    | Type of { imported: bool }
+    | Type of {
+        imported: bool;
+        type_only_namespace: bool;
+      }
     | Value
 
   type read = {
@@ -454,7 +457,10 @@ module Make
   include Refi
 
   type val_kind =
-    | Type of { imported: bool }
+    | Type of {
+        imported: bool;
+        type_only_namespace: bool;
+      }
     | Value
 
   type read = {

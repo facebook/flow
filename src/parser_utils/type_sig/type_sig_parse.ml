@@ -1017,7 +1017,7 @@ module Scope = struct
       failwith "expected DeclareModule to still be the scope"
 
   (* a `declare namespace` exports every binding. *)
-  let finalize_declare_namespace_exn scope tbls id_loc name =
+  let finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name =
     match scope with
     | DeclareNamespace { values; types; parent; _ } ->
       let values =
@@ -1071,7 +1071,12 @@ module Scope = struct
           types
           SMap.empty
       in
-      bind_local ~type_only:false parent tbls name (NamespaceBinding { id_loc; name; values; types })
+      bind_local
+        ~type_only:is_type_only
+        parent
+        tbls
+        name
+        (NamespaceBinding { id_loc; name; values; types })
     | _ -> failwith "The scope must be lexical"
 end
 
@@ -4505,6 +4510,7 @@ let namespace_decl
     opts
     scope
     tbls
+    ~is_type_only
     ~visit_statement
     {
       Ast.Statement.DeclareNamespace.id = (id_loc, { Ast.Identifier.name; _ });
@@ -4520,7 +4526,7 @@ let namespace_decl
   in
   let scope = Scope.push_declare_namespace scope in
   List.iter (visit_statement opts scope tbls) stmts;
-  Scope.finalize_declare_namespace_exn scope tbls id_loc name
+  Scope.finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name
 
 let import_decl _opts scope tbls decl =
   let module I = Ast.Statement.ImportDeclaration in
@@ -5010,7 +5016,8 @@ let rec statement opts scope tbls (loc, stmt) =
     List.iter visit_statement stmts;
     Scope.finalize_declare_module_exports_exn scope
   | S.DeclareNamespace decl ->
-    namespace_decl opts scope tbls ~visit_statement:statement decl ignore2
+    let is_type_only = Flow_ast_utils.is_type_only_declaration_statement (loc, stmt) in
+    namespace_decl opts scope tbls ~is_type_only ~visit_statement:statement decl ignore2
   | S.DeclareEnum decl
   | S.EnumDeclaration decl ->
     enum_decl opts scope tbls decl ignore2

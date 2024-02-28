@@ -1339,6 +1339,7 @@ module ImportTypeTKit = struct
       let enum_type = mk_enum_type enum_reason enum in
       Some (DefT (reason, TypeT (ImportEnumKind, enum_type)))
     | DefT (_, ReactAbstractComponentT _) -> Some t
+    | NamespaceT _ -> Some t
     | DefT (_, PolyT { t_out = DefT (_, ReactAbstractComponentT _); _ }) -> Some t
     | DefT (_, TypeT _) -> Some t
     | AnyT _ -> Some t
@@ -1776,6 +1777,7 @@ module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
     | DefT (_, ClassT _)
     | DefT (_, EnumObjectT _)
     | DefT (_, TypeT _)
+    | NamespaceT _
     | AnyT _ ->
       true
     | DefT (_, PolyT { t_out = t'; _ }) -> is_type t'

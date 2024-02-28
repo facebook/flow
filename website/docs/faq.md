@@ -112,23 +112,24 @@ Flow will make conservative assumptions to try to be sound.
 
 ## Why can't I use a function in my if-clause to check the type of a property?
 
-Flow doesn't track refinements made in separated function calls:
+Flow doesn't track [refinements](.././lang/refinements/) made in separate function calls:
 
 ```js flow-check
 const add = (first: number, second: number) => first + second;
 const val: string | number = 1;
-const isNumber = (valueToRefine: mixed) => typeof valueToRefine === 'number';
+const isNumber = (x: mixed): boolean => typeof x === 'number';
 if (isNumber(val)) {
   add(val, 2);
 }
 ```
 
-However, Flow has [predicates functions](../types/functions/#predicate-functions) that can do these checks via `%checks`:
+However, you can annotate your function with a [type guard](../types/type-guards/) to get this behavior:
 
 ```js flow-check
 const add = (first: number, second: number) => first + second;
 const val: string | number = 1;
-const isNumber = (valueToRefine: mixed): %checks => typeof valueToRefine === 'number';
+// Return annotation updated:
+const isNumber = (x: mixed): x is number => typeof x === 'number';
 if (isNumber(val)) {
   add(val, 2);
 }

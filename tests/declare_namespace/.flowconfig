@@ -1,5 +1,9 @@
+[libs]
+lib.js
+
 [options]
 all=true
 enums=true
-no_flowlib=true
+no_flowlib=false
 experimental.namespaces=true
+react.runtime=automatic

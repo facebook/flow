@@ -624,7 +624,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             hoist_op (fun () -> ignore @@ this#type_annotation_hint bound);
             ignore @@ this#variance_opt variance;
             hoist_op (fun () -> ignore @@ Base.Option.map ~f:this#type_ default);
-            let bindings = Bindings.(singleton (name, Bindings.Type { imported = false })) in
+            let bindings =
+              Bindings.(
+                singleton (name, Bindings.Type { imported = false; type_only_namespace = false })
+              )
+            in
             this#with_bindings
               loc
               bindings
@@ -652,7 +656,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           );
           let bindings =
             Base.List.fold tps ~init:Bindings.empty ~f:(fun bindings (_, { name; _ }) ->
-                Bindings.add (name, Bindings.Type { imported = false }) bindings
+                Bindings.add
+                  (name, Bindings.Type { imported = false; type_only_namespace = false })
+                  bindings
             )
           in
           this#with_bindings

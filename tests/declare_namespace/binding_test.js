@@ -9,4 +9,6 @@ const_like = 1; // error
 const const_like = 1; // error
 
 allow_forward_ref as {...}; // ok
-declare namespace allow_forward_ref {}
+declare namespace allow_forward_ref {
+  declare const foo: number;
+}

@@ -11,7 +11,18 @@ declare namespace exported_ns {
   import React from 'react'; // unsupported
 }
 
-export {exported_ns}; // TODO: support declare export namespace syntax
+declare namespace empty {}
+declare namespace type_only {
+  type T = number;
+}
+
+// TODO: support declare export namespace syntax
+export {
+  exported_ns,
+  empty, // error: empty is type-only
+};
+
+export type {type_only, exported_ns as exported_ns_type_only};
 
 exported_ns.bar1 as empty; // error: number ~> empty
 exported_ns.bar2 as empty; // error: boolean ~> empty
