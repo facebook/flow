@@ -5052,7 +5052,7 @@ struct
         | (_, AssertIterableT { use_op; reason; async; targs }) ->
           let iterable =
             if async then
-              get_builtin_typeapp cx reason "$AsyncIterable" targs
+              get_builtin_typeapp cx reason "$IterableOrAsyncIterableInternal" (l :: targs)
             else
               get_builtin_typeapp cx reason "$Iterable" targs
           in

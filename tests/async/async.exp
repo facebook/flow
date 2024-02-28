@@ -210,5 +210,58 @@ Unexpected number, expected the token `,`
               ^
 
 
+Error ----------------------------------------------------------------------------------------------- generator.js:21:45
 
-Found 15 errors
+Cannot expect `AsyncGenerator` as the return type of async generator function because number [1] is incompatible with
+string [2] in type argument `Yield` [3]. [incompatible-return]
+
+   generator.js:21:45
+     21| async function *genError1(): AsyncGenerator<number, void, void> {
+                                                     ^^^^^^ [1]
+
+References:
+   generator.js:22:31
+     22|     yield* await Promise.all(["a"]); // error string ~> number
+                                       ^^^ [2]
+   <BUILTINS>/core.js:1782:27
+   1782| interface AsyncGenerator<+Yield,+Return,-Next> {
+                                   ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- generator.js:21:30
+
+string [1] is incompatible with number [2] in type argument `Yield` [3]. [incompatible-type-arg]
+
+   generator.js:21:30
+     21| async function *genError1(): AsyncGenerator<number, void, void> {
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   generator.js:22:31
+     22|     yield* await Promise.all(["a"]); // error string ~> number
+                                       ^^^ [1]
+   generator.js:21:45
+     21| async function *genError1(): AsyncGenerator<number, void, void> {
+                                                     ^^^^^^ [2]
+   <BUILTINS>/core.js:1782:27
+   1782| interface AsyncGenerator<+Yield,+Return,-Next> {
+                                   ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- generator.js:26:12
+
+Cannot yield `1` because number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in
+`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   generator.js:26:12
+     26|     yield* 1; // error non iterable
+                    ^ [1]
+
+References:
+   <BUILTINS>/core.js:1795:7
+   1795|     : $Iterable<Yield, Return, Next>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 18 errors
