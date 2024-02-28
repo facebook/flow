@@ -344,14 +344,21 @@ let post_process_errors original_errors =
       reason_lower = reason_lower'
       || is_not_duplicate
            (EIncompatibleWithUseOp { reason_lower = reason_lower'; reason_upper; use_op })
-    | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+    | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type; casting_syntax }
+      ->
       let ((reason_lower', reason_upper), use_op) =
         dedupe_by_flip (reason_lower, reason_upper) use_op
       in
       reason_lower = reason_lower'
       || is_not_duplicate
            (EEnumIncompatible
-              { reason_lower = reason_lower'; reason_upper; use_op; representation_type }
+              {
+                reason_lower = reason_lower';
+                reason_upper;
+                use_op;
+                representation_type;
+                casting_syntax;
+              }
            )
     | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
       (* PropNotFound error will always display the missing vs existing prop in the same order. *)

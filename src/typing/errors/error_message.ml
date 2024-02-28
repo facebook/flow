@@ -567,6 +567,7 @@ and 'loc t' =
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
       representation_type: string option;
+      casting_syntax: Options.CastingSyntax.t;
     }
   (* end enum error messages *)
   | EAssignConstLikeBinding of {
@@ -1344,13 +1345,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { reason = map_reason reason; enum_reason = map_reason enum_reason; example_member }
   | EEnumMemberUsedAsType { reason; enum_reason } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumIncompatible { use_op; reason_lower; reason_upper; representation_type } ->
+  | EEnumIncompatible { use_op; reason_lower; reason_upper; representation_type; casting_syntax } ->
     EEnumIncompatible
       {
         use_op = map_use_op use_op;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
         representation_type;
+        casting_syntax;
       }
   | EAssignConstLikeBinding { loc; definition; binding_kind } ->
     EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
@@ -4659,15 +4661,23 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+  | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type; casting_syntax } ->
     let suggestion =
       match representation_type with
       | Some representation_type ->
+        let example =
+          let open Options.CastingSyntax in
+          match casting_syntax with
+          | Colon -> spf "(<expr>: %s)" representation_type
+          | Both
+          | As ->
+            spf "<expr> as %s" representation_type
+        in
         [
           text "You can explicitly cast your enum value to a ";
           text representation_type;
           text " using ";
-          code (spf "(<expression>: %s)" representation_type);
+          code example;
         ]
       | None -> []
     in

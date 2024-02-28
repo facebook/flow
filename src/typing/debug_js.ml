@@ -1824,7 +1824,8 @@ let dump_error_message =
         (Base.Option.value ~default:"<None>" example_member)
     | EEnumMemberUsedAsType { reason; enum_reason } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+    | EEnumIncompatible
+        { reason_lower; reason_upper; use_op; representation_type; casting_syntax = _ } ->
       spf
         "EEnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; representation_type = %s }"
         (dump_reason cx reason_lower)
