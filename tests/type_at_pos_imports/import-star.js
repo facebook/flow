@@ -2,4 +2,8 @@
 
 import * as TypeExports from './exports-type';
 
-const SpreadTypeExports = {...TypeExports};
+const SpreadTypeExports = {
+//    ^ --pretty
+    ...TypeExports
+//     ^ --pretty
+};

@@ -1,4 +1,6 @@
-exports-class-cjs.js:3:24 = {
+exports-class-cjs.js:3:23
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"class klass<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -13,22 +15,28 @@ exports-class-cjs.js:3:24 = {
   "start":23,
   "end":27
 }
-exports-class-cjs.js:5:25 = {
+
+exports-class-cjs.js:6:24
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"exports-class-cjs.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":24,"offset":69},
-    "end":{"line":5,"column":26,"offset":72}
+    "start":{"line":6,"column":24,"offset":102},
+    "end":{"line":6,"column":26,"offset":105}
   },
   "path":"exports-class-cjs.js",
-  "line":5,
-  "endline":5,
+  "line":6,
+  "endline":6,
   "start":24,
   "end":26
 }
-import-interface.js:3:15 (--expand-json-output) = {
+
+import-interface.js:4:5
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -47,16 +55,19 @@ import-interface.js:3:15 (--expand-json-output) = {
   "loc":{
     "source":"import-interface.js",
     "type":"SourceFile",
-    "start":{"line":3,"column":15,"offset":24},
-    "end":{"line":3,"column":22,"offset":32}
+    "start":{"line":4,"column":5,"offset":28},
+    "end":{"line":4,"column":12,"offset":36}
   },
   "path":"import-interface.js",
-  "line":3,
-  "endline":3,
-  "start":15,
-  "end":22
+  "line":4,
+  "endline":4,
+  "start":5,
+  "end":12
 }
-import-interface.js:3:25 (--expand-json-output) = {
+
+import-interface.js:6:5
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -75,16 +86,19 @@ import-interface.js:3:25 (--expand-json-output) = {
   "loc":{
     "source":"import-interface.js",
     "type":"SourceFile",
-    "start":{"line":3,"column":25,"offset":34},
-    "end":{"line":3,"column":30,"offset":40}
+    "start":{"line":6,"column":5,"offset":78},
+    "end":{"line":6,"column":10,"offset":84}
   },
   "path":"import-interface.js",
-  "line":3,
-  "endline":3,
-  "start":25,
-  "end":30
+  "line":6,
+  "endline":6,
+  "start":5,
+  "end":10
 }
-import-interface.js:5:15 (--expand-json-output) = {
+
+import-interface.js:11:5
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -103,16 +117,19 @@ import-interface.js:5:15 (--expand-json-output) = {
   "loc":{
     "source":"import-interface.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":15,"offset":86},
-    "end":{"line":5,"column":22,"offset":94}
+    "start":{"line":11,"column":5,"offset":170},
+    "end":{"line":11,"column":12,"offset":178}
   },
   "path":"import-interface.js",
-  "line":5,
-  "endline":5,
-  "start":15,
-  "end":22
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":12
 }
-import-interface.js:5:27 (--expand-json-output) = {
+
+import-interface.js:13:5
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -131,16 +148,19 @@ import-interface.js:5:27 (--expand-json-output) = {
   "loc":{
     "source":"import-interface.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":27,"offset":98},
-    "end":{"line":5,"column":35,"offset":107}
+    "start":{"line":13,"column":5,"offset":222},
+    "end":{"line":13,"column":13,"offset":231}
   },
   "path":"import-interface.js",
-  "line":5,
-  "endline":5,
-  "start":27,
-  "end":35
+  "line":13,
+  "endline":13,
+  "start":5,
+  "end":13
 }
-import-interface.js:5:38 (--expand-json-output) = {
+
+import-interface.js:15:5
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -159,16 +179,19 @@ import-interface.js:5:38 (--expand-json-output) = {
   "loc":{
     "source":"import-interface.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":38,"offset":109},
-    "end":{"line":5,"column":43,"offset":115}
+    "start":{"line":15,"column":5,"offset":273},
+    "end":{"line":15,"column":10,"offset":279}
   },
   "path":"import-interface.js",
-  "line":5,
-  "endline":5,
-  "start":38,
-  "end":43
+  "line":15,
+  "endline":15,
+  "start":5,
+  "end":10
 }
-import-interface.js:5:48 (--expand-json-output) = {
+
+import-interface.js:17:5
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -187,16 +210,19 @@ import-interface.js:5:48 (--expand-json-output) = {
   "loc":{
     "source":"import-interface.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":48,"offset":119},
-    "end":{"line":5,"column":54,"offset":126}
+    "start":{"line":17,"column":5,"offset":323},
+    "end":{"line":17,"column":11,"offset":330}
   },
   "path":"import-interface.js",
-  "line":5,
-  "endline":5,
-  "start":48,
-  "end":54
+  "line":17,
+  "endline":17,
+  "start":5,
+  "end":11
 }
-import-class-as-type.js:8:13 = {
+
+import-class-as-type.js:8:13
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"C"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -211,52 +237,64 @@ import-class-as-type.js:8:13 = {
   "start":13,
   "end":13
 }
-import-class-as-type.js:9:13 = {
+
+import-class-as-type.js:10:13
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":13,"offset":239},
-    "end":{"line":9,"column":13,"offset":240}
-  },
-  "path":"import-class-as-type.js",
-  "line":9,
-  "endline":9,
-  "start":13,
-  "end":13
-}
-import-class-as-type.js:10:13 = {
-  "types":{"unevaluated":{"type":"C"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"import-class-as-type.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":13,"offset":265},
-    "end":{"line":10,"column":14,"offset":267}
+    "start":{"line":10,"column":13,"offset":262},
+    "end":{"line":10,"column":13,"offset":263}
   },
   "path":"import-class-as-type.js",
   "line":10,
   "endline":10,
   "start":13,
+  "end":13
+}
+
+import-class-as-type.js:12:13
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"C"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":13,"offset":311},
+    "end":{"line":12,"column":14,"offset":313}
+  },
+  "path":"import-class-as-type.js",
+  "line":12,
+  "endline":12,
+  "start":13,
   "end":14
 }
-import-class-as-type.js:11:13 = {
+
+import-class-as-type.js:14:13
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":13,"offset":289},
-    "end":{"line":11,"column":14,"offset":291}
+    "start":{"line":14,"column":13,"offset":358},
+    "end":{"line":14,"column":14,"offset":360}
   },
   "path":"import-class-as-type.js",
-  "line":11,
-  "endline":11,
+  "line":14,
+  "endline":14,
   "start":13,
   "end":14
 }
-import-class_of_poly_instance-es6.js:4:8 = {
+
+import-class_of_poly_instance-es6.js:4:8
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -294,7 +332,10 @@ import-class_of_poly_instance-es6.js:4:8 = {
   "start":8,
   "end":9
 }
-import-class_of_poly_instance-es6.js:5:13 = {
+
+import-class_of_poly_instance-es6.js:6:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -323,16 +364,19 @@ import-class_of_poly_instance-es6.js:5:13 = {
   "loc":{
     "source":"import-class_of_poly_instance-es6.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":13,"offset":133},
-    "end":{"line":5,"column":15,"offset":136}
+    "start":{"line":6,"column":13,"offset":172},
+    "end":{"line":6,"column":15,"offset":175}
   },
   "path":"import-class_of_poly_instance-es6.js",
-  "line":5,
-  "endline":5,
+  "line":6,
+  "endline":6,
   "start":13,
   "end":15
 }
-import-class_of_poly_instance-es6.js:7:13 = {
+
+import-class_of_poly_instance-es6.js:9:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -361,16 +405,19 @@ import-class_of_poly_instance-es6.js:7:13 = {
   "loc":{
     "source":"import-class_of_poly_instance-es6.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":13,"offset":195},
-    "end":{"line":7,"column":13,"offset":196}
+    "start":{"line":9,"column":13,"offset":278},
+    "end":{"line":9,"column":13,"offset":279}
   },
   "path":"import-class_of_poly_instance-es6.js",
-  "line":7,
-  "endline":7,
+  "line":9,
+  "endline":9,
   "start":13,
   "end":13
 }
-import-class_of_poly_instance-es6.js:8:13 = {
+
+import-class_of_poly_instance-es6.js:11:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -393,16 +440,19 @@ import-class_of_poly_instance-es6.js:8:13 = {
   "loc":{
     "source":"import-class_of_poly_instance-es6.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":13,"offset":221},
-    "end":{"line":8,"column":15,"offset":224}
+    "start":{"line":11,"column":13,"offset":348},
+    "end":{"line":11,"column":15,"offset":351}
   },
   "path":"import-class_of_poly_instance-es6.js",
-  "line":8,
-  "endline":8,
+  "line":11,
+  "endline":11,
   "start":13,
   "end":15
 }
-import-class_of_poly_instance-cjs.js:3:8 = {
+
+import-class_of_poly_instance-cjs.js:3:8
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -437,7 +487,10 @@ import-class_of_poly_instance-cjs.js:3:8 = {
   "start":8,
   "end":9
 }
-import-class_of_poly_instance-cjs.js:4:13 = {
+
+import-class_of_poly_instance-cjs.js:5:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -463,16 +516,19 @@ import-class_of_poly_instance-cjs.js:4:13 = {
   "loc":{
     "source":"import-class_of_poly_instance-cjs.js",
     "type":"SourceFile",
-    "start":{"line":4,"column":13,"offset":77},
-    "end":{"line":4,"column":15,"offset":80}
+    "start":{"line":5,"column":13,"offset":116},
+    "end":{"line":5,"column":15,"offset":119}
   },
   "path":"import-class_of_poly_instance-cjs.js",
-  "line":4,
-  "endline":4,
+  "line":5,
+  "endline":5,
   "start":13,
   "end":15
 }
-import-class_of_poly_instance-cjs.js:6:13 = {
+
+import-class_of_poly_instance-cjs.js:8:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -498,16 +554,19 @@ import-class_of_poly_instance-cjs.js:6:13 = {
   "loc":{
     "source":"import-class_of_poly_instance-cjs.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":13,"offset":139},
-    "end":{"line":6,"column":13,"offset":140}
+    "start":{"line":8,"column":13,"offset":222},
+    "end":{"line":8,"column":13,"offset":223}
   },
   "path":"import-class_of_poly_instance-cjs.js",
-  "line":6,
-  "endline":6,
+  "line":8,
+  "endline":8,
   "start":13,
   "end":13
 }
-import-class_of_poly_instance-cjs.js:7:13 = {
+
+import-class_of_poly_instance-cjs.js:10:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -527,31 +586,19 @@ import-class_of_poly_instance-cjs.js:7:13 = {
   "loc":{
     "source":"import-class_of_poly_instance-cjs.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":13,"offset":165},
-    "end":{"line":7,"column":15,"offset":168}
+    "start":{"line":10,"column":13,"offset":292},
+    "end":{"line":10,"column":15,"offset":295}
   },
   "path":"import-class_of_poly_instance-cjs.js",
-  "line":7,
-  "endline":7,
+  "line":10,
+  "endline":10,
   "start":13,
   "end":15
 }
-import-default.js:15:13 = {
-  "types":null,
-  "reasons":[],
-  "loc":{
-    "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
-  },
-  "path":"",
-  "line":0,
-  "endline":0,
-  "start":1,
-  "end":0
-}
-import-default.js:16:13 = {
+
+import-default.js:16:13
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"A"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -566,29 +613,17 @@ import-default.js:16:13 = {
   "start":13,
   "end":14
 }
-import-default.js:17:13 = {
+
+import-default.js:18:13
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":17,"column":13,"offset":933},
-    "end":{"line":17,"column":14,"offset":935}
-  },
-  "path":"import-default.js",
-  "line":17,
-  "endline":17,
-  "start":13,
-  "end":14
-}
-import-default.js:18:13 = {
-  "types":{"unevaluated":{"type":"ImportedTypeDefaultClass"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"import-default.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":13,"offset":1000},
-    "end":{"line":18,"column":14,"offset":1002}
+    "start":{"line":18,"column":13,"offset":956},
+    "end":{"line":18,"column":14,"offset":958}
   },
   "path":"import-default.js",
   "line":18,
@@ -596,7 +631,28 @@ import-default.js:18:13 = {
   "start":13,
   "end":14
 }
-import-default.js:19:13 = {
+
+import-default.js:20:13
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"ImportedTypeDefaultClass"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":13,"offset":1046},
+    "end":{"line":20,"column":14,"offset":1048}
+  },
+  "path":"import-default.js",
+  "line":20,
+  "endline":20,
+  "start":13,
+  "end":14
+}
+
+import-default.js:22:13
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"ImportedTypeDefaultPolyClass<number>"},
     "evaluated":null
@@ -605,31 +661,37 @@ import-default.js:19:13 = {
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":13,"offset":1070},
-    "end":{"line":19,"column":14,"offset":1072}
+    "start":{"line":22,"column":13,"offset":1139},
+    "end":{"line":22,"column":14,"offset":1141}
   },
   "path":"import-default.js",
-  "line":19,
-  "endline":19,
+  "line":22,
+  "endline":22,
   "start":13,
   "end":14
 }
-import-default.js:20:13 = {
+
+import-default.js:24:13
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"class ImportedTypeDefaultClass"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":20,"column":13,"offset":1164},
-    "end":{"line":20,"column":14,"offset":1166}
+    "start":{"line":24,"column":13,"offset":1256},
+    "end":{"line":24,"column":14,"offset":1258}
   },
   "path":"import-default.js",
-  "line":20,
-  "endline":20,
+  "line":24,
+  "endline":24,
   "start":13,
   "end":14
 }
-import-default.js:21:13 = {
+
+import-default.js:26:13
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"},
     "evaluated":null
@@ -638,16 +700,58 @@ import-default.js:21:13 = {
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":13,"offset":1238},
-    "end":{"line":21,"column":14,"offset":1240}
+    "start":{"line":26,"column":13,"offset":1353},
+    "end":{"line":26,"column":14,"offset":1355}
   },
   "path":"import-default.js",
-  "line":21,
-  "endline":21,
+  "line":26,
+  "endline":26,
   "start":13,
   "end":14
 }
-import-default.js:26:7 = {
+
+import-default.js:28:13
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"class ImportedTypeofDefaultClassFuncall"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":28,"column":13,"offset":1466},
+    "end":{"line":28,"column":14,"offset":1468}
+  },
+  "path":"import-default.js",
+  "line":28,
+  "endline":28,
+  "start":13,
+  "end":14
+}
+
+import-default.js:30:13
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"ImportedValueDefaultClassFuncall"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":30,"column":13,"offset":1577},
+    "end":{"line":30,"column":14,"offset":1579}
+  },
+  "path":"import-default.js",
+  "line":30,
+  "endline":30,
+  "start":13,
+  "end":14
+}
+
+import-default.js:34:7
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -669,16 +773,19 @@ import-default.js:26:7 = {
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":26,"column":7,"offset":1556},
-    "end":{"line":26,"column":8,"offset":1558}
+    "start":{"line":34,"column":7,"offset":1740},
+    "end":{"line":34,"column":8,"offset":1742}
   },
   "path":"import-default.js",
-  "line":26,
-  "endline":26,
+  "line":34,
+  "endline":34,
   "start":7,
   "end":8
 }
-import-rec-export.js:3:10 = {
+
+import-rec-export.js:3:10
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -693,7 +800,10 @@ import-rec-export.js:3:10 = {
   "start":10,
   "end":10
 }
-import-star.js:5:7 = {
+
+import-star.js:5:7
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"{foo: () => MyUnionType}"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -708,22 +818,28 @@ import-star.js:5:7 = {
   "start":7,
   "end":23
 }
-import-star.js:5:31 = {
+
+import-star.js:7:8
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"module \"./exports-type\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-star.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":31,"offset":88},
-    "end":{"line":5,"column":41,"offset":99}
+    "start":{"line":7,"column":8,"offset":110},
+    "end":{"line":7,"column":18,"offset":121}
   },
   "path":"import-star.js",
-  "line":5,
-  "endline":5,
-  "start":31,
-  "end":41
+  "line":7,
+  "endline":7,
+  "start":8,
+  "end":18
 }
-import-typeof-class.js:6:16 {
+
+import-typeof-class.js:6:16
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -755,7 +871,10 @@ import-typeof-class.js:6:16 {
   "start":16,
   "end":16
 }
-import-typeof-class.js:7:16 {
+
+import-typeof-class.js:8:16
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -778,16 +897,19 @@ import-typeof-class.js:7:16 {
   "loc":{
     "source":"import-typeof-class.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":16,"offset":137},
-    "end":{"line":7,"column":16,"offset":138}
+    "start":{"line":8,"column":16,"offset":184},
+    "end":{"line":8,"column":16,"offset":185}
   },
   "path":"import-typeof-class.js",
-  "line":7,
-  "endline":7,
+  "line":8,
+  "endline":8,
   "start":16,
   "end":16
 }
-module-export-0.js:3:20 = {
+
+module-export-0.js:3:20
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"module \"lib_a\""},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -802,7 +924,10 @@ module-export-0.js:3:20 = {
   "start":20,
   "end":20
 }
-module-export-1.js:3:8 = {
+
+module-export-1.js:3:8
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -817,67 +942,82 @@ module-export-1.js:3:8 = {
   "start":8,
   "end":14
 }
-module-export-1.js:4:9 = {
+
+module-export-1.js:5:9
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
     "type":"SourceFile",
-    "start":{"line":4,"column":9,"offset":38},
-    "end":{"line":4,"column":15,"offset":45}
+    "start":{"line":5,"column":9,"offset":56},
+    "end":{"line":5,"column":15,"offset":63}
   },
   "path":"module-export-1.js",
-  "line":4,
-  "endline":4,
+  "line":5,
+  "endline":5,
   "start":9,
   "end":15
 }
-module-export-1.js:7:10 = {
+
+module-export-1.js:9:10
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":10,"offset":79},
-    "end":{"line":7,"column":16,"offset":86}
+    "start":{"line":9,"column":10,"offset":116},
+    "end":{"line":9,"column":16,"offset":123}
   },
   "path":"module-export-1.js",
-  "line":7,
-  "endline":7,
+  "line":9,
+  "endline":9,
   "start":10,
   "end":16
 }
-module-export-1.js:8:11 = {
+
+module-export-1.js:11:11
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":11,"offset":107},
-    "end":{"line":8,"column":17,"offset":114}
+    "start":{"line":11,"column":11,"offset":164},
+    "end":{"line":11,"column":17,"offset":171}
   },
   "path":"module-export-1.js",
-  "line":8,
-  "endline":8,
+  "line":11,
+  "endline":11,
   "start":11,
   "end":17
 }
-module-export-1.js:10:9 = {
+
+module-export-1.js:14:9
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"number | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
     "type":"SourceFile",
-    "start":{"line":10,"column":9,"offset":135},
-    "end":{"line":10,"column":15,"offset":142}
+    "start":{"line":14,"column":9,"offset":213},
+    "end":{"line":14,"column":15,"offset":220}
   },
   "path":"module-export-1.js",
-  "line":10,
-  "endline":10,
+  "line":14,
+  "endline":14,
   "start":9,
   "end":15
 }
-module-import.js:3:7 = {
+
+module-import.js:3:7
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"module \"./module-export-0\""},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -892,7 +1032,10 @@ module-import.js:3:7 = {
   "start":7,
   "end":7
 }
-require-class.js:5:16 = {
+
+require-class.js:5:16
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -920,7 +1063,10 @@ require-class.js:5:16 = {
   "start":16,
   "end":16
 }
-require-class.js:6:16 = {
+
+require-class.js:7:16
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -939,16 +1085,19 @@ require-class.js:6:16 = {
   "loc":{
     "source":"require-class.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":16,"offset":92},
-    "end":{"line":6,"column":16,"offset":93}
+    "start":{"line":7,"column":16,"offset":139},
+    "end":{"line":7,"column":16,"offset":140}
   },
   "path":"require-class.js",
-  "line":6,
-  "endline":6,
+  "line":7,
+  "endline":7,
   "start":16,
   "end":16
 }
-import-type.js:3:20 = {
+
+import-type.js:3:15
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type MyUnionType = \"A\" | \"B\" | \"C\""},
     "evaluated":null
@@ -966,7 +1115,10 @@ import-type.js:3:20 = {
   "start":15,
   "end":25
 }
-import-type.js:7:7 = {
+
+import-type.js:8:7
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -985,16 +1137,19 @@ import-type.js:7:7 = {
   "loc":{
     "source":"import-type.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":7,"offset":105},
-    "end":{"line":7,"column":7,"offset":106}
+    "start":{"line":8,"column":7,"offset":130},
+    "end":{"line":8,"column":7,"offset":131}
   },
   "path":"import-type.js",
-  "line":7,
-  "endline":7,
+  "line":8,
+  "endline":8,
   "start":7,
   "end":7
 }
-rtype-main.js:4:13 = {
+
+rtype-main.js:4:13
+Flags: --pretty --expand-json-output
+{
   "types":{
     "unevaluated":{
       "expanded":{
@@ -1020,3 +1175,4 @@ rtype-main.js:4:13 = {
   "start":13,
   "end":13
 }
+
