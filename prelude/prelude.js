@@ -75,6 +75,12 @@ interface AsyncGenerator<+Yield,+Return,-Next> {
   @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
 }
 
+/* Type used internally for infering the type of the yield delegate */
+type $IterableOrAsyncIterableInternal<Input, +Yield, +Return, -Next> =
+  Input extends $AsyncIterable<any, any, any>
+    ? $AsyncIterable<Yield, Return, Next>
+    : $Iterable<Yield, Return, Next>;
+
 type AsyncIterator<+T> = $AsyncIterator<T,void,void>;
 type AsyncIterable<+T> = $AsyncIterable<T,void,void>;
 
