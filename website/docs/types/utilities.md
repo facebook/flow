@@ -578,7 +578,8 @@ For example
 type Person = {
   age: number,
   name: string,
-}
+};
+// $FlowIgnore[deprecated-utility]
 type PersonDetails = $Shape<Person>;
 
 const person1: Person = {age: 28};  // ERROR: missing `name`

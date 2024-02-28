@@ -81,7 +81,7 @@ Often, third-party code is organized in terms of modules rather than globals. To
 write a libdef that declares the presence of a module you'll want to use the
 `declare module` syntax:
 
-```js flow-check
+```js
 declare module "some-third-party-library" {
   // This is where we'll list the module's exported interface(s)
 }
@@ -109,7 +109,7 @@ to declare either or both of these kinds of exports within a `declare module` bo
 ###### Named Exports {#toc-named-exports}
 
 **flow-typed/some-es-module.js**
-```js flow-check
+```js
 declare module "some-es-module" {
   // Declares a named "concatPath" export
   declare export function concatPath(dirA: string, dirB: string): string;
@@ -121,7 +121,7 @@ Note that you can also declare other things inside the body of the
 `declare module` -- **but they will not be exported from the module**:
 
 **flow-typed/some-es-module.js**
-```js flow-check
+```js
 declare module "some-es-module" {
   // Defines the type of a Path class within this `declare module` body, but
   // does not export it. It can only be referenced by other things inside the
@@ -139,7 +139,7 @@ declare module "some-es-module" {
 ###### Default Exports {#toc-default-exports}
 
 **flow-typed/some-es-module.js**
-```js flow-check
+```js
 declare module "some-es-module" {
   declare class URL {
     constructor(urlStr: string): URL;
@@ -163,7 +163,7 @@ value). To describe the type of this single value within a `declare module`
 body, you'll use the `declare module.exports` syntax:
 
 **flow-typed/some-commonjs-module.js**
-```js flow-check
+```js
 declare module "some-commonjs-module" {
   // The export of this module is an object with a "concatPath" method
   declare module.exports: {
@@ -177,7 +177,7 @@ Note that you can also declare other things inside the body of the
 `declare module`, **but they will not be exported from the module**:
 
 **flow-typed/some-commonjs-module.js**
-```js flow-check
+```js
 declare module "some-commonjs-module" {
   // Defines the type of a Path class within this `declare module` body, but
   // does not export it. It can only be referenced by other things inside the
