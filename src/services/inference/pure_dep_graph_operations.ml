@@ -36,24 +36,6 @@ let calc_direct_dependencies dependency_graph files =
     files
     files
 
-(** [calc_all_dependencies graph files] will return the set of direct and transitive dependencies of
-  [files]. This set include [files]. *)
-let calc_all_dependencies =
-  let rec loop graph files acc =
-    FilenameSet.fold
-      (fun file acc ->
-        let entry = FilenameGraph.find_opt file graph in
-        match entry with
-        | Some files ->
-          let files = FilenameSet.diff files acc in
-          let acc = FilenameSet.union files acc in
-          loop graph files acc
-        | None -> acc)
-      files
-      acc
-  in
-  (fun graph files -> loop graph files files)
-
 (** [calc_direct_dependents graph files] will return the set of direct dependents of
   [files]. This set includes [files]. *)
 let calc_direct_dependents dependency_graph files =

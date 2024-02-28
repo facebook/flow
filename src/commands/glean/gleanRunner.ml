@@ -728,7 +728,7 @@ let all_schema_version = 7
 
 let flow_schema_version = 3
 
-let make ~output_dir ~write_root ~include_direct_deps ~include_transitive_deps =
+let make ~output_dir ~write_root ~include_direct_deps =
   (module Codemod_runner.MakeSimpleTypedRunner (struct
     type accumulator = {
       files_analyzed: int;
@@ -738,11 +738,7 @@ let make ~output_dir ~write_root ~include_direct_deps ~include_transitive_deps =
     let check_options o = o
 
     let expand_roots ~env files =
-      if include_transitive_deps then
-        Pure_dep_graph_operations.calc_all_dependencies
-          (Dependency_info.implementation_dependency_graph env.ServerEnv.dependency_info)
-          files
-      else if include_direct_deps then
+      if include_direct_deps then
         Pure_dep_graph_operations.calc_direct_dependencies
           (Dependency_info.implementation_dependency_graph env.ServerEnv.dependency_info)
           files
