@@ -24,22 +24,11 @@ let spec =
            "--include-direct-deps"
            truthy
            ~doc:"Additionally index direct dependencies of input files"
-      |> flag
-           "--include-transitive-deps"
-           truthy
-           ~doc:"Additionally index transitive dependencies of input files"
       |> flag "--schema-version" truthy ~doc:"Show schema version used by the indexer"
       );
   }
 
-let main
-    codemod_flags
-    output_dir_opt
-    write_root_opt
-    include_direct_deps
-    include_transitive_deps
-    show_schema_version
-    () =
+let main codemod_flags output_dir_opt write_root_opt include_direct_deps show_schema_version () =
   if show_schema_version then
     print_endline (Int.to_string GleanRunner.all_schema_version)
   else
@@ -51,7 +40,7 @@ let main
         failwith "Output directory is nonempty. Empty it."
       else
         CodemodCommand.main
-          (GleanRunner.make ~output_dir ~write_root ~include_direct_deps ~include_transitive_deps)
+          (GleanRunner.make ~output_dir ~write_root ~include_direct_deps)
           codemod_flags
           ()
     | _ -> failwith "--output-dir and --write-root are required."

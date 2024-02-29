@@ -10,9 +10,6 @@
 val calc_direct_dependencies :
   Utils_js.FilenameGraph.t -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
 
-val calc_all_dependencies :
-  Utils_js.FilenameGraph.t -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
-
 val calc_direct_dependents :
   Utils_js.FilenameGraph.t -> Utils_js.FilenameSet.t -> Utils_js.FilenameSet.t
 
