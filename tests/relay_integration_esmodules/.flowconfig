@@ -1,0 +1,12 @@
+[options]
+all=true
+
+module.system=haste
+# get basename
+module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.js\(\.flow\)?\)$' -> '\1'
+# strip .js or .js.flow suffix
+module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'
+
+relay_integration=true
+relay_integration.esmodules=true
+casting_syntax=as

@@ -96,6 +96,7 @@ type metadata = {
   namespaces: bool;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
+  relay_integration_esmodules: bool;
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
@@ -173,6 +174,8 @@ val enable_const_params : t -> bool
 val enable_enums : t -> bool
 
 val enable_relay_integration : t -> bool
+
+val relay_integration_esmodules : t -> bool
 
 val relay_integration_module_prefix : t -> string option
 

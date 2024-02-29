@@ -118,6 +118,7 @@ module Opts = struct
     react_runtime: Options.react_runtime;
     recursion_limit: int;
     relay_integration: bool;
+    relay_integration_esmodules: bool;
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
@@ -247,6 +248,7 @@ module Opts = struct
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
       relay_integration = false;
+      relay_integration_esmodules = false;
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
@@ -964,6 +966,9 @@ module Opts = struct
       ("react.runtime", react_runtime_parser);
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ("relay_integration", boolean (fun opts v -> Ok { opts with relay_integration = v }));
+      ( "relay_integration.esmodules",
+        boolean (fun opts v -> Ok { opts with relay_integration_esmodules = v })
+      );
       ("relay_integration.excludes", relay_integration_excludes_parser);
       ( "relay_integration.module_prefix",
         string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
@@ -1671,6 +1676,8 @@ let react_runtime c = c.options.Opts.react_runtime
 let recursion_limit c = c.options.Opts.recursion_limit
 
 let relay_integration c = c.options.Opts.relay_integration
+
+let relay_integration_esmodules c = c.options.Opts.relay_integration_esmodules
 
 let relay_integration_excludes c = c.options.Opts.relay_integration_excludes
 

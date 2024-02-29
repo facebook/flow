@@ -216,6 +216,8 @@ val recursion_limit : config -> int
 
 val relay_integration : config -> bool
 
+val relay_integration_esmodules : config -> bool
+
 val relay_integration_excludes : config -> string list
 
 val relay_integration_module_prefix : config -> string option

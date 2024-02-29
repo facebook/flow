@@ -129,6 +129,7 @@ type t = {
   opt_quiet: bool;
   opt_react_runtime: react_runtime;
   opt_recursion_limit: int;
+  opt_relay_integration_esmodules: bool;
   opt_relay_integration_excludes: Str.regexp list;
   opt_relay_integration_module_prefix: string option;
   opt_relay_integration_module_prefix_includes: Str.regexp list;
@@ -296,6 +297,8 @@ let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_rela
 let react_runtime opts = opts.opt_react_runtime
 
 let recursion_limit opts = opts.opt_recursion_limit
+
+let relay_integration_esmodules opts = opts.opt_relay_integration_esmodules
 
 let relay_integration_excludes opts = opts.opt_relay_integration_excludes
 

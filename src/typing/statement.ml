@@ -2973,11 +2973,23 @@ module Make
       let t =
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
-          Import_export.get_module_t cx (loc, module_name)
-          |> Import_export.cjs_require_type
-               cx
-               (mk_reason (RCommonJSExports module_name) loc)
-               ~legacy_interop:false
+          let module_t = Import_export.get_module_t cx (loc, module_name) in
+          if Context.relay_integration_esmodules cx then
+            let import_reason = mk_reason (RDefaultImportedType (module_name, module_name)) loc in
+            Import_export.import_default_specifier_type
+              cx
+              import_reason
+              Ast.Statement.ImportDeclaration.ImportValue
+              ~module_name
+              ~source_module_t:module_t
+              ~local_name:module_name
+            |> snd
+          else
+            Import_export.cjs_require_type
+              cx
+              (mk_reason (RCommonJSExports module_name) loc)
+              ~legacy_interop:false
+              module_t
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason (RCustom "graphql tag") loc in

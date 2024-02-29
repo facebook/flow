@@ -1431,6 +1431,7 @@ let make_options
       Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
+    opt_relay_integration_esmodules = FlowConfig.relay_integration_esmodules flowconfig;
     opt_relay_integration_excludes =
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)

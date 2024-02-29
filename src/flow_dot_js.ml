@@ -142,6 +142,7 @@ let stub_metadata ~root ~checked =
     namespaces = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
+    relay_integration_esmodules = false;
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
     relay_integration_module_prefix_includes = [];
