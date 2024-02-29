@@ -44,8 +44,8 @@ function shouldTransform(filename) {
     options && 'excludes' in options
       ? regexpPattern(options.excludes)
       : options && 'exclude' in options
-      ? regexpPattern(options.exclude)
-      : /\/node_modules\//;
+        ? regexpPattern(options.exclude)
+        : /\/node_modules\//;
   return (
     (!includes || includes.test(filename)) &&
     !(excludes && excludes.test(filename))
