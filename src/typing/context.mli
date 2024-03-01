@@ -106,7 +106,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
-  typeof_with_type_arguments: bool;
   use_mixed_in_catch_variables: bool;
 }
 

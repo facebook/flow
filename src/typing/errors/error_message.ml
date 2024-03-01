@@ -806,7 +806,6 @@ and unsupported_syntax =
   | ContextDependentUnsupportedStatement of context_dependent_unsupported_statement
   | WithStatement
   | ComponentSyntax
-  | TypeOfTypeArguments
   | DeclareNamespace
 
 and context_dependent_unsupported_statement =
@@ -3154,12 +3153,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         [text "Unsupported static internal slot "; code name; text "."]
       | WithStatement -> [text "Flow doesn't support "; code "with"; text " statements."]
       | ComponentSyntax -> [text "Component syntax is not enabled."]
-      | TypeOfTypeArguments ->
-        [
-          code "typeof";
-          text " annotation with type arguments is not supported yet. ";
-          text "The type arguments will be ignored.";
-        ]
       | ContextDependentUnsupportedStatement ToplevelLibraryImport ->
         [
           text "Cannot use an import statement at the toplevel of a library file. ";

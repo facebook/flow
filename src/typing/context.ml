@@ -69,7 +69,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
-  typeof_with_type_arguments: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -284,7 +283,6 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;
-    typeof_with_type_arguments = Options.typeof_with_type_arguments options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 

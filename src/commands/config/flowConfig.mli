@@ -248,8 +248,6 @@ val traces : config -> int
 
 val ts_syntax : config -> bool
 
-val typeof_with_type_arguments : config -> bool
-
 val use_mixed_in_catch_variables : config -> bool option
 
 val wait_for_recheck : config -> bool

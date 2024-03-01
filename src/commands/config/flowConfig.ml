@@ -132,7 +132,6 @@ module Opts = struct
     suppress_types: SSet.t;
     traces: int;
     ts_syntax: bool;
-    typeof_with_type_arguments: bool;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -262,7 +261,6 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       traces = 0;
       ts_syntax = false;
-      typeof_with_type_arguments = false;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -981,9 +979,6 @@ module Opts = struct
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("suppress_type", suppress_types_parser);
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
-      ( "typeof_with_type_arguments",
-        boolean (fun opts v -> Ok { opts with typeof_with_type_arguments = v })
-      );
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
@@ -1709,8 +1704,6 @@ let suppress_types c = c.options.Opts.suppress_types
 let traces c = c.options.Opts.traces
 
 let ts_syntax c = c.options.Opts.ts_syntax
-
-let typeof_with_type_arguments c = c.options.Opts.typeof_with_type_arguments
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 
