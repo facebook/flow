@@ -599,12 +599,6 @@ and merge_annot env file = function
     let reason = Reason.(mk_reason (RTypeof qname) loc) in
     let t = merge env file t in
     let targs = Option.map ~f:(List.map (merge env file)) targs in
-    let targs =
-      if (Context.metadata file.cx).Context.typeof_with_type_arguments then
-        targs
-      else
-        None
-    in
     TypeUtil.typeof_annotation reason t targs
   | Bound { ref_loc; name } ->
     let t =

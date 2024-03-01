@@ -398,16 +398,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | None -> (None, None)
         | Some (l, { TypeArgs.arguments; comments }) ->
           let (targs, targs_ast) = convert_list env arguments in
-          let targs =
-            let cx = env.cx in
-            if (Context.metadata cx).Context.typeof_with_type_arguments then
-              Some targs
-            else (
-              Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (l, TypeOfTypeArguments));
-              None
-            )
-          in
-          (targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
+          (Some targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
       in
       ( (loc, TypeUtil.typeof_annotation reason valtype targs),
         Typeof { Typeof.argument = qualification_ast; targs = targs_ast; comments }

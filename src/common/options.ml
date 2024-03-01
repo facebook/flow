@@ -149,7 +149,6 @@ type t = {
   opt_temp_dir: string;
   opt_traces: int;
   opt_ts_syntax: bool;
-  opt_typeof_with_type_arguments: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
@@ -343,8 +342,6 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
-
-let typeof_with_type_arguments opts = opts.opt_typeof_with_type_arguments
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 
