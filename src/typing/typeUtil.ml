@@ -127,7 +127,7 @@ and reason_of_use_t = function
   | StrictEqT { reason; _ } -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
   | SuperT (_, reason, _) -> reason
-  | TestPropT (_, reason, _, _, _) -> reason
+  | TestPropT { reason; _ } -> reason
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT { reason; _ } -> reason
   | UnaryArithT { reason; _ } -> reason
@@ -384,7 +384,8 @@ and mod_reason_of_use_t f = function
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
     ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
-  | TestPropT (op, reason, id, n, t) -> TestPropT (op, f reason, id, n, t)
+  | TestPropT { use_op; reason; id; propref; tout } ->
+    TestPropT { use_op; reason = f reason; id; propref; tout }
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
   | ToStringT { orig_t; reason; t_out } -> ToStringT { orig_t; reason = f reason; t_out }
   | UnaryArithT { reason; result_t; kind } -> UnaryArithT { reason = f reason; result_t; kind }
@@ -463,7 +464,7 @@ let rec util_use_op_of_use_t :
   | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
     util use_op (fun use_op -> GetTypeFromNamespaceT { use_op; reason; prop_ref; tout })
   | GetPropT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetPropT { x with use_op })
-  | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
+  | TestPropT ({ use_op; _ } as x) -> util use_op (fun use_op -> TestPropT { x with use_op })
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
   | GetElemT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetElemT { x with use_op })

@@ -913,7 +913,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p
         ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
         t
-    | TestPropT (use_op, _, _, prop, (preason, ptvar)) ->
+    | TestPropT { use_op; propref = prop; tout = (preason, ptvar); _ } ->
       p
         ~extra:
           (spf

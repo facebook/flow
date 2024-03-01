@@ -600,7 +600,13 @@ module rec TypeTerm : sig
       }
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
-    | TestPropT of use_op * reason * ident * propref * tvar
+    | TestPropT of {
+        use_op: use_op;
+        reason: reason;
+        id: ident;
+        propref: propref;
+        tout: tvar;
+      }
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
@@ -4492,7 +4498,8 @@ let apply_opt_use opt_use t_out =
   | OptGetPropT (use_op, reason, id, propref) ->
     GetPropT { use_op; reason; id; propref; tout = t_out }
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
-  | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
+  | OptTestPropT (use_op, reason, id, propref) ->
+    TestPropT { use_op; reason; id; propref; tout = t_out }
   | OptGetElemT (use_op, reason, id, from_annot, key_t) ->
     GetElemT { use_op; reason; id; from_annot; access_iterables = false; key_t; tout = t_out }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)

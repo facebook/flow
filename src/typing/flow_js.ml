@@ -1959,13 +1959,13 @@ struct
            properties instead of a default, so that other cases may be tried
            instead and succeed. *)
         | (IntersectionT _, GetPropT { use_op; reason; id = Some _; propref; tout })
-        | (IntersectionT _, TestPropT (use_op, reason, _, propref, tout)) ->
+        | (IntersectionT _, TestPropT { use_op; reason; id = _; propref; tout }) ->
           rec_flow cx trace (l, GetPropT { use_op; reason; id = None; propref; tout })
         | ( IntersectionT _,
             OptionalChainT
               ( {
                   t_out =
-                    ( TestPropT (use_op, reason, _, propref, tout)
+                    ( TestPropT { use_op; reason; id = _; propref; tout }
                     | GetPropT { use_op; reason; id = Some _; propref; tout } );
                   _;
                 } as opt_chain
@@ -5176,7 +5176,7 @@ struct
           ) ->
           let access = (use_op, access_reason, None, (prop_reason, member_name)) in
           GetPropTKit.on_EnumObjectT cx trace enum_reason enum access tout
-        | (DefT (_, EnumObjectT _), TestPropT (_, reason, _, propref, tout)) ->
+        | (DefT (_, EnumObjectT _), TestPropT { reason; propref; tout; _ }) ->
           rec_flow
             cx
             trace
@@ -5345,20 +5345,20 @@ struct
            know what the type of the property would be, we set things up so that the
            result of the read cannot be used in any interesting way. *)
         (**************************************************************************)
-        | (DefT (_, NullT), TestPropT (use_op, reason_op, id, propref, tout)) ->
+        | (DefT (_, NullT), TestPropT { use_op; reason; id; propref; tout }) ->
           (* The wildcard TestPropT implementation forwards the lower bound to
              LookupT. This is unfortunate, because LookupT is designed to terminate
              (successfully) on NullT, but property accesses on null should be type
              errors. Ideally, we should prevent LookupT constraints from being
              syntax-driven, in order to preserve the delicate invariants that
              surround it. *)
-          rec_flow cx trace (l, GetPropT { use_op; reason = reason_op; id = Some id; propref; tout })
-        | (DefT (r, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT (use_op, _, id, _, tout)) ->
+          rec_flow cx trace (l, GetPropT { use_op; reason; id = Some id; propref; tout })
+        | (DefT (r, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT { use_op; id; tout; _ }) ->
           (* Special-case property tests of definitely non-null/non-void values to
              return mixed and treat them as a hit. *)
           Context.test_prop_hit cx id;
           rec_flow_t cx trace ~use_op (DefT (r, MixedT Mixed_everything), OpenT tout)
-        | (_, TestPropT (use_op, reason_op, id, propref, tout)) ->
+        | (_, TestPropT { use_op; reason = reason_op; id; propref; tout }) ->
           (* NonstrictReturning lookups unify their result, but we don't want to
              unify with the tout tvar directly, so we create an indirection here to
              ensure we only supply lower bounds to tout. *)
