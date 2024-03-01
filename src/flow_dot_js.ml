@@ -92,7 +92,7 @@ let load_lib_files files =
       exact_by_default = true;
       enable_enums = true;
       enable_component_syntax = true;
-      enable_ts_syntax = false;
+      enable_ts_syntax = true;
       hooklike_functions = true;
       casting_syntax = Options.CastingSyntax.Both;
       for_builtins = true;
@@ -151,7 +151,7 @@ let stub_metadata ~root ~checked =
     strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
-    ts_syntax = false;
+    ts_syntax = true;
     use_mixed_in_catch_variables = false;
   }
 
