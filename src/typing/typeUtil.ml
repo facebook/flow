@@ -88,7 +88,7 @@ and reason_of_use_t = function
   | GetValuesT (reason, _) -> reason
   | GetDictValuesT (reason, _) -> reason
   | GetTypeFromNamespaceT { reason; _ } -> reason
-  | GetPropT (_, reason, _, _, _) -> reason
+  | GetPropT { reason; _ } -> reason
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
   | GetStaticsT (reason, _) -> reason
@@ -312,7 +312,8 @@ and mod_reason_of_use_t f = function
   | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
   | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
     GetTypeFromNamespaceT { use_op; reason = f reason; prop_ref; tout }
-  | GetPropT (use_op, reason, id, n, t) -> GetPropT (use_op, f reason, id, n, t)
+  | GetPropT { use_op; reason; id; propref; tout } ->
+    GetPropT { use_op; reason = f reason; id; propref; tout }
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
@@ -461,7 +462,7 @@ let rec util_use_op_of_use_t :
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, x, t, tp))
   | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
     util use_op (fun use_op -> GetTypeFromNamespaceT { use_op; reason; prop_ref; tout })
-  | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
+  | GetPropT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetPropT { x with use_op })
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))

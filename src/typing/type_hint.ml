@@ -530,12 +530,13 @@ and type_of_hint_decomposition cx op reason t =
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
               GetPropT
-                ( unknown_use,
-                  reason,
-                  Some (Reason.mk_id ()),
-                  mk_named_prop ~reason (OrdinaryName name),
-                  tout
-                )
+                {
+                  use_op = unknown_use;
+                  reason;
+                  id = Some (Reason.mk_id ());
+                  propref = mk_named_prop ~reason (OrdinaryName name);
+                  tout;
+                }
             in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )

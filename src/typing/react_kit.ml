@@ -91,20 +91,22 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       trace
       ( intrinsics,
         GetPropT
-          ( use_op,
-            reason,
-            None,
-            (match literal with
-            | Literal (_, name) ->
-              let reason =
-                replace_desc_reason
-                  (RReactElement { name_opt = Some name; from_component_syntax = false })
-                  reason
-              in
-              mk_named_prop ~reason name
-            | _ -> Computed component),
-            (reason, intrinsic)
-          )
+          {
+            use_op;
+            reason;
+            id = None;
+            propref =
+              (match literal with
+              | Literal (_, name) ->
+                let reason =
+                  replace_desc_reason
+                    (RReactElement { name_opt = Some name; from_component_syntax = false })
+                    reason
+                in
+                mk_named_prop ~reason name
+              | _ -> Computed component);
+            tout = (reason, intrinsic);
+          }
       );
 
     (* Get the artifact from the intrinsic. *)

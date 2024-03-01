@@ -849,7 +849,14 @@ module Make
               GetTypeFromNamespaceT
                 { use_op = unknown_use; reason; prop_ref = (reason, local_name); tout }
             | Ast.Statement.ExportValue ->
-              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
+              GetPropT
+                {
+                  use_op = unknown_use;
+                  reason;
+                  id = None;
+                  propref = mk_named_prop ~reason local_name;
+                  tout;
+                }
           in
           Flow.flow cx (source_ns_t, use_t)
       )

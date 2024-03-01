@@ -28,7 +28,12 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
 
   let get_prop cx use_op reason ?(op_reason = reason) name l =
     Tvar.mk_no_wrap_where cx op_reason (fun tout ->
-        Flow.flow cx (l, GetPropT (use_op, op_reason, None, mk_named_prop ~reason name, tout))
+        Flow.flow
+          cx
+          ( l,
+            GetPropT
+              { use_op; reason = op_reason; id = None; propref = mk_named_prop ~reason name; tout }
+          )
     )
 
   let qualify_type cx use_op reason ~op_reason prop_name l =

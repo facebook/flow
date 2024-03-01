@@ -781,7 +781,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
     | GetDictValuesT _ -> p t
-    | GetPropT (use_op, _, _, prop, (preason, ptvar)) ->
+    | GetPropT { use_op; propref = prop; tout = (preason, ptvar); _ } ->
       p
         ~extra:
           (spf

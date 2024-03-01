@@ -591,7 +591,13 @@ module rec TypeTerm : sig
         prop_ref: reason * name;
         tout: tvar;
       }
-    | GetPropT of use_op * reason * ident option * propref * tvar
+    | GetPropT of {
+        use_op: use_op;
+        reason: reason;
+        id: ident option;
+        propref: propref;
+        tout: tvar;
+      }
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
     | TestPropT of use_op * reason * ident * propref * tvar
@@ -4483,7 +4489,8 @@ let apply_opt_use opt_use t_out =
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out)
   | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
     CallT { use_op; reason; call_action = apply_opt_funcalltype f t_out; return_hint }
-  | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
+  | OptGetPropT (use_op, reason, id, propref) ->
+    GetPropT { use_op; reason; id; propref; tout = t_out }
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (use_op, reason, id, from_annot, key_t) ->

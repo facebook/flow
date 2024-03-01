@@ -359,9 +359,9 @@ let error_message_kind_of_lower = function
     None
 
 let error_message_kind_of_upper = function
-  | GetPropT (_, _, _, Named { reason; name; _ }, _) ->
+  | GetPropT { propref = Named { reason; name; _ }; _ } ->
     Error_message.IncompatibleGetPropT (loc_of_reason reason, Some name)
-  | GetPropT (_, _, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
+  | GetPropT { propref = Computed t; _ } -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
   | SetPropT (_, _, Named { reason; name; _ }, _, _, _, _) ->
     Error_message.IncompatibleSetPropT (loc_of_reason reason, Some name)
