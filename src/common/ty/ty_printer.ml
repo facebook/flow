@@ -631,27 +631,27 @@ let string_of_elt
   |> Source.contents
 
 let string_of_elt_single_line
-    ?(prefer_single_quotes = false) ?(with_comments = true) (elt : Ty.elt) ~exact_by_default :
-    string =
+    ?(prefer_single_quotes = false) ?(with_comments = true) ?(exact_by_default = true) (elt : Ty.elt)
+    =
   layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default elt
   |> print_single_line ~source_maps:None
   |> Source.contents
 
 let string_of_t
-    ?(prefer_single_quotes = false) ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+    ?(prefer_single_quotes = false) ?(with_comments = true) ?(exact_by_default = true) (ty : Ty.t) =
   string_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Type ty)
 
 let string_of_t_single_line
-    ?(prefer_single_quotes = false) ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+    ?(prefer_single_quotes = false) ?(with_comments = true) ?(exact_by_default = true) (ty : Ty.t) =
   string_of_elt_single_line ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Type ty)
 
 let string_of_decl_single_line
-    ?(prefer_single_quotes = false) ?(with_comments = true) (d : Ty.decl) ~exact_by_default : string
+    ?(prefer_single_quotes = false) ?(with_comments = true) ?(exact_by_default = true) (d : Ty.decl)
     =
   string_of_elt_single_line ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Decl d)
 
 let string_of_type_at_pos_result
-    ?(prefer_single_quotes = false) ?(with_comments = true) ~exact_by_default result : string =
+    ?(prefer_single_quotes = false) ?(with_comments = true) ?(exact_by_default = true) result =
   layout_of_type_at_pos_result ~prefer_single_quotes ~with_comments ~exact_by_default result
   |> print_pretty ~source_maps:None
   |> Source.contents
