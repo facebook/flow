@@ -95,6 +95,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             use_op;
             reason;
             id = None;
+            from_annot = false;
             propref =
               (match literal with
               | Literal (_, name) ->

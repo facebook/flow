@@ -78,3 +78,16 @@ interface I {
 (1: I[Bar]); // Should be ok, currently errors
 (true: I[number]); // OK
 ('xx': I['bar']); // ERROR
+
+interface M {
+  method(): number;
+}
+(() => 1) as M['method']; // OK
+(() => true) as M['method']; // ERROR
+
+{
+  const test = (f: M['method']) => {
+    f() as number; // OK
+    f() as empty; // ERROR
+  }
+}

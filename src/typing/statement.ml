@@ -854,6 +854,7 @@ module Make
                   use_op = unknown_use;
                   reason;
                   id = None;
+                  from_annot = false;
                   propref = mk_named_prop ~reason local_name;
                   tout;
                 }

@@ -595,6 +595,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         reason: reason;
         id: ident option;
+        from_annot: bool;
         propref: propref;
         tout: tvar;
       }
@@ -4496,7 +4497,7 @@ let apply_opt_use opt_use t_out =
   | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
     CallT { use_op; reason; call_action = apply_opt_funcalltype f t_out; return_hint }
   | OptGetPropT (use_op, reason, id, propref) ->
-    GetPropT { use_op; reason; id; propref; tout = t_out }
+    GetPropT { use_op; reason; id; from_annot = false; propref; tout = t_out }
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (use_op, reason, id, propref) ->
     TestPropT { use_op; reason; id; propref; tout = t_out }

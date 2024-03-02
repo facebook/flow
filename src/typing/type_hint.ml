@@ -534,6 +534,7 @@ and type_of_hint_decomposition cx op reason t =
                   use_op = unknown_use;
                   reason;
                   id = Some (Reason.mk_id ());
+                  from_annot = false;
                   propref = mk_named_prop ~reason (OrdinaryName name);
                   tout;
                 }

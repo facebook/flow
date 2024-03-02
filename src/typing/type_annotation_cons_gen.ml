@@ -32,7 +32,14 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
           cx
           ( l,
             GetPropT
-              { use_op; reason = op_reason; id = None; propref = mk_named_prop ~reason name; tout }
+              {
+                use_op;
+                reason = op_reason;
+                id = None;
+                from_annot = false;
+                propref = mk_named_prop ~reason name;
+                tout;
+              }
           )
     )
 

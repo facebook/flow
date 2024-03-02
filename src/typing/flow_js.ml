@@ -407,6 +407,7 @@ struct
               use_op;
               reason = access_reason;
               id;
+              from_annot = false;
               propref = mk_named_prop ~reason:prop_reason name;
               tout;
             }
@@ -894,6 +895,7 @@ struct
                   use_op;
                   reason;
                   id = None;
+                  from_annot = true;
                   propref = mk_named_prop ~reason:reason_op ~from_indexed_access:true name;
                   tout = tout_tvar;
                 }
@@ -1455,6 +1457,7 @@ struct
                     use_op;
                     reason = reason_op;
                     id = None;
+                    from_annot = false;
                     propref =
                       Named
                         { reason = prop_ref_reason; name = prop_name; from_indexed_access = false };
@@ -1474,6 +1477,7 @@ struct
                   use_op;
                   reason = reason_op;
                   id = None;
+                  from_annot = false;
                   propref =
                     Named
                       { reason = prop_ref_reason; name = prop_name; from_indexed_access = false };
@@ -1958,17 +1962,17 @@ struct
         (* Cases of an intersection need to produce errors on non-existent
            properties instead of a default, so that other cases may be tried
            instead and succeed. *)
-        | (IntersectionT _, GetPropT { use_op; reason; id = Some _; propref; tout })
+        | (IntersectionT _, GetPropT { use_op; reason; id = Some _; from_annot; propref; tout }) ->
+          rec_flow cx trace (l, GetPropT { use_op; reason; id = None; from_annot; propref; tout })
         | (IntersectionT _, TestPropT { use_op; reason; id = _; propref; tout }) ->
-          rec_flow cx trace (l, GetPropT { use_op; reason; id = None; propref; tout })
+          rec_flow
+            cx
+            trace
+            (l, GetPropT { use_op; reason; id = None; from_annot = false; propref; tout })
         | ( IntersectionT _,
             OptionalChainT
-              ( {
-                  t_out =
-                    ( TestPropT { use_op; reason; id = _; propref; tout }
-                    | GetPropT { use_op; reason; id = Some _; propref; tout } );
-                  _;
-                } as opt_chain
+              ( { t_out = GetPropT { use_op; reason; id = Some _; from_annot; propref; tout }; _ }
+              as opt_chain
               )
           ) ->
           rec_flow
@@ -1976,7 +1980,24 @@ struct
             trace
             ( l,
               OptionalChainT
-                { opt_chain with t_out = GetPropT { use_op; reason; id = None; propref; tout } }
+                {
+                  opt_chain with
+                  t_out = GetPropT { use_op; reason; id = None; from_annot; propref; tout };
+                }
+            )
+        | ( IntersectionT _,
+            OptionalChainT
+              ({ t_out = TestPropT { use_op; reason; id = _; propref; tout }; _ } as opt_chain)
+          ) ->
+          rec_flow
+            cx
+            trace
+            ( l,
+              OptionalChainT
+                {
+                  opt_chain with
+                  t_out = GetPropT { use_op; reason; id = None; from_annot = false; propref; tout };
+                }
             )
         | (IntersectionT _, DestructuringT (reason, kind, selector, tout, id)) ->
           destruct cx ~trace reason kind l selector tout id
@@ -2860,7 +2881,10 @@ struct
           ) ->
           let method_type =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                let u = GetPropT { use_op; reason = reason_lookup; id = None; propref; tout } in
+                let u =
+                  GetPropT
+                    { use_op; reason = reason_lookup; id = None; from_annot = false; propref; tout }
+                in
                 rec_flow cx trace (static, ReposLowerT (reason, false, u))
             )
           in
@@ -3416,7 +3440,10 @@ struct
         | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
-                let u = GetPropT { use_op; reason = lookup_r; id = None; propref; tout } in
+                let u =
+                  GetPropT
+                    { use_op; reason = lookup_r; id = None; from_annot = false; propref; tout }
+                in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
@@ -3834,9 +3861,9 @@ struct
           let t = TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l in
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
         | ( DefT (reason_instance, InstanceT { super; inst; _ }),
-            GetPropT { use_op; reason = reason_op; id; propref; tout }
+            GetPropT { use_op; reason = reason_op; from_annot; id; propref; tout }
           ) ->
-          let method_accessible = false in
+          let method_accessible = from_annot in
           let lookup_action = ReadProp { use_op; obj_t = l; tout } in
           let lookup_kind =
             instance_lookup_kind
@@ -4326,7 +4353,9 @@ struct
             GetPropT { reason; propref = Named { name = OrdinaryName "constructor"; _ }; tout; _ }
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason, OpenT tout)
-        | (DefT (reason_obj, ObjT o), GetPropT { use_op; reason = reason_op; id; propref; tout }) ->
+        | ( DefT (reason_obj, ObjT o),
+            GetPropT { use_op; reason = reason_op; id; from_annot = _; propref; tout }
+          ) ->
           let lookup_info =
             Base.Option.map id ~f:(fun id ->
                 let lookup_default_tout =
@@ -5127,7 +5156,10 @@ struct
           rec_flow cx trace (instance, GetStaticsT statics);
           let method_type =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                let u = GetPropT { use_op; reason = reason_lookup; id = None; propref; tout } in
+                let u =
+                  GetPropT
+                    { use_op; reason = reason_lookup; id = None; from_annot = false; propref; tout }
+                in
                 rec_flow cx trace (OpenT statics, ReposLowerT (reason, false, u))
             )
           in
@@ -5180,7 +5212,17 @@ struct
           rec_flow
             cx
             trace
-            (l, GetPropT { use_op = Op (GetProperty reason); reason; id = None; propref; tout })
+            ( l,
+              GetPropT
+                {
+                  use_op = Op (GetProperty reason);
+                  reason;
+                  id = None;
+                  from_annot = false;
+                  propref;
+                  tout;
+                }
+            )
         | ( DefT (enum_reason, EnumObjectT enum),
             MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action)
           ) ->
@@ -5190,7 +5232,15 @@ struct
                   cx
                   trace
                   ( enum_proto cx ~reason:lookup_reason (enum_reason, enum),
-                    GetPropT { use_op; reason = lookup_reason; id = None; propref; tout }
+                    GetPropT
+                      {
+                        use_op;
+                        reason = lookup_reason;
+                        id = None;
+                        from_annot = false;
+                        propref;
+                        tout;
+                      }
                   )
             )
           in
@@ -5352,7 +5402,10 @@ struct
              errors. Ideally, we should prevent LookupT constraints from being
              syntax-driven, in order to preserve the delicate invariants that
              surround it. *)
-          rec_flow cx trace (l, GetPropT { use_op; reason; id = Some id; propref; tout })
+          rec_flow
+            cx
+            trace
+            (l, GetPropT { use_op; reason; id = Some id; from_annot = false; propref; tout })
         | (DefT (r, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT { use_op; id; tout; _ }) ->
           (* Special-case property tests of definitely non-null/non-void values to
              return mixed and treat them as a hit. *)
@@ -5823,7 +5876,10 @@ struct
         | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
-                let u = GetPropT { use_op; reason = lookup_r; id = None; propref; tout } in
+                let u =
+                  GetPropT
+                    { use_op; reason = lookup_r; id = None; from_annot = false; propref; tout }
+                in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
@@ -6234,6 +6290,7 @@ struct
             use_op;
             reason = reason_op;
             id;
+            from_annot;
             propref = Named { reason; name = OrdinaryName "constructor" as name; _ };
             tout;
           } ->
@@ -6247,6 +6304,7 @@ struct
                     use_op;
                     reason = reason_op;
                     id;
+                    from_annot;
                     propref = mk_named_prop ~reason name;
                     tout = tout';
                   })
@@ -7080,6 +7138,7 @@ struct
                 use_op = unknown_use;
                 reason;
                 id = Some id;
+                from_annot = annot;
                 propref = mk_named_prop ~reason name;
                 tout = tvar;
               }
@@ -7372,7 +7431,14 @@ struct
             | PropertyType { name; _ } ->
               let reason_op = replace_desc_reason (RProperty (Some name)) reason in
               GetPropT
-                { use_op; reason; id = None; propref = mk_named_prop ~reason:reason_op name; tout }
+                {
+                  use_op;
+                  reason;
+                  id = None;
+                  from_annot = true;
+                  propref = mk_named_prop ~reason:reason_op name;
+                  tout;
+                }
             | ElementType { index_type; _ } ->
               GetElemT
                 {
@@ -7856,8 +7922,8 @@ struct
   and elem_action_on_obj cx trace ~use_op l obj reason_op action =
     let propref = propref_for_elem_t l in
     match action with
-    | ReadElem { id; from_annot = _; access_iterables = _; tout } ->
-      rec_flow cx trace (obj, GetPropT { use_op; reason = reason_op; id; propref; tout })
+    | ReadElem { id; from_annot; access_iterables = _; tout } ->
+      rec_flow cx trace (obj, GetPropT { use_op; reason = reason_op; from_annot; id; propref; tout })
     | WriteElem { tin; tout; mode } ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout

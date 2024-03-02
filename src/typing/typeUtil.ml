@@ -312,8 +312,8 @@ and mod_reason_of_use_t f = function
   | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
   | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
     GetTypeFromNamespaceT { use_op; reason = f reason; prop_ref; tout }
-  | GetPropT { use_op; reason; id; propref; tout } ->
-    GetPropT { use_op; reason = f reason; id; propref; tout }
+  | GetPropT { use_op; reason; id; from_annot; propref; tout } ->
+    GetPropT { use_op; reason = f reason; id; from_annot; propref; tout }
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)

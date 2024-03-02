@@ -126,21 +126,6 @@ References:
            ^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- destructors.js:6:17
-
-Cannot instantiate `$PropertyType` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   destructors.js:6:17
-   6| declare var m : $PropertyType<A, "m">; // ok bc this does not actually unbind anything at runtime
-                      ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   destructors.js:2:5
-   2|     m() : void {}
-          ^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------- no_duplicate_error.js:15:19
 
 Cannot get `instance.i` because property `i` [1] cannot be unbound from the context [2] where it was defined.
@@ -462,4 +447,4 @@ Cannot assign function to `b.m` because property `m` is not writable. [cannot-wr
 
 
 
-Found 31 errors
+Found 30 errors
