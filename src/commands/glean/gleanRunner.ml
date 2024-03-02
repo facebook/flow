@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
 module TypeScheme = Type.TypeScheme
 
 module DocumentationFullspanMap = struct
@@ -56,10 +57,10 @@ class member_searcher add_member =
     method! on_type_annot x = x
 
     method! member member =
-      let open Flow_ast.Expression.Member in
+      let open Ast.Expression.Member in
       let { _object = ((_, type_), _); property; _ } = member in
       (match property with
-      | PropertyIdentifier ((aloc, _), Flow_ast.Identifier.{ name; _ }) ->
+      | PropertyIdentifier ((aloc, _), Ast.Identifier.{ name; _ }) ->
         this#annot_with_tparams (add_member ~type_ ~aloc ~name)
       | _ -> ());
       super#member member
@@ -75,7 +76,7 @@ class type_reference_searcher add_reference =
     method on_type_annot x = x
 
     method! generic_identifier_type git =
-      let open Flow_ast.Type.Generic.Identifier in
+      let open Ast.Type.Generic.Identifier in
       (match git with
       | Unqualified id
       | Qualified (_, { id; _ }) ->
@@ -230,7 +231,7 @@ let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
 
 let type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast =
   let results = ref [] in
-  let add_reference ((aloc, t), Flow_ast.Identifier.{ name; _ }) =
+  let add_reference ((aloc, t), Ast.Identifier.{ name; _ }) =
     let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
     let rec def_loc_of_t t =
       let def_loc = t |> TypeUtil.def_loc_of_t |> Parsing_heaps.Reader.loc_of_aloc ~reader in
@@ -556,7 +557,7 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
   object (this)
     inherit Typed_ast_finder.type_parameter_mapper as super
 
-    method! t_identifier (((aloc, type_), Flow_ast.Identifier.{ name; _ }) as ident) =
+    method! t_identifier (((aloc, type_), Ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       if
         Scope_builder.Api.is_local_use scope_info loc && Scope_builder.Api.use_is_def scope_info loc
@@ -564,52 +565,46 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
         this#annot_with_tparams add_var_info name loc type_;
       ident
 
-    method! object_key_identifier (((aloc, type_), Flow_ast.Identifier.{ name; _ }) as ident) =
+    method! object_key_identifier (((aloc, type_), Ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_member_info name loc type_;
       ident
 
-    method! type_alias
-        ( Flow_ast.Statement.TypeAlias.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident
-        ) =
+    method! type_alias _loc alias =
+      let Ast.Statement.TypeAlias.{ id = ((aloc, type_), Ast.Identifier.{ name; _ }); _ } = alias in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
-      ident
+      alias
 
-    method! opaque_type
-        ( Flow_ast.Statement.OpaqueType.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident
-        ) =
+    method! opaque_type _loc otype =
+      let Ast.Statement.OpaqueType.{ id = ((aloc, type_), Ast.Identifier.{ name; _ }); _ } =
+        otype
+      in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
-      ident
+      otype
 
-    method! interface
-        ( Flow_ast.Statement.Interface.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident
-        ) =
+    method! interface _loc iface =
+      let Ast.Statement.Interface.{ id = ((aloc, type_), Ast.Identifier.{ name; _ }); _ } = iface in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
-      ident
+      iface
 
-    method! class_identifier (((aloc, type_), Flow_ast.Identifier.{ name; _ }) as ident) =
+    method! class_identifier (((aloc, type_), Ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       super#class_identifier ident
 
     method! enum_declaration enum =
-      let open Flow_ast.Statement.EnumDeclaration in
-      let { id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); body = (_, body); _ } = enum in
+      let open Ast.Statement.EnumDeclaration in
+      let { id = ((aloc, type_), Ast.Identifier.{ name; _ }); body = (_, body); _ } = enum in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
-      let defaulted_member (aloc, { DefaultedMember.id = (_, Flow_ast.Identifier.{ name; _ }); _ })
-          =
+      let defaulted_member (aloc, { DefaultedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) =
         let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
         this#annot_with_tparams add_member_info name loc type_
       in
-      let initialized_member
-          (aloc, { InitializedMember.id = (_, Flow_ast.Identifier.{ name; _ }); _ }) =
+      let initialized_member (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) =
         let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
         this#annot_with_tparams add_member_info name loc type_
       in

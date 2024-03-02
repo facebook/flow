@@ -1076,15 +1076,15 @@ class local_type_identifiers_searcher =
 
     method add_id id = rev_ids <- id :: rev_ids
 
-    method! type_alias (Flow_ast.Statement.TypeAlias.{ id; _ } as x) =
+    method! type_alias _loc (Flow_ast.Statement.TypeAlias.{ id; _ } as x) =
       this#add_id id;
       x
 
-    method! opaque_type (Flow_ast.Statement.OpaqueType.{ id; _ } as x) =
+    method! opaque_type _loc (Flow_ast.Statement.OpaqueType.{ id; _ } as x) =
       this#add_id id;
       x
 
-    method! interface (Flow_ast.Statement.Interface.{ id; _ } as x) =
+    method! interface _loc (Flow_ast.Statement.Interface.{ id; _ } as x) =
       this#add_id id;
       x
 

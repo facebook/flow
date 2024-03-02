@@ -54,10 +54,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | DeclareExportDeclaration decl ->
           DeclareExportDeclaration (this#declare_export_declaration annot decl)
         | DeclareFunction stuff -> DeclareFunction (this#declare_function stuff)
-        | DeclareInterface stuff -> DeclareInterface (this#declare_interface stuff)
+        | DeclareInterface stuff -> DeclareInterface (this#declare_interface annot stuff)
         | DeclareModule m -> DeclareModule (this#declare_module annot m)
         | DeclareNamespace n -> DeclareNamespace (this#declare_namespace annot n)
-        | DeclareTypeAlias stuff -> DeclareTypeAlias (this#declare_type_alias stuff)
+        | DeclareTypeAlias stuff -> DeclareTypeAlias (this#declare_type_alias annot stuff)
         | DeclareVariable stuff -> DeclareVariable (this#declare_variable stuff)
         | DeclareModuleExports exports -> DeclareModuleExports (this#declare_module_exports exports)
         | DoWhile stuff -> DoWhile (this#do_while stuff)
@@ -74,9 +74,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | FunctionDeclaration func -> FunctionDeclaration (this#function_declaration func)
         | If if_stmt -> If (this#if_statement if_stmt)
         | ImportDeclaration decl -> ImportDeclaration (this#import_declaration annot decl)
-        | InterfaceDeclaration stuff -> InterfaceDeclaration (this#interface_declaration stuff)
+        | InterfaceDeclaration stuff -> InterfaceDeclaration (this#interface_declaration annot stuff)
         | Labeled label -> Labeled (this#labeled_statement label)
-        | OpaqueType otype -> OpaqueType (this#opaque_type otype)
+        | OpaqueType otype -> OpaqueType (this#opaque_type annot otype)
         | Return ret -> Return (this#return ret)
         | Switch switch -> Switch (this#switch switch)
         | Throw throw -> Throw (this#throw throw)
@@ -84,8 +84,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | VariableDeclaration decl -> VariableDeclaration (this#variable_declaration decl)
         | While stuff -> While (this#while_ stuff)
         | With stuff -> With (this#with_ stuff)
-        | TypeAlias stuff -> TypeAlias (this#type_alias stuff)
-        | DeclareOpaqueType otype -> DeclareOpaqueType (this#declare_opaque_type otype)
+        | TypeAlias stuff -> TypeAlias (this#type_alias annot stuff)
+        | DeclareOpaqueType otype -> DeclareOpaqueType (this#declare_opaque_type annot otype)
       )
 
     method comment ((annot, c) : 'M Ast.Comment.t) : 'N Ast.Comment.t = (this#on_loc_annot annot, c)
@@ -648,9 +648,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | Component (annot, decl_component) ->
         Component (this#on_loc_annot annot, this#declare_component decl_component)
       | DefaultType t -> DefaultType (this#type_ t)
-      | NamedType (annot, alias) -> NamedType (this#on_loc_annot annot, this#type_alias alias)
-      | NamedOpaqueType (annot, ot) -> NamedOpaqueType (this#on_loc_annot annot, this#opaque_type ot)
-      | Interface (annot, iface) -> Interface (this#on_loc_annot annot, this#interface iface)
+      | NamedType (annot, alias) -> NamedType (this#on_loc_annot annot, this#type_alias annot alias)
+      | NamedOpaqueType (annot, ot) ->
+        NamedOpaqueType (this#on_loc_annot annot, this#opaque_type annot ot)
+      | Interface (annot, iface) -> Interface (this#on_loc_annot annot, this#interface annot iface)
       | Enum (annot, enum) -> Enum (this#on_loc_annot annot, this#enum_declaration enum)
 
     method declare_function (decl : ('M, 'T) Ast.Statement.DeclareFunction.t)
@@ -663,9 +664,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { id = id'; annot = annot'; predicate = predicate'; comments = comments' }
 
-    method declare_interface (decl : ('M, 'T) Ast.Statement.Interface.t)
+    method declare_interface annot (decl : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =
-      this#interface decl
+      this#interface annot decl
 
     method declare_module _annot (m : ('M, 'T) Ast.Statement.DeclareModule.t)
         : ('N, 'U) Ast.Statement.DeclareModule.t =
@@ -697,9 +698,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { annot = annot'; comments = comments' }
 
-    method declare_type_alias (decl : ('M, 'T) Ast.Statement.TypeAlias.t)
+    method declare_type_alias annot (decl : ('M, 'T) Ast.Statement.TypeAlias.t)
         : ('N, 'U) Ast.Statement.TypeAlias.t =
-      this#type_alias decl
+      this#type_alias annot decl
 
     method declare_variable (decl : ('M, 'T) Ast.Statement.DeclareVariable.t)
         : ('N, 'U) Ast.Statement.DeclareVariable.t =
@@ -1684,7 +1685,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments = this#syntax_opt comments in
       (annot, { Ast.Identifier.name; comments })
 
-    method interface (interface : ('M, 'T) Ast.Statement.Interface.t)
+    method interface _annot (interface : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =
       let open Ast.Statement.Interface in
       let { id = ident; tparams; extends; body; comments } = interface in
@@ -1696,9 +1697,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           { id = id'; tparams = tparams'; extends = extends'; body = body'; comments = comments' }
       )
 
-    method interface_declaration (decl : ('M, 'T) Ast.Statement.Interface.t)
+    method interface_declaration annot (decl : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =
-      this#interface decl
+      this#interface annot decl
 
     method private_name ((annot, ident) : 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
       let open Ast.PrivateName in
@@ -2173,7 +2174,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_key_computed (key : ('M, 'T) Ast.ComputedKey.t) : ('N, 'U) Ast.ComputedKey.t =
       this#computed_key key
 
-    method opaque_type (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
+    method opaque_type _annot (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
         : ('N, 'U) Ast.Statement.OpaqueType.t =
       let open Ast.Statement.OpaqueType in
       let { id; tparams; impltype; supertype; comments } = otype in
@@ -2191,9 +2192,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           }
       )
 
-    method declare_opaque_type (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
+    method declare_opaque_type annot (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
         : ('N, 'U) Ast.Statement.OpaqueType.t =
-      this#opaque_type otype
+      this#opaque_type annot otype
 
     method function_param_pattern (expr : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
       this#binding_pattern expr
@@ -2567,7 +2568,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { _object = _object'; body = body'; comments = comments' }
 
-    method type_alias (stuff : ('M, 'T) Ast.Statement.TypeAlias.t)
+    method type_alias _annot (stuff : ('M, 'T) Ast.Statement.TypeAlias.t)
         : ('N, 'U) Ast.Statement.TypeAlias.t =
       let open Ast.Statement.TypeAlias in
       let { id; tparams; right; comments } = stuff in

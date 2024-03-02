@@ -199,7 +199,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.DeclareFunction.t -> ('N, 'U) Ast.Statement.DeclareFunction.t
 
     method declare_interface :
-      ('M, 'T) Ast.Statement.Interface.t -> ('N, 'U) Ast.Statement.Interface.t
+      'M -> ('M, 'T) Ast.Statement.Interface.t -> ('N, 'U) Ast.Statement.Interface.t
 
     method declare_module :
       'M -> ('M, 'T) Ast.Statement.DeclareModule.t -> ('N, 'U) Ast.Statement.DeclareModule.t
@@ -212,10 +212,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'M -> ('M, 'T) Ast.Statement.DeclareNamespace.t -> ('N, 'U) Ast.Statement.DeclareNamespace.t
 
     method declare_opaque_type :
-      ('M, 'T) Ast.Statement.OpaqueType.t -> ('N, 'U) Ast.Statement.OpaqueType.t
+      'M -> ('M, 'T) Ast.Statement.OpaqueType.t -> ('N, 'U) Ast.Statement.OpaqueType.t
 
     method declare_type_alias :
-      ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t
+      'M -> ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t
 
     method declare_variable :
       ('M, 'T) Ast.Statement.DeclareVariable.t -> ('N, 'U) Ast.Statement.DeclareVariable.t
@@ -443,10 +443,11 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.ImportDeclaration.specifier ->
       ('N, 'U) Ast.Statement.ImportDeclaration.specifier
 
-    method interface : ('M, 'T) Ast.Statement.Interface.t -> ('N, 'U) Ast.Statement.Interface.t
+    method interface :
+      'M -> ('M, 'T) Ast.Statement.Interface.t -> ('N, 'U) Ast.Statement.Interface.t
 
     method interface_declaration :
-      ('M, 'T) Ast.Statement.Interface.t -> ('N, 'U) Ast.Statement.Interface.t
+      'M -> ('M, 'T) Ast.Statement.Interface.t -> ('N, 'U) Ast.Statement.Interface.t
 
     method interface_type : ('M, 'T) Ast.Type.Interface.t -> ('N, 'U) Ast.Type.Interface.t
 
@@ -608,7 +609,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method virtual on_type_annot : 'T -> 'U
 
-    method opaque_type : ('M, 'T) Ast.Statement.OpaqueType.t -> ('N, 'U) Ast.Statement.OpaqueType.t
+    method opaque_type :
+      'M -> ('M, 'T) Ast.Statement.OpaqueType.t -> ('N, 'U) Ast.Statement.OpaqueType.t
 
     method optional_call :
       'T -> ('M, 'T) Ast.Expression.OptionalCall.t -> ('N, 'U) Ast.Expression.OptionalCall.t
@@ -763,7 +765,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_ : ('M, 'T) Flow_ast.Type.t -> ('N, 'U) Ast.Type.t
 
-    method type_alias : ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t
+    method type_alias :
+      'M -> ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t
 
     method type_alias_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
