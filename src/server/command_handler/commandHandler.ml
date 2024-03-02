@@ -538,6 +538,7 @@ let infer_type
     json;
     strip_root;
     expanded;
+    no_typed_ast_for_imports;
   } =
     input
   in
@@ -585,6 +586,7 @@ let infer_type
           ~omit_targ_defaults
           ~max_depth
           ~verbose_normalizer
+          ~no_typed_ast_for_imports
           file_key
           line
           column
@@ -1992,6 +1994,7 @@ let handle_persistent_infer_type
       json = false;
       strip_root = None;
       expanded = false;
+      no_typed_ast_for_imports = false;
     }
   in
   let (result, extra_data) =

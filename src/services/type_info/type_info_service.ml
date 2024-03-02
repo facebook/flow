@@ -20,52 +20,61 @@ let json_data_of_type_opt key str_opt acc =
   :: acc
 
 let type_at_pos
-    ~cx ~file_sig ~typed_ast ~omit_targ_defaults ~max_depth ~verbose_normalizer file line col =
+    ~cx
+    ~file_sig
+    ~typed_ast
+    ~omit_targ_defaults
+    ~max_depth
+    ~verbose_normalizer
+    ~no_typed_ast_for_imports
+    file
+    line
+    col =
   let loc = Loc.cursor (Some file) line col in
   let (json_data, loc, ty) =
-    Query_types.(
-      let file = Context.file cx in
-      let result =
-        type_at_pos_type
-          ~cx
-          ~file
-          ~file_sig
-          ~omit_targ_defaults
-          ~verbose_normalizer
-          ~max_depth
-          ~typed_ast
-          loc
+    let open Query_types in
+    let file = Context.file cx in
+    let result =
+      type_at_pos_type
+        ~cx
+        ~file
+        ~file_sig
+        ~omit_targ_defaults
+        ~verbose_normalizer
+        ~max_depth
+        ~typed_ast
+        ~no_typed_ast_for_imports
+        loc
+    in
+    match result with
+    | FailureNoMatch -> (json_data_of_result "FAILURE_NO_MATCH" [], Loc.none, None)
+    | FailureUnparseable (loc, gt, msg) ->
+      let json_data =
+        []
+        |> json_data_of_result "FAILURE_UNPARSEABLE"
+        |> json_data_of_error msg
+        |> json_data_of_loc loc
+        |> json_data_of_type "type" (Type.string_of_ctor gt)
       in
-      match result with
-      | FailureNoMatch -> (json_data_of_result "FAILURE_NO_MATCH" [], Loc.none, None)
-      | FailureUnparseable (loc, gt, msg) ->
-        let json_data =
-          []
-          |> json_data_of_result "FAILURE_UNPARSEABLE"
-          |> json_data_of_error msg
-          |> json_data_of_loc loc
-          |> json_data_of_type "type" (Type.string_of_ctor gt)
-        in
-        (json_data, loc, None)
-      | Success (loc, ({ Ty.unevaluated; evaluated } as tys)) ->
-        let json_data =
-          []
-          |> json_data_of_result "SUCCESS"
-          |> json_data_of_loc loc
-          |> json_data_of_type
-               "type"
-               ((* TODO use Ty_debug.json_of_t after making it faster using count_calls *)
-                let exact_by_default = Context.exact_by_default cx in
-                Ty_printer.string_of_elt ~exact_by_default unevaluated
-               )
-          |> json_data_of_type_opt
-               "type_evaluated"
-               (let exact_by_default = Context.exact_by_default cx in
-                Base.Option.map evaluated ~f:(Ty_printer.string_of_elt ~exact_by_default)
-               )
-        in
-        (json_data, loc, Some tys)
-    )
+      (json_data, loc, None)
+    | Success (loc, ({ Ty.unevaluated; evaluated } as tys)) ->
+      let json_data =
+        []
+        |> json_data_of_result "SUCCESS"
+        |> json_data_of_loc loc
+        |> json_data_of_type
+             "type"
+             ((* TODO use Ty_debug.json_of_t after making it faster using count_calls *)
+              let exact_by_default = Context.exact_by_default cx in
+              Ty_printer.string_of_elt ~exact_by_default unevaluated
+             )
+        |> json_data_of_type_opt
+             "type_evaluated"
+             (let exact_by_default = Context.exact_by_default cx in
+              Base.Option.map evaluated ~f:(Ty_printer.string_of_elt ~exact_by_default)
+             )
+      in
+      (json_data, loc, Some tys)
   in
   ((loc, ty), json_data)
 

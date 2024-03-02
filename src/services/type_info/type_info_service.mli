@@ -12,6 +12,7 @@ val type_at_pos :
   omit_targ_defaults:bool ->
   max_depth:int ->
   verbose_normalizer:bool ->
+  no_typed_ast_for_imports:bool ->
   File_key.t ->
   int ->
   int ->

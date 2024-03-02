@@ -18,6 +18,7 @@ module Infer_type_options = struct
     json: bool;
     strip_root: File_path.t option;
     expanded: bool;
+    no_typed_ast_for_imports: bool;
   }
 end
 

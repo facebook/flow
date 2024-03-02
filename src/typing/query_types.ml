@@ -25,12 +25,25 @@ let result_of_normalizer_error loc scheme err =
 let max_size_of_evaluated_type = 100
 
 let type_at_pos_type
-    ~cx ~file ~file_sig ~omit_targ_defaults ~verbose_normalizer ~max_depth ~typed_ast loc :
-    Ty.type_at_pos_result result =
+    ~cx
+    ~file
+    ~file_sig
+    ~omit_targ_defaults
+    ~verbose_normalizer
+    ~max_depth
+    ~typed_ast
+    ~no_typed_ast_for_imports
+    loc : Ty.type_at_pos_result result =
   match find_type_at_pos_annotation cx typed_ast loc with
   | None -> FailureNoMatch
   | Some (loc, toplevel_is_type_identifier_reference, scheme) ->
-    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt:(Some typed_ast) in
+    let typed_ast_opt =
+      if no_typed_ast_for_imports then
+        None
+      else
+        Some typed_ast
+    in
+    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt in
     let from_scheme evaluate_type_destructors =
       Ty_normalizer_flow.from_scheme_with_found_computed_type
         ~options:

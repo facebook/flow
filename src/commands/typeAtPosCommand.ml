@@ -43,6 +43,10 @@ let spec =
              ~doc:"Omit type arguments when defaults exist and match the provided type argument"
         |> flag "--max-depth" (required ~default:50 int) ~doc:"Maximum depth of type (default 50)"
         |> flag "--verbose-normalizer" truthy ~doc:"Print verbose info during normalization"
+        |> flag
+             "--do_not_use_typed_AST_for_imports"
+             truthy
+             ~doc:"" (* internal flag for regression purposes *)
         |> anon "args" (required (list_of string))
       );
   }
@@ -111,6 +115,7 @@ let main
     omit_targ_defaults
     max_depth
     verbose_normalizer
+    no_typed_ast_for_imports
     args
     () =
   let json = json || pretty || expanded in
@@ -138,6 +143,7 @@ let main
       json;
       strip_root;
       expanded;
+      no_typed_ast_for_imports;
     }
   in
   let request = ServerProt.Request.INFER_TYPE options in

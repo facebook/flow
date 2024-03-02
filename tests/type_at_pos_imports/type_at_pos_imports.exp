@@ -1176,3 +1176,1181 @@ Flags: --pretty --expand-json-output
   "end":13
 }
 
+exports-class-cjs.js:3:23
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"class klass<T>"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"exports-class-cjs.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":23,"offset":32},
+    "end":{"line":3,"column":27,"offset":37}
+  },
+  "path":"exports-class-cjs.js",
+  "line":3,
+  "endline":3,
+  "start":23,
+  "end":27
+}
+
+exports-class-cjs.js:6:24
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"exports-class-cjs.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":24,"offset":102},
+    "end":{"line":6,"column":26,"offset":105}
+  },
+  "path":"exports-class-cjs.js",
+  "line":6,
+  "endline":6,
+  "start":24,
+  "end":26
+}
+
+import-interface.js:4:5
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"InterfaceDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
+          "name":"Listener"
+        },
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+      },
+      "type":"interface Listener<TFields>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-interface.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":5,"offset":28},
+    "end":{"line":4,"column":12,"offset":36}
+  },
+  "path":"import-interface.js",
+  "line":4,
+  "endline":4,
+  "start":5,
+  "end":12
+}
+
+import-interface.js:6:5
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"InterfaceDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `Logger` (type)","loc":"exports-interface.js:3:18-23"},
+          "name":"Logger"
+        },
+        "typeParams":null
+      },
+      "type":"interface Logger"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-interface.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":5,"offset":78},
+    "end":{"line":6,"column":10,"offset":84}
+  },
+  "path":"import-interface.js",
+  "line":6,
+  "endline":6,
+  "start":5,
+  "end":10
+}
+
+import-interface.js:11:5
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"InterfaceDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
+          "name":"Listener"
+        },
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+      },
+      "type":"interface Listener<TFields>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-interface.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":170},
+    "end":{"line":11,"column":12,"offset":178}
+  },
+  "path":"import-interface.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":12
+}
+
+import-interface.js:13:5
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"InterfaceDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
+          "name":"Listener"
+        },
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+      },
+      "type":"interface Listener<TFields>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-interface.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":5,"offset":222},
+    "end":{"line":13,"column":13,"offset":231}
+  },
+  "path":"import-interface.js",
+  "line":13,
+  "endline":13,
+  "start":5,
+  "end":13
+}
+
+import-interface.js:15:5
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"InterfaceDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `Logger` (type)","loc":"exports-interface.js:3:18-23"},
+          "name":"Logger"
+        },
+        "typeParams":null
+      },
+      "type":"interface Logger"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-interface.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":5,"offset":273},
+    "end":{"line":15,"column":10,"offset":279}
+  },
+  "path":"import-interface.js",
+  "line":15,
+  "endline":15,
+  "start":5,
+  "end":10
+}
+
+import-interface.js:17:5
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"InterfaceDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `Logger` (type)","loc":"exports-interface.js:3:18-23"},
+          "name":"Logger"
+        },
+        "typeParams":null
+      },
+      "type":"interface Logger"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-interface.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":5,"offset":323},
+    "end":{"line":17,"column":11,"offset":330}
+  },
+  "path":"import-interface.js",
+  "line":17,
+  "endline":17,
+  "start":5,
+  "end":11
+}
+
+import-class-as-type.js:8:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"C"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":13,"offset":221},
+    "end":{"line":8,"column":13,"offset":222}
+  },
+  "path":"import-class-as-type.js",
+  "line":8,
+  "endline":8,
+  "start":13,
+  "end":13
+}
+
+import-class-as-type.js:10:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":13,"offset":262},
+    "end":{"line":10,"column":13,"offset":263}
+  },
+  "path":"import-class-as-type.js",
+  "line":10,
+  "endline":10,
+  "start":13,
+  "end":13
+}
+
+import-class-as-type.js:12:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"C"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":13,"offset":311},
+    "end":{"line":12,"column":14,"offset":313}
+  },
+  "path":"import-class-as-type.js",
+  "line":12,
+  "endline":12,
+  "start":13,
+  "end":14
+}
+
+import-class-as-type.js:14:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":13,"offset":358},
+    "end":{"line":14,"column":14,"offset":360}
+  },
+  "path":"import-class-as-type.js",
+  "line":14,
+  "endline":14,
+  "start":13,
+  "end":14
+}
+
+import-class_of_poly_instance-es6.js:4:8
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Utility",
+        "kind":"Class",
+        "typeArgs":[
+          {
+            "kind":"Generic",
+            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+            "type":{
+              "provenance":{
+                "kind":"Imported as `P` (value)",
+                "loc":"exports-class_of_poly_instance-es6.js:3:14"
+              },
+              "name":"P"
+            },
+            "generic_kind":"class"
+          }
+        ]
+      },
+      "type":"Class<P<any>>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-es6.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":8,"offset":73},
+    "end":{"line":4,"column":9,"offset":75}
+  },
+  "path":"import-class_of_poly_instance-es6.js",
+  "line":4,
+  "endline":4,
+  "start":8,
+  "end":9
+}
+
+import-class_of_poly_instance-es6.js:6:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Utility",
+        "kind":"Class",
+        "typeArgs":[
+          {
+            "kind":"Generic",
+            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+            "type":{
+              "provenance":{
+                "kind":"Imported as `P` (value)",
+                "loc":"exports-class_of_poly_instance-es6.js:3:14"
+              },
+              "name":"P"
+            },
+            "generic_kind":"class"
+          }
+        ]
+      },
+      "type":"Class<P<any>>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-es6.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":13,"offset":172},
+    "end":{"line":6,"column":15,"offset":175}
+  },
+  "path":"import-class_of_poly_instance-es6.js",
+  "line":6,
+  "endline":6,
+  "start":13,
+  "end":15
+}
+
+import-class_of_poly_instance-es6.js:9:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Utility",
+        "kind":"Class",
+        "typeArgs":[
+          {
+            "kind":"Generic",
+            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+            "type":{
+              "provenance":{
+                "kind":"Imported as `P` (value)",
+                "loc":"exports-class_of_poly_instance-es6.js:3:14"
+              },
+              "name":"P"
+            },
+            "generic_kind":"class"
+          }
+        ]
+      },
+      "type":"Class<P<any>>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-es6.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":13,"offset":278},
+    "end":{"line":9,"column":13,"offset":279}
+  },
+  "path":"import-class_of_poly_instance-es6.js",
+  "line":9,
+  "endline":9,
+  "start":13,
+  "end":13
+}
+
+import-class_of_poly_instance-es6.js:11:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+        "type":{
+          "provenance":{
+            "kind":"Imported as `P` (value)",
+            "loc":"exports-class_of_poly_instance-es6.js:3:14"
+          },
+          "name":"P"
+        },
+        "generic_kind":"class"
+      },
+      "type":"P<any>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-es6.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":13,"offset":348},
+    "end":{"line":11,"column":15,"offset":351}
+  },
+  "path":"import-class_of_poly_instance-es6.js",
+  "line":11,
+  "endline":11,
+  "start":13,
+  "end":15
+}
+
+import-class_of_poly_instance-cjs.js:3:8
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Utility",
+        "kind":"Class",
+        "typeArgs":[
+          {
+            "kind":"Generic",
+            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+            "type":{
+              "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
+              "name":"P"
+            },
+            "generic_kind":"class"
+          }
+        ]
+      },
+      "type":"Class<P<any>>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-cjs.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":8,"offset":17},
+    "end":{"line":3,"column":9,"offset":19}
+  },
+  "path":"import-class_of_poly_instance-cjs.js",
+  "line":3,
+  "endline":3,
+  "start":8,
+  "end":9
+}
+
+import-class_of_poly_instance-cjs.js:5:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Utility",
+        "kind":"Class",
+        "typeArgs":[
+          {
+            "kind":"Generic",
+            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+            "type":{
+              "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
+              "name":"P"
+            },
+            "generic_kind":"class"
+          }
+        ]
+      },
+      "type":"Class<P<any>>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-cjs.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":13,"offset":116},
+    "end":{"line":5,"column":15,"offset":119}
+  },
+  "path":"import-class_of_poly_instance-cjs.js",
+  "line":5,
+  "endline":5,
+  "start":13,
+  "end":15
+}
+
+import-class_of_poly_instance-cjs.js:8:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Utility",
+        "kind":"Class",
+        "typeArgs":[
+          {
+            "kind":"Generic",
+            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+            "type":{
+              "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
+              "name":"P"
+            },
+            "generic_kind":"class"
+          }
+        ]
+      },
+      "type":"Class<P<any>>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-cjs.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":13,"offset":222},
+    "end":{"line":8,"column":13,"offset":223}
+  },
+  "path":"import-class_of_poly_instance-cjs.js",
+  "line":8,
+  "endline":8,
+  "start":13,
+  "end":13
+}
+
+import-class_of_poly_instance-cjs.js:10:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
+        "type":{
+          "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
+          "name":"P"
+        },
+        "generic_kind":"class"
+      },
+      "type":"P<any>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-class_of_poly_instance-cjs.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":13,"offset":292},
+    "end":{"line":10,"column":15,"offset":295}
+  },
+  "path":"import-class_of_poly_instance-cjs.js",
+  "line":10,
+  "endline":10,
+  "start":13,
+  "end":15
+}
+
+import-default.js:16:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"A"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":13,"offset":878},
+    "end":{"line":16,"column":14,"offset":880}
+  },
+  "path":"import-default.js",
+  "line":16,
+  "endline":16,
+  "start":13,
+  "end":14
+}
+
+import-default.js:18:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":13,"offset":956},
+    "end":{"line":18,"column":14,"offset":958}
+  },
+  "path":"import-default.js",
+  "line":18,
+  "endline":18,
+  "start":13,
+  "end":14
+}
+
+import-default.js:20:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"ImportedTypeDefaultClass"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":13,"offset":1046},
+    "end":{"line":20,"column":14,"offset":1048}
+  },
+  "path":"import-default.js",
+  "line":20,
+  "endline":20,
+  "start":13,
+  "end":14
+}
+
+import-default.js:22:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{
+    "unevaluated":{"type":"ImportedTypeDefaultPolyClass<number>"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":13,"offset":1139},
+    "end":{"line":22,"column":14,"offset":1141}
+  },
+  "path":"import-default.js",
+  "line":22,
+  "endline":22,
+  "start":13,
+  "end":14
+}
+
+import-default.js:24:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"class ImportedTypeDefaultClass"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":13,"offset":1256},
+    "end":{"line":24,"column":14,"offset":1258}
+  },
+  "path":"import-default.js",
+  "line":24,
+  "endline":24,
+  "start":13,
+  "end":14
+}
+
+import-default.js:26:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{
+    "unevaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":26,"column":13,"offset":1353},
+    "end":{"line":26,"column":14,"offset":1355}
+  },
+  "path":"import-default.js",
+  "line":26,
+  "endline":26,
+  "start":13,
+  "end":14
+}
+
+import-default.js:28:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{
+    "unevaluated":{"type":"class ImportedTypeofDefaultClassFuncall"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":28,"column":13,"offset":1466},
+    "end":{"line":28,"column":14,"offset":1468}
+  },
+  "path":"import-default.js",
+  "line":28,
+  "endline":28,
+  "start":13,
+  "end":14
+}
+
+import-default.js:30:13
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"ImportedValueDefaultClassFuncall"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":30,"column":13,"offset":1577},
+    "end":{"line":30,"column":14,"offset":1579}
+  },
+  "path":"import-default.js",
+  "line":30,
+  "endline":30,
+  "start":13,
+  "end":14
+}
+
+import-default.js:34:7
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"ClassDecl",
+        "name":{
+          "provenance":{
+            "kind":"Imported as `ImportedTypeofDefaultClassFuncall` (typeof)",
+            "loc":"exports-default-class-funcall-a.js:4:7"
+          },
+          "name":"B"
+        },
+        "typeParams":null
+      },
+      "type":"class ImportedTypeofDefaultClassFuncall"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":7,"offset":1740},
+    "end":{"line":34,"column":8,"offset":1742}
+  },
+  "path":"import-default.js",
+  "line":34,
+  "endline":34,
+  "start":7,
+  "end":8
+}
+
+import-rec-export.js:3:10
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-rec-export.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":10,"offset":20}
+  },
+  "path":"import-rec-export.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":10
+}
+
+import-star.js:5:7
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"{foo: () => MyUnionType}"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-star.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":7,"offset":64},
+    "end":{"line":5,"column":23,"offset":81}
+  },
+  "path":"import-star.js",
+  "line":5,
+  "endline":5,
+  "start":7,
+  "end":23
+}
+
+import-star.js:7:8
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"module \"./exports-type\""},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"import-star.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":8,"offset":110},
+    "end":{"line":7,"column":18,"offset":121}
+  },
+  "path":"import-star.js",
+  "line":7,
+  "endline":7,
+  "start":8,
+  "end":18
+}
+
+import-typeof-class.js:6:16
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"TypeAlias",
+        "name":{"provenance":{"kind":"Local","loc":"import-typeof-class.js:3:17"},"name":"C"},
+        "typeParams":null,
+        "body":{
+          "kind":"Typeof",
+          "name":{
+            "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
+            "name":"C"
+          }
+        }
+      },
+      "type":"type C = typeof C"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-typeof-class.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":16,"offset":119},
+    "end":{"line":6,"column":16,"offset":120}
+  },
+  "path":"import-typeof-class.js",
+  "line":6,
+  "endline":6,
+  "start":16,
+  "end":16
+}
+
+import-typeof-class.js:8:16
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"TypeAlias",
+        "name":{"provenance":{"kind":"Local","loc":"import-typeof-class.js:4:17"},"name":"D"},
+        "typeParams":null,
+        "body":{
+          "kind":"Typeof",
+          "name":{
+            "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
+            "name":"C"
+          }
+        }
+      },
+      "type":"type D = typeof C"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-typeof-class.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":16,"offset":184},
+    "end":{"line":8,"column":16,"offset":185}
+  },
+  "path":"import-typeof-class.js",
+  "line":8,
+  "endline":8,
+  "start":16,
+  "end":16
+}
+
+module-export-0.js:3:20
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"module \"lib_a\""},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-export-0.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":20,"offset":29},
+    "end":{"line":3,"column":20,"offset":30}
+  },
+  "path":"module-export-0.js",
+  "line":3,
+  "endline":3,
+  "start":20,
+  "end":20
+}
+
+module-export-1.js:3:8
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":8,"offset":17},
+    "end":{"line":3,"column":14,"offset":24}
+  },
+  "path":"module-export-1.js",
+  "line":3,
+  "endline":3,
+  "start":8,
+  "end":14
+}
+
+module-export-1.js:5:9
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":9,"offset":56},
+    "end":{"line":5,"column":15,"offset":63}
+  },
+  "path":"module-export-1.js",
+  "line":5,
+  "endline":5,
+  "start":9,
+  "end":15
+}
+
+module-export-1.js:9:10
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":10,"offset":116},
+    "end":{"line":9,"column":16,"offset":123}
+  },
+  "path":"module-export-1.js",
+  "line":9,
+  "endline":9,
+  "start":10,
+  "end":16
+}
+
+module-export-1.js:11:11
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":11,"offset":164},
+    "end":{"line":11,"column":17,"offset":171}
+  },
+  "path":"module-export-1.js",
+  "line":11,
+  "endline":11,
+  "start":11,
+  "end":17
+}
+
+module-export-1.js:14:9
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"number | string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-export-1.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":9,"offset":213},
+    "end":{"line":14,"column":15,"offset":220}
+  },
+  "path":"module-export-1.js",
+  "line":14,
+  "endline":14,
+  "start":9,
+  "end":15
+}
+
+module-import.js:3:7
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{"unevaluated":{"type":"module \"./module-export-0\""},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"module-import.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":7,"offset":17}
+  },
+  "path":"module-import.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":7
+}
+
+require-class.js:5:16
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"ClassDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `C` (value)","loc":"exports-class.js:3:15"},
+          "name":"C"
+        },
+        "typeParams":null
+      },
+      "type":"class C"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"require-class.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":16,"offset":74},
+    "end":{"line":5,"column":16,"offset":75}
+  },
+  "path":"require-class.js",
+  "line":5,
+  "endline":5,
+  "start":16,
+  "end":16
+}
+
+require-class.js:7:16
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"ClassDecl",
+        "name":{
+          "provenance":{"kind":"Imported as `C` (value)","loc":"exports-class.js:3:15"},
+          "name":"C"
+        },
+        "typeParams":null
+      },
+      "type":"class C"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"require-class.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":16,"offset":139},
+    "end":{"line":7,"column":16,"offset":140}
+  },
+  "path":"require-class.js",
+  "line":7,
+  "endline":7,
+  "start":16,
+  "end":16
+}
+
+import-type.js:3:15
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type MyUnionType = \"A\" | \"B\" | \"C\""},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-type.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":25,"offset":35}
+  },
+  "path":"import-type.js",
+  "line":3,
+  "endline":3,
+  "start":15,
+  "end":25
+}
+
+import-type.js:8:7
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "type":{
+          "provenance":{"kind":"Imported as `MyUnionType` (type)","loc":"exports-type.js:3:13-23"},
+          "name":"MyUnionType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"MyUnionType"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"import-type.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":7,"offset":130},
+    "end":{"line":8,"column":7,"offset":131}
+  },
+  "path":"import-type.js",
+  "line":8,
+  "endline":8,
+  "start":7,
+  "end":7
+}
+
+rtype-main.js:4:13
+Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
+{
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Top"}],
+        "type":{"provenance":{"kind":"Remote","loc":"rtype-c.js:3:15-19"},"name":"Value"},
+        "generic_kind":"type alias"
+      },
+      "type":"Value<mixed>"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"rtype-main.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":13,"offset":62},
+    "end":{"line":4,"column":13,"offset":63}
+  },
+  "path":"rtype-main.js",
+  "line":4,
+  "endline":4,
+  "start":13,
+  "end":13
+}
+
