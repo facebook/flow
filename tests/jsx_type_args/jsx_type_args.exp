@@ -1,34 +1,17 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:18:11
+Error ---------------------------------------------------------------------------------------------------- test.js:21:66
 
-Flow doesn't support JSX type arguments. [unsupported-syntax]
+Cannot create `ComponentMultipleArgs` element because boolean [1] is incompatible with string [2] in type argument `T`.
+[incompatible-type-arg]
 
-   18| <Component<string> prop="foo" />;
-                 ^^^^^^^^
+   test.js:21:66
+   21| <ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t={true} />; // error: bool ~> string
+                                                                        ^^^^ [1]
 
-
-Error ---------------------------------------------------------------------------------------------------- test.js:19:11
-
-Flow doesn't support JSX type arguments. [unsupported-syntax]
-
-   19| <Component<_> prop="foo" />;
-                 ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:20:23
-
-Flow doesn't support JSX type arguments. [unsupported-syntax]
-
-   20| <ComponentWithChildren<string> prop="foo" ><div /></ComponentWithChildren>;
-                             ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:21:23
-
-Flow doesn't support JSX type arguments. [unsupported-syntax]
-
-   21| <ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t={true} />;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+References:
+   test.js:12:49
+   12| declare function ComponentMultipleArgs<R, S, T: string>({
+                                                       ^^^^^^ [2]
 
 
 
-Found 4 errors
+Found 1 error
