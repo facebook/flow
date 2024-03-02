@@ -7,6 +7,8 @@
 
 open Base.Result
 open Loc_collections
+module Ast = Flow_ast
+module Statement = Fix_statement.Statement_
 
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
@@ -1062,7 +1064,7 @@ let exports_of_module_ty
 
 (* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
 (* NOTE: excludes classes, because we'll get those from local_value_identifiers *)
-class local_type_identifiers_searcher =
+class local_type_identifiers_typed_ast_searcher =
   object (this)
     inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
 
@@ -1091,6 +1093,75 @@ class local_type_identifiers_searcher =
     method! import_declaration _ x =
       let open Flow_ast.Statement.ImportDeclaration in
       let { import_kind; specifiers; default; _ } = x in
+      let binds_type = function
+        | ImportType
+        | ImportTypeof ->
+          true
+        | ImportValue -> false
+      in
+      let declaration_binds_type = binds_type import_kind in
+      if declaration_binds_type then
+        Base.Option.iter default ~f:(fun { identifier; _ } -> this#add_id identifier);
+      Base.Option.iter specifiers ~f:(function
+          | ImportNamedSpecifiers specifiers ->
+            List.iter
+              (fun { kind; local; remote; remote_name_def_loc = _ } ->
+                let specifier_binds_type =
+                  match kind with
+                  | None -> declaration_binds_type
+                  | Some k -> binds_type k
+                in
+                if specifier_binds_type then this#add_id (Base.Option.value local ~default:remote))
+              specifiers
+          | ImportNamespaceSpecifier _ -> ( (* namespaces can't be types *) )
+          );
+      x
+  end
+
+class local_type_identifiers_ast_searcher cx =
+  object (this)
+    inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot x = x
+
+    method on_type_annot x = x
+
+    val mutable rev_ids = []
+
+    method rev_ids = rev_ids
+
+    method add_id id = rev_ids <- id :: rev_ids
+
+    method! type_alias loc x =
+      let x' = Ast_loc_utils.loc_to_aloc_mapper#type_alias loc x in
+      let (_t, x') = Statement.type_alias cx (ALoc.of_loc loc) x' in
+      let Ast.Statement.TypeAlias.{ id; _ } = x' in
+      this#add_id id;
+      x
+
+    method! opaque_type loc x =
+      let x' = Ast_loc_utils.loc_to_aloc_mapper#opaque_type loc x in
+      let (_t, x') = Statement.opaque_type cx (ALoc.of_loc loc) x' in
+      let Ast.Statement.OpaqueType.{ id; _ } = x' in
+      this#add_id id;
+      x
+
+    method! interface loc x =
+      let x' = Ast_loc_utils.loc_to_aloc_mapper#interface loc x in
+      let (_t, x') = Statement.interface cx (ALoc.of_loc loc) x' in
+      let Ast.Statement.Interface.{ id; _ } = x' in
+      this#add_id id;
+      x
+
+    method! import_declaration loc x =
+      let open Flow_ast.Statement.ImportDeclaration in
+      let x' = Ast_loc_utils.loc_to_aloc_mapper#import_declaration loc x in
+      let x' =
+        match Statement.statement cx (ALoc.of_loc loc, Ast.Statement.ImportDeclaration x') with
+        | (_, Ast.Statement.ImportDeclaration decl) -> decl
+        | _ -> assert false
+      in
+      let { import_kind; specifiers; default; _ } = x' in
       let binds_type = function
         | ImportType
         | ImportTypeof ->
@@ -1204,20 +1275,23 @@ let make_type_param ~edit_locs { Type.name; _ } =
     insert_text_format = Lsp.Completion.PlainText;
   }
 
-let local_type_identifiers ~typed_ast ~cx ~file_sig =
-  let search = new local_type_identifiers_searcher in
-  Stdlib.ignore (search#program typed_ast);
-  search#rev_ids
+let local_type_identifiers ~ast ~typed_ast_opt ~cx ~file_sig =
+  let rev_ids =
+    match typed_ast_opt with
+    | Some typed_ast ->
+      let search = new local_type_identifiers_typed_ast_searcher in
+      Stdlib.ignore (search#program typed_ast);
+      search#rev_ids
+    | None ->
+      let search = new local_type_identifiers_ast_searcher cx in
+      Stdlib.ignore (search#program ast);
+      search#rev_ids
+  in
+  rev_ids
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer_flow.from_types
        ~options:ty_normalizer_options
-       ~genv:
-         (Ty_normalizer_env.mk_genv
-            ~cx
-            ~file:(Context.file cx)
-            ~typed_ast_opt:(Some typed_ast)
-            ~file_sig
-         )
+       ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast_opt ~file_sig)
 
 let autocomplete_unqualified_type
     ~typing
@@ -1236,7 +1310,9 @@ let autocomplete_unqualified_type
     |> Base.List.rev_map_append utility_types ~f:(make_utility_type ~edit_locs)
     |> Base.List.rev_map_append tparams_rev ~f:(make_type_param ~edit_locs)
   in
-  let type_identifiers = local_type_identifiers ~typed_ast ~cx ~file_sig in
+  let type_identifiers =
+    local_type_identifiers ~ast ~typed_ast_opt:(Some typed_ast) ~cx ~file_sig
+  in
   let (items_rev, errors_to_log) =
     type_identifiers
     |> List.fold_left
