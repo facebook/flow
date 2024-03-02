@@ -9,7 +9,7 @@ declare function ComponentWithChildren<T>({
   children: React.Node,
 }): React.Node;
 
-declare function ComponentMultipleArgs<R, S, T>({
+declare function ComponentMultipleArgs<R, S, T: string>({
   r: R,
   s: S,
   t: T,
@@ -18,4 +18,4 @@ declare function ComponentMultipleArgs<R, S, T>({
 <Component<string> prop="foo" />;
 <Component<_> prop="foo" />;
 <ComponentWithChildren<string> prop="foo" ><div /></ComponentWithChildren>;
-<ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t={true} />;
+<ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t={true} />; // error: bool ~> string

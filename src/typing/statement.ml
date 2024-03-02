@@ -5261,10 +5261,9 @@ module Make
     let (loc_element, _, _) = locs in
     let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
     let targs =
-      Base.Option.map targs ~f:(fun targs ->
-          let (targs_loc, _) = targs in
-          Flow.add_output cx Error_message.(EUnsupportedSyntax (targs_loc, JSXTypeArgs));
-          Tast_utils.error_mapper#call_type_args targs
+      Base.Option.map targs ~f:(fun (targts_loc, args) ->
+          let (_, targs) = convert_call_targs cx Subst_name.Map.empty args in
+          (targts_loc, targs)
       )
     in
     let facebook_fbs = Context.facebook_fbs cx in
