@@ -7,17 +7,20 @@
 
 open File_sig
 
-(* Collect the names and locations of types that are available as we scan
- * the imports. Later we'll match them with some remote defining loc. *)
-type acc_t = Ty.imported_ident list
+let add_bind_ident_from_typed_ast cx typed_ast name import_mode loc acc =
+  match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
+  | Some scheme -> (name, loc, import_mode, scheme) :: acc
+  | None -> acc
 
-let from_imported_locs_map ~import_mode map (acc : acc_t) =
+let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source:_ map acc =
   SMap.fold
-    (fun _remote remote_map acc ->
+    (fun _remote_name remote_map acc ->
       SMap.fold
-        (fun local imported_locs_nel acc ->
+        (fun local_name imported_locs_nel acc ->
           Nel.fold_left
-            (fun acc { local_loc; _ } -> (ALoc.of_loc local_loc, local, import_mode) :: acc)
+            (fun acc { local_loc; remote_loc = _ } ->
+              let local_loc = ALoc.of_loc local_loc in
+              add_bind_ident_from_typed_ast cx typed_ast local_name import_mode local_loc acc)
             acc
             imported_locs_nel)
         remote_map
@@ -25,43 +28,38 @@ let from_imported_locs_map ~import_mode map (acc : acc_t) =
     map
     acc
 
-let rec from_binding ~import_mode binding (acc : acc_t) =
-  match binding with
-  | BindIdent (loc, name) -> (ALoc.of_loc loc, name, import_mode) :: acc
-  | BindNamed map ->
-    List.fold_left (fun acc (_, binding) -> from_binding ~import_mode binding acc) acc map
+let add_require_bindings_from_typed_ast cx ~typed_ast ~import_mode binding acc =
+  let rec loop binding acc =
+    match binding with
+    | BindIdent (loc, name) ->
+      let loc = ALoc.of_loc loc in
+      add_bind_ident_from_typed_ast cx typed_ast name import_mode loc acc
+    | BindNamed map -> List.fold_left (fun acc (_, binding) -> loop binding acc) acc map
+  in
+  loop binding acc
 
-let from_bindings ~import_mode bindings_opt acc =
-  match bindings_opt with
-  | Some bindings -> from_binding ~import_mode bindings acc
-  | None -> acc
+let add_require_bindings cx ~typed_ast ~import_mode ~source:_ bindings_opt acc =
+  Base.Option.fold bindings_opt ~init:acc ~f:(fun acc bindings ->
+      add_require_bindings_from_typed_ast cx ~typed_ast ~import_mode bindings acc
+  )
 
-let from_require require (acc : acc_t) =
+let add_import_bindings cx ~typed_ast acc require =
   match require with
-  | Require { source = _; require_loc = _; bindings; prefix = _ } ->
-    from_bindings ~import_mode:Ty.ValueMode bindings acc
-  | Import { import_loc = _; source = _; named; ns = _; types; typesof; typesof_ns = _ } ->
+  | Require { source; require_loc = _; bindings; prefix = _ } ->
+    add_require_bindings cx ~typed_ast ~import_mode:Ty.ValueMode ~source bindings acc
+  | Import { import_loc = _; source; named; ns = _; types; typesof; typesof_ns = _ } ->
     (* TODO import namespaces (`ns`) as modules that might contain imported types *)
     acc
-    |> from_imported_locs_map ~import_mode:Ty.ValueMode named
-    |> from_imported_locs_map ~import_mode:Ty.TypeMode types
-    |> from_imported_locs_map ~import_mode:Ty.TypeofMode typesof
+    |> add_imported_loc_map_bindings cx ~typed_ast ~import_mode:Ty.ValueMode ~source named
+    |> add_imported_loc_map_bindings cx ~typed_ast ~import_mode:Ty.TypeMode ~source types
+    |> add_imported_loc_map_bindings cx ~typed_ast ~import_mode:Ty.TypeofMode ~source typesof
   | ImportDynamic _
   | Import0 _
   | ImportSynthetic _
   | ExportFrom _ ->
     acc
 
-let extract_imported_idents file_sig =
-  List.fold_left (fun acc require -> from_require require acc) [] (File_sig.requires file_sig)
-
 let extract_schemes cx file_sig typed_ast =
-  file_sig
-  |> File_sig.requires
-  |> List.fold_left (fun acc require -> from_require require acc) []
-  |> List.fold_left
-       (fun acc (loc, name, import_mode) ->
-         match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
-         | Some scheme -> (name, loc, import_mode, scheme) :: acc
-         | None -> acc)
-       []
+  let requires = File_sig.requires file_sig in
+  let imports = List.fold_left (add_import_bindings cx ~typed_ast) [] requires in
+  List.rev imports
