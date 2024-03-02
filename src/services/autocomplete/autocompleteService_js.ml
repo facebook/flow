@@ -471,34 +471,6 @@ let members_of_type
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors
       )
 
-(* The fact that we need this feels convoluted.
-   We run Scope_builder on the untyped AST and now we go back to the typed AST to get the types
-   of the locations we got from Scope_api. We wouldn't need to do this separate pass if
-   Scope_builder/Scope_api were polymorphic.
-*)
-class type_collector (reader : Parsing_heaps.Reader.reader) (locs : LocSet.t) =
-  object
-    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
-    val mutable acc = LocMap.empty
-
-    method on_loc_annot x = x
-
-    method on_type_annot x = x
-
-    method collected_types = acc
-
-    method! t_identifier (((aloc, t), _) as ident) =
-      let loc = loc_of_aloc ~reader aloc in
-      if LocSet.mem loc locs then acc <- LocMap.add loc t acc;
-      ident
-  end
-
-let collect_types ~reader locs typed_ast =
-  let collector = new type_collector reader locs in
-  Stdlib.ignore (collector#program typed_ast);
-  collector#collected_types
-
 let local_value_identifiers ~typing ~genv ~ac_loc ~tparams_rev =
   let { options; reader; cx; ast; typed_ast; file_sig; _ } = typing in
   let scope_info =
@@ -537,17 +509,18 @@ let local_value_identifiers ~typing ~genv ~ac_loc ~tparams_rev =
       ac_scope_id
       SMap.empty
   in
-  let types = collect_types ~reader (LocSet.of_list (SMap.values names_and_locs)) typed_ast in
   names_and_locs
   |> SMap.bindings
   |> Base.List.filter_map ~f:(fun (name, loc) ->
-         (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
-         Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
-             let documentation_and_tags =
-               documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
-             in
-             ((name, documentation_and_tags), Type.TypeScheme.{ tparams_rev; type_ })
-         )
+         let open Base.Option.Let_syntax in
+         let%map type_ =
+           Type_env.checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc (ALoc.of_loc loc)
+         in
+         let documentation_and_tags =
+           documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
+         in
+         (* TODO tparams_rev is probably not accurate for every type_ *)
+         ((name, documentation_and_tags), Type.TypeScheme.{ tparams_rev; type_ })
      )
   |> Ty_normalizer_flow.from_schemes ~options:ty_normalizer_options ~genv
 

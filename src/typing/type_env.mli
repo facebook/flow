@@ -149,6 +149,8 @@ val get_next : Context.t -> ALoc.t -> Type.t
 
 val checked_find_loc_env_write : Context.t -> Env_api.def_loc_type -> ALoc.t -> Type.t
 
+val checked_find_loc_env_write_opt : Context.t -> Env_api.def_loc_type -> ALoc.t -> Type.t option
+
 val resolve_env_entry :
   use_op:Type.use_op ->
   update_reason:bool ->
