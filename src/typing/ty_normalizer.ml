@@ -2351,8 +2351,9 @@ module Make (I : INPUT) : S = struct
       result
 
   let run_imports ~options ~genv =
-    let { Env.file_sig; typed_ast; cx; _ } = genv in
-    Ty_normalizer_imports.extract_schemes cx file_sig typed_ast |> normalize_imports ~options ~genv
+    let { Env.file_sig; typed_ast_opt; cx; _ } = genv in
+    Ty_normalizer_imports.extract_schemes cx file_sig typed_ast_opt
+    |> normalize_imports ~options ~genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val force_instance : bool

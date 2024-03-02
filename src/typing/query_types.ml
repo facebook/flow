@@ -30,7 +30,7 @@ let type_at_pos_type
   match find_type_at_pos_annotation cx typed_ast loc with
   | None -> FailureNoMatch
   | Some (loc, toplevel_is_type_identifier_reference, scheme) ->
-    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
+    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt:(Some typed_ast) in
     let from_scheme evaluate_type_destructors =
       Ty_normalizer_flow.from_scheme_with_found_computed_type
         ~options:
@@ -83,7 +83,7 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
     { Ty_normalizer_env.default_options with Ty_normalizer_env.evaluate_type_destructors }
   in
   let file = Context.file cx in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast_opt:(Some typed_ast) ~file_sig in
   let result =
     Ty_normalizer_flow.from_schemes ~options ~genv (Typed_ast_utils.typed_ast_to_list typed_ast)
   in
@@ -117,7 +117,7 @@ let insert_type_normalize
       toplevel_is_type_identifier_reference = false;
     }
   in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt:(Some typed_ast) in
   match Ty_normalizer_flow.from_scheme ~options ~genv scheme with
   | Ok elt -> Success (loc, elt)
   | Error err -> result_of_normalizer_error loc scheme err

@@ -142,7 +142,9 @@ let debug_string_of_t cx t =
     )
   in
   let file_sig = File_sig.empty in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~file_sig ~typed_ast in
+  let genv =
+    Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~file_sig ~typed_ast_opt:(Some typed_ast)
+  in
   match from_type ~options:Ty_normalizer_env.default_options ~genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
   | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt

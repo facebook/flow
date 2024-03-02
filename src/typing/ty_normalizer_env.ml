@@ -111,12 +111,12 @@ type genv = {
   (* Full (merged) context *)
   cx: Context.t;
   (* Typed AST of the current file *)
-  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+  typed_ast_opt: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option;
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
 }
 
-let mk_genv ~cx ~file ~typed_ast ~file_sig = { file; cx; typed_ast; file_sig }
+let mk_genv ~cx ~file ~typed_ast_opt ~file_sig = { file; cx; typed_ast_opt; file_sig }
 
 module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol

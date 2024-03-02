@@ -8,5 +8,5 @@
 val extract_schemes :
   Context.t ->
   File_sig.t ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
   (string * ALoc.t * Ty.import_mode * Type.TypeScheme.t) list
