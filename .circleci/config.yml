@@ -34,10 +34,10 @@ executors:
           <<: *opam_env
     working_directory: ~/flow
   linux-arm64:
-    machine:
-      image: default
-    environment:
-      <<: *opam_env
+    docker:
+      - image: flowtype/flow-ci:linux-arm64
+        environment:
+          <<: *opam_env
     resource_class: arm.medium
     working_directory: ~/flow
   linux-node:
