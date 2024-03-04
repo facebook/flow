@@ -288,6 +288,8 @@ val exists_excuses : t -> ExistsCheck.t ALocMap.t
 
 val voidable_checks : t -> voidable_check list
 
+val reachable_deps : t -> Utils_js.FilenameSet.t
+
 val environment : t -> Loc_env.t
 
 val typing_mode : t -> typing_mode
@@ -347,6 +349,8 @@ val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 val add_voidable_check : t -> voidable_check -> unit
 
 val add_monomorphized_component : t -> Type.Properties.id -> Type.t -> unit
+
+val add_reachable_dep : t -> File_key.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
