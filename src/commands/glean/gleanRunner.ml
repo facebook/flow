@@ -860,9 +860,12 @@ let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps =
   end : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
   )
 
-let make ~output_dir ~write_root ~include_direct_deps =
+let make ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps =
   let module C = ( val create_typed_runner_config ~output_dir ~write_root ~include_direct_deps
                      : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
                  )
   in
-  (module Codemod_runner.MakeSimpleTypedRunner (C) : Codemod_runner.RUNNABLE)
+  if include_reachable_deps then
+    (module Codemod_runner.MakeSimpleTypedTwoPassRunner (C) : Codemod_runner.RUNNABLE)
+  else
+    (module Codemod_runner.MakeSimpleTypedRunner (C) : Codemod_runner.RUNNABLE)

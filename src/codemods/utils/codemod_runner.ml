@@ -352,6 +352,128 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
     )
 end
 
+(* Checks the codebase and applies C, providing it with the inference context,
+ * and then run another pass on pruned dependencies. *)
+module SimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG = struct
+  type accumulator = C.accumulator * FilenameSet.t
+
+  let reporter : accumulator Codemod_report.t =
+    Codemod_report.
+      {
+        report =
+          (match C.reporter.report with
+          | StringReporter f -> StringReporter (fun opts (acc, _) -> f opts acc)
+          | UnitReporter f -> UnitReporter (fun opts (acc, _) -> f opts acc));
+        combine =
+          (fun (acc1, deps1) (acc2, deps2) ->
+            (C.reporter.combine acc1 acc2, Utils_js.FilenameSet.union deps1 deps2));
+        empty = (C.reporter.empty, FilenameSet.empty);
+      }
+
+  let expand_roots = C.expand_roots
+
+  let merge_and_check env workers options profiling roots ~iteration =
+    Transaction.with_transaction "codemod" (fun transaction ->
+        let reader = Mutator_state_reader.create transaction in
+
+        (* Calculate dependencies that need to be merged *)
+        let%lwt (sig_dependency_graph, components, files_to_merge, _) =
+          let get_dependent_files _ _ _ = Lwt.return FilenameSet.empty in
+          merge_targets ~env ~options ~profiling ~get_dependent_files roots
+        in
+        let%lwt () =
+          Types_js.ensure_parsed_or_trigger_recheck
+            ~options
+            ~profiling
+            ~workers
+            ~reader
+            files_to_merge
+        in
+        let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
+        Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
+        let%lwt _ =
+          Merge_service.merge_runner
+            ~job:merge_job
+            ~mutator
+            ~reader
+            ~options
+            ~for_find_all_refs:false
+            ~workers
+            ~sig_dependency_graph
+            ~components
+            ~recheck_set:files_to_merge
+        in
+        Hh_logger.info "Merging done.";
+        Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
+        let options = C.check_options options in
+        let (next, merge) = mk_next_for_check ~options ~workers roots in
+        let metadata = Context.metadata_of_options options in
+        let visit ~options ast ctx : accumulator =
+          let acc = C.visit ~options ast ctx in
+          (acc, Context.reachable_deps ctx.Codemod_context.Typed.cx)
+        in
+        let mk_check () = mk_check ~visit ~iteration ~reader ~options ~metadata () in
+        let job = Job_utils.mk_job ~mk_check ~options () in
+        let%lwt initial_run_result =
+          MultiWorkerLwt.call
+            workers
+            ~blocking:(Options.blocking_worker_communication options)
+            ~job
+            ~neutral:[]
+            ~merge
+            ~next
+        in
+        Hh_logger.info "Initial run done";
+        let second_run_roots =
+          Base.List.fold initial_run_result ~init:Utils_js.FilenameSet.empty ~f:(fun acc (_, r) ->
+              match r with
+              | Ok (Some (_, files)) -> Utils_js.FilenameSet.(union acc (diff files roots))
+              | _ -> acc
+          )
+        in
+        (* Calculate dependencies that need to be merged *)
+        let%lwt (sig_dependency_graph, components, files_to_merge, _) =
+          let get_dependent_files _ _ _ = Lwt.return FilenameSet.empty in
+          merge_targets ~env ~options ~profiling ~get_dependent_files second_run_roots
+        in
+        let%lwt () =
+          Types_js.ensure_parsed_or_trigger_recheck
+            ~options
+            ~profiling
+            ~workers
+            ~reader
+            files_to_merge
+        in
+        let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
+        Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
+        let%lwt _ =
+          Merge_service.merge_runner
+            ~job:merge_job
+            ~mutator
+            ~reader
+            ~options
+            ~for_find_all_refs:false
+            ~workers
+            ~sig_dependency_graph
+            ~components
+            ~recheck_set:files_to_merge
+        in
+        Hh_logger.info "Merging done.";
+        let (next, merge) = mk_next_for_check ~options ~workers second_run_roots in
+        let%lwt result =
+          MultiWorkerLwt.call
+            workers
+            ~blocking:(Options.blocking_worker_communication options)
+            ~job
+            ~neutral:initial_run_result
+            ~merge
+            ~next
+        in
+        Hh_logger.info "Pruned-deps run done";
+        Lwt.return result
+    )
+end
+
 (* This mode will run a prepass analysis over the input files and their downstream
    dependents. The analysis is expected to gather information to be used later on
    in the main codemod pass.
@@ -757,6 +879,9 @@ end
 
 module MakeSimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : RUNNABLE =
   RepeatRunner (TypedRunner (SimpleTypedRunner (C)))
+
+module MakeSimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : RUNNABLE =
+  RepeatRunner (TypedRunner (SimpleTypedTwoPassRunner (C)))
 
 module MakeTypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : RUNNABLE =
   RepeatRunner (TypedRunner (TypedRunnerWithPrepass (C)))

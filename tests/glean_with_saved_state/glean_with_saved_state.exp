@@ -13,3 +13,8 @@ Indexing 1 file + its direct deps (a.js, re-export.js) with saved state
 
 Wrote facts about 3 JavaScript files.
 
+Indexing 1 file + its pruned transitive deps (a.js, b.js, re-export.js) with saved state
+>>> Launching report...
+
+Wrote facts about 3 JavaScript files.
+
