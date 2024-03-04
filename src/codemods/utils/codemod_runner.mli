@@ -88,6 +88,8 @@ end
 
 module MakeSimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : RUNNABLE
 
+module MakeSimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : RUNNABLE
+
 module MakeUntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : RUNNABLE
 
 module MakeUntypedRunner (C : UNTYPED_RUNNER_CONFIG) : RUNNABLE
