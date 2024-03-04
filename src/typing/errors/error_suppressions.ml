@@ -41,7 +41,7 @@ module FileSuppressions : sig
 
   val add : Loc.t -> applicable_codes -> t -> t
 
-  val remove : Loc.t -> applicable_codes -> t -> t
+  val remove : Loc.t -> CodeSet.t -> t -> t
 
   val union : t -> t -> t
 
@@ -107,8 +107,8 @@ end = struct
   let remove loc codes { suppressions; lint_suppressions; used_universal_suppressions } =
     let supp_at_loc = SpanMap.find_opt loc suppressions in
     let (suppressions, used_universal_suppressions) =
-      match (supp_at_loc, codes) with
-      | (Some (locs, Specific codes'), Specific codes) when CodeSet.subset codes codes' ->
+      match supp_at_loc with
+      | Some (locs, Specific codes') when CodeSet.subset codes codes' ->
         let new_codes = CodeSet.diff codes' codes in
         if CodeSet.is_empty new_codes then
           (SpanMap.remove loc suppressions, used_universal_suppressions)
@@ -118,7 +118,7 @@ end = struct
             SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
           in
           (SpanMap.add orig_loc (locs, Specific new_codes) suppressions, used_universal_suppressions)
-      | (Some (_, All l), Specific codes) ->
+      | Some (_, All l) ->
         let universal =
           CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, l)) codes CodeLocSet.empty
         in
@@ -137,8 +137,7 @@ end = struct
         (* Using a univeral suppression to suppress a single code should remove it from the map, but
            we need to mark the codes it suppressed in the past *)
         (SpanMap.remove loc suppressions, used_universal_suppressions)
-      | (_, All _) -> (SpanMap.remove loc suppressions, used_universal_suppressions)
-      | (None, Specific codes) -> begin
+      | None -> begin
         match SpanMap.find_opt loc used_universal_suppressions with
         | None -> (SpanMap.remove loc suppressions, used_universal_suppressions)
         | Some old_universal ->
@@ -151,7 +150,7 @@ end = struct
           in
           (SpanMap.remove loc suppressions, used_universal_suppressions)
       end
-      | (_, Specific _) -> (suppressions, used_universal_suppressions)
+      | _ -> (suppressions, used_universal_suppressions)
     in
     { suppressions; lint_suppressions; used_universal_suppressions }
 
@@ -223,25 +222,24 @@ let update_file_suppressions f loc suppressions_map =
     let file_suppressions = f file_suppressions in
     FilenameMap.add file file_suppressions suppressions_map
 
-let remove_suppression_from_map loc codes (suppressions_map : t) =
-  update_file_suppressions (FileSuppressions.remove loc codes) loc suppressions_map
+let remove_suppression_from_map loc specific_codes (suppressions_map : t) =
+  update_file_suppressions (FileSuppressions.remove loc specific_codes) loc suppressions_map
 
 let remove_lint_suppression_from_map loc (suppressions_map : t) =
   update_file_suppressions (FileSuppressions.remove_lint_suppression loc) loc suppressions_map
 
-let check_loc suppressions codes (result, (unused : t)) loc =
+let check_loc suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
-  let suppression_applies codes1 codes2 =
-    match (codes1, codes2) with
-    | (_, All _) -> true
-    | (All _, _) -> false
-    | (Specific codes1, Specific codes2) -> CodeSet.subset codes1 codes2
+  let suppression_applies codes2 =
+    match codes2 with
+    | All _ -> true
+    | Specific specific_codes2 -> CodeSet.subset specific_codes specific_codes2
   in
   match suppression_at_loc loc suppressions with
-  | Some (locs, codes') when suppression_applies codes codes' ->
+  | Some (locs, codes') when suppression_applies codes' ->
     let used = locs in
-    let unused = remove_suppression_from_map loc codes unused in
+    let unused = remove_suppression_from_map loc specific_codes unused in
     (Off, used, unused)
   | _ -> (result, LocSet.empty, unused)
 
@@ -276,8 +274,8 @@ let check
   match (ignore, code_opt) with
   | (true, _) -> None
   | (_, None) -> Some (Err, LocSet.empty, unused)
-  | (_, Some codes) ->
-    let (result, used, unused) = check_loc suppressions (Specific codes) (Err, unused) loc in
+  | (_, Some specific_codes) ->
+    let (result, used, unused) = check_loc suppressions specific_codes (Err, unused) loc in
     let result =
       match Flow_errors_utils.kind_of_printable_error err with
       | Flow_errors_utils.RecursionLimitError ->
