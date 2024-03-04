@@ -35,7 +35,7 @@ executors:
     working_directory: ~/flow
   linux-arm64:
     machine:
-      image: ubuntu-2004:202101-01
+      image: default
     environment:
       <<: *opam_env
     resource_class: arm.medium
