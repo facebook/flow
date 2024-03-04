@@ -165,13 +165,23 @@ The equivalent of TypeScript's `ReadonlySet` type in Flow is `$ReadOnlySet`. [ts
                ^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
+Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this satisfies expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   4| export const a = m satisfies T; // ERROR
+                       ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
 
 The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a cast in the form `<expr> as <type>`.
 [ts-syntax]
 
-   4| m satisfies T; // ERROR
-      ^^^^^^^^^^^^^
+   4| export const a = m satisfies T; // ERROR
+                       ^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- type_param_extends.js:1:8
@@ -236,4 +246,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 28 errors
+Found 29 errors

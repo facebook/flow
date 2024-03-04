@@ -446,6 +446,7 @@ module ExpressionSort = struct
     | Object
     | OptionalCall
     | OptionalMember
+    | Satisfies
     | Sequence
     | Super
     | TaggedTemplate
@@ -478,6 +479,7 @@ module ExpressionSort = struct
     | Object -> "object"
     | OptionalCall -> "optional call expression"
     | OptionalMember -> "optional member expression"
+    | Satisfies -> "satisfies expression"
     | Sequence -> "sequence"
     | Super -> "`super` reference"
     | TaggedTemplate -> "tagged template expression"

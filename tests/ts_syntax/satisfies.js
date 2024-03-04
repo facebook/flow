@@ -1,4 +1,4 @@
 type T = mixed;
 declare var m: mixed;
 
-m satisfies T; // ERROR
+export const a = m satisfies T; // ERROR

@@ -119,6 +119,7 @@ module ExpressionSort : sig
     | Object
     | OptionalCall
     | OptionalMember
+    | Satisfies
     | Sequence
     | Super
     | TaggedTemplate
