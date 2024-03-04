@@ -49,7 +49,6 @@ let type_at_pos_type
         ~options:
           {
             Ty_normalizer_env.expand_internal_types = false;
-            flag_shadowed_type_params = false;
             preserve_inferred_literal_types = false;
             evaluate_type_destructors;
             optimize_types = true;
@@ -112,8 +111,6 @@ let insert_type_normalize
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
-      (* Shadowed type parameters won't be valid for type insertion *)
-      flag_shadowed_type_params = true;
       (* We eventually want to elimitate literal types, so let's not expose them here. *)
       preserve_inferred_literal_types = false;
       (* Utility types won't are not serialized so it may be worth evaluating them away

@@ -27,20 +27,6 @@ type options = {
    * Function.prototype.apply: (thisArg: any, argArray?: any): any
    *)
   expand_internal_types: bool;
-  (* The normalizer keeps a stack of type parameters that are in scope. This stack
-   * may contain the same name twice (but with different associated locations).
-   * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
-   * we do not wish to allow the generation of type parameters that are shadowed by
-   * another definition. For example the inferred type for `z` in:*
-
-   * function outer<T>(y: T) {
-   *     function inner<T>(x: T, z) { inner(x, y); }
-   * }
-   *
-   * is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
-   * This flags toggles this behavior.
-   *)
-  flag_shadowed_type_params: bool;
   (* Consider all kinds of Bot and Any the same when simplifying types.
    *
    * The normalized type Ty.Bot may correspond to either the `Empty` type, not have
@@ -80,7 +66,6 @@ let default_options =
   {
     evaluate_type_destructors = EvaluateNone;
     expand_internal_types = false;
-    flag_shadowed_type_params = false;
     merge_bot_and_any_kinds = true;
     omit_targ_defaults = false;
     optimize_types = true;
@@ -93,7 +78,6 @@ let default_options =
 let default_codemod_options =
   {
     expand_internal_types = false;
-    flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
     evaluate_type_destructors = EvaluateSome;
     optimize_types = false;
@@ -204,8 +188,6 @@ let get_cx e = e.genv.cx
 let expand_internal_types e = e.options.expand_internal_types
 
 let evaluate_type_destructors e = e.options.evaluate_type_destructors
-
-let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
 
 let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
 

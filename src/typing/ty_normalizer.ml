@@ -267,31 +267,10 @@ module Make (I : INPUT) : S = struct
     | TVarKey id -> ISet.mem id state.State.rec_tvar_ids
     | EvalKey id -> Type.EvalIdSet.mem id state.State.rec_eval_ids
 
-  (* Lookup a type parameter T in the current environment. There are three outcomes:
-     1. T appears in env and for its first occurence locations match. This means it
-        is not shadowed by another parameter with the same name. In this case
-        return the type parameter.
-     2. T appears in env but is not the first occurence. This means that some other
-        type parameter shadows it. We split cases depending on the value of
-        Config.opt_flag_shadowed_type_params:
-        - true: flag a warning, since the type is not well-formed in this context.
-        - false: return the type normally ignoring the warning.
-     3. The type parameter is not in env. Do the default action.
-  *)
   let lookup_tparam ~default env t tp_name tp_loc =
     let pred { T.name; reason; _ } = name = tp_name && tp_loc = Reason.def_loc_of_reason reason in
     match List.find_opt pred env.Env.tparams_rev with
-    | Some _ ->
-      (* If we care about shadowing of type params, then flag an error *)
-      if Env.flag_shadowed_type_params env then
-        let shadow_pred { T.name; _ } = name = tp_name in
-        match List.find_opt shadow_pred env.Env.tparams_rev with
-        | Some { T.reason; _ } when Reason.def_loc_of_reason reason <> tp_loc ->
-          terr ~kind:ShadowTypeParam (Some t)
-        | Some _ -> return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
-        | None -> assert false
-      else
-        return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
+    | Some _ -> return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
     | None -> default t
 
   (**************)

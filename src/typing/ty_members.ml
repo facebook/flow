@@ -300,7 +300,6 @@ type ty_members = {
 let ty_normalizer_options =
   {
     Ty_normalizer_env.expand_internal_types = true;
-    flag_shadowed_type_params = true;
     preserve_inferred_literal_types = false;
     evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
     optimize_types = true;
