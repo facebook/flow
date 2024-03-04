@@ -11,6 +11,7 @@ type error_code =
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
   | ReactRuleHook
+  | ReactRuleRef
   | CannotDelete
   | CannotImplement
   | CannotInferType
@@ -178,7 +179,6 @@ type error_code =
   | ReactIntrinsicOverlap
   | NestedComponent
   | InvalidRef
-  | ReactRuleRef
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
@@ -209,11 +209,21 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ExportRenamedDefault -> ExportRenamedDefault
   | Lints.UnusedPromise -> UnusedPromise
 
+let require_specific : error_code -> bool = function
+  | ReactRulePropsMutation
+  | ReactRuleHookMutation
+  | ReactRuleHookIncompatible
+  | ReactRuleHook
+  | ReactRuleRef ->
+    true
+  | _ -> false
+
 let string_of_code : error_code -> string = function
   | ReactRulePropsMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
   | ReactRuleHook -> "react-rule-hook"
+  | ReactRuleRef -> "react-rule-unsafe-ref"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"
@@ -382,4 +392,3 @@ let string_of_code : error_code -> string = function
   | BigIntRShift3 -> "bigint-unsigned-right-shift"
   | BigIntNumCoerce -> "bigint-num-coerce"
   | InvalidComponentProp -> "invalid-component-prop"
-  | ReactRuleRef -> "react-rule-unsafe-ref"

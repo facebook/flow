@@ -1082,6 +1082,44 @@ value (`current`) property) during render. (https://react.dev/reference/react/us
                       ^ [1]
 
 
+Error ------------------------------------------------------------------------------ require_specific_suppression.js:2:1
+
+Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. React
+hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
+
+   require_specific_suppression.js:2:1
+   2| useH as (empty) => mixed; // error
+      ^^^^
+
+References:
+   require_specific_suppression.js:1:1
+   1| hook useH<T>(x: T): [T] { return [x];}
+      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   require_specific_suppression.js:2:9
+   2| useH as (empty) => mixed; // error
+              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ require_specific_suppression.js:6:1
+
+Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. React
+hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
+
+   require_specific_suppression.js:6:1
+   6| useH as (empty) => mixed; // error, not suppressed
+      ^^^^
+
+References:
+   require_specific_suppression.js:1:1
+   1| hook useH<T>(x: T): [T] { return [x];}
+      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   require_specific_suppression.js:6:9
+   6| useH as (empty) => mixed; // error, not suppressed
+              ^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- rules_of_hooks.js:74:3
 
 Unreachable code. [unreachable-code]
@@ -2356,4 +2394,4 @@ References:
 
 
 
-Found 160 errors
+Found 162 errors

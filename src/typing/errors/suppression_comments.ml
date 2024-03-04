@@ -14,12 +14,16 @@
 *)
 open Utils_js
 
-module CodeSet : Flow_set.S with type elt = string * Loc.t = Flow_set.Make (struct
+module CodeWithLocOrd = struct
   type t = string * Loc.t
 
   (* Locs are just metadata here, should not affect behavior *)
   let compare (c1, _) (c2, _) = Base.String.compare c1 c2
-end)
+end
+
+module CodeSet : Flow_set.S with type elt = string * Loc.t = Flow_set.Make (CodeWithLocOrd)
+
+module CodeMap : Flow_map.S with type key = string * Loc.t = Flow_map.Make (CodeWithLocOrd)
 
 type applicable_codes =
   | All of Loc.t
