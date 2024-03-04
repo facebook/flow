@@ -14,6 +14,7 @@ aliases:
 
 orbs:
   win: circleci/windows@2.4.0
+  jq: circleci/jq@3.0.0
 
   opam_windows:
     commands:
@@ -425,6 +426,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
+      - jq/install:
+          version: jq-1.7
       - run:
           name: Run tests
           command: ./runtests.sh bin/linux-arm64/flow | cat
