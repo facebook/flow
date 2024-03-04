@@ -218,10 +218,7 @@ jobs:
                 /bin/bash \
             )
             echo "export CONTAINER_ID=$container_id" >> $BASH_ENV
-      - run:
-          name: Create cache breaker
-          command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker'
+      - make-opam-cachebreaker
       - restore-opam-cache
       - run:
           name: Init opam
