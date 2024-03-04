@@ -1969,15 +1969,11 @@ module Make (I : INPUT) : S = struct
           Ty.Decl o'
         | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
       in
-      let type_param env r t =
+      let type_param r t =
         match desc_of_reason r with
         | RType name ->
           let loc = Reason.def_loc_of_reason r in
-          let default t = TypeConverter.convert_t ~env t in
-          let%map p =
-            lookup_tparam ~default env t (Subst_name.Name (display_string_of_name name)) loc
-          in
-          Ty.Type p
+          return (Ty.Type (Ty.Bound (loc, display_string_of_name name)))
         | desc -> terr ~kind:BadTypeAlias ~msg:(spf "type param: %s" (string_of_desc desc)) (Some t)
       in
       let class_ env t =
@@ -1992,7 +1988,7 @@ module Make (I : INPUT) : S = struct
         | ImportEnumKind -> terr ~kind:(UnexpectedTypeCtor "EnumObjectT") None
         | ImportTypeofKind -> import env r t ps
         | OpaqueKind -> opaque env t ps
-        | TypeParamKind -> type_param env r t
+        | TypeParamKind -> type_param r t
         (* The following cases are not common *)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
         | RenderTypeKind -> terr ~kind:BadTypeAlias ~msg:"render type" (Some t)
