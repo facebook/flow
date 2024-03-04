@@ -82,6 +82,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           | None -> Ok (unchecked_module_t cx dep_file mref))))
   and sig_module_t cx file_key parse =
     let create_file = dep_file file_key parse in
+    Context.add_reachable_dep cx file_key;
     let leader =
       lazy
         (Parsing_heaps.Reader_dispatcher.get_leader_unsafe ~reader file_key parse

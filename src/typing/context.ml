@@ -226,6 +226,9 @@ type t = {
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable environment: Loc_env.t;
   mutable typing_mode: typing_mode;
+  (* A subset of all transitive dependencies of the current file as determined by import/require.
+   * This set will only be populated with type sig files that are actually forced. *)
+  mutable reachable_deps: Utils_js.FilenameSet.t;
   node_cache: Node_cache.t;
 }
 
@@ -409,6 +412,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
       hint_eval_cache = IMap.empty;
       environment = Loc_env.empty Name_def.Global;
       typing_mode = CheckingMode;
+      reachable_deps = Utils_js.FilenameSet.empty;
       node_cache = Node_cache.mk_empty ();
     }
   in
@@ -608,6 +612,8 @@ let exists_excuses cx = cx.ccx.exists_excuses
 
 let voidable_checks cx = cx.ccx.voidable_checks
 
+let reachable_deps cx = cx.reachable_deps
+
 let environment cx = cx.environment
 
 let typing_mode cx = cx.typing_mode
@@ -700,6 +706,9 @@ let add_voidable_check cx voidable_check =
 
 let add_monomorphized_component cx id t =
   cx.ccx.monomorphized_components <- Type.Properties.Map.add id t cx.ccx.monomorphized_components
+
+let add_reachable_dep cx file_key =
+  cx.reachable_deps <- Utils_js.FilenameSet.add file_key cx.reachable_deps
 
 let add_missing_local_annot_lower_bound cx loc t =
   let missing_local_annot_lower_bounds = cx.ccx.missing_local_annot_lower_bounds in
