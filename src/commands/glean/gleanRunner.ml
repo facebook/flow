@@ -723,8 +723,8 @@ let all_schema_version = 7
 
 let flow_schema_version = 3
 
-let make ~output_dir ~write_root ~include_direct_deps =
-  (module Codemod_runner.MakeSimpleTypedRunner (struct
+let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps =
+  (module struct
     type accumulator = {
       files_analyzed: int;
       json_filenames: SSet.t;
@@ -857,5 +857,12 @@ let make ~output_dir ~write_root ~include_direct_deps =
       output_facts "src.FileLines.1" file_lines;
       close_out out_channel;
       { files_analyzed = 1; json_filenames = SSet.singleton output_file }
-  end) : Codemod_runner.RUNNABLE
+  end : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
   )
+
+let make ~output_dir ~write_root ~include_direct_deps =
+  let module C = ( val create_typed_runner_config ~output_dir ~write_root ~include_direct_deps
+                     : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
+                 )
+  in
+  (module Codemod_runner.MakeSimpleTypedRunner (C) : Codemod_runner.RUNNABLE)
