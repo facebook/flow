@@ -2982,7 +2982,12 @@ let rec expression opts scope tbls (loc, expr) =
     | Value v -> Value (AsConst v)
     | e -> e
   end
-  | E.TSSatisfies _ -> Annot (Any loc)
+  | E.TSSatisfies _ ->
+    Err
+      ( loc,
+        SigError
+          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Satisfies))
+      )
   | E.Object { E.Object.properties; comments = _ } ->
     object_literal opts scope tbls loc ~frozen:false properties
   | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements
