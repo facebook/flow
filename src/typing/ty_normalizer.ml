@@ -790,7 +790,7 @@ module Make (I : INPUT) : S = struct
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-      | TypeAppT { reason; use_op = _; type_; targs; from_value = _; use_desc = _ } ->
+      | TypeAppT { reason; use_op = _; type_; targs; from_value; use_desc = _ } ->
         (match (desc_of_reason reason, targs) with
         | ( RTypeApp (RReactElement { name_opt = Some name; from_component_syntax = true }),
             component :: _
@@ -799,7 +799,7 @@ module Make (I : INPUT) : S = struct
             (Ty.Generic
                (symbol_from_reason env (TypeUtil.reason_of_t component) name, Ty.TypeAliasKind, None)
             )
-        | _ -> type_app ~env type_ (Some targs))
+        | _ -> type_app ~env ~from_value type_ (Some targs))
       | ThisInstanceT (r, { super; inst; _ }, _, _)
       | DefT (r, InstanceT { super; inst; _ }) ->
         instance_t ~env r super inst
@@ -831,7 +831,7 @@ module Make (I : INPUT) : S = struct
           | T.RendersStar -> Ty.RendersStar
         in
         return (Ty.Renders (ty, variant))
-      | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
+      | ThisTypeAppT (_, c, _, ts) -> type_app ~env ~from_value:false c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
       | OpaqueT (r, o) -> opaque_t ~env r o
       | ObjProtoT _ -> return Ty.(TypeOf (ObjProto, None))
@@ -1353,14 +1353,14 @@ module Make (I : INPUT) : S = struct
         | DefT
             ( _,
               ClassT
-                (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ })
+                (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value; use_desc = _ })
             ) ->
-          type_app ~env type_ targs
+          type_app ~env ~from_value type_ targs
         | _ ->
           let msg = "PolyT:" ^ Type.string_of_ctor t in
           terr ~kind:BadTypeApp ~msg None
       in
-      let rec singleton ~env targs t =
+      let rec singleton ~env ~from_value targs t =
         let open Type in
         match t with
         | AnyT _ -> type__ ~env t
@@ -1378,6 +1378,17 @@ module Make (I : INPUT) : S = struct
               t
               targs
           | None -> type__ ~env inner_t)
+        (* e.g. typeof functionDef<targ1, targ2> *)
+        | DefT (reason, PolyT _) when from_value && Option.is_some targs ->
+          I.typeapp
+            (Env.get_cx env)
+            ~cont:(type__ ~env)
+            ~type_:(type__ ~env)
+            ~app:app_on_generic
+            ~from_value
+            reason
+            t
+            (Option.get targs)
         | DefT (_, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
         | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) ->
           (* This is likely an error - cannot apply on non-polymorphic type.
@@ -1393,7 +1404,7 @@ module Make (I : INPUT) : S = struct
           Ty.Utility (Ty.Class t)
         | UnionT (_, union_rep) ->
           (* This case targeting UnionTs created during tvar_resolution. *)
-          let%map tys = mapM (singleton ~env targs) (union_rep |> T.UnionRep.members) in
+          let%map tys = mapM (singleton ~env ~from_value targs) (union_rep |> T.UnionRep.members) in
           (match tys with
           | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
           | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
@@ -1408,7 +1419,7 @@ module Make (I : INPUT) : S = struct
           let msg = Type.string_of_ctor t in
           terr ~kind:BadTypeApp ~msg None
       in
-      fun ~env t targs ->
+      fun ~env ~from_value t targs ->
         match Lookahead.peek (Env.get_cx env) t with
         | Lookahead.Recursive -> terr ~kind:BadTypeApp ~msg:"recursive" (Some t)
         | Lookahead.LowerBounds [] ->
@@ -1416,7 +1427,7 @@ module Make (I : INPUT) : S = struct
           return (Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper))
         | Lookahead.LowerBounds ts ->
           (* TypeAppT distributes over multiple lower bounds. *)
-          let%map tys = mapM (singleton ~env targs) ts in
+          let%map tys = mapM (singleton ~env ~from_value targs) ts in
           (match tys with
           | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
           | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))

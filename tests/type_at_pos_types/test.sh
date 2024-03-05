@@ -200,6 +200,8 @@ assert_ok "$FLOW" type-at-pos type-alias.js 31 6 --strip-root --pretty
 
 printf "type-alias.js:34:6 "
 assert_ok "$FLOW" type-at-pos type-alias.js 34 6 --strip-root --pretty --expand-json-output
+printf "type-alias.js:37:10 "
+assert_ok "$FLOW" type-at-pos type-alias.js 37 10 --strip-root --pretty
 
 
 # type-destructor-trigger.js

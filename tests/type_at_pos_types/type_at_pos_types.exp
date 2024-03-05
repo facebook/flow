@@ -1581,6 +1581,24 @@ type-alias.js:34:6 {
   "start":6,
   "end":11
 }
+type-alias.js:37:10 {
+  "types":{
+    "unevaluated":{"type":"type TypeOfWithTArgs = (v: string) => string"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":37,"column":6,"offset":697},
+    "end":{"line":37,"column":20,"offset":712}
+  },
+  "path":"type-alias.js",
+  "line":37,
+  "endline":37,
+  "start":6,
+  "end":20
+}
 type-destructor-trigger.js:11:7 = {
   "types":{"unevaluated":{"type":"KeyMirrorRecursive<{|A: string|}>"},"evaluated":null},
   "reasons":[],
