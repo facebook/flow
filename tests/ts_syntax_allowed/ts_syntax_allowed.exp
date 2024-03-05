@@ -1,3 +1,31 @@
+Error ----------------------------------------------------------------------------------------------- basic_types.js:1:1
+
+Cannot cast `null` to undefined because null [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   basic_types.js:1:1
+   1| null as undefined; // error
+      ^^^^ [1]
+
+References:
+   basic_types.js:1:9
+   1| null as undefined; // error
+              ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- basic_types.js:6:7
+
+Cannot cast `''` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   basic_types.js:6:7
+   6| '' as unknown as never; // error
+            ^^^^^^^ [1]
+
+References:
+   basic_types.js:6:18
+   6| '' as unknown as never; // error
+                       ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ exported.js:10:11
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -401,4 +429,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 30 errors
+Found 32 errors

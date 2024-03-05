@@ -359,18 +359,23 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | `Boolean -> ());
       ((loc, BoolT.at loc), t_ast)
     | (loc, (Unknown _ as t_ast)) ->
-      Flow_js_utils.add_output
-        env.cx
-        (Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc });
-      ((loc, AnyT.at (AnyError None) loc), t_ast)
+      if not (Context.ts_syntax env.cx) then
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc });
+      ((loc, MixedT.at loc), t_ast)
     | (loc, (Never _ as t_ast)) ->
-      Flow_js_utils.add_output env.cx (Error_message.ETSSyntax { kind = Error_message.TSNever; loc });
-      ((loc, AnyT.at (AnyError None) loc), t_ast)
+      if not (Context.ts_syntax env.cx) then
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.ETSSyntax { kind = Error_message.TSNever; loc });
+      ((loc, EmptyT.at loc), t_ast)
     | (loc, (Undefined _ as t_ast)) ->
-      Flow_js_utils.add_output
-        env.cx
-        (Error_message.ETSSyntax { kind = Error_message.TSUndefined; loc });
-      ((loc, AnyT.at (AnyError None) loc), t_ast)
+      if not (Context.ts_syntax env.cx) then
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.ETSSyntax { kind = Error_message.TSUndefined; loc });
+      ((loc, VoidT.at loc), t_ast)
     | (loc, Nullable { Nullable.argument = t; comments }) ->
       let (((_, t), _) as t_ast) = convert env t in
       let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
