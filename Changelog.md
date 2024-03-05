@@ -1,3 +1,49 @@
+### 0.230.0
+
+Likely to cause new Flow errors:
+* We now put value exports and type exports into two different namespaces. It means that we will now consistently error on places where you try to import, re-export, or use a imported type as a value. This change also makes certain patterns that happen to work in the past no longer work, e.g.
+
+```
+// a.js
+export type Foo = string;
+// b.js
+const A = require('./a');
+module.exports = {...A};
+// c.js
+// previously allowed, no longer allowed
+import type {Foo} from './b';
+```
+
+* We have allowed function parameters to refer to each other for a while now. However, we didn't implement the analysis correctly for exported functions, which causes inconsistent behaviors. This is now fixed e.g.
+
+```
+// a.js
+// we incorrectly resolve x to refer to
+// be external to the function params,
+// which is a global in this case
+export function foo(x: string, y: typeof x) {}
+// b.js
+import {foo} from './a';
+foo("", 3); // no error before, errors now
+```
+
+* Previously, we allowed assignment to any globals, regardless of whether it's a type or value. Therefore, both were allowed in `Array = 3; $ReadOnlyArray = 2;` Now the latter is banned.
+* Flow now consistently bans referring a type-only global as value
+* Some bad annotations that cause `value-as-type` or `recursive-definition` errors will no longer affect which branch to take in overload resolution.
+
+New Features:
+* Flow now supports typeof with type arguments `type T = typeof foo<string>`. This syntax is supported in prettier since v3.1. If you previously enabled the flag `typeof_with_type_arguments=true`, you need to remove it.
+* Flow now supports explicit type arguments on JSX. e.g. `<Foo<string, _, number >propA='d' />`. Note that some type arguments can be inferred using the `_` syntax.
+* Flow now supports the same `NoInfer` intrinsic that will be available in TypeScript 5.4.
+* Under `experimental.ts_syntax=true`, Flow will
+  * Automatically translate TypeScript's readonly on tuple and array types into Flow equivalent `$ReadOnly<[...]>` and `$ReadOnlyArray<...>` without error.
+  * Automatically translate TypeScript's keyof into Flow equivalent `$Keys` without error. Note that there are behavior differences between `$Keys<>` and `keyof` right now ([flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCSww1wABABBbHAAA6UGxpOxMGIyGx9lMUAQ2IAvNiAOTMgDcxKRxOJmJxACFsQoGlA2CQ8QTiWTsZhKFSael6UzWRyoFyoMSWsZsQBpRnYgAk2uwtBIAB4+QA+FXMikQZnYrE660y+2O7UqmIgfImEhwaBBfIABisACYQwBOUMgJFAA), [TS](https://www.typescriptlang.org/play?ssl=7&ssc=2&pln=1&pc=1#code/MYGwhgzhAECC0G8BQ1XQGYHtMC5oQBcAnASwDsBzaAXmgHI6BuJAXySVEhgCFoBTAB4E+ZACYx4yNNABGYInkKlKNek1bsCATwAOfaAGlVAaz5bM6aN2Z0smOvjAESEdCT4wDNuUQcQnLm4ehsxAA)), so use it with caution.
+  * Automatically translate TypeScript's `unknown` `never` and `undefined` into Flow equivalent `mixed` `empty` and `avoid` without error.
+  * Support TypeScript's variance annotation `readonly` `in` `out`, `in out` without error.
+
+Misc:
+* `experimental.ts_syntax` is now always on in https://flow.org/try.
+
 ### 0.229.2
 
 Misc:
