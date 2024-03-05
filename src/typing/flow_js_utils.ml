@@ -602,7 +602,7 @@ let generic_of_tparam cx ~f { bound; name; reason = param_reason; is_this = _; _
         opt_annot_reason ?annot_loc @@ mk_reason desc param_loc)
       bound
   in
-  GenericT { reason = param_reason; name; id; bound }
+  GenericT { reason = param_reason; name; id; bound; no_infer = false }
 
 let generic_bound cx prev_map ({ name; _ } as tparam) =
   let generic = generic_of_tparam cx ~f:(subst cx prev_map) tparam in
@@ -939,6 +939,7 @@ let fix_this_instance cx reason (reason_i, i, is_this, this_name) =
                  reason;
                  name = this_name;
                  bound = this;
+                 no_infer = false;
                }
            else
              this
@@ -1034,7 +1035,13 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
         (Subst_name.Map.empty, ts, [])
         xs
     in
-    (H.reposition cx ~trace (loc_of_reason reason_tapp) (subst cx ~use_op map t), all_ts_rev)
+    ( H.reposition
+        cx
+        ~trace
+        (loc_of_reason reason_tapp)
+        (subst cx ~use_op ~placeholder_no_infer:(Context.in_implicit_instantiation cx) map t),
+      all_ts_rev
+    )
 
   let mk_typeapp_of_poly
       cx trace ~use_op ~reason_op ~reason_tapp ?(cache = false) id tparams_loc xs t ts =

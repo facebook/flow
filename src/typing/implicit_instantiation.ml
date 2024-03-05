@@ -1643,7 +1643,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               let id = Context.make_generic_id cx name (loc_of_reason reason) in
               let reason = update_desc_reason invalidate_rtype_alias reason in
               let bound = UnionT (reason, UnionRep.make true_t false_t []) in
-              GenericT { reason; name; id; bound })
+              GenericT { reason; name; id; bound; no_infer = false })
       in
       reposition cx ~trace (loc_of_reason reason) t
 end

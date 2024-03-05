@@ -63,7 +63,7 @@ let mk_object_type
   in
   Generic.make_spread_id generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
-         GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id }
+         GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id; no_infer = false }
      )
 
 let type_optionality_and_missing_property { Object.prop_t; _ } =

@@ -2253,6 +2253,13 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (Object_setPrototypeOf loc)
     | _ -> Err (loc, CheckError)
   end
+  | "NoInfer" -> begin
+    match targs with
+    | Some (_, { arguments = [t]; _ }) ->
+      let t = annot opts scope tbls xs t in
+      Annot (NoInfer t)
+    | _ -> Err (loc, CheckError)
+  end
   | "$TEMPORARY$number" -> begin
     match targs with
     | Some (_, { arguments = [(loc, T.NumberLiteral { Ast.NumberLiteral.value; raw; _ })]; _ }) ->
