@@ -52,13 +52,13 @@ echo ""
 echo "================================================================================"
 echo "JSON output without --explain should be an array"
 echo "================================================================================"
-assert_ok "$FLOW" ls --json --strip-root --root src --all $(cat files.txt) src/.flowconfig | jq
+assert_ok "$FLOW" ls --json --strip-root --root src --all $(cat files.txt) src/.flowconfig
 echo ""
 
 echo "================================================================================"
 echo "JSON output with --explain should be JSON object"
 echo "================================================================================"
-assert_ok "$FLOW" ls --json --strip-root --root src --all --explain $(cat files.txt) src/.flowconfig | jq
+assert_ok "$FLOW" ls --json --strip-root --root src --all --explain $(cat files.txt) src/.flowconfig
 echo ""
 
 echo "================================================================================"
