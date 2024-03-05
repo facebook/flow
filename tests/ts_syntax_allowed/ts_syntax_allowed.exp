@@ -304,6 +304,115 @@ Cannot assign `'hello'` to `ro_obj2.b` because property `b` is not writable. [ca
                ^
 
 
+Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:3:20
+
+TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `$ReadOnlyArray<T>`. For object
+and tuple types you can use `$ReadOnly<T>`. [ts-syntax]
+
+   3| declare const baz: readonly {foo: string}; // error
+                         ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:4:1
+
+Cannot cast `foo[0]` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   readonly_of_arr_tuple.js:4:1
+   4| foo[0] as number; // error: string ~> number
+      ^^^^^^
+
+References:
+   readonly_of_arr_tuple.js:1:30
+   1| declare const foo: readonly [string, number];
+                                   ^^^^^^ [1]
+   readonly_of_arr_tuple.js:4:11
+   4| foo[0] as number; // error: string ~> number
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:5:1
+
+Cannot assign empty string to `foo[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
+
+   5| foo[0] = ''; // error
+      ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:6:1
+
+Cannot cast `bar[0]` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   readonly_of_arr_tuple.js:6:1
+   6| bar[0] as number; // error: string ~> number
+      ^^^^^^
+
+References:
+   readonly_of_arr_tuple.js:2:29
+   2| declare const bar: readonly string[];
+                                  ^^^^^^ [1]
+   readonly_of_arr_tuple.js:6:11
+   6| bar[0] as number; // error: string ~> number
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:7:1
+
+Cannot assign empty string to `bar[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   7| bar[0] = ''; // error
+      ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:11:1
+
+Cannot cast `readonly_tuple[0]` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   readonly_of_arr_tuple.js:11:1
+   11| readonly_tuple[0] as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   exported.js:31:48
+   31| declare export const readonly_tuple: readonly [string, number];
+                                                      ^^^^^^ [1]
+   readonly_of_arr_tuple.js:11:22
+   11| readonly_tuple[0] as number; // error: string ~> number
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:12:1
+
+Cannot assign empty string to `readonly_tuple[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
+
+   12| readonly_tuple[0] = ''; // error
+       ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:13:1
+
+Cannot cast `readonly_array[0]` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   readonly_of_arr_tuple.js:13:1
+   13| readonly_array[0] as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   exported.js:32:47
+   32| declare export const readonly_array: readonly string[];
+                                                     ^^^^^^ [1]
+   readonly_of_arr_tuple.js:13:22
+   13| readonly_array[0] as number; // error: string ~> number
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:14:1
+
+Cannot assign empty string to `readonly_array[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   14| readonly_array[0] = ''; // error
+       ^^^^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------- tparam_bound.js:2:3
 
 Cannot call `f` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-call]
@@ -457,4 +566,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 34 errors
+Found 43 errors
