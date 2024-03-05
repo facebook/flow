@@ -32,3 +32,6 @@ type O = N<number>
 
 class Klass {};
 type TKlass = typeof Klass;
+
+declare function poly_id<T>(v: T): T;
+type TypeOfWithTArgs = typeof poly_id<string>;
