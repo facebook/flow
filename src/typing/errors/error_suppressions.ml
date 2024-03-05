@@ -231,15 +231,16 @@ let remove_lint_suppression_from_map loc (suppressions_map : t) =
 let check_loc suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
+  let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
   let suppression_applies codes2 =
     match codes2 with
-    | All _ -> true
-    | Specific specific_codes2 -> CodeSet.subset specific_codes specific_codes2
+    | All _ -> CodeMap.for_all (fun _ require_specific -> not require_specific) specific_codes
+    | Specific specific_codes2 -> CodeSet.subset (Lazy.force specific_codes_set) specific_codes2
   in
   match suppression_at_loc loc suppressions with
   | Some (locs, codes') when suppression_applies codes' ->
     let used = locs in
-    let unused = remove_suppression_from_map loc specific_codes unused in
+    let unused = remove_suppression_from_map loc (Lazy.force specific_codes_set) unused in
     (Off, used, unused)
   | _ -> (result, LocSet.empty, unused)
 
@@ -262,7 +263,11 @@ let check
   let loc = Flow_errors_utils.loc_of_printable_error err in
   let code_opt =
     Flow_errors_utils.code_of_printable_error err
-    |> Base.Option.map ~f:(fun code -> CodeSet.singleton (Error_codes.string_of_code code, loc))
+    |> Base.Option.map ~f:(fun code ->
+           CodeMap.singleton
+             (Error_codes.string_of_code code, loc)
+             (Error_codes.require_specific code)
+       )
   in
   (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
