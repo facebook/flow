@@ -34,10 +34,10 @@ executors:
           <<: *opam_env
     working_directory: ~/flow
   linux-arm64:
-    machine:
-      image: ubuntu-2004:202101-01
-    environment:
-      <<: *opam_env
+    docker:
+      - image: flowtype/flow-ci:linux-arm64
+        environment:
+          <<: *opam_env
     resource_class: arm.medium
     working_directory: ~/flow
   linux-node:
@@ -206,44 +206,23 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      - run:
-          name: Start Docker image
-          command: |
-            rm -rf /home/circleci/.opam && mkdir /home/circleci/.opam
-            container_id=$(\
-              docker run -it -d \
-                --mount type=bind,source=/home/circleci/.opam,target=/home/opam/.opam \
-                --mount type=bind,source=/home/circleci/flow,target=/home/opam/flow \
-                flowtype/flow-ci:linux-arm64 \
-                /bin/bash \
-            )
-            echo "export CONTAINER_ID=$container_id" >> $BASH_ENV
-      - run:
-          name: Create cache breaker
-          command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker'
+      - make-opam-cachebreaker
       - restore-opam-cache
       - run:
           name: Init opam
-          command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'flow/.circleci/opam_init.sh'
+          command: .circleci/opam_init.sh
       - run:
           name: Install opam deps
-          command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && make deps'
+          command: make deps
       - save-opam-cache
       - run:
           name: Build flow
           command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && opam exec -- make bin/flow dist/flow.zip'
+            opam exec -- make bin/flow dist/flow.zip
             mkdir -p bin/linux-arm64 && cp bin/flow bin/linux-arm64/flow
       - run:
           name: Build libflowparser
-          command: |
-            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && opam exec -- make -C src/parser dist/libflowparser.zip'
-      - run:
-          name: Stop Docker container
-          command: docker stop $CONTAINER_ID
+          command: opam exec -- make -C src/parser dist/libflowparser.zip
       - run:
           name: Create artifacts
           command: |
