@@ -1515,6 +1515,13 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Keyof { T.Keyof.argument; comments = _ } ->
       let t = annot opts scope tbls xs argument in
       Annot (Keys (loc, t))
+    | T.ReadOnly { T.ReadOnly.argument = (_, T.Tuple _) as argument; comments = _ } ->
+      let t = annot opts scope tbls xs argument in
+      Annot (ReadOnly (loc, t))
+    | T.ReadOnly
+        { T.ReadOnly.argument = (_, T.Array { T.Array.argument; comments = _ }); comments = _ } ->
+      let t = annot opts scope tbls xs argument in
+      Annot (ReadOnlyArray (loc, t))
     | T.ReadOnly _ -> Annot (Any loc)
     | T.Exists _ -> Annot (Exists loc)
   in

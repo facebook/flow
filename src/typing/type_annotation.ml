@@ -422,18 +422,49 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (t, renders_ast) = convert_render_type ~allow_generic_t:false env loc renders in
       ((loc, t), Renders renders_ast)
     | (loc, ReadOnly ro) ->
-      let { ReadOnly.argument; _ } = ro in
-      let arg_kind =
-        match argument with
-        | (_, Array _) -> Some `Array
-        | (_, Tuple _) -> Some `Tuple
-        | _ -> None
-      in
-      Flow_js_utils.add_output
-        env.cx
-        (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType arg_kind; loc });
-      let t = AnyT.at (AnyError None) loc in
-      ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro))
+      let { ReadOnly.argument; comments } = ro in
+      let cx = env.cx in
+      (match argument with
+      | (_, Tuple _) ->
+        if not (Context.ts_syntax cx) then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType (Some `Tuple); loc });
+        let (((_, arg_t), _) as argument) = convert env argument in
+        let reason = mk_reason RReadOnlyType loc in
+        let t =
+          mk_type_destructor
+            cx
+            (Op (TypeApplication { type_ = reason }))
+            reason
+            arg_t
+            ReadOnlyType
+            (mk_eval_id cx loc)
+        in
+        ((loc, t), ReadOnly { ReadOnly.argument; comments })
+      | (arr_loc, Array { Array.argument; comments }) ->
+        if not (Context.ts_syntax cx) then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType (Some `Array); loc });
+        let (((_, elem_t), _) as argument) = convert env argument in
+        let arr_t =
+          DefT
+            ( mk_annot_reason RROArrayType loc,
+              ArrT (ArrayAT { react_dro = None; elem_t; tuple_view = None })
+            )
+        in
+        let ro_t = DefT (mk_annot_reason RROArrayType loc, ArrT (ROArrayAT (elem_t, None))) in
+        ( (loc, ro_t),
+          ReadOnly
+            { ReadOnly.argument = ((arr_loc, arr_t), Array { Array.argument; comments }); comments }
+        )
+      | _ ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType None; loc });
+        let t = AnyT.at (AnyError None) loc in
+        ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro)))
     | (loc, Tuple { Tuple.elements; comments }) ->
       let reason = mk_annot_reason RTupleType loc in
       let (unresolved_rev, els_asts_rev) =

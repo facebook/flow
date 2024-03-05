@@ -27,3 +27,6 @@ class B extends A {
 }
 
 export type K = keyof B;
+
+declare export const readonly_tuple: readonly [string, number];
+declare export const readonly_array: readonly string[];
