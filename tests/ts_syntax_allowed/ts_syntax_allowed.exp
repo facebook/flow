@@ -1,3 +1,253 @@
+Error ------------------------------------------------------------------------------------------------ exported.js:10:11
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   exported.js:10:11
+   10|     -bad: T; // error
+                 ^
+
+References:
+   exported.js:8:28
+    8| export class Covariant<out T> {
+                                  ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ exported.js:14:11
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   exported.js:14:11
+   14|     +bad: T; // error
+                 ^
+
+References:
+   exported.js:12:31
+   12| export class Contravariant<in T> {
+                                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ invalid_prop_variance.js:1:17
+
+Unexpected identifier, expected the token `:`
+
+   1| type Foo = {out foo: string} // parse error
+                      ^^^
+
+
+Error ---------------------------------------------------------------------------------- invalid_tparam_variance.js:1:11
+
+Unexpected reserved type
+
+   1| class Foo<readonly T> {} // parse error
+                ^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:3:11
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   polarity.js:3:11
+   3|     -bad: T; // error
+                ^
+
+References:
+   polarity.js:1:21
+   1| class Covariant<out T> {
+                          ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:7:11
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   polarity.js:7:11
+   7|     +bad: T; // error
+                ^
+
+References:
+   polarity.js:5:24
+   5| class Contravariant<in T> {
+                             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:15:1
+
+Cannot cast `covariant` to `Covariant` because string literal `foo` [1] is incompatible with string literal `bar` [2] in
+type argument `T` [3]. [incompatible-cast]
+
+   polarity.js:15:1
+   15| covariant as Covariant<'bar'>; // error
+       ^^^^^^^^^
+
+References:
+   polarity.js:13:33
+   13| const covariant = new Covariant<'foo'>;
+                                       ^^^^^ [1]
+   polarity.js:15:24
+   15| covariant as Covariant<'bar'>; // error
+                              ^^^^^ [2]
+   polarity.js:1:21
+    1| class Covariant<out T> {
+                           ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ polarity.js:17:11
+
+Cannot assign `'foo'` to `covariant.prop` because property `prop` is not writable. [cannot-write]
+
+   17| covariant.prop = 'foo'; // error
+                 ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:21:1
+
+Cannot cast `contravariant` to `Contravariant` because string [1] is incompatible with mixed [2] in type argument
+`T` [3]. [incompatible-cast]
+
+   polarity.js:21:1
+   21| contravariant as Contravariant<mixed>; // error
+       ^^^^^^^^^^^^^
+
+References:
+   polarity.js:19:41
+   19| const contravariant = new Contravariant<string>;
+                                               ^^^^^^ [1]
+   polarity.js:21:32
+   21| contravariant as Contravariant<mixed>; // error
+                                      ^^^^^ [2]
+   polarity.js:5:24
+    5| class Contravariant<in T> {
+                              ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:25:1
+
+Cannot cast `invariant` to `Invariant` because string [1] is incompatible with string literal `foo` [2] in type argument
+`T` [3]. [incompatible-cast]
+
+   polarity.js:25:1
+   25| invariant as Invariant<string>; // error
+       ^^^^^^^^^
+
+References:
+   polarity.js:25:24
+   25| invariant as Invariant<string>; // error
+                              ^^^^^^ [1]
+   polarity.js:24:33
+   24| const invariant = new Invariant<'foo'>;
+                                       ^^^^^ [2]
+   polarity.js:9:24
+    9| class Invariant<in out T> {
+                              ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:30:8
+
+Cannot assign `42` to `ro_obj.a` because property `a` is not writable. [cannot-write]
+
+   30| ro_obj.a = 42; // error
+              ^
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:31:8
+
+Cannot assign `'hello'` to `ro_obj.b` because property `b` is not writable. [cannot-write]
+
+   31| ro_obj.b = 'hello'; // error
+              ^
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:36:1
+
+Cannot cast `imported_covariant` to `exported.Covariant` because string literal `foo` [1] is incompatible with string
+literal `bar` [2] in type argument `T` [3]. [incompatible-cast]
+
+   polarity.js:36:1
+   36| imported_covariant as exported.Covariant<'bar'>; // error
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   polarity.js:34:51
+   34| const imported_covariant = new exported.Covariant<'foo'>;
+                                                         ^^^^^ [1]
+   polarity.js:36:42
+   36| imported_covariant as exported.Covariant<'bar'>; // error
+                                                ^^^^^ [2]
+   exported.js:8:28
+    8| export class Covariant<out T> {
+                                  ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ polarity.js:38:20
+
+Cannot assign `'foo'` to `imported_covariant.prop` because property `prop` is not writable. [cannot-write]
+
+   38| imported_covariant.prop = 'foo'; // error
+                          ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:42:1
+
+Cannot cast `imported_contravariant` to `exported.Contravariant` because string [1] is incompatible with mixed [2] in
+type argument `T` [3]. [incompatible-cast]
+
+   polarity.js:42:1
+   42| imported_contravariant as exported.Contravariant<mixed>; // error
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   polarity.js:40:59
+   40| const imported_contravariant = new exported.Contravariant<string>;
+                                                                 ^^^^^^ [1]
+   polarity.js:42:50
+   42| imported_contravariant as exported.Contravariant<mixed>; // error
+                                                        ^^^^^ [2]
+   exported.js:12:31
+   12| export class Contravariant<in T> {
+                                     ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:46:1
+
+Cannot cast `imported_invariant` to `exported.Invariant` because string [1] is incompatible with string literal
+`foo` [2] in type argument `T` [3]. [incompatible-cast]
+
+   polarity.js:46:1
+   46| imported_invariant as exported.Invariant<string>; // error
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   polarity.js:46:42
+   46| imported_invariant as exported.Invariant<string>; // error
+                                                ^^^^^^ [1]
+   polarity.js:45:51
+   45| const imported_invariant = new exported.Invariant<'foo'>;
+                                                         ^^^^^ [2]
+   exported.js:16:31
+   16| export class Invariant<in out T> {
+                                     ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:50:9
+
+Cannot assign `42` to `ro_obj2.a` because property `a` is not writable. [cannot-write]
+
+   50| ro_obj2.a = 42; // error
+               ^
+
+
+Error ------------------------------------------------------------------------------------------------- polarity.js:51:9
+
+Cannot assign `'hello'` to `ro_obj2.b` because property `b` is not writable. [cannot-write]
+
+   51| ro_obj2.b = 'hello'; // error
+               ^
+
+
 Error ---------------------------------------------------------------------------------------------- tparam_bound.js:2:3
 
 Cannot call `f` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-call]
@@ -151,4 +401,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 12 errors
+Found 30 errors
