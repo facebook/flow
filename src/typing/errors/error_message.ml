@@ -609,6 +609,7 @@ and 'loc t' =
       callee_loc: 'loc;
       call_loc: 'loc;
     }
+  | EHookNaming of 'loc
   | EObjectThisReference of 'loc * 'loc virtual_reason
   | EComponentThisReference of {
       component_loc: 'loc;
@@ -1400,6 +1401,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | ConditionalHook -> ConditionalHook
     in
     EHookRuleViolation { callee_loc = f callee_loc; call_loc = f call_loc; hook_rule }
+  | EHookNaming l -> EHookNaming (f l)
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
   | EComponentThisReference { component_loc; this_loc } ->
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
@@ -1732,6 +1734,7 @@ let util_use_op_of_msg nope util = function
   | EHookIncompatible _
   | EHookUniqueIncompatible _
   | EHookRuleViolation _
+  | EHookNaming _
   | EObjectThisReference _
   | EComponentThisReference _
   | EComponentCase _
@@ -1910,6 +1913,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsupportedKeyInObject { loc; _ }
   | EAmbiguousNumericKeyWithVariance loc
   | EHookRuleViolation { call_loc = loc; _ }
+  | EHookNaming loc
   | ECharSetAnnot loc
   | EExportsAnnot loc
   | EPropertyTypeAnnot loc
@@ -4911,6 +4915,8 @@ let friendly_message_of_msg loc_of_aloc msg =
                 "Different React hooks are not compatible with each other, because hooks cannot be called conditionally";
             ];
       }
+  | EHookNaming _ ->
+    Normal { features = [text "Hooks must have names that begin with "; code "use"; text "."] }
   | EHookRuleViolation { callee_loc; hook_rule = ConditionalHook; call_loc = _ } ->
     Normal
       {
@@ -5965,6 +5971,7 @@ let error_code_of_message err : error_code option =
   | EHookUniqueIncompatible _ ->
     Some ReactRuleHookIncompatible
   | EHookRuleViolation _ -> Some ReactRuleHook
+  | EHookNaming _ -> Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
   | ETrivialRecursiveDefinition _ -> Some RecursiveDefinition

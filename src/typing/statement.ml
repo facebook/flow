@@ -895,6 +895,10 @@ module Make
       Flow.flow cx (module_t, CheckUntypedImportT (reason, ImportValue));
       E.ExportBatchSpecifier (specifier_loc, None)
 
+  let hook_check cx hook (loc, { Ast.Identifier.name; _ }) =
+    if hook && not (Flow_ast_utils.hook_name name) then
+      Flow.add_output cx Error_message.(EHookNaming loc)
+
   (************)
   (* Visitors *)
   (************)
@@ -1009,6 +1013,12 @@ module Make
       | _ ->
         (* error case *)
         let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } = f in
+        let hook =
+          match annot with
+          | (_, (_, Ast.Type.Function { Ast.Type.Function.hook; _ })) -> hook
+          | _ -> false
+        in
+        hook_check cx hook (id_loc, id_name);
         let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
         let t =
           Type_env.get_var_declared_type
@@ -7560,6 +7570,7 @@ module Make
         in
         let from_generic_function = Base.Option.is_some tparams in
         let require_return_annot = require_return_annot || from_generic_function in
+        Base.Option.iter id ~f:(hook_check cx hook);
         let (return_t, return, type_guard_opt) =
           match (return, type_guard_incompatible) with
           | (Ast.Function.ReturnAnnot.TypeGuard (_, (loc, _)), Some kind) ->

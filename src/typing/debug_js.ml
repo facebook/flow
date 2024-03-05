@@ -1877,6 +1877,7 @@ let dump_error_message =
         (dump_reason cx lower)
         (dump_reason cx upper)
     | EHookRuleViolation _ -> "EHookRuleViolation ( )"
+    | EHookNaming _ -> "EHookNaming ( )"
     | EInvalidGraphQL (loc, err) ->
       let err_str =
         match err with

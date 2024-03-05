@@ -534,8 +534,8 @@ let push_toplevel_type t exp =
   ((loc, t), e')
 
 let hook_name s =
-  let is_A_to_Z c = c >= 'A' && c <= 'Z' in
-  String.starts_with ~prefix:"use" s && (String.length s = 3 || is_A_to_Z s.[3])
+  let is_cap c = c = Char.uppercase_ascii c in
+  String.starts_with ~prefix:"use" s && (String.length s = 3 || is_cap s.[3])
 
 let hook_function { Flow_ast.Function.id; _ } =
   match id with
