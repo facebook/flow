@@ -17,3 +17,13 @@ export class Invariant<in out T> {
     prop: number;
 }
 export type RO<out T> = {readonly [K in keyof T]: T[K]};
+
+class A {
+    foo: string = '';
+}
+
+class B extends A {
+    bar: string = '';
+}
+
+export type K = keyof B;

@@ -410,10 +410,14 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       ( (loc, TypeUtil.typeof_annotation reason valtype targs),
         Typeof { Typeof.argument = qualification_ast; targs = targs_ast; comments }
       )
-    | (loc, Keyof keyof) ->
-      Flow_js_utils.add_output env.cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
-      let t = AnyT.at (AnyError None) loc in
-      ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
+    | (loc, Keyof { Keyof.argument; comments }) ->
+      let (((_, arg_t), _) as argument) = convert env argument in
+      let t = KeysT (mk_reason RKeySet loc, arg_t) in
+      if not (Context.ts_syntax env.cx) then
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
+      ((loc, t), Keyof { Keyof.argument; comments })
     | (loc, Renders renders) ->
       let (t, renders_ast) = convert_render_type ~allow_generic_t:false env loc renders in
       ((loc, t), Renders renders_ast)
