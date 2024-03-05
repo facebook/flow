@@ -72,6 +72,34 @@ Unexpected reserved type
                 ^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- keyof.js:10:1
+
+Cannot cast `'foo'` to `K` because property `foo` is missing in `B` [1]. [prop-missing]
+
+   keyof.js:10:1
+   10| 'foo' as K; // error: $Keys does not include props from super class, which is different from TS
+       ^^^^^
+
+References:
+   keyof.js:10:10
+   10| 'foo' as K; // error: $Keys does not include props from super class, which is different from TS
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- keyof.js:14:1
+
+Cannot cast `'foo'` to `K2` because property `foo` is missing in `B` [1]. [prop-missing]
+
+   keyof.js:14:1
+   14| 'foo' as K2; // error: $Keys does not include props from super class, which is different from TS
+       ^^^^^
+
+References:
+   keyof.js:14:10
+   14| 'foo' as K2; // error: $Keys does not include props from super class, which is different from TS
+                ^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- polarity.js:3:11
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -429,4 +457,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 32 errors
+Found 34 errors

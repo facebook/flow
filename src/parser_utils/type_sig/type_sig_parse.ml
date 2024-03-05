@@ -1512,7 +1512,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Renders { T.Renders.operator_loc = _; comments = _; argument; variant } ->
       let t = annot opts scope tbls xs argument in
       Annot (Renders (loc, t, variant))
-    | T.Keyof _ -> Annot (Any loc)
+    | T.Keyof { T.Keyof.argument; comments = _ } ->
+      let t = annot opts scope tbls xs argument in
+      Annot (Keys (loc, t))
     | T.ReadOnly _ -> Annot (Any loc)
     | T.Exists _ -> Annot (Exists loc)
   in
