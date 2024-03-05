@@ -107,7 +107,7 @@ let expect_proper_def t =
 
 let expect_proper_def_use t = lift_to_use expect_proper_def t
 
-let subst = Type_subst.subst
+let subst = Type_subst.subst ~placeholder_no_infer:false
 
 let check_canceled =
   let count = ref 0 in
@@ -197,9 +197,9 @@ let find_resolved_opt cx ~default ~f id =
 
 let rec drop_resolved cx t =
   match t with
-  | GenericT { reason; name; id = g_id; bound = OpenT (_, id) } ->
+  | GenericT { reason; name; id = g_id; bound = OpenT (_, id); no_infer } ->
     find_resolved_opt cx id ~default:t ~f:(fun t ->
-        GenericT { reason; name; id = g_id; bound = drop_resolved cx t }
+        GenericT { reason; name; id = g_id; bound = drop_resolved cx t; no_infer }
     )
   | OpenT (_, id) -> find_resolved_opt cx id ~default:t ~f:(drop_resolved cx)
   | _ -> t
@@ -455,7 +455,8 @@ struct
         | AnyT _ ->
           (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
           any_propagated cx trace l u
-        | GenericT { bound; name; reason; id } -> handle_generic cx trace bound reason id name u
+        | GenericT { bound; name; reason; id; no_infer } ->
+          handle_generic cx trace ~no_infer bound reason id name u
         | _ -> false
         (* Either propagate AnyT through the def type, or short-circuit because l <: any trivially *)
       then
@@ -1739,9 +1740,9 @@ struct
           let ts' = Base.List.map ts ~f in
           let reason' = repos_reason (loc_of_reason reason_op) reason in
           continue cx trace (union_of_ts reason' ts') k
-        | (UnionT _, SealGenericT { reason = _; id; name; cont }) ->
+        | (UnionT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
-          continue cx trace (GenericT { reason; id; name; bound = l }) cont
+          continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
@@ -2069,9 +2070,9 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
-        | (IntersectionT _, SealGenericT { reason = _; id; name; cont }) ->
+        | (IntersectionT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
-          continue cx trace (GenericT { reason; id; name; bound = l }) cont
+          continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
         (* CallT uses that arise from the CallType type destructor are processed
@@ -4965,9 +4966,9 @@ struct
         (* Don't refine opaque types based on its bound *)
         | (OpaqueT _, PredicateT (p, t)) -> predicate cx trace t l p
         | (OpaqueT _, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
-        | (OpaqueT _, SealGenericT { reason = _; id; name; cont }) ->
+        | (OpaqueT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
-          continue cx trace (GenericT { reason; id; name; bound = l }) cont
+          continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         (* Preserve OpaqueT as consequent, but branch based on the bound *)
         | (OpaqueT (_, { super_t = Some t; _ }), CondT (r, then_t_opt, else_t, tout)) ->
           let then_t_opt =
@@ -5492,9 +5493,9 @@ struct
         (***********************************************************)
         (* generics                                                *)
         (***********************************************************)
-        | (_, SealGenericT { reason = _; id; name; cont }) ->
+        | (_, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
-          continue cx trace (GenericT { reason; id; name; bound = l }) cont
+          continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (reposition_reason cx reason bound, u)
         (***************)
@@ -6108,13 +6109,13 @@ struct
       false
     | _ -> true
 
-  and handle_generic cx trace bound reason id name u =
-    let make_generic t = GenericT { reason; id; name; bound = t } in
+  and handle_generic cx trace ~no_infer bound reason id name u =
+    let make_generic t = GenericT { reason; id; name; bound = t; no_infer } in
     let narrow_generic_with_continuation mk_use_t cont =
       let t_out' = (reason, Tvar.mk_no_wrap cx reason) in
       let use_t = mk_use_t t_out' in
       rec_flow cx trace (reposition_reason cx reason bound, use_t);
-      rec_flow cx trace (OpenT t_out', SealGenericT { reason; id; name; cont })
+      rec_flow cx trace (OpenT t_out', SealGenericT { reason; id; name; cont; no_infer })
     in
     let narrow_generic_use mk_use_t use_t_out =
       narrow_generic_with_continuation mk_use_t (Upper use_t_out)
@@ -6129,7 +6130,9 @@ struct
       rec_flow
         cx
         trace
-        (reposition_reason cx reason bound, SealGenericT { reason; id; name; cont = Upper upper });
+        ( reposition_reason cx reason bound,
+          SealGenericT { reason; id; name; cont = Upper upper; no_infer }
+        );
       true
     in
     let distribute_union_intersection ?(upper = u) () =
@@ -6180,10 +6183,10 @@ struct
     in
     if
       match bound with
-      | GenericT { bound; id = id'; _ } ->
+      | GenericT { bound; id = id'; no_infer; _ } ->
         Generic.collapse id id'
         |> Base.Option.value_map ~default:false ~f:(fun id ->
-               rec_flow cx trace (GenericT { reason; name; bound; id }, u);
+               rec_flow cx trace (GenericT { reason; name; bound; id; no_infer }, u);
                true
            )
       (* The ClassT operation should commute with GenericT; that is, GenericT(ClassT(x)) = ClassT(GenericT(x)) *)
@@ -6191,13 +6194,15 @@ struct
         rec_flow
           cx
           trace
-          (DefT (r, ClassT (GenericT { reason = reason_of_t bound; name; bound; id })), u);
+          (DefT (r, ClassT (GenericT { reason = reason_of_t bound; name; bound; id; no_infer })), u);
         true
       | KeysT _ ->
         rec_flow
           cx
           trace
-          (reposition_reason cx reason bound, SealGenericT { reason; id; name; cont = Upper u });
+          ( reposition_reason cx reason bound,
+            SealGenericT { reason; id; name; no_infer; cont = Upper u }
+          );
         true
       | DefT (_, EmptyT) -> empty_success u
       | _ -> false
@@ -7194,7 +7199,7 @@ struct
                 { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
             in
             rec_flow cx trace (t, x)
-          | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id } ->
+          | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id; no_infer } ->
             let x =
               EvalTypeDestructorT
                 {
@@ -7205,7 +7210,7 @@ struct
                   tout = tvar;
                 }
             in
-            rec_flow cx trace (GenericT { reason; name; id; bound = t }, x)
+            rec_flow cx trace (GenericT { reason; name; id; bound = t; no_infer }, x)
           | EvalT _ ->
             let x =
               EvalTypeDestructorT
@@ -7317,14 +7322,15 @@ struct
         | _ -> true
       in
       (match t with
-      | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
+      | GenericT
+          { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name; no_infer }
         when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
         eval_destructor
           cx
           ~trace
           use_op
           reason
-          (GenericT { bound = t; reason = r; id; name })
+          (GenericT { bound = t; reason = r; id; name; no_infer })
           d
           tout
       | OpaqueT (r, { underlying_t = Some t; _ })
@@ -7340,6 +7346,7 @@ struct
             reason = reason_tapp;
             id;
             name;
+            no_infer;
           } ->
         let destructor = TypeDestructorT (use_op, reason, d) in
         let t =
@@ -7356,7 +7363,10 @@ struct
         rec_flow
           cx
           trace
-          ( Cache.Eval.id cx (GenericT { bound = t; name; id; reason = reason_tapp }) destructor,
+          ( Cache.Eval.id
+              cx
+              (GenericT { bound = t; name; id; reason = reason_tapp; no_infer })
+              destructor,
             UseT (use_op, OpenT tout)
           )
       | TypeAppT
@@ -7382,26 +7392,29 @@ struct
       *)
       | UnionT (r, rep) when should_destruct_union () ->
         destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = UnionT (_, rep); id; name } when should_destruct_union () ->
+      | GenericT { reason; bound = UnionT (_, rep); id; name; no_infer }
+        when should_destruct_union () ->
         destruct_union
-          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })
           reason
           (UnionRep.members rep)
           (UseT (use_op, OpenT tout))
       | MaybeT (r, t) when should_destruct_union () ->
         destruct_maybe r t (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = MaybeT (_, t); id; name } when should_destruct_union () ->
+      | GenericT { reason; bound = MaybeT (_, t); id; name; no_infer } when should_destruct_union ()
+        ->
         destruct_maybe
-          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })
           reason
           t
           (UseT (use_op, OpenT tout))
       | OptionalT { reason = r; type_ = t; use_desc = _ } when should_destruct_union () ->
         destruct_optional r t (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name }
+      | GenericT
+          { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name; no_infer }
         when should_destruct_union () ->
         destruct_optional
-          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })
           reason
           t
           (UseT (use_op, OpenT tout))
@@ -7409,14 +7422,16 @@ struct
         let t = reposition_reason ~trace cx r ~use_desc t in
         let destructor = TypeDestructorT (use_op, reason, d) in
         rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
-      | GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id } ->
+      | GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id; no_infer } ->
         let t = reposition_reason ~trace cx r ~use_desc t in
         let destructor = TypeDestructorT (use_op, reason, d) in
         rec_flow_t
           cx
           trace
           ~use_op
-          (Cache.Eval.id cx (GenericT { reason = r; id; name; bound = t }) destructor, OpenT tout)
+          ( Cache.Eval.id cx (GenericT { reason = r; id; name; bound = t; no_infer }) destructor,
+            OpenT tout
+          )
       | _ ->
         rec_flow
           cx
@@ -9433,7 +9448,14 @@ struct
             let spread_array =
               Base.Option.value_map
                 ~f:(fun id ->
-                  GenericT { id; bound = spread_array; reason; name = Generic.subst_name_of_id id })
+                  GenericT
+                    {
+                      id;
+                      bound = spread_array;
+                      reason;
+                      name = Generic.subst_name_of_id id;
+                      no_infer = false;
+                    })
                 ~default:spread_array
                 generic
             in
@@ -9714,7 +9736,14 @@ struct
           in
           Base.Option.value_map
             ~f:(fun id ->
-              GenericT { bound = t; id; name = Generic.subst_name_of_id id; reason = reason_of_t t })
+              GenericT
+                {
+                  bound = t;
+                  id;
+                  name = Generic.subst_name_of_id id;
+                  reason = reason_of_t t;
+                  no_infer = false;
+                })
             ~default:t
             generic
       in
@@ -9887,7 +9916,14 @@ struct
               let arr =
                 Base.Option.value_map
                   ~f:(fun id ->
-                    GenericT { bound = arr; reason = r; id; name = Generic.subst_name_of_id id })
+                    GenericT
+                      {
+                        bound = arr;
+                        reason = r;
+                        id;
+                        name = Generic.subst_name_of_id id;
+                        no_infer = false;
+                      })
                   ~default:arr
                   generic
               in

@@ -77,6 +77,7 @@ module rec TypeTerm : sig
         reason: reason;
         name: Subst_name.t;
         bound: t;
+        no_infer: bool;
         id: Generic.id;
       }
     (* this-abstracted instance. If `is_this` is true, then this literally comes from
@@ -896,6 +897,7 @@ module rec TypeTerm : sig
         reason: reason;
         id: Generic.id;
         name: Subst_name.t;
+        no_infer: bool;
         cont: cont;
       }
     | OptionalIndexedAccessT of {

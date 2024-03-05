@@ -333,11 +333,17 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     cx: Context.t;
     tparams_map: Type.t Subst_name.Map.t;
     infer_tparams_map: ((ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParam.t * Type.t) ALocMap.t;
+    in_no_infer: bool;
     in_renders_arg: bool;
   }
 
-  let mk_convert_env cx ?(infer_tparams_map = ALocMap.empty) ?(in_renders_arg = false) tparams_map =
-    { cx; tparams_map; infer_tparams_map; in_renders_arg }
+  let mk_convert_env
+      cx
+      ?(infer_tparams_map = ALocMap.empty)
+      ?(in_no_infer = false)
+      ?(in_renders_arg = false)
+      tparams_map =
+    { cx; tparams_map; infer_tparams_map; in_no_infer; in_renders_arg }
 
   let rec convert env =
     let open Ast.Type in
@@ -667,7 +673,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       ) as t_ast ->
       (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
       let ident = (name_loc, name, id_comments) in
-      let convert_type_params () =
+      let convert_type_params ?(env = env) () =
         match targs with
         | None -> ([], None)
         | Some (loc, { TypeArgs.arguments = targs; comments }) ->
@@ -728,14 +734,27 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         (* in-scope type vars *)
         | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+              let t = Subst_name.Map.find (Subst_name.Name name) tparams_map in
               let t =
-                mod_tparam_t_annot_loc
-                  ~annot_loc:loc
-                  (Subst_name.Map.find (Subst_name.Name name) tparams_map)
+                if env.in_no_infer then
+                  match t with
+                  | GenericT { reason; name; bound; no_infer = _; id } ->
+                    GenericT { reason; name; bound; no_infer = true; id }
+                  | t -> t
+                else
+                  t
               in
+              let t = mod_tparam_t_annot_loc ~annot_loc:loc t in
               reconstruct_ast t None
           )
         | _ when Type_env.local_scope_entry_exists cx name_loc -> local_generic_type ()
+        (* NoInfer intrinsic that makes every GenericT inside it no_infer *)
+        | "NoInfer" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (elemts, targs) = convert_type_params ~env:{ env with in_no_infer = true } () in
+              let elem_t = List.hd elemts in
+              reconstruct_ast elem_t targs
+          )
         (* Temporary base types with literal information *)
         | "$TEMPORARY$number" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

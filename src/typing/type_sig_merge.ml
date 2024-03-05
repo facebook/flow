@@ -469,11 +469,12 @@ let make_hooklike file hooklike t =
 type merge_env = {
   tps: Type.t SMap.t;
   infer_tps: (ALoc.t * Type.t) SMap.t;
+  in_no_infer: bool;
   in_renders_arg: bool;
 }
 
-let mk_merge_env ?(infer_tps = SMap.empty) ?(in_renders_arg = false) tps =
-  { tps; infer_tps; in_renders_arg }
+let mk_merge_env ?(infer_tps = SMap.empty) ?(in_no_infer = false) ?(in_renders_arg = false) tps =
+  { tps; infer_tps; in_no_infer; in_renders_arg }
 
 let rec merge ?(hooklike = false) env file = function
   | Pack.Annot t ->
@@ -604,9 +605,18 @@ and merge_annot env file = function
     let t =
       match SMap.find_opt name env.infer_tps with
       | Some (name_loc, t) when name_loc = ref_loc -> t
-      | _ -> SMap.find name env.tps
+      | _ ->
+        let t = SMap.find name env.tps in
+        if env.in_no_infer then
+          match t with
+          | Type.GenericT { reason; name; bound; no_infer = _; id } ->
+            Type.GenericT { reason; name; bound; no_infer = true; id }
+          | t -> t
+        else
+          t
     in
     TypeUtil.mod_reason_of_t (Reason.repos_reason ref_loc) t
+  | NoInfer t -> merge { env with in_no_infer = true } file t
   | TEMPORARY_Number (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason RNumber loc) in
     Type.(DefT (reason, NumT (Literal (None, (num, raw)))))

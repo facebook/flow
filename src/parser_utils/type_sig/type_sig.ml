@@ -513,6 +513,7 @@ type ('loc, 'a) annot =
       ref_loc: 'loc;
       name: string;
     }
+  | NoInfer of 'a
   | TEMPORARY_Number of 'loc * float * string
   | TEMPORARY_String of 'loc * string
   | TEMPORARY_LongString of 'loc

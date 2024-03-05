@@ -10,12 +10,19 @@ val free_var_finder : Context.t -> ?bound:Subst_name.Set.t -> Type.t -> Subst_na
 val new_name : Subst_name.t -> Subst_name.Set.t -> Subst_name.t
 
 val subst :
-  Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t Subst_name.Map.t -> Type.t -> Type.t
+  Context.t ->
+  ?use_op:Type.use_op ->
+  ?force:bool ->
+  ?placeholder_no_infer:bool ->
+  Type.t Subst_name.Map.t ->
+  Type.t ->
+  Type.t
 
 val subst_destructor :
   Context.t ->
   ?use_op:Type.use_op ->
   ?force:bool ->
+  ?placeholder_no_infer:bool ->
   Type.t Subst_name.Map.t ->
   Type.destructor ->
   Type.destructor
@@ -24,6 +31,7 @@ val subst_instance_type :
   Context.t ->
   ?use_op:Type.use_op ->
   ?force:bool ->
+  ?placeholder_no_infer:bool ->
   Type.t Subst_name.Map.t ->
   Type.instance_t ->
   Type.instance_t
