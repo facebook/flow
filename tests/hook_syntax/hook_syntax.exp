@@ -1,3 +1,27 @@
+Error ------------------------------------------------------------------------------------------------ bad_names.js:1:14
+
+Hooks must have names that begin with `use`. [react-rule-hook]
+
+   1| declare hook notAHook(): void;
+                   ^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- bad_names.js:2:6
+
+Hooks must have names that begin with `use`. [react-rule-hook]
+
+   2| hook alsoNotAHook() { }
+           ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ bad_names.js:3:21
+
+Hooks must have names that begin with `use`. [react-rule-hook]
+
+   3| export default hook extremelyNotAHook() { }
+                          ^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:3:13
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -2394,4 +2418,4 @@ References:
 
 
 
-Found 162 errors
+Found 165 errors
