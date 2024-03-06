@@ -38,7 +38,7 @@ New Features:
 * Under `experimental.ts_syntax=true`, Flow will
   * Automatically translate TypeScript's readonly on tuple and array types into Flow equivalent `$ReadOnly<[...]>` and `$ReadOnlyArray<...>` without error.
   * Automatically translate TypeScript's keyof into Flow equivalent `$Keys` without error. Note that there are behavior differences between `$Keys<>` and `keyof` right now ([flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCSww1wABABBbHAAA6UGxpOxMGIyGx9lMUAQ2IAvNiAOTMgDcxKRxOJmJxACFsQoGlA2CQ8QTiWTsZhKFSael6UzWRyoFyoMSWsZsQBpRnYgAk2uwtBIAB4+QA+FXMikQZnYrE660y+2O7UqmIgfImEhwaBBfIABisACYQwBOUMgJFAA), [TS](https://www.typescriptlang.org/play?ssl=7&ssc=2&pln=1&pc=1#code/MYGwhgzhAECC0G8BQ1XQGYHtMC5oQBcAnASwDsBzaAXmgHI6BuJAXySVEhgCFoBTAB4E+ZACYx4yNNABGYInkKlKNek1bsCATwAOfaAGlVAaz5bM6aN2Z0smOvjAESEdCT4wDNuUQcQnLm4ehsxAA)), so use it with caution.
-  * Automatically translate TypeScript's `unknown` `never` and `undefined` into Flow equivalent `mixed` `empty` and `avoid` without error.
+  * Automatically translate TypeScript's `unknown` `never` and `undefined` into Flow equivalent `mixed` `empty` and `void` without error.
   * Support TypeScript's variance annotation `readonly` `in` `out`, `in out` without error.
 
 Misc:
