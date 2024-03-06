@@ -1,45 +1,10 @@
-Error -------------------------------------------------------------------------------------------------- exported.js:1:1
-
-`declare namespace` statement is not supported yet. The declaration will be ignored. [unsupported-syntax]
-
-      v------------------------------
-   1| declare namespace exported_ns {
-   2|   declare const fff: number;
-   3| }
-      ^
-
-
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
-`declare namespace` statement is not supported yet. The declaration will be ignored. [unsupported-syntax]
+`declare namespace` statement is not supported yet. [unsupported-syntax]
 
-      v-----------------------------------------------
-   1| declare namespace both_type_and_value { // error
-   2|   declare export const bar: number;
-   3|   declare export type Baz = string;
-   4| }
-      ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:7:28
-
-Cannot use `Baz` as a type because it is an `any`-typed value. Type `Baz` properly, so it is no longer `any`-typed, to
-use it as an annotation. [value-as-type]
-
-   7| both_type_and_value.bar as both_type_and_value.Baz; // error: baz is any typed
-                                 ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------ test.js:9:1
-
-`declare namespace` statement is not supported yet. The declaration will be ignored. [unsupported-syntax]
-
-       v--------------------------------------------------------------
-    9| declare namespace unsupported_declare_module_exports { // error
-   10|   declare module.exports: {foo: string};
-   11| }
-       ^
+   1| declare namespace disallowed {} // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 4 errors
+Found 1 error

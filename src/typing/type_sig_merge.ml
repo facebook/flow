@@ -2085,7 +2085,7 @@ let merge_def file reason = function
     Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members
-  | NamespaceBinding { id_loc = _; name = _; values; types } when Context.namespaces file.cx ->
+  | NamespaceBinding { id_loc = _; name = _; values; types } ->
     let f smap =
       SMap.fold
         (fun name (loc, packed) ->
@@ -2100,7 +2100,6 @@ let merge_def file reason = function
         NameUtils.Map.empty
     in
     Flow_js_utils.namespace_type file.cx reason (f values) (f types)
-  | NamespaceBinding _ -> Type.AnyT.error reason
 
 let merge_export file = function
   | Pack.ExportRef ref

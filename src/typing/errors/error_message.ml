@@ -3192,12 +3192,7 @@ let friendly_message_of_msg loc_of_aloc msg =
           code "declare namespace";
           text ". The statement will be ignored.";
         ]
-      | DeclareNamespace ->
-        [
-          code "declare namespace";
-          text " statement is not supported yet. ";
-          text "The declaration will be ignored.";
-        ]
+      | DeclareNamespace -> [code "declare namespace"; text " statement is not supported yet."]
     in
     Normal { features }
   | EUseArrayLiteral _ ->

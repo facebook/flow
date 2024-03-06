@@ -1978,15 +1978,12 @@ module Make
         (body_loc, { Ast.Statement.Block.body = body_statements; comments = body_comments })
       in
       let (t, id) =
-        if Context.namespaces cx then
-          let (name_loc, { Ast.Identifier.name; comments }) = id in
-          let reason = mk_reason (RNamespace name) name_loc in
-          let t = Module_info_analyzer.analyze_declare_namespace cx reason body_statements in
-          (t, ((name_loc, t), { Ast.Identifier.name; comments }))
-        else
-          let id = Tast_utils.error_mapper#pattern_identifier id in
+        let (name_loc, { Ast.Identifier.name; comments }) = id in
+        let reason = mk_reason (RNamespace name) name_loc in
+        let t = Module_info_analyzer.analyze_declare_namespace cx reason body_statements in
+        if not (File_key.is_lib_file (Context.file cx) || Context.namespaces cx) then
           Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
-          (AnyT.at (AnyError None) loc, id)
+        (t, ((name_loc, t), { Ast.Identifier.name; comments }))
       in
       (t, { Ast.Statement.DeclareNamespace.id; body; comments })
 
