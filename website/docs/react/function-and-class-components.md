@@ -1,6 +1,6 @@
 ---
-title: Components
-slug: /react/components
+title: Function/Class Components
+slug: /react/function-and-class-components
 ---
 
 Adding Flow types to your [React components](https://react.dev/learn/your-first-component) is incredibly powerful. After typing
