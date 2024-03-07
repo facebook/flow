@@ -236,11 +236,30 @@ type Ref<C> =
   | (instance: React.ElementRef<C> | null) => mixed;
   | { -current: React$ElementRef<ElementType> | null, ... }
 ```
+## `React.PropsOf<Component>` {#toc-react-propsof}
+When `Component` is written using [Component Syntax](../component-syntax), `React.PropsOf<Component>`
+gives you the type of an object that you must pass in to instantiate `Component` with JSX.
+Importantly, the props with defaults are optional in the resulting type.
+
+For example:
+```js flow-check
+import * as React from 'react';
+
+component MyComponent(foo: number, bar: string = 'str') {
+  return null;
+}
+
+// Only foo is required
+({foo: 3}) as React.ElementConfig<typeof MyComponent>;
+```
 
 ## `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
 
-This utility gets the type of the object that you must pass in to a
-component in order to instantiate it via `createElement()` or `jsx()`.
+Like [React.PropsOf](#toc-react-propsof), this utility gets the type of the object that you must pass in to a
+component in order to instantiate it via `createElement()` or `jsx()`. While `PropsOf` takes in an element of
+a component, which is convenient when using [Component Syntax](../component-syntax), `ElementConfig` takes in the type of a component
+instead. `typeof Component` must be the type *of* a React component so you need to use `typeof` as in
+`React.ElementConfig<typoef Component>`.
 
 Importantly, props with defaults are optional in the resulting type.
 
@@ -281,6 +300,11 @@ This type is used for the `props` property on [`React.Element<typeof Component>`
 Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
+## `React.RefOf<Component>` {#toc-react-refof}
+
+When using [Component Syntax](../component-syntax), `React.RefOf<Component>` will give you
+the type of the `current` field on the `ref` prop of the component. If there is no `ref` prop
+on the component it will return `void`.
 
 ## `React.ElementRef<typeof Component>` {#toc-react-elementref}
 
@@ -293,7 +317,7 @@ various component types:
   `React.ElementRef<typeof Foo>` then the type would be the instance of `Foo`.
 - React function components do not have a backing instance and so
   `React.ElementRef<typeof Bar>` (when `Bar` is `function Bar() {}`) will give
-  you the undefined type.
+  you the void type.
 - JSX intrinsics like `div` will give you their DOM instance. For
   `React.ElementRef<'div'>` that would be `HTMLDivElement`. For
   `React.ElementRef<'input'>` that would be `HTMLInputElement`.
