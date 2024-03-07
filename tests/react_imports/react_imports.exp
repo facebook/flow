@@ -71,45 +71,40 @@ References:
                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es-default.js:5:25
+Error ------------------------------------------------------------------------------------------------ es-default.js:6:2
 
-Cannot get `React.Node` because property `Node` is missing in object type [1]. [prop-missing]
+Cannot cast object literal to `Node` because: [incompatible-cast]
+ - Either object literal [1] is incompatible with `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
-   es-default.js:5:25
-     5| ('Hello, world!': React.Node); // Error: Not in default export.
-                                ^^^^
-
-References:
-   <BUILTINS>/react.js:684:26
-   684|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- es-default.js:6:12
-
-Cannot get `React.Node` because property `Node` is missing in object type [1]. [prop-missing]
-
-   es-default.js:6:12
-     6| ({}: React.Node); // Error: Not in default export.
-                   ^^^^
+   es-default.js:6:2
+    6| ({}: React.Node); // Error.
+        ^^ [1]
 
 References:
-   <BUILTINS>/react.js:684:26
-   684|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:7:14
 
-Cannot get `React.Missing` because property `Missing` is missing in object type [1]. [prop-missing]
+Cannot get `React.Missing` because property `Missing` is missing in namespace React [1]. [prop-missing]
 
    es-default.js:7:14
      7| (null: React.Missing); // Error: Not in default export.
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:684:26
-   684|   declare export default typeof React;
+   <BUILTINS>/react.js:997:26
+   997|   declare export default typeof React;
                                  ^^^^^^^^^^^^ [1]
 
 
@@ -163,9 +158,32 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:205:16
-   205| declare module react {
+   <BUILTINS>/react.js:246:16
+   246| declare module react {
                        ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- use_type_without_import.js:2:2
+
+Cannot cast object literal to `Node` because: [incompatible-cast]
+ - Either object literal [1] is incompatible with `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+   use_type_without_import.js:2:2
+    2| ({}) as React.Node; // error
+        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 

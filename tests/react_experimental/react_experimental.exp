@@ -7,9 +7,9 @@ Cannot call `React.startTransition` because function [1] requires another argume
               ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:576:42
-   576|   declare export function startTransition(() => void): void;
-                                                 ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:921:37
+   921|     declare function startTransition(() => void): void;
+                                            ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:6:30
@@ -21,9 +21,9 @@ Cannot call `React.useDeferredValue` because no more than 1 argument is expected
                                      ^^
 
 References:
-   <BUILTINS>/react.js:561:43
-   561|   declare export function useDeferredValue<T>(value: T): T;
-                                                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:906:38
+   906|     declare function useDeferredValue<T>(value: T): T;
+                                             ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:5:21
@@ -35,9 +35,9 @@ Cannot call `React.useTransition` because no arguments are expected by function 
                             ^^
 
 References:
-   <BUILTINS>/react.js:569:40
-   569|   declare export function useTransition(): [boolean, (() => void) => void];
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:914:35
+   914|     declare function useTransition(): [boolean, (() => void) => void];
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:12:2
@@ -49,9 +49,9 @@ Cannot cast `isPending` to function type because boolean [1] is incompatible wit
          ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:569:45
-   569|   declare export function useTransition(): [boolean, (() => void) => void];
-                                                    ^^^^^^^ [1]
+   <BUILTINS>/react.js:914:40
+   914|     declare function useTransition(): [boolean, (() => void) => void];
+                                               ^^^^^^^ [1]
    useTransition_hook.js:12:13
     12| (isPending: (() => void) => void); // Error: boolean is incompatible with function type
                     ^^^^^^^^^^^^^^^^^^^^ [2]
@@ -66,9 +66,9 @@ Cannot cast `startTransition` to boolean because function type [1] is incompatib
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:569:54
-   569|   declare export function useTransition(): [boolean, (() => void) => void];
-                                                             ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:914:49
+   914|     declare function useTransition(): [boolean, (() => void) => void];
+                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
    useTransition_hook.js:13:19
     13| (startTransition: boolean); // Error: function type is incompatible with boolean
                           ^^^^^^^ [2]
@@ -83,9 +83,9 @@ Cannot call `startTransition` because function [1] requires another argument. [i
         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:569:54
-   569|   declare export function useTransition(): [boolean, (() => void) => void];
-                                                             ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:914:49
+   914|     declare function useTransition(): [boolean, (() => void) => void];
+                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

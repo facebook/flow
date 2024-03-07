@@ -8,8 +8,8 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
                                  ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:205:16
-   205| declare module react {
+   <BUILTINS>/react.js:246:16
+   246| declare module react {
                        ^^^^^ [1]
 
 
@@ -26,14 +26,14 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:635:56
-                                                               v-
-   635|   declare export var Profiler: React$AbstractComponent<{|
-   636|     +children?: React$Node,
-   637|     +id: string,
-   638|     +onRender: ProfilerOnRenderFnType,
-   639|   |}, void, React$Node>;
-          -^ [2]
+   <BUILTINS>/react.js:785:53
+                                                            v-
+   785|     declare const Profiler: React$AbstractComponent<{|
+   786|       +children?: React$Node,
+   787|       +id: string,
+   788|       +onRender: ProfilerOnRenderFnType,
+   789|     |}, void, React$Node>;
+            -^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
@@ -49,14 +49,14 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:635:56
-                                                               v-
-   635|   declare export var Profiler: React$AbstractComponent<{|
-   636|     +children?: React$Node,
-   637|     +id: string,
-   638|     +onRender: ProfilerOnRenderFnType,
-   639|   |}, void, React$Node>;
-          -^ [2]
+   <BUILTINS>/react.js:785:53
+                                                            v-
+   785|     declare const Profiler: React$AbstractComponent<{|
+   786|       +children?: React$Node,
+   787|       +id: string,
+   788|       +onRender: ProfilerOnRenderFnType,
+   789|     |}, void, React$Node>;
+            -^ [2]
 
 
 

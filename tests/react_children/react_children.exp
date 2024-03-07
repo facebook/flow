@@ -43,6 +43,21 @@ parameter. [incompatible-call]
                               ^^^^^^ [1]
 
 References:
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:14:24
+
+Cannot call `Children.map` with function bound to `fn` because string [1] is incompatible with number [2] in the first
+parameter. [incompatible-call]
+
+   api.js:14:24
+   14| na(Children.map(a, (x: string) => x as string)); // Error
+                              ^^^^^^ [1]
+
+References:
    api.js:5:25
     5| const a: ChildrenArray<?number> = [
                                ^^^^^^ [2]
@@ -85,6 +100,21 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:17:25
 
+Cannot call `Children.forEach` with function bound to `fn` because number [1] is incompatible with nullable number [2]
+in the first parameter. [incompatible-call]
+
+   api.js:17:25
+   17| Children.forEach(a, (x: number) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:17:25
+
 Cannot call `Children.forEach` with function bound to `fn` because number [1] is incompatible with null or undefined [2]
 in the first parameter. [incompatible-call]
 
@@ -96,6 +126,36 @@ References:
    api.js:5:24
     5| const a: ChildrenArray<?number> = [
                               ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:19:25
+
+Cannot call `Children.forEach` with function bound to `fn` because string [1] is incompatible with nullable number [2]
+in the first parameter. [incompatible-call]
+
+   api.js:19:25
+   19| Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:19:25
+
+Cannot call `Children.forEach` with function bound to `fn` because string [1] is incompatible with number [2] in the
+first parameter. [incompatible-call]
+
+   api.js:19:25
+   19| Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:19:25
@@ -138,12 +198,30 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:385:42
-   385|     count(children: ChildrenArray<any>): number,
-                                                 ^^^^^^ [1]
+   <BUILTINS>/react.js:752:44
+   752|       count(children: ChildrenArray<any>): number,
+                                                   ^^^^^^ [1]
    api.js:32:15
     32| function s(x: string) {}
                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ api.js:25:3
+
+Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   api.js:25:3
+   25| s(Children.only(a)); // Error
+         ^^^^^^^^^^^^^^^^
+
+References:
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   api.js:32:15
+   32| function s(x: string) {}
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ api.js:25:3
@@ -184,10 +262,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:28:4
 
-Cannot call `sa` with `Children.toArray(...)` bound to `x` because string [1] is incompatible with number [2] in array
-element. Arrays are invariantly typed. See
+Cannot call `sa` with `Children.toArray(...)` bound to `x` because in array element: [incompatible-call]
+ - Either string [1] is incompatible with number [2].
+ - Or string [1] is incompatible with number [3].
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-call]
 
    api.js:28:4
    28| sa(Children.toArray(a)); // Error
@@ -197,9 +277,30 @@ References:
    api.js:34:22
    34| function sa(x: Array<string>) {}
                             ^^^^^^ [1]
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
    api.js:5:25
     5| const a: ChildrenArray<?number> = [
-                               ^^^^^^ [2]
+                               ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:28:21
+
+Cannot call `sa` with `Children.toArray(...)` bound to `x` because number [1] is incompatible with string [2] in array
+element. [incompatible-call]
+
+   api.js:28:21
+   28| sa(Children.toArray(a)); // Error
+                           ^
+
+References:
+   api.js:5:10
+    5| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   api.js:34:22
+   34| function sa(x: Array<string>) {}
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4
@@ -1722,7 +1823,7 @@ References:
 
 
 
-Found 99 errors
+Found 105 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
