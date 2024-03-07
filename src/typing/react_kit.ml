@@ -107,6 +107,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 mk_named_prop ~reason name
               | _ -> Computed component);
             tout = (reason, intrinsic);
+            hint = hint_unavailable;
           }
       );
 

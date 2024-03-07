@@ -747,8 +747,32 @@ module Make (Flow : INPUT) : OUTPUT = struct
             }
         ) ->
       Some id
-    | IntersectionCases (_, GetPropT { tout = (_, id); _ })
-    | SingletonCase (_, GetPropT { tout = (_, id); _ }) ->
+    | IntersectionCases
+        ( _,
+          GetPropT
+            {
+              use_op = _;
+              reason = _;
+              id = _;
+              from_annot = _;
+              propref = _;
+              tout = (_, id);
+              hint = _;
+            }
+        )
+    | SingletonCase
+        ( _,
+          GetPropT
+            {
+              use_op = _;
+              reason = _;
+              id = _;
+              from_annot = _;
+              propref = _;
+              tout = (_, id);
+              hint = _;
+            }
+        ) ->
       Some id
     | _ -> None
 

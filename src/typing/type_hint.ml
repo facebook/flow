@@ -537,6 +537,7 @@ and type_of_hint_decomposition cx op reason t =
                   from_annot = false;
                   propref = mk_named_prop ~reason (OrdinaryName name);
                   tout;
+                  hint = hint_unavailable;
                 }
             in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)

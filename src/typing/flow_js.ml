@@ -410,6 +410,7 @@ struct
               from_annot = false;
               propref = mk_named_prop ~reason:prop_reason name;
               tout;
+              hint = hint_unavailable;
             }
         )
 
@@ -899,6 +900,7 @@ struct
                   from_annot = true;
                   propref = mk_named_prop ~reason:reason_op ~from_indexed_access:true name;
                   tout = tout_tvar;
+                  hint = hint_unavailable;
                 }
             | OptionalIndexedAccessTypeIndex key_t ->
               GetElemT
@@ -1463,6 +1465,7 @@ struct
                       Named
                         { reason = prop_ref_reason; name = prop_name; from_indexed_access = false };
                     tout;
+                    hint = hint_unavailable;
                   }
               ))
         | ( _,
@@ -1483,6 +1486,7 @@ struct
                     Named
                       { reason = prop_ref_reason; name = prop_name; from_indexed_access = false };
                   tout;
+                  hint = hint_unavailable;
                 }
             )
         (* unwrap namespace type into object type, drop all information about types in the namespace *)
@@ -1963,17 +1967,24 @@ struct
         (* Cases of an intersection need to produce errors on non-existent
            properties instead of a default, so that other cases may be tried
            instead and succeed. *)
-        | (IntersectionT _, GetPropT { use_op; reason; id = Some _; from_annot; propref; tout }) ->
-          rec_flow cx trace (l, GetPropT { use_op; reason; id = None; from_annot; propref; tout })
-        | (IntersectionT _, TestPropT { use_op; reason; id = _; propref; tout }) ->
+        | ( IntersectionT _,
+            GetPropT { use_op; reason; id = Some _; from_annot; propref; tout; hint }
+          ) ->
           rec_flow
             cx
             trace
-            (l, GetPropT { use_op; reason; id = None; from_annot = false; propref; tout })
+            (l, GetPropT { use_op; reason; id = None; from_annot; propref; tout; hint })
+        | (IntersectionT _, TestPropT { use_op; reason; id = _; propref; tout; hint }) ->
+          rec_flow
+            cx
+            trace
+            (l, GetPropT { use_op; reason; id = None; from_annot = false; propref; tout; hint })
         | ( IntersectionT _,
             OptionalChainT
-              ( { t_out = GetPropT { use_op; reason; id = Some _; from_annot; propref; tout }; _ }
-              as opt_chain
+              ( {
+                  t_out = GetPropT { use_op; reason; id = Some _; from_annot; propref; tout; hint };
+                  _;
+                } as opt_chain
               )
           ) ->
           rec_flow
@@ -1983,12 +1994,12 @@ struct
               OptionalChainT
                 {
                   opt_chain with
-                  t_out = GetPropT { use_op; reason; id = None; from_annot; propref; tout };
+                  t_out = GetPropT { use_op; reason; id = None; from_annot; propref; tout; hint };
                 }
             )
         | ( IntersectionT _,
             OptionalChainT
-              ({ t_out = TestPropT { use_op; reason; id = _; propref; tout }; _ } as opt_chain)
+              ({ t_out = TestPropT { use_op; reason; id = _; propref; tout; hint }; _ } as opt_chain)
           ) ->
           rec_flow
             cx
@@ -1997,7 +2008,8 @@ struct
               OptionalChainT
                 {
                   opt_chain with
-                  t_out = GetPropT { use_op; reason; id = None; from_annot = false; propref; tout };
+                  t_out =
+                    GetPropT { use_op; reason; id = None; from_annot = false; propref; tout; hint };
                 }
             )
         | (IntersectionT _, DestructuringT (reason, kind, selector, tout, id)) ->
@@ -2884,7 +2896,15 @@ struct
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
                 let u =
                   GetPropT
-                    { use_op; reason = reason_lookup; id = None; from_annot = false; propref; tout }
+                    {
+                      use_op;
+                      reason = reason_lookup;
+                      id = None;
+                      from_annot = false;
+                      propref;
+                      tout;
+                      hint = hint_unavailable;
+                    }
                 in
                 rec_flow cx trace (static, ReposLowerT (reason, false, u))
             )
@@ -3443,7 +3463,15 @@ struct
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u =
                   GetPropT
-                    { use_op; reason = lookup_r; id = None; from_annot = false; propref; tout }
+                    {
+                      use_op;
+                      reason = lookup_r;
+                      id = None;
+                      from_annot = false;
+                      propref;
+                      tout;
+                      hint = hint_unavailable;
+                    }
                 in
                 rec_flow cx trace (FunProtoT reason, u)
             )
@@ -3857,12 +3885,12 @@ struct
         (* ... and their fields read *)
         (*****************************)
         | ( DefT (r, InstanceT _),
-            GetPropT { propref = Named { name = OrdinaryName "constructor"; _ }; tout; _ }
+            GetPropT { propref = Named { name = OrdinaryName "constructor"; _ }; tout; hint = _; _ }
           ) ->
           let t = TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l in
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
         | ( DefT (reason_instance, InstanceT { super; inst; _ }),
-            GetPropT { use_op; reason = reason_op; from_annot; id; propref; tout }
+            GetPropT { use_op; reason = reason_op; from_annot; id; propref; tout; hint = _ }
           ) ->
           let method_accessible = from_annot in
           let lookup_action = ReadProp { use_op; obj_t = l; tout } in
@@ -4355,7 +4383,7 @@ struct
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason, OpenT tout)
         | ( DefT (reason_obj, ObjT o),
-            GetPropT { use_op; reason = reason_op; id; from_annot = _; propref; tout }
+            GetPropT { use_op; reason = reason_op; id; from_annot = _; propref; tout; hint = _ }
           ) ->
           let lookup_info =
             Base.Option.map id ~f:(fun id ->
@@ -4368,7 +4396,9 @@ struct
             )
           in
           GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info tout
-        | (AnyT (_, src), GetPropT { reason; id; tout; _ }) ->
+        | ( AnyT (_, src),
+            GetPropT { use_op = _; reason; id; from_annot = _; propref = _; tout; hint = _ }
+          ) ->
           Base.Option.iter id ~f:(Context.test_prop_hit cx);
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, OpenT tout)
@@ -4511,7 +4541,16 @@ struct
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
         | ( DefT (_, ArrT _),
-            GetPropT { reason; propref = Named { name = OrdinaryName "constructor"; _ }; tout; _ }
+            GetPropT
+              {
+                use_op = _;
+                reason;
+                id = _;
+                from_annot = _;
+                propref = Named { name = OrdinaryName "constructor"; _ };
+                tout;
+                hint = _;
+              }
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason, OpenT tout)
         | ( DefT (_, ArrT _),
@@ -5120,7 +5159,16 @@ struct
         (* classes can have their prototype read *)
         (*****************************************)
         | ( DefT (reason, ClassT instance),
-            GetPropT { propref = Named { name = OrdinaryName "prototype"; _ }; tout; _ }
+            GetPropT
+              {
+                use_op = _;
+                reason = _;
+                id = _;
+                from_annot = _;
+                propref = Named { name = OrdinaryName "prototype"; _ };
+                tout;
+                hint = _;
+              }
           ) ->
           let instance = reposition cx ~trace (loc_of_reason reason) instance in
           rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
@@ -5159,7 +5207,15 @@ struct
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
                 let u =
                   GetPropT
-                    { use_op; reason = reason_lookup; id = None; from_annot = false; propref; tout }
+                    {
+                      use_op;
+                      reason = reason_lookup;
+                      id = None;
+                      from_annot = false;
+                      propref;
+                      tout;
+                      hint = hint_unavailable;
+                    }
                 in
                 rec_flow cx trace (OpenT statics, ReposLowerT (reason, false, u))
             )
@@ -5202,14 +5258,17 @@ struct
               {
                 use_op;
                 reason = access_reason;
+                id = _;
+                from_annot = _;
                 propref = Named { reason = prop_reason; name = member_name; _ };
                 tout;
-                _;
+                hint = _;
               }
           ) ->
           let access = (use_op, access_reason, None, (prop_reason, member_name)) in
           GetPropTKit.on_EnumObjectT cx trace enum_reason enum access tout
-        | (DefT (_, EnumObjectT _), TestPropT { reason; propref; tout; _ }) ->
+        | (DefT (_, EnumObjectT _), TestPropT { use_op = _; reason; id = _; propref; tout; hint })
+          ->
           rec_flow
             cx
             trace
@@ -5222,6 +5281,7 @@ struct
                   from_annot = false;
                   propref;
                   tout;
+                  hint;
                 }
             )
         | ( DefT (enum_reason, EnumObjectT enum),
@@ -5241,6 +5301,7 @@ struct
                         from_annot = false;
                         propref;
                         tout;
+                        hint = hint_unavailable;
                       }
                   )
             )
@@ -5396,7 +5457,7 @@ struct
            know what the type of the property would be, we set things up so that the
            result of the read cannot be used in any interesting way. *)
         (**************************************************************************)
-        | (DefT (_, NullT), TestPropT { use_op; reason; id; propref; tout }) ->
+        | (DefT (_, NullT), TestPropT { use_op; reason; id; propref; tout; hint }) ->
           (* The wildcard TestPropT implementation forwards the lower bound to
              LookupT. This is unfortunate, because LookupT is designed to terminate
              (successfully) on NullT, but property accesses on null should be type
@@ -5406,13 +5467,13 @@ struct
           rec_flow
             cx
             trace
-            (l, GetPropT { use_op; reason; id = Some id; from_annot = false; propref; tout })
+            (l, GetPropT { use_op; reason; id = Some id; from_annot = false; propref; tout; hint })
         | (DefT (r, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT { use_op; id; tout; _ }) ->
           (* Special-case property tests of definitely non-null/non-void values to
              return mixed and treat them as a hit. *)
           Context.test_prop_hit cx id;
           rec_flow_t cx trace ~use_op (DefT (r, MixedT Mixed_everything), OpenT tout)
-        | (_, TestPropT { use_op; reason = reason_op; id; propref; tout }) ->
+        | (_, TestPropT { use_op; reason = reason_op; id; propref; tout; hint = _ }) ->
           (* NonstrictReturning lookups unify their result, but we don't want to
              unify with the tout tvar directly, so we create an indirection here to
              ensure we only supply lower bounds to tout. *)
@@ -5815,7 +5876,16 @@ struct
         (* Tuple "length" access *)
         (*************************)
         | ( DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; react_dro = _ })),
-            GetPropT { propref = Named { name = OrdinaryName "length"; _ }; tout; _ }
+            GetPropT
+              {
+                use_op = _;
+                reason = _;
+                id = _;
+                from_annot = _;
+                propref = Named { name = OrdinaryName "length"; _ };
+                tout;
+                hint = _;
+              }
           ) ->
           GetPropTKit.on_array_length cx trace reason arity (reason_of_use_t u) tout
         | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
@@ -5879,7 +5949,15 @@ struct
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u =
                   GetPropT
-                    { use_op; reason = lookup_r; id = None; from_annot = false; propref; tout }
+                    {
+                      use_op;
+                      reason = lookup_r;
+                      id = None;
+                      from_annot = false;
+                      propref;
+                      tout;
+                      hint = hint_unavailable;
+                    }
                 in
                 rec_flow cx trace (FunProtoT reason, u)
             )
@@ -6298,6 +6376,7 @@ struct
             from_annot;
             propref = Named { reason; name = OrdinaryName "constructor" as name; _ };
             tout;
+            hint;
           } ->
         if is_concrete bound then
           match bound with
@@ -6312,6 +6391,7 @@ struct
                     from_annot;
                     propref = mk_named_prop ~reason name;
                     tout = tout';
+                    hint;
                   })
               tout;
             true
@@ -7146,6 +7226,7 @@ struct
                 from_annot = annot;
                 propref = mk_named_prop ~reason name;
                 tout = tvar;
+                hint = hint_unavailable;
               }
           in
           if has_default then
@@ -7453,6 +7534,7 @@ struct
                   from_annot = true;
                   propref = mk_named_prop ~reason:reason_op name;
                   tout;
+                  hint = hint_unavailable;
                 }
             | ElementType { index_type; _ } ->
               GetElemT
@@ -7938,7 +8020,13 @@ struct
     let propref = propref_for_elem_t l in
     match action with
     | ReadElem { id; from_annot; access_iterables = _; tout } ->
-      rec_flow cx trace (obj, GetPropT { use_op; reason = reason_op; from_annot; id; propref; tout })
+      rec_flow
+        cx
+        trace
+        ( obj,
+          GetPropT
+            { use_op; reason = reason_op; from_annot; id; propref; tout; hint = hint_unavailable }
+        )
     | WriteElem { tin; tout; mode } ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout

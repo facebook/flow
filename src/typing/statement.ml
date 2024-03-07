@@ -857,6 +857,7 @@ module Make
                   from_annot = false;
                   propref = mk_named_prop ~reason local_name;
                   tout;
+                  hint = hint_unavailable;
                 }
           in
           Flow.flow cx (source_ns_t, use_t)
@@ -5910,9 +5911,17 @@ module Make
     let id = mk_id () in
     let prop_name = OrdinaryName name in
     if Base.Option.is_some cond then
-      OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name)
+      OptTestPropT
+        (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint_unavailable)
     else
-      OptGetPropT (use_op, reason, Some id, mk_named_prop ~reason:prop_reason prop_name)
+      OptGetPropT
+        {
+          use_op;
+          reason;
+          id = Some id;
+          propref = mk_named_prop ~reason:prop_reason prop_name;
+          hint = hint_unavailable;
+        }
 
   and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
     let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in

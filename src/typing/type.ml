@@ -599,6 +599,7 @@ module rec TypeTerm : sig
         from_annot: bool;
         propref: propref;
         tout: tvar;
+        hint: lazy_hint_t;
       }
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
@@ -608,6 +609,7 @@ module rec TypeTerm : sig
         id: ident;
         propref: propref;
         tout: tvar;
+        hint: lazy_hint_t;
       }
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
@@ -1031,9 +1033,15 @@ module rec TypeTerm : sig
         * class_binding list
         * bool
         * opt_method_action
-    | OptGetPropT of use_op * reason * ident option * propref
+    | OptGetPropT of {
+        use_op: use_op;
+        reason: reason;
+        id: ident option;
+        propref: propref;
+        hint: lazy_hint_t;
+      }
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
-    | OptTestPropT of use_op * reason * ident * propref
+    | OptTestPropT of use_op * reason * ident * propref * lazy_hint_t
     | OptGetElemT of use_op * reason * ident option * bool (* from annot *) * t
     | OptCallElemT of use_op * (* call *) reason * (* lookup *) reason * t * opt_method_action
 
@@ -4498,11 +4506,11 @@ let apply_opt_use opt_use t_out =
     PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out)
   | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
     CallT { use_op; reason; call_action = apply_opt_funcalltype f t_out; return_hint }
-  | OptGetPropT (use_op, reason, id, propref) ->
-    GetPropT { use_op; reason; id; from_annot = false; propref; tout = t_out }
+  | OptGetPropT { use_op; reason; id; propref; hint } ->
+    GetPropT { use_op; reason; id; from_annot = false; propref; tout = t_out; hint }
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
-  | OptTestPropT (use_op, reason, id, propref) ->
-    TestPropT { use_op; reason; id; propref; tout = t_out }
+  | OptTestPropT (use_op, reason, id, propref, hint) ->
+    TestPropT { use_op; reason; id; propref; tout = t_out; hint }
   | OptGetElemT (use_op, reason, id, from_annot, key_t) ->
     GetElemT { use_op; reason; id; from_annot; access_iterables = false; key_t; tout = t_out }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)

@@ -39,6 +39,7 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
                 from_annot = false;
                 propref = mk_named_prop ~reason name;
                 tout;
+                hint = hint_unavailable;
               }
           )
     )

@@ -781,7 +781,16 @@ and dump_use_t_ (depth, tvars) cx t =
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
     | GetDictValuesT _ -> p t
-    | GetPropT { use_op; propref = prop; tout = (preason, ptvar); _ } ->
+    | GetPropT
+        {
+          use_op;
+          reason = _;
+          id = _;
+          from_annot = _;
+          propref = prop;
+          tout = (preason, ptvar);
+          hint = _;
+        } ->
       p
         ~extra:
           (spf
@@ -913,7 +922,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p
         ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
         t
-    | TestPropT { use_op; propref = prop; tout = (preason, ptvar); _ } ->
+    | TestPropT { use_op; reason = _; id = _; propref = prop; tout = (preason, ptvar); hint = _ } ->
       p
         ~extra:
           (spf

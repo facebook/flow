@@ -312,8 +312,8 @@ and mod_reason_of_use_t f = function
   | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
   | GetTypeFromNamespaceT { use_op; reason; prop_ref; tout } ->
     GetTypeFromNamespaceT { use_op; reason = f reason; prop_ref; tout }
-  | GetPropT { use_op; reason; id; from_annot; propref; tout } ->
-    GetPropT { use_op; reason = f reason; id; from_annot; propref; tout }
+  | GetPropT { use_op; reason; id; from_annot; propref; tout; hint } ->
+    GetPropT { use_op; reason = f reason; id; from_annot; propref; tout; hint }
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
@@ -384,8 +384,8 @@ and mod_reason_of_use_t f = function
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
     ObjKitT (use_op, f reason, resolve_tool, tool, tout)
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
-  | TestPropT { use_op; reason; id; propref; tout } ->
-    TestPropT { use_op; reason = f reason; id; propref; tout }
+  | TestPropT { use_op; reason; id; propref; tout; hint } ->
+    TestPropT { use_op; reason = f reason; id; propref; tout; hint }
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
   | ToStringT { orig_t; reason; t_out } -> ToStringT { orig_t; reason = f reason; t_out }
   | UnaryArithT { reason; result_t; kind } -> UnaryArithT { reason = f reason; result_t; kind }
@@ -417,10 +417,12 @@ and mod_reason_of_opt_use_t f = function
   | OptMethodT (op, r1, r2, ref, action) -> OptMethodT (op, f r1, r2, ref, action)
   | OptPrivateMethodT (op, r1, r2, props, cbs, static, action) ->
     OptPrivateMethodT (op, f r1, r2, props, cbs, static, action)
-  | OptGetPropT (use_op, reason, id, n) -> OptGetPropT (use_op, f reason, id, n)
+  | OptGetPropT { use_op; reason; id; propref; hint } ->
+    OptGetPropT { use_op; reason = f reason; id; propref; hint }
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
-  | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
+  | OptTestPropT (use_op, reason, test_prop_id, propref, hint) ->
+    OptTestPropT (use_op, f reason, test_prop_id, propref, hint)
   | OptGetElemT (use_op, reason, id, annot, it) -> OptGetElemT (use_op, f reason, id, annot, it)
   | OptCallElemT (use_op, r1, r2, elt, call) -> OptCallElemT (use_op, f r1, r2, elt, call)
 
