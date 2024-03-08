@@ -594,7 +594,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let (tparam, t) = ALocMap.find tparam_loc env.infer_tparams_map in
         ((loc, t), Infer { Infer.tparam; comments }))
     | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
-      let t = mk_singleton_string loc value in
+      let t =
+        if Type_inference_hooks_js.dispatch_literal_hook env.cx loc then
+          EmptyT.at loc
+        else
+          mk_singleton_string loc value
+      in
       ((loc, t), t_ast)
     | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
       ((loc, mk_singleton_number loc value raw), t_ast)

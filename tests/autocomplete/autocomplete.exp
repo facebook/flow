@@ -6029,7 +6029,7 @@ Flags: --pretty
 
 type_string_literal.js:3:13
 Flags: --pretty
-{"result":[{"name":"'AUTO332'","type":"\"AUTO332\""}]}
+{"result":[]}
 
 fixme.js:5:4
 Flags: --lsp
