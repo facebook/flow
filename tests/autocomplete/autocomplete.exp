@@ -6027,6 +6027,10 @@ type_binding_id.js:11:15
 Flags: --pretty
 {"result":[]}
 
+type_string_literal.js:3:13
+Flags: --pretty
+{"result":[{"name":"'AUTO332'","type":"\"AUTO332\""}]}
+
 fixme.js:5:4
 Flags: --lsp
 {
