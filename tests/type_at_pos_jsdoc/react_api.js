@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-React.checkPropTypes;
-//       ^
 React.Children;
 //       ^
 React.cloneElement;
@@ -13,8 +11,6 @@ React.createClass;
 React.createContext;
 //       ^
 React.createElement;
-//       ^
-React.createFactory;
 //       ^
 React.createRef;
 //       ^

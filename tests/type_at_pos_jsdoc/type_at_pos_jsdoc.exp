@@ -1540,30 +1540,6 @@ Flags: --strip-root --pretty
 react_api.js:3:10
 Flags: --strip-root --pretty
 {
-  "documentation":"**@deprecated** ",
-  "types":{
-    "unevaluated":{
-      "type":"<V>(propTypes: any, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":7,"offset":39},
-    "end":{"line":3,"column":20,"offset":53}
-  },
-  "path":"react_api.js",
-  "line":3,
-  "endline":3,
-  "start":7,
-  "end":20
-}
-
-react_api.js:5:10
-Flags: --strip-root --pretty
-{
   "documentation":"`Children`lets you manipulate and transform the JSX received as the\nchildren prop.\n\nUsing `Children` is uncommon and can lead to fragile code.\n[See common alternatives](https://react.dev/reference/react/Children#alternatives).\n\n**@see** https://react.dev/reference/react/Children",
   "types":{
     "unevaluated":{
@@ -1577,17 +1553,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":7,"offset":72},
-    "end":{"line":5,"column":14,"offset":80}
+    "start":{"line":3,"column":7,"offset":39},
+    "end":{"line":3,"column":14,"offset":47}
   },
   "path":"react_api.js",
-  "line":5,
-  "endline":5,
+  "line":3,
+  "endline":3,
   "start":7,
   "end":14
 }
 
-react_api.js:7:10
+react_api.js:5:10
 Flags: --strip-root --pretty
 {
   "documentation":"Using cloneElement is uncommon and can lead to fragile code.\n[See common alternatives](https://react.dev/reference/react/cloneElement#alternatives)\n\n**@see** https://react.dev/reference/react/cloneElement",
@@ -1596,17 +1572,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":7,"offset":99},
-    "end":{"line":7,"column":18,"offset":111}
+    "start":{"line":5,"column":7,"offset":66},
+    "end":{"line":5,"column":18,"offset":78}
   },
   "path":"react_api.js",
-  "line":7,
-  "endline":7,
+  "line":5,
+  "endline":5,
   "start":7,
   "end":18
 }
 
-react_api.js:9:10
+react_api.js:7:10
 Flags: --strip-root --pretty
 {
   "documentation":"`Component` lets you define a React component as a JavaScript class.\n\nWe recommend defining components as functions instead of classes.\n[See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).\n\n**@see** https://react.dev/reference/react/Component",
@@ -1618,36 +1594,35 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":7,"offset":130},
-    "end":{"line":9,"column":15,"offset":139}
+    "start":{"line":7,"column":7,"offset":97},
+    "end":{"line":7,"column":15,"offset":106}
+  },
+  "path":"react_api.js",
+  "line":7,
+  "endline":7,
+  "start":7,
+  "end":15
+}
+
+react_api.js:9:10
+Flags: --strip-root --pretty
+{
+  "types":{"unevaluated":{"type":"void"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"react_api.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":7,"offset":125},
+    "end":{"line":9,"column":17,"offset":136}
   },
   "path":"react_api.js",
   "line":9,
   "endline":9,
   "start":7,
-  "end":15
-}
-
-react_api.js:11:10
-Flags: --strip-root --pretty
-{
-  "documentation":"**@deprecated** ",
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":7,"offset":158},
-    "end":{"line":11,"column":17,"offset":169}
-  },
-  "path":"react_api.js",
-  "line":11,
-  "endline":11,
-  "start":7,
   "end":17
 }
 
-react_api.js:13:10
+react_api.js:11:10
 Flags: --strip-root --pretty
 {
   "documentation":"`createContext` lets you create a context that components can provide or read.\n\n**@see** https://react.dev/reference/react/createContext",
@@ -1661,8 +1636,27 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":7,"offset":188},
-    "end":{"line":13,"column":19,"offset":201}
+    "start":{"line":11,"column":7,"offset":155},
+    "end":{"line":11,"column":19,"offset":168}
+  },
+  "path":"react_api.js",
+  "line":11,
+  "endline":11,
+  "start":7,
+  "end":19
+}
+
+react_api.js:13:10
+Flags: --strip-root --pretty
+{
+  "documentation":"`createElement` lets you create a React element.\nIt serves as an alternative to writing JSX.\n\n**@see** https://react.dev/reference/react/createElement",
+  "types":{"unevaluated":{"type":"React$CreateElement"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"react_api.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":7,"offset":187},
+    "end":{"line":13,"column":19,"offset":200}
   },
   "path":"react_api.js",
   "line":13,
@@ -1674,49 +1668,6 @@ Flags: --strip-root --pretty
 react_api.js:15:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`createElement` lets you create a React element.\nIt serves as an alternative to writing JSX.\n\n**@see** https://react.dev/reference/react/createElement",
-  "types":{"unevaluated":{"type":"React$CreateElement"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":7,"offset":220},
-    "end":{"line":15,"column":19,"offset":233}
-  },
-  "path":"react_api.js",
-  "line":15,
-  "endline":15,
-  "start":7,
-  "end":19
-}
-
-react_api.js:17:10
-Flags: --strip-root --pretty
-{
-  "documentation":"**@deprecated** \n\nThis API will be removed in a future major version of React.\n[See the alternatives](https://react.dev/reference/react/createFactory#alternatives).",
-  "types":{
-    "unevaluated":{
-      "type":"<ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":7,"offset":252},
-    "end":{"line":17,"column":19,"offset":265}
-  },
-  "path":"react_api.js",
-  "line":17,
-  "endline":17,
-  "start":7,
-  "end":19
-}
-
-react_api.js:19:10
-Flags: --strip-root --pretty
-{
   "documentation":"`createRef` creates a ref object which can contain arbitrary value.\n\n`createRef` is mostly used for class components.\nFunction components typically rely on `useRef` instead.\n\n**@see** https://react.dev/reference/react/createRef",
   "types":{
     "unevaluated":{"type":"<T>() => React$RefObject<(T | null)>"},
@@ -1726,17 +1677,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":7,"offset":284},
-    "end":{"line":19,"column":15,"offset":293}
+    "start":{"line":15,"column":7,"offset":219},
+    "end":{"line":15,"column":15,"offset":228}
   },
   "path":"react_api.js",
-  "line":19,
-  "endline":19,
+  "line":15,
+  "endline":15,
   "start":7,
   "end":15
 }
 
-react_api.js:21:10
+react_api.js:17:10
 Flags: --strip-root --pretty
 {
   "documentation":"`forwardRef` lets your component expose a DOM node to parent component\nwith a ref.\n\n**@see** https://react.dev/reference/react/forwardRef",
@@ -1750,17 +1701,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":7,"offset":312},
-    "end":{"line":21,"column":16,"offset":322}
+    "start":{"line":17,"column":7,"offset":247},
+    "end":{"line":17,"column":16,"offset":257}
   },
   "path":"react_api.js",
-  "line":21,
-  "endline":21,
+  "line":17,
+  "endline":17,
   "start":7,
   "end":16
 }
 
-react_api.js:23:10
+react_api.js:19:10
 Flags: --strip-root --pretty
 {
   "documentation":"`useState` is a React Hook that lets you add a\n[state variable](https://react.dev/learn/state-a-components-memory)\nto your component.\n\n**@see** https://react.dev/reference/react/useState",
@@ -1772,17 +1723,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":23,"column":7,"offset":341},
-    "end":{"line":23,"column":14,"offset":349}
+    "start":{"line":19,"column":7,"offset":276},
+    "end":{"line":19,"column":14,"offset":284}
   },
   "path":"react_api.js",
-  "line":23,
-  "endline":23,
+  "line":19,
+  "endline":19,
   "start":7,
   "end":14
 }
 
-react_api.js:25:10
+react_api.js:21:10
 Flags: --strip-root --pretty
 {
   "documentation":"`useReducer` is a React Hook that lets you add a\n[reducer](https://react.dev/learn/extracting-state-logic-into-a-reducer)\nto your component.\n\n**@see** https://react.dev/reference/react/useReducer",
@@ -1796,12 +1747,12 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"react_api.js",
     "type":"SourceFile",
-    "start":{"line":25,"column":7,"offset":368},
-    "end":{"line":25,"column":16,"offset":378}
+    "start":{"line":21,"column":7,"offset":303},
+    "end":{"line":21,"column":16,"offset":313}
   },
   "path":"react_api.js",
-  "line":25,
-  "endline":25,
+  "line":21,
+  "endline":21,
   "start":7,
   "end":16
 }
