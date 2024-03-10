@@ -42,6 +42,19 @@ type WithReadOnlyOpt = [a: number, +b?: string];
   (withWriteOnlyOpt: [a: number, b?: string | boolean]); // ERROR
   (withWriteOnlyOpt: [a: number, -b?: string]); // OK
 }
+{
+  declare const f11: (...[+foo?: string]) => number;
+  declare const f12: (...[+foo: string | void]) => number;
+  declare const f2: (foo?: string) => number;
+
+  f11 as typeof f2; // error
+  f12 as typeof f2; // ok
+  f2 as typeof f11; // ok
+  f2 as typeof f12; // ok
+  f11 as typeof f12; // error
+  f12 as typeof f11; // ok
+  // from above, f12 = f2 <: f11
+}
 
 ([1]: Single); // OK
 ([1, undefined]: Single); // ERROR
