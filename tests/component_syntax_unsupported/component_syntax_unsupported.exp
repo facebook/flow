@@ -17,8 +17,8 @@ Cannot cast `3` to `React.FragmentType` because number [1] is incompatible with 
 
 References:
    <BUILTINS>/react.js:708:5
-            v------------------------------------------------------------
-   708|     declare component Fragment<Renders: React$Node = React$Node>(
+            v------------------------------------------------------
+   708|     declare component Fragment<Renders: React$Node = void>(
    709|       children?: Renders,
    710|     ) renders Renders;
             -----------------^ [2]

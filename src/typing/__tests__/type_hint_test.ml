@@ -637,7 +637,7 @@ let eval_hint_tests =
           [Decomp_FuncParam ([None], 0, None); Decomp_JsxRef];
     "jsx_fragment_ref"
     >:: mk_eval_hint_test_with_type_setup
-          ~expected:"void | React$Node"
+          ~expected:"void"
           "declare var Fragment: React$FragmentType; Fragment"
           [Decomp_ObjProp "children"; Decomp_JsxProps];
   ]

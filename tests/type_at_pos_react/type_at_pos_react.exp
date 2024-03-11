@@ -36,19 +36,12 @@ react_component.js:31:7 = {
               "generic_kind":"type alias"
             },
             "polarity":"Neutral",
-            "default":{
-              "kind":"Generic",
-              "type":{
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
-                "name":"React$Node"
-              },
-              "generic_kind":"type alias"
-            }
+            "default":{"kind":"Void"}
           }
         ],
         "isType":false
       },
-      "type":"component Fragment<Renders: React$Node = React$Node>"
+      "type":"component Fragment<Renders: React$Node = void>"
     },
     "evaluated":null
   },
