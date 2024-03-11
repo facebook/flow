@@ -1755,7 +1755,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       in
       let reason = mk_annot_reason RInterfaceType loc in
       let (iface_sig, extend_asts) =
-        let id = ALoc.id_none in
+        let id = Context.make_aloc_id env.cx loc in
         let (extends, extend_asts) =
           extends |> Base.List.map ~f:(mk_interface_super env) |> List.split
         in

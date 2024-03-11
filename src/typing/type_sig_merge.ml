@@ -1074,7 +1074,7 @@ and merge_annot env file = function
     )
   | InlineInterface (loc, def) ->
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
-    let id = ALoc.id_none in
+    let id = Context.make_aloc_id file.cx loc in
     merge_interface ~inline:true env file reason None id def []
   | MappedTypeAnnot
       { loc; source_type; property_type; key_tparam; variance; optional; inline_keyof } ->

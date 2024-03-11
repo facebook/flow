@@ -2560,6 +2560,10 @@ let flow_arith cx ?trace reason l r kind =
       );
     AnyT.error reason
 
+let is_same_instance_type { class_id = class_id1; _ } { class_id = class_id2; _ } =
+  (* `ALoc.id_none` is not equal to anything for class ids *)
+  ALoc.equal_id class_id1 class_id2 && (not @@ ALoc.equal_id class_id1 ALoc.id_none)
+
 (* TypeAppT ~> TypeAppT has special behavior that flows the type arguments directly
  * instead of evaluating the types and then flowing the results to each other. This is
  * a bug that should be removed because it breaks transitivity, which can cause errors

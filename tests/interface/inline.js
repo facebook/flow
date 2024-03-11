@@ -28,3 +28,8 @@ interface Base { p: number }
 type Derived = interface extends Base {
   p: string, // error: string ~> number
 }
+
+{
+  declare const x: interface {foo: number};
+  x as interface {foo: string}; // ERROR
+}

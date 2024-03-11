@@ -451,6 +451,24 @@ References:
                            ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- inline.js:34:3
+
+Cannot cast `x` to interface type because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-cast]
+
+   inline.js:34:3
+   34|   x as interface {foo: string}; // ERROR
+         ^
+
+References:
+   inline.js:33:36
+   33|   declare const x: interface {foo: number};
+                                          ^^^^^^ [1]
+   inline.js:34:24
+   34|   x as interface {foo: string}; // ERROR
+                              ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ interface.js:3:17
 
 Cannot assign `(new C()).x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -1152,7 +1170,7 @@ References:
 
 
 
-Found 74 errors
+Found 75 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

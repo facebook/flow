@@ -3548,7 +3548,7 @@ struct
                 )
               )
           ) ->
-          if ALoc.equal_id inst.class_id inst_super.class_id then
+          if is_same_instance_type inst inst_super then
             let { type_args = tmap1; _ } = inst in
             let { type_args = tmap2; _ } = inst_super in
             let ureason =
@@ -8427,7 +8427,7 @@ struct
         (InternalT (ExtendsT (_, c, DefT (_, InstanceT { inst = instance_a; _ }))) as right)
       ) ->
       (* TODO: intersection *)
-      if ALoc.equal_id instance_a.class_id instance_c.class_id then
+      if is_same_instance_type instance_a instance_c then
         rec_flow_t cx trace ~use_op:unknown_use (c, OpenT result)
       else
         (* Recursively check whether super(C) extends A, with enough context. **)
@@ -8469,7 +8469,7 @@ struct
         DefT (reason, InstanceT { super = super_c; inst = instance_c; _ }),
         (InternalT (ExtendsT (_, _, DefT (_, InstanceT { inst = instance_a; _ }))) as right)
       ) ->
-      if ALoc.equal_id instance_a.class_id instance_c.class_id then
+      if is_same_instance_type instance_a instance_c then
         ()
       else
         let u = PredicateT (NotP (LeftP (InstanceofTest, right)), result) in
