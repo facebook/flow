@@ -30,8 +30,6 @@ val make_bound_id : ALoc.id -> Subst_name.t -> id
 
 val make_spread_id : spread_id -> id option
 
-val make_spread_id_exn : spread_id -> id
-
 val spread_subtract : spread_id -> spread_id -> spread_id
 
 val spread_append : spread_id -> spread_id -> spread_id

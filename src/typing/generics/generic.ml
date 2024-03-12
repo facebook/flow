@@ -129,8 +129,6 @@ let make_bound_id aloc_id name = Bound { generic = { id = aloc_id; name }; super
 let make_spread_id (opt : spread_id) : id option =
   Base.Option.map ~f:(fun spread -> Spread spread) (Nel.of_list opt)
 
-let make_spread_id_exn opt = Spread (Nel.of_list_exn opt)
-
 let spread_subtract id1 id2 =
   Base.List.filter ~f:(fun a -> not @@ Base.List.mem ~equal:equal_bound id2 a) id1
 
