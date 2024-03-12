@@ -1029,3 +1029,8 @@ Flags:
 Obj
 reduce_recursive.js:16:25,16:27
 
+spread.js:4:11
+Flags:
+{|...T, ...S, prop: number|}
+spread.js:4:11,4:11
+

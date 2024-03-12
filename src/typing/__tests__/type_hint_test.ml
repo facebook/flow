@@ -463,7 +463,7 @@ let eval_hint_tests =
     *)
     "fun_decomp_unsolved_type_parameter"
     >:: mk_eval_hint_test
-          ~expected:"(mixed) => void"
+          ~expected:"(T) => void"
           "<T>(T => void) => void"
           [Decomp_FuncParam ([None], 0, None)];
     "obj_prop_from_record_neutral_polarity"

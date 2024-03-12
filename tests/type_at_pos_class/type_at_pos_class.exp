@@ -843,5 +843,5 @@ constructor.js:4:7 {
   "start":3,
   "end":13
 }
-this.js:5:13 this
+this.js:5:13 $ReadOnly<this>
 this.js:5:13,5:15

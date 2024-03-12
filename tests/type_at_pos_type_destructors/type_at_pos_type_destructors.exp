@@ -61,7 +61,6 @@ Flags:
 type T8<T> = T extends {bar: <T>(T) => void, foo: infer T, ...}
   ? string
   : number
-= string | number
 conditional-types.js:29:6,29:7
 
 conditional-types.js:34:5
@@ -194,13 +193,13 @@ spread.js:26:6,26:8
 spread.js:30:6
 Flags:
 type B1<T: {...}, S: {...}> = {...T, ...S, o: O, ...}
-= {o: O, ...}
+= {...T, ...S, o: O, ...}
 spread.js:30:6,30:7
 
 spread.js:32:6
 Flags:
 type B2<T: {...}> = {...T, o: O, ...}
-= {o: O, ...}
+= {...T, o: O, ...}
 spread.js:32:6,32:7
 
 spread.js:34:6
@@ -251,7 +250,7 @@ spread.js:50:6,50:9
 spread.js:52:6
 Flags:
 type PTA2<T: {...}> = {...T, ...B2<T>, ...}
-= {o: O, ...}
+= {...T, o: O, ...}
 spread.js:52:6,52:9
 
 spread.js:54:6
@@ -290,19 +289,19 @@ spread.js:64:6,64:8
 spread.js:66:6
 Flags:
 type Nest1<T: {...}> = {...T, ...}
-= {...}
+= {...T, ...}
 spread.js:66:6,66:10
 
 spread.js:68:6
 Flags:
 type Nest2<T: {...}> = {...T, ...}
-= {...}
+= {...T, ...}
 spread.js:68:6,68:10
 
 spread.js:70:6
 Flags:
 type UNest<T: {...}> = {...T, ...}
-= {...}
+= {...T, ...} | {...T, ...} | {...T, ...}
 spread.js:70:6,70:10
 
 type-destructor.js:20:6
@@ -628,37 +627,31 @@ mapped-type.js:26:6,26:15
 mapped-type.js:30:6
 Flags:
 type Unevaluated1<T: {...}> = {[key in keyof T]: T[key]}
-= {...}
 mapped-type.js:30:6,30:17
 
 mapped-type.js:32:6
 Flags:
 type Unevaluated2<T: {...}> = {+[key in keyof T]: T[key]}
-= {...}
 mapped-type.js:32:6,32:17
 
 mapped-type.js:34:6
 Flags:
 type Unevaluated3<T: {...}> = {-[key in keyof T]: T[key]}
-= {...}
 mapped-type.js:34:6,34:17
 
 mapped-type.js:36:6
 Flags:
 type Unevaluated4<T: {...}> = {[key in keyof T]?: T[key]}
-= {...}
 mapped-type.js:36:6,36:17
 
 mapped-type.js:38:6
 Flags:
 type Unevaluated5<T: {...}> = {+[key in keyof T]?: T[key]}
-= {...}
 mapped-type.js:38:6,38:17
 
 mapped-type.js:40:6
 Flags:
 type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]}
-= {...}
 mapped-type.js:40:6,40:17
 
 mapped-type.js:44:4
@@ -723,7 +716,6 @@ mapped-type.js:71:4,71:4
 mapped-type.js:76:6
 Flags:
 type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in O]: O[key]}
-= {||}
 mapped-type.js:76:6,76:20
 
 mapped-type.js:79:4

@@ -28,6 +28,7 @@ type error_kind =
   | BadEvalT
   | BadUse
   | ShadowTypeParam
+  | SyntheticBoundT
   | UnexpectedTypeCtor of string
   | UnsupportedTypeCtor
   | UnsupportedUseCtor

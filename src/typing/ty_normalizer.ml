@@ -40,6 +40,7 @@ type error_kind =
   | BadEvalT
   | BadUse
   | ShadowTypeParam
+  | SyntheticBoundT
   | UnexpectedTypeCtor of string
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
@@ -63,6 +64,7 @@ let error_kind_to_string = function
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
   | ShadowTypeParam -> "Shadowed type parameters"
+  | SyntheticBoundT -> "Synthetic type parameter"
   | UnexpectedTypeCtor c -> spf "Unexpected type constructor (%s)" c
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
@@ -732,7 +734,7 @@ module Make (I : INPUT) : S = struct
             in
             let%map bound = param_bound ~env bound in
             Ty.Infer (symbol, bound)
-          | None -> type__ ~env bound
+          | None -> subst_name ~env loc t bound name
         in
         lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env ?id t
@@ -1542,6 +1544,41 @@ module Make (I : INPUT) : S = struct
         (* Fallback *)
         | t -> custom_fun_short ~env t
       )
+
+    and subst_name ~env loc t bound name =
+      match name with
+      | Subst_name.Name name
+      | Subst_name.Id (_, name)
+      | Subst_name.Synthetic { op_kind = None; name; _ } ->
+        (* When `op_kind` is None we can rely on `name`. *)
+        return (Ty.Bound (loc, name))
+      | Subst_name.Synthetic { op_kind = Some Subst_name.ReadOnly; ts = [name]; _ } ->
+        let%map t = subst_name ~env loc t bound name in
+        Ty.Utility (Ty.ReadOnly t)
+      | Subst_name.Synthetic { op_kind = Some Subst_name.Partial; ts = [name]; _ } ->
+        let%map t = subst_name ~env loc t bound name in
+        Ty.Utility (Ty.Partial t)
+      | Subst_name.Synthetic { op_kind = Some Subst_name.Required; ts = [name]; _ } ->
+        let%map t = subst_name ~env loc t bound name in
+        Ty.Utility (Ty.Required t)
+      | Subst_name.Synthetic { op_kind = Some Subst_name.Spread; ts; _ } ->
+        let%bind obj_props =
+          mapM
+            (fun b ->
+              let%map t = subst_name ~env loc t bound b in
+              Ty.SpreadProp t)
+            ts
+        in
+        let%map ty_bound = type__ ~env bound in
+        let (obj_props, obj_kind, obj_literal, obj_frozen) =
+          match ty_bound with
+          | Ty.Obj { Ty.obj_props = bound_props; obj_kind; obj_literal; obj_frozen; _ } ->
+            (obj_props @ bound_props, obj_kind, obj_literal, obj_frozen)
+          | _ -> (obj_props, Ty.ExactObj, None, false)
+        in
+        Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind; obj_literal; obj_frozen }
+      | Subst_name.Synthetic { op_kind = Some _; ts = _; name = _ } ->
+        terr ~kind:SyntheticBoundT (Some t)
 
     and custom_fun_short ~env =
       Type.(
