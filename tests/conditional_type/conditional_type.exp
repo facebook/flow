@@ -539,7 +539,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:12
 
-Cannot return `true` because boolean [1] is incompatible with `conditional type` [2]. [incompatible-return]
+Cannot return `true` because boolean [1] is incompatible with conditional type [2]. [incompatible-return]
 
    generic.js:4:12
    4|     return true; // error
@@ -553,7 +553,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:6:12
 
-Cannot return `1` because number [1] is incompatible with `conditional type` [2]. [incompatible-return]
+Cannot return `1` because number [1] is incompatible with conditional type [2]. [incompatible-return]
 
    generic.js:6:12
    6|     return 1; // error
@@ -602,7 +602,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generic.js:17:12
 
-Cannot return `true` because boolean [1] is incompatible with `conditional type` [2]. [incompatible-return]
+Cannot return `true` because boolean [1] is incompatible with conditional type [2]. [incompatible-return]
 
    generic.js:17:12
    17|     return true; // error
@@ -616,7 +616,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generic.js:19:12
 
-Cannot return `1` because number [1] is incompatible with `conditional type` [2]. [incompatible-return]
+Cannot return `1` because number [1] is incompatible with conditional type [2]. [incompatible-return]
 
    generic.js:19:12
    19|     return 1; // error
@@ -700,7 +700,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:38:7
 
-Cannot assign `y` to `x` because boolean [1] is incompatible with `conditional type` [2]. [incompatible-type]
+Cannot assign `y` to `x` because boolean [1] is incompatible with conditional type [2]. [incompatible-type]
 
    generic.js:38:7
    38|   x = y; // expected error
@@ -717,7 +717,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:38:7
 
-Cannot assign `y` to `x` because number [1] is incompatible with `conditional type` [2]. [incompatible-type]
+Cannot assign `y` to `x` because number [1] is incompatible with conditional type [2]. [incompatible-type]
 
    generic.js:38:7
    38|   x = y; // expected error
@@ -734,7 +734,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:39:7
 
-Cannot assign `z` to `x` because boolean [1] is incompatible with `conditional type` [2]. [incompatible-type]
+Cannot assign `z` to `x` because boolean [1] is incompatible with conditional type [2]. [incompatible-type]
 
    generic.js:39:7
    39|   x = z; // unfortunate error, but this is sound.
@@ -751,7 +751,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:39:7
 
-Cannot assign `z` to `x` because number [1] is incompatible with `conditional type` [2]. [incompatible-type]
+Cannot assign `z` to `x` because number [1] is incompatible with conditional type [2]. [incompatible-type]
 
    generic.js:39:7
    39|   x = z; // unfortunate error, but this is sound.

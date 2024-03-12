@@ -2237,7 +2237,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (GenericT { reason; bound; _ }, _) ->
       rec_flow_t cx trace ~use_op (reposition_reason cx reason bound, u)
     | (_, GenericT { reason; name; _ }) ->
-      let desc = RIncompatibleInstantiation (Subst_name.string_of_subst_name name) in
+      let desc = RIncompatibleInstantiation name in
       let bot = DefT (replace_desc_reason desc reason, EmptyT) in
       rec_flow_t cx trace ~use_op (l, bot)
     | (ObjProtoT reason, _) ->

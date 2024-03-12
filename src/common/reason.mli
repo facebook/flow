@@ -173,7 +173,7 @@ type 'loc virtual_reason_desc =
   | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RRefinedElement of 'loc virtual_reason_desc
-  | RIncompatibleInstantiation of string
+  | RIncompatibleInstantiation of Subst_name.t
   | RSpreadOf of 'loc virtual_reason_desc
   | RPartialOf of 'loc virtual_reason_desc
   | RRequiredOf of 'loc virtual_reason_desc

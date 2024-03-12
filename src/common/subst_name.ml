@@ -36,3 +36,12 @@ let string_of_subst_name n =
   | Name n
   | Id (_, n) ->
     n
+
+(** Similar to [string_of_subst_name] but uses backticks (code formatting) for
+ * non-synthetic names. *)
+let formatted_string_of_subst_name n =
+  match n with
+  | Synthetic (n, _) -> n
+  | Name n
+  | Id (_, n) ->
+    Utils_js.spf "`%s`" n

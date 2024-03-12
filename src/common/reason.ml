@@ -214,7 +214,7 @@ type 'loc virtual_reason_desc =
   | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RRefinedElement of 'loc virtual_reason_desc
-  | RIncompatibleInstantiation of string
+  | RIncompatibleInstantiation of Subst_name.t
   | RSpreadOf of 'loc virtual_reason_desc
   | RPartialOf of 'loc virtual_reason_desc
   | RRequiredOf of 'loc virtual_reason_desc
@@ -658,7 +658,7 @@ let rec string_of_desc = function
   | RType x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
-  | RTypeParam (x, _, _) -> spf "`%s`" (Subst_name.string_of_subst_name x)
+  | RTypeParam (x, _, _) -> Subst_name.formatted_string_of_subst_name x
   | RTypeParamDefault r -> spf "%s (inferred from type parameter's default)" (string_of_desc r)
   | RTypeParamBound r -> spf "%s (inferred from type parameter's bound)" (string_of_desc r)
   | RTypeof x -> spf "`typeof %s`" x
@@ -731,7 +731,7 @@ let rec string_of_desc = function
   | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
   | RRefinedElement d -> spf "array element of refined %s" (string_of_desc d)
-  | RIncompatibleInstantiation x -> spf "`%s`" x
+  | RIncompatibleInstantiation x -> Subst_name.formatted_string_of_subst_name x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RPartialOf d -> spf "partial %s" (string_of_desc d)
   | RRequiredOf d -> spf "required of %s" (string_of_desc d)

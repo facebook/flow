@@ -62,19 +62,25 @@ and id =
    if any, have been spread into an object *)
 type spread_id = bound list
 
-let rec bound_to_string =
+let rec bound_to_string ?(code = false) b =
   let open Utils_js in
-  function
-  | { generic = { name; _ }; super = None } -> Subst_name.string_of_subst_name name
-  | { generic = { name; _ }; super = Some id } ->
-    spf "%s:%s" (Subst_name.string_of_subst_name name) (to_string id)
+  let s =
+    match b with
+    | { generic = { name; _ }; super = None } -> spf "%s" (Subst_name.string_of_subst_name name)
+    | { generic = { name; _ }; super = Some id } ->
+      spf "%s:%s" (Subst_name.string_of_subst_name name) (to_string id)
+  in
+  if code then
+    "`" ^ s ^ "`"
+  else
+    s
 
 and to_string id =
   let open Utils_js in
   match id with
-  | Bound bound -> bound_to_string bound
+  | Bound bound -> bound_to_string ~code:true bound
   | Spread ids ->
-    spf "{ ...%s }" (String.concat ", ..." (Base.List.map ~f:bound_to_string (Nel.to_list ids)))
+    spf "`{ ...%s }`" (String.concat ", ..." (Base.List.map ~f:bound_to_string (Nel.to_list ids)))
 
 let rec all_subst_names_of_id = function
   | Bound bound -> all_subst_names_of_bound bound
