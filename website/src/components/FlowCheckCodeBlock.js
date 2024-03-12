@@ -41,12 +41,10 @@ function getErrorsUnderlineRangesOnLine(
     .filter(Boolean);
 }
 
-type Props = {children: string, metastring: string};
-
-export default function FlowCheckCodeBlock({
-  children,
-  metastring,
-}: Props): MixedElement {
+export default component FlowCheckCodeBlock(
+  children: string,
+  metastring: string,
+) {
   const flowErrors: Array<FlowError> = JSON.parse(metastring || '[]');
   const {prism} = useThemeConfig();
   const [showCopied, setShowCopied] = useState(false);

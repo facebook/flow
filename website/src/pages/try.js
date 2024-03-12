@@ -15,7 +15,7 @@ import Navbar from '@theme/Navbar';
 
 const TryFlow = React.lazy(() => import('../try-flow/TryFlow'));
 
-export default function TryFlowPage(): React.MixedElement {
+export default component TryFlowPage() {
   const context = useDocusaurusContext();
   const {siteConfig = ({}: any)} = context;
   return (

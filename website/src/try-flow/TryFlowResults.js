@@ -15,7 +15,7 @@ import ReactJson from 'react-json-view';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
 
-function ErrorMessage({msg}: {msg: FlowJsErrorMessage}) {
+component ErrorMessage(msg: FlowJsErrorMessage) {
   if (msg.loc && msg.context != null) {
     const basename = msg.loc.source.replace(/.*\//, '');
     const filename = basename !== '-' ? `${msg.loc.source}:` : '';
@@ -52,11 +52,7 @@ function ErrorMessage({msg}: {msg: FlowJsErrorMessage}) {
   }
 }
 
-function ErrorMessageExtra({
-  info,
-}: {
-  info: FlowJsErrorMessageInformation,
-}): React.Node {
+component ErrorMessageExtra(info: FlowJsErrorMessageInformation) {
   return (
     <ul>
       <li>
@@ -109,7 +105,7 @@ function shouldCollapse(cursorPosition: Position, json: mixed): boolean {
   return true;
 }
 
-type Props = {
+export default component TryFlowResults(
   flowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
   changeFlowVersion: (SyntheticInputEvent<>) => void,
@@ -118,18 +114,7 @@ type Props = {
   internalError: string,
   cursorPosition: ?Position,
   ast: interface {} | string,
-};
-
-export default function TryFlowResults({
-  flowVersion,
-  flowVersions,
-  changeFlowVersion,
-  loading,
-  errors,
-  internalError,
-  cursorPosition,
-  ast,
-}: Props): MixedElement {
+) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
 
   return (

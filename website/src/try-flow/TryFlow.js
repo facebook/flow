@@ -89,13 +89,10 @@ const initialState: InitialStateFromHash = initialStateFromURI || {
   config: null,
 };
 
-export default function TryFlow({
-  defaultFlowVersion,
-  flowVersions,
-}: {
+export default component TryFlow(
   defaultFlowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
-}): MixedElement {
+) {
   const {withBaseUrl} = useBaseUrlUtils();
   const [initialStateFromStorage, setInitialStateFromStorage] = useState(
     initialStateFromURI == null

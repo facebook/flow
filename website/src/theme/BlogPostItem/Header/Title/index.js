@@ -15,11 +15,7 @@ import {useBlogPost} from '@docusaurus/theme-common/internal';
 
 import styles from './styles.module.css';
 
-type Props = $ReadOnly<{className: string}>;
-
-export default function BlogPostItemHeaderTitle({
-  className,
-}: Props): React.Node {
+export default component BlogPostItemHeaderTitle(className: string) {
   const {metadata} = useBlogPost();
   const {permalink, title, frontMatter} = metadata;
   const mediumLink = frontMatter['medium-link'];

@@ -13,13 +13,7 @@ import Link from '@docusaurus/Link';
 import type FlowJsServices from './flow-services';
 import styles from './TryFlow.module.css';
 
-function DocsLink({
-  kind,
-  id,
-}: {
-  kind: 'option' | 'lint',
-  id: string,
-}): React.Node {
+component DocsLink(kind: 'option' | 'lint', id: string) {
   let href;
   if (kind === 'lint') {
     href = `/en/docs/linting/rule-reference/#toc-${id}`;
@@ -30,22 +24,12 @@ function DocsLink({
   return <Link to={href}>[docs]</Link>;
 }
 
-type Props = $ReadOnly<{
-  flowService: ?FlowJsServices,
-  setConfig: ({[string]: mixed}) => void,
-}>;
-
-function TryFlowConfigRows({
-  name,
-  schema,
-  config,
-  setConfig,
-}: {
+component TryFlowConfigRows(
   name: string,
   schema: FlowJsConfigSchema,
   config: {[string]: mixed},
   setConfig: ({[string]: mixed}) => void,
-}): React.Node {
+) {
   return (
     <>
       {schema.length > 0 ? (
@@ -104,10 +88,10 @@ function TryFlowConfigRows({
   );
 }
 
-export default function TryFlowConfigEditor({
-  flowService,
-  setConfig,
-}: Props): React.Node {
+export default component TryFlowConfigEditor(
+  flowService: ?FlowJsServices,
+  setConfig: ({[string]: mixed}) => void,
+) {
   if (flowService == null) {
     return 'Loading Flow configuration schema';
   }
