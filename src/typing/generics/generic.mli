@@ -5,9 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type generic = {
+  id: ALoc.id;
+  name: Subst_name.t;
+}
+
 type id
 
-type spread_id
+type bound = {
+  generic: generic;
+  super: id option;
+}
+
+type spread_id = bound list
 
 type sat_result =
   | Satisfied
@@ -28,7 +38,7 @@ val make_spread : id -> spread_id
 
 val make_bound_id : ALoc.id -> Subst_name.t -> id
 
-val make_spread_id : spread_id -> id option
+val make_op_id : Subst_name.op_kind -> spread_id -> id option
 
 val spread_subtract : spread_id -> spread_id -> spread_id
 

@@ -255,6 +255,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           ~invalidate_aliases:true
           ~interface:None
           ~reachable_targs
+          ~kind:Subst_name.CreateElement
           flags
           call
           id
@@ -492,6 +493,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             ~invalidate_aliases:false
             ~interface:None
             ~reachable_targs
+            ~kind:Subst_name.ReactConfig
             flags
             call
             id

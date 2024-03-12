@@ -5,6 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type op_kind =
+  | Spread
+  | ReadOnly
+  | Mapped
+  | Partial
+  | Required
+  | CheckConfig
+  | CreateElement
+  | ReactConfig
+  | Conditional
+[@@deriving eq, ord, show]
+
 module Name = struct
   (* Subst names are used to represent the names of type parameters.
      - A `Name` is just a typical name, originating directly from the source.
@@ -22,7 +34,11 @@ module Name = struct
   type t =
     | Name of string
     | Id of int * string
-    | Synthetic of string * t list
+    | Synthetic of {
+        name: string;
+        op_kind: op_kind option;
+        ts: t list;
+      }
   [@@deriving eq, ord, show]
 end
 
@@ -32,7 +48,7 @@ include Name
 
 let string_of_subst_name n =
   match n with
-  | Synthetic (n, _)
+  | Synthetic { name = n; _ }
   | Name n
   | Id (_, n) ->
     n
@@ -41,7 +57,7 @@ let string_of_subst_name n =
  * non-synthetic names. *)
 let formatted_string_of_subst_name n =
   match n with
-  | Synthetic (n, _) -> n
+  | Synthetic { name = n; _ } -> n
   | Name n
   | Id (_, n) ->
     Utils_js.spf "`%s`" n

@@ -98,7 +98,8 @@ let free_var_finder cx ?(bound = Subst_name.Set.empty) t =
 let new_name name fvs =
   let (ct, n) =
     match name with
-    | Subst_name.Synthetic (n, _) -> failwith (Utils_js.spf "Cannot rename synthetic name %s" n)
+    | Subst_name.Synthetic { name = n; _ } ->
+      failwith (Utils_js.spf "Cannot rename synthetic name %s" n)
     | Subst_name.Name n -> (0, n)
     | Subst_name.Id (ct, n) -> (ct, n)
   in
@@ -219,7 +220,7 @@ let substituter =
       else
         let t_out =
           match t with
-          | GenericT { name = Subst_name.Synthetic (name, ids); reason; _ } ->
+          | GenericT { name = Subst_name.Synthetic { name; op_kind = _; ts = ids }; reason; _ } ->
             if Base.List.exists ~f:(fun name -> Subst_name.Map.mem name map) ids then
               failwith
                 (Utils_js.spf

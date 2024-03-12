@@ -1017,7 +1017,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:134:3
 
-Cannot return `otherData` because object type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+Cannot return `otherData` because object type [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-return]
 
    misc.js:134:3
    134|   otherData;
@@ -1357,7 +1357,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:2:10
 
-Cannot return `x` because mapped type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+Cannot return `x` because mapped type [1] is incompatible with type including generic type(s) `T` [2].
+[incompatible-return]
 
    synthetic.js:2:10
    2|   return x; // error S incompatible with T
@@ -1374,7 +1375,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:6:10
 
-Cannot return `x` because `$ReadOnly` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+Cannot return `x` because `$ReadOnly` [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-return]
 
    synthetic.js:6:10
    6|   return x; // error S incompatible with T
@@ -1391,7 +1392,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:10:10
 
-Cannot return `x` because `Pick` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+Cannot return `x` because `Pick` [1] is incompatible with type including generic type(s) `T` [2]. [incompatible-return]
 
    synthetic.js:10:10
    10|   return x; // error S incompatible with T
@@ -1408,7 +1409,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10
 
-Cannot return `x` because partial `S` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+Cannot return `x` because partial `S` [1] is incompatible with `Partial<T>` [2]. [incompatible-return]
 
    synthetic.js:14:10
    14|   return x; // error S incompatible with T
@@ -1425,7 +1426,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:18:10
 
-Cannot return `x` because required of `S` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+Cannot return `x` because required of `S` [1] is incompatible with `Required<T>` [2]. [incompatible-return]
 
    synthetic.js:18:10
    18|   return x; // error S incompatible with T

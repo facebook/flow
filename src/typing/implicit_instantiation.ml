@@ -1639,7 +1639,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               (* A conditional type with GenericTs in check type and extends type is tricky.
                  We cannot conservatively decide which branch we will take. To maintain
                  soundness in this general case, we make the type abstract. *)
-              let name = Subst_name.Synthetic ("conditional type", []) in
+              let name =
+                Subst_name.Synthetic
+                  { name = "conditional type"; op_kind = Some Subst_name.Conditional; ts = [] }
+              in
               let id = Context.make_generic_id cx name (loc_of_reason reason) in
               let reason = update_desc_reason invalidate_rtype_alias reason in
               let bound = UnionT (reason, UnionRep.make true_t false_t []) in

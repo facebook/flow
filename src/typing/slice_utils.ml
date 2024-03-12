@@ -18,6 +18,7 @@ let mk_object_type
     ~invalidate_aliases
     ~interface
     ~reachable_targs
+    ~kind
     flags
     call
     id
@@ -61,7 +62,7 @@ let mk_object_type
         ~default:(t, def_reason)
         exact_reason
   in
-  Generic.make_spread_id generics
+  Generic.make_op_id kind generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
          GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id; no_infer = false }
      )
@@ -564,6 +565,7 @@ let spread_mk_object
     ~invalidate_aliases:true
     ~interface:None
     ~reachable_targs
+    ~kind:Subst_name.Spread
     flags
     call
     id
@@ -749,6 +751,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
          ~invalidate_aliases:true
          ~interface:None
          ~reachable_targs
+         ~kind:Subst_name.CheckConfig
          flags
          call
          id
@@ -1112,6 +1115,7 @@ let object_rest
       ~interface:None
         (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
       ~reachable_targs
+      ~kind:Subst_name.Spread
       flags
       call
       id
@@ -1172,6 +1176,7 @@ let object_read_only =
       ~invalidate_aliases:false
       ~interface
       ~reachable_targs
+      ~kind:Subst_name.ReadOnly
       flags
       call
       id
@@ -1219,12 +1224,18 @@ let object_update_optionality kind =
       | (RRequiredOf _, `Required) -> r
       | _ -> reason
     in
+    let kind =
+      match kind with
+      | `Partial -> Subst_name.Partial
+      | `Required -> Subst_name.Required
+    in
     mk_object_type
       ~def_reason
       ~exact_reason:(Some reason)
       ~invalidate_aliases:false
       ~interface
       ~reachable_targs
+      ~kind
       flags
       call
       id
@@ -1795,6 +1806,7 @@ let map_object
     ~invalidate_aliases:true
     ~interface
     ~reachable_targs
+    ~kind:Subst_name.Mapped
     flags
     call
     id

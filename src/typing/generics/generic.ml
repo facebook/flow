@@ -42,7 +42,7 @@ type bound = {
    like
      function f<X: {}, Y: {}>(x: X, y: Y): {...X, ...Y} { return {...x, ...y} }
    the type {...X, ...Y} will be represented as a GenericT, whose type upper bound is
-   {} and whose Generic.id is Spread [Y, X]. (Note that the ordering of this list of
+   {} and whose Generic.id is Op (Spread, [Y, X]). (Note that the ordering of this list of
    generics is reversed from how it appears in values). This information can then be used to enforce
    that the only values that are well-typed lower bounds for the type are other
    spreads from the same generics, in the same order--as opposed to the unsoundnesses that
@@ -55,7 +55,7 @@ type bound = {
 and spread = bound Nel.t
 
 and id =
-  | Spread of spread
+  | Op of Subst_name.op_kind * spread
   | Bound of bound
 
 (* Used in the object_kit representation of objects, representing whatever generics,
@@ -79,23 +79,36 @@ and to_string id =
   let open Utils_js in
   match id with
   | Bound bound -> bound_to_string ~code:true bound
-  | Spread ids ->
+  | Op (Subst_name.Spread, ids) ->
     spf "`{ ...%s }`" (String.concat ", ..." (Base.List.map ~f:bound_to_string (Nel.to_list ids)))
+  | Op (Subst_name.Partial, (id, [])) -> spf "`Partial<%s>`" (bound_to_string id)
+  | Op (Subst_name.Required, (id, [])) -> spf "`Required<%s>`" (bound_to_string id)
+  | Op (Subst_name.ReadOnly, (id, [])) -> spf "`$ReadOnly<%s>`" (bound_to_string id)
+  | Op (_, ids) ->
+    spf
+      "type including generic type(s) %s"
+      (String.concat ", " (Base.List.map ~f:(bound_to_string ~code:true) (Nel.to_list ids)))
 
 let rec all_subst_names_of_id = function
   | Bound bound -> all_subst_names_of_bound bound
-  | Spread bounds -> Base.List.concat_map ~f:all_subst_names_of_bound (Nel.to_list bounds)
+  | Op (_, bounds) -> Base.List.concat_map ~f:all_subst_names_of_bound (Nel.to_list bounds)
 
 and all_subst_names_of_bound = function
-  | { generic = { name = Subst_name.Synthetic (_, names); _ }; super = None } -> names
+  | { generic = { name = Subst_name.Synthetic { ts = names; _ }; _ }; super = None } -> names
   | { generic = { name; _ }; super = None } -> [name]
-  | { generic = { name = Subst_name.Synthetic (_, names); _ }; super = Some super } ->
+  | { generic = { name = Subst_name.Synthetic { ts = names; _ }; _ }; super = Some super } ->
     names @ all_subst_names_of_id super
   | { generic = { name; _ }; super = Some super } -> name :: all_subst_names_of_id super
 
+let id_to_kind = function
+  | Bound _ -> None
+  | Op (op_kind, _) -> Some op_kind
+
 let subst_name_of_id = function
   | Bound { generic = { name; _ }; super = None } -> name
-  | id -> Subst_name.Synthetic (to_string id, all_subst_names_of_id id)
+  | id ->
+    Subst_name.Synthetic
+      { name = to_string id; op_kind = id_to_kind id; ts = all_subst_names_of_id id }
 
 let rec equal_bound
     { generic = { id = id1; _ }; super = super1 } { generic = { id = id2; _ }; super = super2 } =
@@ -115,25 +128,25 @@ and equal_spreads s1 s2 =
 and equal_id k1 k2 =
   match (k1, k2) with
   | (Bound b1, Bound b2) -> equal_bound b1 b2
-  | (Spread bs1, Spread bs2) -> equal_spreads (Nel.to_list bs1) (Nel.to_list bs2)
+  | (Op (_, bs1), Op (_, bs2)) -> equal_spreads (Nel.to_list bs1) (Nel.to_list bs2)
   | _ -> false
 
 let rec collapse l u =
   match l with
   | Bound { generic; super = None } -> Some (Bound { generic; super = Some u })
   | Bound { generic; super = Some u' } -> Some (Bound { generic; super = collapse u' u })
-  | Spread _ -> None
+  | Op _ -> None
 
 let spread_empty = []
 
 let make_spread = function
-  | Spread spread -> Nel.to_list spread
+  | Op (_, spread) -> Nel.to_list spread
   | Bound bound -> [bound]
 
 let make_bound_id aloc_id name = Bound { generic = { id = aloc_id; name }; super = None }
 
-let make_spread_id (opt : spread_id) : id option =
-  Base.Option.map ~f:(fun spread -> Spread spread) (Nel.of_list opt)
+let make_op_id op_kind (opt : spread_id) : id option =
+  Base.Option.map ~f:(fun spread -> Op (op_kind, spread)) (Nel.of_list opt)
 
 let spread_subtract id1 id2 =
   Base.List.filter ~f:(fun a -> not @@ Base.List.mem ~equal:equal_bound id2 a) id1
@@ -150,7 +163,7 @@ let rec fold_ids ~f ~acc id =
   in
   match id with
   | Bound bound -> test_bound acc bound
-  | Spread spread -> Nel.fold_left test_bound acc spread
+  | Op (_, spread) -> Nel.fold_left test_bound acc spread
 
 let spread_exists = Base.List.is_empty %> not
 
@@ -262,7 +275,7 @@ let rec satisfies ~printer id1 id2 =
          return x; // ok
        }
   *)
-  | (Bound bound1, Spread (bound2, [])) -> bound_satisfies bound1 bound2
+  | (Bound bound1, Op (_, (bound2, []))) -> bound_satisfies bound1 bound2
   (* A 'bound' generic only represents one bound, so it can't
      satisfy a spread of more than one generic on its own. We can see if it's bounded by a
      'spread', though. Example:
@@ -271,7 +284,7 @@ let rec satisfies ~printer id1 id2 =
         return z; // ok
       }
   *)
-  | (Bound { generic = _; super = Some id1 }, Spread _) -> satisfies ~printer id1 id2
+  | (Bound { generic = _; super = Some id1 }, Op _) -> satisfies ~printer id1 id2
   (* As above, but if it's not bounded by a spread, we can't do
      anything but strip off the generic from the lower type.
 
@@ -279,7 +292,7 @@ let rec satisfies ~printer id1 id2 =
         return y; // should error
       }
   *)
-  | (Bound { generic = _; super = None }, Spread _) ->
+  | (Bound { generic = _; super = None }, Op _) ->
     printer
       (lazy ["Generics unsatisfied: single bound cannot satisfy spread with multiple elements"]);
     Upper id2
@@ -294,12 +307,12 @@ let rec satisfies ~printer id1 id2 =
         return y; // should error (but didn't previously with old generics)
       }
   *)
-  | (Spread bounds, Bound _) ->
+  | (Op (_, bounds), Bound _) ->
     let bound1 = Nel.rev bounds |> Nel.hd in
     satisfies ~printer (Bound bound1) id2
   (* If an upper bound spread expects more generic components in the spread than are provided in
      the lower bound, it clearly can't be satisfied *)
-  | (Spread s1, Spread s2) when Nel.length s2 > Nel.length s1 ->
+  | (Op (_, s1), Op (_, s2)) when Nel.length s2 > Nel.length s1 ->
     printer (lazy ["Generics unsatisfied: more elements in upper bound than lower bound"]);
     Upper id2
   (* When comparing two spreads, we drop the tail elements of the lower bound so that
@@ -318,7 +331,7 @@ let rec satisfies ~printer id1 id2 =
        ({...x, ...y}: {...X, ...Z, ...Y}); // nope
      }
   *)
-  | (Spread s1, Spread s2) ->
+  | (Op (_, s1), Op (_, s2)) ->
     let s1 = Nel.to_list s1 in
     let s2 = Nel.to_list s2 in
     let s1 = Base.List.drop s1 (List.length s1 - List.length s2) in
