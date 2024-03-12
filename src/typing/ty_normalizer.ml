@@ -26,7 +26,6 @@ module File_sig = File_sig
 
 type error_kind =
   | BadMethodType
-  | BadBoundT
   | BadCallProp
   | BadClassT
   | BadMappedType
@@ -50,7 +49,6 @@ type error = error_kind * string
 
 let error_kind_to_string = function
   | BadMethodType -> "Bad method type"
-  | BadBoundT -> "Unbound type parameter"
   | BadCallProp -> "Bad call property"
   | BadClassT -> "Bad class"
   | BadMappedType -> "Bad mapped type"
@@ -268,12 +266,6 @@ module Make (I : INPUT) : S = struct
     match id with
     | TVarKey id -> ISet.mem id state.State.rec_tvar_ids
     | EvalKey id -> Type.EvalIdSet.mem id state.State.rec_eval_ids
-
-  let lookup_tparam ~default env t tp_name tp_loc =
-    let pred { T.name; reason; _ } = name = tp_name && tp_loc = Reason.def_loc_of_reason reason in
-    match List.find_opt pred env.Env.tparams_rev with
-    | Some _ -> return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
-    | None -> default t
 
   (**************)
   (* Type ctors *)
@@ -723,20 +715,7 @@ module Make (I : INPUT) : S = struct
           else
             let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
             type_variable ~env ~cont:type__ root_id
-      | GenericT { bound; reason; name; _ } ->
-        let loc = Reason.def_loc_of_reason reason in
-        let default _ =
-          let pred { T.name = tp_name; _ } = name = tp_name in
-          match List.find_opt pred env.Env.infer_tparams with
-          | Some { T.name; reason; bound; _ } ->
-            let symbol =
-              symbol_from_reason env reason (OrdinaryName (Subst_name.string_of_subst_name name))
-            in
-            let%map bound = param_bound ~env bound in
-            Ty.Infer (symbol, bound)
-          | None -> subst_name ~env loc t bound name
-        in
-        lookup_tparam ~default env bound name loc
+      | GenericT { bound; reason; name; _ } -> generic_t env bound reason name t
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | EvalT (t, d, id') ->
         if id = Some (EvalKey id') then
@@ -1579,6 +1558,21 @@ module Make (I : INPUT) : S = struct
         Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind; obj_literal; obj_frozen }
       | Subst_name.Synthetic { op_kind = Some _; ts = _; name = _ } ->
         terr ~kind:SyntheticBoundT (Some t)
+
+    and generic_t env bound reason name t =
+      let loc = Reason.def_loc_of_reason reason in
+      let pred { T.name = name'; reason; _ } =
+        name = name' && loc = Reason.def_loc_of_reason reason
+      in
+      (* GenericT normalizes to Ty.Bound, except for conditional "infer" types. *)
+      match List.find_opt pred env.Env.infer_tparams with
+      | Some { T.name = name'; reason; bound; _ } ->
+        let symbol =
+          symbol_from_reason env reason (OrdinaryName (Subst_name.string_of_subst_name name'))
+        in
+        let%map bound = param_bound ~env bound in
+        Ty.Infer (symbol, bound)
+      | None -> subst_name ~env loc t bound name
 
     and custom_fun_short ~env =
       Type.(

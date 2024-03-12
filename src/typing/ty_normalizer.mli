@@ -14,7 +14,6 @@ module File_sig = File_sig
 
 type error_kind =
   | BadMethodType
-  | BadBoundT
   | BadCallProp
   | BadClassT
   | BadMappedType
