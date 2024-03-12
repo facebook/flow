@@ -12,3 +12,7 @@ const fragment1 = <></>;
 const fragment2 = <><Component foo={3}/></>;
 const fragment3 = <><></></>;
 const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+
+component RefWithoutReact(ref: any) { // error
+    return;
+}

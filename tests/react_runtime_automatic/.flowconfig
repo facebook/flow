@@ -2,3 +2,4 @@
 all=true
 no_flowlib=false
 react.runtime=automatic
+component_syntax=true

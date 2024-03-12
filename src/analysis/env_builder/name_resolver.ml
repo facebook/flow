@@ -5459,16 +5459,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! component_param param =
         let (_, { Ast.Statement.ComponentDeclaration.Param.name; _ }) = param in
         begin
-          match (name, Context.react_runtime cx, env_state.jsx_base_name, Context.jsx cx) with
-          | ( ( Ast.Statement.ComponentDeclaration.Param.Identifier
-                  (loc, { Ast.Identifier.name = "ref"; _ })
-              | Ast.Statement.ComponentDeclaration.Param.StringLiteral
-                  (loc, { Ast.StringLiteral.value = "ref"; _ }) ),
-              Options.ReactRuntimeClassic,
-              Some name,
-              Options.Jsx_react
-            ) ->
-            this#any_identifier loc name
+          match name with
+          | Ast.Statement.ComponentDeclaration.Param.Identifier
+              (loc, { Ast.Identifier.name = "ref"; _ })
+          | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+              (loc, { Ast.StringLiteral.value = "ref"; _ }) ->
+            this#any_identifier loc "React"
           | _ -> ()
         end;
         super#component_param param
