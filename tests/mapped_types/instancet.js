@@ -18,7 +18,7 @@ type MappedInterfaceWithIndexer = {+[key in keyof WithIndexer]: WithIndexer[key]
 {
   declare const i: MappedInterfaceWithIndexer;
   (i: interface {+foo: number, +[string]: boolean}); // OK
-  (i: interface {+foo: number, [string]: boolean}); // // Should error, but currently doesn't (due to broken subtyping between interface indexers, not mapped types)
+  (i: interface {+foo: number, [string]: boolean}); // ERROR
 }
 
 class A {

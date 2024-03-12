@@ -1135,6 +1135,24 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ instancet.js:21:4
+
+Cannot cast `i` to interface type because an index signature declaring the expected key / value type is read-only in
+mapped type [1] but writable in interface type [2]. [incompatible-variance]
+
+   instancet.js:21:4
+   21|   (i: interface {+foo: number, [string]: boolean}); // ERROR
+          ^
+
+References:
+   instancet.js:19:20
+   19|   declare const i: MappedInterfaceWithIndexer;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   instancet.js:21:7
+   21|   (i: interface {+foo: number, [string]: boolean}); // ERROR
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ instancet.js:33:4
 
 Cannot cast `inst` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
@@ -2051,7 +2069,7 @@ References:
 
 
 
-Found 134 errors
+Found 135 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

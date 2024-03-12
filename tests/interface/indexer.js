@@ -67,7 +67,7 @@ interface Contravariant {
 }
 {
   declare const x: interface {[Keys]: number};
-  (x: Invariant); // Should error, but currently doesn't
+  (x: Invariant); // ERROR
   (x: Covariant); // OK
   (x: Contravariant); // OK
 }
@@ -80,8 +80,8 @@ interface Contravariant {
 }
 {
   declare const x: interface {[Keys]: number | string};
-  (x: interface {[Keys]: number}); // Should error, but currently doesn't
-  (x: interface {+[Keys]: number}); // Should error, but currently doesn't
+  (x: interface {[Keys]: number}); // ERROR
+  (x: interface {+[Keys]: number}); // ERROR
   (x: interface {-[Keys]: number}); // OK
 }
 

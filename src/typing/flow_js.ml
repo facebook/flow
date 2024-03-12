@@ -7023,6 +7023,51 @@ struct
         OrdinaryField { type_; polarity = Polarity.Positive }
       | _ -> Property.type_ p
     in
+    inst_dict
+    |> Base.Option.iter ~f:(fun { key = ukey; value = uvalue; dict_polarity = upolarity; _ } ->
+           match lower with
+           | DefT
+               ( _,
+                 InstanceT
+                   {
+                     inst =
+                       {
+                         inst_dict =
+                           Some { key = lkey; value = lvalue; dict_polarity = lpolarity; _ };
+                         _;
+                       };
+                     _;
+                   }
+               ) ->
+             rec_flow_p
+               cx
+               ~trace
+               ~report_polarity:false
+               ~use_op:
+                 (Frame (IndexerKeyCompatibility { lower = lreason; upper = reason_struct }, use_op))
+               lreason
+               reason_struct
+               (Computed ukey)
+               ( OrdinaryField { type_ = lkey; polarity = lpolarity },
+                 OrdinaryField { type_ = ukey; polarity = upolarity }
+               );
+             rec_flow_p
+               cx
+               ~trace
+               ~use_op:
+                 (Frame
+                    ( PropertyCompatibility { prop = None; lower = lreason; upper = reason_struct },
+                      use_op
+                    )
+                 )
+               lreason
+               reason_struct
+               (Computed uvalue)
+               ( OrdinaryField { type_ = lvalue; polarity = lpolarity },
+                 OrdinaryField { type_ = uvalue; polarity = upolarity }
+               )
+           | _ -> ()
+       );
     own_props
     |> NameUtils.Map.iter (fun name p ->
            let use_op =
