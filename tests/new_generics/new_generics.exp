@@ -1355,6 +1355,91 @@ References:
               ^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ synthetic.js:2:10
+
+Cannot return `x` because mapped type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   synthetic.js:2:10
+   2|   return x; // error S incompatible with T
+               ^
+
+References:
+   synthetic.js:1:25
+   1| function test1<S, T>(x: { [K in keyof S]: S[K] }): { [K in keyof T]: T[K] } {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   synthetic.js:1:52
+   1| function test1<S, T>(x: { [K in keyof S]: S[K] }): { [K in keyof T]: T[K] } {
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ synthetic.js:6:10
+
+Cannot return `x` because `$ReadOnly` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   synthetic.js:6:10
+   6|   return x; // error S incompatible with T
+               ^
+
+References:
+   synthetic.js:5:25
+   5| function test2<S, T>(x: $ReadOnly<S>): $ReadOnly<T> {
+                              ^^^^^^^^^^^^ [1]
+   synthetic.js:5:40
+   5| function test2<S, T>(x: $ReadOnly<S>): $ReadOnly<T> {
+                                             ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- synthetic.js:10:10
+
+Cannot return `x` because `Pick` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   synthetic.js:10:10
+   10|   return x; // error S incompatible with T
+                ^
+
+References:
+   synthetic.js:9:53
+    9| function test3<S: { a: mixed }, T: { a: mixed }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                           ^^^^^^^^^^^^ [1]
+   synthetic.js:9:68
+    9| function test3<S: { a: mixed }, T: { a: mixed }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                                          ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10
+
+Cannot return `x` because partial `S` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   synthetic.js:14:10
+   14|   return x; // error S incompatible with T
+                ^
+
+References:
+   synthetic.js:13:33
+   13| function test4<S, T>(x: Partial<S>): Partial<T> {
+                                       ^ [1]
+   synthetic.js:13:46
+   13| function test4<S, T>(x: Partial<S>): Partial<T> {
+                                                    ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- synthetic.js:18:10
+
+Cannot return `x` because required of `S` [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
+
+   synthetic.js:18:10
+   18|   return x; // error S incompatible with T
+                ^
+
+References:
+   synthetic.js:17:34
+   17| function test5<S, T>(x: Required<S>): Required<T> {
+                                        ^ [1]
+   synthetic.js:17:48
+   17| function test5<S, T>(x: Required<S>): Required<T> {
+                                                      ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- this.js:8:14
 
 Cannot return `this.f2()` because `C` [1] is incompatible with `this` [2]. [incompatible-return]
@@ -1429,7 +1514,7 @@ References:
 
 
 
-Found 84 errors
+Found 89 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
