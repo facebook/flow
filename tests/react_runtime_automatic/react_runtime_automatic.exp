@@ -190,5 +190,13 @@ References:
                            ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:16:27
 
-Found 10 errors
+Cannot resolve name `React`. [cannot-resolve-name]
+
+   16| component RefWithoutReact(ref: any) { // error
+                                 ^^^
+
+
+
+Found 11 errors

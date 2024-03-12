@@ -19,13 +19,10 @@ struct
   open Types
 
   let read_react cx loc =
-    match Context.react_runtime cx with
-    | Options.ReactRuntimeClassic ->
-      let (_ : Type.t) =
-        Type_env.var_ref ~lookup_mode:Type_env.LookupMode.ForValue cx (OrdinaryName "React") loc
-      in
-      ()
-    | Options.ReactRuntimeAutomatic -> ()
+    let (_ : Type.t) =
+      Type_env.query_var ~lookup_mode:Type_env.LookupMode.ForValue cx (OrdinaryName "React") loc
+    in
+    ()
 
   let param_type_with_name (Param { t; name; default; pattern; _ }) =
     let open Ast.Statement.ComponentDeclaration.Param in
