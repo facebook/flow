@@ -1,0 +1,4 @@
+[options]
+all=true
+react.runtime=automatic
+component_syntax=true

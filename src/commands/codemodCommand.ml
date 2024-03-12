@@ -200,6 +200,36 @@ module KeyMirror_command = struct
   let command = CommandSpec.command spec main
 end
 
+module RemoveReactImportCommand = struct
+  let doc = "Remove unnecessary imports of React under react.runtime=automatic."
+
+  let spec =
+    {
+      CommandSpec.name = "remove-unnecessary-react-import";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod remove-unnecessary-react-import [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
+    }
+
+  let main codemod_flags () =
+    let module Runner = Codemod_runner.MakeUntypedRunner (struct
+      module Acc = Remove_react_import.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      let visit = Codemod_utils.make_visitor (Codemod_utils.Mapper Remove_react_import.mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 module Annotate_optional_properties_command = struct
   let doc = "Inserts optional properties on object definitions where properties are missing."
 
@@ -262,6 +292,7 @@ let command =
           Annotate_optional_properties_command.command
         );
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
+        (RemoveReactImportCommand.spec.CommandSpec.name, RemoveReactImportCommand.command);
       ]
   in
   CommandSpec.command spec main

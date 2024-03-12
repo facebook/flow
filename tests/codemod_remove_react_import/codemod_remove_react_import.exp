@@ -1,0 +1,13 @@
+>>> removed.js (#changes: 1)
+
+
+type Foo = React.AbstractComponent<{}>;
+<div />;
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Removed instances:                        1
+  Still useful instances:                   3
+
