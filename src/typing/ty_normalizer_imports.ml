@@ -17,7 +17,7 @@ let import_mode_to_import_kind =
 
 let add_bind_ident_from_typed_ast cx typed_ast name import_mode loc acc =
   match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
-  | Some scheme -> (name, loc, import_mode, scheme) :: acc
+  | Some t -> (name, loc, import_mode, t) :: acc
   | None -> acc
 
 let add_bind_ident_from_imports cx local_name import_mode local_loc source remote_name acc =
@@ -25,7 +25,7 @@ let add_bind_ident_from_imports cx local_name import_mode local_loc source remot
   let import_reason =
     Reason.mk_reason (Reason.RNamedImportedType (module_name, local_name)) source_loc
   in
-  let (_, type_) =
+  let (_, t) =
     Import_export.import_named_specifier_type
       cx
       import_reason
@@ -35,8 +35,7 @@ let add_bind_ident_from_imports cx local_name import_mode local_loc source remot
       ~remote_name
       ~local_name
   in
-  let scheme = { Type.TypeScheme.tparams_rev = []; type_ } in
-  (local_name, local_loc, import_mode, scheme) :: acc
+  (local_name, local_loc, import_mode, t) :: acc
 
 let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
   let (source_loc, module_name) = source in
@@ -77,7 +76,7 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
   match binding with
   | BindIdent (loc, name) ->
     let loc = ALoc.of_loc loc in
-    (name, loc, Ty.ValueMode, { Type.TypeScheme.tparams_rev = []; type_ = t }) :: acc
+    (name, loc, Ty.ValueMode, t) :: acc
   | BindNamed map -> begin
     let open Type in
     match Import_export.concretize_module_type cx reason module_t with
@@ -88,9 +87,7 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
           match binding with
           | BindIdent (loc, name') ->
             (match NameUtils.Map.find_opt (Reason.OrdinaryName name) value_exports_tmap with
-            | Some { type_ = t; _ } ->
-              (name', ALoc.of_loc loc, Ty.ValueMode, { TypeScheme.tparams_rev = []; type_ = t })
-              :: acc
+            | Some { type_ = t; _ } -> (name', ALoc.of_loc loc, Ty.ValueMode, t) :: acc
             | None -> acc)
           | BindNamed _ ->
             (* This case should be rare. Not worth collecting imported names from here *)
@@ -137,7 +134,7 @@ let add_import_bindings cx ~typed_ast acc require =
   | ExportFrom _ ->
     acc
 
-let extract_schemes cx file_sig typed_ast =
+let extract_types cx file_sig typed_ast =
   let requires = File_sig.requires file_sig in
   let imports = List.fold_left (add_import_bindings cx ~typed_ast) [] requires in
   List.rev imports

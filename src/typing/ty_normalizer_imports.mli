@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val extract_schemes :
+val extract_types :
   Context.t ->
   File_sig.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
-  (string * ALoc.t * Ty.import_mode * Type.TypeScheme.t) list
+  (string * ALoc.t * Ty.import_mode * Type.t) list

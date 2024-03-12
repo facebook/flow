@@ -94,15 +94,7 @@ let create_extracted_function
       |> TypeParamSet.diff used_tparam_set
       |> TypeParamSet.elements
     in
-    (* We need not only the unbound tparams for synthesize types, but also bound ones, since
-       unbound ones might have constraints on the bound ones.
-
-       e.g. `B` is unbound in scope and `A` is bound, but we have `B: A`, so `A` must be included
-            for synthesizing types. *)
-    let tparams_env = unbound_tparams @ target_tparams_rev in
-    match%map
-      unbound_tparams |> List.map (type_param_synthesizer tparams_env) |> Base.Result.all
-    with
+    match%map unbound_tparams |> List.map type_param_synthesizer |> Base.Result.all with
     | [] -> None
     | tparams -> Some (Types.type_params tparams)
   in
@@ -648,7 +640,7 @@ let create_expression_extract_to_react_component_refactor
         else
           Some (Some (Types.type_params (List.rev tparams))))
       ~f:(fun acc tparam ->
-        match type_param_synthesizer tparams tparam with
+        match type_param_synthesizer tparam with
         | Ok tparam -> Base.Continue_or_stop.Continue (tparam :: acc)
         | Error _ -> Base.Continue_or_stop.Stop None)
   in
@@ -913,7 +905,7 @@ let extract_from_type_refactors
         |> TypeParamSet.diff used_tparams
         |> TypeParamSet.elements
       in
-      (type_params_to_add, type_param_synthesizer (available_tparams @ type_params_to_add))
+      (type_params_to_add, type_param_synthesizer)
     in
     let open Ast_builder in
     let new_type_name = create_unique_name "NewType" in

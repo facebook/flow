@@ -10,7 +10,7 @@ open Typed_ast_finder
 
 (* Find identifier under location *)
 module Type_at_pos = struct
-  exception Found of ALoc.t * bool * Type.TypeScheme.t
+  exception Found of ALoc.t * bool * Type.t
 
   (* Kinds of nodes that "type-at-pos" is interested in:
    * - identifiers              (handled in t_identifier)
@@ -28,8 +28,7 @@ module Type_at_pos = struct
       method find_loc
           : 'a. ALoc.t -> Type.t -> is_type_identifier:bool -> tparams_rev:Type.typeparam list -> 'a
           =
-        fun loc t ~is_type_identifier ~tparams_rev ->
-          raise (Found (loc, is_type_identifier, { Type.TypeScheme.tparams_rev; type_ = t }))
+        (fun loc t ~is_type_identifier ~tparams_rev:_ -> raise (Found (loc, is_type_identifier, t)))
 
       method! t_identifier (((loc, t), _) as id) =
         if self#covers_target loc then
@@ -121,9 +120,8 @@ class type_at_aloc_map_folder =
     val mutable map = ALocMap.empty
 
     method! on_type_annot x =
-      let (loc, type_) = x in
-      let scheme = Type.TypeScheme.{ type_; tparams_rev = rev_bound_tparams } in
-      map <- ALocMap.add loc scheme map;
+      let (loc, t) = x in
+      map <- ALocMap.add loc t map;
       x
 
     method to_map = map
@@ -136,19 +134,19 @@ class type_at_aloc_list_folder =
     val mutable l = []
 
     method! on_type_annot x =
-      let (loc, type_) = x in
-      l <- (loc, Type.TypeScheme.{ type_; tparams_rev = rev_bound_tparams }) :: l;
+      let (loc, t) = x in
+      l <- (loc, t) :: l;
       x
 
     method to_list = l
   end
 
-let typed_ast_to_map typed_ast : Type.TypeScheme.t ALocMap.t =
+let typed_ast_to_map typed_ast : Type.t ALocMap.t =
   let folder = new type_at_aloc_map_folder in
   ignore (folder#program typed_ast);
   folder#to_map
 
-let typed_ast_to_list typed_ast : (ALoc.t * Type.TypeScheme.t) list =
+let typed_ast_to_list typed_ast : (ALoc.t * Type.t) list =
   let folder = new type_at_aloc_list_folder in
   ignore (folder#program typed_ast);
   folder#to_list

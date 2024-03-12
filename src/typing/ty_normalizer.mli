@@ -52,7 +52,6 @@ module type S = sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
-    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
@@ -64,7 +63,6 @@ module type S = sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -73,7 +71,6 @@ module type S = sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t

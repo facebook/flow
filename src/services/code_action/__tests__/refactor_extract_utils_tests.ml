@@ -1058,7 +1058,7 @@ let type_synthesizer_tests =
         | [] -> ""
         | _ ->
           let pretty_print_typeparam tparam =
-            match type_param_synthesizer tparams_rev tparam with
+            match type_param_synthesizer tparam with
             | Ok synthesized ->
               synthesized
               |> Js_layout_generator.type_param ~opts:Js_layout_generator.default_opts

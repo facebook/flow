@@ -23,15 +23,14 @@ val find_type_at_pos_annotation :
   Context.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Loc.t ->
-  (Loc.t * bool * Type.TypeScheme.t) option
+  (Loc.t * bool * Type.t) option
 
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
-  Type.TypeScheme.t Loc_collections.ALocMap.t
+  Type.t Loc_collections.ALocMap.t
 
 val typed_ast_to_list :
-  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
-  (ALoc.t * Type.TypeScheme.t) list
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t -> (ALoc.t * Type.t) list
 
 val error_mapper : (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
 

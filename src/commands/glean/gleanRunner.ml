@@ -6,7 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module TypeScheme = Type.TypeScheme
 
 module DocumentationFullspanMap = struct
   type doc_span = {
@@ -61,7 +60,7 @@ class member_searcher add_member =
       let { _object = ((_, type_), _); property; _ } = member in
       (match property with
       | PropertyIdentifier ((aloc, _), Ast.Identifier.{ name; _ }) ->
-        this#annot_with_tparams (add_member ~type_ ~aloc ~name)
+        this#annot_with_tparams (fun ~tparams_rev:_ -> add_member ~type_ ~aloc ~name)
       | _ -> ());
       super#member member
   end
@@ -266,9 +265,8 @@ let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
 
 let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig =
   let results = ref [] in
-  let add_member ~type_ ~aloc ~name ~tparams_rev =
-    let scheme = TypeScheme.{ tparams_rev; type_ } in
-    Base.List.iter (extract_member_def ~cx ~typed_ast ~file_sig scheme name) ~f:(fun def_aloc ->
+  let add_member ~type_ ~aloc ~name =
+    Base.List.iter (extract_member_def ~cx ~typed_ast ~file_sig type_ name) ~f:(fun def_aloc ->
         let memberDeclaration =
           let loc = Parsing_heaps.Reader.loc_of_aloc ~reader def_aloc in
           MemberDeclaration.{ name; loc }
@@ -628,10 +626,7 @@ let module_documentations ~root ~write_root ~ast ~file : Hh_json.json list =
 
 let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
   let infos = ref [] in
-  let add_info kind ~tparams_rev name loc type_ =
-    let scheme = TypeScheme.{ tparams_rev; type_ } in
-    infos := ((kind, name, loc), scheme) :: !infos
-  in
+  let add_info kind ~tparams_rev:_ name loc type_ = infos := ((kind, name, loc), type_) :: !infos in
   let add_var_info = add_info `Declaration in
   let add_member_info = add_info `MemberDeclaration in
   let add_type_info = add_info `TypeDeclaration in
@@ -652,7 +647,7 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
   let docs_and_spans = DocumentationFullspanMap.create ast file in
 
   Base.List.fold
-    (Ty_normalizer_flow.from_schemes ~options ~genv !infos)
+    (Ty_normalizer_flow.from_types ~options ~genv !infos)
     ~init:([], [], [])
     ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
       let (documentation, span) =

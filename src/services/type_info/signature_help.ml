@@ -123,7 +123,6 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
 (* given a Loc.t within a function call or `new` expression, returns the type of the function/constructor being called *)
 module Callee_finder = struct
   type t = {
-    tparams_rev: Type.typeparam list;
     type_: Type.t;
     active_parameter: int;
     loc: Loc.t;
@@ -178,8 +177,8 @@ module Callee_finder = struct
             let active_parameter = find_argument ~reader cursor arguments 0 in
             let loc = loc_of_aloc ~reader callee_loc in
             let type_ = get_callee_type () in
-            this#annot_with_tparams (fun ~tparams_rev ->
-                raise (Found (Some { tparams_rev; type_; active_parameter; loc }))
+            this#annot_with_tparams (fun ~tparams_rev:_ ->
+                raise (Found (Some { type_; active_parameter; loc }))
             )
           else
             recurse ()
@@ -260,8 +259,7 @@ module Callee_finder = struct
       let _ = finder#program typed_ast in
       None
     with
-    | Found (Some { tparams_rev; type_; active_parameter; loc }) ->
-      Some ({ Type.TypeScheme.tparams_rev; type_ }, active_parameter, loc)
+    | Found (Some { type_; active_parameter; loc }) -> Some (type_, active_parameter, loc)
     | Found None -> None
 end
 
@@ -296,10 +294,8 @@ let rec fix_alias_reason cx t =
 
 let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
-  | Some (scheme, active_parameter, callee_loc) ->
-    let { Type.TypeScheme.type_ = t; _ } = scheme in
-    let t' = fix_alias_reason cx t in
-    let scheme = { scheme with Type.TypeScheme.type_ = t' } in
+  | Some (t, active_parameter, callee_loc) ->
+    let t = fix_alias_reason cx t in
     let genv =
       Ty_normalizer_env.mk_genv
         ~cx
@@ -307,7 +303,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
         ~typed_ast_opt:(Some typed_ast)
         ~file_sig
     in
-    let ty = Ty_normalizer_flow.from_scheme ~options:ty_normalizer_options ~genv scheme in
+    let ty = Ty_normalizer_flow.from_type ~options:ty_normalizer_options ~genv t in
     let jsdoc =
       match
         GetDef_js.get_def

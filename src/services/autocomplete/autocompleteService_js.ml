@@ -432,10 +432,8 @@ let members_of_type
     ?(force_instance = false)
     ?(include_interface_members = false)
     ?(exclude_keys = SSet.empty)
-    ~tparams_rev
-    type_ =
+    t =
   let { cx; typed_ast; file_sig; _ } = typing in
-  let t = Type.TypeScheme.{ tparams_rev; type_ } in
   let ty_members = Ty_members.extract ~force_instance ~cx ~typed_ast ~file_sig t in
   let include_valid_member (s, (Ty_members.{ inherited; source; _ } as info)) =
     if
@@ -470,10 +468,10 @@ let members_of_type
            ),
         match errors with
         | [] -> []
-        | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors
+        | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx t) :: errors
       )
 
-let local_value_identifiers ~typing ~genv ~ac_loc ~tparams_rev =
+let local_value_identifiers ~typing ~genv ~ac_loc =
   let { options; reader; cx; ast; typed_ast; file_sig; _ } = typing in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
@@ -521,10 +519,9 @@ let local_value_identifiers ~typing ~genv ~ac_loc ~tparams_rev =
          let documentation_and_tags =
            documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc
          in
-         (* TODO tparams_rev is probably not accurate for every type_ *)
-         ((name, documentation_and_tags), Type.TypeScheme.{ tparams_rev; type_ })
+         ((name, documentation_and_tags), type_)
      )
-  |> Ty_normalizer_flow.from_schemes ~options:ty_normalizer_options ~genv
+  |> Ty_normalizer_flow.from_types ~options:ty_normalizer_options ~genv
 
 (* Roughly collects upper bounds of a type.
  * This logic will be changed or made unnecessary once we have contextual typing *)
@@ -596,12 +593,12 @@ let autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit
   in
   (prefer_single_quotes, edit_locs)
 
-let autocomplete_literals
-    ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound ~token =
-  let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
+let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token =
   let options = ty_normalizer_options in
   let upper_bound_ty =
-    Result.value (Ty_normalizer_flow.expand_literal_union ~options ~genv scheme) ~default:Ty.Top
+    Result.value
+      (Ty_normalizer_flow.expand_literal_union ~options ~genv upper_bound)
+      ~default:Ty.Top
   in
   let exact_by_default = Context.exact_by_default cx in
   let literals = literals_of_ty [] upper_bound_ty in
@@ -821,7 +818,6 @@ let autocomplete_id
     ~include_super
     ~include_this
     ~ac_options
-    ~tparams_rev
     ~edit_locs
     ~token
     ~type_ =
@@ -835,14 +831,7 @@ let autocomplete_id
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
   let results =
-    autocomplete_literals
-      ~prefer_single_quotes
-      ~cx
-      ~genv
-      ~tparams_rev
-      ~edit_locs
-      ~upper_bound
-      ~token
+    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token
   in
   let rank =
     if results = [] then
@@ -850,7 +839,7 @@ let autocomplete_id
     else
       1
   in
-  let identifiers = local_value_identifiers ~typing ~genv ~ac_loc ~tparams_rev in
+  let identifiers = local_value_identifiers ~typing ~genv ~ac_loc in
   let (items_rev, errors_to_log) =
     identifiers
     |> List.fold_left
@@ -1340,7 +1329,7 @@ let autocomplete_unqualified_type
   let genv =
     Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast_opt:(Some typed_ast) ~file_sig
   in
-  let value_identifiers = local_value_identifiers ~typing ~genv ~ac_loc ~tparams_rev in
+  let value_identifiers = local_value_identifiers ~typing ~genv ~ac_loc in
 
   (* The value-level identifiers we suggest in type autocompletion:
       - classes
@@ -1520,7 +1509,7 @@ let autocomplete_member
   let { options; cx; _ } = typing in
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let exact_by_default = Context.exact_by_default cx in
-  match members_of_type ~typing ~exclude_proto_members:false ~force_instance this ~tparams_rev with
+  match members_of_type ~typing ~exclude_proto_members:false ~force_instance this with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log) ->
     let items =
@@ -1639,7 +1628,6 @@ let autocomplete_member
             ~include_super
             ~include_this
             ~ac_options
-            ~tparams_rev
             ~edit_locs
             ~token
             ~type_
@@ -1696,14 +1684,14 @@ let should_autoimport_react ~options ~imports ~file_sig =
   else
     false
 
-let autocomplete_jsx_intrinsic ~typing ~ac_loc ~tparams_rev ~edit_locs =
+let autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs =
   let intrinsics_t =
     let open Reason in
     let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) ac_loc in
     Flow_js.get_builtin_type typing.cx reason "$JSXIntrinsics"
   in
   let (items, errors_to_log) =
-    match members_of_type ~typing ~exclude_proto_members:true ~tparams_rev intrinsics_t with
+    match members_of_type ~typing ~exclude_proto_members:true intrinsics_t with
     | Error err -> ([], [err])
     | Ok (mems, errors_to_log) ->
       let items =
@@ -1728,7 +1716,7 @@ let autocomplete_jsx_intrinsic ~typing ~ac_loc ~tparams_rev ~edit_locs =
   in
   { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
-let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~tparams_rev ~edit_locs ~token ~type_ =
+let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type_ =
   let { options; reader; file_sig; ast; _ } = typing in
   let results_id =
     autocomplete_id
@@ -1738,12 +1726,11 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~tparams_rev ~edit_locs
       ~include_super:false
       ~include_this:false
       ~ac_options
-      ~tparams_rev
       ~edit_locs
       ~token
       ~type_
   in
-  let results_jsx = autocomplete_jsx_intrinsic ~typing ~ac_loc ~tparams_rev ~edit_locs in
+  let results_jsx = autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs in
   let ({ result; errors_to_log } as results) =
     let open AcCompletion in
     let {
@@ -1799,8 +1786,7 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~tparams_rev ~edit_locs
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx_attribute
-    ~typing ~used_attr_names ~has_value ~tparams_rev ~edit_locs ~token cls attribute =
+let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~token cls attribute =
   let { cx; _ } = typing in
   let open Flow_js in
   let reason =
@@ -1820,7 +1806,7 @@ let autocomplete_jsx_attribute
   let exclude_keys = SSet.add "children" used_attr_names in
   (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
   let mems_result =
-    members_of_type ~typing ~exclude_proto_members:true ~exclude_keys props_object ~tparams_rev
+    members_of_type ~typing ~exclude_proto_members:true ~exclude_keys props_object
   in
   match mems_result with
   | Error err -> AcFatalError err
@@ -1847,13 +1833,11 @@ let autocomplete_jsx_attribute
     let result = { AcCompletion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
-let autocomplete_module_exports
-    ~typing ~tparams_rev ~edit_locs ~token ~kind ?filter_name module_type =
+let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name module_type =
   let { cx; file_sig; typed_ast; _ } = typing in
-  let scheme = Type.TypeScheme.{ tparams_rev; type_ = module_type } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
-    Ty_normalizer_flow.from_scheme
+    Ty_normalizer_flow.from_type
       ~options:ty_normalizer_options
       ~genv:
         (Ty_normalizer_env.mk_genv
@@ -1862,7 +1846,7 @@ let autocomplete_module_exports
            ~typed_ast_opt:(Some typed_ast)
            ~file_sig
         )
-      scheme
+      module_type
   in
   let documentation_and_tags_of_module_member = documentation_and_tags_of_def_loc typing in
   let (items, errors_to_log) =
@@ -1882,7 +1866,7 @@ let autocomplete_module_exports
   let items = filter_by_token_and_sort token items in
   AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
-let unused_super_methods ~typing ~edit_locs ~tparams_rev ~exclude_keys enclosing_class_t =
+let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
   let { options; reader; _ } = typing in
   let open Base.Result.Let_syntax in
   let%bind (mems, errors_to_log) =
@@ -1893,7 +1877,6 @@ let unused_super_methods ~typing ~edit_locs ~tparams_rev ~exclude_keys enclosing
       ~include_interface_members:true
       ~exclude_keys
       enclosing_class_t
-      ~tparams_rev
   in
   let items =
     mems
@@ -1914,24 +1897,20 @@ let unused_super_methods ~typing ~edit_locs ~tparams_rev ~exclude_keys enclosing
   in
   return (items, errors_to_log)
 
-let autocomplete_class_key ~typing ~token ~edit_locs ~tparams_rev enclosing_class_t =
+let autocomplete_class_key ~typing ~token ~edit_locs enclosing_class_t =
   match enclosing_class_t with
   | Some enclosing_class_t -> begin
     match
       let open Base.Result.Let_syntax in
       let%bind (existing_members, _) =
-        members_of_type
-          ~typing
-          ~exclude_proto_members:true
-          ~force_instance:true
-          enclosing_class_t
-          ~tparams_rev
+        members_of_type ~typing ~exclude_proto_members:true ~force_instance:true enclosing_class_t
       in
+
       let exclude_keys =
         existing_members |> Base.List.map ~f:(fun (name, _, _) -> name) |> SSet.of_list
       in
       let%bind (items, errors_to_log) =
-        unused_super_methods ~typing ~edit_locs ~tparams_rev ~exclude_keys enclosing_class_t
+        unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t
       in
       let items = filter_by_token_and_sort token items in
       return (items, errors_to_log)
@@ -1943,7 +1922,7 @@ let autocomplete_class_key ~typing ~token ~edit_locs ~tparams_rev enclosing_clas
   | None ->
     AcResult { result = { AcCompletion.items = []; is_incomplete = false }; errors_to_log = [] }
 
-let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type ~tparams_rev =
+let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type =
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let (insert_loc, _replace_loc) = edit_locs in
   let exact_by_default = Context.exact_by_default typing.cx in
@@ -1957,7 +1936,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
           acc
         else
           let spread_keys =
-            match members_of_type ~typing ~exclude_proto_members:true spread_type ~tparams_rev with
+            match members_of_type ~typing ~exclude_proto_members:true spread_type with
             | Error _ -> SSet.empty
             | Ok (members, _) -> Base.List.map members ~f:(fun (name, _, _) -> name) |> SSet.of_list
           in
@@ -1968,10 +1947,10 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
   match
     let open Base.Result.Let_syntax in
     let%bind (methods, methods_errors_to_log) =
-      unused_super_methods ~typing ~edit_locs ~tparams_rev ~exclude_keys upper_bound
+      unused_super_methods ~typing ~edit_locs ~exclude_keys upper_bound
     in
     let%bind (mems, mems_errors_to_log) =
-      members_of_type ~typing ~exclude_keys ~exclude_proto_members:true upper_bound ~tparams_rev
+      members_of_type ~typing ~exclude_keys ~exclude_proto_members:true upper_bound
     in
     let items =
       mems
@@ -2166,7 +2145,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         (* TODO: include keywords *)
-        autocomplete_class_key ~typing ~token ~edit_locs ~tparams_rev enclosing_class_t
+        autocomplete_class_key ~typing ~token ~edit_locs enclosing_class_t
       | Ac_module ->
         (* TODO: complete module names *)
         AcEmpty "Module"
@@ -2182,17 +2161,10 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
             `Either
         in
         let filter_name name = not (SSet.mem name used_keys) in
-        autocomplete_module_exports
-          ~typing
-          ~tparams_rev
-          ~edit_locs
-          ~token
-          ~kind
-          ~filter_name
-          module_type
+        autocomplete_module_exports ~typing ~edit_locs ~token ~kind ~filter_name module_type
       | Ac_enum -> AcEmpty "Enum"
       | Ac_key { obj_type; used_keys; spreads } ->
-        autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type ~tparams_rev
+        autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
       | Ac_literal { lit_type } ->
         let genv =
           Ty_normalizer_env.mk_genv
@@ -2204,14 +2176,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =
-          autocomplete_literals
-            ~prefer_single_quotes
-            ~cx
-            ~genv
-            ~tparams_rev
-            ~edit_locs
-            ~upper_bound
-            ~token
+          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token
           |> filter_by_token_and_sort token
         in
         let result = { AcCompletion.items; is_incomplete = false } in
@@ -2225,7 +2190,6 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
             ~include_super
             ~include_this
             ~ac_options
-            ~tparams_rev
             ~edit_locs
             ~token
             ~type_
@@ -2295,13 +2259,12 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
           ~is_type_annotation
           ~force_instance:is_super
       | Ac_jsx_element { type_ } ->
-        autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~tparams_rev ~edit_locs ~token ~type_
+        autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type_
       | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
         autocomplete_jsx_attribute
           ~typing
           ~used_attr_names
           ~has_value
-          ~tparams_rev
           ~edit_locs
           ~token
           component_t
@@ -2318,6 +2281,6 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
              ~token
           )
       | Ac_qualified_type qtype ->
-        autocomplete_module_exports ~typing ~tparams_rev ~edit_locs ~token ~kind:`Type qtype
+        autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type qtype
     in
     (Some token, Some ac_loc, string_of_autocomplete_type autocomplete_type, result)

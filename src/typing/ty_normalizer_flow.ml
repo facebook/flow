@@ -72,28 +72,13 @@ let print_normalizer_banner env =
     in
     prerr_endlinef "%s" banner
 
-let from_schemes ~options ~genv schemes =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let (_, result) =
-    Base.List.fold_map
-      ~f:(fun state (a, scheme) ->
-        let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-        match run_type ~options ~genv ~imported_names ~tparams_rev state t with
-        | (Ok t, state) -> (state, (a, Ok t))
-        | (Error s, state) -> (state, (a, Error s)))
-      ~init:State.empty
-      schemes
-  in
-  result
-
 let from_types ~options ~genv ts =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (_, result) =
     Base.List.fold_map
       ~f:(fun state (a, t) ->
-        match run_type ~options ~genv ~imported_names ~tparams_rev:[] state t with
+        match run_type ~options ~genv ~imported_names state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       ~init:State.empty
@@ -101,38 +86,26 @@ let from_types ~options ~genv ts =
   in
   result
 
-let from_scheme_with_found_computed_type ~options ~genv scheme =
+let from_type_with_found_computed_type ~options ~genv t =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
-  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-  let (result, state) = run_type ~options ~genv ~imported_names ~tparams_rev State.empty t in
+  let (result, state) = run_type ~options ~genv ~imported_names State.empty t in
   (result, State.found_computed_type state)
 
-let from_scheme ~options ~genv scheme =
-  fst (from_scheme_with_found_computed_type ~options ~genv scheme)
+let from_type ~options ~genv t = fst (from_type_with_found_computed_type ~options ~genv t)
 
-let from_type ~options ~genv t =
+let expand_members ~force_instance ~options ~genv t =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
-  let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev:[] State.empty t in
-  result
-
-let expand_members ~force_instance ~options ~genv scheme =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
   let (result, _) =
-    run_expand_members ~options ~genv ~force_instance ~imported_names ~tparams_rev State.empty t
+    run_expand_members ~options ~genv ~force_instance ~imported_names State.empty t
   in
   result
 
-let expand_literal_union ~options ~genv scheme =
+let expand_literal_union ~options ~genv t =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
-  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-  let (result, _) =
-    run_expand_literal_union ~options ~genv ~imported_names ~tparams_rev State.empty t
-  in
+  let (result, _) = run_expand_literal_union ~options ~genv ~imported_names State.empty t in
   result
 
 let debug_string_of_t cx t =

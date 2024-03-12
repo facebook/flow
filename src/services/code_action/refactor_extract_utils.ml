@@ -970,7 +970,7 @@ module TypeSynthesizer = struct
     file: File_key.t;
     file_sig: File_sig.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
-    type_at_loc_map: Type.TypeScheme.t LocMap.t;
+    type_at_loc_map: (Type.typeparam list * Type.t) LocMap.t;
   }
 
   class type_collector reader (locs : LocSet.t) =
@@ -986,7 +986,7 @@ module TypeSynthesizer = struct
       method collected_types = acc
 
       method private collect_type_at_loc ~tparams_rev loc t =
-        acc <- LocMap.add loc { Type.TypeScheme.tparams_rev; type_ = t } acc
+        acc <- LocMap.add loc (tparams_rev, t) acc
 
       method! t_identifier (((aloc, t), _) as ident) =
         let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
@@ -1046,9 +1046,7 @@ module TypeSynthesizer = struct
 
   type type_synthesizer_with_import_adder = {
     type_param_synthesizer:
-      Type.typeparam list ->
-      Type.typeparam ->
-      ((Loc.t, Loc.t) Flow_ast.Type.TypeParam.t, Insert_type.expected) result;
+      Type.typeparam -> ((Loc.t, Loc.t) Flow_ast.Type.TypeParam.t, Insert_type.expected) result;
     type_synthesizer:
       Loc.t ->
       ((Type.typeparam list * (Loc.t, Loc.t) Flow_ast.Type.t) option, Insert_type.expected) result;
@@ -1062,7 +1060,7 @@ module TypeSynthesizer = struct
         ~file
         ~reserved_names:SSet.empty
     in
-    let synth_type loc scheme =
+    let synth_type loc t =
       try
         Ok
           (Insert_type.synth_type
@@ -1073,16 +1071,15 @@ module TypeSynthesizer = struct
              ~ambiguity_strategy:Autofix_options.Generalize
              ~remote_converter
              loc
-             scheme
+             t
           )
       with
       | Insert_type.(FailedToInsertType (Expected expected)) -> Error expected
     in
     let open Base.Result.Let_syntax in
-    let type_param_synthesizer tparams_rev { Type.name; bound; polarity; default; _ } =
-      let type_scheme_of_type type_ = { Type.TypeScheme.tparams_rev; type_ } in
+    let type_param_synthesizer { Type.name; bound; polarity; default; _ } =
       let%bind bound =
-        match%map bound |> type_scheme_of_type |> synth_type Loc.none with
+        match%map bound |> synth_type Loc.none with
         | (_, (_, Flow_ast.Type.Mixed _)) -> Flow_ast.Type.Missing Loc.none
         | bound -> Flow_ast.Type.Available bound
       in
@@ -1096,7 +1093,7 @@ module TypeSynthesizer = struct
         match default with
         | None -> return None
         | Some default ->
-          let%map (_, ast) = default |> type_scheme_of_type |> synth_type Loc.none in
+          let%map (_, ast) = default |> synth_type Loc.none in
           Some ast
       in
       Ast_builder.Types.type_param ~bound ?variance ?default (Subst_name.string_of_subst_name name)
@@ -1104,8 +1101,8 @@ module TypeSynthesizer = struct
     let type_synthesizer loc =
       match LocMap.find_opt loc type_at_loc_map with
       | None -> return None
-      | Some ({ Type.TypeScheme.tparams_rev; type_ } as type_scheme) ->
-        let%map (_, ast_type) = synth_type loc type_scheme in
+      | Some (tparams_rev, type_) ->
+        let%map (_, ast_type) = synth_type loc type_ in
         Some (keep_used_tparam_rev ~cx ~tparams_rev ~type_, ast_type)
     in
     {

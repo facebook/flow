@@ -920,13 +920,13 @@ end = struct
     let (_, { statements; _ }) = prog in
     Base.List.find_map ~f:(visit_statement defs tgt) statements
 
-  let get_imported_ident cx (local_name, loc, import_mode, { Type.TypeScheme.type_; _ }) =
+  let get_imported_ident cx (local_name, loc, import_mode, t) =
     let t =
-      match Ty_normalizer.Lookahead.peek cx type_ with
+      match Ty_normalizer.Lookahead.peek cx t with
       | Ty_normalizer.Lookahead.LowerBounds [t] -> t
       | Ty_normalizer.Lookahead.LowerBounds _
       | Ty_normalizer.Lookahead.Recursive ->
-        type_
+        t
     in
     (loc_of_aloc (TypeUtil.def_loc_of_t t), (loc, local_name, import_mode))
 
@@ -938,7 +938,7 @@ end = struct
     (* Collect information about imports in currect file to accurately compute
      * wether the base GraphQL type is imported in the current file. *)
     let defs =
-      Ty_normalizer_imports.extract_schemes cx file_sig (Some typed_ast)
+      Ty_normalizer_imports.extract_types cx file_sig (Some typed_ast)
       |> List.map (get_imported_ident cx)
       |> Loc_collections.LocMap.of_list
     in

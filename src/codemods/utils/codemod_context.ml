@@ -30,9 +30,9 @@ module Typed = struct
     let aloc = ALoc.of_loc loc in
     match Typed_ast_finder.find_exact_match_annotation cx typed_ast aloc with
     | None -> Error MissingTypeAnnotation
-    | Some scheme ->
+    | Some t ->
       let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt:(Some typed_ast) in
-      (match Ty_normalizer_flow.from_scheme ~options:norm_opts ~genv scheme with
+      (match Ty_normalizer_flow.from_type ~options:norm_opts ~genv t with
       | Ok ty -> Ok ty
       | Error e -> Error (NormalizationError e))
 

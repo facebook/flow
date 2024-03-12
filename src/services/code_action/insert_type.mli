@@ -59,7 +59,7 @@ val synth_type :
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   Loc.t ->
-  Type.TypeScheme.t ->
+  Type.t ->
   (Loc.t, Loc.t) Flow_ast.Type.annotation
 
 val add_statement_after_directive_and_type_imports :

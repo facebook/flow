@@ -387,9 +387,9 @@ let type_lookup_at_location cx typed_ast loc =
   | Some p -> p
   | None -> raise @@ unexpected @@ UnknownTypeAtPoint loc
 
-let normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme =
+let normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc t =
   Query_types.(
-    match insert_type_normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme with
+    match insert_type_normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc t with
     | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
     | FailureUnparseable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
     | Success (_, ty) -> ty
@@ -404,7 +404,7 @@ let synth_type
     ~ambiguity_strategy
     ~remote_converter
     type_loc
-    type_scheme =
+    t =
   let exact_by_default = Context.exact_by_default cx in
   let imports_react = ImportsHelper.imports_react file_sig in
   let process ty =
@@ -427,7 +427,7 @@ let synth_type
       type_loc
   in
   let ty =
-    let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme in
+    let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in
     match Ty_utils.typify_elt elt with
     | Some ty -> process ty
     | None ->
@@ -506,7 +506,7 @@ let add_imports remote_converter stmts =
   let new_imports = remote_converter#to_import_stmts () in
   add_statement_after_directive_and_type_imports stmts new_imports
 
-let insert_type_scheme
+let insert_type_
     ~cx
     ~file_sig
     ~typed_ast
@@ -516,7 +516,7 @@ let insert_type_scheme
     ?remote_converter
     ast
     target
-    loc_to_type_scheme =
+    loc_to_type =
   let file =
     match target.Loc.source with
     | Some source -> source
@@ -538,7 +538,7 @@ let insert_type_scheme
       ~ambiguity_strategy
       ~remote_converter
       location
-      (loc_to_type_scheme location)
+      (loc_to_type location)
   in
   let casting_syntax = Context.casting_syntax cx in
   let mapper = new mapper ~strict ~synth_type ~casting_syntax target in
@@ -556,7 +556,7 @@ let insert_type
     ?remote_converter
     ast
     target =
-  insert_type_scheme
+  insert_type_
     ~cx
     ~file_sig
     ~typed_ast
@@ -580,11 +580,7 @@ let insert_type_t
     ast
     target
     type_t =
-  let loc_to_scheme location =
-    let scheme = type_lookup_at_location cx typed_ast location in
-    { scheme with Type.TypeScheme.type_ = type_t }
-  in
-  insert_type_scheme
+  insert_type_
     ~cx
     ~file_sig
     ~typed_ast
@@ -594,7 +590,8 @@ let insert_type_t
     ?remote_converter
     ast
     target
-    loc_to_scheme
+    (fun _loc -> type_t
+  )
 
 let mk_diff ast new_ast = Flow_ast_differ.program ast new_ast
 

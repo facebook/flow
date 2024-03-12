@@ -18,16 +18,9 @@ end
 
 open Get_def_result
 
-let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance type_ name =
+let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name =
   let ( let* ) = Result.bind in
-  let* Ty_members.{ members; _ } =
-    Ty_members.extract
-      ~force_instance
-      ~cx
-      ~typed_ast
-      ~file_sig
-      Type.TypeScheme.{ tparams_rev = []; type_ }
-  in
+  let* Ty_members.{ members; _ } = Ty_members.extract ~force_instance ~cx ~typed_ast ~file_sig t in
   let def_locs =
     Base.Option.bind
       (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)

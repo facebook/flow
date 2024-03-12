@@ -118,7 +118,6 @@ module type S = sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
-    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
@@ -130,7 +129,6 @@ module type S = sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -139,7 +137,6 @@ module type S = sig
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
@@ -1225,15 +1222,8 @@ module Make (I : INPUT) : S = struct
         terr ~kind:BadThisClassT ~msg:"InterfaceKind" (Some (DefT (r, InstanceT t)))
 
     and type_params_t ~env tparams =
-      let (env, results) =
-        Nel.fold_left
-          (fun (env, rs) tp ->
-            let r = type_param ~env tp in
-            (Env.add_typeparam env tp, r :: rs))
-          (env, [])
-          tparams
-      in
-      let%map ps = List.rev results |> all in
+      let results = Nel.map (fun tp -> type_param ~env tp) tparams in
+      let%map ps = Nel.to_list results |> all in
       let ps =
         match ps with
         | [] -> None
@@ -1781,7 +1771,6 @@ module Make (I : INPUT) : S = struct
           match property_type with
           | DefT (_, PolyT { tparams = (key_tparam, []); t_out; _ }) ->
             let%bind key_tparam_ty = type_param ~env key_tparam in
-            let env = Env.add_typeparam env key_tparam in
             let%bind property_ty = type__ ~env t_out in
             return (key_tparam_ty, property_ty)
           | _ -> terr ~kind:BadMappedType (Some property_type)
@@ -1818,26 +1807,6 @@ module Make (I : INPUT) : S = struct
       return (Ty.Obj obj_t)
 
     and type_destructor_unevaluated ~env t d =
-      let env =
-        match d with
-        | T.MappedType { distributive_tparam_name = Some name; _ }
-        | T.ConditionalType { distributive_tparam_name = Some name; _ } ->
-          let reason_tparam = TypeUtil.reason_of_t t in
-          {
-            env with
-            Env.tparams_rev =
-              {
-                T.reason = reason_tparam;
-                name;
-                bound = T.MixedT.make reason_tparam;
-                polarity = Polarity.Neutral;
-                default = None;
-                is_this = false;
-              }
-              :: env.Env.tparams_rev;
-          }
-        | _ -> env
-      in
       let%bind ty = type__ ~env t in
       match d with
       | T.MakeHooklike
@@ -1866,9 +1835,7 @@ module Make (I : INPUT) : S = struct
           { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t } ->
         let check_type = ty in
         let%bind extends_type = type__ ~env:{ env with Env.infer_tparams } extends_t in
-        let%bind true_type =
-          type__ ~env:(List.fold_left Env.add_typeparam env infer_tparams) true_t
-        in
+        let%bind true_type = type__ ~env true_t in
         let%map false_type = type__ ~env false_t in
         Ty.Conditional { check_type; extends_type; true_type; false_type }
       | T.TypeMap (T.ObjectMap t') ->
@@ -2289,10 +2256,9 @@ module Make (I : INPUT) : S = struct
       ~options
       ~genv
       ~imported_names
-      ~tparams_rev
       state
       t : ('a, error) result * State.t =
-    let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
+    let env = Env.init ~options ~genv ~imported_names in
     let (result, state) = run state (f ~env t) in
     let result =
       match result with
@@ -2340,21 +2306,20 @@ module Make (I : INPUT) : S = struct
       | Type t -> def_loc_of_ty t
       | Decl d -> def_loc_of_decl d
     in
-    let convert ~options ~genv scheme =
-      let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
+    let convert ~options ~genv t =
       let imported_names = ALocMap.empty in
       (* We shouldn't need to evaluate any destructors for imports. *)
       let options = { options with Env.evaluate_type_destructors = Env.EvaluateNone } in
-      let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
+      let env = Env.init ~options ~genv ~imported_names in
       let%map ty = ElementConverter.convert_toplevel ~env t in
       def_loc_of_elt ty
     in
-    fun ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t ->
+    fun ~options ~genv imported_ts : Ty.imported_ident ALocMap.t ->
       let state = State.empty in
       let (_, result) =
         List.fold_left
-          (fun (st, acc) (name, loc, import_mode, scheme) ->
-            match run st (convert ~options ~genv scheme) with
+          (fun (st, acc) (name, loc, import_mode, t) ->
+            match run st (convert ~options ~genv t) with
             | (Ok (Some def_loc), st) -> (st, ALocMap.add def_loc (loc, name, import_mode) acc)
             | (Ok None, st) ->
               (* unrecognizable remote type *)
@@ -2363,13 +2328,13 @@ module Make (I : INPUT) : S = struct
               (* normalization error *)
               (st, acc))
           (state, ALocMap.empty)
-          imported_schemes
+          imported_ts
       in
       result
 
   let run_imports ~options ~genv =
     let { Env.file_sig; typed_ast_opt; cx; _ } = genv in
-    Ty_normalizer_imports.extract_schemes cx file_sig typed_ast_opt
+    Ty_normalizer_imports.extract_types cx file_sig typed_ast_opt
     |> normalize_imports ~options ~genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
@@ -2572,10 +2537,7 @@ module Make (I : INPUT) : S = struct
       | ThisInstanceT (r, { static; super; implements; inst }, _, _)
       | DefT (r, InstanceT { static; super; implements; inst }) ->
         instance_t ~env ~inherited ~source ~imode r static super implements inst
-      | DefT (_, PolyT { tparams; t_out; _ }) ->
-        let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
-        let env = Env.{ env with tparams_rev } in
-        type__ ~env ~inherited ~source ~imode t_out
+      | DefT (_, PolyT { t_out; _ }) -> type__ ~env ~inherited ~source ~imode t_out
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
       | IntersectionT (_, rep) ->
         app_intersection ~f:(type__ ~env ?id ~inherited ~source ~imode) rep

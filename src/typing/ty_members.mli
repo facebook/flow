@@ -26,5 +26,5 @@ val extract :
   cx:Context.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   file_sig:File_sig.t ->
-  Type.TypeScheme.t ->
+  Type.t ->
   (ty_members, string) result

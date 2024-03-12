@@ -3652,15 +3652,6 @@ module ConstFoldMap = WrappedMap.Make (struct
   let compare = Stdlib.compare
 end)
 
-(* Type scheme: a type and an attendant environment of type parameters.
- * See normalizer for use. *)
-module TypeScheme = struct
-  type t = {
-    tparams_rev: TypeTerm.typeparam list;
-    type_: TypeTerm.t;
-  }
-end
-
 include TypeTerm
 
 (*********************************************************)

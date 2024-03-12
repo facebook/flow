@@ -113,30 +113,6 @@ type t = {
   genv: genv;
   (* Normalization parameters *)
   options: options;
-  (* Type parameters in scope
-
-     The parameter environment is useful in handling inferred type parameters.
-     During checking, type parameters are expanded to so called generated tests,
-     that hold the `RPolyTest` reason. During normalization we wish to recover the
-     more informative original parameter names, instead of these tests. To do so
-     it's important to know what type parameters were in scope at the location where
-     a type was recorded. The type parameter name is saved with that `RPolyTest`
-     reason. What is not guaranteed, however, is that the parameter is in scope at
-     the point of the query. For example, consider:
-
-       function f<T>(x: T) { return x; }
-       const y = f(1);
-
-     The type for `x` within `f` is reconstructed from the generated bounds (for
-     `T`): Empty and Mixed. From the `RPolyTest` reasons on these types we can
-     recover the name `T` and return that instead of the bounds.
-
-     Due to the lack of a return type for `f`, however, querying `y` returns the
-     exact same answer even outside the context of `f`. The reasons will still point
-     to `T` even though it's now out of scope. In this case we need to fall back to
-     the actual bounds and return those instead. So the normalized type here would
-     be: Empty | Mixed, which simplifies to Mixed. *)
-  tparams_rev: Type.typeparam list;
   infer_tparams: Type.typeparam list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
@@ -168,12 +144,11 @@ type t = {
   seen_eval_ids: Type.EvalIdSet.t;
 }
 
-let init ~options ~genv ~tparams_rev ~imported_names =
+let init ~options ~genv ~imported_names =
   {
     options;
     genv;
     depth = 0;
-    tparams_rev;
     infer_tparams = [];
     imported_names;
     under_type_alias = SymbolSet.empty;
@@ -198,8 +173,6 @@ let max_depth e = e.options.max_depth
 let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 
 let current_file e = e.genv.file
-
-let add_typeparam env typeparam = { env with tparams_rev = typeparam :: env.tparams_rev }
 
 let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
 

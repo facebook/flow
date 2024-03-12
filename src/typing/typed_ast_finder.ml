@@ -143,9 +143,9 @@ class type_parameter_mapper =
 
 (* Find exact location match *)
 module ExactMatchQuery = struct
-  exception Found of Type.TypeScheme.t
+  exception Found of Type.t
 
-  let found ~tparams_rev t = raise (Found { Type.TypeScheme.tparams_rev; type_ = t })
+  let found ~tparams_rev:_ t = raise (Found t)
 
   class exact_match_searcher cx (target_loc : ALoc.t) =
     object (self)
@@ -173,7 +173,7 @@ module ExactMatchQuery = struct
       ignore (searcher#program typed_ast);
       None
     with
-    | Found scheme -> Some scheme
+    | Found t -> Some t
 end
 
 let find_exact_match_annotation = ExactMatchQuery.find
