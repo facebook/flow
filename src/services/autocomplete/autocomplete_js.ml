@@ -207,8 +207,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         this#find key_loc name Ac_type_binding
       | _ -> super#object_property_type opt
 
-    method member_with_loc expr_loc expr =
+    method member_with_loc annot expr =
       let open Flow_ast.Expression.Member in
+      let (expr_loc, _) = annot in
       let { _object = ((obj_loc, obj_type), _); property; comments = _ } = expr in
       let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc) in
       let is_super = Flow_ast_utils.is_super_member_access expr in
@@ -251,7 +252,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             )
         | _ -> ()
       end;
-      super#member expr
+      super#member annot expr
 
     method optional_member_with_loc expr_loc expr =
       let open Flow_ast.Expression.OptionalMember in
@@ -570,8 +571,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | ((loc, lit_type), StringLiteral Flow_ast.StringLiteral.{ raw; _ })
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
-      | (((loc, _) as annot), Member member) ->
-        (this#on_type_annot annot, Member (this#member_with_loc loc member))
+      | (annot, Member member) ->
+        (this#on_type_annot annot, Member (this#member_with_loc annot member))
       | (((loc, _) as annot), OptionalMember opt_member) ->
         (this#on_type_annot annot, OptionalMember (this#optional_member_with_loc loc opt_member))
       | (((_, obj_type) as annot), Object obj) ->

@@ -175,7 +175,7 @@ class searcher
         this#request (Get_def_request.Type { annot = source_annot; name = None });
       super#export_source source_annot lit
 
-    method! member expr =
+    method! member loc expr =
       let open Flow_ast.Expression.Member in
       let { _object; property; comments = _ } = expr in
       begin
@@ -190,7 +190,7 @@ class searcher
           this#request result
         | _ -> ()
       end;
-      super#member expr
+      super#member loc expr
 
     method! indexed_access_type expr =
       let open Flow_ast.Type.IndexedAccess in

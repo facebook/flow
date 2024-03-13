@@ -55,14 +55,14 @@ class member_searcher add_member =
 
     method! on_type_annot x = x
 
-    method! member member =
+    method! member annot member =
       let open Ast.Expression.Member in
       let { _object = ((_, type_), _); property; _ } = member in
       (match property with
       | PropertyIdentifier ((aloc, _), Ast.Identifier.{ name; _ }) ->
         this#annot_with_tparams (fun ~tparams_rev:_ -> add_member ~type_ ~aloc ~name)
       | _ -> ());
-      super#member member
+      super#member annot member
   end
 
 class type_reference_searcher add_reference =

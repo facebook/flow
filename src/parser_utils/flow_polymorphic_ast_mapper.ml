@@ -142,12 +142,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | RegExpLiteral x -> RegExpLiteral (this#regexp_literal x)
         | ModuleRefLiteral x -> ModuleRefLiteral (this#module_ref_literal x)
         | Logical x -> Logical (this#logical x)
-        | Member x -> Member (this#member x)
+        | Member x -> Member (this#member annot x)
         | MetaProperty x -> MetaProperty (this#meta_property x)
         | New x -> New (this#new_ x)
         | Object x -> Object (this#object_ x)
         | OptionalCall x -> OptionalCall (this#optional_call annot x)
-        | OptionalMember x -> OptionalMember (this#optional_member x)
+        | OptionalMember x -> OptionalMember (this#optional_member annot x)
         | Sequence x -> Sequence (this#sequence x)
         | Super x -> Super (this#super_expression x)
         | TaggedTemplate x -> TaggedTemplate (this#tagged_template x)
@@ -2048,7 +2048,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { operator; left = left'; right = right'; comments = comments' }
 
-    method member (expr : ('M, 'T) Ast.Expression.Member.t) : ('N, 'U) Ast.Expression.Member.t =
+    method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
+        : ('N, 'U) Ast.Expression.Member.t =
       let open Ast.Expression.Member in
       let { _object; property; comments } = expr in
       let _object' = this#expression _object in
@@ -2056,11 +2057,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { _object = _object'; property = property'; comments = comments' }
 
-    method optional_member (expr : ('M, 'T) Ast.Expression.OptionalMember.t)
+    method optional_member (annot : 'T) (expr : ('M, 'T) Ast.Expression.OptionalMember.t)
         : ('N, 'U) Ast.Expression.OptionalMember.t =
       let open Ast.Expression.OptionalMember in
       let { member; optional; filtered_out } = expr in
-      let member' = this#member member in
+      let member' = this#member annot member in
       let filtered_out' = this#on_type_annot filtered_out in
       { member = member'; optional; filtered_out = filtered_out' }
 

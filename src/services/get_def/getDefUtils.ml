@@ -216,7 +216,7 @@ module Def_kind_search = struct
         | None -> ());
         super#export_named_declaration loc decl
 
-      method! member expr =
+      method! member loc expr =
         let open Flow_ast.Expression.Member in
         let { _object; property; comments = _ } = expr in
         (match property with
@@ -227,7 +227,7 @@ module Def_kind_search = struct
         | PropertyPrivateName _
         | PropertyExpression _ ->
           ());
-        super#member expr
+        super#member loc expr
 
       method! object_property prop =
         let open Flow_ast.Expression.Object.Property in

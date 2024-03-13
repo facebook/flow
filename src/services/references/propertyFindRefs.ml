@@ -84,7 +84,7 @@ module Potential_ordinary_refs_search = struct
         else
           specifier
 
-      method! member expr =
+      method! member loc expr =
         let open Flow_ast.Expression.Member in
         let { _object = ((_, ty), _); property; comments = _ } = expr in
         (match property with
@@ -94,7 +94,7 @@ module Potential_ordinary_refs_search = struct
         | PropertyIdentifier _
         | PropertyExpression _ ->
           ());
-        super#member expr
+        super#member loc expr
 
       method! jsx_opening_element elt =
         let open Flow_ast.JSX in

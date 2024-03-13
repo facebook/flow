@@ -533,7 +533,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method logical : ('M, 'T) Ast.Expression.Logical.t -> ('N, 'U) Ast.Expression.Logical.t
 
-    method member : ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
+    method member : 'T -> ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
 
     method member_private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t
 
@@ -616,7 +616,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'T -> ('M, 'T) Ast.Expression.OptionalCall.t -> ('N, 'U) Ast.Expression.OptionalCall.t
 
     method optional_member :
-      ('M, 'T) Ast.Expression.OptionalMember.t -> ('N, 'U) Ast.Expression.OptionalMember.t
+      'T -> ('M, 'T) Ast.Expression.OptionalMember.t -> ('N, 'U) Ast.Expression.OptionalMember.t
 
     method pattern :
       ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
