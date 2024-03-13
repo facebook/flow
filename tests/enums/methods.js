@@ -15,6 +15,12 @@ const b: Iterable<E> = E.members();
 const c: boolean = E.isValid('A');
 E.isValid(maybeString);
 const s: string = E.getName(E.A);
+{
+  const x = 'A';
+  if (E.isValid(x)) {
+    x as E; // OK
+  }
+}
 
 // .members()
 for (const x of E.members()) {
