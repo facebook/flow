@@ -1,3 +1,24 @@
+### 0.231.0
+
+Likely to cause new Flow errors:
+* Fixed subtyping of inline interfaces, e.g. [try-flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIACpYgC8WPSgK4YGwWOAMGIyCxwhEMyRAG4ADpQDRLKjk2z2LHyGk4llQeRYjAkIl+Eyk8nATCUGloYjLKBMrEAelVWIAyjkINo2FiTJQILN+PkTCQ4NAgvkAAxWABMAGY7TaQEigA).
+
+New Features:
+* No longer trigger `method-unbinding` errors with indexed access types.
+* Add `relay_integration.esmodules` option. When this option, along with `relay_integration`, is enabled, Flow will treat `graphql` fragments/queries/etc. as `import default` rather than `require`. Use this when you ouput ESM from Relay's codegen (e.g. `eagerEsModules`).
+
+Notable bug fixes:
+* Don't error when returning an array, map, etc when an `AsyncGenerator<T, void, void>` type is expected (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCAB0JBioBgSLRFgACGALZRwaCEgBU-ygAEYABQASmQhIAgvjFgBxQQmSIQSgAHmEIhmvEJ+QgcDYYolUoAfITgDjCSrCbQ4Hg2JTCQBtWligBMYoAzABdADchIA9FbCQB3aAAcgkhJMlH5hNOtBE-OwOKROJxeIJYGJpMeUCpNINTJZ7JD3J2NDCguFovFkulGfliuVqvVmu1GDtbxdAAV3YkyFZuLh6XrDSbTYzLTb7U6XW6PV6fSx-YHcRzQyTFhGo4JjbG2UPE7yUwKdfZTFAEGK0yZTTLM1uc0rI-mNbgtYSdnbCQBZDCMAVL9Krk-TExypmt20OqDO13UbtQb2+-tQDEID5CYJDkoByDAQADFYBoGgAnLBIBIkAA))
+
+IDE:
+* Fixed a bug where `AUTO332` appeared in the result of string literal type completion.
+
+Library Definitions:
+* Added definitions for `FileSystem` APIs (thanks @ZelJin).
+* Added constructor to the `StorageManager` class (thanks @ZelJin).
+* Removed `checkPropTypes`, `DOM`, `createClass`, `ConcurrentMode` from `react` module.
+* Types in react module can now also be used when React is default imported like `import React from 'react'`, they can also be used without imports, e.g. `type N = React.Node`.
+
 ### 0.230.0
 
 Likely to cause new Flow errors:
