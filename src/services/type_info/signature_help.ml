@@ -263,8 +263,6 @@ module Callee_finder = struct
     | Found None -> None
 end
 
-let ty_normalizer_options = Ty_normalizer_env.default_options
-
 let rec collect_functions ~jsdoc ~exact_by_default acc = function
   | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->
     let details = func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return in
@@ -295,9 +293,12 @@ let rec fix_alias_reason cx t =
 let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
   | Some (t, active_parameter, callee_loc) ->
-    let t = fix_alias_reason cx t in
-    let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
-    let ty = Ty_normalizer_flow.from_type ~options:ty_normalizer_options ~genv t in
+    let t' = fix_alias_reason cx t in
+    let norm_options = Ty_normalizer_env.default_options in
+    let genv =
+      Ty_normalizer_env.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
+    in
+    let ty = Ty_normalizer_flow.from_type genv t' in
     let jsdoc =
       match
         GetDef_js.get_def

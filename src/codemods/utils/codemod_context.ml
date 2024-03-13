@@ -31,8 +31,10 @@ module Typed = struct
     match Typed_ast_finder.find_exact_match_annotation cx typed_ast aloc with
     | None -> Error MissingTypeAnnotation
     | Some t ->
-      let genv = Ty_normalizer_env.mk_genv ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
-      (match Ty_normalizer_flow.from_type ~options:norm_opts ~genv t with
+      let genv =
+        Ty_normalizer_env.mk_genv ~options:norm_opts ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
+      in
+      (match Ty_normalizer_flow.from_type genv t with
       | Ok ty -> Ok ty
       | Error e -> Error (NormalizationError e))
 

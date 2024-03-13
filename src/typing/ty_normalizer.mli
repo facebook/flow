@@ -49,18 +49,16 @@ module type S = sig
   end
 
   val run_type :
-    options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
 
-  val run_imports : options:Env.options -> genv:Env.genv -> Ty.imported_ident ALocMap.t
+  val run_imports : Env.genv -> Ty.imported_ident ALocMap.t
 
   val run_expand_members :
     force_instance:bool ->
-    options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
     State.t ->
@@ -68,7 +66,6 @@ module type S = sig
     (Ty.t, error) result * State.t
 
   val run_expand_literal_union :
-    options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
     State.t ->

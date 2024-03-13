@@ -521,7 +521,7 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
          in
          ((name, documentation_and_tags), type_)
      )
-  |> Ty_normalizer_flow.from_types ~options:ty_normalizer_options ~genv
+  |> Ty_normalizer_flow.from_types genv
 
 (* Roughly collects upper bounds of a type.
  * This logic will be changed or made unnecessary once we have contextual typing *)
@@ -594,11 +594,8 @@ let autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit
   (prefer_single_quotes, edit_locs)
 
 let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token =
-  let options = ty_normalizer_options in
   let upper_bound_ty =
-    Result.value
-      (Ty_normalizer_flow.expand_literal_union ~options ~genv upper_bound)
-      ~default:Ty.Top
+    Result.value (Ty_normalizer_flow.expand_literal_union genv upper_bound) ~default:Ty.Top
   in
   let exact_by_default = Context.exact_by_default cx in
   let literals = literals_of_ty [] upper_bound_ty in
@@ -825,7 +822,13 @@ let autocomplete_id
   let { reader; cx; typed_ast; file_sig; options; _ } = typing in
   let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  let genv =
+    Ty_normalizer_env.mk_genv
+      ~options:ty_normalizer_options
+      ~cx
+      ~typed_ast_opt:(Some typed_ast)
+      ~file_sig
+  in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
   let results =
@@ -1277,8 +1280,7 @@ let local_type_identifiers ~ast ~typed_ast_opt ~cx ~file_sig =
   rev_ids
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer_flow.from_types
-       ~options:ty_normalizer_options
-       ~genv:(Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt ~file_sig)
+       (Ty_normalizer_env.mk_genv ~options:ty_normalizer_options ~cx ~typed_ast_opt ~file_sig)
 
 let autocomplete_unqualified_type
     ~typing
@@ -1324,7 +1326,13 @@ let autocomplete_unqualified_type
              (items_rev, error_to_log :: errors_to_log))
          (items_rev, [])
   in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  let genv =
+    Ty_normalizer_env.mk_genv
+      ~options:ty_normalizer_options
+      ~cx
+      ~typed_ast_opt:(Some typed_ast)
+      ~file_sig
+  in
   let value_identifiers = local_value_identifiers ~typing ~genv ~ac_loc in
 
   (* The value-level identifiers we suggest in type autocompletion:
@@ -1832,12 +1840,14 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
 let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name module_type =
   let { cx; file_sig; typed_ast; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
-  let module_ty_res =
-    Ty_normalizer_flow.from_type
+  let genv =
+    Ty_normalizer_env.mk_genv
       ~options:ty_normalizer_options
-      ~genv:(Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig)
-      module_type
+      ~cx
+      ~file_sig
+      ~typed_ast_opt:(Some typed_ast)
   in
+  let module_ty_res = Ty_normalizer_flow.from_type genv module_type in
   let documentation_and_tags_of_module_member = documentation_and_tags_of_def_loc typing in
   let (items, errors_to_log) =
     match module_ty_res with
@@ -2156,7 +2166,13 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_key { obj_type; used_keys; spreads } ->
         autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
       | Ac_literal { lit_type } ->
-        let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+        let genv =
+          Ty_normalizer_env.mk_genv
+            ~options:ty_normalizer_options
+            ~cx
+            ~typed_ast_opt:(Some typed_ast)
+            ~file_sig
+        in
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =

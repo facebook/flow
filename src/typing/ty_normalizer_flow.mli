@@ -7,29 +7,19 @@
 
 open Ty_normalizer_env
 
-val from_type : options:options -> genv:genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result
+val from_type : genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result
 
 val from_type_with_found_computed_type :
-  options:options -> genv:genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result * bool
+  genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result * bool
 
 (* The following differ from mapping `from_type` on each input as it folds over
    the input elements of the input propagating the state (caches) after each
    transformation to the next element. *)
-val from_types :
-  options:options ->
-  genv:genv ->
-  ('a * Type.t) list ->
-  ('a * (Ty.elt, Ty_normalizer.error) result) list
+val from_types : genv -> ('a * Type.t) list -> ('a * (Ty.elt, Ty_normalizer.error) result) list
 
-val expand_members :
-  force_instance:bool ->
-  options:options ->
-  genv:genv ->
-  Type.t ->
-  (Ty.t, Ty_normalizer.error) result
+val expand_members : force_instance:bool -> genv -> Type.t -> (Ty.t, Ty_normalizer.error) result
 
-val expand_literal_union :
-  options:options -> genv:genv -> Type.t -> (Ty.t, Ty_normalizer.error) result
+val expand_literal_union : genv -> Type.t -> (Ty.t, Ty_normalizer.error) result
 
 (* A debugging facility for getting quick string representations of Type.t *)
 val debug_string_of_t : Context.t -> Type.t -> string

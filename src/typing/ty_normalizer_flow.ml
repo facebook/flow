@@ -63,8 +63,8 @@ open Normalizer
 
 (* Exposed API *)
 
-let print_normalizer_banner env =
-  if env.Env.verbose_normalizer then
+let print_normalizer_banner genv =
+  if Env.(genv.options.verbose_normalizer) then
     let banner =
       "\n========================================"
       ^ " Normalization "
@@ -72,13 +72,13 @@ let print_normalizer_banner env =
     in
     prerr_endlinef "%s" banner
 
-let from_types ~options ~genv ts =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
+let from_types genv ts =
+  print_normalizer_banner genv;
+  let imported_names = run_imports genv in
   let (_, result) =
     Base.List.fold_map
       ~f:(fun state (a, t) ->
-        match run_type ~options ~genv ~imported_names state t with
+        match run_type ~genv ~imported_names state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       ~init:State.empty
@@ -86,26 +86,28 @@ let from_types ~options ~genv ts =
   in
   result
 
-let from_type_with_found_computed_type ~options ~genv t =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let (result, state) = run_type ~options ~genv ~imported_names State.empty t in
+let from_type_with_found_computed_type genv t =
+  print_normalizer_banner genv;
+  let imported_names = run_imports genv in
+  let (result, state) = run_type ~genv ~imported_names State.empty t in
   (result, State.found_computed_type state)
 
-let from_type ~options ~genv t = fst (from_type_with_found_computed_type ~options ~genv t)
-
-let expand_members ~force_instance ~options ~genv t =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let (result, _) =
-    run_expand_members ~options ~genv ~force_instance ~imported_names State.empty t
-  in
+let from_type genv t =
+  print_normalizer_banner genv;
+  let imported_names = run_imports genv in
+  let (result, _) = run_type ~genv ~imported_names State.empty t in
   result
 
-let expand_literal_union ~options ~genv t =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let (result, _) = run_expand_literal_union ~options ~genv ~imported_names State.empty t in
+let expand_members ~force_instance genv t =
+  print_normalizer_banner genv;
+  let imported_names = run_imports genv in
+  let (result, _) = run_expand_members ~genv ~force_instance ~imported_names State.empty t in
+  result
+
+let expand_literal_union genv t =
+  print_normalizer_banner genv;
+  let imported_names = run_imports genv in
+  let (result, _) = run_expand_literal_union ~genv ~imported_names State.empty t in
   result
 
 let debug_string_of_t cx t =
@@ -115,7 +117,8 @@ let debug_string_of_t cx t =
     )
   in
   let file_sig = File_sig.empty in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
-  match from_type ~options:Ty_normalizer_env.default_options ~genv t with
+  let options = Ty_normalizer_env.default_options in
+  let genv = Ty_normalizer_env.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
+  match from_type genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
   | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt

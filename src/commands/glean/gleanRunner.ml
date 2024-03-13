@@ -641,13 +641,12 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
        #program
        typed_ast
     );
-  let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
   let options = Ty_normalizer_env.default_options in
+  let genv = Ty_normalizer_env.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
   let exact_by_default = Context.exact_by_default cx in
   let docs_and_spans = DocumentationFullspanMap.create ast file in
-
   Base.List.fold
-    (Ty_normalizer_flow.from_types ~options ~genv !infos)
+    (Ty_normalizer_flow.from_types genv !infos)
     ~init:([], [], [])
     ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
       let (documentation, span) =

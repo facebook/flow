@@ -297,26 +297,25 @@ type ty_members = {
   errors: string list;
 }
 
-let ty_normalizer_options =
-  {
-    Ty_normalizer_env.expand_internal_types = true;
-    preserve_inferred_literal_types = false;
-    evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
-    optimize_types = true;
-    omit_targ_defaults = false;
-    merge_bot_and_any_kinds = true;
-    verbose_normalizer = false;
-    max_depth = Some 50;
-    toplevel_is_type_identifier_reference = false;
-  }
-
-let extract ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
-  let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
-  match
-    Ty_normalizer_flow.expand_members ~force_instance ~options:ty_normalizer_options ~genv scheme
-  with
-  | Error error -> Error (Ty_normalizer.error_to_string error)
-  | Ok (Ty.Any _) -> Error "not enough type information to extract members"
-  | Ok this_ty ->
-    let (members, errors) = members_of_ty this_ty in
-    Ok { members; errors }
+let extract =
+  let options =
+    {
+      Ty_normalizer_env.expand_internal_types = true;
+      preserve_inferred_literal_types = false;
+      evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
+      optimize_types = true;
+      omit_targ_defaults_option = false;
+      merge_bot_and_any_kinds = true;
+      verbose_normalizer = false;
+      max_depth = Some 50;
+      toplevel_is_type_identifier_reference = false;
+    }
+  in
+  fun ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme ->
+    let genv = Ty_normalizer_env.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+    match Ty_normalizer_flow.expand_members ~force_instance genv scheme with
+    | Error error -> Error (Ty_normalizer.error_to_string error)
+    | Ok (Ty.Any _) -> Error "not enough type information to extract members"
+    | Ok this_ty ->
+      let (members, errors) = members_of_ty this_ty in
+      Ok { members; errors }

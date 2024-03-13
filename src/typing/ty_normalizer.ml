@@ -115,18 +115,16 @@ module type S = sig
   end
 
   val run_type :
-    options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident ALocMap.t ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
 
-  val run_imports : options:Env.options -> genv:Env.genv -> Ty.imported_ident ALocMap.t
+  val run_imports : Env.genv -> Ty.imported_ident ALocMap.t
 
   val run_expand_members :
     force_instance:bool ->
-    options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
     State.t ->
@@ -134,7 +132,6 @@ module type S = sig
     (Ty.t, error) result * State.t
 
   val run_expand_literal_union :
-    options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
     State.t ->
@@ -663,9 +660,9 @@ module Make (I : INPUT) : S = struct
 
     and type__ ~env ?id t =
       let%bind env = descend env t in
-      let options = env.Env.options in
+
       let depth = env.Env.depth - 1 in
-      if options.Env.verbose_normalizer then
+      if Env.verbose env then
         type_debug ~env ?id ~depth t
       else
         type_with_alias_reason ~env ?id t
@@ -954,7 +951,7 @@ module Make (I : INPUT) : S = struct
       let { T.flags; props_tmap; call_t; _ } = o in
       let { T.obj_kind; T.frozen = obj_frozen; _ } = flags in
       let obj_literal =
-        if Env.(env.options.preserve_inferred_literal_types) then
+        if Env.preserve_inferred_literal_types env then
           Some (Reason.is_literal_object_reason reason)
         else
           None
@@ -1065,7 +1062,7 @@ module Make (I : INPUT) : S = struct
     and arr_ty ~env reason elt_t =
       let desc = Reason.desc_of_reason reason in
       let arr_literal =
-        if Env.(env.options.preserve_inferred_literal_types) then
+        if Env.preserve_inferred_literal_types env then
           Some
             (match desc with
             | RArrayLit -> true
@@ -1251,7 +1248,7 @@ module Make (I : INPUT) : S = struct
           if Env.omit_targ_defaults env then
             (* Disable the option for recursive calls to type_params_t to avoid
              * infinite recursion in cases like `class C<T: C<any>> {}` *)
-            let env = Env.{ env with options = { env.options with omit_targ_defaults = false } } in
+            let env = Env.{ env with omit_targ_defaults = false } in
             let%map (_, tparams) = type_params_t ~env tparams in
             remove_targs_matching_defaults targs tparams
           else
@@ -2061,7 +2058,7 @@ module Make (I : INPUT) : S = struct
                 {
                   name = Reason_utils.component_symbol env name reason;
                   tparams;
-                  is_type = Env.(env.options.toplevel_is_type_identifier_reference);
+                  is_type = Env.toplevel_is_type_identifier_reference env;
                 }
              )
           )
@@ -2135,7 +2132,7 @@ module Make (I : INPUT) : S = struct
         | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
           component_decl ~env None name reason
         | DefT (_, ReactAbstractComponentT { component_kind = Structural; _ })
-          when Env.(env.options.toplevel_is_type_identifier_reference) ->
+          when Env.toplevel_is_type_identifier_reference env ->
           let orig_reason = TypeUtil.reason_of_t orig_t in
           (match desc_of_reason orig_reason with
           | RIdentifier (OrdinaryName name) -> component_decl ~env None name orig_reason
@@ -2253,18 +2250,16 @@ module Make (I : INPUT) : S = struct
   let run_type_aux
       ~(f : env:Env.t -> T.t -> ('a, error) t)
       ~(simpl : merge_kinds:bool -> ?sort:bool -> 'a -> 'a)
-      ~options
       ~genv
       ~imported_names
       state
       t : ('a, error) result * State.t =
-    let env = Env.init ~options ~genv ~imported_names in
+    let env = Env.init ~genv ~imported_names in
     let (result, state) = run state (f ~env t) in
     let result =
       match result with
-      | Ok t when options.Env.optimize_types ->
-        let { Env.merge_bot_and_any_kinds = merge_kinds; _ } = options in
-        Ok (simpl ~merge_kinds ~sort:false t)
+      | Ok t when Env.optimize_types env ->
+        Ok (simpl ~merge_kinds:(Env.merge_bot_and_any_kinds env) ~sort:false t)
       | _ -> result
     in
     (result, state)
@@ -2306,20 +2301,21 @@ module Make (I : INPUT) : S = struct
       | Type t -> def_loc_of_ty t
       | Decl d -> def_loc_of_decl d
     in
-    let convert ~options ~genv t =
+    let convert genv t =
       let imported_names = ALocMap.empty in
-      (* We shouldn't need to evaluate any destructors for imports. *)
-      let options = { options with Env.evaluate_type_destructors = Env.EvaluateNone } in
-      let env = Env.init ~options ~genv ~imported_names in
+      let env = Env.init ~genv ~imported_names in
       let%map ty = ElementConverter.convert_toplevel ~env t in
       def_loc_of_elt ty
     in
-    fun ~options ~genv imported_ts : Ty.imported_ident ALocMap.t ->
+    fun genv imported_ts : Ty.imported_ident ALocMap.t ->
+      (* We shouldn't need to evaluate any destructors for imports. *)
+      let options = { genv.Env.options with Env.evaluate_type_destructors = Env.EvaluateNone } in
+      let genv = { genv with Env.options } in
       let state = State.empty in
       let (_, result) =
         List.fold_left
           (fun (st, acc) (name, loc, import_mode, t) ->
-            match run st (convert ~options ~genv t) with
+            match run st (convert genv t) with
             | (Ok (Some def_loc), st) -> (st, ALocMap.add def_loc (loc, name, import_mode) acc)
             | (Ok None, st) ->
               (* unrecognizable remote type *)
@@ -2332,10 +2328,9 @@ module Make (I : INPUT) : S = struct
       in
       result
 
-  let run_imports ~options ~genv =
+  let run_imports genv =
     let { Env.file_sig; typed_ast_opt; cx; _ } = genv in
-    Ty_normalizer_imports.extract_types cx file_sig typed_ast_opt
-    |> normalize_imports ~options ~genv
+    Ty_normalizer_imports.extract_types cx file_sig typed_ast_opt |> normalize_imports genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val force_instance : bool

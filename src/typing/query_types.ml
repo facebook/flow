@@ -42,23 +42,24 @@ let type_at_pos_type
       else
         Some typed_ast
     in
-    let genv = Ty_normalizer_env.mk_genv ~cx ~file_sig ~typed_ast_opt in
+    let options evaluate_type_destructors =
+      {
+        Ty_normalizer_env.expand_internal_types = false;
+        preserve_inferred_literal_types = false;
+        evaluate_type_destructors;
+        optimize_types = true;
+        omit_targ_defaults_option = omit_targ_defaults;
+        merge_bot_and_any_kinds = true;
+        verbose_normalizer;
+        max_depth = Some max_depth;
+        toplevel_is_type_identifier_reference;
+      }
+    in
+
     let from_type evaluate_type_destructors =
-      Ty_normalizer_flow.from_type_with_found_computed_type
-        ~options:
-          {
-            Ty_normalizer_env.expand_internal_types = false;
-            preserve_inferred_literal_types = false;
-            evaluate_type_destructors;
-            optimize_types = true;
-            omit_targ_defaults;
-            merge_bot_and_any_kinds = true;
-            verbose_normalizer;
-            max_depth = Some max_depth;
-            toplevel_is_type_identifier_reference;
-          }
-        ~genv
-        t
+      let options = options evaluate_type_destructors in
+      let genv = Ty_normalizer_env.mk_genv ~options ~cx ~file_sig ~typed_ast_opt in
+      Ty_normalizer_flow.from_type_with_found_computed_type genv t
     in
     let (unevaluated, found_computed_type) = from_type Ty_normalizer_env.EvaluateNone in
     let evaluated =
@@ -93,10 +94,8 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
     { Ty_normalizer_env.default_options with Ty_normalizer_env.evaluate_type_destructors }
   in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
-  let result =
-    Ty_normalizer_flow.from_types ~options ~genv (Typed_ast_utils.typed_ast_to_list typed_ast)
-  in
+  let genv = Ty_normalizer_env.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  let result = Ty_normalizer_flow.from_types genv (Typed_ast_utils.typed_ast_to_list typed_ast) in
   let print_ok = function
     | (l, Ok t) -> Some (l, printer t)
     | _ -> None
@@ -116,14 +115,14 @@ let insert_type_normalize ~cx ~file_sig ~omit_targ_defaults ~typed_ast loc t : T
       (* Optimize types is false because Insert_types manually calls the simplifier with
          a custom comparison operation *)
       optimize_types = false;
-      omit_targ_defaults;
+      omit_targ_defaults_option = omit_targ_defaults;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
       max_depth = None;
       toplevel_is_type_identifier_reference = false;
     }
   in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
-  match Ty_normalizer_flow.from_type ~options ~genv t with
+  let genv = Ty_normalizer_env.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
+  match Ty_normalizer_flow.from_type genv t with
   | Ok elt -> Success (loc, elt)
   | Error err -> result_of_normalizer_error loc t err

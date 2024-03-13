@@ -44,7 +44,7 @@ type options = {
    *
    * WARNING: May be slow due to the structural equality checks that this necessitates.
    *)
-  omit_targ_defaults: bool;
+  omit_targ_defaults_option: bool;
   (* Run an optimization pass that removes duplicates from unions and intersections.
    *
    * WARNING May be slow for large types
@@ -67,7 +67,7 @@ let default_options =
     evaluate_type_destructors = EvaluateNone;
     expand_internal_types = false;
     merge_bot_and_any_kinds = true;
-    omit_targ_defaults = false;
+    omit_targ_defaults_option = false;
     optimize_types = true;
     preserve_inferred_literal_types = false;
     verbose_normalizer = false;
@@ -81,7 +81,7 @@ let default_codemod_options =
     preserve_inferred_literal_types = false;
     evaluate_type_destructors = EvaluateSome;
     optimize_types = false;
-    omit_targ_defaults = true;
+    omit_targ_defaults_option = true;
     merge_bot_and_any_kinds = false;
     verbose_normalizer = false;
     max_depth = None;
@@ -96,9 +96,11 @@ type genv = {
   typed_ast_opt: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option;
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
+  (* Normalization parameters *)
+  options: options;
 }
 
-let mk_genv ~cx ~typed_ast_opt ~file_sig = { cx; typed_ast_opt; file_sig }
+let mk_genv ~options ~cx ~typed_ast_opt ~file_sig = { cx; typed_ast_opt; file_sig; options }
 
 module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol
@@ -109,8 +111,6 @@ end)
 type t = {
   (* Does not change. Set once in the beginning. *)
   genv: genv;
-  (* Normalization parameters *)
-  options: options;
   infer_tparams: Type.typeparam list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
@@ -140,11 +140,11 @@ type t = {
   (* Detect recursive types *)
   seen_tvar_ids: ISet.t;
   seen_eval_ids: Type.EvalIdSet.t;
+  omit_targ_defaults: bool;
 }
 
-let init ~options ~genv ~imported_names =
+let init ~genv ~imported_names =
   {
-    options;
     genv;
     depth = 0;
     infer_tparams = [];
@@ -152,24 +152,31 @@ let init ~options ~genv ~imported_names =
     under_type_alias = SymbolSet.empty;
     seen_tvar_ids = ISet.empty;
     seen_eval_ids = Type.EvalIdSet.empty;
+    omit_targ_defaults = genv.options.omit_targ_defaults_option;
   }
 
 let descend e = { e with depth = e.depth + 1 }
 
 let get_cx e = e.genv.cx
 
-let expand_internal_types e = e.options.expand_internal_types
+let expand_internal_types e = e.genv.options.expand_internal_types
 
-let evaluate_type_destructors e = e.options.evaluate_type_destructors
+let evaluate_type_destructors e = e.genv.options.evaluate_type_destructors
 
-let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
+let preserve_inferred_literal_types e = e.genv.options.preserve_inferred_literal_types
 
-let omit_targ_defaults e = e.options.omit_targ_defaults
+let omit_targ_defaults e = e.omit_targ_defaults
 
-let max_depth e = e.options.max_depth
+let optimize_types e = e.genv.options.optimize_types
 
-let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
+let max_depth e = e.genv.options.max_depth
+
+let merge_bot_and_any_kinds e = e.genv.options.merge_bot_and_any_kinds
 
 let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
 
 let seen_type_alias name e = SymbolSet.mem name e.under_type_alias
+
+let verbose e = e.genv.options.verbose_normalizer
+
+let toplevel_is_type_identifier_reference e = e.genv.options.toplevel_is_type_identifier_reference
