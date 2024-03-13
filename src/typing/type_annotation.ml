@@ -257,7 +257,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `InOut; loc })
       | _ -> ()
     );
-    Typed_ast_finder.polarity variance
+    Typed_ast_utils.polarity variance
 
   (* Distributive tparam name helpers *)
   let use_distributive_tparam_name cx name name_loc tparams_map =

@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-open Typed_ast_utils
+open Typed_ast_finder
 
 type 'a result =
   | FailureNoMatch
