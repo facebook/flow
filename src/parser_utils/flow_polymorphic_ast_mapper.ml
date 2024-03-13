@@ -132,7 +132,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Function x -> Function (this#function_expression x)
         | Identifier x -> Identifier (this#t_identifier x)
         | Import x -> Import (this#import annot x)
-        | JSXElement x -> JSXElement (this#jsx_element x)
+        | JSXElement x -> JSXElement (this#jsx_element annot x)
         | JSXFragment x -> JSXFragment (this#jsx_fragment x)
         | StringLiteral x -> StringLiteral (this#string_literal x)
         | BooleanLiteral x -> BooleanLiteral (this#boolean_literal x)
@@ -1848,7 +1848,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       ignore import_kind;
       this#pattern_identifier ~kind:Ast.Variable.Let id
 
-    method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
+    method jsx_element (_annot : 'T) (expr : ('M, 'T) Ast.JSX.element) =
       let open Ast.JSX in
       let { opening_element; closing_element; children; comments } = expr in
       let opening_element' = this#jsx_opening_element opening_element in
@@ -1948,9 +1948,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method jsx_child (child : ('M, 'T) Ast.JSX.child) : ('N, 'U) Ast.JSX.child =
       let open Ast.JSX in
       let (annot, child') = child in
-      ( this#on_loc_annot annot,
+      ( this#on_type_annot annot,
         match child' with
-        | Element elem -> Element (this#jsx_element elem)
+        | Element elem -> Element (this#jsx_element annot elem)
         | Fragment frag -> Fragment (this#jsx_fragment frag)
         | ExpressionContainer expr -> ExpressionContainer (this#jsx_expression expr)
         | SpreadChild spread -> SpreadChild (this#jsx_spread_child spread)

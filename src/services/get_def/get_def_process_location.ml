@@ -474,7 +474,7 @@ class searcher
     method! jsx_child child =
       let (loc, c) = child in
       match c with
-      | Flow_ast.JSX.Text _ when covers_target loc -> this#found_empty "jsx text"
+      | Flow_ast.JSX.Text _ when annot_covers_target loc -> this#found_empty "jsx text"
       | _ -> super#jsx_child child
 
     method! class_body cls_body =

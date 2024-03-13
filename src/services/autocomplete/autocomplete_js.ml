@@ -425,7 +425,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! jsx_child child =
       match child with
-      | (loc, Flow_ast.JSX.(Text Text.{ raw; _ })) when this#covers_target loc ->
+      | ((loc, _), Flow_ast.JSX.(Text Text.{ raw; _ })) when this#covers_target loc ->
         this#find loc raw Ac_jsx_text
       | _ -> super#jsx_child child
 

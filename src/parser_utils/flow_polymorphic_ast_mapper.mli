@@ -479,7 +479,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method jsx_closing_element : ('M, 'T) Ast.JSX.Closing.t -> ('N, 'U) Ast.JSX.Closing.t
 
-    method jsx_element : ('M, 'T) Ast.JSX.element -> ('N, 'U) Ast.JSX.element
+    method jsx_element : 'T -> ('M, 'T) Ast.JSX.element -> ('N, 'U) Ast.JSX.element
 
     method jsx_expression :
       ('M, 'T) Ast.JSX.ExpressionContainer.t -> ('N, 'U) Ast.JSX.ExpressionContainer.t

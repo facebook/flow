@@ -5781,29 +5781,31 @@ module Make
     | Element e ->
       let (t, e) = jsx cx loc e in
       let reason = mk_reason RJSXChild loc in
-      (Some (UnresolvedArg (mk_tuple_element reason t, None)), (loc, Element e))
+      (Some (UnresolvedArg (mk_tuple_element reason t, None)), ((loc, t), Element e))
     | Fragment f ->
       let (t, f) = jsx_fragment cx loc f in
       let reason = mk_reason RJSXChild loc in
-      (Some (UnresolvedArg (mk_tuple_element reason t, None)), (loc, Fragment f))
+      (Some (UnresolvedArg (mk_tuple_element reason t, None)), ((loc, t), Fragment f))
     | ExpressionContainer ec ->
       ExpressionContainer.(
         let { expression = ex; ExpressionContainer.comments } = ec in
-        let (unresolved_param, ex) =
+        let (unresolved_param, ex, t) =
           match ex with
           | Expression e ->
             let (((loc, t), _) as e) = expression cx e in
             let reason = mk_reason RJSXChild loc in
-            (Some (UnresolvedArg (mk_tuple_element reason t, None)), Expression e)
-          | EmptyExpression -> (None, EmptyExpression)
+            (Some (UnresolvedArg (mk_tuple_element reason t, None)), Expression e, t)
+          | EmptyExpression -> (None, EmptyExpression, AnyT.at Untyped loc)
         in
         ( unresolved_param,
-          (loc, ExpressionContainer { expression = ex; ExpressionContainer.comments })
+          ((loc, t), ExpressionContainer { expression = ex; ExpressionContainer.comments })
         )
       )
     | SpreadChild { SpreadChild.expression = expr; comments } ->
       let (((_, t), _) as e) = expression cx expr in
-      (Some (UnresolvedSpreadArg t), (loc, SpreadChild { SpreadChild.expression = e; comments }))
+      ( Some (UnresolvedSpreadArg t),
+        ((loc, t), SpreadChild { SpreadChild.expression = e; comments })
+      )
     | Text { Text.value; raw } ->
       let unresolved_param_opt =
         match jsx_trim_text loc value with
@@ -5812,7 +5814,7 @@ module Make
           Some (UnresolvedArg (mk_tuple_element reason c, None))
         | None -> None
       in
-      (unresolved_param_opt, (loc, Text { Text.value; raw }))
+      (unresolved_param_opt, ((loc, AnyT.at Untyped loc), Text { Text.value; raw }))
 
   and jsx_trim_text loc value =
     match Utils_jsx.trim_jsx_text (ALoc.to_loc_exn loc) value with

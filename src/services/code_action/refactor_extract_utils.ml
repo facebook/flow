@@ -347,7 +347,7 @@ module AstExtractor = struct
           in
           elem
         else if Loc.contains loc extract_range then
-          super#jsx_element elem
+          super#jsx_element loc elem
         else
           elem
 

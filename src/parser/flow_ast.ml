@@ -1872,7 +1872,7 @@ and JSX : sig
     [@@deriving show]
   end
 
-  type ('M, 'T) child = 'M * ('M, 'T) child'
+  type ('M, 'T) child = 'T * ('M, 'T) child'
 
   and ('M, 'T) child' =
     | Element of ('M, 'T) element
