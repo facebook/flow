@@ -10,7 +10,6 @@ open Reason
 open Loc_collections
 module Env = Ty_normalizer_env
 module T = Type
-module File_sig = File_sig
 
 (* The type normalizer converts infered types (of type `Type.t`) under a context
    cx to the simplified form of type `Ty.t`. It is called by various modules,
@@ -114,29 +113,21 @@ module type S = sig
     val found_computed_type : t -> bool
   end
 
-  val run_type :
-    genv:Env.genv ->
-    imported_names:Ty.imported_ident ALocMap.t ->
-    State.t ->
-    Type.t ->
-    (Ty.elt, error) result * State.t
+  val run_type : genv:Env.genv -> State.t -> Type.t -> (Ty.elt, error) result * State.t
 
-  val run_imports : Env.genv -> Ty.imported_ident ALocMap.t
+  val normalize_imports :
+    Context.t ->
+    File_sig.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
+    Env.options ->
+    (string * ALoc.t * Ty.import_mode * Type.t) list ->
+    Ty.imported_ident Loc_collections.ALocMap.t
 
   val run_expand_members :
-    force_instance:bool ->
-    genv:Env.genv ->
-    imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    State.t ->
-    Type.t ->
-    (Ty.t, error) result * State.t
+    force_instance:bool -> genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
 
   val run_expand_literal_union :
-    genv:Env.genv ->
-    imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    State.t ->
-    Type.t ->
-    (Ty.t, error) result * State.t
+    genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
 end
 
 module type INPUT = sig
@@ -324,13 +315,13 @@ module Make (I : INPUT) : S = struct
         if File_key.to_string current_source = def_source then
           Ty.Local
         else
-          Ty.Library { Ty.imported_as = ALocMap.find_opt sym_def_loc env.Env.imported_names }
+          Ty.Library { Ty.imported_as = ALocMap.find_opt sym_def_loc (Env.imported_names env) }
       | Some (SourceFile def_source) ->
         let current_source = Context.file Env.(get_cx env) in
         if File_key.to_string current_source = def_source then
           Ty.Local
         else
-          Ty.Remote { Ty.imported_as = ALocMap.find_opt sym_def_loc env.Env.imported_names }
+          Ty.Remote { Ty.imported_as = ALocMap.find_opt sym_def_loc (Env.imported_names env) }
       | Some (JsonFile _)
       | Some (ResourceFile _) ->
         Ty.Local
@@ -2251,10 +2242,9 @@ module Make (I : INPUT) : S = struct
       ~(f : env:Env.t -> T.t -> ('a, error) t)
       ~(simpl : merge_kinds:bool -> ?sort:bool -> 'a -> 'a)
       ~genv
-      ~imported_names
       state
       t : ('a, error) result * State.t =
-    let env = Env.init ~genv ~imported_names in
+    let env = Env.init ~genv in
     let (result, state) = run state (f ~env t) in
     let result =
       match result with
@@ -2302,15 +2292,22 @@ module Make (I : INPUT) : S = struct
       | Decl d -> def_loc_of_decl d
     in
     let convert genv t =
-      let imported_names = ALocMap.empty in
-      let env = Env.init ~genv ~imported_names in
+      let env = Env.init ~genv in
       let%map ty = ElementConverter.convert_toplevel ~env t in
       def_loc_of_elt ty
     in
-    fun genv imported_ts : Ty.imported_ident ALocMap.t ->
+    fun cx file_sig typed_ast_opt options imported_ts : Ty.imported_ident ALocMap.t ->
       (* We shouldn't need to evaluate any destructors for imports. *)
-      let options = { genv.Env.options with Env.evaluate_type_destructors = Env.EvaluateNone } in
-      let genv = { genv with Env.options } in
+      let options = { options with Env.evaluate_type_destructors = Env.EvaluateNone } in
+      let genv =
+        {
+          Env.options;
+          cx;
+          file_sig;
+          typed_ast_opt;
+          imported_names = lazy Loc_collections.ALocMap.empty;
+        }
+      in
       let state = State.empty in
       let (_, result) =
         List.fold_left
@@ -2327,10 +2324,6 @@ module Make (I : INPUT) : S = struct
           imported_ts
       in
       result
-
-  let run_imports genv =
-    let { Env.file_sig; typed_ast_opt; cx; _ } = genv in
-    Ty_normalizer_imports.extract_types cx file_sig typed_ast_opt |> normalize_imports genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val force_instance : bool

@@ -642,7 +642,7 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
        typed_ast
     );
   let options = Ty_normalizer_env.default_options in
-  let genv = Ty_normalizer_env.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
   let exact_by_default = Context.exact_by_default cx in
   let docs_and_spans = DocumentationFullspanMap.create ast file in
   Base.List.fold

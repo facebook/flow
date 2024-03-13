@@ -5,10 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Loc_collections
 module Env = Ty_normalizer_env
 module T = Type
-module File_sig = File_sig
 
 (* Error reporting *)
 
@@ -48,29 +46,21 @@ module type S = sig
     val found_computed_type : t -> bool
   end
 
-  val run_type :
-    genv:Env.genv ->
-    imported_names:Ty.imported_ident ALocMap.t ->
-    State.t ->
-    Type.t ->
-    (Ty.elt, error) result * State.t
+  val run_type : genv:Env.genv -> State.t -> Type.t -> (Ty.elt, error) result * State.t
 
-  val run_imports : Env.genv -> Ty.imported_ident ALocMap.t
+  val normalize_imports :
+    Context.t ->
+    File_sig.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
+    Env.options ->
+    (string * ALoc.t * Ty.import_mode * Type.t) list ->
+    Ty.imported_ident Loc_collections.ALocMap.t
 
   val run_expand_members :
-    force_instance:bool ->
-    genv:Env.genv ->
-    imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    State.t ->
-    Type.t ->
-    (Ty.t, error) result * State.t
+    force_instance:bool -> genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
 
   val run_expand_literal_union :
-    genv:Env.genv ->
-    imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
-    State.t ->
-    Type.t ->
-    (Ty.t, error) result * State.t
+    genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
 end
 
 module type INPUT = sig

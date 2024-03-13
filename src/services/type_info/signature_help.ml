@@ -296,7 +296,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
     let t' = fix_alias_reason cx t in
     let norm_options = Ty_normalizer_env.default_options in
     let genv =
-      Ty_normalizer_env.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
+      Ty_normalizer_flow.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
     in
     let ty = Ty_normalizer_flow.from_type genv t' in
     let jsdoc =

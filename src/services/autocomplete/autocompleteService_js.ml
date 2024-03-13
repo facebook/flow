@@ -823,7 +823,7 @@ let autocomplete_id
   let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let genv =
-    Ty_normalizer_env.mk_genv
+    Ty_normalizer_flow.mk_genv
       ~options:ty_normalizer_options
       ~cx
       ~typed_ast_opt:(Some typed_ast)
@@ -1280,7 +1280,7 @@ let local_type_identifiers ~ast ~typed_ast_opt ~cx ~file_sig =
   rev_ids
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer_flow.from_types
-       (Ty_normalizer_env.mk_genv ~options:ty_normalizer_options ~cx ~typed_ast_opt ~file_sig)
+       (Ty_normalizer_flow.mk_genv ~options:ty_normalizer_options ~cx ~typed_ast_opt ~file_sig)
 
 let autocomplete_unqualified_type
     ~typing
@@ -1327,7 +1327,7 @@ let autocomplete_unqualified_type
          (items_rev, [])
   in
   let genv =
-    Ty_normalizer_env.mk_genv
+    Ty_normalizer_flow.mk_genv
       ~options:ty_normalizer_options
       ~cx
       ~typed_ast_opt:(Some typed_ast)
@@ -1841,7 +1841,7 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
   let { cx; file_sig; typed_ast; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
   let genv =
-    Ty_normalizer_env.mk_genv
+    Ty_normalizer_flow.mk_genv
       ~options:ty_normalizer_options
       ~cx
       ~file_sig
@@ -2167,7 +2167,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
       | Ac_literal { lit_type } ->
         let genv =
-          Ty_normalizer_env.mk_genv
+          Ty_normalizer_flow.mk_genv
             ~options:ty_normalizer_options
             ~cx
             ~typed_ast_opt:(Some typed_ast)

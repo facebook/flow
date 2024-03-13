@@ -74,11 +74,10 @@ let print_normalizer_banner genv =
 
 let from_types genv ts =
   print_normalizer_banner genv;
-  let imported_names = run_imports genv in
   let (_, result) =
     Base.List.fold_map
       ~f:(fun state (a, t) ->
-        match run_type ~genv ~imported_names state t with
+        match run_type ~genv state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       ~init:State.empty
@@ -88,27 +87,36 @@ let from_types genv ts =
 
 let from_type_with_found_computed_type genv t =
   print_normalizer_banner genv;
-  let imported_names = run_imports genv in
-  let (result, state) = run_type ~genv ~imported_names State.empty t in
+  let (result, state) = run_type ~genv State.empty t in
   (result, State.found_computed_type state)
 
 let from_type genv t =
   print_normalizer_banner genv;
-  let imported_names = run_imports genv in
-  let (result, _) = run_type ~genv ~imported_names State.empty t in
+  let (result, _) = run_type ~genv State.empty t in
   result
 
 let expand_members ~force_instance genv t =
   print_normalizer_banner genv;
-  let imported_names = run_imports genv in
-  let (result, _) = run_expand_members ~genv ~force_instance ~imported_names State.empty t in
+  let (result, _) = run_expand_members ~genv ~force_instance State.empty t in
   result
 
 let expand_literal_union genv t =
   print_normalizer_banner genv;
-  let imported_names = run_imports genv in
-  let (result, _) = run_expand_literal_union ~genv ~imported_names State.empty t in
+  let (result, _) = run_expand_literal_union ~genv State.empty t in
   result
+
+let mk_genv ~options ~cx ~typed_ast_opt ~file_sig =
+  let imported_names =
+    lazy
+      (normalize_imports
+         cx
+         file_sig
+         typed_ast_opt
+         options
+         (Ty_normalizer_imports.extract_types cx file_sig typed_ast_opt)
+      )
+  in
+  { Ty_normalizer_env.options; cx; typed_ast_opt; file_sig; imported_names }
 
 let debug_string_of_t cx t =
   let typed_ast =
@@ -118,7 +126,7 @@ let debug_string_of_t cx t =
   in
   let file_sig = File_sig.empty in
   let options = Ty_normalizer_env.default_options in
-  let genv = Ty_normalizer_env.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
+  let genv = mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
   match from_type genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
   | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt

@@ -88,7 +88,7 @@ let default_codemod_options =
     toplevel_is_type_identifier_reference = false;
   }
 
-(* This is a global environment that should not change during normalization *)
+(** Global environment that does not change during normalization *)
 type genv = {
   (* Full (merged) context *)
   cx: Context.t;
@@ -96,11 +96,14 @@ type genv = {
   typed_ast_opt: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option;
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
+  (* In determining whether a symbol is Local, Imported, Remote, etc, it is
+     useful to keep a map of imported names and the corresponding
+     location available. We can then make this decision by comparing the
+     source file with the current context's file information. *)
+  imported_names: Ty.imported_ident Loc_collections.ALocMap.t Lazy.t;
   (* Normalization parameters *)
   options: options;
 }
-
-let mk_genv ~options ~cx ~typed_ast_opt ~file_sig = { cx; typed_ast_opt; file_sig; options }
 
 module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol
@@ -112,11 +115,6 @@ type t = {
   (* Does not change. Set once in the beginning. *)
   genv: genv;
   infer_tparams: Type.typeparam list;
-  (* In determining whether a symbol is Local, Imported, Remote, etc, it is
-     useful to keep a map of imported names and the corresponding
-     location available. We can then make this decision by comparing the
-     source file with the current context's file information. *)
-  imported_names: Ty.imported_ident Loc_collections.ALocMap.t;
   (* For debugging purposes mostly *)
   depth: int;
   (* The default behavior with type aliases is to return the name of the alias
@@ -143,12 +141,11 @@ type t = {
   omit_targ_defaults: bool;
 }
 
-let init ~genv ~imported_names =
+let init ~genv =
   {
     genv;
     depth = 0;
     infer_tparams = [];
-    imported_names;
     under_type_alias = SymbolSet.empty;
     seen_tvar_ids = ISet.empty;
     seen_eval_ids = Type.EvalIdSet.empty;
@@ -158,6 +155,8 @@ let init ~genv ~imported_names =
 let descend e = { e with depth = e.depth + 1 }
 
 let get_cx e = e.genv.cx
+
+let imported_names e = Lazy.force e.genv.imported_names
 
 let expand_internal_types e = e.genv.options.expand_internal_types
 

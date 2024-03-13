@@ -32,7 +32,7 @@ module Typed = struct
     | None -> Error MissingTypeAnnotation
     | Some t ->
       let genv =
-        Ty_normalizer_env.mk_genv ~options:norm_opts ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
+        Ty_normalizer_flow.mk_genv ~options:norm_opts ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
       in
       (match Ty_normalizer_flow.from_type genv t with
       | Ok ty -> Ok ty
