@@ -90,8 +90,6 @@ let default_codemod_options =
 
 (* This is a global environment that should not change during normalization *)
 type genv = {
-  (* File the query originated from *)
-  file: File_key.t;
   (* Full (merged) context *)
   cx: Context.t;
   (* Typed AST of the current file *)
@@ -100,7 +98,7 @@ type genv = {
   file_sig: File_sig.t;
 }
 
-let mk_genv ~cx ~file ~typed_ast_opt ~file_sig = { file; cx; typed_ast_opt; file_sig }
+let mk_genv ~cx ~typed_ast_opt ~file_sig = { cx; typed_ast_opt; file_sig }
 
 module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol
@@ -171,8 +169,6 @@ let omit_targ_defaults e = e.options.omit_targ_defaults
 let max_depth e = e.options.max_depth
 
 let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
-
-let current_file e = e.genv.file
 
 let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
 

@@ -26,7 +26,6 @@ let max_size_of_evaluated_type = 100
 
 let type_at_pos_type
     ~cx
-    ~file
     ~file_sig
     ~omit_targ_defaults
     ~verbose_normalizer
@@ -43,7 +42,7 @@ let type_at_pos_type
       else
         Some typed_ast
     in
-    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt in
+    let genv = Ty_normalizer_env.mk_genv ~cx ~file_sig ~typed_ast_opt in
     let from_type evaluate_type_destructors =
       Ty_normalizer_flow.from_type_with_found_computed_type
         ~options:
@@ -94,8 +93,7 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
     { Ty_normalizer_env.default_options with Ty_normalizer_env.evaluate_type_destructors }
   in
-  let file = Context.file cx in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
   let result =
     Ty_normalizer_flow.from_types ~options ~genv (Typed_ast_utils.typed_ast_to_list typed_ast)
   in
@@ -105,8 +103,7 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   in
   Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
-let insert_type_normalize
-    ~cx ?(file = Context.file cx) ~file_sig ~omit_targ_defaults ~typed_ast loc t : Ty.elt result =
+let insert_type_normalize ~cx ~file_sig ~omit_targ_defaults ~typed_ast loc t : Ty.elt result =
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
@@ -126,7 +123,7 @@ let insert_type_normalize
       toplevel_is_type_identifier_reference = false;
     }
   in
-  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast_opt:(Some typed_ast) in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
   match Ty_normalizer_flow.from_type ~options ~genv t with
   | Ok elt -> Success (loc, elt)
   | Error err -> result_of_normalizer_error loc t err

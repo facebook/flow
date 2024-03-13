@@ -323,13 +323,13 @@ module Make (I : INPUT) : S = struct
     let sym_provenance =
       match symbol_source with
       | Some (LibFile def_source) ->
-        let current_source = Env.(env.genv.file) in
+        let current_source = Context.file Env.(get_cx env) in
         if File_key.to_string current_source = def_source then
           Ty.Local
         else
           Ty.Library { Ty.imported_as = ALocMap.find_opt sym_def_loc env.Env.imported_names }
       | Some (SourceFile def_source) ->
-        let current_source = Env.(env.genv.file) in
+        let current_source = Context.file Env.(get_cx env) in
         if File_key.to_string current_source = def_source then
           Ty.Local
         else
@@ -1935,7 +1935,7 @@ module Make (I : INPUT) : S = struct
     let opaque_type_t ~env reason opaque_type tparams =
       let open Type in
       let name = opaque_type.opaque_name in
-      let current_source = Env.current_file env in
+      let current_source = Context.file (Env.get_cx env) in
       let opaque_source = ALoc.source (def_loc_of_reason reason) in
       let name = symbol_from_reason env reason (Reason.OrdinaryName name) in
       (* Compare the current file (of the query) and the file that the opaque
@@ -2486,7 +2486,7 @@ module Make (I : INPUT) : S = struct
         member_expand_object ~env ~inherited ~source super implements inst
 
     and opaque_t ~env ~inherited ~source ~imode r opaquetype =
-      let current_source = Env.current_file env in
+      let current_source = Context.file (Env.get_cx env) in
       let opaque_source = ALoc.source (def_loc_of_reason r) in
       (* Compare the current file (of the query) and the file that the opaque
          type is defined. If they differ, then hide the underlying type. *)

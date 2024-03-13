@@ -369,13 +369,11 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
       )
     in
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
-    let file = Context.file cx in
     let loc = mk_loc filename line col in
     let open Query_types in
     let result =
       type_at_pos_type
         ~cx
-        ~file
         ~file_sig
         ~omit_targ_defaults:false
         ~typed_ast

@@ -33,11 +33,9 @@ let type_at_pos
   let loc = Loc.cursor (Some file) line col in
   let (json_data, loc, ty) =
     let open Query_types in
-    let file = Context.file cx in
     let result =
       type_at_pos_type
         ~cx
-        ~file
         ~file_sig
         ~omit_targ_defaults
         ~verbose_normalizer
