@@ -1248,8 +1248,7 @@ let utility_types =
     "$Values";
   ]
 
-let make_type_param ~edit_locs { Type.name; _ } =
-  let name = Subst_name.string_of_subst_name name in
+let make_type_param ~edit_locs name =
   {
     AcCompletion.kind = Some Lsp.Completion.TypeParameter;
     name;

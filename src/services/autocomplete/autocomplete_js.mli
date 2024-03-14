@@ -56,7 +56,7 @@ type autocomplete_type =
   | Ac_jsx_text  (** JSX text child *)
 
 type process_location_result = {
-  tparams_rev: Type.typeparam list;
+  tparams_rev: string list;
   ac_loc: ALoc.t;
   token: string;
   autocomplete_type: autocomplete_type;

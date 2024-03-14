@@ -56,7 +56,7 @@ type autocomplete_type =
   | Ac_jsx_text  (** JSX text child *)
 
 type process_location_result = {
-  tparams_rev: Type.typeparam list;
+  tparams_rev: string list;
   ac_loc: ALoc.t;
   token: string;
   autocomplete_type: autocomplete_type;
@@ -131,7 +131,24 @@ exception Found of process_location_result
 
 class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
   object (this)
-    inherit Typed_ast_finder.type_parameter_mapper as super
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t, string] Typed_ast_finder
+                                                                 .type_parameter_mapper_generic as super
+
+    method private loc_of_annot (loc, _) = loc
+
+    method on_loc_annot x = x
+
+    method on_type_annot (x, y) = (x, y)
+
+    method private make_typeparam tparam =
+      let open Flow_ast.Type.TypeParam in
+      let (_, { name = (_, { Flow_ast.Identifier.name; _ }); _ }) = tparam in
+      name
+
+    method private make_class_this _cls = "this"
+
+    method private make_declare_class_this _decl = "this"
 
     val mutable enclosing_classes : Type.t list = []
 
