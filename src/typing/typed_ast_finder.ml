@@ -9,20 +9,21 @@ module Ast = Flow_ast
 
 let mk_bound_t cx tparam = Flow_js_utils.generic_of_tparam cx ~f:(fun x -> x) tparam
 
-class type_parameter_mapper =
+class virtual ['M, 'T, 'N, 'U, 'P] type_parameter_mapper_generic =
   object (self)
-    inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+    inherit ['M, 'T, 'N, 'U] Flow_polymorphic_ast_mapper.mapper as super
 
-    method on_loc_annot (x : ALoc.t) = x
+    method virtual make_typeparam : ('M, 'T) Ast.Type.TypeParam.t -> 'P
 
-    method on_type_annot (x : ALoc.t * Type.t) = x
+    method virtual make_class_this : ('M, 'T) Ast.Class.t -> 'P
+
+    method virtual make_declare_class_this : ('M, 'T) Ast.Statement.DeclareClass.t -> 'P
 
     (* Since the mapper wasn't originally written to pass an accumulator value
        through the calls, we're maintaining this accumulator imperatively. *)
-    val mutable rev_bound_tparams : Type.typeparam list = []
+    val mutable rev_bound_tparams : 'P list = []
 
-    method annot_with_tparams : 'a. (tparams_rev:Type.typeparam list -> 'a) -> 'a =
+    method annot_with_tparams : 'a. (tparams_rev:'P list -> 'a) -> 'a =
       (fun f -> f ~tparams_rev:rev_bound_tparams)
 
     (* Imperatively adds type parameter to bound_tparams environment. *)
@@ -31,25 +32,6 @@ class type_parameter_mapper =
       let tparam = self#make_typeparam tparam in
       rev_bound_tparams <- tparam :: rev_bound_tparams;
       res
-
-    method private make_typeparam tparam =
-      let open Ast.Type.TypeParam in
-      let (_, { name = id; bound; bound_kind = _; variance; default }) = tparam in
-      let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) name_loc) in
-      let bound =
-        match bound with
-        | Ast.Type.Missing (_, t)
-        | Ast.Type.Available (_, ((_, t), _)) ->
-          t
-      in
-      let default =
-        match default with
-        | None -> None
-        | Some ((_, t), _) -> Some t
-      in
-      let polarity = Typed_ast_utils.polarity variance in
-      { Type.reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
 
     (* Record and restore the parameter environment around nodes that might
        update it. *)
@@ -87,6 +69,50 @@ class type_parameter_mapper =
     (* Classes assume an additional "this" type parameter, which needs to be
        explicitly added to bound_tparams *)
     method! class_ cls =
+      let this_tparam = self#make_class_this cls in
+      let originally_bound_tparams = rev_bound_tparams in
+      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
+      let cls = super#class_ cls in
+      rev_bound_tparams <- originally_bound_tparams;
+      cls
+
+    method! declare_class decl =
+      let this_tparam = self#make_declare_class_this decl in
+      let originally_bound_tparams = rev_bound_tparams in
+      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
+      let decl = super#declare_class decl in
+      rev_bound_tparams <- originally_bound_tparams;
+      decl
+  end
+
+class type_parameter_mapper =
+  object
+    inherit ['M, 'T, 'N, 'U, Type.typeparam] type_parameter_mapper_generic
+
+    method on_loc_annot (x : ALoc.t) = x
+
+    method on_type_annot (x : ALoc.t * Type.t) = x
+
+    method private make_typeparam tparam =
+      let open Ast.Type.TypeParam in
+      let (_, { name = id; bound; bound_kind = _; variance; default }) = tparam in
+      let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+      let reason = Reason.mk_annot_reason (Reason.RType (Reason.OrdinaryName name)) name_loc in
+      let bound =
+        match bound with
+        | Ast.Type.Missing (_, t)
+        | Ast.Type.Available (_, ((_, t), _)) ->
+          t
+      in
+      let default =
+        match default with
+        | None -> None
+        | Some ((_, t), _) -> Some t
+      in
+      let polarity = Typed_ast_utils.polarity variance in
+      { Type.reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
+
+    method private make_class_this cls =
       let open Reason in
       let { Ast.Class.body = (body_loc, _); id; _ } = cls in
       let bound =
@@ -96,41 +122,27 @@ class type_parameter_mapper =
           let reason = mk_reason (RCustom "<<anonymous class>>") body_loc in
           Type.DefT (reason, Type.MixedT Type.Mixed_everything)
       in
-      let this_tparam =
-        {
-          Type.name = Subst_name.Name "this";
-          reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
-          bound;
-          polarity = Polarity.Positive;
-          default = None;
-          is_this = true;
-        }
-      in
-      let originally_bound_tparams = rev_bound_tparams in
-      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
-      let cls = super#class_ cls in
-      rev_bound_tparams <- originally_bound_tparams;
-      cls
+      {
+        Type.name = Subst_name.Name "this";
+        reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
+        bound;
+        polarity = Polarity.Positive;
+        default = None;
+        is_this = true;
+      }
 
-    method! declare_class decl =
+    method private make_declare_class_this decl =
       let open Reason in
       let { Ast.Statement.DeclareClass.id; _ } = decl in
       let ((_, bound), _) = id in
-      let this_tparam =
-        {
-          Type.name = Subst_name.Name "this";
-          reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
-          bound;
-          polarity = Polarity.Positive;
-          default = None;
-          is_this = true;
-        }
-      in
-      let originally_bound_tparams = rev_bound_tparams in
-      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
-      let decl = super#declare_class decl in
-      rev_bound_tparams <- originally_bound_tparams;
-      decl
+      {
+        Type.name = Subst_name.Name "this";
+        reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
+        bound;
+        polarity = Polarity.Positive;
+        default = None;
+        is_this = true;
+      }
   end
 
 (* Find exact location match *)
