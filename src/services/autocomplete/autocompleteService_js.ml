@@ -2165,7 +2165,8 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_enum -> AcEmpty "Enum"
       | Ac_key { obj_type; used_keys; spreads } ->
         autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
-      | Ac_literal { lit_type } ->
+      | Ac_literal { lit_type = None } -> AcEmpty "Literal"
+      | Ac_literal { lit_type = Some lit_type } ->
         let genv =
           Ty_normalizer_flow.mk_genv
             ~options:ty_normalizer_options

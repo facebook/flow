@@ -32,7 +32,7 @@ type autocomplete_type =
       used_keys: SSet.t;
       spreads: (Loc.t * Type.t) list;
     }  (** object key *)
-  | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
+  | Ac_literal of { lit_type: Type.t option }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type of { allow_react_element_shorthand: bool }  (** type identifiers *)
   | Ac_type_binding

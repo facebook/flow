@@ -32,7 +32,7 @@ type autocomplete_type =
       used_keys: SSet.t;
       spreads: (Loc.t * Type.t) list;
     }  (** object key *)
-  | Ac_literal of { lit_type: Type.t }  (** inside a string literal *)
+  | Ac_literal of { lit_type: Type.t option }  (** inside a string literal *)
   | Ac_module  (** a module name *)
   | Ac_type of { allow_react_element_shorthand: bool }  (** type identifiers *)
   | Ac_type_binding  (** introduces a new type name. like Ac_binding, but for types *)
@@ -420,7 +420,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match value with
       | StringLiteral ((loc, lit_type), { Flow_ast.StringLiteral.raw; _ })
         when this#covers_target loc ->
-        this#find loc raw (Ac_literal { lit_type })
+        this#find loc raw (Ac_literal { lit_type = Some lit_type })
       | _ -> super#jsx_attribute_value value
 
     method! jsx_child child =
@@ -434,7 +434,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match key with
       (* TODO: we shouldn't have to fabricate a type here! *)
       | StringLiteral (loc, { Flow_ast.StringLiteral.raw; _ }) when this#covers_target loc ->
-        this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
+        this#find loc raw (Ac_literal { lit_type = Some Type.(AnyT.at Untyped loc) })
       | _ -> super#pattern_object_property_key ?kind key
 
     method! class_key key =
@@ -453,7 +453,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match key with
       | StringLiteral ((loc, lit_type), Flow_ast.StringLiteral.{ raw; _ })
         when this#covers_target loc ->
-        this#find loc raw (Ac_literal { lit_type })
+        this#find loc raw (Ac_literal { lit_type = Some lit_type })
       | _ -> super#object_key key
 
     method! enum_member_identifier ((loc, Flow_ast.Identifier.{ name; _ }) as ident) =
@@ -570,7 +570,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match expr with
       | ((loc, lit_type), StringLiteral Flow_ast.StringLiteral.{ raw; _ })
         when this#covers_target loc ->
-        this#find loc raw (Ac_literal { lit_type })
+        this#find loc raw (Ac_literal { lit_type = Some lit_type })
       | (annot, Member member) ->
         (this#on_type_annot annot, Member (this#member_with_loc annot member))
       | (((loc, _) as annot), OptionalMember opt_member) ->
@@ -632,7 +632,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | (loc, Flow_ast.Expression.TemplateLiteral.Element.{ value = { raw; _ }; _ })
         when this#covers_target loc ->
         (* TODO: we shouldn't have to fabricate a type here! *)
-        this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
+        this#find loc raw (Ac_literal { lit_type = Some Type.(AnyT.at Untyped loc) })
       | _ -> super#template_literal_element elem
 
     method! import_declaration decl_loc decl =
@@ -749,9 +749,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! type_ t =
       let open Flow_ast.Type in
       match t with
-      | ((loc, lit_type), StringLiteral { Flow_ast.StringLiteral.raw; _ })
-        when this#covers_target loc ->
-        this#find loc raw (Ac_literal { lit_type })
+      | ((loc, _), StringLiteral { Flow_ast.StringLiteral.raw; _ }) when this#covers_target loc ->
+        this#find loc raw (Ac_literal { lit_type = None })
       | (((loc, _) as annot), IndexedAccess ia) ->
         (this#on_type_annot annot, IndexedAccess (this#indexed_access_type_with_loc loc ia))
       | (((loc, _) as annot), OptionalIndexedAccess ia) ->
