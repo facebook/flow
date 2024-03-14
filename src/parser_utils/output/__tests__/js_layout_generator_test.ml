@@ -1980,7 +1980,13 @@ let tests =
            assert_statement_string ~ctxt "type T<in out A>=A;"
          );
          ("as_expression" >:: fun ctxt -> assert_expression_string ~ctxt "a as T");
+         ( "as_expression_precedence" >:: fun ctxt ->
+           assert_expression_string ~ctxt ~pretty:true "(x ?? a) as T"
+         );
          ("as_const_expression" >:: fun ctxt -> assert_expression_string ~ctxt "a as const");
+         ( "as_const_expression_precedence" >:: fun ctxt ->
+           assert_expression_string ~ctxt ~pretty:true "(x ?? a) as const"
+         );
          ("satisfies_expression" >:: fun ctxt -> assert_expression_string ~ctxt "a satisfies T");
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";

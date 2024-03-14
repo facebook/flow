@@ -1263,8 +1263,8 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.JSXElement el -> jsx_element ~opts loc el
       | E.JSXFragment fr -> jsx_fragment ~opts loc fr
       | E.TypeCast cast -> type_cast ~opts loc cast
-      | E.AsConstExpression cast -> as_const_expression ~opts loc cast
-      | E.AsExpression cast -> as_expression ~opts loc cast
+      | E.AsConstExpression cast -> as_const_expression ~ctxt ~opts ~precedence loc cast
+      | E.AsExpression cast -> as_expression ~ctxt ~opts ~precedence loc cast
       | E.TSSatisfies cast -> ts_satisfies ~opts loc cast
       | E.Import { E.Import.argument; comments } ->
         layout_node_with_comments_opt loc comments
@@ -1487,18 +1487,25 @@ and type_cast ~opts loc cast =
   layout_node_with_comments_opt loc comments
   @@ wrap_in_parens (fuse [expr_layout; type_annotation ~opts annot])
 
-and as_const_expression ~opts loc cast =
+and as_const_expression ~ctxt ~opts ~precedence loc cast =
   let open Ast.Expression.AsConstExpression in
   let { expression = expr; comments } = cast in
-  let expr_layout = expression ~opts expr in
+  let expr_layout = expression_with_parens ~ctxt ~opts ~precedence expr in
   let rhs = [Atom "as"; space; Atom "const"] in
   layout_node_with_comments_opt loc comments @@ fuse [expr_layout; space; fuse rhs]
 
-and as_expression ~opts loc cast =
+and as_expression ~ctxt ~opts ~precedence loc cast =
   let open Ast.Expression.AsExpression in
   let { expression = expr; annot = (_, annot); comments } = cast in
   layout_node_with_comments_opt loc comments
-  @@ fuse [expression ~opts expr; space; Atom "as"; space; type_ ~opts annot]
+  @@ fuse
+       [
+         expression_with_parens ~ctxt ~opts ~precedence expr;
+         space;
+         Atom "as";
+         space;
+         type_ ~opts annot;
+       ]
 
 and ts_satisfies ~opts loc cast =
   let open Ast.Expression.TSSatisfies in
