@@ -156,6 +156,7 @@ type error_code =
   | UnderconstrainedImplicitInstantiation
   | UninitializedInstanceProperty
   | UnionUnoptimizable
+  | UnionPartiallyOptimizableNonUniqueKeys
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
   | UnnecessaryDeclareTypeOnlyExport
@@ -370,6 +371,7 @@ let string_of_code : error_code -> string = function
   | UnderconstrainedImplicitInstantiation -> "underconstrained-implicit-instantiation"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | UnionUnoptimizable -> "union-unoptimizable"
+  | UnionPartiallyOptimizableNonUniqueKeys -> "union-partially-optimizable-non-unique-keys"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryDeclareTypeOnlyExport -> "unnecessary-declare-type-only-export"

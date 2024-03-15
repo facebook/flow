@@ -2374,8 +2374,10 @@ and UnionRep : sig
   type finally_optimized_rep =
     | EnumUnion of UnionEnumSet.t
     | PartiallyOptimizedUnionEnum of UnionEnumSet.t
-    | DisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
-    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
+    | AlmostDisjointUnionWithPossiblyNonUniqueKeys of
+        TypeTerm.t Nel.t UnionEnumMap.t NameUtils.Map.t
+    | PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys of
+        TypeTerm.t Nel.t UnionEnumMap.t NameUtils.Map.t
     | Empty
     | Singleton of TypeTerm.t
 
@@ -2383,7 +2385,6 @@ and UnionRep : sig
     | ContainsUnresolved of 'loc virtual_reason
     | NoCandidateMembers (* E.g. `number | string` *)
     | NoCommonKeys
-    | NonUniqueKeys of (UnionEnum.t * 'loc virtual_reason * 'loc virtual_reason) NameUtils.Map.t
 
   val optimize :
     t ->
@@ -2477,8 +2478,10 @@ end = struct
   type finally_optimized_rep =
     | EnumUnion of UnionEnumSet.t
     | PartiallyOptimizedUnionEnum of UnionEnumSet.t
-    | DisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
-    | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
+    | AlmostDisjointUnionWithPossiblyNonUniqueKeys of
+        TypeTerm.t Nel.t UnionEnumMap.t NameUtils.Map.t
+    | PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys of
+        TypeTerm.t Nel.t UnionEnumMap.t NameUtils.Map.t
     | Empty
     | Singleton of TypeTerm.t
 
@@ -2486,7 +2489,6 @@ end = struct
     | ContainsUnresolved of 'loc virtual_reason
     | NoCandidateMembers
     | NoCommonKeys
-    | NonUniqueKeys of (UnionEnum.t * 'loc virtual_reason * 'loc virtual_reason) NameUtils.Map.t
 
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
@@ -2652,33 +2654,37 @@ end = struct
         ([], false)
         ts
     in
-    let unique_values =
-      let rec unique_values ~reason_of_t ~reasonless_eq idx = function
-        | [] -> Ok idx
+    let almost_unique_values =
+      let rec almost_unique_values
+          ~reason_of_t ~reasonless_eq (hybrid_idx : TypeTerm.t Nel.t UnionEnumMap.t) = function
+        | [] -> hybrid_idx
         | (enum, t) :: values -> begin
-          match UnionEnumMap.find_opt enum idx with
-          | None -> unique_values ~reason_of_t ~reasonless_eq (UnionEnumMap.add enum t idx) values
-          | Some t' ->
-            if reasonless_eq t t' then
-              (* This corresponds to the case
-               * type T = { f: "a" };
-               * type Union = T | T;
-               *)
-              unique_values ~reason_of_t ~reasonless_eq idx values
-            else
-              Error (enum, reason_of_t t, reason_of_t t')
+          let hybrid_idx =
+            UnionEnumMap.adjust
+              enum
+              (function
+                | None -> Nel.one t
+                | Some l when Nel.exists (reasonless_eq t) l ->
+                  (* This corresponds to the case
+                   * type T = { f: "a" };
+                   * type Union = T | T;
+                   *)
+                  l
+                | Some l -> Nel.cons t l)
+              hybrid_idx
+          in
+          almost_unique_values ~reason_of_t ~reasonless_eq hybrid_idx values
         end
       in
-      unique_values UnionEnumMap.empty
+      almost_unique_values UnionEnumMap.empty
     in
-    let unique ~reason_of_t ~reasonless_eq idx =
+    let almost_unique ~reason_of_t ~reasonless_eq idx =
       NameUtils.Map.fold
-        (fun key values (acc, err_acc) ->
-          match unique_values ~reason_of_t ~reasonless_eq values with
-          | Error err -> (acc, NameUtils.Map.add key err err_acc)
-          | Ok idx -> (NameUtils.Map.add key idx acc, err_acc))
+        (fun key values acc ->
+          let hybrid_idx = almost_unique_values ~reason_of_t ~reasonless_eq values in
+          NameUtils.Map.add key hybrid_idx acc)
         idx
-        (NameUtils.Map.empty, NameUtils.Map.empty)
+        NameUtils.Map.empty
     in
     let intersect_props (base_props, candidates) =
       (* Compute the intersection of properties of objects that have singleton types *)
@@ -2709,13 +2715,11 @@ end = struct
               Error NoCommonKeys
             else
               (* Ensure that enums map to unique types *)
-              let (map, err_map) = unique ~reason_of_t ~reasonless_eq idx in
-              if NameUtils.Map.is_empty map then
-                Error (NonUniqueKeys err_map)
-              else if partial then
-                Ok (PartiallyOptimizedDisjointUnion map)
+              let hybrid_map = almost_unique ~reason_of_t ~reasonless_eq idx in
+              if partial then
+                Ok (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys hybrid_map)
               else
-                Ok (DisjointUnion map)
+                Ok (AlmostDisjointUnionWithPossiblyNonUniqueKeys hybrid_map)
         end
 
   let optimize_ rep ~reason_of_t ~reasonless_eq ~flatten ~find_resolved ~find_props =
@@ -2779,8 +2783,8 @@ end = struct
           Yes
         else
           Conditional t
-      | Some (DisjointUnion _) -> No
-      | Some (PartiallyOptimizedDisjointUnion _) -> Unknown
+      | Some (AlmostDisjointUnionWithPossiblyNonUniqueKeys _) -> No
+      | Some (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys _) -> Unknown
       | Some (EnumUnion tset) ->
         if UnionEnumSet.mem tcanon tset then
           Yes
@@ -2794,7 +2798,7 @@ end = struct
     end
     | None -> failwith "quick_mem_enum is defined only for canonizable type"
 
-  let lookup_disjoint_union find_resolved prop_map ~partial map =
+  let lookup_almost_disjoint_union find_resolved prop_map ~partial map =
     NameUtils.Map.fold
       (fun key idx acc ->
         if acc <> Unknown then
@@ -2805,7 +2809,8 @@ end = struct
             match canon_prop find_resolved p with
             | Some enum -> begin
               match UnionEnumMap.find_opt enum idx with
-              | Some t' -> Conditional t'
+              | Some (t, []) -> Conditional t
+              | Some (_, _ :: _) -> Unknown
               | None ->
                 if partial then
                   Unknown
@@ -2835,9 +2840,10 @@ end = struct
           Yes
         else
           Conditional t
-      | Some (DisjointUnion map) -> lookup_disjoint_union find_resolved prop_map ~partial:false map
-      | Some (PartiallyOptimizedDisjointUnion map) ->
-        lookup_disjoint_union find_resolved prop_map ~partial:true map
+      | Some (AlmostDisjointUnionWithPossiblyNonUniqueKeys map) ->
+        lookup_almost_disjoint_union find_resolved prop_map ~partial:false map
+      | Some (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys map) ->
+        lookup_almost_disjoint_union find_resolved prop_map ~partial:true map
       | Some (EnumUnion _) -> No
       | Some (PartiallyOptimizedUnionEnum _) -> Unknown
     end
@@ -2852,8 +2858,10 @@ end = struct
     | Some (EnumUnion _) -> "Enum"
     | Some Empty -> "Empty"
     | Some (Singleton _) -> "Singleton"
-    | Some (PartiallyOptimizedDisjointUnion _) -> "Partially Optimized Disjoint Union"
-    | Some (DisjointUnion _) -> "Disjoint Union"
+    | Some (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys _) ->
+      "Partially Optimized Almost Disjoint Union with possibly non-unique keys"
+    | Some (AlmostDisjointUnionWithPossiblyNonUniqueKeys _) ->
+      "Almost Disjoint Union with possibly non-unique keys"
     | Some (PartiallyOptimizedUnionEnum _) -> "Partially Optimized Enum"
     | None -> "No Specialization"
 

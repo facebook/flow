@@ -799,12 +799,34 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~find_resolved:(Context.find_resolved cx)
           ~find_props:(Context.find_props cx)
       in
-      Base.Result.iter_error specialization ~f:(fun kind ->
+      begin
+        match specialization with
+        | Error kind ->
           add_output
             cx
             ~trace
             (Error_message.EUnionOptimization { loc = loc_of_reason reason; kind })
-      );
+        | Ok
+            ( UnionRep.AlmostDisjointUnionWithPossiblyNonUniqueKeys map
+            | UnionRep.PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys map ) ->
+          let non_unique_keys =
+            map
+            |> NameUtils.Map.map (fun map ->
+                   map
+                   |> UnionRep.UnionEnumMap.filter (fun _ (_, ts) -> ts <> [])
+                   |> UnionRep.UnionEnumMap.map (Nel.map TypeUtil.reason_of_t)
+               )
+            |> NameUtils.Map.filter (fun _ map -> not (UnionRep.UnionEnumMap.is_empty map))
+          in
+          if not (NameUtils.Map.is_empty non_unique_keys) then
+            add_output
+              cx
+              ~trace
+              (Error_message.EUnionPartialOptimizationNonUniqueKey
+                 { loc = loc_of_reason reason; non_unique_keys }
+              )
+        | Ok _ -> ()
+      end;
       true
     | UnionCases (use_op, l, rep, _ts) ->
       if not (UnionRep.is_optimized_finally rep) then
