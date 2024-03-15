@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ac_id = {
+type bracket_syntax = {
   include_super: bool;
   include_this: bool;
   type_: Type.t;
-  enclosing_class_t: Type.t option;
 }
 
 type autocomplete_type =
@@ -19,7 +18,12 @@ type autocomplete_type =
       text: string;
       loc: ALoc.t;  (** Loc of the whole comment *)
     }  (** inside a comment *)
-  | Ac_id of ac_id  (** identifier references *)
+  | Ac_id of {
+      include_super: bool;
+      include_this: bool;
+      type_: Type.t;
+      enclosing_class_t: Type.t option;
+    }  (** identifier references *)
   | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_import_specifier of {
@@ -40,7 +44,7 @@ type autocomplete_type =
   | Ac_member of {
       obj_type: Type.t;
       in_optional_chain: bool;
-      bracket_syntax: ac_id option;
+      bracket_syntax: bracket_syntax option;
       (* loc of `.foo` or `[foo]` *)
       member_loc: Loc.t option;
       is_type_annotation: bool;
@@ -159,12 +163,16 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method private get_enclosing_class = Base.List.hd enclosing_classes
 
     method default_ac_id type_ =
-      {
-        include_super = false;
-        include_this = false;
-        type_;
-        enclosing_class_t = this#get_enclosing_class;
-      }
+      Ac_id
+        {
+          include_super = false;
+          include_this = false;
+          type_;
+          enclosing_class_t = this#get_enclosing_class;
+        }
+
+    method default_bracket_syntax type_ : bracket_syntax =
+      { include_super = false; include_this = false; type_ }
 
     method find : 'a. ALoc.t -> string -> autocomplete_type -> 'a =
       fun ac_loc token autocomplete_type ->
@@ -199,13 +207,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc name (Ac_id (this#default_ac_id type_))
+        this#find loc name (this#default_ac_id type_)
       else
         super#t_identifier ident
 
     method! jsx_element_name_identifier
         (((ac_loc, type_), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if this#covers_target ac_loc then this#find ac_loc name (Ac_id (this#default_ac_id type_));
+      if this#covers_target ac_loc then this#find ac_loc name (this#default_ac_id type_);
       ident
 
     (* Override to avoid providing autocomplete for object key identifier in type annotations *)
@@ -261,7 +269,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                {
                  obj_type;
                  in_optional_chain = false;
-                 bracket_syntax = Some (this#default_ac_id type_);
+                 bracket_syntax = Some (this#default_bracket_syntax type_);
                  member_loc;
                  is_type_annotation = false;
                  is_super;
@@ -313,7 +321,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                {
                  obj_type;
                  in_optional_chain = true;
-                 bracket_syntax = Some (this#default_ac_id type_);
+                 bracket_syntax = Some (this#default_bracket_syntax type_);
                  member_loc;
                  is_type_annotation = false;
                  is_super = false;
@@ -539,7 +547,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       begin
         match id with
         | Unqualified ((loc, t), { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
-          this#find loc name (Ac_id (this#default_ac_id t))
+          this#find loc name (this#default_ac_id t)
         | Qualified
             ((expr_loc, _), { qualification; id = ((loc, _), Flow_ast.Identifier.{ name; _ }) })
           when this#covers_target loc ->
@@ -711,7 +719,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
              {
                obj_type;
                in_optional_chain = false;
-               bracket_syntax = Some (this#default_ac_id index_type);
+               bracket_syntax = Some (this#default_bracket_syntax index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
                is_super = false;
@@ -748,7 +756,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
              {
                obj_type;
                in_optional_chain = true;
-               bracket_syntax = Some (this#default_ac_id index_type);
+               bracket_syntax = Some (this#default_bracket_syntax index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
                is_super = false;

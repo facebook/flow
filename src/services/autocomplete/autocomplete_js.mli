@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ac_id = {
+type bracket_syntax = {
   include_super: bool;
   include_this: bool;
   type_: Type.t;
-  enclosing_class_t: Type.t option;
 }
 
 type autocomplete_type =
@@ -19,7 +18,12 @@ type autocomplete_type =
       text: string;
       loc: ALoc.t;
     }  (** inside a comment *)
-  | Ac_id of ac_id  (** identifier references *)
+  | Ac_id of {
+      include_super: bool;
+      include_this: bool;
+      type_: Type.t;
+      enclosing_class_t: Type.t option;
+    }  (** identifier references *)
   | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_import_specifier of {
@@ -40,7 +44,7 @@ type autocomplete_type =
   | Ac_member of {
       obj_type: Type.t;
       in_optional_chain: bool;
-      bracket_syntax: ac_id option;
+      bracket_syntax: bracket_syntax option;
       (* loc of `.foo` or `[foo]` *)
       member_loc: Loc.t option;
       is_type_annotation: bool;

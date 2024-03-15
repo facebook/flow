@@ -1609,7 +1609,7 @@ let autocomplete_member
       let items = filter_by_token_and_sort token items in
       let result = { AcCompletion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
-    | Some Autocomplete_js.{ include_this; include_super; type_; _ } ->
+    | Some Autocomplete_js.{ include_this; include_super; type_ } ->
       let {
         result = { AcCompletion.items = id_items; is_incomplete };
         errors_to_log = id_errors_to_log;
