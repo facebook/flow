@@ -288,12 +288,12 @@ class virtual ['a] t =
           t
         else
           ClassT t''
-      | EnumT enum ->
+      | EnumValueT enum ->
         let enum' = self#enum cx map_cx enum in
         if enum' == enum then
           t
         else
-          EnumT enum'
+          EnumValueT enum'
       | EnumObjectT enum ->
         let enum' = self#enum cx map_cx enum in
         if enum' == enum then

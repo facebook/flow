@@ -187,7 +187,7 @@ let visitor =
       | DefT (_, StrT _)
       | DefT (_, VoidT)
       | DefT (_, EnumObjectT _)
-      | DefT (_, EnumT _) ->
+      | DefT (_, EnumValueT _) ->
         Kind.Checked
       (* Concrete uncovered constructors *)
       (* TODO: Rethink coverage for these types *)

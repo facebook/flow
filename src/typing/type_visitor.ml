@@ -110,7 +110,7 @@ class ['a] t =
       | NullT
       | VoidT ->
         acc
-      | EnumT enum
+      | EnumValueT enum
       | EnumObjectT enum ->
         let { enum_name = _; enum_id = _; members = _; representation_t; has_unknown_members = _ } =
           enum

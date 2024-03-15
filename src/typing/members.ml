@@ -594,7 +594,7 @@ let rec extract_type cx this_t =
   | ObjProtoT _
   | OpaqueT _
   | DefT (_, TypeT _)
-  | DefT (_, EnumT _) ->
+  | DefT (_, EnumValueT _) ->
     FailureUnhandledType this_t
 
 let rec extract_members ?(exclude_proto_members = false) cx = function

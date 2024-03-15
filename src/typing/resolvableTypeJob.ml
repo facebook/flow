@@ -240,7 +240,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, SingletonStrT _)
   | DefT (_, SingletonBigIntT _)
   | DefT (_, CharSetT _)
-  | DefT (_, EnumT _)
+  | DefT (_, EnumValueT _)
   | DefT (_, EnumObjectT _)
   | AnyT _ ->
     acc

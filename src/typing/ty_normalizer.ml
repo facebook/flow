@@ -851,7 +851,7 @@ module Make (I : INPUT) : S = struct
       | DefT (reason, EnumObjectT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.TypeOf (Ty.TSymbol symbol, None)
-      | DefT (reason, EnumT _) ->
+      | DefT (reason, EnumValueT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.Generic (symbol, Ty.EnumKind, None)
       | DefT (_, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
@@ -2118,7 +2118,7 @@ module Make (I : INPUT) : S = struct
           class_or_interface_decl ~env r None static super inst
         (* Enums *)
         | DefT (reason, EnumObjectT _)
-        | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumT _))) ->
+        | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumValueT _))) ->
           enum_decl ~env reason
         | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
           component_decl ~env None name reason
@@ -2511,7 +2511,7 @@ module Make (I : INPUT) : S = struct
       | DefT (r, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, (BoolT _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
       | DefT (r, SymbolT) -> primitive ~env r "Symbol"
-      | DefT (_, EnumT _) -> return no_members
+      | DefT (_, EnumValueT _) -> return no_members
       | ObjProtoT r -> primitive ~env r "Object"
       | FunProtoT r -> primitive ~env r "Function"
       | DefT (r, ObjT o) ->

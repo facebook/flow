@@ -273,7 +273,10 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, TypeT (kind, arg)) ->
       p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
     | DefT
-        (_, EnumT { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ })
+        ( _,
+          EnumValueT
+            { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ }
+        )
     | DefT
         ( _,
           EnumObjectT
@@ -955,7 +958,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ConcretizeTypeAppsT _ -> p t
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | EnumCastT { use_op = _; enum = (reason, enum) } ->
-      p ~reason:false ~extra:(kid (DefT (reason, EnumT enum))) t
+      p ~reason:false ~extra:(kid (DefT (reason, EnumValueT enum))) t
     | EnumExhaustiveCheckT { check; _ } ->
       let check_str =
         match check with

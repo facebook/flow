@@ -139,12 +139,12 @@ let strict_equatable_error cond_context (l, r) =
   | (_, DefT (_, EnumObjectT _)) ->
     Some (Lazy.force comparison_error)
   (* We allow comparison between enums of the same type. *)
-  | (DefT (_, EnumT { enum_id = id1; _ }), DefT (_, EnumT { enum_id = id2; _ }))
+  | (DefT (_, EnumValueT { enum_id = id1; _ }), DefT (_, EnumValueT { enum_id = id2; _ }))
     when ALoc.equal_id id1 id2 ->
     None
   (* We allow the comparison of enums to null and void outside of switches. *)
-  | (DefT (_, EnumT _), DefT (_, (NullT | VoidT)))
-  | (DefT (_, (NullT | VoidT)), DefT (_, EnumT _)) -> begin
+  | (DefT (_, EnumValueT _), DefT (_, (NullT | VoidT)))
+  | (DefT (_, (NullT | VoidT)), DefT (_, EnumValueT _)) -> begin
     match cond_context with
     | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
     | None
@@ -152,8 +152,8 @@ let strict_equatable_error cond_context (l, r) =
       None
   end
   (* We don't allow the comparison of enums and other types in general. *)
-  | (DefT (_, EnumT _), _)
-  | (_, DefT (_, EnumT _)) ->
+  | (DefT (_, EnumValueT _), _)
+  | (_, DefT (_, EnumValueT _)) ->
     Some (Lazy.force comparison_error)
   (* We don't check other strict equality comparisons. *)
   | _ -> None
@@ -352,7 +352,7 @@ struct
 
   let enum_proto cx ~reason (enum_reason, enum) =
     let enum_object_t = DefT (enum_reason, EnumObjectT enum) in
-    let enum_t = DefT (enum_reason, EnumT enum) in
+    let enum_t = DefT (enum_reason, EnumValueT enum) in
     let { representation_t; _ } = enum in
     FlowJs.get_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_t; representation_t]
 
@@ -776,7 +776,7 @@ struct
         (***************************)
         (* type cast e.g. `(x: T)` *)
         (***************************)
-        | (DefT (reason, EnumT enum), TypeCastT (use_op, cast_to_t)) ->
+        | (DefT (reason, EnumValueT enum), TypeCastT (use_op, cast_to_t)) ->
           rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, enum) })
         | (UnionT _, TypeCastT (_, (UnionT _ as u)))
           when union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype l u ->
@@ -784,9 +784,9 @@ struct
         | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
         (**********************************************************************)
-        (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)
+        (* enum cast e.g. `(x: T)` where `x` is an `EnumValueT`                    *)
         (* We allow enums to be explicitly cast to their representation type. *)
-        (* When we specialize `TypeCastT` when the LHS is an `EnumT`, the     *)
+        (* When we specialize `TypeCastT` when the LHS is an `EnumValueT`, the     *)
         (* `cast_to_t` of `TypeCastT` must then be resolved. So we call flow  *)
         (* with it on the LHS, and `EnumCastT` on the RHS. When we actually   *)
         (* turn this into a `UseT`, it must placed back on the RHS.           *)
@@ -795,7 +795,7 @@ struct
           when TypeUtil.quick_subtype representation_t cast_to_t ->
           rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
         | (cast_to_t, EnumCastT { use_op; enum = (reason, enum) }) ->
-          rec_flow cx trace (DefT (reason, EnumT enum), UseT (use_op, cast_to_t))
+          rec_flow cx trace (DefT (reason, EnumValueT enum), UseT (use_op, cast_to_t))
         (******************)
         (* Module exports *)
         (******************)
@@ -5335,7 +5335,7 @@ struct
           add_output cx ~trace (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
           rec_flow cx trace (AnyT.error reason, result)
         (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
-        | ( DefT (enum_reason, EnumT enum),
+        | ( DefT (enum_reason, EnumValueT enum),
             EnumExhaustiveCheckT
               {
                 reason = check_reason;
@@ -5397,7 +5397,7 @@ struct
             ~default_case
             ~incomplete_out
             ~discriminant_after_check
-        | ( DefT (enum_reason, EnumT { members; _ }),
+        | ( DefT (enum_reason, EnumValueT { members; _ }),
             EnumExhaustiveCheckT
               {
                 reason;

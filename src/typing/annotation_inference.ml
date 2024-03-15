@@ -314,7 +314,7 @@ module rec ConsGen : S = struct
     let reposition cx ?trace:_ loc t = reposition cx loc t
 
     let enum_proto cx ~reason (enum_reason, enum) =
-      let enum_t = DefT (enum_reason, EnumT enum) in
+      let enum_t = DefT (enum_reason, EnumValueT enum) in
       let { representation_t; _ } = enum in
       get_builtin_typeapp cx reason "$EnumProto" [enum_t; representation_t]
 
@@ -577,7 +577,7 @@ module rec ConsGen : S = struct
     | (DefT (lreason, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
       mk_enum_type lreason enum
-    | (DefT (enum_reason, EnumT _), Annot_UseT_TypeT (reason, _)) ->
+    | (DefT (enum_reason, EnumValueT _), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
       AnyT.error reason
     | (l, Annot_UseT_TypeT (reason_use, _)) ->

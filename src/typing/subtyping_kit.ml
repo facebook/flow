@@ -2138,7 +2138,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (_, EnumObjectT { enum_id = id1; _ }), DefT (_, EnumObjectT { enum_id = id2; _ }))
       when ALoc.equal_id id1 id2 ->
       ()
-    | (DefT (_, EnumT { enum_id = id1; _ }), DefT (_, EnumT { enum_id = id2; _ }))
+    | (DefT (_, EnumValueT { enum_id = id1; _ }), DefT (_, EnumValueT { enum_id = id2; _ }))
       when ALoc.equal_id id1 id2 ->
       ()
     | ( DefT
@@ -2166,7 +2166,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
     | ( DefT
           ( _,
-            EnumT
+            EnumValueT
               {
                 enum_id = id1;
                 enum_name = n1;
@@ -2178,7 +2178,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ),
         DefT
           ( _,
-            EnumT
+            EnumValueT
               {
                 enum_id = id2;
                 enum_name = n2;
@@ -2195,7 +2195,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
            && SSet.equal (SSet.of_list @@ SMap.keys m1) (SSet.of_list @@ SMap.keys m2)
            && has_unknown1 = has_unknown2 ->
       rec_flow_t cx trace ~use_op (r1, r2)
-    | (DefT (enum_reason, EnumT { representation_t; _ }), t)
+    | (DefT (enum_reason, EnumValueT { representation_t; _ }), t)
       when TypeUtil.quick_subtype representation_t t ->
       let representation_type =
         match representation_t with

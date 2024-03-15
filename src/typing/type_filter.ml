@@ -83,7 +83,7 @@ let rec exists cx = function
         ( NullT | VoidT
         | SingletonBoolT false
         | BoolT (Some false)
-        | EnumT { representation_t = DefT (_, BoolT (Some false)); _ }
+        | EnumValueT { representation_t = DefT (_, BoolT (Some false)); _ }
         | SingletonStrT (OrdinaryName "")
         | StrT (Literal (_, OrdinaryName ""))
         | SingletonNumT (0., _)
@@ -113,7 +113,7 @@ let rec not_exists cx t =
         ( NullT | VoidT
         | SingletonBoolT false
         | BoolT (Some false)
-        | EnumT { representation_t = DefT (_, BoolT (Some false)); _ }
+        | EnumValueT { representation_t = DefT (_, BoolT (Some false)); _ }
         | SingletonStrT (OrdinaryName "")
         | StrT (Literal (_, OrdinaryName ""))
         | SingletonNumT (0., _)
@@ -128,15 +128,15 @@ let rec not_exists cx t =
       ( r,
         ( SingletonBoolT _
         | BoolT (Some _)
-        | EnumT { representation_t = DefT (_, BoolT (Some _)); _ }
+        | EnumValueT { representation_t = DefT (_, BoolT (Some _)); _ }
         | SingletonStrT _ | NumericStrKeyT _
         | StrT (Literal _ | Truthy)
-        | EnumT { representation_t = DefT (_, StrT Truthy); _ }
+        | EnumValueT { representation_t = DefT (_, StrT Truthy); _ }
         | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
         | SingletonNumT _
         | NumT (Literal _ | Truthy)
-        | EnumT { representation_t = DefT (_, NumT Truthy); _ }
-        | EnumT { representation_t = DefT (_, BigIntT Truthy); _ }
+        | EnumValueT { representation_t = DefT (_, NumT Truthy); _ }
+        | EnumValueT { representation_t = DefT (_, BigIntT Truthy); _ }
         | MixedT Mixed_truthy )
       ) ->
     DefT (r, EmptyT)
@@ -333,14 +333,14 @@ let boolean loc t =
   | DefT (_, MixedT _) ->
     DefT (mk_reason RBoolean loc, BoolT None)
   | DefT (_, BoolT _)
-  | DefT (_, EnumT { representation_t = DefT (_, BoolT _); _ }) ->
+  | DefT (_, EnumValueT { representation_t = DefT (_, BoolT _); _ }) ->
     t
   | DefT (r, _) -> DefT (r, EmptyT)
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_boolean t =
   match t with
-  | DefT (_, EnumT { representation_t = DefT (_, BoolT _); _ })
+  | DefT (_, EnumValueT { representation_t = DefT (_, BoolT _); _ })
   | DefT (_, BoolT _) ->
     DefT (reason_of_t t, EmptyT)
   | _ -> t
@@ -352,14 +352,14 @@ let string loc t =
   | DefT (_, MixedT _) ->
     DefT (mk_reason RString loc, StrT AnyLiteral)
   | DefT (_, StrT _)
-  | DefT (_, EnumT { representation_t = DefT (_, StrT _); _ }) ->
+  | DefT (_, EnumValueT { representation_t = DefT (_, StrT _); _ }) ->
     t
   | DefT (r, _) -> DefT (r, EmptyT)
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_string t =
   match t with
-  | DefT (_, EnumT { representation_t = DefT (_, StrT _); _ })
+  | DefT (_, EnumValueT { representation_t = DefT (_, StrT _); _ })
   | DefT (_, StrT _) ->
     DefT (reason_of_t t, EmptyT)
   | _ -> t
@@ -384,14 +384,14 @@ let number loc t =
   | DefT (_, MixedT _) ->
     DefT (mk_reason RNumber loc, NumT AnyLiteral)
   | DefT (_, NumT _)
-  | DefT (_, EnumT { representation_t = DefT (_, NumT _); _ }) ->
+  | DefT (_, EnumValueT { representation_t = DefT (_, NumT _); _ }) ->
     t
   | DefT (r, _) -> DefT (r, EmptyT)
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_number t =
   match t with
-  | DefT (_, EnumT { representation_t = DefT (_, NumT _); _ })
+  | DefT (_, EnumValueT { representation_t = DefT (_, NumT _); _ })
   | DefT (_, NumT _) ->
     DefT (reason_of_t t, EmptyT)
   | _ -> t
@@ -403,14 +403,14 @@ let bigint loc t =
   | DefT (_, MixedT _) ->
     DefT (mk_reason RBigInt loc, BigIntT AnyLiteral)
   | DefT (_, BigIntT _)
-  | DefT (_, EnumT { representation_t = DefT (_, BigIntT _); _ }) ->
+  | DefT (_, EnumValueT { representation_t = DefT (_, BigIntT _); _ }) ->
     t
   | DefT (r, _) -> DefT (r, EmptyT)
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_bigint t =
   match t with
-  | DefT (_, EnumT { representation_t = DefT (_, BigIntT _); _ })
+  | DefT (_, EnumValueT { representation_t = DefT (_, BigIntT _); _ })
   | DefT (_, BigIntT _) ->
     DefT (reason_of_t t, EmptyT)
   | _ -> t
@@ -643,7 +643,7 @@ let rec tag_of_def_t cx = function
   | InstanceT { inst; _ } -> tag_of_inst inst
   | ArrT _ -> Some (TypeTagSet.singleton ArrTag)
   | PolyT { t_out; _ } -> tag_of_t cx t_out
-  | EnumT _ -> Some (TypeTagSet.singleton EnumTag)
+  | EnumValueT _ -> Some (TypeTagSet.singleton EnumTag)
   | EmptyT -> Some TypeTagSet.empty
   | MixedT _
   | ClassT _

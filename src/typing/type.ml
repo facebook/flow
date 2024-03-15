@@ -248,7 +248,7 @@ module rec TypeTerm : sig
       }
     | RendersT of canonical_renders_form
     (* Enum types *)
-    | EnumT of enum_t
+    | EnumValueT of enum_t
     | EnumObjectT of enum_t
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
@@ -3983,7 +3983,7 @@ let string_of_def_ctor = function
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
-  | EnumT _ -> "EnumT"
+  | EnumValueT _ -> "EnumValueT"
   | EnumObjectT _ -> "EnumObjectT"
   | FunT _ -> "FunT"
   | InstanceT _ -> "InstanceT"
@@ -4515,7 +4515,7 @@ let mk_enum_type reason enum =
         | _ -> desc)
       reason
   in
-  DefT (reason, EnumT enum)
+  DefT (reason, EnumValueT enum)
 
 let call_of_method_app
     call_this_t

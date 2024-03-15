@@ -209,7 +209,7 @@ let equatable = function
   | ( DefT
         ( _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT | EnumObjectT _ | EnumT _ )
+          | SymbolT | EnumObjectT _ | EnumValueT _ )
         ),
       _
     )
@@ -217,7 +217,7 @@ let equatable = function
       DefT
         ( _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT | EnumObjectT _ | EnumT _ )
+          | SymbolT | EnumObjectT _ | EnumValueT _ )
         )
     ) ->
     false
@@ -1200,7 +1200,7 @@ module ValueToTypeReferenceTransform = struct
     | DefT (lreason, EnumObjectT enum) ->
       (* an enum object value annotation becomes the enum type *)
       mk_enum_type lreason enum
-    | DefT (enum_reason, EnumT _) ->
+    | DefT (enum_reason, EnumValueT _) ->
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason = reason_op; enum_reason });
       AnyT.error reason_op
     | DefT (reason_component, ReactAbstractComponentT _) as l ->
