@@ -22,20 +22,22 @@ choose between [Babel](http://babeljs.io/) and
 
 [Babel](http://babeljs.io/) is a compiler for JavaScript code that has
 support for Flow. Babel will take your Flow code and strip out any type
-annotations. Read more about [using Babel](../tools/babel).
+annotations. If you already use Babel in your project, see [using Babel](../tools/babel).
 
-First install `@babel/core`, `@babel/cli`, and `@babel/preset-flow` with
+First install `@babel/core`, `@babel/cli`, `@babel/preset-flow`, and `babel-plugin-syntax-hermes-parser` with
 either [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```bash npm2yarn
-npm install --save-dev @babel/core @babel/cli @babel/preset-flow
+npm install --save-dev @babel/core @babel/cli @babel/preset-flow babel-plugin-syntax-hermes-parser
 ```
 
-Next you need to create a `.babelrc` file at the root of your project with
-`"@babel/preset-flow"` in your `"presets"`.
+Next you need to create a `.babelrc` file at the root of your project with the `@babel/preset-flow` preset and `babel-plugin-syntax-hermes-parser` plugin.
 
 ```json
-{ "presets": ["@babel/preset-flow"] }
+{
+  "presets": ["@babel/preset-flow"],
+  "plugins": ["babel-plugin-syntax-hermes-parser"],
+}
 ```
 
 If you then put all your source files in a `src` directory you can compile them
