@@ -87,7 +87,24 @@ let has_unaccounted_react_value_usage_visitor =
       t'
 
     method! component_declaration loc c =
-      this#update_acc (fun _ -> true);
+      let open Ast.Statement.ComponentDeclaration in
+      let { params = (_, { Params.params; _ }); _ } = c in
+      if
+        Base.List.exists
+          params
+          ~f:(fun
+               ( _,
+                 {
+                   Param.name =
+                     ( Param.Identifier (_, { Ast.Identifier.name; _ })
+                     | Param.StringLiteral (_, { Ast.StringLiteral.value = name; _ }) );
+                   _;
+                 }
+               )
+             -> name = "ref"
+        )
+      then
+        this#update_acc (fun _ -> true);
       super#component_declaration loc c
 
     method! identifier ((_, { Ast.Identifier.name; _ }) as id) =
