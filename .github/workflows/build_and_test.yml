@@ -303,6 +303,10 @@ jobs:
       FLOW_RUNTESTS_PARALLELISM: 8
     steps:
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_linux_bin
+        path: bin/linux
     - name: Run tests
       run: ./runtests.sh bin/linux/flow | cat
   runtests_macos:
@@ -314,6 +318,10 @@ jobs:
       with:
         xcode-version: '13.4'
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_macos_bin
+        path: bin/macos
     - name: Run tests
       run: ./runtests.sh bin/macos/flow | cat
   tool_test_linux:
@@ -324,6 +332,10 @@ jobs:
     - build_linux
     steps:
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_linux_bin
+        path: bin/linux
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
@@ -337,6 +349,10 @@ jobs:
       with:
         xcode-version: '13.4'
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_macos_bin
+        path: bin/macos
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
@@ -347,6 +363,10 @@ jobs:
     - build_win
     steps:
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_win_bin
+        path: bin/win64
     - name: Install tool deps from yarn
       run: |-
         cd packages/flow-dev-tools
