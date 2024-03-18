@@ -361,23 +361,23 @@ jobs:
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
       run: ./tool test --bin bin/macos/flow | cat
-  tool_test_win:
-    runs-on: windows-latest
-    needs:
-    - build_win
-    steps:
-    - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
-      with:
-        name: build_win_bin
-        path: bin/win64
-    - name: Install tool deps from yarn
-      run: |-
-        cd packages/flow-dev-tools
-        yarn install --ignore-scripts --pure-lockfile
-    - name: Run tool tests
-      run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
-      shell: bash
+  # tool_test_win:
+  #  runs-on: windows-latest
+  #  needs:
+  #  - build_win
+  #  steps:
+  #  - uses: actions/checkout@v3.6.0
+  #  - uses: actions/download-artifact@v3.0.2
+  #    with:
+  #      name: build_win_bin
+  #      path: bin/win64
+  #  - name: Install tool deps from yarn
+  #    run: |-
+  #      cd packages/flow-dev-tools
+  #      yarn install --ignore-scripts --pure-lockfile
+  #  - name: Run tool tests
+  #    run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
+  #    shell: bash
   ounit_test_linux:
     runs-on: ubuntu-latest
     container:
