@@ -27,55 +27,51 @@ module ErrorSet = Flow_error.ErrorSet
    returns (success, parse and signature errors, exports)
 *)
 let load_lib_files ~ccx ~options ~reader files =
-  let%lwt (ok, errors, ordered_asts) =
+  let%lwt (errors, ordered_asts) =
     files
     |> Lwt_list.fold_left_s
-         (fun (ok_acc, errors_acc, asts_acc) file ->
+         (fun (errors_acc, asts_acc) file ->
            let lib_file = File_key.LibFile file in
            match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
            | Some ast ->
              (* construct ast list in reverse override order *)
              let asts_acc = ast :: asts_acc in
-             Lwt.return (ok_acc, errors_acc, asts_acc)
+             Lwt.return (errors_acc, asts_acc)
            | None ->
              Hh_logger.info "Failed to find %s in parsing heap." (File_key.show lib_file);
-             Lwt.return (false, errors_acc, asts_acc))
-         (true, ErrorSet.empty, [])
+             Lwt.return (errors_acc, asts_acc))
+         (ErrorSet.empty, [])
   in
   let (builtin_exports, master_cx, cx_opt) =
-    if ok then
-      let sig_opts = Type_sig_options.builtin_options options in
-      let (builtins, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
-      let cx_opt =
-        match master_cx with
-        | Context.EmptyMasterContext -> None
-        | Context.NonEmptyMasterContext { builtin_leader_file_key; _ } ->
-          let metadata =
-            Context.(
-              let metadata = metadata_of_options options in
-              { metadata with checked = false }
-            )
-          in
-          let mk_builtins = Merge_js.mk_builtins metadata master_cx in
-          let cx =
-            Context.make
-              ccx
-              metadata
-              builtin_leader_file_key
-              (lazy (ALoc.empty_table builtin_leader_file_key))
-              (fun mref -> Error (Reason.InternalModuleName mref))
-              mk_builtins
-          in
-          Some cx
-      in
-      (Exports.of_builtins builtins, master_cx, cx_opt)
-    else
-      (Exports.empty, Context.EmptyMasterContext, None)
+    let sig_opts = Type_sig_options.builtin_options options in
+    let (builtins, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
+    let cx_opt =
+      match master_cx with
+      | Context.EmptyMasterContext -> None
+      | Context.NonEmptyMasterContext { builtin_leader_file_key; _ } ->
+        let metadata =
+          Context.(
+            let metadata = metadata_of_options options in
+            { metadata with checked = false }
+          )
+        in
+        let mk_builtins = Merge_js.mk_builtins metadata master_cx in
+        let cx =
+          Context.make
+            ccx
+            metadata
+            builtin_leader_file_key
+            (lazy (ALoc.empty_table builtin_leader_file_key))
+            (fun mref -> Error (Reason.InternalModuleName mref))
+            mk_builtins
+        in
+        Some cx
+    in
+    (Exports.of_builtins builtins, master_cx, cx_opt)
   in
-  Lwt.return (ok, master_cx, cx_opt, errors, builtin_exports)
+  Lwt.return (master_cx, cx_opt, errors, builtin_exports)
 
 type init_result = {
-  ok: bool;
   errors: ErrorSet.t FilenameMap.t;
   warnings: ErrorSet.t FilenameMap.t;
   suppressions: Error_suppressions.t;
@@ -103,7 +99,7 @@ let error_set_to_filemap err_set =
 let init ~options ~reader lib_files =
   let ccx = Context.make_ccx () in
 
-  let%lwt (ok, master_cx, cx_opt, parse_and_sig_errors, exports) =
+  let%lwt (master_cx, cx_opt, parse_and_sig_errors, exports) =
     load_lib_files ~ccx ~options ~reader lib_files
   in
 
@@ -135,4 +131,4 @@ let init ~options ~reader lib_files =
     (error_set_to_filemap errors, error_set_to_filemap warnings, suppressions)
   in
 
-  Lwt.return { ok; errors; warnings; suppressions; exports; master_cx }
+  Lwt.return { errors; warnings; suppressions; exports; master_cx }

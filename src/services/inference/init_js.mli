@@ -6,7 +6,6 @@
  *)
 
 type init_result = {
-  ok: bool;
   errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   suppressions: Error_suppressions.t;
