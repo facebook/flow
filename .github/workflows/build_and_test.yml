@@ -307,6 +307,7 @@ jobs:
       with:
         name: build_linux_bin
         path: bin/linux
+    - run: chmod +x bin/linux/flow
     - name: Run tests
       run: ./runtests.sh bin/linux/flow | cat
   runtests_macos:
@@ -322,6 +323,7 @@ jobs:
       with:
         name: build_macos_bin
         path: bin/macos
+    - run: chmod +x bin/macos/flow
     - name: Run tests
       run: ./runtests.sh bin/macos/flow | cat
   tool_test_linux:
@@ -336,6 +338,7 @@ jobs:
       with:
         name: build_linux_bin
         path: bin/linux
+    - run: chmod +x bin/linux/flow
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
@@ -353,6 +356,7 @@ jobs:
       with:
         name: build_macos_bin
         path: bin/macos
+    - run: chmod +x bin/macos/flow
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
