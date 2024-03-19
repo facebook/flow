@@ -215,56 +215,60 @@ let is_super_member_access = function
   | { Flow_ast.Expression.Member._object = (_, Flow_ast.Expression.Super _); _ } -> true
   | _ -> false
 
-let acceptable_statement_in_declaration_context ~in_declare_namespace = function
-  | Flow_ast.Statement.Block _ -> Error "block"
-  | Flow_ast.Statement.Break _ -> Error "break"
-  | Flow_ast.Statement.ClassDeclaration _ -> Error "class declaration"
-  | Flow_ast.Statement.ComponentDeclaration _ -> Error "component declaration"
-  | Flow_ast.Statement.Continue _ -> Error "continue"
-  | Flow_ast.Statement.Debugger _ -> Error "debugger"
-  | Flow_ast.Statement.DoWhile _ -> Error "do while"
-  | Flow_ast.Statement.ExportDefaultDeclaration _ -> Error "export"
-  | Flow_ast.Statement.ExportNamedDeclaration _ -> Error "export"
-  | Flow_ast.Statement.Expression _ -> Error "expression"
-  | Flow_ast.Statement.For _ -> Error "for"
-  | Flow_ast.Statement.ForIn _ -> Error "for in"
-  | Flow_ast.Statement.ForOf _ -> Error "for of"
-  | Flow_ast.Statement.FunctionDeclaration _ -> Error "function declaration"
-  | Flow_ast.Statement.If _ -> Error "if"
-  | Flow_ast.Statement.Labeled _ -> Error "labeled"
-  | Flow_ast.Statement.Return _ -> Error "return"
-  | Flow_ast.Statement.Switch _ -> Error "switch"
-  | Flow_ast.Statement.Throw _ -> Error "throw"
-  | Flow_ast.Statement.Try _ -> Error "try"
-  | Flow_ast.Statement.VariableDeclaration _ -> Error "variable declaration"
-  | Flow_ast.Statement.While _ -> Error "while"
-  | Flow_ast.Statement.With _ -> Error "with"
-  | Flow_ast.Statement.ImportDeclaration _ ->
+let acceptable_statement_in_declaration_context ~in_declare_namespace =
+  let open Flow_ast.Statement in
+  function
+  | Block _ -> Error "block"
+  | Break _ -> Error "break"
+  | ClassDeclaration _ -> Error "class declaration"
+  | ComponentDeclaration _ -> Error "component declaration"
+  | Continue _ -> Error "continue"
+  | Debugger _ -> Error "debugger"
+  | DoWhile _ -> Error "do while"
+  | ExportDefaultDeclaration _ -> Error "export default"
+  | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportValue; _ } ->
+    Error "value export"
+  | Expression _ -> Error "expression"
+  | For _ -> Error "for"
+  | ForIn _ -> Error "for in"
+  | ForOf _ -> Error "for of"
+  | FunctionDeclaration _ -> Error "function declaration"
+  | If _ -> Error "if"
+  | Labeled _ -> Error "labeled"
+  | Return _ -> Error "return"
+  | Switch _ -> Error "switch"
+  | Throw _ -> Error "throw"
+  | Try _ -> Error "try"
+  | VariableDeclaration _ -> Error "variable declaration"
+  | While _ -> Error "while"
+  | With _ -> Error "with"
+  | ImportDeclaration _ ->
     if in_declare_namespace then
       Error "import declaration"
     else
       Ok ()
-  | Flow_ast.Statement.DeclareModuleExports _ ->
+  | DeclareModuleExports _ ->
     if in_declare_namespace then
       Error "declare module.exports"
     else
       Ok ()
-  | Flow_ast.Statement.DeclareClass _
-  | Flow_ast.Statement.DeclareComponent _
-  | Flow_ast.Statement.DeclareEnum _
-  | Flow_ast.Statement.DeclareExportDeclaration _
-  | Flow_ast.Statement.DeclareFunction _
-  | Flow_ast.Statement.DeclareInterface _
-  | Flow_ast.Statement.DeclareModule _
-  | Flow_ast.Statement.DeclareNamespace _
-  | Flow_ast.Statement.DeclareOpaqueType _
-  | Flow_ast.Statement.DeclareTypeAlias _
-  | Flow_ast.Statement.DeclareVariable _
-  | Flow_ast.Statement.Empty _
-  | Flow_ast.Statement.EnumDeclaration _
-  | Flow_ast.Statement.InterfaceDeclaration _
-  | Flow_ast.Statement.OpaqueType _
-  | Flow_ast.Statement.TypeAlias _ ->
+  | DeclareClass _
+  | DeclareComponent _
+  | DeclareEnum _
+  | DeclareExportDeclaration _
+  | DeclareFunction _
+  | DeclareInterface _
+  | DeclareModule _
+  | DeclareNamespace _
+  | DeclareOpaqueType _
+  | DeclareTypeAlias _
+  | DeclareVariable _
+  | Empty _
+  | EnumDeclaration _
+  | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportType; _ }
+  | InterfaceDeclaration _
+  | OpaqueType _
+  | TypeAlias _ ->
     Ok ()
 
 let rec is_type_only_declaration_statement (_, stmt') =
@@ -284,6 +288,7 @@ let rec is_type_only_declaration_statement (_, stmt') =
       true
     | DeclareNamespace { DeclareNamespace.body = (_, { Block.body; _ }); _ } ->
       List.for_all is_type_only_declaration_statement body
+    | ExportNamedDeclaration { ExportNamedDeclaration.export_kind; _ } -> export_kind = ExportType
     | Block _
     | Break _
     | ClassDeclaration _
@@ -293,7 +298,6 @@ let rec is_type_only_declaration_statement (_, stmt') =
     | DoWhile _
     | EnumDeclaration _
     | ExportDefaultDeclaration _
-    | ExportNamedDeclaration _
     | Expression _
     | For _
     | ForIn _

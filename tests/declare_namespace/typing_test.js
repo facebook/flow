@@ -33,8 +33,11 @@ exported_ns.bar2 as empty; // error: boolean ~> empty
 exported_ns.bar3 as empty; // error: string ~> empty
 exported_ns.f(3) as empty; // error: number ~> empty
 1 as exported_ns.Baz; // error: number ~> string
+1 as exported_ns.Baz2; // error: number ~> string
+1 as exported_ns.Baz3; // error: number ~> interface {}
 exported_ns.B.C as empty; // error: enum ~> empty
 exported_ns.React; // error: prop-missing
+exported_ns.CONSTANT as empty; // error: prop-missing
 empty as empty; // ok: already errored being type-only in exported.js
 
 import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';

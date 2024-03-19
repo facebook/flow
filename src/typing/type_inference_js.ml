@@ -433,7 +433,7 @@ class lib_def_loc_mapper_and_validator cx =
       | OpaqueType _ ->
         None
       | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportValue; _ } ->
-        Some (error "export")
+        Some (error "value export")
       | ImportDeclaration _ ->
         if in_toplevel_scope then
           Some

@@ -3182,14 +3182,14 @@ let friendly_message_of_msg loc_of_aloc msg =
       | ContextDependentUnsupportedStatement (UnsupportedStatementInLibdef kind) ->
         [
           text "Cannot use ";
-          code kind;
+          text kind;
           text " statements in a library file. ";
           text "The statement will be ignored.";
         ]
       | ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareModule kind) ->
         [
           text "Cannot use ";
-          code kind;
+          text kind;
           text " statements with in ";
           code "declare module";
           text ". The statement will be ignored.";
@@ -3197,7 +3197,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       | ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareNamespace kind) ->
         [
           text "Cannot use ";
-          code kind;
+          text kind;
           text " statements with in ";
           code "declare namespace";
           text ". The statement will be ignored.";

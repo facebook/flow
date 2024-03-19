@@ -71,160 +71,234 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exported.js:9:3
 
-Cannot use `if` statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
 
    9|   if (true) {} // unsupported
         ^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:10:3
+Error ------------------------------------------------------------------------------------------------- exported.js:12:3
 
-Cannot use `declare module.exports` statements with in `declare namespace`. The statement will be ignored.
+Cannot use value export statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
+
+   12|   export const CONSTANT = 'foo'; // unsupported
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:13:3
+
+Cannot use export default statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
+
+   13|   export default CONSTANT; // unsupported
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:14:3
+
+Cannot use declare module.exports statements with in `declare namespace`. The statement will be ignored.
 [unsupported-syntax]
 
-   10|   declare module.exports: {foo: string}; // unsupported
+   14|   declare module.exports: {foo: string}; // unsupported
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:10:3
+Error ------------------------------------------------------------------------------------------------- exported.js:14:3
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   10|   declare module.exports: {foo: string}; // unsupported
+   14|   declare module.exports: {foo: string}; // unsupported
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:11:3
+Error ------------------------------------------------------------------------------------------------- exported.js:15:3
 
-Cannot use `import declaration` statements with in `declare namespace`. The statement will be ignored.
+Cannot use import declaration statements with in `declare namespace`. The statement will be ignored.
 [unsupported-syntax]
 
-   11|   import React from 'react'; // unsupported
+   15|   import React from 'react'; // unsupported
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:22:3
+Error ------------------------------------------------------------------------------------------------- exported.js:26:3
 
 Cannot use type-only namespace `empty` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
 [type-as-value]
 
-   exported.js:22:3
-   22|   empty, // error: empty is type-only
+   exported.js:26:3
+   26|   empty, // error: empty is type-only
          ^^^^^
 
 References:
-   exported.js:14:19
-   14| declare namespace empty {}
+   exported.js:18:19
+   18| declare namespace empty {}
                          ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:27:1
+Error ------------------------------------------------------------------------------------------------- exported.js:31:1
 
 Cannot cast `exported_ns.bar1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:27:1
-   27| exported_ns.bar1 as empty; // error: number ~> empty
+   exported.js:31:1
+   31| exported_ns.bar1 as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:2:30
     2|   declare export const bar1: number;
                                     ^^^^^^ [1]
-   exported.js:27:21
-   27| exported_ns.bar1 as empty; // error: number ~> empty
+   exported.js:31:21
+   31| exported_ns.bar1 as empty; // error: number ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:28:1
+Error ------------------------------------------------------------------------------------------------- exported.js:32:1
 
 Cannot cast `exported_ns.bar2` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:28:1
-   28| exported_ns.bar2 as empty; // error: boolean ~> empty
+   exported.js:32:1
+   32| exported_ns.bar2 as empty; // error: boolean ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:3:23
     3|   declare const bar2: boolean;
                              ^^^^^^^ [1]
-   exported.js:28:21
-   28| exported_ns.bar2 as empty; // error: boolean ~> empty
+   exported.js:32:21
+   32| exported_ns.bar2 as empty; // error: boolean ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:29:1
+Error ------------------------------------------------------------------------------------------------- exported.js:33:1
 
 Cannot cast `exported_ns.bar3` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:29:1
-   29| exported_ns.bar3 as empty; // error: string ~> empty
+   exported.js:33:1
+   33| exported_ns.bar3 as empty; // error: string ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:4:21
     4|   declare var bar3: string;
                            ^^^^^^ [1]
-   exported.js:29:21
-   29| exported_ns.bar3 as empty; // error: string ~> empty
+   exported.js:33:21
+   33| exported_ns.bar3 as empty; // error: string ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:30:1
+Error ------------------------------------------------------------------------------------------------- exported.js:34:1
 
 Cannot cast `exported_ns.f(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:30:1
-   30| exported_ns.f(3) as empty; // error: number ~> empty
+   exported.js:34:1
+   34| exported_ns.f(3) as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:6:31
     6|   declare function f(number): number;
                                      ^^^^^^ [1]
-   exported.js:30:21
-   30| exported_ns.f(3) as empty; // error: number ~> empty
+   exported.js:34:21
+   34| exported_ns.f(3) as empty; // error: number ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:31:1
+Error ------------------------------------------------------------------------------------------------- exported.js:35:1
 
 Cannot cast `1` to `Baz` because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   exported.js:31:1
-   31| 1 as exported_ns.Baz; // error: number ~> string
+   exported.js:35:1
+   35| 1 as exported_ns.Baz; // error: number ~> string
        ^ [1]
 
 References:
-   exported.js:31:6
-   31| 1 as exported_ns.Baz; // error: number ~> string
+   exported.js:35:6
+   35| 1 as exported_ns.Baz; // error: number ~> string
             ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:32:1
+Error ------------------------------------------------------------------------------------------------- exported.js:36:1
+
+Cannot cast `1` to `Baz2` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   exported.js:36:1
+   36| 1 as exported_ns.Baz2; // error: number ~> string
+       ^ [1]
+
+References:
+   exported.js:36:6
+   36| 1 as exported_ns.Baz2; // error: number ~> string
+            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:37:1
+
+Cannot cast `1` to `Baz3` because number [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You can wrap it in
+`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   exported.js:37:1
+   37| 1 as exported_ns.Baz3; // error: number ~> interface {}
+       ^ [1]
+
+References:
+   exported.js:37:6
+   37| 1 as exported_ns.Baz3; // error: number ~> interface {}
+            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:38:1
 
 Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   exported.js:32:1
-   32| exported_ns.B.C as empty; // error: enum ~> empty
+   exported.js:38:1
+   38| exported_ns.B.C as empty; // error: enum ~> empty
        ^^^^^^^^^^^^^^^
 
 References:
    exported.js:8:8
     8|   enum B { C, D }
               ^ [1]
-   exported.js:32:20
-   32| exported_ns.B.C as empty; // error: enum ~> empty
+   exported.js:38:20
+   38| exported_ns.B.C as empty; // error: enum ~> empty
                           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:33:13
+Error ------------------------------------------------------------------------------------------------ exported.js:39:13
 
 Cannot get `exported_ns.React` because property `React` is missing in namespace exported_ns [1]. [prop-missing]
 
-   exported.js:33:13
-   33| exported_ns.React; // error: prop-missing
+   exported.js:39:13
+   39| exported_ns.React; // error: prop-missing
                    ^^^^^
+
+References:
+   exported.js:1:19
+    1| declare namespace exported_ns {
+                         ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:40:1
+
+Cannot cast `exported_ns.CONSTANT` to empty because `void` (due to access of non-existent property `CONSTANT`) [1] is
+incompatible with empty [2]. [incompatible-cast]
+
+   exported.js:40:1
+   40| exported_ns.CONSTANT as empty; // prop-missing
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   exported.js:40:25
+   40| exported_ns.CONSTANT as empty; // prop-missing
+                               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ exported.js:40:13
+
+Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in namespace exported_ns [1]. [prop-missing]
+
+   exported.js:40:13
+   40| exported_ns.CONSTANT as empty; // prop-missing
+                   ^^^^^^^^
 
 References:
    exported.js:1:19
@@ -339,7 +413,7 @@ use it as an annotation. [value-as-type]
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:12:3
 
-Cannot use `declare module.exports` statements with in `declare namespace`. The statement will be ignored.
+Cannot use declare module.exports statements with in `declare namespace`. The statement will be ignored.
 [unsupported-syntax]
 
    12|   declare module.exports: {foo: string}; // unsupported
@@ -363,7 +437,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:23:3
 
-Cannot use `if` statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
 
    23|   if (true) {} // error
          ^^^^^^^^^^^^
@@ -371,7 +445,7 @@ Cannot use `if` statements with in `declare namespace`. The statement will be ig
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:24:3
 
-Cannot use `import declaration` statements with in `declare namespace`. The statement will be ignored.
+Cannot use import declaration statements with in `declare namespace`. The statement will be ignored.
 [unsupported-syntax]
 
    24|   import React from 'react'; // unsupported
@@ -496,27 +570,56 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:36:1
 
-Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `1` to `Baz2` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    typing_test.js:36:1
-   36| exported_ns.B.C as empty; // error: enum ~> empty
+   36| 1 as exported_ns.Baz2; // error: number ~> string
+       ^ [1]
+
+References:
+   typing_test.js:36:6
+   36| 1 as exported_ns.Baz2; // error: number ~> string
+            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:37:1
+
+Cannot cast `1` to `Baz3` because number [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You can wrap it in
+`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   typing_test.js:37:1
+   37| 1 as exported_ns.Baz3; // error: number ~> interface {}
+       ^ [1]
+
+References:
+   typing_test.js:37:6
+   37| 1 as exported_ns.Baz3; // error: number ~> interface {}
+            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:38:1
+
+Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   typing_test.js:38:1
+   38| exported_ns.B.C as empty; // error: enum ~> empty
        ^^^^^^^^^^^^^^^
 
 References:
    exported.js:8:8
     8|   enum B { C, D }
               ^ [1]
-   typing_test.js:36:20
-   36| exported_ns.B.C as empty; // error: enum ~> empty
+   typing_test.js:38:20
+   38| exported_ns.B.C as empty; // error: enum ~> empty
                           ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:37:13
+Error --------------------------------------------------------------------------------------------- typing_test.js:39:13
 
 Cannot get `exported_ns.React` because property `React` is missing in namespace exported_ns [1]. [prop-missing]
 
-   typing_test.js:37:13
-   37| exported_ns.React; // error: prop-missing
+   typing_test.js:39:13
+   39| exported_ns.React; // error: prop-missing
                    ^^^^^
 
 References:
@@ -525,102 +628,131 @@ References:
                          ^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:41:1
+Error ---------------------------------------------------------------------------------------------- typing_test.js:40:1
+
+Cannot cast `exported_ns.CONSTANT` to empty because `void` (due to access of non-existent property `CONSTANT`) [1] is
+incompatible with empty [2]. [incompatible-cast]
+
+   typing_test.js:40:1
+   40| exported_ns.CONSTANT as empty; // error: prop-missing
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   typing_test.js:40:25
+   40| exported_ns.CONSTANT as empty; // error: prop-missing
+                               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:40:13
+
+Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in namespace exported_ns [1]. [prop-missing]
+
+   typing_test.js:40:13
+   40| exported_ns.CONSTANT as empty; // error: prop-missing
+                   ^^^^^^^^
+
+References:
+   exported.js:1:19
+    1| declare namespace exported_ns {
+                         ^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- typing_test.js:44:1
 
 Cannot use type `exported_ns_type_only` [1] as a value. Types are erased and don't exist at runtime. If the exported
 binding can also be used as a value, try importing it using `import exported_ns_type_only` instead of
 `import type exported_ns_type_only` and `import {exported_ns_type_only}` instead of
 `import type {exported_ns_type_only}`. [type-as-value]
 
-   typing_test.js:41:1
-   41| exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
+   typing_test.js:44:1
+   44| exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   typing_test.js:40:51
-   40| import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
+   typing_test.js:43:51
+   43| import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
                                                          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:41:24
+Error --------------------------------------------------------------------------------------------- typing_test.js:44:24
 
 Cannot use type `exported_ns_type_only2` [1] as a value. Types are erased and don't exist at runtime. If the exported
 binding can also be used as a value, try importing it using `import exported_ns_type_only2` instead of
 `import type exported_ns_type_only2` and `import {exported_ns_type_only2}` instead of
 `import type {exported_ns_type_only2}`. [type-as-value]
 
-   typing_test.js:41:24
-   41| exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
+   typing_test.js:44:24
+   44| exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
                               ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   typing_test.js:40:27
-   40| import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
+   typing_test.js:43:27
+   43| import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:45:3
+Error ---------------------------------------------------------------------------------------------- typing_test.js:48:3
 
 Cannot cast `1` to `B` because number [1] is incompatible with `B` [2]. [incompatible-cast]
 
-   typing_test.js:45:3
-   45|   1 as exported_ns_type_only.B; // error: number ~> enum
+   typing_test.js:48:3
+   48|   1 as exported_ns_type_only.B; // error: number ~> enum
          ^ [1]
 
 References:
-   typing_test.js:45:8
-   45|   1 as exported_ns_type_only.B; // error: number ~> enum
+   typing_test.js:48:8
+   48|   1 as exported_ns_type_only.B; // error: number ~> enum
               ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:47:3
+Error ---------------------------------------------------------------------------------------------- typing_test.js:50:3
 
 Cannot cast `exported_ns.B.C` to `T` because `B` [1] is incompatible with number [2]. [incompatible-cast]
 
-   typing_test.js:47:3
-   47|   exported_ns.B.C as exported_ns_type_only2.T; // error: enum ~> number
+   typing_test.js:50:3
+   50|   exported_ns.B.C as exported_ns_type_only2.T; // error: enum ~> number
          ^^^^^^^^^^^^^^^
 
 References:
    exported.js:8:8
     8|   enum B { C, D }
               ^ [1]
-   typing_test.js:47:22
-   47|   exported_ns.B.C as exported_ns_type_only2.T; // error: enum ~> number
+   typing_test.js:50:22
+   50|   exported_ns.B.C as exported_ns_type_only2.T; // error: enum ~> number
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:52:3
+Error ---------------------------------------------------------------------------------------------- typing_test.js:55:3
 
 Cannot use type-only namespace `type_only` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
 [type-as-value]
 
-   typing_test.js:52:3
-   52|   type_only; // error: type-as-value
+   typing_test.js:55:3
+   55|   type_only; // error: type-as-value
          ^^^^^^^^^
 
 References:
-   typing_test.js:49:21
-   49|   declare namespace type_only {
+   typing_test.js:52:21
+   52|   declare namespace type_only {
                            ^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- typing_test.js:54:3
+Error ---------------------------------------------------------------------------------------------- typing_test.js:57:3
 
 Cannot cast `1` to `Bar` because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   typing_test.js:54:3
-   54|   1 as type_only.Bar; // error: number ~> string
+   typing_test.js:57:3
+   57|   1 as type_only.Bar; // error: number ~> string
          ^ [1]
 
 References:
-   typing_test.js:54:8
-   54|   1 as type_only.Bar; // error: number ~> string
+   typing_test.js:57:8
+   57|   1 as type_only.Bar; // error: number ~> string
               ^^^^^^^^^^^^^ [2]
 
 
 
-Found 43 errors
+Found 53 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -5566,19 +5566,25 @@ let%expect_test "builtin_cjs_module_auto_export_type" =
   (* All types in cjs modules are auto exported. *)
   print_builtins [{|
     declare module foo {
-      declare type T = number;
+      declare type T1 = number;
+      export type T2 = string;
       declare module.exports: string;
     }
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
+    0. TypeAlias {id_loc = [2:15-17];
+         name = "T1"; tparams = Mono;
+         body = (Annot (Number [2:20-26]))}
+    1. TypeAlias {id_loc = [3:14-16];
+         name = "T2"; tparams = Mono;
+         body = (Annot (String [3:19-25]))}
 
     Builtin module foo:
-    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
-                exports = (Some (Annot (String [3:26-32])));
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1)|];
+                exports = (Some (Annot (String [4:26-32])));
                 info =
-                CJSModuleInfo {type_export_keys = [|"T"|];
+                CJSModuleInfo {type_export_keys = [|"T1"; "T2"|];
                   type_stars = []; strict = true;
                   platform_availability_set = None}} |}]
 
@@ -5667,6 +5673,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
       declare enum A { B }
       declare type T = number;
       declare export type U = string;
+      export const ignored = 3; // unsupported;
     }
   |}];
   [%expect {|
@@ -5881,11 +5888,14 @@ let%expect_test "builtin_declare_namespace" =
       declare function f(): string;
       declare function f(): number;
       declare type Baz = string;
+      export type Boz = string;
       enum B {
         C,
         D,
       }
       if (true) {} // unsupported
+      export const foo = ''; // unsupported
+      export default foo; // unsupported
       declare module.exports: {foo: string}; // unsupported
       import React from 'react'; // unsupported
     }
@@ -5912,19 +5922,24 @@ let%expect_test "builtin_declare_namespace" =
     4. TypeAlias {id_loc = [7:15-18];
          name = "Baz"; tparams = Mono;
          body = (Annot (String [7:21-27]))}
-    5. EnumBinding {id_loc = [8:7-8];
+    5. TypeAlias {id_loc = [8:14-17];
+         name = "Boz"; tparams = Mono;
+         body = (Annot (String [8:20-26]))}
+    6. EnumBinding {id_loc = [9:7-8];
          name = "B"; rep = StringRep {truthy = true};
-         members = { "C" -> [9:4-5]; "D" -> [10:4-5] };
+         members = { "C" -> [10:4-5]; "D" -> [11:4-5] };
          has_unknown_members = false}
-    6. NamespaceBinding {id_loc = [1:18-20];
+    7. NamespaceBinding {id_loc = [1:18-20];
          name = "ns";
          values =
-         { "B" -> ([8:7-8], (Ref LocalRef {ref_loc = [8:7-8]; index = 5}));
+         { "B" -> ([9:7-8], (Ref LocalRef {ref_loc = [9:7-8]; index = 6}));
            "bar1" -> ([2:23-27], (Ref LocalRef {ref_loc = [2:23-27]; index = 0}));
            "bar2" -> ([3:16-20], (Ref LocalRef {ref_loc = [3:16-20]; index = 1}));
            "bar3" -> ([4:14-18], (Ref LocalRef {ref_loc = [4:14-18]; index = 2}));
            "f" -> ([5:19-20], (Ref LocalRef {ref_loc = [5:19-20]; index = 3})) };
-         types = { "Baz" -> ([7:15-18], (Ref LocalRef {ref_loc = [7:15-18]; index = 4})) }}
+         types =
+         { "Baz" -> ([7:15-18], (Ref LocalRef {ref_loc = [7:15-18]; index = 4}));
+           "Boz" -> ([8:14-17], (Ref LocalRef {ref_loc = [8:14-17]; index = 5})) }}
 
     Builtin global value ns |}]
 

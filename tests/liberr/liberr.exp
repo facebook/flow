@@ -55,7 +55,7 @@ Error --------------------------------------------------------------------------
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:5:1
 
-Cannot use `block` statements in a library file. The statement will be ignored. [unsupported-syntax]
+Cannot use block statements in a library file. The statement will be ignored. [unsupported-syntax]
 
       v
    5| {
@@ -66,7 +66,7 @@ Cannot use `block` statements in a library file. The statement will be ignored. 
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:9:1
 
-Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements in a library file. The statement will be ignored. [unsupported-syntax]
 
        v----------
     9| if (true) {
@@ -101,7 +101,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
 
-Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements in a library file. The statement will be ignored. [unsupported-syntax]
 
    3|   if (true) {} // error
         ^^^^^^^^^^^^
@@ -109,10 +109,26 @@ Cannot use `if` statements in a library file. The statement will be ignored. [un
 
 Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
 
-Cannot use `if` statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
 
    3|   if (true) {} // error
         ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:4:3
+
+Cannot use value export statements in a library file. The statement will be ignored. [unsupported-syntax]
+
+   4|   export const foo = ''; // error
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:4:3
+
+Cannot use value export statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+
+   4|   export const foo = ''; // error
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------------- a.js:5:17
@@ -205,7 +221,7 @@ References:
 
 
 
-Found 20 errors
+Found 22 errors
 
 ============================================
 With warnings:
@@ -264,7 +280,7 @@ Error --------------------------------------------------------------------------
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:5:1
 
-Cannot use `block` statements in a library file. The statement will be ignored. [unsupported-syntax]
+Cannot use block statements in a library file. The statement will be ignored. [unsupported-syntax]
 
       v
    5| {
@@ -275,7 +291,7 @@ Cannot use `block` statements in a library file. The statement will be ignored. 
 
 Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:9:1
 
-Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements in a library file. The statement will be ignored. [unsupported-syntax]
 
        v----------
     9| if (true) {
@@ -310,7 +326,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
 
-Cannot use `if` statements in a library file. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements in a library file. The statement will be ignored. [unsupported-syntax]
 
    3|   if (true) {} // error
         ^^^^^^^^^^^^
@@ -318,10 +334,26 @@ Cannot use `if` statements in a library file. The statement will be ignored. [un
 
 Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:3:3
 
-Cannot use `if` statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+Cannot use if statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
 
    3|   if (true) {} // error
         ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:4:3
+
+Cannot use value export statements in a library file. The statement will be ignored. [unsupported-syntax]
+
+   4|   export const foo = ''; // error
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:4:3
+
+Cannot use value export statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+
+   4|   export const foo = ''; // error
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------------- a.js:5:17
@@ -422,4 +454,4 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 
 
-Found 20 errors and 1 warning
+Found 22 errors and 1 warning

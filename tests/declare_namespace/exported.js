@@ -7,6 +7,10 @@ declare namespace exported_ns {
   declare type Baz = string;
   enum B { C, D }
   if (true) {} // unsupported
+  export type Baz2 = string;
+  export interface Baz3 {}
+  export const CONSTANT = 'foo'; // unsupported
+  export default CONSTANT; // unsupported
   declare module.exports: {foo: string}; // unsupported
   import React from 'react'; // unsupported
 }
@@ -29,5 +33,8 @@ exported_ns.bar2 as empty; // error: boolean ~> empty
 exported_ns.bar3 as empty; // error: string ~> empty
 exported_ns.f(3) as empty; // error: number ~> empty
 1 as exported_ns.Baz; // error: number ~> string
+1 as exported_ns.Baz2; // error: number ~> string
+1 as exported_ns.Baz3; // error: number ~> interface {}
 exported_ns.B.C as empty; // error: enum ~> empty
 exported_ns.React; // error: prop-missing
+exported_ns.CONSTANT as empty; // prop-missing
