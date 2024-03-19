@@ -13,7 +13,7 @@ Adding Flow types to a functional component is the same as [adding types to a st
 Just create an object type for the props and Flow will ensure that the props passed to the component match up with what is expected.
 
 ```js flow-check
-import * as React from 'react';
+import React from 'react';
 
 type Props = {
   foo: number,
@@ -29,12 +29,6 @@ function MyComponent(props: Props) {
 <MyComponent foo={42} />
 ```
 
-> **Note:** We import `React` as a namespace here with
-> `import * as React from 'react'` instead of as a default with
-> `import React from 'react'`. When importing React as an ES module you may use
-> either style, but importing as a namespace gives you access to React's
-> [utility types](../types).
-
 
 ### Adding Default Props to Functional Components {#toc-adding-default-props-to-functional-components}
 
@@ -44,7 +38,7 @@ By destructuring the props in the function parameter, you can assign a value to 
 to the component (or passed with the value `undefined`).
 
 ```js flow-check
-import * as React from 'react';
+import React from 'react';
 
 type Props = {
   foo?: number, // foo is optional to pass in.
@@ -67,7 +61,7 @@ argument to the `React.Component` type. This will have the same effect as adding
 to the `props` parameter of a function component.
 
 ```js flow-check
-import * as React from 'react';
+import React from 'react';
 
 type Props = {
   foo: number,
@@ -103,7 +97,7 @@ type, in the example below we name it `State`, and pass it as the second type
 argument to `React.Component`.
 
 ```js flow-check
-import * as React from 'react';
+import React from 'react';
 
 type Props = { /* ... */ };
 
@@ -147,7 +141,7 @@ value from `defaultProps`. Flow supports this notion as well. To type default
 props add a `static defaultProps` property to your class.
 
 ```js flow-check
-import * as React from 'react';
+import React from 'react';
 
 type Props = {
   foo: number, // foo is required.
