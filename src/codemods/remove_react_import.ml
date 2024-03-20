@@ -103,12 +103,17 @@ let has_unaccounted_react_value_usage_visitor =
                )
              -> name = "ref"
         )
-      then
-        this#update_acc (fun _ -> true);
+      then (
+        Hh_logger.info "Skipping component with ref %s" (Reason.string_of_loc loc);
+        this#update_acc (fun _ -> true)
+      );
       super#component_declaration loc c
 
-    method! identifier ((_, { Ast.Identifier.name; _ }) as id) =
-      if in_typeof_type && name = "React" then this#update_acc (fun _ -> true);
+    method! identifier ((loc, { Ast.Identifier.name; _ }) as id) =
+      if in_typeof_type && name = "React" then (
+        Hh_logger.info "Skipping React in typeof %s" (Reason.string_of_loc loc);
+        this#update_acc (fun _ -> true)
+      );
       id
   end
 
@@ -132,14 +137,24 @@ let mapper ctx =
         (* We intentionally exclude types so that the type uses of React is not counted. *)
         let scope_info = Scope_builder.program ~enable_enums:false ~with_types:false prog in
         let unused =
-          Scope_api.With_Loc.def_is_unused
-            scope_info
-            (Scope_api.With_Loc.def_of_use scope_info react_import_def_loc)
-          && not
-               (has_unaccounted_react_value_usage_visitor#eval
-                  has_unaccounted_react_value_usage_visitor#program
-                  prog
-               )
+          let def = Scope_api.With_Loc.def_of_use scope_info react_import_def_loc in
+          let uses = Scope_api.With_Loc.uses_of_def scope_info ~exclude_def:true def in
+          if Loc_collections.LocSet.is_empty uses then
+            not
+              (has_unaccounted_react_value_usage_visitor#eval
+                 has_unaccounted_react_value_usage_visitor#program
+                 prog
+              )
+          else (
+            Hh_logger.info
+              "Skipping due to value uses %s"
+              (uses
+              |> Loc_collections.LocSet.elements
+              |> Base.List.map ~f:Reason.string_of_loc
+              |> String.concat ", "
+              );
+            false
+          )
         in
         this#update_acc (fun acc ->
             let extra =
