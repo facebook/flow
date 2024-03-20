@@ -381,10 +381,20 @@ class process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t
         else
           ident
 
-    method! jsx_opening_element elt =
+    method! jsx_element expr_annot expr =
+      let open Flow_ast.JSX in
+      let { opening_element; closing_element; children; comments } = expr in
+      ignore @@ this#visit_jsx_opening_element expr_annot expr opening_element;
+      Base.Option.iter closing_element ~f:(fun closing_element ->
+          ignore @@ this#visit_jsx_closing_element expr_annot expr closing_element
+      );
+      ignore @@ this#jsx_children children;
+      ignore @@ this#syntax_opt comments;
+      expr
+
+    method private visit_jsx_opening_element _expr_annot _expr elt =
       let open Flow_ast.JSX in
       let (_, Opening.{ name = component_name; targs = _; attributes; self_closing = _ }) = elt in
-
       (match component_name with
       | Identifier ((loc, type_), { Identifier.name; comments = _ }) ->
         if this#covers_target loc then this#find loc name (Ac_jsx_element { type_ })
@@ -427,7 +437,7 @@ class process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t
         found;
       super#jsx_opening_element elt
 
-    method! jsx_closing_element elem =
+    method private visit_jsx_closing_element _expr_annot _expr elem =
       let open Flow_ast.JSX in
       let open Flow_ast.JSX.Closing in
       let (_, { name }) = elem in
