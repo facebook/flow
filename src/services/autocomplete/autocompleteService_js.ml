@@ -361,7 +361,18 @@ type typing = {
   ast: (Loc.t, Loc.t) Flow_ast.Program.t;
   typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
   exports: Export_search.t;
+  norm_genv: Ty_normalizer_env.genv;
 }
+
+let mk_typing_artifacts ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~exports =
+  let norm_genv =
+    Ty_normalizer_flow.mk_genv
+      ~options:ty_normalizer_options
+      ~cx
+      ~typed_ast_opt:(Some typed_ast)
+      ~file_sig
+  in
+  { options; reader; cx; file_sig; ast; typed_ast; exports; norm_genv }
 
 type ac_result = {
   result: AcCompletion.t;
@@ -819,16 +830,9 @@ let autocomplete_id
     ~token
     ~type_ =
   let open AcCompletion in
-  let { reader; cx; typed_ast; file_sig; options; _ } = typing in
+  let { reader; cx; options; norm_genv = genv; _ } = typing in
   let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let genv =
-    Ty_normalizer_flow.mk_genv
-      ~options:ty_normalizer_options
-      ~cx
-      ~typed_ast_opt:(Some typed_ast)
-      ~file_sig
-  in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
   let results =
@@ -1264,7 +1268,7 @@ let make_type_param ~edit_locs name =
     insert_text_format = Lsp.Completion.PlainText;
   }
 
-let local_type_identifiers ~ast ~typed_ast_opt ~cx ~file_sig =
+let local_type_identifiers ~ast ~typed_ast_opt ~cx ~genv =
   let rev_ids =
     match typed_ast_opt with
     | Some typed_ast ->
@@ -1278,8 +1282,7 @@ let local_type_identifiers ~ast ~typed_ast_opt ~cx ~file_sig =
   in
   rev_ids
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
-  |> Ty_normalizer_flow.from_types
-       (Ty_normalizer_flow.mk_genv ~options:ty_normalizer_options ~cx ~typed_ast_opt ~file_sig)
+  |> Ty_normalizer_flow.from_types genv
 
 let autocomplete_unqualified_type
     ~typing
@@ -1289,7 +1292,7 @@ let autocomplete_unqualified_type
     ~ac_loc
     ~edit_locs
     ~token =
-  let { options; reader; cx; file_sig; ast; typed_ast; exports } = typing in
+  let { options; reader; cx; file_sig; ast; typed_ast; exports; norm_genv = genv } = typing in
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
@@ -1298,9 +1301,7 @@ let autocomplete_unqualified_type
     |> Base.List.rev_map_append utility_types ~f:(make_utility_type ~edit_locs)
     |> Base.List.rev_map_append tparams_rev ~f:(make_type_param ~edit_locs)
   in
-  let type_identifiers =
-    local_type_identifiers ~ast ~typed_ast_opt:(Some typed_ast) ~cx ~file_sig
-  in
+  let type_identifiers = local_type_identifiers ~ast ~typed_ast_opt:(Some typed_ast) ~cx ~genv in
   let (items_rev, errors_to_log) =
     type_identifiers
     |> List.fold_left
@@ -1324,13 +1325,6 @@ let autocomplete_unqualified_type
              let error_to_log = Ty_normalizer.error_to_string err in
              (items_rev, error_to_log :: errors_to_log))
          (items_rev, [])
-  in
-  let genv =
-    Ty_normalizer_flow.mk_genv
-      ~options:ty_normalizer_options
-      ~cx
-      ~typed_ast_opt:(Some typed_ast)
-      ~file_sig
   in
   let value_identifiers = local_value_identifiers ~typing ~genv ~ac_loc in
 
@@ -1837,15 +1831,8 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
     AcResult { result; errors_to_log }
 
 let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name module_type =
-  let { cx; file_sig; typed_ast; _ } = typing in
+  let { cx; norm_genv = genv; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
-  let genv =
-    Ty_normalizer_flow.mk_genv
-      ~options:ty_normalizer_options
-      ~cx
-      ~file_sig
-      ~typed_ast_opt:(Some typed_ast)
-  in
   let module_ty_res = Ty_normalizer_flow.from_type genv module_type in
   let documentation_and_tags_of_module_member = documentation_and_tags_of_def_loc typing in
   let (items, errors_to_log) =
@@ -2113,7 +2100,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
-  let { options; reader; cx; file_sig; ast; typed_ast; _ } = typing in
+  let { options; reader; cx; ast; typed_ast; norm_genv = genv; _ } = typing in
   let open Autocomplete_js in
   match process_location cx ~trigger_character ~cursor ~ast ~typed_ast_opt:(Some typed_ast) with
   | Error err -> (None, None, "None", AcFatalError err)
@@ -2167,13 +2154,6 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
       | Ac_literal { lit_type = None } -> AcEmpty "Literal"
       | Ac_literal { lit_type = Some lit_type } ->
-        let genv =
-          Ty_normalizer_flow.mk_genv
-            ~options:ty_normalizer_options
-            ~cx
-            ~typed_ast_opt:(Some typed_ast)
-            ~file_sig
-        in
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =

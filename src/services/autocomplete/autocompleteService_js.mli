@@ -42,15 +42,17 @@ type ac_result = {
   errors_to_log: string list;
 }
 
-type typing = {
-  options: Options.t;
-  reader: Parsing_heaps.Reader.reader;
-  cx: Context.t;
-  file_sig: File_sig.t;
-  ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
-  exports: Export_search.t;
-}
+type typing
+
+val mk_typing_artifacts :
+  options:Options.t ->
+  reader:Parsing_heaps.Reader.reader ->
+  cx:Context.t ->
+  file_sig:File_sig.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  exports:Export_search.t ->
+  typing
 
 type autocomplete_service_result =
   | AcResult of ac_result

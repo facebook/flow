@@ -342,9 +342,15 @@ let autocomplete
               show_ranking_info;
             }
           in
-          let exports = env.ServerEnv.exports in
           let typing =
-            { AutocompleteService_js.exports; options; reader; cx; file_sig; ast; typed_ast }
+            AutocompleteService_js.mk_typing_artifacts
+              ~options
+              ~reader
+              ~cx
+              ~file_sig
+              ~ast
+              ~typed_ast
+              ~exports:env.ServerEnv.exports
           in
           let (token_opt, ac_loc, ac_type_string, results_res) =
             autocomplete_get_results typing ac_options trigger_character cursor_loc
