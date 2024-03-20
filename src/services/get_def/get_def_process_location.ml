@@ -68,13 +68,15 @@ let annot_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
     annot
 
-class searcher
-  ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : ALoc.t -> bool) ~purpose =
-  let loc_of_annot (loc, _) = loc in
-  let annot_covers_target annot = covers_target (loc_of_annot annot) in
+class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
   object (this)
-    inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+    inherit [ALoc.t, 'T, ALoc.t, 'T] Typed_ast_finder.enclosing_node_mapper as super
+
+    method virtual loc_of_annot : 'T -> ALoc.t
+
+    method private annot_covers_target annot = covers_target (this#loc_of_annot annot)
+
+    method private is_legit_require annot = is_legit_require (this#loc_of_annot annot)
 
     val mutable in_require_declarator = false
 
@@ -84,31 +86,42 @@ class searcher
 
     method found_loc = found_loc_
 
-    method with_in_require_declarator value f =
+    method private with_in_require_declarator value f =
       let was_in_require_declarator = in_require_declarator in
       in_require_declarator <- value;
       let result = f () in
       in_require_declarator <- was_in_require_declarator;
       result
 
-    method on_loc_annot (x : ALoc.t) = x
+    method private on_loc_annot x = x
 
-    method on_type_annot (x : ALoc.t * Type.t) = x
-
-    method own_def : 'a. ALoc.t -> string -> 'a =
+    method private own_def : 'a. ALoc.t -> string -> 'a =
       fun loc name ->
         found_loc_ <- OwnDef (loc, name);
         raise Found
 
-    method found_empty : 'a. string -> 'a =
+    method private found_empty : 'a. string -> 'a =
       fun x ->
         found_loc_ <- Empty x;
         raise Found
 
-    method request : 'a. (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> 'a =
+    method private request : 'a. (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> 'a =
       fun x ->
         found_loc_ <- Request x;
         raise Found
+
+    method virtual private type_from_enclosing_node : 'T -> Type.t
+
+    method virtual private get_module_t : 'T -> ALoc.t Ast.StringLiteral.t -> Type.t
+
+    method virtual private remote_name_def_loc_of_import_named_specifier
+        : (ALoc.t, 'T) Ast.Statement.ImportDeclaration.named_specifier -> ALoc.t option
+
+    method virtual private remote_default_name_def_loc_of_import_declaration
+        : ALoc.t * (ALoc.t, 'T) Ast.Statement.ImportDeclaration.t -> ALoc.t option
+
+    method virtual private component_name_of_jsx_element
+        : 'T -> (ALoc.t, 'T) Ast.JSX.element -> ALoc.t * Type.t
 
     method! variable_declarator
         ~kind ((_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) as x) =
@@ -118,14 +131,19 @@ class searcher
       let (id_annot, _) = id in
       let has_require =
         match init with
-        | Some init when is_require ~is_legit_require init && annot_covers_target id_annot -> true
+        | Some init
+          when is_require ~is_legit_require:this#is_legit_require init
+               && this#annot_covers_target id_annot ->
+          true
         | _ -> false
       in
       this#with_in_require_declarator has_require (fun () -> super#variable_declarator ~kind x)
 
     method! import_source source_annot lit =
-      if annot_covers_target source_annot then
-        this#request (Get_def_request.Type { annot = source_annot; name = None });
+      if this#annot_covers_target source_annot then begin
+        let source_annot = (this#loc_of_annot source_annot, this#get_module_t source_annot lit) in
+        this#request (Get_def_request.Type { annot = source_annot; name = None })
+      end;
       super#import_source source_annot lit
 
     method! import_named_specifier ~import_kind:_ decl =
@@ -133,48 +151,55 @@ class searcher
       let {
         local;
         remote = (remote_annot, { Ast.Identifier.name; _ });
-        remote_name_def_loc;
+        remote_name_def_loc = _;
         kind = _;
       } =
         decl
       in
-      ( if annot_covers_target remote_annot then
-        match remote_name_def_loc with
+      ( if this#annot_covers_target remote_annot then
+        match this#remote_name_def_loc_of_import_named_specifier decl with
         | Some l -> this#own_def l name
-        | None -> this#own_def (fst remote_annot) "default"
+        | None -> this#own_def (this#loc_of_annot remote_annot) "default"
       );
       Base.Option.iter local ~f:(fun (local_annot, _) ->
-          if annot_covers_target local_annot then
-            match remote_name_def_loc with
+          if this#annot_covers_target local_annot then
+            match this#remote_name_def_loc_of_import_named_specifier decl with
             | Some l -> this#own_def l name
-            | None -> this#own_def (fst local_annot) "default"
+            | None -> this#own_def (this#loc_of_annot local_annot) "default"
       );
       decl
 
     method! import_declaration loc decl =
       let open Ast.Statement.ImportDeclaration in
-      let { default; specifiers; source; _ } = decl in
-      Base.Option.iter default ~f:(fun { identifier = (annot, _); remote_default_name_def_loc } ->
-          if annot_covers_target annot then
-            match remote_default_name_def_loc with
+      let { default; specifiers; source = (source_annot, _); _ } = decl in
+      Base.Option.iter default ~f:(fun { identifier = (annot, _); _ } ->
+          if this#annot_covers_target annot then
+            match this#remote_default_name_def_loc_of_import_declaration (loc, decl) with
             | Some l -> this#own_def l "default"
-            | None -> this#own_def (fst annot) "default"
+            | None -> this#own_def (this#loc_of_annot annot) "default"
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()
-          | ImportNamespaceSpecifier (l, ((name_loc, _), { Ast.Identifier.name; _ })) ->
+          | ImportNamespaceSpecifier (l, (name_annot, { Ast.Identifier.name; _ })) ->
             if covers_target l then (
               match purpose with
               | Get_def_types.Purpose.GoToDefinition ->
-                this#request (Get_def_request.Type { annot = fst source; name = Some name })
-              | Get_def_types.Purpose.FindReferences -> ignore @@ this#own_def name_loc name
+                let t = this#type_from_enclosing_node source_annot in
+                this#request
+                  (Get_def_request.Type
+                     { annot = (this#loc_of_annot source_annot, t); name = Some name }
+                  )
+              | Get_def_types.Purpose.FindReferences ->
+                ignore @@ this#own_def (this#loc_of_annot name_annot) name
             )
           );
       super#import_declaration loc decl
 
     method! export_source source_annot lit =
-      if annot_covers_target source_annot then
-        this#request (Get_def_request.Type { annot = source_annot; name = None });
+      if this#annot_covers_target source_annot then begin
+        let source_annot = (this#loc_of_annot source_annot, this#get_module_t source_annot lit) in
+        this#request (Get_def_request.Type { annot = source_annot; name = None })
+      end;
       super#export_source source_annot lit
 
     method! member loc expr =
@@ -182,8 +207,10 @@ class searcher
       let { _object; property; comments = _ } = expr in
       begin
         match property with
-        | PropertyIdentifier (annot, { Ast.Identifier.name; _ }) when annot_covers_target annot ->
+        | PropertyIdentifier (annot, { Ast.Identifier.name; _ }) when this#annot_covers_target annot
+          ->
           let (obj_annot, _) = _object in
+          let obj_annot = (this#loc_of_annot obj_annot, this#type_from_enclosing_node obj_annot) in
           let force_instance = Flow_ast_utils.is_super_member_access expr in
           let result =
             Get_def_request.(Member { prop_name = name; object_type = obj_annot; force_instance })
@@ -198,8 +225,9 @@ class searcher
       let { _object; index; comments = _ } = expr in
       (match index with
       | (annot, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ })
-        when annot_covers_target annot ->
+        when this#annot_covers_target annot ->
         let (obj_annot, _) = _object in
+        let obj_annot = (this#loc_of_annot obj_annot, this#type_from_enclosing_node obj_annot) in
         let result =
           Get_def_request.(
             Member { prop_name = value; object_type = obj_annot; force_instance = false }
@@ -210,12 +238,16 @@ class searcher
       super#indexed_access_type expr
 
     method! t_identifier ((loc, { Ast.Identifier.name; _ }) as id) =
-      if annot_covers_target loc then this#request (Get_def_request.Identifier { name; loc });
+      if this#annot_covers_target loc then begin
+        let t = this#type_from_enclosing_node loc in
+        this#request (Get_def_request.Identifier { name; loc = (this#loc_of_annot loc, t) })
+      end;
       super#t_identifier id
 
-    method! jsx_opening_element elt =
+    method! jsx_element expr_loc expr =
       let open Ast.JSX in
-      let (_, Opening.{ name = component_name; attributes; _ }) = elt in
+      let { opening_element; closing_element = _; children = _; comments = _ } = expr in
+      let (_, Opening.{ name = _component_name; attributes; _ }) = opening_element in
       List.iter
         (function
           | Opening.Attribute
@@ -226,19 +258,19 @@ class searcher
                   _;
                 }
               )
-            when annot_covers_target annot ->
-            let loc = loc_of_annot annot in
-            this#request
-              (Get_def_request.JsxAttribute
-                 { component_t = annot_of_jsx_name component_name; name = attribute_name; loc }
-              )
+            when this#annot_covers_target annot ->
+            let loc = this#loc_of_annot annot in
+            let component_t = this#component_name_of_jsx_element expr_loc expr in
+            this#request (Get_def_request.JsxAttribute { component_t; name = attribute_name; loc })
           | _ -> ())
         attributes;
-      super#jsx_opening_element elt
+      super#jsx_element expr_loc expr
 
     method! jsx_element_name_identifier ((annot, { Ast.JSX.Identifier.name; comments = _ }) as id) =
-      if annot_covers_target annot then
-        this#request (Get_def_request.Identifier { name; loc = annot });
+      if this#annot_covers_target annot then begin
+        let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
+        this#request (Get_def_request.Identifier { name; loc = annot })
+      end;
       super#jsx_element_name_identifier id
 
     method! jsx_element_name_namespaced ns =
@@ -258,7 +290,7 @@ class searcher
       (* In const {foo: bar} = require('some_module'); foo and bar should jump to prop def of foo,
          while in other cases, bar should be its own definition. *)
       let is_id_pattern_of_obj_key_in_require_declarator = function
-        | (id_annot, Identifier _) -> in_require_declarator && annot_covers_target id_annot
+        | (id_annot, Identifier _) -> in_require_declarator && this#annot_covers_target id_annot
         | _ -> false
       in
       let () =
@@ -272,13 +304,19 @@ class searcher
                 | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
                   when covers_target loc || is_id_pattern_of_obj_key_in_require_declarator pattern
                   ->
+                  let pat_annot =
+                    (this#loc_of_annot pat_annot, this#type_from_enclosing_node pat_annot)
+                  in
                   this#request
                     Get_def_request.(
                       Member { prop_name = name; object_type = pat_annot; force_instance = false }
                     )
                 | Property.Identifier (id_annot, { Ast.Identifier.name; _ })
-                  when annot_covers_target id_annot
+                  when this#annot_covers_target id_annot
                        || is_id_pattern_of_obj_key_in_require_declarator pattern ->
+                  let pat_annot =
+                    (this#loc_of_annot pat_annot, this#type_from_enclosing_node pat_annot)
+                  in
                   this#request
                     Get_def_request.(
                       Member { prop_name = name; object_type = pat_annot; force_instance = false }
@@ -293,17 +331,18 @@ class searcher
       super#pattern ?kind pat
 
     method! pattern_identifier ?kind (annot, ({ Ast.Identifier.name; comments = _ } as name_node)) =
-      if kind != None && annot_covers_target annot then
+      if kind != None && this#annot_covers_target annot then
         if in_require_declarator then
+          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
           this#request (Get_def_request.Type { annot; name = Some name })
         else
-          this#own_def (loc_of_annot annot) name;
+          this#own_def (this#loc_of_annot annot) name;
       super#pattern_identifier ?kind (annot, name_node)
 
     method! expression (annot, expr) =
       let open Ast in
       let open Expression in
-      if annot_covers_target annot then
+      if this#annot_covers_target annot then
         match expr with
         | StringLiteral _ -> this#found_empty "string"
         | NumberLiteral _ -> this#found_empty "number"
@@ -320,7 +359,8 @@ class searcher
                 );
               _;
             }
-          when is_legit_require source_annot ->
+          when this#is_legit_require source_annot ->
+          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
           this#request (Get_def_request.Type { annot; name = None })
         | _ -> super#expression (annot, expr)
       else
@@ -330,7 +370,7 @@ class searcher
         super#expression (annot, expr)
 
     method! type_ (annot, t) =
-      if annot_covers_target annot then
+      if this#annot_covers_target annot then
         let open! Ast.Type in
         match t with
         | Any _
@@ -384,7 +424,10 @@ class searcher
 
     method! module_ref_literal mref =
       let { Ast.ModuleRefLiteral.require_out; _ } = mref in
-      if annot_covers_target require_out then
+      if this#annot_covers_target require_out then
+        let require_out =
+          (this#loc_of_annot require_out, this#type_from_enclosing_node require_out)
+        in
         this#request (Get_def_request.Type { annot = require_out; name = None })
       else
         super#module_ref_literal mref
@@ -397,25 +440,25 @@ class searcher
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
     method! object_key_identifier id =
       let (annot, { Ast.Identifier.name; comments = _ }) = id in
-      if annot_covers_target annot then this#own_def (loc_of_annot annot) name;
+      if this#annot_covers_target annot then this#own_def (this#loc_of_annot annot) name;
       id
 
     method! object_key_string_literal literal =
       let (annot, _) = literal in
       (* TODO: this should be supported *)
-      if annot_covers_target annot then this#found_empty "object key (literal)";
+      if this#annot_covers_target annot then this#found_empty "object key (literal)";
       literal
 
     method! object_key_number_literal literal =
       let (annot, _) = literal in
       (* TODO: this should be supported *)
-      if annot_covers_target annot then this#found_empty "object key (literal)";
+      if this#annot_covers_target annot then this#found_empty "object key (literal)";
       literal
 
     method! object_key_bigint_literal literal =
       let (annot, _) = literal in
       (* TODO: this should be supported *)
-      if annot_covers_target annot then this#found_empty "object key (literal)";
+      if this#annot_covers_target annot then this#found_empty "object key (literal)";
       literal
 
     (* for object properties using the shorthand {variableName} syntax,
@@ -432,7 +475,8 @@ class searcher
       let { Ast.Expression.New.callee = (_, callee); _ } = expr in
       begin
         match callee with
-        | Ast.Expression.Identifier (annot, _) when annot_covers_target annot ->
+        | Ast.Expression.Identifier (annot, _) when this#annot_covers_target annot ->
+          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
           this#request
             Get_def_request.(
               Member
@@ -461,7 +505,7 @@ class searcher
 
     method! jsx_attribute_value_literal lit =
       let (annot, _) = lit in
-      if annot_covers_target annot then this#found_empty "jsx attribute literal";
+      if this#annot_covers_target annot then this#found_empty "jsx attribute literal";
       lit
 
     method! jsx_attribute_name_namespaced name =
@@ -473,7 +517,7 @@ class searcher
     method! jsx_child child =
       let (loc, c) = child in
       match c with
-      | Ast.JSX.Text _ when annot_covers_target loc -> this#found_empty "jsx text"
+      | Ast.JSX.Text _ when this#annot_covers_target loc -> this#found_empty "jsx text"
       | _ -> super#jsx_child child
 
     method! class_body cls_body =
@@ -504,9 +548,38 @@ class searcher
         pn
   end
 
+class typed_ast_searcher _cx ~typed_ast:_ ~is_legit_require ~covers_target ~purpose =
+  object
+    inherit [ALoc.t * Type.t] searcher _cx ~is_legit_require ~covers_target ~purpose
+
+    method private loc_of_annot (loc, _) = loc
+
+    method on_type_annot (x, y) = (x, y)
+
+    method private remote_name_def_loc_of_import_named_specifier decl =
+      let { Ast.Statement.ImportDeclaration.remote_name_def_loc; _ } = decl in
+      remote_name_def_loc
+
+    method private remote_default_name_def_loc_of_import_declaration (_loc, decl) =
+      let open Ast.Statement.ImportDeclaration in
+      let { default; _ } = decl in
+      match default with
+      | None -> None
+      | Some { remote_default_name_def_loc = loc; _ } -> loc
+
+    method private get_module_t (_, t) _ = t
+
+    method private component_name_of_jsx_element _ expr =
+      let open Ast.JSX in
+      let { opening_element = (_, Opening.{ name; _ }); _ } = expr in
+      annot_of_jsx_name name
+
+    method private type_from_enclosing_node (_, t) = t
+  end
+
 let process_location_in_typed_ast ~typed_ast ~is_legit_require ~purpose loc =
   let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-  let searcher = new searcher ~is_legit_require ~covers_target ~purpose in
+  let searcher = new typed_ast_searcher () ~typed_ast ~is_legit_require ~covers_target ~purpose in
   (try ignore (searcher#program typed_ast) with
   | Found -> ());
   searcher#found_loc

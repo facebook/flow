@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 type 'loc result =
   | OwnDef of 'loc * (* name *) string
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
@@ -12,11 +14,48 @@ type 'loc result =
   | LocNotFound
 [@@deriving show]
 
+(* We don't really need to export this type, but it is a convenient way to enforce
+ * that searcher is indeed polymorpphic over 'T, instead of being pinned to
+ * `ALoc.t * Type.t` through an inferred constraint. *)
+class virtual ['T] searcher :
+  'c
+  -> is_legit_require:(ALoc.t -> bool)
+  -> covers_target:(ALoc.t -> bool)
+  -> purpose:Get_def_types.Purpose.t
+  -> object
+       inherit [ALoc.t, 'T, ALoc.t, 'T] Typed_ast_finder.enclosing_node_mapper
+
+       val mutable available_private_names : ALoc.t SMap.t
+
+       val mutable enclosing_node_stack : (ALoc.t, 'T) Typed_ast_finder.enclosing_node list
+
+       val mutable found_loc_ : ALoc.t result
+
+       val mutable in_require_declarator : bool
+
+       method virtual private type_from_enclosing_node : 'T -> Type.t
+
+       method virtual private get_module_t : 'T -> ALoc.t Ast.StringLiteral.t -> Type.t
+
+       method virtual private remote_name_def_loc_of_import_named_specifier :
+         (ALoc.t, 'T) Ast.Statement.ImportDeclaration.named_specifier -> ALoc.t option
+
+       method virtual private remote_default_name_def_loc_of_import_declaration :
+         ALoc.t * (ALoc.t, 'T) Ast.Statement.ImportDeclaration.t -> ALoc.t option
+
+       method virtual private component_name_of_jsx_element :
+         'T -> (ALoc.t, 'T) Ast.JSX.element -> ALoc.t * Type.t
+
+       method found_loc : ALoc.t result
+
+       method virtual loc_of_annot : 'T -> ALoc.t
+     end
+
 val process_type_request : Context.t -> Type.t -> (ALoc.t, string) Stdlib.result
 
 val process_location_in_typed_ast :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  is_legit_require:(ALoc.t * Type.t -> bool) ->
+  is_legit_require:(ALoc.t -> bool) ->
   purpose:Get_def_types.Purpose.t ->
   Loc.t ->
   ALoc.t result

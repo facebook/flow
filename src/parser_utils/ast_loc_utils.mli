@@ -8,3 +8,6 @@
 (* Converts a (Loc.t, Loc.t) AST into a (ALoc.t, ALoc.t) AST. Leaves the underlying representation
  * of the contained ALoc.ts concrete. *)
 val loc_to_aloc_mapper : (Loc.t, Loc.t, ALoc.t, ALoc.t) Flow_polymorphic_ast_mapper.mapper
+
+val loc_to_aloc_unit_mapper :
+  (Loc.t, Loc.t, ALoc.t, ALoc.t * unit) Flow_polymorphic_ast_mapper.mapper
