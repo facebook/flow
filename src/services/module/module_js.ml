@@ -524,10 +524,10 @@ module Haste : MODULE_SYSTEM = struct
       ~options ~reader ?phantom_acc ~dir ~source r =
     let dependency = resolve_haste_module ~options ~reader ?phantom_acc ~source ~dir r in
     let file_options = Options.file_options options in
-    if file_options.Files.multi_platform then
+    if Files.multi_platform file_options then
       match Option.map Parsing_heaps.read_dependency dependency with
       | Some (Modulename.String mname as module_name)
-        when Base.List.exists file_options.Files.multi_platform_extensions ~f:(fun ext ->
+        when Base.List.exists (Files.multi_platform_extensions file_options) ~f:(fun ext ->
                  String.ends_with ~suffix:ext mname
              ) ->
         (* If we don't allow an import to resolve a platform specific import, but we did find one,
@@ -547,7 +547,7 @@ module Haste : MODULE_SYSTEM = struct
       Node.resolve_relative ~options ~reader ?phantom_acc ~source:f dir r
     else
       let file_options = Options.file_options options in
-      if not file_options.Files.multi_platform then
+      if not (Files.multi_platform file_options) then
         lazy_seq
           [
             lazy (resolve_haste_module ~options ~reader ?phantom_acc ~source:f ~dir r);

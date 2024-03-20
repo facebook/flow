@@ -11,30 +11,32 @@ type lib_dir =
   | Prelude of File_path.t
   | Flowlib of File_path.t
 
-type options = {
-  default_lib_dir: lib_dir option;
-  ignores: (string * Str.regexp) list;
-  untyped: (string * Str.regexp) list;
-  declarations: (string * Str.regexp) list;
-  includes: Path_matcher.t;
-  lib_paths: File_path.t list;
-  module_file_exts: string list;
-  module_resource_exts: SSet.t;
-  multi_platform: bool;
-  multi_platform_extensions: string list;
-  multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
-  node_resolver_dirnames: string list;
-}
+type options
+
+val mk_options :
+  default_lib_dir:lib_dir option ->
+  ignores:(string * Str.regexp) list ->
+  untyped:(string * Str.regexp) list ->
+  declarations:(string * Str.regexp) list ->
+  includes:Path_matcher.t ->
+  lib_paths:File_path.t list ->
+  module_file_exts:string list ->
+  module_resource_exts:SSet.t ->
+  multi_platform:bool ->
+  multi_platform_extensions:string list ->
+  multi_platform_ambient_supports_platform_directory_overrides:(string * string list) list ->
+  node_resolver_dirnames:string list ->
+  options
 
 val default_options : options
 
 val default_lib_dir : options -> lib_dir option
 
+val with_default_lib_dir : default_lib_dir:lib_dir option -> options -> options
+
 val ignores : options -> (string * Str.regexp) list
 
 val untyped : options -> (string * Str.regexp) list
-
-val declarations : options -> (string * Str.regexp) list
 
 val includes : options -> Path_matcher.t
 
@@ -43,6 +45,13 @@ val lib_paths : options -> File_path.t list
 val module_file_exts : options -> string list
 
 val module_resource_exts : options -> SSet.t
+
+val multi_platform : options -> bool
+
+val multi_platform_extensions : options -> string list
+
+val multi_platform_ambient_supports_platform_directory_overrides :
+  options -> (string * string list) list
 
 val node_resolver_dirnames : options -> string list
 

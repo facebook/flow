@@ -241,7 +241,7 @@ let main
     make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag
   in
   (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
-  let options = { options with Files.default_lib_dir = None } in
+  let options = Files.with_default_lib_dir ~default_lib_dir:None options in
   let (_, libs) = Files.init options in
   (* `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
    * we pass in ~libs:SSet.empty, which means we won't filter out any lib files *)

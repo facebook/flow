@@ -60,7 +60,7 @@ module Import_export = struct
           Flow_js_utils.lookup_builtin_error cx m_name reason
           |> Flow_js_utils.apply_env_errors cx loc
       in
-      ( if perform_platform_validation && Context.((metadata cx).file_options.Files.multi_platform)
+      ( if perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
       then
         match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
         | [ModuleT m] -> check_platform_availability cx reason m.module_available_platforms

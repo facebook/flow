@@ -26,6 +26,34 @@ type options = {
   node_resolver_dirnames: string list;
 }
 
+let mk_options
+    ~default_lib_dir
+    ~ignores
+    ~untyped
+    ~declarations
+    ~includes
+    ~lib_paths
+    ~module_file_exts
+    ~module_resource_exts
+    ~multi_platform
+    ~multi_platform_extensions
+    ~multi_platform_ambient_supports_platform_directory_overrides
+    ~node_resolver_dirnames =
+  {
+    default_lib_dir;
+    ignores;
+    untyped;
+    declarations;
+    includes;
+    lib_paths;
+    module_file_exts;
+    module_resource_exts;
+    multi_platform;
+    multi_platform_extensions;
+    multi_platform_ambient_supports_platform_directory_overrides;
+    node_resolver_dirnames;
+  }
+
 let default_options =
   {
     default_lib_dir = None;
@@ -44,11 +72,11 @@ let default_options =
 
 let default_lib_dir options = options.default_lib_dir
 
+let with_default_lib_dir ~default_lib_dir options = { options with default_lib_dir }
+
 let ignores options = options.ignores
 
 let untyped options = options.untyped
-
-let declarations options = options.declarations
 
 let includes options = options.includes
 
@@ -57,6 +85,13 @@ let lib_paths options = options.lib_paths
 let module_file_exts options = options.module_file_exts
 
 let module_resource_exts options = options.module_resource_exts
+
+let multi_platform options = options.multi_platform
+
+let multi_platform_extensions options = options.multi_platform_extensions
+
+let multi_platform_ambient_supports_platform_directory_overrides options =
+  options.multi_platform_ambient_supports_platform_directory_overrides
 
 let node_resolver_dirnames options = options.node_resolver_dirnames
 

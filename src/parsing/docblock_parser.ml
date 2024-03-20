@@ -122,7 +122,7 @@ let extract_docblock =
       | (loc, "@jsxRuntime") :: _ :: xs ->
         let acc = ((loc, InvalidJSXRuntimeAttribute) :: errors, info) in
         parse_attributes ~file_options ~filename acc xs
-      | (loc, "@supportsPlatform") :: (_, platform) :: xs when file_options.Files.multi_platform ->
+      | (loc, "@supportsPlatform") :: (_, platform) :: xs when Files.multi_platform file_options ->
         let acc =
           if
             filename
@@ -134,7 +134,7 @@ let extract_docblock =
           else if
             Base.List.mem
               ~equal:String.equal
-              file_options.Files.multi_platform_extensions
+              (Files.multi_platform_extensions file_options)
               ("." ^ platform)
           then
             let existing_platforms = Base.Option.value info.supportsPlatform ~default:[] in
