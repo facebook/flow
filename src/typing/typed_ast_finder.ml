@@ -9,9 +9,79 @@ module Ast = Flow_ast
 
 let mk_bound_t cx tparam = Flow_js_utils.generic_of_tparam cx ~f:(fun x -> x) tparam
 
+type ('M, 'T) enclosing_node =
+  | EnclosingProgram of ('M, 'T) Ast.Program.t
+  | EnclosingStatement of ('M, 'T) Ast.Statement.t
+  | EnclosingExpression of ('M, 'T) Ast.Expression.t
+
+class virtual ['M, 'T, 'N, 'U] enclosing_node_mapper =
+  object
+    inherit ['M, 'T, 'N, 'U] Flow_polymorphic_ast_mapper.mapper as super
+
+    val mutable enclosing_node_stack : ('M, 'T) enclosing_node list = []
+
+    method enclosing_node = List.hd enclosing_node_stack
+
+    method! program prog =
+      let old_enclosing_node_stack = enclosing_node_stack in
+      enclosing_node_stack <- EnclosingProgram prog :: enclosing_node_stack;
+      let program' = super#program prog in
+      enclosing_node_stack <- old_enclosing_node_stack;
+      program'
+
+    method! statement stmt =
+      let old_enclosing_node_stack = enclosing_node_stack in
+      enclosing_node_stack <- EnclosingStatement stmt :: enclosing_node_stack;
+      let stmt' = super#statement stmt in
+      enclosing_node_stack <- old_enclosing_node_stack;
+      stmt'
+
+    method! expression expr =
+      let old_enclosing_node_stack = enclosing_node_stack in
+      enclosing_node_stack <- EnclosingExpression expr :: enclosing_node_stack;
+      let expr' = super#expression expr in
+      enclosing_node_stack <- old_enclosing_node_stack;
+      expr'
+  end
+
+module Statement = Fix_statement.Statement_
+
+let infer_node cx node =
+  match node with
+  | EnclosingProgram prog ->
+    let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = prog in
+    let statements = Statement.statement_list cx statements in
+    EnclosingProgram (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments })
+  | EnclosingStatement stmt -> EnclosingStatement (Statement.statement cx stmt)
+  | EnclosingExpression expr -> EnclosingExpression (Statement.expression cx expr)
+
+let find_type_annot_in_node loc node =
+  let exception Found of Type.t in
+  let visitor =
+    object (_this)
+      inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+
+      method on_loc_annot loc = loc
+
+      method on_type_annot (loc', t) =
+        if loc' = loc then raise (Found t);
+        (loc, t)
+    end
+  in
+  try
+    begin
+      match node with
+      | EnclosingProgram prog -> ignore (visitor#program prog)
+      | EnclosingStatement stmt -> ignore (visitor#statement stmt)
+      | EnclosingExpression expr -> ignore (visitor#expression expr)
+    end;
+    None
+  with
+  | Found t -> Some t
+
 class virtual ['M, 'T, 'N, 'U, 'P] type_parameter_mapper_generic =
   object (self)
-    inherit ['M, 'T, 'N, 'U] Flow_polymorphic_ast_mapper.mapper as super
+    inherit ['M, 'T, 'N, 'U] enclosing_node_mapper as super
 
     method virtual make_typeparam : ('M, 'T) Ast.Type.TypeParam.t -> 'P
 
