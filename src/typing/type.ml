@@ -1734,8 +1734,6 @@ module rec TypeTerm : sig
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf
-    (* common community functions *)
-    | Compose of bool
     (* 3rd party libs *)
     | ReactCreateElement
     | ReactCloneElement

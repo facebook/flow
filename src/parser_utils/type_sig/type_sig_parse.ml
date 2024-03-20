@@ -2520,16 +2520,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactElementRef (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "$Compose" -> begin
-    match targs with
-    | None -> Annot (Compose loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "$ComposeReverse" -> begin
-    match targs with
-    | None -> Annot (ComposeReverse loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "$Flow$DebugPrint" -> begin
     match targs with
     | None -> Annot (FlowDebugPrint loc)

@@ -16,7 +16,10 @@ f.bind(null, ...b);
 
 function f(...args: Array<mixed>) {}
 
-declare var compose: $Compose;
+declare function compose<A, T: $ReadOnlyArray<any>, R>(
+  f1: (a: A) => R,
+  f2: (...T) => A,
+): (...T) => R;
 compose(...[(x: mixed) => x, (x: mixed) => x]);
 
 const c: $ReadOnlyArray<number> = [4,5,6];

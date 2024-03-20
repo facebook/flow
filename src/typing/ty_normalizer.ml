@@ -1412,7 +1412,7 @@ module Make (I : INPUT) : S = struct
       in
       generic_talias opaque_symbol targs
 
-    and custom_fun_expanded ~env =
+    and custom_fun_expanded =
       Type.(
         function
         (* Object.assign: (target: any, ...sources: Array<any>): any *)
@@ -1498,8 +1498,6 @@ module Make (I : INPUT) : S = struct
               let f2 = mk_fun ~tparams ~params (ReturnType reactElement) in
               mk_inter (f1, [f2])
             )
-        (* Fallback *)
-        | t -> custom_fun_short ~env t
       )
 
     and subst_name ~env loc t bound name =
@@ -1558,8 +1556,6 @@ module Make (I : INPUT) : S = struct
         | ObjectAssign -> return (builtin_t (Reason.OrdinaryName "Object$Assign"))
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
         | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
-        | Compose false -> return (builtin_t (Reason.OrdinaryName "$Compose"))
-        | Compose true -> return (builtin_t (Reason.OrdinaryName "$ComposeReverse"))
         | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
         | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
         | ReactElementFactory t ->
@@ -1572,7 +1568,7 @@ module Make (I : INPUT) : S = struct
 
     and custom_fun ~env t =
       if Env.expand_internal_types env then
-        custom_fun_expanded ~env t
+        custom_fun_expanded t
       else
         custom_fun_short ~env t
 

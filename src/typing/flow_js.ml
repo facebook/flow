@@ -3318,7 +3318,7 @@ struct
         | ( CustomFunT
               ( _,
                 ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint
-                | DebugThrow | DebugSleep | Compose _ | ReactCreateElement | ReactCloneElement
+                | DebugThrow | DebugSleep | ReactCreateElement | ReactCloneElement
                 | ReactElementFactory _ )
               ),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
@@ -3404,11 +3404,7 @@ struct
           rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
         | ( CustomFunT
-              ( lreason,
-                ( (Compose _ | ReactCreateElement | ReactCloneElement | ReactElementFactory _) as
-                kind
-                )
-              ),
+              (lreason, ((ReactCreateElement | ReactCloneElement | ReactElementFactory _) as kind)),
             CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
           ) ->
           let {
@@ -6815,7 +6811,6 @@ struct
     | UseT (_, CustomFunT (_, ObjectAssign))
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
-    | UseT (_, CustomFunT (_, Compose _))
     | UseT (_, CustomFunT (_, ReactCreateElement))
     | UseT (_, CustomFunT (_, ReactCloneElement))
     | UseT (_, CustomFunT (_, DebugPrint))
@@ -6912,7 +6907,6 @@ struct
     | CustomFunT (_, ObjectAssign)
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)
-    | CustomFunT (_, Compose _)
     | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, ReactCloneElement)
     | CustomFunT (_, DebugThrow)

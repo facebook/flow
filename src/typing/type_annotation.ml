@@ -1216,8 +1216,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | "Object$Assign" -> mk_custom_fun cx loc t_ast targs ident ObjectAssign
         | "Object$GetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectGetPrototypeOf
         | "Object$SetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectSetPrototypeOf
-        | "$Compose" -> mk_custom_fun cx loc t_ast targs ident (Compose false)
-        | "$ComposeReverse" -> mk_custom_fun cx loc t_ast targs ident (Compose true)
         | "React$AbstractComponent" ->
           let reason = mk_reason (RCustom "AbstractComponent") loc in
           (match targs with

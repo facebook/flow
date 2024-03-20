@@ -597,8 +597,6 @@ type ('loc, 'a) annot =
   | Object_assign of 'loc
   | Object_getPrototypeOf of 'loc
   | Object_setPrototypeOf of 'loc
-  | Compose of 'loc
-  | ComposeReverse of 'loc
   | ReactAbstractComponent of {
       loc: 'loc;
       config: 'a;

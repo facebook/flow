@@ -25,12 +25,12 @@ exists in `Props` [2]. [prop-missing]
          ^^^
 
 References:
-   hocs.js:13:25
+   hocs.js:16:25
                                v-
-   13| ): (React.ComponentType<{|
-   14|   ...Props,
-   15|   ...ExtraProps,
-   16| |}>) => React.ComponentType<Props> {
+   16| ): (React.ComponentType<{|
+   17|   ...Props,
+   18|   ...ExtraProps,
+   19| |}>) => React.ComponentType<Props> {
        -^ [1]
    Bad.js:9:21
     9| const Bad = (props: Props) => null;

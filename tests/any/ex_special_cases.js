@@ -3,8 +3,6 @@
 // any ~> functionlike
 class C { }
 var C_any: any = C;
-declare var cmp: $Compose;
-var cmp_cany: any = cmp;
 declare var proto_apply: Function$Prototype$Apply;
 declare var proto_bind: Function$Prototype$Bind;
 declare var proto_call: Function$Prototype$Call;
@@ -17,7 +15,6 @@ var f_any: any = f;
 // functionlike ~> any
 declare var a: any;
 var C_from_any: Class<C> = a;
-var cmp_from_any: $Compose = a;
 var proto_apply_from_any: Function$Prototype$Apply = a;
 var proto_bind_from_any: Function$Prototype$Bind = a;
 var proto_call_from_any: Function$Prototype$Call = a;

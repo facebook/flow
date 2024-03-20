@@ -891,12 +891,6 @@ and merge_annot env file = function
   | Object_setPrototypeOf loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.ObjectSetPrototypeOf)
-  | Compose loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.Compose false)
-  | ComposeReverse loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.Compose true)
   | ReactAbstractComponent { loc; config; instance; renders } ->
     let reason = Reason.(mk_reason (RCustom "AbstractComponent") loc) in
     let config = merge env file config in

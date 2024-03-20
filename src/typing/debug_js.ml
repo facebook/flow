@@ -126,8 +126,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
-    | Compose false -> "Compose"
-    | Compose true -> "ComposeReverse"
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
     | ReactElementFactory _ -> "ReactElementFactory"

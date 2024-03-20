@@ -752,7 +752,6 @@ class virtual ['a] t =
       | ObjectAssign
       | ObjectGetPrototypeOf
       | ObjectSetPrototypeOf
-      | Compose _
       | ReactCreateElement
       | ReactCloneElement
       | DebugPrint
