@@ -192,8 +192,8 @@ Optional elements must be at the end of the tuple type, after all required eleme
 
 ```js flow-check
 type T = [foo: number, bar?: string];
-([1, "s"]: T); // OK: has all elements
-([1]: T); // OK: skipping optional element
+[1, "s"] as T; // OK: has all elements
+[1] as T; // OK: skipping optional element
 ```
 
 You cannot write `undefined` to the optional element - add `| void` to the element type if you want to do so:
@@ -202,7 +202,7 @@ You cannot write `undefined` to the optional element - add `| void` to the eleme
 type T = [foo?: number, bar?: number | void];
 declare const x: T;
 x[0] = undefined; // ERROR
-([undefined]: T); // ERROR
+[undefined] as T; // ERROR
 
 x[1] = undefined; // OK: we've added `| void` to the element type
 ```
@@ -211,10 +211,10 @@ You can also use the [`Partial`](../utilities/#toc-partial) and [`Required`](../
 
 ```js flow-check
 type AllRequired = [number, string];
-([]: Partial<AllRequired>); // OK: like `[a?: number, b?: string]` now
+[] as Partial<AllRequired>; // OK: like `[a?: number, b?: string]` now
 
 type AllOptional = [a?: number, b?: string];
-([]: Required<AllOptional>); // ERROR: like `[a: number, b: string]` now
+[] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
 ```
 
 Tuples with optional elements have an arity (length) that is a range rather than a single number. For example, `[number, b?: string]` has an length of 1-2.
@@ -226,7 +226,7 @@ You can spread a tuple type into another tuple type to make a longer tuple type:
 ```js flow-check
 type A = [number, string];
 type T = [...A, boolean]; // Same as `[number, string, boolean]`
-([1, "s", true]: T); // OK
+[1, "s", true] as T; // OK
 ```
 
 Tuple spreads preserve labels, variance, and optionality. You cannot spread arrays into tuples, only other tuples.
@@ -238,14 +238,14 @@ You can still type this value as the appropriate `Array<T>` type - only the tupl
 ```js flow-check
 const a: [foo?: 1] = [];
 const b = [0, ...a, 2]; // At runtime this is `[0, 2]`
-(b: [0, 1 | void, 2]); // ERROR
-(b: Array<number | void>); // OK
+b as [0, 1 | void, 2]; // ERROR
+b as Array<number | void>; // OK
 
 const c: [0, foo?: 1] = [0];
 const d: [bar?: 2] = [2];
 const e = [...c, ...d]; // At runtime this is `[0, 2]`
-(e: [0, foo?: 1, bar?: 2]); // ERROR
-(e: Array<number | void>); // OK
+e as [0, foo?: 1, bar?: 2]; // ERROR
+e as Array<number | void>; // OK
 ```
 
 ## Adoption

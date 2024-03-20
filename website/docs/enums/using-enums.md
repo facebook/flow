@@ -457,7 +457,7 @@ If your enum value is in a union (e.g. `?Status`), first refine to only the enum
 const status: ?Status = ...;
 
 if (status != null) {
-  (status: Status); // 'status' is refined to 'Status' at this point
+  status as Status; // 'status' is refined to 'Status' at this point
   switch (status) {
     case Status.Active: break;
     case Status.Paused: break;
@@ -472,7 +472,7 @@ const val: Status | number = ...;
 
 // 'Status' is a string enum
 if (typeof val === 'string') {
-  (val: Status); // 'val' is refined to 'Status' at this point
+  val as Status; // 'val' is refined to 'Status' at this point
   switch (val) {
     case Status.Active: break;
     case Status.Paused: break;

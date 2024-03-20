@@ -148,7 +148,7 @@ type Foo = {
   bar: number
 }
 
-declare var foo: Foo;
+declare const foo: Foo;
 foo?.bar; // Error
 ```
 
@@ -162,7 +162,7 @@ type Foo = {
   }
 }
 
-declare var foo: ?Foo;
+declare const foo: ?Foo;
 foo?.bar?.baz; // Error
 ```
 

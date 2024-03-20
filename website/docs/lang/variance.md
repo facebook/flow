@@ -81,7 +81,7 @@ type NonCovariantOf<X> = {
 ```
 Let's also declare a variable `nonCovariantCity` of type `NonCovariantOf<City>`
 ```js
-declare var nonCovariantCity: NonCovariantOf<City>;
+declare const nonCovariantCity: NonCovariantOf<City>;
 ```
 Now, it is not safe to consider `nonCovariantCity` as an object of type `NonCovariantOf<Noun>`.
 Were we allowed to do this, we could have the following declaration:
@@ -109,7 +109,7 @@ type InvariantOf<X> = {
 ```
 Assuming a variable
 ```js
-declare var invariantCity: InvariantOf<City>;
+declare const invariantCity: InvariantOf<City>;
 ```
 it is *not* safe to use `invariantCity` in a context where:
 - an `InvariantOf<Noun>` is needed, because we should not be able to write a `Noun` to property

@@ -23,7 +23,7 @@ The same logic can be applied for all `const`-like initializations. Where things
 get a little more complicated is when variable initialization spans across multiple statements,
 for example in
 ```js flow-check
-declare var maybeString: ?string;
+declare const maybeString: ?string;
 
 let len;
 if (typeof maybeString === "string") {
@@ -51,7 +51,7 @@ an object with a `length` property, or a string, just to name a few. If later on
 the program we had the following calls to `getLength`
 ```js
 getLength("abc");
-getLength({ length: 1 });
+getLength({length: 1});
 ```
 one possible inference would be that `x` is a `string | { length: number }`. What this implies,
 however, is that the type of `getLength` is determined by any part of the current
@@ -116,7 +116,7 @@ Flow can infer the types for unannotated parameters even when they are nested wi
 other expressions like objects. For example in
 in
 ```js flow-check
-const fn3: { f: (number) => void } = { f: (x) => {(x: string)} };
+const fn3: {f: (number) => void} = {f: (x) => {x as string}};
 ```
 Flow will infer `number` as the type of `x`, and so the cast fails.
 
@@ -183,7 +183,7 @@ or calling `useState` from the React library:
 ```js flow-check
 const set = new Set([1, 2, 3]);
 
-import { useState } from 'react';
+import {useState} from 'react';
 const [num, setNum] = useState(42);
 ```
 Flow here infers that the type of `set` is `Set<number>`, and that `num` and `setNum`
@@ -291,10 +291,10 @@ Finally, a common source of errors is the case where the inferred type in a gene
 call is correct for the call itself, but not indicative of the expected use later in the code.
 For example, consider
 ```js flow-check
-import { useState } from 'react';
+import {useState} from 'react';
 const [str, setStr] = useState("");
 
-declare var maybeString: ?string;
+declare const maybeString: ?string;
 setStr(maybeString);
 ```
 Passing the string `""` to the call to `useState` makes Flow infer `string` as the type

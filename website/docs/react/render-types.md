@@ -265,17 +265,17 @@ component Header() {
  return <h1>Hello Header!</h1>;
 }
 
-declare var rendersHeader: renders Header;
-declare var rendersMaybeHeader: renders? Header;
-declare var rendersHeaderList: renders* Header;
+declare const rendersHeader: renders Header;
+declare const rendersMaybeHeader: renders? Header;
+declare const rendersHeaderList: renders* Header;
 
-(rendersHeader: React.Node);
-(rendersMaybeHeader: React.Node);
-(rendersHeaderList: React.Node);
+rendersHeader as React.Node;
+rendersMaybeHeader as React.Node;
+rendersHeaderList as React.Node;
 
-(rendersHeader: React.MixedElement);
-(rendersMaybeHeader: React.MixedElement); // ERROR!
-(rendersHeaderList: React.MixedElement); // ERROR!
+rendersHeader as React.MixedElement;
+rendersMaybeHeader as React.MixedElement; // ERROR!
+rendersHeaderList as React.MixedElement; // ERROR!
 ```
 
 `renders Foo` is a subtype of `renders? Foo`, and `renders? Foo` is a subtype of `renders* Foo`.
@@ -287,15 +287,15 @@ component Header() {
  return <h1>Hello Header!</h1>;
 }
 
-declare var rendersHeader: renders Header;
-declare var rendersMaybeHeader: renders? Header;
-declare var rendersHeaderList: renders* Header;
+declare const rendersHeader: renders Header;
+declare const rendersMaybeHeader: renders? Header;
+declare const rendersHeaderList: renders* Header;
 
-(rendersHeader: renders? Header);
-(rendersHeader: renders* Header);
-(rendersMaybeHeader: renders* Header);
+rendersHeader as renders? Header;
+rendersHeader as renders* Header;
+rendersMaybeHeader as renders* Header;
 
-(rendersMaybeHeader: renders Header); // ERROR
-(rendersHeaderList: renders Header); // ERROR
-(rendersHeaderList: renders? Header); // ERROR
+rendersMaybeHeader as renders Header; // ERROR
+rendersHeaderList as renders Header; // ERROR
+rendersHeaderList as renders? Header; // ERROR
 ```

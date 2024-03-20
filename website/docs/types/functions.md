@@ -291,7 +291,7 @@ is passed in as an argument to the respective call.
 For example, consider the *inlined* refinement
 
 ```js flow-check
-declare var obj: { n?: number };
+declare const obj: {n?: number};
 
 if (obj.n != null) {
   const n: number = obj.n;
@@ -308,7 +308,7 @@ function bar(a: {n?: number, ...}): %checks {
   return a.n != null;
 }
 
-declare var obj: {n?: number};
+declare const obj: {n?: number};
 
 if (bar(obj)) {
   const n: number = obj.n; // Error
@@ -334,7 +334,7 @@ function add(x: number, y: number) {
 
 add.bar = "hello world";
 
-(add: CallableObj);
+add as CallableObj;
 ```
 
 In general, functions can have properties assigned to them if they are function declarations, or

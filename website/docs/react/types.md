@@ -139,10 +139,10 @@ class Bar extends React.Component<{}> {}
 ```
 
 Take note of the `typeof`, it is required! We want to get the
-type *of* the value `Foo`. `(Foo: Foo)` is an error because `Foo` cannot be used
-as a type, so the following is correct: `(Foo: typeof Foo)`.
+type *of* the value `Foo`. `Foo as Foo` is an error because `Foo` cannot be used
+as a type, so the following is correct: `Foo as typeof Foo`.
 
-`Bar` without `typeof` would be the type of an instance of `Bar`: `(new Bar(): Bar)`.
+`Bar` without `typeof` would be the type of an instance of `Bar`: `new Bar() as Bar`.
 We want the type *of* `Bar` not the type of an instance of `Bar`.
 `Class<Bar>` would also work here, but we prefer `typeof` for consistency
 with function components.
