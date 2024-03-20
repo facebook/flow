@@ -349,7 +349,7 @@ let autocomplete
               ~cx
               ~file_sig
               ~ast
-              ~typed_ast
+              ~typed_ast_opt:(Some typed_ast)
               ~exports:env.ServerEnv.exports
           in
           let (token_opt, ac_loc, ac_type_string, results_res) =
@@ -456,7 +456,7 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         ~cx
         ~file_sig
         ~ast
-        ~typed_ast
+        ~typed_ast_opt:(Some typed_ast)
         ~purpose:Get_def_types.Purpose.GoToDefinition
         loc
       |> fun result ->

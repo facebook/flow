@@ -551,7 +551,17 @@ let get_def_info ~options ~reader ~purpose (ast, file_sig, _) type_info loc :
   | Error error -> Error error
   | Ok (Some props_info) -> Ok (PropertyDefinition props_info)
   | Ok None ->
-    (match GetDef_js.get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose loc with
+    (match
+       GetDef_js.get_def
+         ~options
+         ~loc_of_aloc
+         ~cx
+         ~file_sig
+         ~ast
+         ~typed_ast_opt:(Some typed_ast)
+         ~purpose
+         loc
+     with
     | GetDef_js.Get_def_result.Def (locs, name)
     | GetDef_js.Get_def_result.Partial (locs, name, _) ->
       Ok (VariableDefinition (Loc_collections.LocSet.elements locs, name))

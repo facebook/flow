@@ -24,7 +24,7 @@ type ty_members = {
 val extract :
   ?force_instance:bool ->
   cx:Context.t ->
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
   file_sig:File_sig.t ->
   Type.t ->
   (ty_members, string) result

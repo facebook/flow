@@ -59,16 +59,10 @@ class virtual ['T] searcher :
 
 val process_type_request : Context.t -> Type.t -> (ALoc.t, string) Stdlib.result
 
-val process_location_in_typed_ast :
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  is_legit_require:(ALoc.t -> bool) ->
-  purpose:Get_def_types.Purpose.t ->
-  Loc.t ->
-  ALoc.t result
-
-val process_location_in_ast :
+val process_location :
   Context.t ->
-  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
   is_legit_require:(ALoc.t -> bool) ->
   purpose:Get_def_types.Purpose.t ->
   Loc.t ->

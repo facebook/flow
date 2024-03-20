@@ -670,18 +670,22 @@ class on_demand_searcher cx ~is_legit_require ~covers_target ~purpose =
       | Some t -> t
   end
 
-let process_location_in_typed_ast ~typed_ast ~is_legit_require ~purpose loc =
-  let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-  let searcher = new typed_ast_searcher () ~typed_ast ~is_legit_require ~covers_target ~purpose in
-  (try ignore (searcher#program typed_ast) with
-  | Found -> ());
-  searcher#found_loc
-
-let process_location_in_ast cx ast ~is_legit_require ~purpose loc =
-  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-  let searcher = new on_demand_searcher cx ~is_legit_require ~covers_target ~purpose in
-  match searcher#program aloc_ast with
+let search ~searcher ast =
+  match searcher#program ast with
   | exception Found -> searcher#found_loc
   | exception Internal_error_exn err -> InternalError err
   | _ -> searcher#found_loc
+
+let process_location cx ~ast ~typed_ast_opt ~is_legit_require ~purpose loc =
+  match typed_ast_opt with
+  | Some typed_ast ->
+    let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
+    let searcher = new typed_ast_searcher () ~typed_ast ~is_legit_require ~covers_target ~purpose in
+    search ~searcher typed_ast
+  | None ->
+    (* Computing the aloc_ast here is temporary. When on-demand autocomplete is ready,
+     * we can use the same aloc_ast used when computing the typed environment. *)
+    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+    let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
+    let searcher = new on_demand_searcher cx ~is_legit_require ~covers_target ~purpose in
+    search ~searcher aloc_ast

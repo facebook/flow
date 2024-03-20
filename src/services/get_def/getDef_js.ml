@@ -18,9 +18,11 @@ end
 
 open Get_def_result
 
-let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name =
+let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name =
   let ( let* ) = Result.bind in
-  let* Ty_members.{ members; _ } = Ty_members.extract ~force_instance ~cx ~typed_ast ~file_sig t in
+  let* Ty_members.{ members; _ } =
+    Ty_members.extract ~force_instance ~cx ~typed_ast_opt ~file_sig t
+  in
   let def_locs =
     Base.Option.bind
       (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)
@@ -31,7 +33,7 @@ let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t n
   | Some def_locs -> Ok (Nel.map loc_of_aloc def_locs, Some name)
   | None -> Error (Printf.sprintf "failed to find member %s in members map" name)
 
-let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
+let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
   function
   | Get_def_request.Identifier { name; loc = (aloc, type_) } ->
@@ -47,18 +49,11 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
       let def_loc = def.Scope_api.With_Loc.Def.locs in
       Ok (def_loc, Some name)
     | [] ->
-      process_request
-        ~options
-        ~loc_of_aloc
-        ~cx
-        ~is_legit_require
-        ~ast
-        ~typed_ast
-        ~file_sig
-        (Get_def_request.Type { annot = (aloc, type_); name = Some name })
+      let req = Get_def_request.Type { annot = (aloc, type_); name = Some name } in
+      process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
-    extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name
+    extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name
   | Get_def_request.Type { annot = (_, v); name } ->
     Get_def_process_location.process_type_request cx v
     |> Base.Result.map ~f:(fun aloc -> (Nel.one (loc_of_aloc aloc), name))
@@ -70,17 +65,12 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
           Flow_js.flow cx (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
       )
     in
-    process_request
-      ~options
-      ~loc_of_aloc
-      ~cx
-      ~is_legit_require
-      ~ast
-      ~typed_ast
-      ~file_sig
+    let req =
       Get_def_request.(
         Member { prop_name = name; object_type = (loc, props_object); force_instance = false }
       )
+    in
+    process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
 
 module Depth = struct
   let limit = 100
@@ -129,7 +119,7 @@ module Depth = struct
     depth.results <- Loc_collections.LocMap.add loc result results
 end
 
-let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose requested_loc =
+let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast_opt ~purpose requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc source_aloc in
@@ -158,7 +148,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose request
     | Ok Depth.NoResult ->
       let open Get_def_process_location in
       let result =
-        match process_location_in_typed_ast ~is_legit_require ~typed_ast ~purpose req_loc with
+        match process_location cx ~ast ~is_legit_require ~typed_ast_opt ~purpose req_loc with
         | OwnDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
         | Request request -> begin
           match
@@ -168,7 +158,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose request
               ~cx
               ~is_legit_require
               ~ast
-              ~typed_ast
+              ~typed_ast_opt
               ~file_sig
               request
           with

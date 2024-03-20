@@ -50,7 +50,7 @@ val mk_typing_artifacts :
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
   exports:Export_search.t ->
   typing
 

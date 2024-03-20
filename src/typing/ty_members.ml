@@ -311,8 +311,8 @@ let extract =
       toplevel_is_type_identifier_reference = false;
     }
   in
-  fun ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme ->
-    let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  fun ?(force_instance = false) ~cx ~typed_ast_opt ~file_sig scheme ->
+    let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt ~file_sig in
     match Ty_normalizer_flow.expand_members ~force_instance genv scheme with
     | Error error -> Error (Ty_normalizer.error_to_string error)
     | Ok (Ty.Any _) -> Error "not enough type information to extract members"
