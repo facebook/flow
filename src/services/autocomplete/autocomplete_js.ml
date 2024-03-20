@@ -947,6 +947,47 @@ class typed_ast_process_request_searcher ~(from_trigger_character : bool) ~(curs
         Type.(AnyT.at Untyped loc)
   end
 
+module Statement = Fix_statement.Statement_
+
+exception Internal_exn of string
+
+class on_demand_process_request_searcher cx ~(from_trigger_character : bool) ~(cursor : Loc.t) =
+  object (this)
+    inherit [ALoc.t] process_request_searcher ~from_trigger_character ~cursor
+
+    method private loc_of_annot loc = loc
+
+    method on_type_annot x = x
+
+    method private type_from_enclosing_node loc =
+      let node = this#enclosing_node in
+      let typed_node = Typed_ast_finder.infer_node cx node in
+      match Typed_ast_finder.find_type_annot_in_node loc typed_node with
+      | None -> raise (Internal_exn "enclosing loc missing")
+      | Some t -> t
+
+    method private type_of_component_name_of_jsx_element loc expr =
+      let open Ast.JSX in
+      match this#infer_expression (loc, Ast.Expression.JSXElement expr) with
+      | (_, Ast.Expression.JSXElement { opening_element = (_, Opening.{ name; _ }); _ }) ->
+        type_of_jsx_name name
+      | _ -> raise (Internal_exn "typed AST structure mismatch")
+
+    method private type_of_expression expr =
+      let ((_, t), _) = this#infer_expression expr in
+      t
+
+    method private infer_expression expr = Statement.expression cx expr
+
+    method private infer_statement stmt = Statement.statement cx stmt
+
+    method private type_of_class_id loc cls =
+      let open Ast.Statement in
+      match this#infer_statement (loc, ClassDeclaration cls) with
+      | (_, ClassDeclaration { Flow_ast.Class.id = Some ((_, t), _); _ }) -> t
+      | _ -> raise (Internal_exn "typed AST structure mismatch")
+  end
+
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let autocomplete_literal ~cursor _cx ac_loc = covers_target cursor ac_loc
@@ -955,15 +996,31 @@ let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor a
 
 let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
-let process_location ~trigger_character ~cursor ~typed_ast =
-  let searcher =
-    new typed_ast_process_request_searcher
-      ~from_trigger_character:(trigger_character <> None)
-      ~cursor
-  in
-  match searcher#program typed_ast with
-  | exception Found f -> Some f
-  | _ -> None
+let process_location cx ~trigger_character ~cursor ~ast ~typed_ast_opt =
+  match typed_ast_opt with
+  | None ->
+    let searcher =
+      new on_demand_process_request_searcher
+        cx
+        ~from_trigger_character:(trigger_character <> None)
+        ~cursor
+    in
+    (* Computing the aloc_ast here is temporary. When on-demand autocomplete is ready,
+     * we can use the same aloc_ast used when computing the typed environment. *)
+    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+    (match searcher#program aloc_ast with
+    | exception Found f -> Ok (Some f)
+    | exception Internal_exn err -> Error err
+    | _ -> Ok None)
+  | Some typed_ast ->
+    let searcher =
+      new typed_ast_process_request_searcher
+        ~from_trigger_character:(trigger_character <> None)
+        ~cursor
+    in
+    (match searcher#program typed_ast with
+    | exception Found f -> Ok (Some f)
+    | _ -> Ok None)
 
 let autocomplete_set_hooks ~cursor =
   Type_inference_hooks_js.set_id_hook (autocomplete_id ~cursor);

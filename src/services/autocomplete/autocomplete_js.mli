@@ -67,10 +67,12 @@ type process_location_result = {
 }
 
 val process_location :
+  Context.t ->
   trigger_character:string option ->
   cursor:Loc.t ->
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  process_location_result option
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
+  (process_location_result option, string) result
 
 val autocomplete_set_hooks : cursor:Loc.t -> unit
 

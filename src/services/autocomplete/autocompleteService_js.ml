@@ -2115,15 +2115,16 @@ let string_of_autocomplete_type ac_type =
 let autocomplete_get_results typing ac_options trigger_character cursor =
   let { options; reader; cx; file_sig; ast; typed_ast; _ } = typing in
   let open Autocomplete_js in
-  match process_location ~trigger_character ~cursor ~typed_ast with
-  | None ->
+  match process_location cx ~trigger_character ~cursor ~ast ~typed_ast_opt:(Some typed_ast) with
+  | Error err -> (None, None, "None", AcFatalError err)
+  | Ok None ->
     let result = { AcCompletion.items = []; is_incomplete = false } in
     ( None,
       None,
       "None",
       AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] }
     )
-  | Some { tparams_rev; ac_loc; token; autocomplete_type } ->
+  | Ok (Some { tparams_rev; ac_loc; token; autocomplete_type }) ->
     (* say you're completing `foo|Baz`. the token is "fooBaz" and ac_loc points at
        "fooAUTO332Baz". if the suggestion is "fooBar", the user can choose to insert
        into the token, yielding "fooBarBaz", or they can choose to replace the token,
