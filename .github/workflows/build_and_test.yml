@@ -303,6 +303,11 @@ jobs:
       FLOW_RUNTESTS_PARALLELISM: 8
     steps:
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_linux_bin
+        path: bin/linux
+    - run: chmod +x bin/linux/flow
     - name: Run tests
       run: ./runtests.sh bin/linux/flow | cat
   runtests_macos:
@@ -314,6 +319,11 @@ jobs:
       with:
         xcode-version: '13.4'
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_macos_bin
+        path: bin/macos
+    - run: chmod +x bin/macos/flow
     - name: Run tests
       run: ./runtests.sh bin/macos/flow | cat
   tool_test_linux:
@@ -324,6 +334,11 @@ jobs:
     - build_linux
     steps:
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_linux_bin
+        path: bin/linux
+    - run: chmod +x bin/linux/flow
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
@@ -337,27 +352,32 @@ jobs:
       with:
         xcode-version: '13.4'
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_macos_bin
+        path: bin/macos
+    - run: chmod +x bin/macos/flow
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
       run: ./tool test --bin bin/macos/flow | cat
   # tool_test_win:
-  #   runs-on: windows-latest
-  #   needs:
-  #   - build_win
-  #   steps:
-  #   - uses: actions/checkout@v3.6.0
-  #   - name: Install Node LTS
-  #     run: choco install nodejs-lts -y
-  #   - name: Enable Corepack
-  #     run: corepack enable
-  #   - name: Install tool deps from yarn
-  #     run: |-
-  #       cd packages/flow-dev-tools
-  #       yarn install --ignore-scripts --pure-lockfile
-  #   - name: Run tool tests
-  #     run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
-  #     shell: bash
+  #  runs-on: windows-latest
+  #  needs:
+  #  - build_win
+  #  steps:
+  #  - uses: actions/checkout@v3.6.0
+  #  - uses: actions/download-artifact@v3.0.2
+  #    with:
+  #      name: build_win_bin
+  #      path: bin/win64
+  #  - name: Install tool deps from yarn
+  #    run: |-
+  #      cd packages/flow-dev-tools
+  #      yarn install --ignore-scripts --pure-lockfile
+  #  - name: Run tool tests
+  #    run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
+  #    shell: bash
   ounit_test_linux:
     runs-on: ubuntu-latest
     container:
