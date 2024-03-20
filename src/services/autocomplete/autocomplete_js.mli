@@ -99,6 +99,8 @@ class virtual ['T] process_request_searcher :
        method virtual private infer_statement :
          (ALoc.t, 'T) Flow_ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t
 
+       method virtual private check_closest_enclosing_statement : unit
+
        method virtual private type_of_component_name_of_jsx_element :
          'T -> (ALoc.t, 'T) Flow_ast.JSX.element -> Type.t
 

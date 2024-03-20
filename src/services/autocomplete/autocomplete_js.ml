@@ -151,6 +151,8 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     method virtual private infer_statement
         : (ALoc.t, 'T) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
+    method virtual private check_closest_enclosing_statement : unit
+
     method virtual private type_of_component_name_of_jsx_element
         : 'T -> (ALoc.t, 'T) Flow_ast.JSX.element -> Type.t
 
@@ -214,10 +216,11 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
         result
 
     method! comment ((loc, Flow_ast.Comment.{ text; _ }) as c) =
-      if this#covers_target loc then
+      if this#covers_target loc then (
         let (token, word_loc) = extract_word cursor text in
+        this#check_closest_enclosing_statement;
         this#find (ALoc.of_loc word_loc) token (Ac_comment { text; loc })
-      else
+      ) else
         super#comment c
 
     method! t_identifier ((annot, { Flow_ast.Identifier.name; _ }) as ident) =
@@ -945,6 +948,9 @@ class typed_ast_process_request_searcher ~(from_trigger_character : bool) ~(curs
       | _ ->
         (* impossible thanks to calling context of type_of_class_id *)
         Type.(AnyT.at Untyped loc)
+
+    (* This is a no-op since we have already checked the entire AST. *)
+    method private check_closest_enclosing_statement = ()
   end
 
 module Statement = Fix_statement.Statement_
@@ -980,6 +986,42 @@ class on_demand_process_request_searcher cx ~(from_trigger_character : bool) ~(c
     method private infer_expression expr = Statement.expression cx expr
 
     method private infer_statement stmt = Statement.statement cx stmt
+
+    method private check_closest_enclosing_statement =
+      let last_stmt = ref None in
+      Base.List.iter
+        ~f:(function
+          | Typed_ast_finder.EnclosingStatement stmt -> last_stmt := Some stmt
+          | _ -> ())
+        enclosing_node_stack;
+      Base.Option.iter !last_stmt ~f:(fun ((loc, _) as s) ->
+          (* Check the closest statement *)
+          let s' = Statement.statement cx s in
+          let ast =
+            ( loc,
+              {
+                Ast.Program.statements = [s];
+                interpreter = None;
+                comments = None;
+                all_comments = [];
+              }
+            )
+          in
+          let tast =
+            ( loc,
+              {
+                Ast.Program.statements = [s'];
+                interpreter = None;
+                comments = None;
+                all_comments = [];
+              }
+            )
+          in
+          let metadata = Context.metadata cx in
+          (* We need to also run post-inference checks since some errors are
+           * raised there. *)
+          Merge_js.post_merge_checks cx ast tast metadata
+      )
 
     method private type_of_class_id loc cls =
       let open Ast.Statement in
