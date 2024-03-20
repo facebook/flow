@@ -5,10 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Typed_ast_finder
 module Ast = Flow_ast
 
 (** stops walking the tree *)
 exception Found
+
+type internal_error =
+  | Enclosing_node_error
+  | On_demand_tast_error
+[@@deriving show]
 
 (** This type is distinct from the one raised by the searcher because
   it would never make sense for the searcher to raise LocNotFound *)
@@ -17,6 +23,7 @@ type 'loc result =
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
+  | InternalError of internal_error
 [@@deriving show]
 
 (* here lies the difference between "Go to Definition" and "Go to Type Definition":
@@ -70,7 +77,7 @@ let annot_of_jsx_name =
 
 class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
   object (this)
-    inherit [ALoc.t, 'T, ALoc.t, 'T] Typed_ast_finder.enclosing_node_mapper as super
+    inherit [ALoc.t, 'T, ALoc.t, 'T] enclosing_node_mapper as super
 
     method virtual loc_of_annot : 'T -> ALoc.t
 
@@ -577,9 +584,104 @@ class typed_ast_searcher _cx ~typed_ast:_ ~is_legit_require ~covers_target ~purp
     method private type_from_enclosing_node (_, t) = t
   end
 
+module Statement = Fix_statement.Statement_
+
+let find_remote_name_def_loc_in_node loc node =
+  let exception Found of ALoc.t option in
+  let visitor =
+    object (_this)
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_loc_annot loc = loc
+
+      method on_type_annot loc = loc
+
+      method! import_named_specifier ~import_kind specifier =
+        let open Ast.Statement.ImportDeclaration in
+        let { remote = ((loc', _), _); remote_name_def_loc; _ } = specifier in
+        if loc' = loc then raise (Found remote_name_def_loc);
+        super#import_named_specifier ~import_kind specifier
+    end
+  in
+  try
+    begin
+      match node with
+      | EnclosingProgram prog -> ignore (visitor#program prog)
+      | EnclosingStatement stmt -> ignore (visitor#statement stmt)
+      | EnclosingExpression expr -> ignore (visitor#expression expr)
+    end;
+    None
+  with
+  | Found t -> Some t
+
+exception Internal_error_exn of internal_error
+
+class on_demand_searcher cx ~is_legit_require ~covers_target ~purpose =
+  object (this)
+    inherit [ALoc.t] searcher cx ~is_legit_require ~covers_target ~purpose
+
+    method on_type_annot x = x
+
+    method loc_of_annot x = x
+
+    method private remote_name_def_loc_of_import_named_specifier decl =
+      let open Flow_ast.Statement.ImportDeclaration in
+      let { remote = (remote_loc, _); _ } = decl in
+      let node = this#enclosing_node in
+      let typed_node = Typed_ast_finder.infer_node cx node in
+      match find_remote_name_def_loc_in_node remote_loc typed_node with
+      | None -> raise (Internal_error_exn Enclosing_node_error)
+      | Some t -> t
+
+    method private remote_default_name_def_loc_of_import_declaration (loc, decl) =
+      let open Ast.Statement.ImportDeclaration in
+      let stmt' = Statement.statement cx (loc, Flow_ast.Statement.ImportDeclaration decl) in
+      (* NOTE: remote_default_name_def_loc field gets updated during inference *)
+      match stmt' with
+      | ( _,
+          Ast.Statement.ImportDeclaration
+            { default = Some { remote_default_name_def_loc = Some l; _ }; _ }
+        ) ->
+        Some l
+      | _ -> None
+
+    method private get_module_t loc source =
+      let { Flow_ast.StringLiteral.value = module_name; _ } = source in
+      Type_operation_utils.Import_export.get_module_t
+        cx
+        (loc, module_name)
+        ~perform_platform_validation:false
+
+    method private component_name_of_jsx_element loc expr =
+      let open Ast.JSX in
+      let typed_expr = Statement.expression cx (loc, Flow_ast.Expression.JSXElement expr) in
+      match typed_expr with
+      | (_, Flow_ast.Expression.JSXElement expr) ->
+        let { opening_element = (_, Opening.{ name = component_name; _ }); _ } = expr in
+        annot_of_jsx_name component_name
+      | _ -> raise (Internal_error_exn On_demand_tast_error)
+
+    method private type_from_enclosing_node loc =
+      let node = this#enclosing_node in
+      let typed_node = Typed_ast_finder.infer_node cx node in
+      match find_type_annot_in_node loc typed_node with
+      | None -> raise (Internal_error_exn Enclosing_node_error)
+      | Some t -> t
+  end
+
 let process_location_in_typed_ast ~typed_ast ~is_legit_require ~purpose loc =
   let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
   let searcher = new typed_ast_searcher () ~typed_ast ~is_legit_require ~covers_target ~purpose in
   (try ignore (searcher#program typed_ast) with
   | Found -> ());
   searcher#found_loc
+
+let process_location_in_ast cx ast ~is_legit_require ~purpose loc =
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
+  let searcher = new on_demand_searcher cx ~is_legit_require ~covers_target ~purpose in
+  match searcher#program aloc_ast with
+  | exception Found -> searcher#found_loc
+  | exception Internal_error_exn err -> InternalError err
+  | _ -> searcher#found_loc

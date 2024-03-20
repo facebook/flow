@@ -7,11 +7,17 @@
 
 module Ast = Flow_ast
 
+type internal_error =
+  | Enclosing_node_error
+  | On_demand_tast_error
+[@@deriving show]
+
 type 'loc result =
   | OwnDef of 'loc * (* name *) string
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
+  | InternalError of internal_error
 [@@deriving show]
 
 (* We don't really need to export this type, but it is a convenient way to enforce
@@ -55,6 +61,14 @@ val process_type_request : Context.t -> Type.t -> (ALoc.t, string) Stdlib.result
 
 val process_location_in_typed_ast :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  is_legit_require:(ALoc.t -> bool) ->
+  purpose:Get_def_types.Purpose.t ->
+  Loc.t ->
+  ALoc.t result
+
+val process_location_in_ast :
+  Context.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   is_legit_require:(ALoc.t -> bool) ->
   purpose:Get_def_types.Purpose.t ->
   Loc.t ->

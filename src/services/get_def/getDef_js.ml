@@ -204,6 +204,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose request
         end
         | Empty msg -> Bad_loc msg
         | LocNotFound -> Bad_loc "not found"
+        | InternalError err -> Def_error (Get_def_process_location.show_internal_error err)
       in
       Depth.cache_result req_loc result depth;
       result
