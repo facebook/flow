@@ -75,3 +75,15 @@ val process_location :
 val autocomplete_set_hooks : cursor:Loc.t -> unit
 
 val autocomplete_unset_hooks : unit -> unit
+
+(* We don't really need to export this type, but it is a convenient way to enforce
+ * that this class is indeed polymorphic over 'T (instead of being pinned to
+ * `ALoc.t * Type.t`). *)
+class virtual process_request_searcher :
+  from_trigger_character:bool
+  -> cursor:Loc.t
+  -> object
+       inherit
+         [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t, string] Typed_ast_finder
+                                                                    .type_parameter_mapper_generic
+     end

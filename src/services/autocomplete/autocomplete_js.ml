@@ -133,7 +133,7 @@ let extract_word cursor_loc text =
 
 exception Found of process_location_result
 
-class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
+class process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t) =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t, string] Typed_ast_finder
@@ -158,11 +158,11 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     val mutable allow_react_element_shorthand = false
 
-    method covers_target loc = covers_target cursor loc
+    method private covers_target loc = covers_target cursor loc
 
     method private get_enclosing_class = Base.List.hd enclosing_classes
 
-    method default_ac_id type_ =
+    method private default_ac_id type_ =
       Ac_id
         {
           include_super = false;
@@ -171,10 +171,10 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           enclosing_class_t = this#get_enclosing_class;
         }
 
-    method default_bracket_syntax type_ : bracket_syntax =
+    method private default_bracket_syntax type_ : bracket_syntax =
       { include_super = false; include_this = false; type_ }
 
-    method find : 'a. ALoc.t -> string -> autocomplete_type -> 'a =
+    method private find : 'a. ALoc.t -> string -> autocomplete_type -> 'a =
       fun ac_loc token autocomplete_type ->
         let autocomplete_type =
           match autocomplete_type with
@@ -190,7 +190,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             raise (Found { tparams_rev; ac_loc; token; autocomplete_type })
         )
 
-    method with_enclosing_class_t : 'a. Type.t -> 'a Lazy.t -> 'a =
+    method private with_enclosing_class_t : 'a. Type.t -> 'a Lazy.t -> 'a =
       fun class_t f ->
         let previously_enclosing = enclosing_classes in
         enclosing_classes <- class_t :: enclosing_classes;
@@ -232,7 +232,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         this#find key_loc name Ac_type_binding
       | _ -> super#object_property_type opt
 
-    method member_with_loc annot expr =
+    method private member_with_loc annot expr =
       let open Flow_ast.Expression.Member in
       let (expr_loc, _) = annot in
       let { _object = ((obj_loc, obj_type), _); property; comments = _ } = expr in
@@ -279,7 +279,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       end;
       super#member annot expr
 
-    method optional_member_with_loc expr_loc expr =
+    method private optional_member_with_loc expr_loc expr =
       let open Flow_ast.Expression.OptionalMember in
       let open Flow_ast.Expression.Member in
       let {
@@ -605,7 +605,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | ((_, class_t), Class _) -> this#with_enclosing_class_t class_t (lazy (super#expression expr))
       | _ -> super#expression expr
 
-    method object_with_type obj_type obj =
+    method private object_with_type obj_type obj =
       let open Flow_ast.Expression.Object in
       let { properties; comments } = obj in
       let (used_keys, spreads) =
@@ -631,13 +631,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         properties;
       obj
 
-    method object_property_or_spread_property_with_type ~used_keys ~spreads obj_type prop =
+    method private object_property_or_spread_property_with_type ~used_keys ~spreads obj_type prop =
       let open Flow_ast.Expression.Object in
       match prop with
       | Property p -> Property (this#object_property_with_type ~used_keys ~spreads obj_type p)
       | SpreadProperty s -> SpreadProperty (this#spread_property s)
 
-    method object_property_with_type ~used_keys ~spreads obj_type prop =
+    method private object_property_with_type ~used_keys ~spreads obj_type prop =
       let open Flow_ast.Expression.Object.Property in
       (match snd prop with
       | Init
@@ -697,7 +697,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       else
         decl
 
-    method indexed_access_type_with_loc loc ia =
+    method private indexed_access_type_with_loc loc ia =
       let open Flow_ast in
       let { Type.IndexedAccess._object; index; _ } = ia in
       let ((obj_loc, obj_type), _) = _object in
@@ -728,7 +728,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | _ -> ());
       super#indexed_access_type ia
 
-    method optional_indexed_access_type_with_loc loc ia =
+    method private optional_indexed_access_type_with_loc loc ia =
       let open Flow_ast in
       let {
         Type.OptionalIndexedAccess.indexed_access = { Type.IndexedAccess._object; index; comments };
@@ -833,7 +833,11 @@ let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let process_location ~trigger_character ~cursor ~typed_ast =
   try
-    ignore ((new process_request_searcher (trigger_character <> None) cursor)#program typed_ast);
+    ignore
+      ((new process_request_searcher ~from_trigger_character:(trigger_character <> None) ~cursor)
+         #program
+         typed_ast
+      );
     None
   with
   | Found f -> Some f
