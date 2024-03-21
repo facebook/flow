@@ -196,9 +196,14 @@ module Make
             curr_resolve_idx = 0;
           }
         in
-        let tout = Tvar.mk cx reason in
-        let use_op = Op (ObjectSpread { op = reason }) in
-        Flow.flow cx (t, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
+        let tout =
+          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+              let use_op = Op (ObjectSpread { op = reason }) in
+              Flow.flow
+                cx
+                (t, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout))
+          )
+        in
         if obj_key_autocomplete acc then
           let (_, lazy_hint) = Type_env.get_hint cx (Reason.loc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
@@ -1775,21 +1780,21 @@ module Make
     )
 
   and for_of_elemt cx right_t reason await =
-    let elem_t = Tvar.mk cx reason in
-    let loc = loc_of_reason reason in
-    (* Second and third args here are never relevant to the loop, but they should be as
-       general as possible to allow iterating over arbitrary generators *)
-    let targs = [elem_t; MixedT.why reason; EmptyT.why reason] in
-    let (async, iterable_reason) =
-      if await then
-        (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
-      else
-        (false, mk_reason (RCustom "iteration expected on Iterable") loc)
-    in
-    Flow.flow
-      cx
-      (right_t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs });
-    elem_t
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun elem_t ->
+        let loc = loc_of_reason reason in
+        (* Second and third args here are never relevant to the loop, but they should be as
+           general as possible to allow iterating over arbitrary generators *)
+        let targs = [elem_t; MixedT.why reason; EmptyT.why reason] in
+        let (async, iterable_reason) =
+          if await then
+            (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
+          else
+            (false, mk_reason (RCustom "iteration expected on Iterable") loc)
+        in
+        Flow.flow
+          cx
+          (right_t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs })
+    )
 
   and type_alias
       cx
@@ -4878,23 +4883,26 @@ module Make
       let prop_name = OrdinaryName name in
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let super_t = super_ cx super_loc in
-      let prop_t = Tvar.mk cx prop_reason in
-      let use_op =
-        make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+      let prop_t =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx prop_reason (fun prop_t ->
+            let use_op =
+              make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+            in
+            Flow.flow
+              cx
+              ( super_t,
+                SetPropT
+                  ( use_op,
+                    reason,
+                    mk_named_prop ~reason:prop_reason prop_name,
+                    mode,
+                    Normal,
+                    t,
+                    Some prop_t
+                  )
+              )
+        )
       in
-      Flow.flow
-        cx
-        ( super_t,
-          SetPropT
-            ( use_op,
-              reason,
-              mk_named_prop ~reason:prop_reason prop_name,
-              mode,
-              Normal,
-              t,
-              Some prop_t
-            )
-        );
       let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
       ( (lhs_loc, prop_t),
         reconstruct_ast
@@ -4920,19 +4928,19 @@ module Make
         (* flow type to object property itself *)
         let class_entries = Type_env.get_class_entries cx in
         let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
-        let prop_t = Tvar.mk cx prop_reason in
-        let use_op =
-          make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
-        in
-        let upper =
-          maybe_chain
-            lhs_reason
-            (SetPrivatePropT
-               (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
-            )
-        in
-        Flow.flow cx (o, upper);
-        prop_t
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx prop_reason (fun prop_t ->
+            let use_op =
+              make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+            in
+            let upper =
+              maybe_chain
+                lhs_reason
+                (SetPrivatePropT
+                   (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
+                )
+            in
+            Flow.flow cx (o, upper)
+        )
       in
       ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
     (* _object.name = e *)
@@ -4953,26 +4961,26 @@ module Make
         let prop_name = OrdinaryName name in
         let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
         (* flow type to object property itself *)
-        let prop_t = Tvar.mk cx prop_reason in
-        let use_op =
-          make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
-        in
-        let upper =
-          maybe_chain
-            lhs_reason
-            (SetPropT
-               ( use_op,
-                 reason,
-                 mk_named_prop ~reason:prop_reason prop_name,
-                 mode,
-                 wr_ctx,
-                 t,
-                 Some prop_t
-               )
-            )
-        in
-        Flow.flow cx (o, upper);
-        prop_t
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx prop_reason (fun prop_t ->
+            let use_op =
+              make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+            in
+            let upper =
+              maybe_chain
+                lhs_reason
+                (SetPropT
+                   ( use_op,
+                     reason,
+                     mk_named_prop ~reason:prop_reason prop_name,
+                     mode,
+                     wr_ctx,
+                     t,
+                     Some prop_t
+                   )
+                )
+            in
+            Flow.flow cx (o, upper)
+        )
       in
       let lhs_t =
         match (_object, name) with
