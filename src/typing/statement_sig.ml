@@ -14,7 +14,7 @@ module type S = sig
   module Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types
 
   module Func_stmt_params :
-    Func_params.S
+    Func_params_intf.S
       with module Config_types := Func_stmt_config_types.Types
        and module Config := Func_stmt_config
        and module Types = Func_stmt_params_types

@@ -193,8 +193,8 @@ class func_scope_visitor
 module Make
     (Statement : Statement_sig.S)
     (CT : Func_class_sig_types.Config.S)
-    (C : Func_params.Config with module Types := CT)
-    (F : Func_params.S with module Config_types := CT and module Config := C)
+    (C : Func_params_intf.Config with module Types := CT)
+    (F : Func_params_intf.S with module Config_types := CT and module Config := C)
     (T : Func_class_sig_types.Func.S with module Config := CT and module Param := F.Types) :
   S with module Config_types := CT and module Config := C and module Param := F and module Types = T =
 struct

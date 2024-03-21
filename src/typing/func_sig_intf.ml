@@ -10,7 +10,8 @@ module type S = sig
 
   module Config : Func_params_intf.Config with module Types := Config_types
 
-  module Param : Func_params.S with module Config_types := Config_types and module Config := Config
+  module Param :
+    Func_params_intf.S with module Config_types := Config_types and module Config := Config
 
   module Types :
     Func_class_sig_types.Func.S with module Config := Config_types and module Param := Param.Types
