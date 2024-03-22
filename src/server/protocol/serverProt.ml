@@ -199,13 +199,14 @@ module Response = struct
     return_ty: string;
   }
 
-  type textedit = Loc.t * string
+  type textedit = Loc.t * string [@@deriving eq, show]
 
   type insert_replace_edit = {
     newText: string;
     insert: Loc.t;
     replace: Loc.t;
   }
+  [@@deriving eq, show]
 
   module Completion = struct
     type completion_item = {
@@ -223,11 +224,13 @@ module Response = struct
       log_info: string;
       insert_text_format: Lsp.Completion.insertTextFormat;
     }
+    [@@deriving eq, show]
 
     type t = {
       items: completion_item list;
       is_incomplete: bool;
     }
+    [@@deriving eq, show]
   end
 
   (** Which "type" of autocomplete this was. e.g. identifier vs type vs member.

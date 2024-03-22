@@ -10,7 +10,7 @@
   flow_exit_status
   utils_core)
  (preprocess
-  (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)))
+  (pps lwt_ppx ppx_deriving.show ppx_deriving.std ppx_deriving.enum ppx_deriving.eq)))
 
 (dirs
  (:standard __tests__))

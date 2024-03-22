@@ -17,6 +17,7 @@ type 'r ac_result = {
   result: 'r;
   errors_to_log: string list;
 }
+[@@deriving eq, show]
 
 type typing
 
@@ -34,9 +35,11 @@ type 'r autocomplete_service_result_generic =
   | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
+[@@deriving eq, show]
 
 type autocomplete_service_result =
   ServerProt.Response.Completion.t autocomplete_service_result_generic
+[@@deriving eq, show]
 
 val autocomplete_get_results :
   typing ->

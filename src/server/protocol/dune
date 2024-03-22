@@ -12,4 +12,6 @@
   flow_server_utils
   flow_typing
   lsp ; hack
-  flow_exit))
+  flow_exit)
+ (preprocess
+  (pps ppx_deriving.eq ppx_deriving.show)))

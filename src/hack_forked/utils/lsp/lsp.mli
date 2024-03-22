@@ -254,7 +254,7 @@ module CodeActionClientCapabilities : sig
 end
 
 module CompletionItemTag : sig
-  type t = Deprecated [@value 1] [@@deriving enum]
+  type t = Deprecated [@value 1] [@@deriving enum, eq, show]
 end
 
 module CompletionClientCapabilities : sig
@@ -745,12 +745,12 @@ module Completion : sig
     | Event  (** 23 *)
     | Operator  (** 24 *)
     | TypeParameter  (** 25 *)
-  [@@deriving enum]
+  [@@deriving enum, eq, show]
 
   type insertTextFormat =
     | PlainText  (** 1 -- the insertText/textEdits are just plain strings *)
     | SnippetFormat  (** 2 -- wire: just "Snippet" *)
-  [@@deriving enum]
+  [@@deriving enum, eq, show]
 
   type completionTriggerKind =
     | Invoked [@value 1]

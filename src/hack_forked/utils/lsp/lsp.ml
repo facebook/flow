@@ -359,7 +359,7 @@ module CodeActionClientCapabilities = struct
 end
 
 module CompletionItemTag = struct
-  type t = Deprecated [@value 1] [@@deriving enum]
+  type t = Deprecated [@value 1] [@@deriving enum, eq, show]
 end
 
 module CompletionClientCapabilities = struct
@@ -927,7 +927,7 @@ module Completion = struct
     | Event [@value 23]
     | Operator [@value 24]
     | TypeParameter [@value 25]
-  [@@deriving enum]
+  [@@deriving enum, eq, show]
 
   (* These numbers should match
    * https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
@@ -935,7 +935,7 @@ module Completion = struct
   type insertTextFormat =
     | PlainText [@value 1]  (** the insertText/textEdits are just plain strings *)
     | SnippetFormat [@value 2]  (** wire: just "Snippet" *)
-  [@@deriving enum]
+  [@@deriving enum, eq, show]
 
   type completionTriggerKind =
     | Invoked [@value 1]
