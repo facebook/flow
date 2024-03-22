@@ -380,10 +380,15 @@ let autocomplete
         in
         autocomplete_get_results cx (Typed_ast_utils.ALoc_ast aloc_ast)
       in
-      let (token_opt, ac_loc, ac_type_string, results_res) =
+      let ((token_opt, ac_loc, ac_type_string, results_res), initial_json_props) =
         match Options.autocomplete_mode options with
-        | Options.Ac_typed_ast -> autocomplete_fully_type_and_get_results ()
-        | Options.Ac_on_demand_typing -> autocomplete_on_demand_get_results ()
+        | Options.Ac_typed_ast -> (autocomplete_fully_type_and_get_results (), initial_json_props)
+        | Options.Ac_on_demand_typing -> (autocomplete_on_demand_get_results (), initial_json_props)
+        | Options.Ac_both ->
+          let (_, _, _, r1) = autocomplete_on_demand_get_results () in
+          let ((_, _, _, r2) as result) = autocomplete_fully_type_and_get_results () in
+          let equal = AutocompleteService_js.equal_autocomplete_service_result r1 r2 in
+          (result, ("on_demand_compliance", Hh_json.JSON_Bool equal) :: initial_json_props)
       in
       (* Make sure hooks are unset *after* we've gotten the results to account for
        * on-demand type checking. *)
