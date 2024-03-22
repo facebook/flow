@@ -1121,7 +1121,7 @@ class local_type_identifiers_typed_ast_searcher =
 
 class local_type_identifiers_ast_searcher cx =
   object (this)
-    inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+    inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper
 
     method on_loc_annot x = x
 
@@ -1134,31 +1134,27 @@ class local_type_identifiers_ast_searcher cx =
     method add_id id = rev_ids <- id :: rev_ids
 
     method! type_alias loc x =
-      let x' = Ast_loc_utils.loc_to_aloc_mapper#type_alias loc x in
-      let (_t, x') = Statement.type_alias cx (ALoc.of_loc loc) x' in
+      let (_t, x') = Statement.type_alias cx loc x in
       let Ast.Statement.TypeAlias.{ id; _ } = x' in
       this#add_id id;
       x
 
     method! opaque_type loc x =
-      let x' = Ast_loc_utils.loc_to_aloc_mapper#opaque_type loc x in
-      let (_t, x') = Statement.opaque_type cx (ALoc.of_loc loc) x' in
+      let (_t, x') = Statement.opaque_type cx loc x in
       let Ast.Statement.OpaqueType.{ id; _ } = x' in
       this#add_id id;
       x
 
     method! interface loc x =
-      let x' = Ast_loc_utils.loc_to_aloc_mapper#interface loc x in
-      let (_t, x') = Statement.interface cx (ALoc.of_loc loc) x' in
+      let (_t, x') = Statement.interface cx loc x in
       let Ast.Statement.Interface.{ id; _ } = x' in
       this#add_id id;
       x
 
     method! import_declaration loc x =
       let open Flow_ast.Statement.ImportDeclaration in
-      let x' = Ast_loc_utils.loc_to_aloc_mapper#import_declaration loc x in
       let x' =
-        match Statement.statement cx (ALoc.of_loc loc, Ast.Statement.ImportDeclaration x') with
+        match Statement.statement cx (loc, Ast.Statement.ImportDeclaration x) with
         | (_, Ast.Statement.ImportDeclaration decl) -> decl
         | _ -> assert false
       in
@@ -1276,16 +1272,16 @@ let make_type_param ~edit_locs name =
   }
 
 let local_type_identifiers artifacts =
-  let { ast; available_ast; cx; norm_genv; _ } = artifacts in
+  let { available_ast; cx; norm_genv; _ } = artifacts in
   let rev_ids =
     match available_ast with
     | Typed_ast_utils.Typed_ast typed_ast ->
       let search = new local_type_identifiers_typed_ast_searcher in
       Stdlib.ignore (search#program typed_ast);
       search#rev_ids
-    | Typed_ast_utils.ALoc_ast _ ->
+    | Typed_ast_utils.ALoc_ast aloc_ast ->
       let search = new local_type_identifiers_ast_searcher cx in
-      Stdlib.ignore (search#program ast);
+      Stdlib.ignore (search#program aloc_ast);
       search#rev_ids
   in
   rev_ids
