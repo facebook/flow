@@ -138,7 +138,6 @@ module type S = sig
 
   val mk_func_sig :
     Context.t ->
-    required_this_param_type:Type.t option ->
     require_return_annot:bool ->
     constructor:bool ->
     getset:bool ->

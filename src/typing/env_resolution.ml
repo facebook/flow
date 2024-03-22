@@ -339,20 +339,13 @@ let resolve_pred_func cx (ex, callee, targs, arguments) =
 
 let resolve_annotated_function
     cx ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
-  let { Ast.Function.body; params; sig_loc; hook; _ } = function_ in
+  let { Ast.Function.sig_loc; hook; _ } = function_ in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
-  let default_this =
-    if bind_this && Signature_utils.This_finder.found_this_in_body_or_params body params then
-      let loc = loc_of_reason reason in
-      Tvar.mk cx (mk_reason RThis loc)
-    else
-      Type.implicit_mixed_this reason
-  in
+  let default_this = Flow_js_utils.default_this_type cx ~needs_this_param:bind_this function_ in
   let ((func_sig, _) as sig_data) =
     Statement.mk_func_sig
       cx
-      ~required_this_param_type:(Base.Option.some_if bind_this default_this)
       ~require_return_annot:false
       ~constructor:false
       ~getset:false
@@ -630,7 +623,7 @@ let rec resolve_binding cx reason loc b =
         ) ->
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
-    let { Ast.Function.sig_loc; async; generator; params; body; _ } = function_ in
+    let { Ast.Function.sig_loc; async; generator; _ } = function_ in
     let reason_fun =
       func_reason
         ~async
@@ -641,17 +634,10 @@ let rec resolve_binding cx reason loc b =
           sig_loc
         )
     in
-    let default_this =
-      if (not arrow) && Signature_utils.This_finder.found_this_in_body_or_params body params then
-        let loc = loc_of_reason reason_fun in
-        Tvar.mk cx (mk_reason RThis loc)
-      else
-        Type.implicit_mixed_this reason_fun
-    in
+    let default_this = Flow_js_utils.default_this_type cx ~needs_this_param:(not arrow) function_ in
     let ((func_sig, _) as sig_data) =
       Statement.mk_func_sig
         cx
-        ~required_this_param_type:(Base.Option.some_if (not arrow) default_this)
         ~require_return_annot:false
         ~constructor:false
         ~getset:false

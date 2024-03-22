@@ -6416,22 +6416,12 @@ module Make
               | (_, Ast.Expression.ArrowFunction _) ->
                 (dummy_this (loc_of_reason reason), true, None)
               | (loc, _) ->
-                let this_t =
-                  if
-                    Signature_utils.This_finder.found_this_in_body_or_params
-                      function_.Ast.Function.body
-                      function_.Ast.Function.params
-                  then
-                    Tvar.mk cx (mk_reason RThis sig_loc)
-                  else
-                    Type.implicit_mixed_this reason
-                in
+                let this_t = Flow_js_utils.default_this_type cx ~needs_this_param:true function_ in
                 (this_t, false, Some loc)
             in
             let ((func_sig, _) as sig_data) =
               mk_func_sig
                 cx
-                ~required_this_param_type:(Base.Option.some_if (not arrow) this_t)
                 ~constructor:false
                 ~getset:false
                 ~require_return_annot:true
@@ -6482,7 +6472,6 @@ module Make
     let mk_method cx ~constructor ~getset =
       mk_func_sig
         cx
-        ~required_this_param_type:None
         ~require_return_annot:(not constructor)
         ~constructor
         ~getset
@@ -7393,20 +7382,6 @@ module Make
       let (((_, t), _) as annot) = Anno.convert cx tparams_map annot in
       Func_stmt_config_types.Types.This { t; loc; annot = (annot_loc, annot) }
     in
-    let require_this_annot cx func param_loc = function
-      | (Some t, None)
-        when Signature_utils.This_finder.found_this_in_body_or_params
-               func.Ast.Function.body
-               func.Ast.Function.params ->
-        let reason = mk_reason (RImplicitThis (RFunction RNormal)) param_loc in
-        Flow.add_output
-          cx
-          (Error_message.EMissingLocalAnnotation
-             { reason; hint_available = false; from_generic_function = false }
-          );
-        Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
-      | _ -> ()
-    in
     let mk_params cx tparams_map params =
       let (loc, { Ast.Function.Params.params; rest; this_; comments }) = params in
       let fparams =
@@ -7537,15 +7512,7 @@ module Make
               )
           )
     in
-    fun cx
-        ~required_this_param_type
-        ~require_return_annot
-        ~constructor
-        ~getset
-        ~statics
-        tparams_map
-        reason
-        func ->
+    fun cx ~require_return_annot ~constructor ~getset ~statics tparams_map reason func ->
       let {
         Ast.Function.tparams;
         return;
@@ -7581,11 +7548,6 @@ module Make
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
         let fparams = mk_params cx tparams_map params in
-        require_this_annot
-          cx
-          func
-          (fst params)
-          (required_this_param_type, Ast.Function.Params.((snd params).this_));
         let body = Some body in
         let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
         let open Func_class_sig_types.Func in
@@ -7783,11 +7745,10 @@ module Make
      signature consisting of type parameters, parameter types, parameter names,
      and return type, check the body against that signature by adding `this`
      and super` to the environment, and return the signature. *)
-  and function_decl cx ~required_this_param_type ~fun_loc ~arrow ~statics reason func default_this =
+  and function_decl cx ~fun_loc ~arrow ~statics reason func default_this =
     let (func_sig, reconstruct_func) =
       mk_func_sig
         cx
-        ~required_this_param_type
         ~require_return_annot:false
         ~constructor:false
         ~getset:false
@@ -7842,25 +7803,13 @@ module Make
         (lazy [spf "Function cache hit at %s" (ALoc.debug_to_string (loc_of_reason reason))]);
       cached
     | None ->
-      let loc = loc_of_reason reason in
-
       (* The default behavior of `this` still depends on how it
          was created, so we must provide the recipe based on where `function_decl`
          is invoked. *)
-      let default_this =
-        if
-          Signature_utils.This_finder.found_this_in_body_or_params
-            func.Ast.Function.body
-            func.Ast.Function.params
-        then
-          Tvar.mk cx (mk_reason RThis loc)
-        else
-          Type.implicit_mixed_this reason
-      in
+      let default_this = Flow_js_utils.default_this_type cx ~needs_this_param func in
       let (fun_type, reconstruct_ast) =
         function_decl
           cx
-          ~required_this_param_type:(Base.Option.some_if needs_this_param default_this)
           ~fun_loc:(Base.Option.some_if needs_this_param fun_loc)
           ~arrow:false
           ~statics
@@ -7879,15 +7828,7 @@ module Make
        objects through which the function may be called. *)
     let default_this = None in
     let (fun_type, reconstruct_ast) =
-      function_decl
-        cx
-        ~required_this_param_type:None
-        ~fun_loc:None
-        ~arrow:true
-        ~statics
-        reason
-        func
-        default_this
+      function_decl cx ~fun_loc:None ~arrow:true ~statics reason func default_this
     in
     (fun_type, reconstruct_ast fun_type)
 

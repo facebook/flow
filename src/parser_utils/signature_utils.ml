@@ -84,4 +84,12 @@ module This_finder = struct
     let finder = new finder in
     (* If this appears in parameter defaults it still counts *)
     finder#eval finder#function_body_any body || finder#eval finder#function_params params
+
+  let missing_this_annotation
+      ~needs_this_param
+      (body : ('a, 'a) Flow_ast.Function.body)
+      (params : ('a, 'a) Flow_ast.Function.Params.t) =
+    needs_this_param
+    && Option.is_none (snd params).Flow_ast.Function.Params.this_
+    && found_this_in_body_or_params body params
 end

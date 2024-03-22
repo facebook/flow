@@ -631,6 +631,20 @@ let poly_minimum_arity =
   in
   Nel.fold_left f 0
 
+(** This typing *)
+let default_this_type cx ~needs_this_param func =
+  let { Flow_ast.Function.params; body; _ } = func in
+  let reason = mk_reason (RImplicitThis (RFunction RNormal)) (fst params) in
+  if Signature_utils.This_finder.missing_this_annotation ~needs_this_param body params then (
+    add_output
+      cx
+      (Error_message.EMissingLocalAnnotation
+         { reason; hint_available = false; from_generic_function = false }
+      );
+    AnyT.make (AnyError (Some MissingAnnotation)) reason
+  ) else
+    MixedT.make reason
+
 (** Object Subtyping *)
 
 let string_key s reason =
