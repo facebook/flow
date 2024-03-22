@@ -19,6 +19,19 @@ type check_file =
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (FindRefsTypes.single_ref list, string) result
 
+type compute_env =
+  File_key.t ->
+  resolved_module SMap.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  Docblock.t ->
+  ALoc.table Lazy.t ->
+  Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t
+
+type check_file_and_comp_env = {
+  check_file: check_file;
+  compute_env: compute_env;
+}
+
 let unknown_module_t cx _mref m =
   let module_name = Modulename.to_string m in
   let builtins = Context.builtins cx in
@@ -281,8 +294,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     in
     Lazy.force file_rec
   in
-
-  fun file_key resolved_modules ast file_sig docblock aloc_table find_ref_request ->
+  let check_file file_key resolved_modules ast file_sig docblock aloc_table find_ref_request =
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx () in
@@ -317,3 +329,17 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
              )
     in
     (cx, typed_ast, find_refs_result)
+  in
+  let compute_env file_key resolved_modules ast docblock aloc_table =
+    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+    let ccx = Context.make_ccx () in
+    let metadata = Context.docblock_overrides docblock file_key base_metadata in
+    let resolved_requires = ref SMap.empty in
+    let resolve_require mref = SMap.find mref !resolved_requires in
+    let cx = Context.make ccx metadata file_key aloc_table resolve_require mk_builtins in
+    resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
+    ConsGen.set_dst_cx cx;
+    let () = Type_inference_js.initialize_env cx aloc_ast in
+    (cx, aloc_ast)
+  in
+  { check_file; compute_env }

@@ -408,7 +408,7 @@ let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
     (diff, Some (suppressions, duration))
 
 let mk_check_file options ~reader ~master_cx ~find_ref_request () =
-  let check_file =
+  let { Check_service.check_file; _ } =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let cache = Check_cache.create ~capacity:10000000 in
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache ()
@@ -502,13 +502,31 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     let f mref = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
     SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
   in
-  let check_file =
+  let { Check_service.check_file; compute_env = _ } =
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
   in
   let (cx, tast, _) =
     check_file file resolved_modules ast file_sig docblock aloc_table FindRefsTypes.empty_request
   in
   (cx, tast)
+
+let compute_env_of_contents ~reader options master_cx file ast docblock file_sig =
+  let aloc_table =
+    lazy
+      (match Parsing_heaps.Reader.get_aloc_table ~reader file with
+      | Some aloc_table -> aloc_table
+      | None -> ALoc.empty_table file)
+  in
+  let reader = Abstract_state_reader.State_reader reader in
+  let resolved_modules =
+    let node_modules_containers = !Files.node_modules_containers in
+    let f mref = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
+    SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
+  in
+  let { Check_service.check_file = _; compute_env } =
+    Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
+  in
+  compute_env file resolved_modules ast docblock aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)

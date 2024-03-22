@@ -43,6 +43,16 @@ val check_contents_context :
   File_sig.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
+val compute_env_of_contents :
+  reader:State_reader.t ->
+  Options.t ->
+  Context.master_context ->
+  File_key.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  Docblock.t ->
+  File_sig.t ->
+  Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t
+
 val merge_runner :
   job:'a merge_job ->
   mutator:Parsing_heaps.Merge_context_mutator.t ->

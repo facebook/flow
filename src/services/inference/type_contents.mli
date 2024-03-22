@@ -33,3 +33,27 @@ val printable_errors_of_file_artifacts_result :
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   * (* warnings *)
     Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+
+val compute_env_of_contents :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  reader:Parsing_heaps.Reader.reader ->
+  Context.master_context ->
+  File_key.t ->
+  Docblock.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  string array ->
+  File_sig.t ->
+  Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t
+
+val check_contents :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  reader:Parsing_heaps.Reader.reader ->
+  Context.master_context ->
+  File_key.t ->
+  Docblock.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  string array ->
+  File_sig.t ->
+  Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

@@ -190,7 +190,7 @@ let unchecked_dependencies ~options ~reader file requires =
 (** Ensures that dependencies are checked; schedules them to be checked and cancels the
     Lwt thread to abort the command if not.
 
-    This is necessary because [merge_contents] needs all of the dep type sigs to be
+    This is necessary because [check_contents] needs all of the dep type sigs to be
     available, but since it doesn't use workers it can't go parse everything itself. *)
 let ensure_checked_dependencies ~options ~reader file requires =
   let unchecked_deps = unchecked_dependencies ~options ~reader file requires in
@@ -219,10 +219,17 @@ let ensure_checked_dependencies ~options ~reader file requires =
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~profiling ~reader master_cx filename docblock ast requires file_sig =
+let check_contents ~options ~profiling ~reader master_cx filename docblock ast requires file_sig =
   with_timer ~options "MergeContents" profiling (fun () ->
       let () = ensure_checked_dependencies ~options ~reader filename requires in
       Merge_service.check_contents_context ~reader options master_cx filename ast docblock file_sig
+  )
+
+let compute_env_of_contents
+    ~options ~profiling ~reader master_cx filename docblock ast requires file_sig =
+  with_timer ~options "MergeContents" profiling (fun () ->
+      let () = ensure_checked_dependencies ~options ~reader filename requires in
+      Merge_service.compute_env_of_contents ~reader options master_cx filename ast docblock file_sig
   )
 
 let type_parse_artifacts ~options ~profiling master_cx filename intermediate_result =
@@ -233,7 +240,7 @@ let type_parse_artifacts ~options ~profiling master_cx filename intermediate_res
     let ((cx, typed_ast), obj_to_obj_map) =
       let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
       Obj_to_obj_hook.with_obj_to_obj_hook ~enabled:true ~loc_of_aloc ~f:(fun () ->
-          merge_contents
+          check_contents
             ~options
             ~profiling
             ~reader
