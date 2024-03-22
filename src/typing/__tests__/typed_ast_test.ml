@@ -116,6 +116,7 @@ let before_and_after_stmts file_name =
     Type_inference_js.infer_ast
       cx
       file_key
+      metadata
       []
       (Ast_loc_utils.loc_to_aloc_mapper#program ast)
       ~lint_severities:LintSettings.empty_severities

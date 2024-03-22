@@ -13,11 +13,15 @@ val scan_for_suppressions :
   * Error_suppressions.t
   * ALoc.t Error_message.t' list
 
+val initialize_env :
+  ?exclude_syms:SSet.t -> Context.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> unit
+
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast :
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
   File_key.t ->
+  Context.metadata ->
   Loc.t Flow_ast.Comment.t list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
@@ -27,6 +31,7 @@ val infer_lib_file :
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
   File_key.t ->
+  Context.metadata ->
   Loc.t Flow_ast.Comment.t list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
@@ -35,6 +40,7 @@ val infer_file :
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
   File_key.t ->
+  Context.metadata ->
   Loc.t Flow_ast.Comment.t list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
