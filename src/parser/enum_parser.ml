@@ -404,6 +404,7 @@ end = struct
           | None ->
             let bools_len = List.length members.boolean_members in
             let nums_len = List.length members.number_members in
+            let bigints_len = List.length members.bigint_members in
             let strs_len = List.length members.string_members in
             let defaulted_len = List.length members.defaulted_members in
             let empty () =
@@ -416,9 +417,9 @@ end = struct
                 }
             in
             begin
-              match (bools_len, nums_len, strs_len, defaulted_len) with
-              | (0, 0, 0, 0) -> empty ()
-              | (0, 0, _, _) ->
+              match (bools_len, nums_len, bigints_len, strs_len, defaulted_len) with
+              | (0, 0, 0, 0, 0) -> empty ()
+              | (0, 0, 0, _, _) ->
                 string_body
                   ~env
                   ~enum_name
@@ -427,7 +428,7 @@ end = struct
                   members.string_members
                   members.defaulted_members
                   comments
-              | (_, 0, 0, _) when bools_len >= defaulted_len ->
+              | (_, 0, 0, 0, _) when bools_len >= defaulted_len ->
                 List.iter
                   (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
                     error_at
@@ -441,7 +442,7 @@ end = struct
                     has_unknown_members;
                     comments;
                   }
-              | (0, _, 0, _) when nums_len >= defaulted_len ->
+              | (0, _, 0, 0, _) when nums_len >= defaulted_len ->
                 List.iter
                   (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
                     error_at
@@ -451,6 +452,20 @@ end = struct
                 NumberBody
                   {
                     NumberBody.members = members.number_members;
+                    explicit_type = false;
+                    has_unknown_members;
+                    comments;
+                  }
+              | (0, 0, _, 0, _) when bigints_len >= defaulted_len ->
+                List.iter
+                  (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
+                    error_at
+                      env
+                      (loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name }))
+                  members.defaulted_members;
+                BigIntBody
+                  {
+                    BigIntBody.members = members.bigint_members;
                     explicit_type = false;
                     has_unknown_members;
                     comments;
