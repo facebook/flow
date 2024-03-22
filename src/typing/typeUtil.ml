@@ -739,6 +739,8 @@ let rec mod_loc_of_virtual_use_op f =
       InferredTypeForTypeGuardParameter { reason = mod_reason reason; is_return_false_statement }
     | RendersCompatibility -> RendersCompatibility
     | UnifyFlip -> UnifyFlip
+    | EnumRepresentationTypeCompatibility { lower; upper } ->
+      EnumRepresentationTypeCompatibility { lower = mod_reason lower; upper = mod_reason upper }
   in
   function
   | Op op -> Op (mod_loc_of_root_use_op f op)

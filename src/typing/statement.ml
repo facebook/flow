@@ -7980,7 +7980,7 @@ module Make
     let (representation_t, members, has_unknown_members) =
       match body with
       | (_, BooleanBody { BooleanBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason (REnumRepresentation RBoolean) (loc_of_reason enum_reason) in
+        let reason = mk_reason RBoolean (loc_of_reason enum_reason) in
         let (members, bool_type, _) =
           Base.List.fold_left
             ~f:
@@ -8011,7 +8011,7 @@ module Make
         in
         (DefT (reason, BoolT bool_type), members, has_unknown_members)
       | (_, NumberBody { NumberBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason (REnumRepresentation RNumber) (loc_of_reason enum_reason) in
+        let reason = mk_reason RNumber (loc_of_reason enum_reason) in
         let (members, num_type, _) =
           Base.List.fold_left
             ~f:
@@ -8041,7 +8041,7 @@ module Make
         in
         (DefT (reason, NumT num_type), members, has_unknown_members)
       | (_, BigIntBody { BigIntBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason (REnumRepresentation RBigInt) (loc_of_reason enum_reason) in
+        let reason = mk_reason RBigInt (loc_of_reason enum_reason) in
         let (members, num_type, _) =
           Base.List.fold_left
             ~f:
@@ -8073,7 +8073,7 @@ module Make
       | ( _,
           StringBody { StringBody.members = StringBody.Initialized members; has_unknown_members; _ }
         ) ->
-        let reason = mk_reason (REnumRepresentation RString) (loc_of_reason enum_reason) in
+        let reason = mk_reason RString (loc_of_reason enum_reason) in
         let (members, str_type, _) =
           Base.List.fold_left
             ~f:
@@ -8104,13 +8104,13 @@ module Make
         (DefT (reason, StrT str_type), members, has_unknown_members)
       | (_, StringBody { StringBody.members = StringBody.Defaulted members; has_unknown_members; _ })
         ->
-        let reason = mk_reason (REnumRepresentation RString) (loc_of_reason enum_reason) in
+        let reason = mk_reason RString (loc_of_reason enum_reason) in
         ( DefT (reason, StrT Truthy (* Member names can't be the empty string *)),
           defaulted_members members,
           has_unknown_members
         )
       | (_, SymbolBody { SymbolBody.members; has_unknown_members; comments = _ }) ->
-        let reason = mk_reason (REnumRepresentation RSymbol) (loc_of_reason enum_reason) in
+        let reason = mk_reason RSymbol (loc_of_reason enum_reason) in
         (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
     in
     { enum_name; enum_id; members; representation_t; has_unknown_members }

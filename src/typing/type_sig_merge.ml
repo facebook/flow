@@ -241,7 +241,7 @@ let import_typeof_ns file reason id_loc index =
   ConsGen.import_typeof file.cx reason "*" ns_t
 
 let merge_enum file reason id_loc enum_name rep members has_unknown_members =
-  let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
+  let rep_reason desc = Reason.(mk_reason desc id_loc) in
   let rep_t desc def_t = Type.DefT (rep_reason desc, def_t) in
   let representation_t =
     let open Type in

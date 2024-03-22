@@ -460,8 +460,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:16:13
 
-Cannot conform to common interface module because number enum [1] is incompatible with string enum [2] in property
-`BarBad1`. Read the docs on Flow's multi-platform support for more information:
+Cannot conform to common interface module because number [1] is incompatible with string [2] in the enum's
+representation type of property `BarBad1`. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [incompatible-type]
 
    enums.ios.js:16:13

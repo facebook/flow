@@ -111,7 +111,6 @@ type 'loc virtual_reason_desc =
   | RUnknownString
   | RUnionEnum
   | REnum of string (* name *)
-  | REnumRepresentation of 'loc virtual_reason_desc
   | RThis
   | RThisType
   | RImplicitInstantiation
@@ -304,7 +303,6 @@ let rec map_desc_locs f = function
     | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectMapi | RObjectKeyMirror
     | RObjectMapConst | RIndexedAccess _ | RConditionalType | RInferType _ ) as r ->
     r
-  | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
   | RTypeAlias (s, Some b, d) -> RTypeAlias (s, Some (f b), map_desc_locs f d)
@@ -618,7 +616,6 @@ let rec string_of_desc = function
   | RUnknownString -> "some string with unknown value"
   | RUnionEnum -> "literal union"
   | REnum name -> spf "enum `%s`" name
-  | REnumRepresentation representation -> spf "%s enum" (string_of_desc representation)
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RImplicitInstantiation -> "implicit instantiation"
@@ -1563,7 +1560,6 @@ let classification_of_reason r =
   | RPossiblyMissingPropFromObj _
   | RUnionBranching _
   | REnum _
-  | REnumRepresentation _
   | RUnannotatedNext
   | RTypeGuardParam _ ->
     `Unclassified

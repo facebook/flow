@@ -251,6 +251,8 @@ let flip_frame = function
         upper_optional = c.lower_optional;
       }
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
+  | EnumRepresentationTypeCompatibility c ->
+    EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
   | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | TupleAssignment _
     | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | OpaqueTypeBound _
     | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
@@ -794,6 +796,8 @@ let rec make_error_printable :
         unwrap_frame loc frames lower use_op [text "the indexer property"]
       | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the callable signature"]
+      | Frame (EnumRepresentationTypeCompatibility { lower; _ }, use_op) ->
+        unwrap_frame loc frames lower use_op [text "the enum's representation type"]
       | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
         let message =
           [

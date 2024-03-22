@@ -530,6 +530,10 @@ module rec TypeTerm : sig
       }
     | RendersCompatibility
     | UnifyFlip
+    | EnumRepresentationTypeCompatibility of {
+        lower: 'loc virtual_reason;
+        upper: 'loc virtual_reason;
+      }
 
   and 'loc virtual_use_op =
     | Op of 'loc virtual_root_use_op
@@ -4122,6 +4126,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TypePredicateCompatibility -> "TypePredicateCompatibility"
   | RendersCompatibility -> "RendersCompatibility"
   | InferredTypeForTypeGuardParameter _ -> "InferredTypeForTypeGuardParameter"
+  | EnumRepresentationTypeCompatibility _ -> "EnumRepresentationTypeCompatibility"
 
 let string_of_use_op (type a) : a virtual_use_op -> string = function
   | Op root -> string_of_root_use_op root
