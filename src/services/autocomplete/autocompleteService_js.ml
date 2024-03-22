@@ -374,15 +374,18 @@ let mk_typing_artifacts ~options ~reader ~cx ~file_sig ~ast ~available_ast ~expo
   in
   { options; reader; cx; file_sig; ast; available_ast; exports; norm_genv }
 
-type ac_result = {
-  result: AcCompletion.t;
+type 'r ac_result = {
+  result: 'r;
   errors_to_log: string list;
 }
 
-type autocomplete_service_result =
-  | AcResult of ac_result
+type 'r autocomplete_service_result_generic =
+  | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
+
+type autocomplete_service_result =
+  ServerProt.Response.Completion.t autocomplete_service_result_generic
 
 let jsdoc_of_def_loc { reader; ast; _ } def_loc =
   loc_of_aloc ~reader def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~reader
@@ -2109,7 +2112,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
   match process_location cx ~trigger_character ~cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
-    let result = { AcCompletion.items = []; is_incomplete = false } in
+    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     ( None,
       None,
       "None",
@@ -2267,5 +2270,12 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
           )
       | Ac_qualified_type qtype ->
         autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type qtype
+    in
+    let result =
+      match result with
+      | AcResult { result; errors_to_log } ->
+        AcResult { result = AcCompletion.to_server_prot_completion_t result; errors_to_log }
+      | AcEmpty s -> AcEmpty s
+      | AcFatalError e -> AcFatalError e
     in
     (Some token, Some ac_loc, string_of_autocomplete_type autocomplete_type, result)

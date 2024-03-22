@@ -5,30 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module AcCompletion : sig
-  type completion_item = {
-    kind: Lsp.Completion.completionItemKind option;
-    name: string;
-    labelDetail: string option;  (** LSP's CompletionItemLabelDetails.detail *)
-    description: string option;  (** LSP's CompletionItemLabelDetails.description *)
-    itemDetail: string option;  (** LSP's CompletionItem.detail *)
-    text_edit: ServerProt.Response.insert_replace_edit option;
-    additional_text_edits: ServerProt.Response.textedit list;
-    sort_text: string option;
-    preselect: bool;
-    documentation_and_tags: (string option * Lsp.CompletionItemTag.t list option) Lazy.t;
-    log_info: string;
-    insert_text_format: Lsp.Completion.insertTextFormat;
-  }
-
-  type t = {
-    items: completion_item list;
-    is_incomplete: bool;
-  }
-
-  val to_server_prot_completion_t : t -> ServerProt.Response.Completion.t
-end
-
 type ac_options = {
   imports: bool;
   imports_min_characters: int;
@@ -37,8 +13,8 @@ type ac_options = {
   show_ranking_info: bool;
 }
 
-type ac_result = {
-  result: AcCompletion.t;
+type 'r ac_result = {
+  result: 'r;
   errors_to_log: string list;
 }
 
@@ -54,10 +30,13 @@ val mk_typing_artifacts :
   exports:Export_search.t ->
   typing
 
-type autocomplete_service_result =
-  | AcResult of ac_result
+type 'r autocomplete_service_result_generic =
+  | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
+
+type autocomplete_service_result =
+  ServerProt.Response.Completion.t autocomplete_service_result_generic
 
 val autocomplete_get_results :
   typing ->
