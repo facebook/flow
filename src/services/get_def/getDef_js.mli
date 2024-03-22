@@ -21,7 +21,7 @@ val get_def :
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
+  available_ast:Typed_ast_utils.available_ast ->
   purpose:Get_def_types.Purpose.t ->
   Loc.t ->
   Get_def_result.t

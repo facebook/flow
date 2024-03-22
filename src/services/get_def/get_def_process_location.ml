@@ -676,16 +676,13 @@ let search ~searcher ast =
   | exception Internal_error_exn err -> InternalError err
   | _ -> searcher#found_loc
 
-let process_location cx ~ast ~typed_ast_opt ~is_legit_require ~purpose loc =
-  match typed_ast_opt with
-  | Some typed_ast ->
+let process_location cx ~available_ast ~is_legit_require ~purpose loc =
+  match available_ast with
+  | Typed_ast_utils.Typed_ast typed_ast ->
     let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
     let searcher = new typed_ast_searcher () ~typed_ast ~is_legit_require ~covers_target ~purpose in
     search ~searcher typed_ast
-  | None ->
-    (* Computing the aloc_ast here is temporary. When on-demand autocomplete is ready,
-     * we can use the same aloc_ast used when computing the typed environment. *)
-    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  | Typed_ast_utils.ALoc_ast aloc_ast ->
     let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
     let searcher = new on_demand_searcher cx ~is_legit_require ~covers_target ~purpose in
     search ~searcher aloc_ast

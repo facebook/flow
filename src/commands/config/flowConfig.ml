@@ -44,6 +44,7 @@ module Opts = struct
 
   type t = {
     all: bool option;
+    autocomplete_mode: Options.autocomplete_mode option;
     autoimports: bool option;
     autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool option;
@@ -172,6 +173,7 @@ module Opts = struct
   let default_options =
     {
       all = None;
+      autocomplete_mode = None;
       autoimports = None;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = None;
@@ -386,6 +388,11 @@ module Opts = struct
 
   let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
+
+  let autocomplete_mode_parser =
+    enum
+      [("typed_ast", Options.Ac_typed_ast); ("on_demand", Options.Ac_on_demand_typing)]
+      (fun opts v -> Ok { opts with autocomplete_mode = Some v })
 
   let casting_syntax_parser =
     enum
@@ -853,6 +860,7 @@ module Opts = struct
   let parsers =
     [
       ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
+      ("experimental.autocomplete_mode", autocomplete_mode_parser);
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ( "autoimports.min_characters",
         uint (fun opts v ->
@@ -1520,6 +1528,8 @@ let libs config = config.libs
 (* options *)
 
 let all c = c.options.Opts.all
+
+let autocomplete_mode c = c.options.Opts.autocomplete_mode
 
 let autoimports c = c.options.Opts.autoimports
 

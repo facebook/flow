@@ -558,7 +558,7 @@ let get_def_info ~options ~reader ~purpose (ast, file_sig, _) type_info loc :
          ~cx
          ~file_sig
          ~ast
-         ~typed_ast_opt:(Some typed_ast)
+         ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
          ~purpose
          loc
      with

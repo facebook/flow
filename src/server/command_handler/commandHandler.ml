@@ -302,11 +302,7 @@ let autocomplete
       Autocomplete_sigil.add contents line column
     in
     Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
-    let file_artifacts_result =
-      let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
-      Type_contents.type_parse_artifacts ~options ~profiling env.master_cx filename parse_result
-    in
-    Autocomplete_js.autocomplete_unset_hooks ();
+    let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
     let initial_json_props =
       let open Hh_json in
       [
@@ -314,8 +310,8 @@ let autocomplete
         ("broader_context", JSON_String broader_context);
       ]
     in
-    (match file_artifacts_result with
-    | Error _parse_errors ->
+    (match parse_result with
+    | (None, _parse_errors) ->
       let err_str = "Couldn't parse file in parse_contents" in
       let json_data_to_log =
         let open Hh_json in
@@ -327,92 +323,126 @@ let autocomplete
           )
       in
       (Error err_str, Some json_data_to_log)
-    | Ok
-        ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
-          Typecheck_artifacts { cx; typed_ast; _ }
-        ) ->
-      Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
-          let open AutocompleteService_js in
-          let ac_options =
-            {
-              AutocompleteService_js.imports;
-              imports_min_characters;
-              imports_ranked_usage;
-              imports_ranked_usage_boost_exact_match_min_length;
-              show_ranking_info;
-            }
-          in
-          let typing =
-            AutocompleteService_js.mk_typing_artifacts
-              ~options
-              ~reader
-              ~cx
-              ~file_sig
-              ~ast
-              ~typed_ast_opt:(Some typed_ast)
-              ~exports:env.ServerEnv.exports
-          in
-          let (token_opt, ac_loc, ac_type_string, results_res) =
+    | (Some (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; requires; _ }), _errs)
+      ->
+      let open AutocompleteService_js in
+      let ac_options =
+        {
+          AutocompleteService_js.imports;
+          imports_min_characters;
+          imports_ranked_usage;
+          imports_ranked_usage_boost_exact_match_min_length;
+          show_ranking_info;
+        }
+      in
+      let autocomplete_get_results cx available_ast =
+        Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
+            let typing =
+              AutocompleteService_js.mk_typing_artifacts
+                ~options
+                ~reader
+                ~cx
+                ~file_sig
+                ~ast
+                ~available_ast
+                ~exports:env.ServerEnv.exports
+            in
             autocomplete_get_results typing ac_options trigger_character cursor_loc
+        )
+      in
+      let autocomplete_fully_type_and_get_results () =
+        let (cx, typed_ast) =
+          Type_contents.check_contents
+            ~options
+            ~profiling
+            ~reader:(State_reader.create ())
+            env.master_cx
+            filename
+            info
+            ast
+            requires
+            file_sig
+        in
+        autocomplete_get_results cx (Typed_ast_utils.Typed_ast typed_ast)
+      in
+      let autocomplete_on_demand_get_results () =
+        let (cx, aloc_ast) =
+          Type_contents.compute_env_of_contents
+            ~options
+            ~profiling
+            ~reader:(State_reader.create ())
+            env.master_cx
+            filename
+            info
+            ast
+            requires
+            file_sig
+        in
+        autocomplete_get_results cx (Typed_ast_utils.ALoc_ast aloc_ast)
+      in
+      let (token_opt, ac_loc, ac_type_string, results_res) =
+        match Options.autocomplete_mode options with
+        | Options.Ac_typed_ast -> autocomplete_fully_type_and_get_results ()
+        | Options.Ac_on_demand_typing -> autocomplete_on_demand_get_results ()
+      in
+      (* Make sure hooks are unset *after* we've gotten the results to account for
+       * on-demand type checking. *)
+      Autocomplete_js.autocomplete_unset_hooks ();
+      let json_props_to_log =
+        ("ac_type", Hh_json.JSON_String ac_type_string)
+        :: ("docblock", Docblock.json_of_docblock info)
+        :: ( "token",
+             match token_opt with
+             | None -> Hh_json.JSON_Null
+             | Some token -> Hh_json.JSON_String token
+           )
+        :: initial_json_props
+      in
+      let (response, json_props_to_log) =
+        let open Hh_json in
+        match results_res with
+        | AcResult { result; errors_to_log } ->
+          let result = AcCompletion.to_server_prot_completion_t result in
+          let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
+          let result_string =
+            match (items, errors_to_log) with
+            | (_, []) -> "SUCCESS"
+            | ([], _ :: _) -> "FAILURE"
+            | (_ :: _, _ :: _) -> "PARTIAL"
           in
-          let json_props_to_log =
-            ("ac_type", Hh_json.JSON_String ac_type_string)
-            :: ("docblock", Docblock.json_of_docblock info)
-            :: ( "token",
-                 match token_opt with
-                 | None -> Hh_json.JSON_Null
-                 | Some token -> Hh_json.JSON_String token
-               )
-            :: initial_json_props
+          let at_least_one_result_has_documentation =
+            Base.List.exists items ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                Base.Option.is_some documentation
+            )
           in
-          let (response, json_props_to_log) =
-            let open Hh_json in
-            match results_res with
-            | AcResult { result; errors_to_log } ->
-              let result = AcCompletion.to_server_prot_completion_t result in
-              let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
-              let result_string =
-                match (items, errors_to_log) with
-                | (_, []) -> "SUCCESS"
-                | ([], _ :: _) -> "FAILURE"
-                | (_ :: _, _ :: _) -> "PARTIAL"
-              in
-              let at_least_one_result_has_documentation =
-                Base.List.exists
-                  items
-                  ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
-                    Base.Option.is_some documentation
-                )
-              in
-              ( Ok (token_opt, result, ac_loc, ac_type_string),
-                ("result", JSON_String result_string)
-                :: ("count", JSON_Number (items |> List.length |> string_of_int))
-                :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
-                :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
-                :: json_props_to_log
-              )
-            | AcEmpty reason ->
-              ( Ok
-                  ( token_opt,
-                    { ServerProt.Response.Completion.items = []; is_incomplete = false },
-                    ac_loc,
-                    ac_type_string
-                  ),
-                ("result", JSON_String "SUCCESS")
-                :: ("count", JSON_Number "0")
-                :: ("empty_reason", JSON_String reason)
-                :: json_props_to_log
-              )
-            | AcFatalError error ->
-              ( Error error,
-                ("result", JSON_String "FAILURE")
-                :: ("errors", JSON_Array [JSON_String error])
-                :: json_props_to_log
-              )
-          in
-          let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
-          (response, Some (Hh_json.JSON_Object json_props_to_log))
-      ))
+          ( Ok (token_opt, result, ac_loc, ac_type_string),
+            ("result", JSON_String result_string)
+            :: ("count", JSON_Number (items |> List.length |> string_of_int))
+            :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+            :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
+            :: json_props_to_log
+          )
+        | AcEmpty reason ->
+          ( Ok
+              ( token_opt,
+                { ServerProt.Response.Completion.items = []; is_incomplete = false },
+                ac_loc,
+                ac_type_string
+              ),
+            ("result", JSON_String "SUCCESS")
+            :: ("count", JSON_Number "0")
+            :: ("empty_reason", JSON_String reason)
+            :: json_props_to_log
+          )
+        | AcFatalError error ->
+          ( Error error,
+            ("result", JSON_String "FAILURE")
+            :: ("errors", JSON_Array [JSON_String error])
+            :: json_props_to_log
+          )
+      in
+      let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
+      (response, Some (Hh_json.JSON_Object json_props_to_log)))
 
 let check_file ~options ~env ~profiling ~force file_input =
   let options = { options with Options.opt_all = Options.all options || force } in
@@ -456,7 +486,7 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         ~cx
         ~file_sig
         ~ast
-        ~typed_ast_opt:(Some typed_ast)
+        ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
         ~purpose:Get_def_types.Purpose.GoToDefinition
         loc
       |> fun result ->

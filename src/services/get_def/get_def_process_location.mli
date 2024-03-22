@@ -61,8 +61,7 @@ val process_type_request : Context.t -> Type.t -> (ALoc.t, string) Stdlib.result
 
 val process_location :
   Context.t ->
-  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
+  available_ast:Typed_ast_utils.available_ast ->
   is_legit_require:(ALoc.t -> bool) ->
   purpose:Get_def_types.Purpose.t ->
   Loc.t ->

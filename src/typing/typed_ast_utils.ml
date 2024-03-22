@@ -8,6 +8,14 @@
 module Ast = Flow_ast
 module ALocMap = Loc_collections.ALocMap
 
+type available_ast =
+  | Typed_ast of (ALoc.t, ALoc.t * Type.t) Ast.Program.t
+  | ALoc_ast of (ALoc.t, ALoc.t) Ast.Program.t
+
+let typed_ast_of_available_ast = function
+  | Typed_ast tast -> Some tast
+  | ALoc_ast _ -> None
+
 let polarity = function
   | Some (_, { Ast.Variance.kind = Ast.Variance.Plus; comments = _ }) -> Polarity.Positive
   | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative

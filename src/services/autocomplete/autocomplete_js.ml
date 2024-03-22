@@ -1038,23 +1038,20 @@ let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor a
 
 let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
-let process_location cx ~trigger_character ~cursor ~ast ~typed_ast_opt =
-  match typed_ast_opt with
-  | None ->
+let process_location cx ~trigger_character ~cursor ~available_ast =
+  match available_ast with
+  | Typed_ast_utils.ALoc_ast aloc_ast ->
     let searcher =
       new on_demand_process_request_searcher
         cx
         ~from_trigger_character:(trigger_character <> None)
         ~cursor
     in
-    (* Computing the aloc_ast here is temporary. When on-demand autocomplete is ready,
-     * we can use the same aloc_ast used when computing the typed environment. *)
-    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     (match searcher#program aloc_ast with
     | exception Found f -> Ok (Some f)
     | exception Internal_exn err -> Error err
     | _ -> Ok None)
-  | Some typed_ast ->
+  | Typed_ast_utils.Typed_ast typed_ast ->
     let searcher =
       new typed_ast_process_request_searcher
         ~from_trigger_character:(trigger_character <> None)

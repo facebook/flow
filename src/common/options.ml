@@ -35,6 +35,10 @@ type react_rules =
   | DeepReadOnlyHookReturns
   | RulesOfHooks
 
+type autocomplete_mode =
+  | Ac_typed_ast
+  | Ac_on_demand_typing
+
 type format = {
   opt_bracket_spacing: bool;
   opt_single_quotes: bool;
@@ -67,6 +71,7 @@ type t = {
   opt_all: bool;
   opt_as_const: bool;
   opt_any_propagation: bool;
+  opt_autocomplete_mode: autocomplete_mode;
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
@@ -161,6 +166,8 @@ let all opts = opts.opt_all
 let as_const opts = opts.opt_as_const
 
 let any_propagation opts = opts.opt_any_propagation
+
+let autocomplete_mode opts = opts.opt_autocomplete_mode
 
 let autoimports opts = opts.opt_autoimports
 

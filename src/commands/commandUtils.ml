@@ -1488,6 +1488,8 @@ let make_options
       Option.value
         options_flags.long_lived_workers
         ~default:(FlowConfig.long_lived_workers flowconfig);
+    opt_autocomplete_mode =
+      Base.Option.value (FlowConfig.autocomplete_mode flowconfig) ~default:Options.Ac_typed_ast;
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
     opt_blocking_worker_communication =

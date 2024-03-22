@@ -59,7 +59,7 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
             ~cx
             ~file_sig
             ~ast
-            ~typed_ast_opt:(Some typed_ast)
+            ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
             ~purpose:Get_def_types.Purpose.FindReferences
             remote_loc
         with

@@ -359,16 +359,20 @@ type typing = {
   cx: Context.t;
   file_sig: File_sig.t;
   ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-  typed_ast_opt: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option;
+  available_ast: Typed_ast_utils.available_ast;
   exports: Export_search.t;
   norm_genv: Ty_normalizer_env.genv;
 }
 
-let mk_typing_artifacts ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt ~exports =
+let mk_typing_artifacts ~options ~reader ~cx ~file_sig ~ast ~available_ast ~exports =
   let norm_genv =
-    Ty_normalizer_flow.mk_genv ~options:ty_normalizer_options ~cx ~typed_ast_opt ~file_sig
+    Ty_normalizer_flow.mk_genv
+      ~options:ty_normalizer_options
+      ~cx
+      ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
+      ~file_sig
   in
-  { options; reader; cx; file_sig; ast; typed_ast_opt; exports; norm_genv }
+  { options; reader; cx; file_sig; ast; available_ast; exports; norm_genv }
 
 type ac_result = {
   result: AcCompletion.t;
@@ -388,7 +392,7 @@ let jsdoc_of_member typing info =
   | [def_loc] -> jsdoc_of_def_loc typing def_loc
   | _ -> None
 
-let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt loc =
+let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc =
   let open GetDef_js.Get_def_result in
   match
     GetDef_js.get_def
@@ -397,7 +401,7 @@ let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt loc =
       ~cx
       ~file_sig
       ~ast
-      ~typed_ast_opt
+      ~available_ast
       ~purpose:Get_def_types.Purpose.GoToDefinition
       loc
   with
@@ -421,9 +425,9 @@ let documentation_and_tags_of_member typing info =
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
-let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt loc =
+let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc =
   lazy
-    (jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt loc
+    (jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
@@ -440,8 +444,15 @@ let members_of_type
     ?(include_interface_members = false)
     ?(exclude_keys = SSet.empty)
     t =
-  let { cx; typed_ast_opt; file_sig; _ } = typing in
-  let ty_members = Ty_members.extract ~force_instance ~cx ~typed_ast_opt ~file_sig t in
+  let { cx; available_ast; file_sig; _ } = typing in
+  let ty_members =
+    Ty_members.extract
+      ~force_instance
+      ~cx
+      ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
+      ~file_sig
+      t
+  in
   let include_valid_member (s, (Ty_members.{ inherited; source; _ } as info)) =
     if
       (exclude_proto_members && inherited)
@@ -479,7 +490,7 @@ let members_of_type
       )
 
 let local_value_identifiers ~typing ~genv ~ac_loc =
-  let { options; reader; cx; ast; typed_ast_opt; file_sig; _ } = typing in
+  let { options; reader; cx; ast; available_ast; file_sig; _ } = typing in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
   in
@@ -524,7 +535,7 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
            Type_env.checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc (ALoc.of_loc loc)
          in
          let documentation_and_tags =
-           documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt loc
+           documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc
          in
          ((name, documentation_and_tags), type_)
      )
@@ -1265,14 +1276,14 @@ let make_type_param ~edit_locs name =
   }
 
 let local_type_identifiers artifacts =
-  let { ast; typed_ast_opt; cx; norm_genv; _ } = artifacts in
+  let { ast; available_ast; cx; norm_genv; _ } = artifacts in
   let rev_ids =
-    match typed_ast_opt with
-    | Some typed_ast ->
+    match available_ast with
+    | Typed_ast_utils.Typed_ast typed_ast ->
       let search = new local_type_identifiers_typed_ast_searcher in
       Stdlib.ignore (search#program typed_ast);
       search#rev_ids
-    | None ->
+    | Typed_ast_utils.ALoc_ast _ ->
       let search = new local_type_identifiers_ast_searcher cx in
       Stdlib.ignore (search#program ast);
       search#rev_ids
@@ -1289,7 +1300,7 @@ let autocomplete_unqualified_type
     ~ac_loc
     ~edit_locs
     ~token =
-  let { options; reader; cx; file_sig; ast; typed_ast_opt; exports; norm_genv = genv } = typing in
+  let { options; reader; cx; file_sig; ast; available_ast; exports; norm_genv = genv } = typing in
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
@@ -1305,7 +1316,7 @@ let autocomplete_unqualified_type
          (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
            let documentation_and_tags =
              loc_of_aloc ~reader aloc
-             |> documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast_opt
+             |> documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast
            in
            match ty_result with
            | Ok elt ->
@@ -2097,9 +2108,9 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
-  let { options; reader; cx; ast; typed_ast_opt; norm_genv = genv; _ } = typing in
+  let { options; reader; cx; ast; available_ast; norm_genv = genv; _ } = typing in
   let open Autocomplete_js in
-  match process_location cx ~trigger_character ~cursor ~ast ~typed_ast_opt with
+  match process_location cx ~trigger_character ~cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
     let result = { AcCompletion.items = []; is_incomplete = false } in

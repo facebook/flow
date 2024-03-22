@@ -119,7 +119,7 @@ module Depth = struct
     depth.results <- Loc_collections.LocMap.add loc result results
 end
 
-let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast_opt ~purpose requested_loc =
+let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc source_aloc in
@@ -148,7 +148,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast_opt ~purpose req
     | Ok Depth.NoResult ->
       let open Get_def_process_location in
       let result =
-        match process_location cx ~ast ~is_legit_require ~typed_ast_opt ~purpose req_loc with
+        match process_location cx ~is_legit_require ~available_ast ~purpose req_loc with
         | OwnDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
         | Request request -> begin
           match
@@ -158,7 +158,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast_opt ~purpose req
               ~cx
               ~is_legit_require
               ~ast
-              ~typed_ast_opt
+              ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
               ~file_sig
               request
           with

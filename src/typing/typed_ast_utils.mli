@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
+type available_ast =
+  | Typed_ast of (ALoc.t, ALoc.t * Type.t) Ast.Program.t
+  | ALoc_ast of (ALoc.t, ALoc.t) Ast.Program.t
+
+val typed_ast_of_available_ast : available_ast -> (ALoc.t, ALoc.t * Type.t) Ast.Program.t option
+
 val polarity : 'L Flow_ast.Variance.t option -> Polarity.t
 
 val typed_ast_to_map :
