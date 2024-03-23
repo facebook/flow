@@ -69,10 +69,12 @@ if (d16.kind === 'kind1') {
   d16.items[0] as null;
 }
 
-import {E as E17} from './enums';
+import {E as E17, enumMember, enumCastMethod} from './enums';
 E17 as empty; // error enum ~> empty
 E17.A as empty; // error enum ~> empty
 E17.C as empty; // error - not a member
+enumMember as E17; // OK
+enumCastMethod.call(E17, 'A') as E17 | void; // OK
 
 import {x as x18, y as y18, z as z18} from './eval_readonly';
 x18 as empty; // error number, string ~> empty

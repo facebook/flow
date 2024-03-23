@@ -314,9 +314,10 @@ module rec ConsGen : S = struct
     let reposition cx ?trace:_ loc t = reposition cx loc t
 
     let enum_proto cx ~reason (enum_reason, enum) =
+      let enum_object_t = DefT (enum_reason, EnumObjectT enum) in
       let enum_t = DefT (enum_reason, EnumValueT enum) in
       let { representation_t; _ } = enum in
-      get_builtin_typeapp cx reason "$EnumProto" [enum_t; representation_t]
+      get_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_t; representation_t]
 
     let cg_lookup cx _trace ~obj_t ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
         =
