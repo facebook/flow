@@ -49,16 +49,15 @@ let push = List.append
 let exists = List.exists
 
 let to_assoc t =
-  let (xs, map) =
-    List.fold_left
-      (fun (xs, map) ((loc, { Ast.Identifier.name = x; comments = _ }), kind) ->
+  let rec loop acc = function
+    | [] -> acc
+    | ((loc, { Ast.Identifier.name = x; comments = _ }), kind) :: rest ->
+        let (xs, map) = acc in
         match SMap.find_opt x map with
-        (* First kind wins *)
-        | Some (kind, locs) -> (xs, SMap.add x (kind, Nel.cons loc locs) map)
-        | None -> (x :: xs, SMap.add x (kind, Nel.one loc) map))
-      ([], SMap.empty)
-      (List.rev t)
+        | Some (kind, locs) -> loop (xs, SMap.add x (kind, Nel.cons loc locs) map) rest
+        | None -> loop (x :: xs, SMap.add x (kind, Nel.one loc) map) rest
   in
+  let (xs, map) = loop ([], SMap.empty) (List.rev t) in
   List.rev_map (fun x -> (x, SMap.find x map |> fun (kind, locs) -> (kind, Nel.rev locs))) xs
 
 let to_map t =
