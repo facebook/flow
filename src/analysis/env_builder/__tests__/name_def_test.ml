@@ -58,13 +58,18 @@ let print_values values =
   Printf.printf "[\n  %s\n]" (String.concat ";\n  " strlist)
 
 let print_order lst =
+  let print_kind_and_loc (k, l) =
+    if k = Env_api.OrdinaryNameLoc then
+      ALoc.debug_to_string l
+    else
+      Printf.sprintf "%s (%s)" (ALoc.debug_to_string l) (Env_api.show_def_loc_type k)
+  in
   let msg_of_elt elt =
     match elt with
-    | Normal (_, l)
-    | Resolvable (_, l) ->
-      ALoc.debug_to_string l
-    | Illegal { payload = (_, loc); _ } ->
-      Printf.sprintf "illegal self-cycle (%s)" (ALoc.debug_to_string loc)
+    | Normal payload
+    | Resolvable payload ->
+      print_kind_and_loc payload
+    | Illegal { payload; _ } -> Printf.sprintf "illegal self-cycle (%s)" (print_kind_and_loc payload)
   in
   let msg =
     let loc_of_elt elt =
@@ -268,7 +273,7 @@ let x: { [number]: number => number } = { [42]: v => v };
   |};
   [%expect {|
     (2, 4) to (2, 5) =>
-    (2, 43) to (2, 45) =>
+    (2, 43) to (2, 45) (Env_api.Make.ExpressionLoc) =>
     (2, 48) to (2, 49) |}]
 
 let%expect_test "function_def" =
@@ -458,7 +463,7 @@ x = 42;
     (10, 0) to (10, 1) =>
     (3, 2) to (3, 3) =>
     (2, 9) to (2, 21) =>
-    (8, 10) to (8, 31) |}]
+    (8, 10) to (8, 31) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "typeof1" =
   print_order_test {|
@@ -632,7 +637,7 @@ if (x instanceof C) {
   [%expect {|
     (2, 6) to (2, 7) =>
     (5, 12) to (5, 13) =>
-    (8, 17) to (8, 18) =>
+    (8, 17) to (8, 18) (Env_api.Make.ExpressionLoc) =>
     (9, 2) to (9, 3) |}]
 
 let%expect_test "refi_latent" =
@@ -647,7 +652,7 @@ if (f(x)) {
   |};
   [%expect {|
     (3, 12) to (3, 13) =>
-    (6, 6) to (6, 7) =>
+    (6, 6) to (6, 7) (Env_api.Make.ExpressionLoc) =>
     illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
 
 let%expect_test "refi_latent_complex" =
@@ -663,7 +668,7 @@ if (f()(x)) {
   [%expect {|
     (2, 23) to (2, 24) =>
     (3, 12) to (3, 13) =>
-    (6, 8) to (6, 9) =>
+    (6, 8) to (6, 9) (Env_api.Make.ExpressionLoc) =>
     illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
 
 let%expect_test "refi_sentinel" =
@@ -678,7 +683,7 @@ if (x.type === 1) {
   [%expect {|
     (2, 12) to (2, 13) =>
     (5, 4) to (5, 10) =>
-    (5, 15) to (5, 16) =>
+    (5, 15) to (5, 16) (Env_api.Make.ExpressionLoc) =>
     (6, 2) to (6, 3) |}]
 
 let%expect_test "declare_class" =
@@ -899,7 +904,7 @@ let%expect_test "destructuring param empty 1" =
 function f([]) {}
   |};
   [%expect {|
-    (2, 11) to (2, 13) =>
+    (2, 11) to (2, 13) (Env_api.Make.FunctionParamLoc) =>
     (2, 9) to (2, 10) |}]
 
 let%expect_test "destructuring param empty 2" =
@@ -907,7 +912,7 @@ let%expect_test "destructuring param empty 2" =
 function f([]) { return 1 }
   |};
   [%expect {|
-    (2, 11) to (2, 13) =>
+    (2, 11) to (2, 13) (Env_api.Make.FunctionParamLoc) =>
     (2, 9) to (2, 10) |}]
 
 let%expect_test "destructuring param empty 3" =
@@ -949,11 +954,11 @@ let%expect_test "destructuring order" =
 const {foo: [bar, baz = 3], hello: {world: flow}} = global;
   |};
   [%expect {|
-    (2, 6) to (2, 49) =>
-    (2, 12) to (2, 26) =>
+    (2, 6) to (2, 49) (Env_api.Make.PatternLoc) =>
+    (2, 12) to (2, 26) (Env_api.Make.PatternLoc) =>
     (2, 13) to (2, 16) =>
     (2, 18) to (2, 21) =>
-    (2, 35) to (2, 48) =>
+    (2, 35) to (2, 48) (Env_api.Make.PatternLoc) =>
     (2, 43) to (2, 47) |}]
 
 let%expect_test "refi_recorded_read" =
@@ -975,9 +980,9 @@ if (obj.d.type === "a") {
   [%expect {|
     (2, 4) to (2, 9) =>
     (2, 4) to (2, 14) =>
-    (3, 6) to (3, 26) =>
-    (2, 19) to (2, 22) =>
-    (3, 10) to (3, 25) =>
+    (3, 6) to (3, 26) (Env_api.Make.PatternLoc) =>
+    (2, 19) to (2, 22) (Env_api.Make.ExpressionLoc) =>
+    (3, 10) to (3, 25) (Env_api.Make.PatternLoc) =>
     (3, 11) to (3, 18) =>
     (3, 20) to (3, 24) |}]
 
@@ -1056,7 +1061,7 @@ import * as R from 'foo';
     (2, 15) to (2, 16) =>
     (2, 9) to (2, 14) =>
     (8, 12) to (8, 13) =>
-    (4, 19) to (4, 22) =>
+    (4, 19) to (4, 22) (Env_api.Make.ExpressionLoc) =>
     (5, 4) to (5, 5) |}]
 
 let%expect_test "object_prop_assign" =
@@ -1081,7 +1086,7 @@ function test(arr, i) {
     (2, 19) to (2, 20) =>
     (2, 9) to (2, 13) =>
     (3, 6) to (3, 7) =>
-    (3, 6) to (3, 9) |}]
+    (3, 6) to (3, 9) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "this" =
   print_order_test {|
@@ -1114,7 +1119,7 @@ function g() {
 x.push(42);
   |};
   [%expect {|
-    (9, 7) to (9, 9) =>
+    (9, 7) to (9, 9) (Env_api.Make.ArrayProviderLoc) =>
     (2, 4) to (2, 5) =>
     (4, 6) to (4, 7) =>
     (3, 9) to (3, 10) =>
@@ -1191,7 +1196,7 @@ var x = [];
 x.push(42);
   |};
   [%expect {|
-    (3, 7) to (3, 9) =>
+    (3, 7) to (3, 9) (Env_api.Make.ArrayProviderLoc) =>
     (2, 4) to (2, 5) |}]
 
 let%expect_test "left to right deps" =
@@ -1203,11 +1208,11 @@ pipe(
 );
   |};
   [%expect {|
-    (3, 2) to (3, 4) =>
+    (3, 2) to (3, 4) (Env_api.Make.ExpressionLoc) =>
     (4, 2) to (4, 3) =>
-    (4, 2) to (4, 8) =>
+    (4, 2) to (4, 8) (Env_api.Make.ExpressionLoc) =>
     (5, 2) to (5, 3) =>
-    (5, 2) to (5, 9) |}]
+    (5, 2) to (5, 9) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "left to right cycles" =
   print_order_test {|
@@ -1219,10 +1224,10 @@ pipe(
 );
   |};
   [%expect {|
-    (4, 2) to (4, 4) =>
+    (4, 2) to (4, 4) (Env_api.Make.ExpressionLoc) =>
     (5, 2) to (5, 3) =>
-    illegal scc: (((5, 2) to (5, 8)); ((6, 2) to (6, 3)); ((6, 7) to (6, 8))) =>
-    (6, 2) to (6, 12) |}]
+    illegal scc: (((5, 2) to (5, 8) (Env_api.Make.ExpressionLoc)); ((6, 2) to (6, 3)); ((6, 7) to (6, 8))) =>
+    (6, 2) to (6, 12) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "inner-outer-class" =
   print_order_test {|
@@ -1251,7 +1256,7 @@ function foo(arr: $ReadOnlyArray<Object>) {
   |};
   [%expect {|
     (2, 13) to (2, 16) =>
-    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46)); ((4, 49) to (4, 51))) |}]
+    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22) (Env_api.Make.ExpressionLoc)); ((4, 16) to (4, 47) (Env_api.Make.ExpressionLoc)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46) (Env_api.Make.ExpressionLoc)); ((4, 49) to (4, 51) (Env_api.Make.ExpressionLoc))) |}]
 
 let%expect_test "new cycle" =
   print_order_test {|
@@ -1262,7 +1267,7 @@ function foo(arr: $ReadOnlyArray<Object>) {
   |};
   [%expect {|
     (2, 13) to (2, 16) =>
-    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46)); ((4, 49) to (4, 58))) |}]
+    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22) (Env_api.Make.ExpressionLoc)); ((4, 16) to (4, 47) (Env_api.Make.ExpressionLoc)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46) (Env_api.Make.ExpressionLoc)); ((4, 49) to (4, 58) (Env_api.Make.ExpressionLoc))) |}]
 
 let%expect_test "lit cycle" =
   print_order_test {|
@@ -1273,8 +1278,8 @@ function foo(arr: $ReadOnlyArray<Object>) {
   |};
   [%expect {|
     (2, 13) to (2, 16) =>
-    (4, 49) to (4, 51) =>
-    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46))) |}]
+    (4, 49) to (4, 51) (Env_api.Make.ExpressionLoc) =>
+    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22) (Env_api.Make.ExpressionLoc)); ((4, 16) to (4, 47) (Env_api.Make.ExpressionLoc)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46) (Env_api.Make.ExpressionLoc))) |}]
 
 let%expect_test "obj cycle" =
   print_order_test {|
@@ -1287,7 +1292,7 @@ const RecursiveObj = {
 };
   |};
   [%expect {|
-  illegal scc: ((illegal self-cycle ((2, 6) to (2, 18))); ((6, 19) to (6, 32)))
+  illegal scc: ((illegal self-cycle ((2, 6) to (2, 18))); ((6, 19) to (6, 32) (Env_api.Make.ExpressionLoc)))
      |}]
 
 let%expect_test "react_fwd" =
@@ -1396,7 +1401,7 @@ titlesAdlabels.push(rule.title_label);
     [%expect {|
       (2, 12) to (2, 16) =>
       (4, 0) to (4, 16) =>
-      (5, 20) to (5, 36) =>
+      (5, 20) to (5, 36) (Env_api.Make.ArrayProviderLoc) =>
       (3, 6) to (3, 20) |}]
 
 let%expect_test "logic_op_assign_repeat" =
@@ -1424,7 +1429,7 @@ if (values.b === values.a) {
 |};
     [%expect {|
       (2, 12) to (2, 18) =>
-      (4, 17) to (4, 25) |}]
+      (4, 17) to (4, 25) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "def_class" =
   print_order_test {|
@@ -1448,7 +1453,7 @@ declare var f: any;
       legal scc: (((2, 6) to (2, 7)); ((3, 4) to (3, 5)); ((4, 4) to (4, 12))) =>
       (4, 23) to (4, 27) =>
       (7, 12) to (7, 13) =>
-      (4, 45) to (4, 49) |}]
+      (4, 45) to (4, 49) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "pred" =
   print_order_test {|
@@ -1460,7 +1465,7 @@ declare class Stack {
 |};
     [%expect {|
       (2, 17) to (2, 27) =>
-      legal scc: (((2, 9) to (2, 16)); ((2, 84) to (2, 89)); ((3, 14) to (3, 19))) |}]
+      legal scc: (((2, 9) to (2, 16)); ((2, 84) to (2, 89) (Env_api.Make.ExpressionLoc)); ((3, 14) to (3, 19))) |}]
 
 let%expect_test "statics cycle" =
   print_order_test {|
@@ -1481,7 +1486,7 @@ g(function h() { return f() })
 |};
     [%expect {|
       (2, 11) to (2, 12) =>
-      (2, 2) to (2, 29) |}]
+      (2, 2) to (2, 29) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "callee hint cycle" =
   print_order_test {|
@@ -1489,7 +1494,7 @@ g(function () { return f() })
 |};
     [%expect {|
       (2, 2) to (2, 28) =>
-      (2, 2) to (2, 28) |}]
+      (2, 2) to (2, 28) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "instantiate hint cycle" =
   print_order_test {|
@@ -1511,7 +1516,7 @@ type a2 = number;
       (2, 6) to (2, 9) =>
       (4, 5) to (4, 7) =>
       (2, 15) to (2, 18) =>
-      (2, 5) to (2, 29) |}]
+      (2, 5) to (2, 29) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "fwd ref provider" =
   print_order_test {|
@@ -1553,9 +1558,9 @@ if (pair.values.length !== 0) {
       (2, 12) to (2, 16) =>
       (4, 4) to (4, 15) =>
       (4, 4) to (4, 22) =>
-      (4, 27) to (4, 28) =>
+      (4, 27) to (4, 28) (Env_api.Make.ExpressionLoc) =>
       (5, 8) to (5, 11) =>
-      (6, 20) to (6, 31) |}]
+      (6, 20) to (6, 31) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "component ordering" =
   print_order_test {|
@@ -1592,7 +1597,7 @@ f((x): typeof x => x);
     [%expect{|
        (2, 12) to (2, 13) =>
        illegal self-cycle ((3, 3) to (3, 4)) =>
-       (3, 2) to (3, 20)
+       (3, 2) to (3, 20) (Env_api.Make.ExpressionLoc)
        |}]
 
 let%expect_test "contextual type guard" =
@@ -1603,7 +1608,7 @@ f((x): x is number => true);
     [%expect{|
        (2, 12) to (2, 13) =>
        (3, 3) to (3, 4) =>
-       (3, 2) to (3, 26)
+       (3, 2) to (3, 26) (Env_api.Make.ExpressionLoc)
        |}]
 
 let%expect_test "declare component ordering" =
