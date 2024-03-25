@@ -459,7 +459,7 @@ class returned_expression_collector =
 
 let function_params_all_annotated
     ~allow_unannotated_this
-    ((_, { Ast.Function.Params.params = parameters; rest; this_; _ }) as params)
+    ((_, { Ast.Function.Params.params = parameters; rest; _ }) as params)
     body =
   Base.List.for_all parameters ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
       argument |> Destructure.type_of_pattern |> Base.Option.is_some
@@ -467,10 +467,12 @@ let function_params_all_annotated
   && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
          argument |> Destructure.type_of_pattern |> Base.Option.is_some
      )
-  && (allow_unannotated_this
-     || Base.Option.is_some this_
-     || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
-     )
+  && not
+       (Signature_utils.This_finder.missing_this_annotation
+          ~needs_this_param:(not allow_unannotated_this)
+          body
+          params
+       )
 
 let identifier_has_autocomplete ~autocomplete_hooks (loc, { Ast.Identifier.name; _ }) =
   autocomplete_hooks.Env_api.With_ALoc.id_hook name loc
@@ -1430,29 +1432,18 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
 
     method visit_function_expr
         ~func_hints ~has_this_def ~var_assigned_to ~statics ~arrow ~hooklike function_loc expr =
-      let {
-        Ast.Function.id;
-        async;
-        generator;
-        sig_loc;
-        params = (_, { Ast.Function.Params.this_; _ }) as params;
-        body;
-        _;
-      } =
-        expr
-      in
+      let { Ast.Function.id; async; generator; sig_loc; params; body; _ } = expr in
       let scope_kind = func_scope_kind expr in
-      begin
-        match this_ with
-        | None
-          when has_this_def && Signature_utils.This_finder.found_this_in_body_or_params body params
-          ->
-          this#add_binding
-            (Env_api.FunctionThisLoc, function_loc)
-            (mk_reason RThis function_loc)
-            MissingThisAnnot
-        | _ -> ()
-      end;
+      if
+        Signature_utils.This_finder.missing_this_annotation
+          ~needs_this_param:has_this_def
+          body
+          params
+      then
+        this#add_binding
+          (Env_api.FunctionThisLoc, function_loc)
+          (mk_reason RThis function_loc)
+          MissingThisAnnot;
       this#in_new_tparams_env (fun () ->
           this#visit_function ~scope_kind ~func_hints expr;
           (match var_assigned_to with
@@ -1523,25 +1514,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       expr
 
     method visit_function_declaration ~statics loc expr =
-      let {
-        Ast.Function.id;
-        async;
-        generator;
-        sig_loc;
-        params = (_, { Ast.Function.Params.this_; _ }) as params;
-        body;
-        _;
-      } =
-        expr
-      in
+      let { Ast.Function.id; async; generator; sig_loc; params; body; _ } = expr in
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
-          begin
-            match this_ with
-            | None when Signature_utils.This_finder.found_this_in_body_or_params body params ->
-              this#add_binding (Env_api.FunctionThisLoc, loc) (mk_reason RThis loc) MissingThisAnnot
-            | _ -> ()
-          end;
+          if Signature_utils.This_finder.missing_this_annotation ~needs_this_param:true body params
+          then
+            this#add_binding (Env_api.FunctionThisLoc, loc) (mk_reason RThis loc) MissingThisAnnot;
           this#visit_function ~func_hints:[] ~scope_kind expr;
           let reason = func_reason ~async ~generator sig_loc in
           let def =
