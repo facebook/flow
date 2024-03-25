@@ -839,7 +839,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         (inferred_targ_list, lhs, constructor_t, Some new_tout)
       | Check.Jsx { clone; component; config; targs; children } ->
         let new_tout = Tvar.mk cx reason_op in
-        let (call_targs, inferred_targ_list) = merge_targs targs in
+        let (_, inferred_targ_list) = merge_targs targs in
         let react_kit_t =
           ReactKitT
             ( use_op,
@@ -850,14 +850,24 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                   component;
                   config;
                   children;
-                  targs = Some call_targs;
+                  targs = None;
                   tout = new_tout;
                   return_hint = Type.hint_unavailable;
                   record_monomorphized_result = false;
                 }
             )
         in
-        (inferred_targ_list, lhs, react_kit_t, Some new_tout)
+        let lower =
+          Flow.mk_typeapp_instance_annot
+            cx
+            ~use_op
+            ~reason_op
+            ~reason_tapp
+            ~from_value:true
+            lhs
+            (Base.List.map ~f:(fun (_, t, _, _) -> t) inferred_targ_list)
+        in
+        (inferred_targ_list, lower, react_kit_t, Some new_tout)
     in
     Flow.flow cx (lower_t, use_t);
     (inferred_targ_list, marked_tparams, tout)

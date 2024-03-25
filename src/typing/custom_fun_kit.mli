@@ -13,6 +13,7 @@ module type CUSTOM_FUN = sig
     return_hint:Type.lazy_hint_t ->
     Reason.t ->
     Type.custom_fun_kind ->
+    Type.targ list option ->
     Type.t list ->
     Type.t option ->
     Type.t ->

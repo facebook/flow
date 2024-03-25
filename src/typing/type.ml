@@ -1803,7 +1803,7 @@ module rec TypeTerm : sig
     | ResolveSpreadsToMultiflowCallFull of int * funtype
     | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
     (* We can also call custom functions. *)
-    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * t * lazy_hint_t
+    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * targ list option * t * lazy_hint_t
     (* Once we've finished resolving spreads for a function's arguments,
      * partially apply the arguments to the function and return the resulting
      * function (basically what func.bind(that, ...args) does) *)
@@ -3098,6 +3098,7 @@ and React : sig
         config: TypeTerm.t;
         children: TypeTerm.t list * TypeTerm.t option;
         tout: TypeTerm.t_out;
+        targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;
       }
     | CreateElement of {
@@ -3106,10 +3107,6 @@ and React : sig
         config: TypeTerm.t;
         children: TypeTerm.t list * TypeTerm.t option;
         tout: TypeTerm.t_out;
-        (* There is currently no way to specify this syntactically, which is why it is omitted
-         * from CreateElement0. This field is used by Pierce's algorithm to track what bounds the implicitly
-         * instantiated type variables would eventually get. It is likely that we will need to add
-         * syntax support for explicit type arguments on React component instantiations *)
         targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;
         record_monomorphized_result: bool;

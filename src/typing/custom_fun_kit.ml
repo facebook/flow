@@ -18,6 +18,7 @@ module type CUSTOM_FUN = sig
     return_hint:Type.lazy_hint_t ->
     Reason.t ->
     Type.custom_fun_kind ->
+    Type.targ list option ->
     Type.t list ->
     Type.t option ->
     Type.t ->
@@ -27,7 +28,7 @@ end
 module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
   include Flow
 
-  let run cx trace ~use_op ~return_hint reason_op kind args spread_arg tout =
+  let run cx trace ~use_op ~return_hint reason_op kind targs args spread_arg tout =
     match kind with
     | ReactCreateElement ->
       (match args with
@@ -45,7 +46,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = ([], None); tout; return_hint }
+                  { clone = false; targs; config; children = ([], None); tout; return_hint }
               )
           )
       (* React.createElement(component, config, ...children) *)
@@ -58,7 +59,14 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = (children, spread_arg); tout; return_hint }
+                  {
+                    clone = false;
+                    targs;
+                    config;
+                    children = (children, spread_arg);
+                    tout;
+                    return_hint;
+                  }
               )
           )
       (* React.createElement() *)
@@ -110,7 +118,14 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = true; config; children = (children, spread_arg); tout; return_hint }
+                  {
+                    clone = true;
+                    targs;
+                    config;
+                    children = (children, spread_arg);
+                    tout;
+                    return_hint;
+                  }
               )
           )
       (* React.cloneElement() *)
@@ -133,7 +148,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = ([], None); tout; return_hint }
+                  { clone = false; targs; config; children = ([], None); tout; return_hint }
               )
           )
       (* React.createFactory(component)(config, ...children) *)
@@ -146,7 +161,14 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               ( use_op,
                 reason_op,
                 React.CreateElement0
-                  { clone = false; config; children = (children, spread_arg); tout; return_hint }
+                  {
+                    clone = false;
+                    targs;
+                    config;
+                    children = (children, spread_arg);
+                    tout;
+                    return_hint;
+                  }
               )
           ))
     | ObjectAssign

@@ -28,3 +28,8 @@ Flags:
 React$Ref<(props: {x: number}) => Node>
 test.js:22:7,22:9
 
+test.js:27:8
+Flags:
+number
+test.js:27:8,27:8
+

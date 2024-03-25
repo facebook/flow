@@ -439,7 +439,14 @@ and dump_use_t_ (depth, tvars) cx t =
     React.(
       function
       | CreateElement0
-          { clone = _; config; children = (children, children_spread); tout; return_hint = _ }
+          {
+            clone = _;
+            targs = _;
+            config;
+            children = (children, children_spread);
+            tout;
+            return_hint = _;
+          }
       | CreateElement
           {
             clone = _;

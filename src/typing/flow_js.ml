@@ -1262,7 +1262,7 @@ struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement0 { clone; config; children; tout; return_hint }
+                React.CreateElement0 { clone; targs; config; children; tout; return_hint }
               )
           ) ->
           let tool =
@@ -1273,7 +1273,7 @@ struct
                 config;
                 children;
                 tout;
-                targs = None;
+                targs;
                 return_hint;
                 record_monomorphized_result = false;
               }
@@ -2342,7 +2342,7 @@ struct
               )
             | ResolveSpreadsToMultiflowCallFull (id, _)
             | ResolveSpreadsToMultiflowSubtypeFull (id, _)
-            | ResolveSpreadsToCustomFunCall (id, _, _, _)
+            | ResolveSpreadsToCustomFunCall (id, _, _, _, _)
             | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
               let reason_elemt = reason_of_t elemt in
               let pos = Base.List.length rrt_resolved in
@@ -3420,22 +3420,25 @@ struct
             calltype
           in
           CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
-          (* None of the supported custom funs are polymorphic, so error here
-             instead of threading targs into spread resolution. *)
-          Base.Option.iter call_targs ~f:(fun _ ->
-              add_output
-                cx
-                ~trace
-                Error_message.(
-                  ECallTypeArity
-                    {
-                      call_loc = loc_of_reason reason_op;
-                      is_new = false;
-                      reason_arity = lreason;
-                      expected_arity = 0;
-                    }
-                )
-          );
+          (match kind with
+          | ReactCreateElement -> ()
+          | _ ->
+            (* None of the other custom funs are polymorphic, so error here
+               instead of threading targs into spread resolution. *)
+            Base.Option.iter call_targs ~f:(fun _ ->
+                add_output
+                  cx
+                  ~trace
+                  Error_message.(
+                    ECallTypeArity
+                      {
+                        call_loc = loc_of_reason reason_op;
+                        is_new = false;
+                        reason_arity = lreason;
+                        expected_arity = 0;
+                      }
+                  )
+            ));
           let make_op_nonlocal = function
             | FunCall op -> FunCall { op with local = false }
             | FunCallMethod op -> FunCallMethod { op with local = false }
@@ -3448,7 +3451,7 @@ struct
             ~use_op
             reason_op
             args
-            (ResolveSpreadsToCustomFunCall (mk_id (), kind, OpenT tout, return_hint))
+            (ResolveSpreadsToCustomFunCall (mk_id (), kind, call_targs, OpenT tout, return_hint))
         | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
             MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
           ) ->
@@ -10018,7 +10021,7 @@ struct
         (args, params)
     in
     (* Similar to finish_multiflow_full but for custom functions. *)
-    let finish_custom_fun_call ~return_hint cx ?trace ~use_op ~reason_op kind tout resolved =
+    let finish_custom_fun_call ~return_hint cx ?trace ~use_op ~reason_op kind targs tout resolved =
       (* Multiflows always come out of a flow *)
       let trace =
         match trace with
@@ -10028,7 +10031,7 @@ struct
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let spread_arg = Base.Option.map ~f:fst spread_arg in
       let args = Base.List.map ~f:fst args in
-      CustomFunKit.run ~return_hint cx trace ~use_op reason_op kind args spread_arg tout
+      CustomFunKit.run ~return_hint cx trace ~use_op reason_op kind targs args spread_arg tout
     in
     (* This is used for things like Function.prototype.apply, whose second arg is
      * basically a spread argument that we'd like to resolve *)
@@ -10099,8 +10102,8 @@ struct
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:true ft resolved
       | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:false ft resolved
-      | ResolveSpreadsToCustomFunCall (_, kind, tout, return_hint) ->
-        finish_custom_fun_call ~return_hint cx ?trace ~use_op ~reason_op kind tout resolved
+      | ResolveSpreadsToCustomFunCall (_, kind, targs, tout, return_hint) ->
+        finish_custom_fun_call ~return_hint cx ?trace ~use_op ~reason_op kind targs tout resolved
       | ResolveSpreadsToCallT (funcalltype, tin) ->
         finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
 

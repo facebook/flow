@@ -19,3 +19,5 @@ declare function ComponentMultipleArgs<R, S, T: string>({
 <Component<_> prop="foo" />;
 <ComponentWithChildren<string> prop="foo" ><div /></ComponentWithChildren>;
 <ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t={true} />; // error: bool ~> string
+<ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t="s" />; // error: bool ~> string, string ~> bool
+<ComponentMultipleArgs<string> r="foo" s={1} t="s" />; // error: arity

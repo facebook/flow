@@ -5287,7 +5287,7 @@ module Make
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_opening_element, children_loc) in
     let t =
-      jsx_desugar cx "React.Fragment" fragment_t (NullT.at expr_loc) [] unresolved_params locs
+      jsx_desugar cx "React.Fragment" fragment_t None (NullT.at expr_loc) [] unresolved_params locs
     in
     Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
@@ -5296,12 +5296,14 @@ module Make
     let open Ast.JSX in
     let (loc_element, _, _) = locs in
     let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
-    let targs =
+    let targs_with_tast_opt =
       Base.Option.map targs ~f:(fun (targts_loc, args) ->
-          let (_, targs) = convert_call_targs cx Subst_name.Map.empty args in
-          (targts_loc, targs)
+          let (targs, targs_tast) = convert_call_targs cx Subst_name.Map.empty args in
+          (targs, (targts_loc, targs_tast))
       )
     in
+    let targs_opt = Base.Option.map ~f:fst targs_with_tast_opt in
+    let targs_tast_opt = Base.Option.map ~f:snd targs_with_tast_opt in
     let facebook_fbs = Context.facebook_fbs cx in
     let facebook_fbt = Context.facebook_fbt cx in
     let jsx_mode = Context.jsx cx in
@@ -5382,7 +5384,7 @@ module Make
               attributes
               children
           in
-          let t = jsx_desugar cx name c o attributes unresolved_params locs in
+          let t = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name; comments }) in
           (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
@@ -5404,7 +5406,7 @@ module Make
             attributes
             children
         in
-        let t = jsx_desugar cx name c o attributes unresolved_params locs in
+        let t = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
@@ -5451,7 +5453,11 @@ module Make
         Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
       | None -> None
     in
-    (t, (loc, { Opening.name; targs; self_closing; attributes }), children, closing_element)
+    ( t,
+      (loc, { Opening.name; targs = targs_tast_opt; self_closing; attributes }),
+      children,
+      closing_element
+    )
 
   and jsx_match_closing_element =
     let match_identifiers o_id c_id =
@@ -5640,7 +5646,7 @@ module Make
     in
     (t, attributes, unresolved_params, children)
 
-  and jsx_desugar cx name component_t props attributes children locs =
+  and jsx_desugar cx name component_t targs_opt props attributes children locs =
     let (loc_element, loc_opening, loc_children) = locs in
     let return_hint = Type_env.get_hint cx loc_element in
     match Context.jsx cx with
@@ -5675,7 +5681,7 @@ module Make
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
         let call_action =
-          Funcalltype (mk_functioncalltype ~call_kind:RegularCallKind reason_jsx None args tvar)
+          Funcalltype (mk_functioncalltype ~call_kind:RegularCallKind reason_jsx targs_opt args tvar)
         in
         Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint })
       | Options.ReactRuntimeClassic ->
@@ -5704,7 +5710,7 @@ module Make
                   {
                     methodcalltype =
                       mk_methodcalltype
-                        None
+                        targs_opt
                         ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                         tvar;
                     return_hint;
@@ -5750,12 +5756,12 @@ module Make
              ~call_strict_arity:false
              prop_loc
              (jsx_expr, ot, name)
-             None
+             targs_opt
              argts
           )
       | _ ->
         let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-        func_call cx loc_element reason ~use_op ~call_strict_arity:false f None argts None)
+        func_call cx loc_element reason ~use_op ~call_strict_arity:false f targs_opt argts None)
 
   (* The @jsx pragma specifies a left hand side expression EXPR such that
    *

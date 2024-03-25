@@ -21,3 +21,8 @@ declare function Foo(props: { x: number }): React.Node;
 
 (<Foo ref={0} />);
 //    ^
+
+declare function Poly<T>(props: { x: T }): React.Node;
+
+(<Poly<_> x={0} />);
+//     ^
