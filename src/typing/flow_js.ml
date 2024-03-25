@@ -1418,8 +1418,8 @@ struct
           in
           rec_flow cx trace (t1, UseT (use_op, t2))
         | (TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc = _ }, _) ->
-          if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
-            let reason_op = reason_of_use_t u in
+          let reason_op = reason_of_use_t u in
+          if TypeAppExpansion.push_unless_loop cx `Lower (type_, targs) then (
             let t =
               mk_typeapp_instance_annot
                 cx

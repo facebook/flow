@@ -630,8 +630,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         TypeAppT
           { reason = r2; use_op = op2; type_ = c2; targs = ts2; from_value = fv2; use_desc = _ }
       ) ->
-      if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
-        if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
+      if TypeAppExpansion.push_unless_loop cx `Lower (c1, ts1) then (
+        if TypeAppExpansion.push_unless_loop cx `Upper (c2, ts2) then (
           rec_flow
             cx
             trace
@@ -643,8 +643,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc },
         _
       ) ->
-      if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
-        let reason_op = reason_of_t u in
+      let reason_op = reason_of_t u in
+      if TypeAppExpansion.push_unless_loop cx `Lower (type_, targs) then (
         let t =
           reposition_reason
             ~trace
@@ -668,8 +668,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( _,
         TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc }
       ) ->
-      if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
-        let reason_op = reason_of_t l in
+      let reason_op = reason_of_t l in
+      if TypeAppExpansion.push_unless_loop cx `Upper (type_, targs) then (
         let t =
           mk_typeapp_instance
             cx

@@ -106,7 +106,7 @@ module TypeAppExpansion = struct
     let compare = Stdlib.compare
   end)
 
-  type entry = Type.t * RootSet.t list
+  type entry = Type.t * RootSet.t list * [ `Lower | `Upper ]
 end
 
 type sig_t = Type.TypeContext.t

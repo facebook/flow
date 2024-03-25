@@ -63,7 +63,7 @@ end
 module TypeAppExpansion : sig
   type entry
 
-  val push_unless_loop : Context.t -> Type.t * Type.t list -> bool
+  val push_unless_loop : Context.t -> [ `Lower | `Upper ] -> Type.t * Type.t list -> bool
 
   val pop : Context.t -> unit
 
@@ -115,15 +115,18 @@ end = struct
       DescFormat.name_of_instance_reason r
 
   (* show entries in the stack *)
-  let show_entry (c, tss) =
+  let show_entry (c, tss, side) =
     spf
-      "%s<%s>"
+      "%s<%s> %s"
       (string_of_desc_of_t c)
       (string_of_list tss "," (fun ts ->
            let ts = RootSet.elements ts in
            spf "[%s]" (string_of_list ts ";" string_of_desc_of_root)
        )
       )
+      (match side with
+      | `Lower -> "lower"
+      | `Upper -> "upper")
 
   let _dump_stack cx =
     let stack = Context.instantiation_stack cx in
@@ -158,22 +161,23 @@ end = struct
       in
       loop false (prev_tss, tss)
     in
-    fun cx (c, ts) ->
+    fun cx side (c, ts) ->
       let stack = Context.instantiation_stack cx in
       let tss = Base.List.map ~f:(collect_roots cx) ts in
       let loop =
         !stack
-        |> List.exists (fun (prev_c, prev_tss) ->
-               c = prev_c && possibly_expanding_targs prev_tss tss
+        |> List.exists (fun (prev_c, prev_tss, prev_side) ->
+               c = prev_c && possibly_expanding_targs prev_tss tss && side = prev_side
            )
       in
       if loop then (
         if Context.is_verbose cx then
-          prerr_endlinef "encountered the same TypeAppT again: %s" (show_entry (c, tss));
+          prerr_endlinef "encountered the same TypeAppT again: %s" (show_entry (c, tss, side));
         false
       ) else (
-        stack := (c, tss) :: !stack;
-        if Context.is_verbose cx then prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
+        stack := (c, tss, side) :: !stack;
+        if Context.is_verbose cx then
+          prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss, side));
         true
       )
 

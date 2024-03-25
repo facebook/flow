@@ -27,7 +27,7 @@ module TypeAppExpansion : sig
 
   module RootSet : Flow_set.S with type elt = root
 
-  type entry = Type.t * RootSet.t list
+  type entry = Type.t * RootSet.t list * [ `Lower | `Upper ]
 end
 
 (* The Context module defines types for data which is passed around during type
