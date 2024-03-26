@@ -2679,6 +2679,10 @@ class_declaration_name.js:5:8
 Flags: --pretty
 {"result":[]}
 
+class_extends.js:5:20
+Flags: --pretty
+{"result":[{"name":"Foo","type":"class Foo"},{"name":"function","type":""}]}
+
 pattern_object_key_middle.js:6:12
 Flags: --pretty
 {"result":[{"name":"foobar","type":"string"}]}

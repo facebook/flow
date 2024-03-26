@@ -14,19 +14,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:30:17
 
-Cannot extend `D` [1] with `obj` because object type [2] is not inheritable. [incompatible-use]
+Cannot extend `D` [1] with `obj` because `obj` [2] is not inheritable. [incompatible-use]
 
    test.js:30:17
    30| class D extends obj {}
-                       ^^^
+                       ^^^ [2]
 
 References:
    test.js:30:7
    30| class D extends obj {}
              ^ [1]
-   test.js:29:18
-   29| declare var obj: {};
-                        ^^ [2]
 
 
 

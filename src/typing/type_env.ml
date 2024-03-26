@@ -675,6 +675,15 @@ let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
   let t = query_var ~lookup_mode cx name ?desc loc in
   Flow_js.reposition cx loc t
 
+let sig_var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
+  let desc =
+    match desc with
+    | Some desc -> desc
+    | None -> RIdentifier name
+  in
+  let reason = mk_reason desc loc in
+  AnnotT (reason, query_var cx ~lookup_mode name loc, true)
+
 let read_class_self_type cx loc =
   match checked_find_loc_env_write_opt cx Env_api.ClassSelfLoc loc with
   | Some t -> t
