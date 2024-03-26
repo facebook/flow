@@ -118,6 +118,14 @@ val var_ref :
   ALoc.t ->
   Type.t
 
+val sig_var_ref :
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  ?desc:Reason.reason_desc ->
+  Reason.name ->
+  ALoc.t ->
+  Type.t
+
 val intrinsic_ref :
   Context.t -> ?desc:Reason.reason_desc -> Reason.name -> ALoc.t -> (Type.t * ALoc.t) option
 

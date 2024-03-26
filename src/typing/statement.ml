@@ -6490,8 +6490,8 @@ module Make
           let open Ast.Expression in
           let rec super_expr (loc, expr) =
             match expr with
-            | Identifier (id_loc, id) ->
-              let t = identifier cx id id_loc in
+            | Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
+              let t = Type_env.sig_var_ref cx (OrdinaryName name) id_loc in
               (t, (fun () -> ((loc, t), Identifier ((id_loc, t), id))))
             | Member
                 {
