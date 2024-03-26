@@ -1486,8 +1486,8 @@ generic_fn<annot>((s) => s);
 type annot = string;
 |};
     [%expect {|
-      (2, 19) to (2, 20) =>
       (3, 5) to (3, 10) =>
+      (2, 19) to (2, 20) =>
       (2, 18) to (2, 26) (Env_api.Make.ExpressionLoc) |}]
 
 let%expect_test "callee hint cycle" =

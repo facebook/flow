@@ -799,7 +799,16 @@ struct
                     );
                     ignore @@ collector#jsx_children jsx_children
                 )
-              | Hint.Instantiate_Callee { Hint.return_hints; arg_list; arg_index; _ } ->
+              | Hint.Instantiate_Callee
+                  { Hint.return_hints; arg_list; arg_index; targs; reason = _ } ->
+                let acc =
+                  depends_of_node
+                    (fun collector ->
+                      Base.Option.iter (Lazy.force targs) ~f:(fun targs ->
+                          ignore @@ collector#call_type_args targs
+                      ))
+                    acc
+                in
                 let rec loop acc i = function
                   | [] -> acc
                   | arg :: rest when i >= arg_index ->
