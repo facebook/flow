@@ -1,3 +1,68 @@
+### 0.232.0
+
+Likely to cause new Flow errors:
+
+* Support for `$Compose` and `$ComposeReverse` types are removed. We recommend to use overloads to approximate their behavior instead. e.g.
+
+```
+declare export function compose(): <T>(a: T) => T;
+declare export function compose<F: (...$ReadOnlyArray<empty>) => mixed>(
+  f: F,
+): F;
+declare export function compose<A, T: $ReadOnlyArray<any>, R>(
+  f1: (a: A) => R,
+  f2: (...T) => A,
+): (...T) => R;
+declare export function compose<A, B, T: $ReadOnlyArray<any>, R>(
+  f1: (b: B) => R,
+  f2: (a: A) => B,
+  f3: (...T) => A,
+): (...T) => R;
+declare export function compose<A, B, C, T: $ReadOnlyArray<any>, R>(
+  f1: (c: C) => R,
+  f2: (b: B) => C,
+  f3: (a: A) => B,
+  f4: (...T) => A,
+): (...T) => R;
+declare export function compose<R>(
+  f1: (b: any) => R,
+  ...funcs: $ReadOnlyArray<(...$ReadOnlyArray<empty>) => mixed>
+): (...$ReadOnlyArray<any>) => R;
+declare export function compose<R>(
+  ...funcs: $ReadOnlyArray<(...$ReadOnlyArray<empty>) => mixed>
+): (...$ReadOnlyArray<any>) => R;
+```
+
+* You might see more errors around type application. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIAGLEAA8ABUAHxYgC8WOAWJgxGQWMJWKRAG4ADp+NZYgBCVCJpIpVMwlDpDOZbLZmOwXIwXSJ5KxiWSbD5uIJ3MovOJrKgbI0Syokts9ix8jp3JlmrZ8ixGBIUpl2BED1omqxAHpXVioBAsSZKBBKFj0liAAxWABMAGYAIxWYO8H3Uf2eiAAdzpCpSWPxAD9SQ6nWyYiB8iYSHBoEF8qHIzHgyAkUA)
+* Fix subtyping of indexers in instances/interfaces. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAJbPYcfJkDj0oCuGBccAANr2UxQBAAXWJwhEMxxAB8cbT0ggkQBuAA6UHkOIwJBJfhM5MpNKkPKZOJZM35OIA9KqcQA5CAAdxxJkoECBMRA+RMJDg0CCEXsJhASKAA)
+
+New Features:
+* Updated the `isValid` Flow Enums method to use a type guard, allowing it to refine its input to the enum type in a conditional context.
+E.g.
+
+```
+enum Status {Active, Off}
+const s = "Active";
+if (Status.isValid(s)) {
+  s as Status; // Should work
+}
+```
+
+* `export type Foo = ...` and `export interface Bar {...}` statements are now allowed in `declare module` and `declare namespace` bodies.
+* We added a new codemod `flow codemod remove-unnecessary-react-import` which can help remove unnecessary react imports under `react.runtime=automatic`
+
+Notable bug fixes:
+* Fixed issue when explicitly supplied JSX type arguments are ignored
+* Fixed code action output of casting syntax when LHS of `as` or `as const` has low precedence
+
+Library Definitions:
+* Added definitions for the following APIs:
+  * `window.showOpenFilePicker()`: [MDN](https://developer.mozilla.org/en-US/docs/Web/API/window/showOpenFilePicker), [WICG](https://wicg.github.io/file-system-access/#api-showopenfilepicker)
+  * `window.showSaveFilePicker()`: [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/showSaveFilePicker), [WICG](https://wicg.github.io/file-system-access/#api-showsavefilepicker)
+  * `window.showDirectoryPicker()`: [MDN](https://developer.mozilla.org/en-US/docs/Web/API/window/showDirectoryPicker), [WICG](https://wicg.github.io/file-system-access/#api-showdirectorypicker)
+  * `DataTransferItem.getAsFileSystemHandle()`: [MDN](https://developer.mozilla.org/en-US/docs/Web/API/DataTransferItem/getAsFileSystemHandle), [WICG](https://wicg.github.io/file-system-access/#dom-datatransferitem-getasfilesystemhandle)
+  * `StorageManager.getDirectory()`: [MDN](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/getDirectory), [WHATWG](https://fs.spec.whatwg.org/#dom-storagemanager-getdirectory)
+
 ### 0.231.0
 
 Likely to cause new Flow errors:
