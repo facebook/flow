@@ -1480,6 +1480,16 @@ Dialog.Prop = function(): void {
       (2, 9) to (2, 15) =>
       (4, 0) to (4, 11) |}]
 
+let%expect_test "callee hint type args" =
+  print_order_test {|
+generic_fn<annot>((s) => s);
+type annot = string;
+|};
+    [%expect {|
+      (2, 19) to (2, 20) =>
+      (3, 5) to (3, 10) =>
+      (2, 18) to (2, 26) (Env_api.Make.ExpressionLoc) |}]
+
 let%expect_test "callee hint cycle" =
   print_order_test {|
 g(function h() { return f() })
