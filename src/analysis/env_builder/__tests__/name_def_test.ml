@@ -1465,7 +1465,7 @@ declare class Stack {
 |};
     [%expect {|
       (2, 17) to (2, 27) =>
-      legal scc: (((2, 9) to (2, 16)); ((2, 84) to (2, 89) (Env_api.Make.ExpressionLoc)); ((3, 14) to (3, 19))) |}]
+      illegal scc: (((2, 9) to (2, 16)); ((2, 84) to (2, 89) (Env_api.Make.ExpressionLoc)); ((3, 14) to (3, 19))) |}]
 
 let%expect_test "statics cycle" =
   print_order_test {|

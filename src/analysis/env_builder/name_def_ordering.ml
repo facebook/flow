@@ -1270,11 +1270,7 @@ struct
       | DeclaredComponent _
       | DeclaredClass _
       | DeclaredNamespace _
-      | Function
-          {
-            synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
-            _;
-          }
+      | Function { synthesizable_from_annotation = FunctionSynthesizable; _ }
       | Component _ ->
         true
       | ExpressionDef _
