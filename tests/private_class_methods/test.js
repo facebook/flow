@@ -83,3 +83,14 @@ declare const c2: C<number>;
 
 let x = c.public();
 x = c2.public(); // error
+
+class PrivateMethodOnAnyReceiver {
+  prop: () => void = function () { // error: missing-this-annot
+    this.#bar(); // accessing private methods on any is permitted.
+    this.#baz; // accessing private fields on any is permitted.
+  }
+
+  #bar(): void {}
+
+  #baz = 3;
+}

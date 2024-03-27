@@ -3698,10 +3698,29 @@ struct
         | (AnyT (_, src), MethodT (_, _, _, propref, NoMethodAction prop_t)) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src (reason_of_propref propref), prop_t)
+        | (AnyT (_, src), PrivateMethodT (_, _, prop_r, _, _, _, NoMethodAction prop_t)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src prop_r, prop_t)
         | ( AnyT (_, src),
             MethodT
               ( use_op,
                 reason_op,
+                _,
+                _,
+                CallM
+                  {
+                    methodcalltype = { meth_args_tlist; meth_tout; _ };
+                    return_hint = _;
+                    specialized_callee;
+                  }
+              )
+          )
+        | ( AnyT (_, src),
+            PrivateMethodT
+              ( use_op,
+                reason_op,
+                _,
+                _,
                 _,
                 _,
                 CallM
@@ -3717,7 +3736,8 @@ struct
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) meth_args_tlist;
           CalleeRecorder.add_callee cx CalleeRecorder.Tast l specialized_callee;
           rec_flow_t cx trace ~use_op:unknown_use (any, OpenT meth_tout)
-        | (AnyT (_, src), MethodT (use_op, reason_op, _, _, (ChainM _ as chain))) ->
+        | (AnyT (_, src), MethodT (use_op, reason_op, _, _, (ChainM _ as chain)))
+        | (AnyT (_, src), PrivateMethodT (use_op, reason_op, _, _, _, _, (ChainM _ as chain))) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           let any = AnyT.why src reason_op in
           apply_method_action cx trace any use_op reason_op l chain
@@ -4422,6 +4442,9 @@ struct
             GetPropT { use_op = _; reason; id; from_annot = _; propref = _; tout; hint = _ }
           ) ->
           Base.Option.iter id ~f:(Context.test_prop_hit cx);
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, OpenT tout)
+        | (AnyT (_, src), GetPrivatePropT (_, reason, _, _, _, tout)) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, OpenT tout)
         (********************************)

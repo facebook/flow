@@ -1693,23 +1693,16 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               | Ast.Class.Body.Property
                   ( _,
                     {
-                      Ast.Class.Property.value =
-                        Ast.Class.Property.Initialized (f_loc, Ast.Expression.Function _);
+                      Ast.Class.Property.annot = Ast.Type.Missing _;
+                      value = Ast.Class.Property.Initialized (f_loc, Ast.Expression.Function _);
                       _;
                     }
                   )
               | Ast.Class.Body.PrivateField
                   ( _,
                     {
-                      Ast.Class.PrivateField.value =
-                        Ast.Class.Property.Initialized
-                          ( f_loc,
-                            Ast.Expression.Function
-                              {
-                                Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ });
-                                _;
-                              }
-                          );
+                      Ast.Class.PrivateField.annot = Ast.Type.Missing _;
+                      value = Ast.Class.Property.Initialized (f_loc, Ast.Expression.Function _);
                       _;
                     }
                   ) ->
