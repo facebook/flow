@@ -153,7 +153,7 @@ let rec not_exists cx t =
   | t -> t
 
 let rec maybe cx = function
-  | OpaqueT (r, opq) -> filter_opaque (maybe cx) r opq
+  | OpaqueT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | UnionT (r, rep) -> recurse_into_union cx maybe (r, UnionRep.members rep)
   | MaybeT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | DefT (r, MixedT Mixed_everything) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
@@ -185,6 +185,7 @@ let rec not_maybe cx = function
   | t -> t
 
 let null = function
+  | OpaqueT (r, _)
   | OptionalT { reason = _; type_ = MaybeT (r, _); use_desc = _ }
   | MaybeT (r, _) ->
     NullT.why r
@@ -209,7 +210,9 @@ let rec not_null cx = function
   | t -> t
 
 let undefined = function
-  | MaybeT (r, _) -> VoidT.why r
+  | OpaqueT (r, _)
+  | MaybeT (r, _) ->
+    VoidT.why r
   | DefT (_, VoidT) as t -> t
   | OptionalT { reason = r; type_ = _; use_desc } -> VoidT.why_with_use_desc ~use_desc r
   | DefT (r, MixedT Mixed_everything)

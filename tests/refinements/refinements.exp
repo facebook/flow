@@ -4060,6 +4060,125 @@ References:
                                ^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
+
+Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:24:5
+   24|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:22
+   18|   declare const foo: ?Foo;
+                            ^^^^ [1]
+   opaque_type.js:24:12
+   24|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
+
+Cannot cast `foo` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:24:5
+   24|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:23
+   18|   declare const foo: ?Foo;
+                             ^^^ [1]
+   opaque_type.js:24:12
+   24|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
+
+Cannot cast `foo` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:24:5
+   24|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:23
+   18|   declare const foo: ?Foo;
+                             ^^^ [1]
+   opaque_type.js:24:12
+   24|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:28:5
+
+Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:28:5
+   28|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:22
+   18|   declare const foo: ?Foo;
+                            ^^^^ [1]
+   opaque_type.js:28:12
+   28|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:28:5
+
+Cannot cast `foo` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:28:5
+   28|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:23
+   18|   declare const foo: ?Foo;
+                             ^^^ [1]
+   opaque_type.js:28:12
+   28|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:32:5
+
+Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:32:5
+   32|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:22
+   18|   declare const foo: ?Foo;
+                            ^^^^ [1]
+   opaque_type.js:32:12
+   32|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:32:5
+
+Cannot cast `foo` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   opaque_type.js:32:5
+   32|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:23
+   18|   declare const foo: ?Foo;
+                             ^^^ [1]
+   opaque_type.js:32:12
+   32|     foo as empty; // error
+                  ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ property.js:71:12
 
 Cannot return `x[y.z]` because null or undefined [1] is incompatible with string [2]. [incompatible-return]
@@ -6278,7 +6397,7 @@ References:
 
 
 
-Found 414 errors
+Found 421 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
