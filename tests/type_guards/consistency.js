@@ -79,6 +79,15 @@ function contextual() {
   arr.filter((x): x is number => (
     x != null // okay
   ));
+
+  type Foo = {type: 'foo', a: string};
+  type Bar = {type: 'bar', b: number};
+  declare var fooBarArr: Array<Foo | Bar>;
+
+  const mappedArr = fooBarArr.filter((x): x is Foo => (
+    x.type === 'foo'
+  ));
+  mappedArr as Array<Foo>;
 }
 
 

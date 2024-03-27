@@ -7730,9 +7730,10 @@ module Make
         in
         let reconstruct_ast params_tast body fun_type =
           let () =
-            match kind with
-            | Predicate p -> predicate_checks cx p params
-            | _ -> ()
+            if Context.typing_mode cx = Context.CheckingMode then
+              match kind with
+              | Predicate p -> predicate_checks cx p params
+              | _ -> ()
           in
           {
             func with
