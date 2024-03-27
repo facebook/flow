@@ -3229,6 +3229,49 @@ module Constraint = struct
 
   module UseTypeMap = Flow_map.Make (UseTypeKey)
 
+  module ForcingState : sig
+    type t
+
+    val of_lazy_t : error_reason:Reason.t -> TypeTerm.t Lazy.t -> t
+
+    val of_non_lazy_t : TypeTerm.t -> t
+
+    val force : on_error:(Reason.t -> TypeTerm.t) -> t -> TypeTerm.t
+
+    val map : f:(TypeTerm.t -> TypeTerm.t) -> t -> t
+  end = struct
+    type state =
+      | Unforced
+      | Forcing
+      | Forced
+
+    type t = {
+      valid: TypeTerm.t Lazy.t;
+      error_reason: Reason.t option;
+      mutable state: state;
+    }
+
+    let of_lazy_t ~error_reason valid =
+      { valid; error_reason = Some error_reason; state = Unforced }
+
+    let of_non_lazy_t t = { valid = lazy t; error_reason = None; state = Forced }
+
+    let force ~on_error s =
+      match s.state with
+      | Unforced ->
+        s.state <- Forcing;
+        let t = Lazy.force_val s.valid in
+        s.state <- Forced;
+        t
+      | Forced -> Lazy.force_val s.valid
+      | Forcing ->
+        let t = on_error (Base.Option.value_exn s.error_reason) in
+        s.state <- Forced;
+        t
+
+    let map ~f s = { valid = Lazy.map f s.valid; error_reason = s.error_reason; state = Unforced }
+  end
+
   (** Constraints carry type information that narrows down the possible solutions
       of tvar, and are of two kinds:
 
@@ -3241,7 +3284,7 @@ module Constraint = struct
   type constraints =
     | Resolved of TypeTerm.t
     | Unresolved of bounds
-    | FullyResolved of TypeTerm.t Lazy.t
+    | FullyResolved of ForcingState.t
 
   (** The bounds structure carries the evolving constraints on the solution of an
       unresolved tvar.
@@ -3279,21 +3322,6 @@ module Constraint = struct
     }
 
   let new_unresolved_root () = create_root (Unresolved (new_bounds ()))
-
-  (* For any constraints, return a list of def types that form either the lower
-     bounds of the solution, or a singleton containing the solution itself. *)
-  let types_of : constraints -> TypeTerm.t list = function
-    | Unresolved { lower; _ } -> TypeMap.keys lower
-    | Resolved t
-    | FullyResolved (lazy t) ->
-      [t]
-
-  let uses_of : constraints -> TypeTerm.use_t list = function
-    | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
-    | Resolved t -> [TypeTerm.UseT (unknown_use, t)]
-    | FullyResolved (lazy t) -> [TypeTerm.UseT (unknown_use, t)]
-
-  let fully_resolved_node t = create_root (FullyResolved (lazy t))
 end
 
 (**************************)

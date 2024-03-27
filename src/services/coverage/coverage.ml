@@ -118,9 +118,8 @@ let visitor =
           Constraint.(
             let cov =
               match constraints with
-              | Resolved t
-              | FullyResolved (lazy t) ->
-                self#type_ cx t
+              | Resolved t -> self#type_ cx t
+              | FullyResolved s -> self#type_ cx (Context.force_fully_resolved_tvar cx s)
               | Unresolved bounds ->
                 let bounds = TypeMap.keys bounds.lower in
                 self#types_list cx OpOr bounds

@@ -17,18 +17,30 @@ type cx = Context.t
 
 type loc = ALoc.t
 
+(* For any constraints, return a list of def types that form either the lower
+   bounds of the solution, or a singleton containing the solution itself. *)
+let types_of cx : constraints -> TypeTerm.t list = function
+  | Unresolved { lower; _ } -> TypeMap.keys lower
+  | Resolved t -> [t]
+  | FullyResolved s -> [Context.force_fully_resolved_tvar cx s]
+
+let uses_of cx : constraints -> TypeTerm.use_t list = function
+  | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
+  | Resolved t -> [TypeTerm.UseT (unknown_use, t)]
+  | FullyResolved s -> [TypeTerm.UseT (unknown_use, Context.force_fully_resolved_tvar cx s)]
+
 (* These possible_* functions would ideally be in constraint.ml, but since they use
  * Context and Context depends on Constraint we need to extract these functions
  * to a separate module in order to avoid a circular dependency *)
 
 (* Def types that describe the solution of a type variable. *)
-let possible_types cx id = types_of (Context.find_graph cx id) |> List.filter is_proper_def
+let possible_types cx id = types_of cx (Context.find_graph cx id) |> List.filter is_proper_def
 
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
 
-let possible_uses cx id = uses_of (Context.find_graph cx id) |> List.filter is_proper_use
+let possible_uses cx id = uses_of cx (Context.find_graph cx id) |> List.filter is_proper_use
 
 let rec collect_lowers ~filter_empty cx seen acc = function
   | [] -> Base.List.rev acc
@@ -782,19 +794,18 @@ let builtin_promise_class_id cx =
     let (_, constraints) = Context.find_constraints cx id in
     begin
       match constraints with
-      | Constraint.FullyResolved
-          (lazy
-            (DefT
-              ( _,
-                PolyT
-                  {
-                    t_out = DefT (_, ClassT (ThisInstanceT (_, { inst = { class_id; _ }; _ }, _, _)));
-                    _;
-                  }
-              )
-              )
+      | Constraint.FullyResolved s ->
+        (match Context.force_fully_resolved_tvar cx s with
+        | DefT
+            ( _,
+              PolyT
+                {
+                  t_out = DefT (_, ClassT (ThisInstanceT (_, { inst = { class_id; _ }; _ }, _, _)));
+                  _;
+                }
             ) ->
-        Some class_id
+          Some class_id
+        | _ -> None)
       | _ -> None
     end
   | _ -> None
@@ -805,24 +816,22 @@ let is_builtin_iterable_class_id class_id cx =
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
     (match constraints with
-    | Constraint.FullyResolved
-        (lazy
-          (DefT
-            ( _,
-              PolyT
-                {
-                  t_out =
-                    DefT
-                      ( _,
-                        ClassT
-                          (DefT (_, InstanceT { inst = { class_id = iterable_class_id; _ }; _ }))
-                      );
-                  _;
-                }
-            )
-            )
+    | Constraint.FullyResolved s ->
+      (match Context.force_fully_resolved_tvar cx s with
+      | DefT
+          ( _,
+            PolyT
+              {
+                t_out =
+                  DefT
+                    ( _,
+                      ClassT (DefT (_, InstanceT { inst = { class_id = iterable_class_id; _ }; _ }))
+                    );
+                _;
+              }
           ) ->
-      ALoc.equal_id class_id iterable_class_id
+        ALoc.equal_id class_id iterable_class_id
+      | _ -> false)
     | _ -> false)
   | _ -> false
 
@@ -833,13 +842,12 @@ let builtin_react_element_opaque_id cx =
     let (_, constraints) = Context.find_constraints cx id in
     begin
       match constraints with
-      | Constraint.FullyResolved
-          (lazy
-            (DefT
-              (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ })
-              )
-            ) ->
-        Some opaque_id
+      | Constraint.FullyResolved s ->
+        (match Context.force_fully_resolved_tvar cx s with
+        | DefT (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ })
+          ->
+          Some opaque_id
+        | _ -> None)
       | _ -> None
     end
   | _ -> None
@@ -2598,9 +2606,8 @@ let rec wraps_mapped_type cx = function
   | OpenT (_, id) ->
     let (_, constraints) = Context.find_constraints cx id in
     (match constraints with
-    | FullyResolved (lazy t)
-    | Resolved t ->
-      wraps_mapped_type cx t
+    | FullyResolved s -> wraps_mapped_type cx (Context.force_fully_resolved_tvar cx s)
+    | Resolved t -> wraps_mapped_type cx t
     | _ -> false)
   | DefT (_, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
   | TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ } ->

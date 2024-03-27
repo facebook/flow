@@ -89,9 +89,8 @@ module Lookahead = struct
         else
           let seen = ISet.add root_id seen in
           (match constraints with
-          | T.Constraint.Resolved t
-          | T.Constraint.FullyResolved (lazy t) ->
-            loop cx acc seen t
+          | T.Constraint.Resolved t -> loop cx acc seen t
+          | T.Constraint.FullyResolved s -> loop cx acc seen (Context.force_fully_resolved_tvar cx s)
           | T.Constraint.Unresolved bounds ->
             let ts = T.TypeMap.keys bounds.T.Constraint.lower in
             List.fold_left (fun a t -> loop cx a seen t) acc ts)
@@ -489,9 +488,9 @@ module Make (I : INPUT) : S = struct
       >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
     in
     let resolve_bounds = function
-      | T.Constraint.Resolved t
-      | T.Constraint.FullyResolved (lazy t) ->
-        cont ~env ~id:(TVarKey id) t
+      | T.Constraint.Resolved t -> cont ~env ~id:(TVarKey id) t
+      | T.Constraint.FullyResolved s ->
+        cont ~env ~id:(TVarKey id) (Context.force_fully_resolved_tvar Env.(env.genv.cx) s)
       | T.Constraint.Unresolved bounds ->
         (match%bind resolve_from_lower_bounds bounds with
         | [] -> empty_with_upper_bounds bounds

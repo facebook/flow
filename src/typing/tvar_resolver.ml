@@ -119,7 +119,7 @@ class resolver ~no_lowers =
       let module C = Type.Constraint in
       let (root_id, _, root) = Context.find_root cx id in
       if ISet.mem root_id immediate then (
-        root.C.constraints <- C.FullyResolved (lazy (no_lowers r));
+        root.C.constraints <- C.FullyResolved (C.ForcingState.of_non_lazy_t (no_lowers r));
         (seen, immediate)
       ) else
         let immediate = ISet.add root_id immediate in
@@ -136,7 +136,7 @@ class resolver ~no_lowers =
             if Context.typing_mode cx <> Context.CheckingMode then
               C.Resolved t
             else
-              C.FullyResolved (lazy t)
+              C.FullyResolved (C.ForcingState.of_non_lazy_t t)
           in
           root.C.constraints <- constraints;
           let seen = ISet.add root_id seen in

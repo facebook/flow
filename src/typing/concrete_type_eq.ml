@@ -49,15 +49,13 @@ let rec eq cx t1 t2 =
       true
     | (OpenT (_, id1), t2) ->
       (match Context.find_graph cx id1 with
-      | Resolved t1
-      | FullyResolved (lazy t1) ->
-        eq cx t1 t2
+      | Resolved t1 -> eq cx t1 t2
+      | FullyResolved s1 -> eq cx (Context.force_fully_resolved_tvar cx s1) t2
       | Unresolved _ -> compare t1 (swap_reason t2 t1) = 0)
     | (_, OpenT (_, id2)) ->
       (match Context.find_graph cx id2 with
-      | Resolved t2
-      | FullyResolved (lazy t2) ->
-        eq cx t1 t2
+      | Resolved t2 -> eq cx t1 t2
+      | FullyResolved s2 -> eq cx t1 (Context.force_fully_resolved_tvar cx s2)
       | Unresolved _ -> compare t1 (swap_reason t2 t1) = 0)
     | (AnnotT (_, t1, _), _) -> eq cx t1 t2
     | (_, AnnotT (_, t2, _)) -> eq cx t1 t2

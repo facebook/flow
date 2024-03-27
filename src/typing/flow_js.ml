@@ -190,9 +190,8 @@ let inherited_method = function
 let find_resolved_opt cx ~default ~f id =
   let constraints = Context.find_graph cx id in
   match constraints with
-  | Resolved t
-  | FullyResolved (lazy t) ->
-    f t
+  | Resolved t -> f t
+  | FullyResolved s -> f (Context.force_fully_resolved_tvar cx s)
   | Unresolved _ -> default
 
 let rec drop_resolved cx t =
@@ -501,14 +500,39 @@ struct
               add_lower_edges cx trace ~new_use_op:use_op (id1, bounds1) (id2, bounds2);
               flows_across cx trace ~use_op bounds1.lower bounds2.upper
             )
-          | (Unresolved bounds1, (Resolved t2 | FullyResolved (lazy t2))) ->
+          | (Unresolved bounds1, Resolved t2) ->
             let t2_use = flow_use_op cx unknown_use (UseT (use_op, t2)) in
             edges_and_flows_to_t cx trace (id1, bounds1) t2_use
-          | ((Resolved t1 | FullyResolved (lazy t1)), Unresolved bounds2) ->
+          | (Unresolved bounds1, FullyResolved s2) ->
+            let t2_use =
+              flow_use_op cx unknown_use (UseT (use_op, Context.force_fully_resolved_tvar cx s2))
+            in
+            edges_and_flows_to_t cx trace (id1, bounds1) t2_use
+          | (Resolved t1, Unresolved bounds2) ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
-          | ((Resolved t1 | FullyResolved (lazy t1)), (Resolved t2 | FullyResolved (lazy t2))) ->
+          | (FullyResolved s1, Unresolved bounds2) ->
+            edges_and_flows_from_t
+              cx
+              trace
+              ~new_use_op:use_op
+              (Context.force_fully_resolved_tvar cx s1)
+              (id2, bounds2)
+          | (Resolved t1, Resolved t2) ->
             let t2_use = flow_use_op cx unknown_use (UseT (use_op, t2)) in
-            rec_flow cx trace (t1, t2_use))
+            rec_flow cx trace (t1, t2_use)
+          | (Resolved t1, FullyResolved s2) ->
+            let t2_use =
+              flow_use_op cx unknown_use (UseT (use_op, Context.force_fully_resolved_tvar cx s2))
+            in
+            rec_flow cx trace (t1, t2_use)
+          | (FullyResolved s1, Resolved t2) ->
+            let t2_use = flow_use_op cx unknown_use (UseT (use_op, t2)) in
+            rec_flow cx trace (Context.force_fully_resolved_tvar cx s1, t2_use)
+          | (FullyResolved s1, FullyResolved s2) ->
+            let t2_use =
+              flow_use_op cx unknown_use (UseT (use_op, Context.force_fully_resolved_tvar cx s2))
+            in
+            rec_flow cx trace (Context.force_fully_resolved_tvar cx s1, t2_use))
         (******************)
         (* process Y ~> U *)
         (******************)
@@ -521,9 +545,8 @@ struct
           let (id1, constraints1) = Context.find_constraints cx tvar in
           (match constraints1 with
           | Unresolved bounds1 -> edges_and_flows_to_t cx trace (id1, bounds1) t2
-          | Resolved t1
-          | FullyResolved (lazy t1) ->
-            rec_flow cx trace (t1, t2))
+          | Resolved t1 -> rec_flow cx trace (t1, t2)
+          | FullyResolved s1 -> rec_flow cx trace (Context.force_fully_resolved_tvar cx s1, t2))
         (******************)
         (* process L ~> X *)
         (******************)
@@ -532,9 +555,9 @@ struct
           (match constraints2 with
           | Unresolved bounds2 ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
-          | Resolved t2
-          | FullyResolved (lazy t2) ->
-            rec_flow cx trace (t1, UseT (use_op, t2)))
+          | Resolved t2 -> rec_flow cx trace (t1, UseT (use_op, t2))
+          | FullyResolved s2 ->
+            rec_flow cx trace (t1, UseT (use_op, Context.force_fully_resolved_tvar cx s2)))
         (************************)
         (* Eval type destructor *)
         (************************)
@@ -9014,23 +9037,47 @@ struct
           (id1, bounds1)
       );
       node1 := Goto { parent = id2 }
-    | (Unresolved bounds1, (Resolved t2 | FullyResolved (lazy t2))) ->
+    | (Unresolved bounds1, Resolved t2) ->
       let t2_use = UseT (use_op, t2) in
       edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
       edges_and_flows_from_t cx trace ~new_use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
       node1 := Goto { parent = id2 }
-    | ((Resolved t1 | FullyResolved (lazy t1)), Unresolved bounds2) ->
+    | (Unresolved bounds1, FullyResolved s2) ->
+      let t2 = Context.force_fully_resolved_tvar cx s2 in
+      let t2_use = UseT (use_op, t2) in
+      edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
+      edges_and_flows_from_t cx trace ~new_use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
+      node1 := Goto { parent = id2 }
+    | (Resolved t1, Unresolved bounds2) ->
       let t1_use = UseT (unify_flip use_op, t1) in
       edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t1 (id2, bounds2);
       root2.constraints <- root1.constraints;
       node1 := Goto { parent = id2 }
-    | (Resolved t1, (Resolved t2 | FullyResolved (lazy t2)))
-    | (FullyResolved (lazy t1), FullyResolved (lazy t2)) ->
+    | (FullyResolved s1, Unresolved bounds2) ->
+      let t1 = Context.force_fully_resolved_tvar cx s1 in
+      let t1_use = UseT (unify_flip use_op, t1) in
+      edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
+      edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t1 (id2, bounds2);
+      root2.constraints <- root1.constraints;
+      node1 := Goto { parent = id2 }
+    | (Resolved t1, Resolved t2) ->
       (* replace node first, in case rec_unify recurses back to these tvars *)
       node1 := Goto { parent = id2 };
       rec_unify cx trace ~use_op t1 t2
-    | (FullyResolved (lazy t1), Resolved t2) ->
+    | (Resolved t1, FullyResolved s2) ->
+      let t2 = Context.force_fully_resolved_tvar cx s2 in
+      (* replace node first, in case rec_unify recurses back to these tvars *)
+      node1 := Goto { parent = id2 };
+      rec_unify cx trace ~use_op t1 t2
+    | (FullyResolved s1, FullyResolved s2) ->
+      let t1 = Context.force_fully_resolved_tvar cx s1 in
+      let t2 = Context.force_fully_resolved_tvar cx s2 in
+      (* replace node first, in case rec_unify recurses back to these tvars *)
+      node1 := Goto { parent = id2 };
+      rec_unify cx trace ~use_op t1 t2
+    | (FullyResolved s1, Resolved t2) ->
+      let t1 = Context.force_fully_resolved_tvar cx s1 in
       (* prefer fully resolved roots to resolved roots *)
       root2.constraints <- root1.constraints;
       (* replace node first, in case rec_unify recurses back to these tvars *)
@@ -9043,7 +9090,13 @@ struct
     let ((id1, _, root1) as root_node1) = Context.find_root cx id1 in
     let ((id2, _, root2) as root_node2) = Context.find_root cx id2 in
     match (root1.Constraint.constraints, root2.Constraint.constraints) with
-    | (FullyResolved (lazy t1), FullyResolved (lazy t2)) -> rec_unify cx trace ~use_op t1 t2
+    | (FullyResolved s1, FullyResolved s2) ->
+      rec_unify
+        cx
+        trace
+        ~use_op
+        (Context.force_fully_resolved_tvar cx s1)
+        (Context.force_fully_resolved_tvar cx s2)
     | _ ->
       if id1 = id2 then
         ()
@@ -9064,16 +9117,15 @@ struct
     | Unresolved bounds ->
       let constraints =
         if fully_resolved then
-          FullyResolved (lazy t)
+          FullyResolved (ForcingState.of_non_lazy_t t)
         else
           Resolved t
       in
       root.constraints <- constraints;
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t (id, bounds)
-    | Resolved t_
-    | FullyResolved (lazy t_) ->
-      rec_unify cx trace ~use_op t_ t
+    | Resolved t_ -> rec_unify cx trace ~use_op t_ t
+    | FullyResolved s -> rec_unify cx trace ~use_op (Context.force_fully_resolved_tvar cx s) t
 
   (******************)
 
@@ -9290,7 +9342,21 @@ struct
              On the other hand, if the tvars are already resolved, then we can do something
              interesting... *)
           match (Context.find_graph cx id1, Context.find_graph cx id2) with
-          | ((Resolved t1 | FullyResolved (lazy t1)), (Resolved t2 | FullyResolved (lazy t2)))
+          | (Resolved t1, Resolved t2)
+            when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
+            ->
+            naive_unify cx trace ~use_op t1 t2
+          | (Resolved t1, FullyResolved s2)
+            when let t2 = Context.force_fully_resolved_tvar cx s2 in
+                 Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
+            ->
+            naive_unify cx trace ~use_op t1 t2
+          | (FullyResolved s1, Resolved t2)
+            when let t1 = Context.force_fully_resolved_tvar cx s1 in
+                 Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
+            ->
+            naive_unify cx trace ~use_op t1 t2
+          | (FullyResolved s1, FullyResolved s2)
           (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
              definitions, and we might get into an infinite loop (which could perhaps be avoided by
              a unification cache, but we'd rather not cache if we can get away with it).
@@ -9304,7 +9370,9 @@ struct
              introduce differences in their representations that would kill other
              optimizations. Thus, we focus on the special case where these types have the same
              reason, and then do naive unification. *)
-            when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
+            when let t1 = Context.force_fully_resolved_tvar cx s1 in
+                 let t2 = Context.force_fully_resolved_tvar cx s2 in
+                 Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
             ->
             naive_unify cx trace ~use_op t1 t2
           | _ -> naive_unify cx trace ~use_op t1 t2
@@ -10282,8 +10350,8 @@ struct
           match constraints with
           (* TODO: In the FullyResolved case, repositioning will cause us to "lose"
            * the fully resolved status. We should be able to preserve it. *)
-          | Resolved t
-          | FullyResolved (lazy t) ->
+          | Resolved _
+          | FullyResolved _ ->
             (* A tvar may be resolved to a type that has special repositioning logic,
              * like UnionT. We want to recurse to pick up that logic, but must be
              * careful as the union may refer back to the tvar itself, causing a loop.
@@ -10292,10 +10360,10 @@ struct
             | Some t -> t
             | None ->
               (* The resulting tvar should be fully resolved if this one is *)
-              let fully_resolved =
+              let (fully_resolved, t) =
                 match constraints with
-                | Resolved _ -> false
-                | FullyResolved _ -> true
+                | Resolved t -> (false, t)
+                | FullyResolved s -> (true, Context.force_fully_resolved_tvar cx s)
                 | Unresolved _ -> assert_false "handled below"
               in
               mk_cached_tvar_where reason t_open id (fun tvar ->

@@ -1105,10 +1105,10 @@ and merge_annot env file = function
           | Type.GenericT { bound = KeysT (_, obj_t); _ } -> (obj_t, SemiHomomorphic source_type)
           | Type.OpenT (_, id) ->
             (match Context.find_constraints file.cx id with
-            | ( _,
-                Type.Constraint.FullyResolved (lazy (Type.GenericT { bound = KeysT (_, obj_t); _ }))
-              ) ->
-              (obj_t, SemiHomomorphic source_type)
+            | (_, Type.Constraint.FullyResolved s) ->
+              (match Context.force_fully_resolved_tvar file.cx s with
+              | Type.GenericT { bound = KeysT (_, obj_t); _ } -> (obj_t, SemiHomomorphic source_type)
+              | _ -> (source_type, Unspecialized))
             | _ -> (source_type, Unspecialized))
           | _ -> (source_type, Unspecialized)
       )
@@ -1118,7 +1118,10 @@ and merge_annot env file = function
       | Type.GenericT { name; _ } -> Some name
       | Type.OpenT (_, id) ->
         (match Context.find_constraints file.cx id with
-        | (_, Type.Constraint.FullyResolved (lazy (Type.GenericT { name; _ }))) -> Some name
+        | (_, Type.Constraint.FullyResolved s) ->
+          (match Context.force_fully_resolved_tvar file.cx s with
+          | Type.GenericT { name; _ } -> Some name
+          | _ -> None)
         | _ -> None)
       | _ -> None
     in

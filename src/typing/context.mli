@@ -471,6 +471,8 @@ val find_root : t -> Type.ident -> Type.ident * Type.Constraint.node * Type.Cons
 
 val find_root_id : t -> Type.ident -> Type.ident
 
+val force_fully_resolved_tvar : t -> Type.Constraint.ForcingState.t -> Type.t
+
 val find_resolved : t -> Type.t -> Type.t option
 
 val env_cache_find_opt :

@@ -64,7 +64,7 @@ let function_like_op op = object_like_op op
 let get_fully_resolved_type cx id =
   let (_, constraints) = Context.find_constraints cx id in
   match constraints with
-  | Constraint.FullyResolved (lazy t) -> t
+  | Constraint.FullyResolved s -> Context.force_fully_resolved_tvar cx s
   | Constraint.Resolved _
   | Constraint.Unresolved _ ->
     failwith "unexpected unresolved constraint in annotation inference"
@@ -374,7 +374,10 @@ module rec ConsGen : S = struct
           ensure_annot_resolved cx reason id
         )
     in
-    let node = Constraint.create_root (Constraint.FullyResolved t) in
+    let node =
+      Constraint.create_root
+        (Constraint.FullyResolved (Constraint.ForcingState.of_lazy_t ~error_reason:reason t))
+    in
     Context.add_tvar cx id node;
     tvar
 
@@ -403,7 +406,10 @@ module rec ConsGen : S = struct
         | _ -> t
       in
       Context.remove_avar cx id;
-      Context.add_tvar cx id (Type.Constraint.fully_resolved_node t);
+      Context.add_tvar
+        cx
+        id
+        Type.Constraint.(create_root (FullyResolved (ForcingState.of_non_lazy_t t)));
       let dependents1 = deps_of_constraint constraints1 in
       resolve_dependent_set cx reason dependents1 t
 

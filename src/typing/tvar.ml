@@ -33,14 +33,20 @@ let mk_no_wrap_where cx reason f =
   let () = f (reason, tvar) in
   Type.OpenT (reason, tvar)
 
-let mk_fully_resolved_lazy cx reason t =
+let mk_fully_resolved_helper cx reason state =
   let id = Reason.mk_id () in
-  let constraints = Type.Constraint.FullyResolved t in
-  let node = Type.Constraint.create_root constraints in
+  let node = Type.Constraint.create_root (Type.Constraint.FullyResolved state) in
   Context.set_graph cx (IMap.add id node (Context.graph cx));
   Type.OpenT (reason, id)
 
-let mk_fully_resolved cx reason t = mk_fully_resolved_lazy cx reason (lazy t)
+let mk_fully_resolved_lazy cx reason lazy_t =
+  mk_fully_resolved_helper
+    cx
+    reason
+    (Type.Constraint.ForcingState.of_lazy_t ~error_reason:reason lazy_t)
+
+let mk_fully_resolved cx reason t =
+  mk_fully_resolved_helper cx reason (Type.Constraint.ForcingState.of_non_lazy_t t)
 
 let mk_resolved cx reason t =
   let id = Reason.mk_id () in

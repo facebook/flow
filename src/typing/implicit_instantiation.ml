@@ -615,9 +615,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       else
         let constraints = Context.find_graph cx id in
         (match constraints with
-        | Constraint.FullyResolved (lazy t)
-        | Constraint.Resolved t ->
-          filter_placeholder t
+        | Constraint.FullyResolved s -> filter_placeholder (Context.force_fully_resolved_tvar cx s)
+        | Constraint.Resolved t -> filter_placeholder t
         | Constraint.Unresolved bounds ->
           let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
           uppers
@@ -679,7 +678,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | OpenT (r, id) ->
       let constraints = Context.find_graph cx id in
       (match constraints with
-      | Constraint.FullyResolved (lazy t)
+      | Constraint.FullyResolved s ->
+        let t = Context.force_fully_resolved_tvar cx s in
+        if Tvar_resolver.has_placeholders cx t then
+          None
+        else
+          Some t
       | Constraint.Resolved t ->
         if Tvar_resolver.has_placeholders cx t then
           None

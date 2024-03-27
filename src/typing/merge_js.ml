@@ -244,9 +244,8 @@ let detect_matching_props_violations cx =
         else
           let seen = ISet.add root_id seen in
           (match constraints with
-          | Constraint.Resolved t
-          | Constraint.FullyResolved (lazy t) ->
-            loop cx acc seen t
+          | Constraint.Resolved t -> loop cx acc seen t
+          | Constraint.FullyResolved s -> loop cx acc seen (Context.force_fully_resolved_tvar cx s)
           | Constraint.Unresolved bounds ->
             let ts = TypeMap.keys bounds.Constraint.lower in
             List.fold_left (fun a t -> loop cx a seen t) acc ts)
@@ -638,19 +637,19 @@ let copier =
       else
         let (root_id, constraints) = Context.find_constraints src_cx id in
         if id == root_id then (
-          let t =
+          let state =
             match constraints with
             | Unresolved _
             | Resolved _ ->
               failwith "unexpected unresolved constraint"
-            | FullyResolved thunk ->
-              lazy
-                (let (lazy t) = thunk in
-                 let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                 t
-                )
+            | FullyResolved s ->
+              ForcingState.map
+                ~f:(fun t ->
+                  let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
+                  t)
+                s
           in
-          let node = create_root (FullyResolved t) in
+          let node = create_root (FullyResolved state) in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
           dst_cx
         ) else
