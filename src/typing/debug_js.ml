@@ -1041,7 +1041,13 @@ and dump_tvar_ (depth, tvars) cx id =
         | Goto goto -> spf "%d, Goto %d" id goto.parent
         | Root { constraints = Resolved t; _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
-        | Root { constraints = FullyResolved _; _ } -> spf "%d, FullyResolved" id
+        | Root { constraints = FullyResolved s; _ } ->
+          let payload =
+            match ForcingState.get_forced s with
+            | None -> "unevaluated"
+            | Some t -> dump_t_ (depth - 1, stack) cx t
+          in
+          spf "%d, FullyResolved %s" id payload
         | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
             spf "%d" id

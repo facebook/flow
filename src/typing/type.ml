@@ -3238,6 +3238,8 @@ module Constraint = struct
 
     val force : on_error:(Reason.t -> TypeTerm.t) -> t -> TypeTerm.t
 
+    val get_forced : t -> TypeTerm.t option
+
     val map : f:(TypeTerm.t -> TypeTerm.t) -> t -> t
   end = struct
     type state =
@@ -3268,6 +3270,13 @@ module Constraint = struct
         let t = on_error (Base.Option.value_exn s.error_reason) in
         s.state <- Forced;
         t
+
+    let get_forced s =
+      match s.state with
+      | Unforced
+      | Forcing ->
+        None
+      | Forced -> Some (Lazy.force_val s.valid)
 
     let map ~f s = { valid = Lazy.map f s.valid; error_reason = s.error_reason; state = Unforced }
   end
