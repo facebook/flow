@@ -543,8 +543,7 @@ let get_property_def_info ~loc_of_aloc type_info loc : (property_def_info option
     ~default:(Ok None)
     def_kind
 
-let get_def_info ~options ~reader ~purpose (ast, file_sig, _) type_info loc :
-    (def_info, string) result =
+let get_def_info ~reader ~purpose (ast, file_sig, _) type_info loc : (def_info, string) result =
   let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }) = type_info in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   match get_property_def_info ~loc_of_aloc type_info loc with
@@ -553,7 +552,6 @@ let get_def_info ~options ~reader ~purpose (ast, file_sig, _) type_info loc :
   | Ok None ->
     (match
        GetDef_js.get_def
-         ~options
          ~loc_of_aloc
          ~cx
          ~file_sig

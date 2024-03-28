@@ -33,7 +33,7 @@ let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance
   | Some def_locs -> Ok (Nel.map loc_of_aloc def_locs, Some name)
   | None -> Error (Printf.sprintf "failed to find member %s in members map" name)
 
-let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig :
+let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
   function
   | Get_def_request.Identifier { name; loc = (aloc, type_) } ->
@@ -50,7 +50,7 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
       Ok (def_loc, Some name)
     | [] ->
       let req = Get_def_request.Type { annot = (aloc, type_); name = Some name } in
-      process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
+      process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name
@@ -70,7 +70,7 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
         Member { prop_name = name; object_type = (loc, props_object); force_instance = false }
       )
     in
-    process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
+    process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
 
 module Depth = struct
   let limit = 100
@@ -119,7 +119,7 @@ module Depth = struct
     depth.results <- Loc_collections.LocMap.add loc result results
 end
 
-let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_loc =
+let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc source_aloc in
@@ -153,7 +153,6 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose req
         | Request request -> begin
           match
             process_request
-              ~options
               ~loc_of_aloc
               ~cx
               ~is_legit_require

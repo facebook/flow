@@ -31,7 +31,6 @@ val get_property_def_info :
   (property_def_info option, string) result
 
 val get_def_info :
-  options:Options.t ->
   reader:Parsing_heaps.Reader.reader ->
   purpose:Purpose.t ->
   FindRefsUtils.ast_info ->

@@ -12,7 +12,7 @@ type search_result = {
   remote_locs: Loc.t list;
 }
 
-let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
+let search ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
   let open File_sig in
   let require_name_locs =
     Base.List.fold (File_sig.requires file_sig) ~init:[] ~f:(fun acc -> function
@@ -54,7 +54,6 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
       ~f:(fun ((local_locs, remote_locs) as acc) (remote_loc, local_loc) ->
         match
           GetDef_js.get_def
-            ~options
             ~loc_of_aloc
             ~cx
             ~file_sig

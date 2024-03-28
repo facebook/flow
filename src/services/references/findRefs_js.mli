@@ -7,7 +7,6 @@
 
 val find_local_refs :
   reader:State_reader.t ->
-  options:Options.t ->
   file_key:File_key.t ->
   parse_artifacts:Types_js_types.parse_artifacts ->
   typecheck_artifacts:Types_js_types.typecheck_artifacts ->
@@ -17,7 +16,6 @@ val find_local_refs :
   (Get_def_types.def_info * FindRefsTypes.find_refs_ok, string) result
 
 val local_refs_of_find_ref_request :
-  options:Options.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->

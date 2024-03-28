@@ -13,16 +13,16 @@ let sort_and_dedup refs =
   Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2) refs
 
 let local_refs_of_find_ref_request
-    ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind = _ } =
+    ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind = _ } =
   let var_refs prop_refs =
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let (ast, file_sig, _) = ast_info in
     let (Types_js_types.Typecheck_artifacts { cx; typed_ast; _ }) = type_info in
     let { LocalImportRefSearcher.local_locs = import_def_locs; remote_locs } =
-      LocalImportRefSearcher.search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs
+      LocalImportRefSearcher.search ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs
     in
     let scope_info =
-      Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
+      Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
     in
     (* Property refs might contain binding destructuring pattern identifiers.
      * We should find all local references of them. *)
@@ -68,8 +68,7 @@ let local_refs_of_find_ref_request
     merge_with_var_refs prop_refs
   | Get_def_types.NoDefinition no_def_reason -> Ok (FindRefsTypes.NoDefinition no_def_reason)
 
-let find_local_refs
-    ~reader ~options ~file_key ~parse_artifacts ~typecheck_artifacts ~kind ~line ~col =
+let find_local_refs ~reader ~file_key ~parse_artifacts ~typecheck_artifacts ~kind ~line ~col =
   let open Base.Result.Let_syntax in
   let ast_info =
     match parse_artifacts with
@@ -77,7 +76,6 @@ let find_local_refs
   in
   let%bind def_info =
     GetDefUtils.get_def_info
-      ~options
       ~reader
       ~purpose:Get_def_types.Purpose.FindReferences
       ast_info
@@ -86,7 +84,6 @@ let find_local_refs
   in
   let%bind result =
     local_refs_of_find_ref_request
-      ~options
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       ast_info
       typecheck_artifacts

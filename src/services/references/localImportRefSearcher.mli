@@ -11,7 +11,6 @@ type search_result = {
 }
 
 val search :
-  options:Options.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   cx:Context.t ->
   file_sig:File_sig.t ->

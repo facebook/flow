@@ -290,7 +290,7 @@ let rec fix_alias_reason cx t =
     IntersectionT (r, InterRep.make t0 t1 ts)
   | _ -> t'
 
-let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
+let find_signatures ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
   | Some (t, active_parameter, callee_loc) ->
     let t' = fix_alias_reason cx t in
@@ -302,7 +302,6 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
     let jsdoc =
       match
         GetDef_js.get_def
-          ~options
           ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
           ~cx
           ~file_sig

@@ -16,7 +16,6 @@ module Get_def_result : sig
 end
 
 val get_def :
-  options:Options.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   cx:Context.t ->
   file_sig:File_sig.t ->

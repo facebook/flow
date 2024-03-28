@@ -476,7 +476,7 @@ let check_file ~options ~env ~profiling ~force file_input =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
+let get_def_of_check_result ~reader ~profiling ~check_result (file, line, col) =
   Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
       let loc = Loc.cursor (Some file) line col in
       let ( Parse_artifacts { ast; file_sig; parse_errors; _ },
@@ -485,7 +485,6 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         check_result
       in
       GetDef_js.get_def
-        ~options
         ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
         ~cx
         ~file_sig
@@ -633,12 +632,7 @@ let infer_type
       in
       let (getdef_loc_result, _) =
         try_with_json (fun () ->
-            get_def_of_check_result
-              ~options
-              ~reader
-              ~profiling
-              ~check_result
-              (file_key, line, column)
+            get_def_of_check_result ~reader ~profiling ~check_result (file_key, line, column)
         )
       in
       let get_def_documentation =
@@ -962,7 +956,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
       (Error msg, Some (Hh_json.JSON_Object json_props))
     | Ok check_result ->
       let (result, json_props) =
-        get_def_of_check_result ~options ~reader ~profiling ~check_result (file_key, line, col)
+        get_def_of_check_result ~reader ~profiling ~check_result (file_key, line, col)
       in
       let json =
         let json_props = Base.Option.value ~default:[] json_props in
@@ -2264,7 +2258,7 @@ let handle_persistent_signaturehelp_lsp
     | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
       let func_details =
         let cursor_loc = Loc.cursor (Some path) line col in
-        Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast cursor_loc
+        Signature_help.find_signatures ~reader ~cx ~file_sig ~ast ~typed_ast cursor_loc
       in
       (match func_details with
       | Ok details ->
@@ -2319,7 +2313,7 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
-let find_local_references ~reader ~options ~file_artifacts ~kind file_key pos :
+let find_local_references ~reader ~file_artifacts ~kind file_key pos :
     ((Get_def_types.def_info * FindRefsTypes.find_refs_ok, string) result * Hh_json.json option)
     Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
@@ -2328,7 +2322,6 @@ let find_local_references ~reader ~options ~file_artifacts ~kind file_key pos :
     let results =
       FindRefs_js.find_local_refs
         ~reader
-        ~options
         ~file_key
         ~parse_artifacts
         ~typecheck_artifacts
@@ -2370,7 +2363,6 @@ let map_local_find_references_results ~reader ~options ~client ~profiling ~env ~
     let%lwt (local_refs, extra_data) =
       find_local_references
         ~reader
-        ~options
         ~file_artifacts
         ~kind:FindRefsTypes.FindReferences
         file_key
@@ -2429,7 +2421,6 @@ let handle_global_find_references
     let (line, col) = Flow_lsp_conversions.position_of_document_position text_doc_position in
     (match
        FindRefs_js.find_local_refs
-         ~options
          ~reader
          ~file_key
          ~parse_artifacts
@@ -2657,7 +2648,6 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
         let%lwt (all_refs, extra_data) =
           find_local_references
             ~reader
-            ~options
             ~file_artifacts
             ~kind:FindRefsTypes.Rename
             file_key

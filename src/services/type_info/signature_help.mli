@@ -14,7 +14,6 @@ val func_details :
   ServerProt.Response.func_details_result
 
 val find_signatures :
-  options:Options.t ->
   reader:State_reader.t ->
   cx:Context.t ->
   file_sig:File_sig.t ->

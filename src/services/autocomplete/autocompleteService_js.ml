@@ -398,11 +398,10 @@ let jsdoc_of_member typing info =
   | [def_loc] -> jsdoc_of_def_loc typing def_loc
   | _ -> None
 
-let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc =
+let jsdoc_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc =
   let open GetDef_js.Get_def_result in
   match
     GetDef_js.get_def
-      ~options
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       ~cx
       ~file_sig
@@ -431,9 +430,9 @@ let documentation_and_tags_of_member typing info =
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
-let documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc =
+let documentation_and_tags_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc =
   lazy
-    (jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc
+    (jsdoc_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
@@ -496,7 +495,7 @@ let members_of_type
       )
 
 let local_value_identifiers ~typing ~genv ~ac_loc =
-  let { options; reader; cx; ast; available_ast; file_sig; _ } = typing in
+  let { reader; cx; ast; available_ast; file_sig; _ } = typing in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
   in
@@ -541,7 +540,7 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
            Type_env.checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc (ALoc.of_loc loc)
          in
          let documentation_and_tags =
-           documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast loc
+           documentation_and_tags_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc
          in
          ((name, documentation_and_tags), type_)
      )
@@ -1302,7 +1301,9 @@ let autocomplete_unqualified_type
     ~ac_loc
     ~edit_locs
     ~token =
-  let { options; reader; cx; file_sig; ast; available_ast; exports; norm_genv = genv } = typing in
+  let { options = _; reader; cx; file_sig; ast; available_ast; exports; norm_genv = genv } =
+    typing
+  in
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
@@ -1318,7 +1319,7 @@ let autocomplete_unqualified_type
          (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
            let documentation_and_tags =
              loc_of_aloc ~reader aloc
-             |> documentation_and_tags_of_loc ~options ~reader ~cx ~file_sig ~ast ~available_ast
+             |> documentation_and_tags_of_loc ~reader ~cx ~file_sig ~ast ~available_ast
            in
            match ty_result with
            | Ok elt ->

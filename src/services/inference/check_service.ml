@@ -317,7 +317,6 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     in
     let find_refs_result =
       FindRefs_js.local_refs_of_find_ref_request
-        ~options
         ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         (ast, file_sig, docblock)
         (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
