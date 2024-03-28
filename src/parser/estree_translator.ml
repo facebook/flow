@@ -1958,7 +1958,7 @@ with type t = Impl.t = struct
         loc
         [("operator", string operator); ("typeAnnotation", _type operand)]
     and read_only_type (loc, { Type.ReadOnly.argument; comments }) =
-      node ?comments "ReadOnlyTypeAnnotation" loc [("argument", _type argument)]
+      flow_type_operator loc comments "readonly" argument
     and tuple_type (loc, { Type.Tuple.elements; comments }) =
       node
         ?comments
