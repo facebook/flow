@@ -2556,6 +2556,12 @@ module Make (I : INPUT) : S = struct
       | ExactT (_, t) -> type__ ~env ~inherited ~source ~imode t
       | GenericT { bound; _ } -> type__ ~env ~inherited ~source ~imode bound
       | OpaqueT (r, o) -> opaque_t ~env ~inherited ~source ~imode r o
+      | DefT (reason, ReactAbstractComponentT _) ->
+        I.builtin_type
+          (Env.get_cx env)
+          ~cont:(type__ ~env ~inherited ~source ~imode)
+          reason
+          "React$AbstractComponentStatics"
       | t -> TypeConverter.convert_t ~env t
 
     and convert_t ~env t = type__ ~env ~inherited:false ~source:Ty.Other ~imode:IMUnset t

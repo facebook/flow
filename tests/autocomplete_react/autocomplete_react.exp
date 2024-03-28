@@ -345,6 +345,26 @@ jsx-text.js:1:11
 Flags: --pretty
 {"result":[]}
 
+component_members.js:7:11
+Flags: --pretty
+{
+  "result":[
+    {"name":"displayName","type":"(?string) | void"},
+    {"name":"name","type":"(?string) | void"},
+    {"name":"propTypes","type":"{[string]: any} | void"}
+  ]
+}
+
+component_members_poly.js:7:11
+Flags: --pretty
+{
+  "result":[
+    {"name":"displayName","type":"(?string) | void"},
+    {"name":"name","type":"(?string) | void"},
+    {"name":"propTypes","type":"{[string]: any} | void"}
+  ]
+}
+
 components.js:5:21
 Flags: --pretty
 {"result":[]}

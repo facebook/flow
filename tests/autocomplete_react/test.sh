@@ -19,4 +19,6 @@ queries_in_file autocomplete "jsx-function-component-3.js" --pretty
 queries_in_file autocomplete "jsx-abstract-component.js" --pretty
 queries_in_file autocomplete "jsx-with-children.js" --pretty
 queries_in_file autocomplete "jsx-text.js" --pretty
+queries_in_file autocomplete "component_members.js" --pretty
+queries_in_file autocomplete "component_members_poly.js" --pretty
 queries_in_file autocomplete "components.js" --pretty
