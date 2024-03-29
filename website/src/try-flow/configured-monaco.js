@@ -13,11 +13,28 @@ import type FlowJsServices from './flow-services';
 import createTokensProvider from './tokens-theme-provider';
 import flowLanguageConfiguration from './flow-configuration.json';
 
-let typeAsPosFunctionForMonaco = (value: string, position: any): ?string =>
+type Position = {lineNumber: number, column: number};
+
+let getDefFunctionForMonaco = (
+  value: string,
+  position: Position,
+): $ReadOnlyArray<FlowLoc> => [];
+
+function setGetDefFunction(flowService: ?FlowJsServices): void {
+  getDefFunctionForMonaco = (value, position) =>
+    flowService?.getDef?.(
+      '-',
+      value,
+      position.lineNumber,
+      position.column - 1,
+    ) ?? [];
+}
+
+let typeAsPosFunctionForMonaco = (value: string, position: Position): ?string =>
   null;
 
 function setTypeAtPosFunction(flowService: ?FlowJsServices): void {
-  typeAsPosFunctionForMonaco = (value: string, position) =>
+  typeAsPosFunctionForMonaco = (value, position) =>
     flowService?.typeAtPos(
       '-',
       value,
@@ -34,6 +51,24 @@ monaco.languages.register({
 monaco.languages.setLanguageConfiguration('flow', flowLanguageConfiguration);
 const languageId = monaco.languages.getEncodedLanguageId('flow');
 monaco.languages.setTokensProvider('flow', createTokensProvider(languageId));
+monaco.languages.registerDefinitionProvider('flow', {
+  provideDefinition(model, position) {
+    try {
+      return getDefFunctionForMonaco(model.getValue(), position).map(loc => ({
+        uri: model.uri,
+        range: {
+          startLineNumber: loc.start.line,
+          startColumn: loc.start.column,
+          endLineNumber: loc.end.line,
+          endColumn: loc.end.column + 1,
+        },
+      }));
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  },
+});
 monaco.languages.registerHoverProvider('flow', {
   provideHover(model, position) {
     const result = typeAsPosFunctionForMonaco(model.getValue(), position);
@@ -49,4 +84,4 @@ monaco.languages.registerHoverProvider('flow', {
 });
 loader.config({monaco});
 
-export {monaco, setTypeAtPosFunction};
+export {monaco, setGetDefFunction, setTypeAtPosFunction};

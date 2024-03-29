@@ -82,6 +82,15 @@ export default class FlowJsServices {
     return this._flow.checkContent(filename, body, this.config);
   }
 
+  getDef(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+  ): $ReadOnlyArray<FlowLoc> {
+    return this._flow.getDef(filename, body, line, col, this.config);
+  }
+
   typeAtPos(filename: string, body: string, line: number, col: number): string {
     return this._flow.typeAtPos(filename, body, line, col, this.config);
   }

@@ -351,6 +351,40 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1 };
   }
 
+let get_def filename content line col js_config_object : (Loc.t list, string) result =
+  let filename = File_key.SourceFile filename in
+  let root = File_path.dummy_path in
+  match parse_content filename content with
+  | Error _ -> Error "parse error"
+  | Ok (ast, file_sig) ->
+    let (_, docblock) =
+      Docblock_parser.(
+        parse_docblock
+          ~max_tokens:docblock_max_tokens
+          ~file_options:Files.default_options
+          filename
+          content
+      )
+    in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+    let loc = mk_loc filename line col in
+    (match
+       GetDef_js.get_def
+         ~loc_of_aloc:ALoc.to_loc_exn
+         ~cx
+         ~file_sig
+         ~ast
+         ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
+         ~purpose:Get_def_types.Purpose.GoToDefinition
+         loc
+     with
+    | GetDef_js.Get_def_result.Def (locs, _)
+    | GetDef_js.Get_def_result.Partial (locs, _, _) ->
+      Ok (Loc_collections.LocSet.elements locs)
+    | GetDef_js.Get_def_result.Bad_loc err_msg
+    | GetDef_js.Get_def_result.Def_error err_msg ->
+      Error err_msg)
+
 let infer_type filename content line col js_config_object : Loc.t * (string, string) result =
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
@@ -436,6 +470,17 @@ let dump_types js_file js_content js_config_object =
     let strip_root = None in
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json
+
+let get_def js_file js_content js_line js_col js_config_object =
+  let filename = Js.to_string js_file in
+  let content = Js.to_string js_content in
+  let line = Js.parseInt js_line in
+  let col = Js.parseInt js_col in
+  match get_def filename content line col js_config_object with
+  | Ok locs ->
+    Hh_json.JSON_Array (List.map (Reason.json_of_loc ~strip_root:None ~offset_table:None) locs)
+    |> js_of_json
+  | Error msg -> failwith msg
 
 let type_at_pos js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
@@ -588,5 +633,7 @@ let () = Js.Unsafe.set exports "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_
 let () = Js.Unsafe.set exports "flowVersion" (Js.string Flow_version.version)
 
 let () = Js.Unsafe.set exports "parse" (Js.wrap_callback Flow_parser_js.parse)
+
+let () = Js.Unsafe.set exports "getDef" (Js.wrap_callback get_def)
 
 let () = Js.Unsafe.set exports "typeAtPos" (Js.wrap_callback type_at_pos)

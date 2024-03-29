@@ -15,7 +15,11 @@ import * as LZString from 'lz-string';
 import styles from './TryFlow.module.css';
 import TryFlowConfigEditor from './TryFlowConfigEditor';
 import TryFlowResults from './TryFlowResults';
-import {monaco, setTypeAtPosFunction} from './configured-monaco';
+import {
+  monaco,
+  setGetDefFunction,
+  setTypeAtPosFunction,
+} from './configured-monaco';
 import FlowJsServices from './flow-services';
 import createTokensProvider from './tokens-theme-provider';
 import flowLanguageConfiguration from './flow-configuration.json';
@@ -151,6 +155,7 @@ export default component TryFlow(
   }
 
   function forceRecheck() {
+    setGetDefFunction(flowService);
     setTypeAtPosFunction(flowService);
 
     const model = monaco.editor.getModels()[0];

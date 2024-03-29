@@ -46,3 +46,27 @@ function Foo(x: string) {}
 ) {
   throw 'There should be no errors if jsx pragma is correctly parsed.';
 }
+
+if (
+  JSON.stringify(
+    flow.getDef('test.js', 'const foo = 1;\nfoo', 2, 1, config),
+    undefined,
+    2,
+  ) !==
+  `[
+  {
+    "source": "test.js",
+    "type": "SourceFile",
+    "start": {
+      "line": 1,
+      "column": 7
+    },
+    "end": {
+      "line": 1,
+      "column": 9
+    }
+  }
+]`
+) {
+  throw 'Incorrect get-def result';
+}

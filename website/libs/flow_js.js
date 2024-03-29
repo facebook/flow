@@ -7,12 +7,14 @@
  * @format
  */
 
+declare type FlowLoc = {
+  source: string,
+  start: {line: number, column: number},
+  end: {line: number, column: number},
+};
+
 declare type FlowJsErrorMessage = {
-  loc: {
-    source: string,
-    start: {line: number, column: number},
-    end: {line: number, column: number},
-  },
+  loc: FlowLoc,
   context: string,
   type: string,
   descr: string,
@@ -67,6 +69,13 @@ declare type FlowJs = {
     body: string,
     options: {[string]: mixed},
   ): $ReadOnlyArray<FlowJsError>,
+  getDef(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+    options: {[string]: mixed},
+  ): $ReadOnlyArray<FlowLoc>,
   typeAtPos(
     filename: string,
     body: string,

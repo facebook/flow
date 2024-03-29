@@ -76,7 +76,7 @@ let find_local_refs ~reader ~file_key ~parse_artifacts ~typecheck_artifacts ~kin
   in
   let%bind def_info =
     GetDefUtils.get_def_info
-      ~reader
+      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       ~purpose:Get_def_types.Purpose.FindReferences
       ast_info
       typecheck_artifacts

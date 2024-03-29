@@ -31,7 +31,7 @@ val get_property_def_info :
   (property_def_info option, string) result
 
 val get_def_info :
-  reader:Parsing_heaps.Reader.reader ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   purpose:Purpose.t ->
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->
