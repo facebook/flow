@@ -15,6 +15,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------- instantiation_err.js:2:17
 
+Cannot instantiate `T` because `T` [1] is not a polymorphic type. [incompatible-use]
+
+   instantiation_err.js:2:17
+   2| export type U = T<string>; // Err: cannot instantiate
+                      ^^^^^^^^^
+
+References:
+   type_exports.js:1:13
+   1| export type T = string;
+                  ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- instantiation_err.js:2:17
+
 Cannot instantiate `T` because `T` [1] is not a polymorphic type. (FLOW BUG: This is a misplaced error. The original
 error was raised in file `instantiation_err_dep.js`). [incompatible-use]
 
@@ -139,4 +153,4 @@ References:
 
 
 
-Found 9 errors
+Found 10 errors

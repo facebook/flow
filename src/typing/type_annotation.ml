@@ -2597,9 +2597,17 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       (ConsGen.mk_instance env.cx ~type_t_kind reason c, None)
     | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
       let (targs, targs_ast) = convert_list env targs in
-      ( typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs,
-        Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
-      )
+      let t = typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs in
+      ( if Subst_name.Set.is_empty (Type_subst.free_var_finder env.cx t) then
+        match t with
+        | TypeAppT { reason; use_op; type_; targs; from_value = _; use_desc = _ } ->
+          Context.add_post_inference_validation_flow
+            env.cx
+            type_
+            (SpecializeT (use_op, reason, reason, true, Some targs, Tvar.mk env.cx reason))
+        | _ -> failwith "typeapp_annot should create a TypeAppT"
+      );
+      (t, Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
   and mk_type_param env ~from_infer_type (loc, type_param) =
     let { cx; tparams_map; _ } = env in

@@ -331,6 +331,36 @@ References:
                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- more.js:140:34
+
+Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
+argument `T`. [incompatible-type-arg]
+
+   more.js:140:34
+   140|   __fragments: FragmentReference<{thing1: true}> &
+                                         ^^^^^^^^^^^^^^ [1]
+
+References:
+   more.js:13:42
+    13| declare opaque type FragmentReference<T: FragmentTypeof>;
+                                                 ^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- more.js:142:23
+
+Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
+argument `T`. [incompatible-type-arg]
+
+   more.js:142:23
+   142|     FragmentReference<{thing2: true}>,
+                              ^^^^^^^^^^^^^^ [1]
+
+References:
+   more.js:13:42
+    13| declare opaque type FragmentReference<T: FragmentTypeof>;
+                                                 ^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- more.js:153:20
 
 Cannot create `PluralTest` element because null [1] is incompatible with read-only array type [2] in property `users`.
@@ -428,4 +458,4 @@ References:
 
 
 
-Found 26 errors
+Found 28 errors
