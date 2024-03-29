@@ -54,12 +54,13 @@ let recurse_into_intersection =
 
 let filter_opaque filter_fn reason ({ underlying_t; super_t; _ } as opq) =
   match underlying_t with
-  | Some underlying_t -> begin
+  | Some underlying_t
+    when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason) -> begin
     match filter_fn underlying_t with
     | DefT (_, EmptyT) -> DefT (reason, EmptyT)
     | t -> OpaqueT (reason, { opq with underlying_t = Some t })
   end
-  | None -> begin
+  | _ -> begin
     let super_t = Base.Option.value ~default:(DefT (reason, MixedT Mixed_everything)) super_t in
     match filter_fn super_t with
     | DefT (_, EmptyT) -> DefT (reason, EmptyT)
