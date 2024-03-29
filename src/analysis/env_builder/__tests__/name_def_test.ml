@@ -570,6 +570,23 @@ class D extends C {
   [%expect {|
     legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
 
+let%expect_test "class_extends_cast" =
+  print_order_test {|
+type Ref = { children: Array<Node> };
+
+declare const referencedInClassExtends: Ref;
+
+declare function f(v: mixed): mixed;
+
+class Node extends (f(referencedInClassExtends) as any) {}
+  |};
+  [%expect {|
+    (8, 6) to (8, 10) =>
+    (2, 5) to (2, 8) =>
+    (4, 14) to (4, 38) =>
+    (6, 17) to (6, 18) =>
+    (8, 22) to (8, 46) (Env_api.Make.ExpressionLoc) |}]
+
 let%expect_test "enum" =
   print_order_test {|
 function havoced() {

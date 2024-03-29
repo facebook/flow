@@ -605,6 +605,24 @@ struct
             expr
           )
 
+        method class_extends_sig
+            ((_, { Ast.Class.Extends.expr; targs; comments = _ }) : ('loc, 'loc) Ast.Class.Extends.t)
+            : unit =
+          Base.Option.iter targs ~f:(fun targs -> ignore @@ this#type_args targs);
+          (* We only visit expressions that is used to generate the class signature. *)
+          let rec visit_expr_for_sig ((_, expr') as expr) =
+            let open Ast.Expression in
+            match expr' with
+            | Identifier _ -> ignore @@ this#expression expr
+            | Member { Member._object; property = Member.PropertyIdentifier _; comments = _ } ->
+              visit_expr_for_sig _object
+            | AsExpression { AsExpression.expression = _; annot; comments = _ }
+            | TypeCast { TypeCast.expression = _; annot; comments = _ } ->
+              ignore @@ this#type_annotation annot
+            | _ -> ()
+          in
+          visit_expr_for_sig expr
+
         method class_body_annotated (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
           let open Ast.Class.Body in
           let (_, { body; comments = _ }) = cls_body in
@@ -878,7 +896,7 @@ struct
           (fun visitor ->
             let open Flow_ast_mapper in
             let _ = visitor#class_body_annotated body in
-            let _ = map_opt (map_loc visitor#class_extends) extends in
+            Base.Option.iter ~f:visitor#class_extends_sig extends;
             let _ = map_opt visitor#class_implements implements in
             let _ = map_list visitor#class_decorator class_decorators in
             let _ = map_opt visitor#type_params tparams in
