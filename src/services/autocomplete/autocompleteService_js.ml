@@ -10,16 +10,6 @@ open Loc_collections
 module Ast = Flow_ast
 module Statement = Fix_statement.Statement_
 
-let max_autoimport_suggestions = 100
-
-let default_autoimport_options =
-  let open Export_search in
-  {
-    default_options with
-    max_results = max_autoimport_suggestions;
-    num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
-  }
-
 module AcCompletion = struct
   type completion_item = {
     kind: Lsp.Completion.completionItemKind option;
@@ -358,11 +348,12 @@ type typing = {
   get_haste_name: File_key.t -> string option;
   get_package_info: File_key.t -> (Package_json.t, unit) result option;
   is_package_file: string -> bool;
+  search_exported_values: ac_options:ac_options -> string -> Export_search_types.search_results;
+  search_exported_types: ac_options:ac_options -> string -> Export_search_types.search_results;
   cx: Context.t;
   file_sig: File_sig.t;
   ast: (Loc.t, Loc.t) Flow_ast.Program.t;
   available_ast: Typed_ast_utils.available_ast;
-  exports: Export_search.t;
   norm_genv: Ty_normalizer_env.genv;
 }
 
@@ -373,11 +364,12 @@ let mk_typing_artifacts
     ~get_haste_name
     ~get_package_info
     ~is_package_file
+    ~search_exported_values
+    ~search_exported_types
     ~cx
     ~file_sig
     ~ast
-    ~available_ast
-    ~exports =
+    ~available_ast =
   let norm_genv =
     Ty_normalizer_flow.mk_genv
       ~options:ty_normalizer_options
@@ -392,11 +384,12 @@ let mk_typing_artifacts
     get_haste_name;
     get_package_info;
     is_package_file;
+    search_exported_values;
+    search_exported_types;
     cx;
     file_sig;
     ast;
     available_ast;
-    exports;
     norm_genv;
   }
 
@@ -982,13 +975,7 @@ let autocomplete_id
       else
         let locals = set_of_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) identifiers in
         let { Export_search_types.results = auto_imports; is_incomplete } =
-          let options =
-            {
-              default_autoimport_options with
-              Export_search.weighted = ac_options.imports_ranked_usage;
-            }
-          in
-          Export_search.search_values ~options before typing.exports
+          typing.search_exported_values ~ac_options before
         in
         let items_rev =
           append_completion_items_of_autoimports
@@ -1343,11 +1330,12 @@ let autocomplete_unqualified_type
     get_haste_name = _;
     get_package_info = _;
     is_package_file = _;
+    search_exported_values = _;
+    search_exported_types;
     cx;
     file_sig;
     ast;
     available_ast;
-    exports;
     norm_genv = genv;
   } =
     typing
@@ -1464,13 +1452,7 @@ let autocomplete_unqualified_type
       in
       let { Export_search_types.results = auto_imports; is_incomplete } =
         let (before, _after) = Autocomplete_sigil.remove token in
-        let options =
-          {
-            default_autoimport_options with
-            Export_search.weighted = ac_options.imports_ranked_usage;
-          }
-        in
-        Export_search.search_types ~options before exports
+        search_exported_types ~ac_options before
       in
       let items_rev =
         append_completion_items_of_autoimports

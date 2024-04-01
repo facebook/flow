@@ -3,7 +3,7 @@
  (wrapped false)
  (libraries
   fuzzy_score
-  flow_search
+  flow_search_types
   flow_server_protocol
   flow_service_type_info
   flow_typing

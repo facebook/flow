@@ -280,6 +280,21 @@ let get_status ~options env =
   in
   (status_response, lazy_stats)
 
+let autoimport_options ~ac_options =
+  let open Export_search in
+  {
+    default_options with
+    max_results = 100;
+    num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
+    weighted = ac_options.AutocompleteService_js.imports_ranked_usage;
+  }
+
+let search_exported_values ~exports ~ac_options before =
+  Export_search.search_values ~options:(autoimport_options ~ac_options) before exports
+
+let search_exported_types ~exports ~ac_options before =
+  Export_search.search_types ~options:(autoimport_options ~ac_options) before exports
+
 let autocomplete
     ~trigger_character
     ~reader
@@ -354,11 +369,12 @@ let autocomplete
                 ~get_haste_name:(get_haste_name ~reader)
                 ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                 ~is_package_file:(is_package_file ~reader)
+                ~search_exported_values:(search_exported_values ~exports:env.ServerEnv.exports)
+                ~search_exported_types:(search_exported_types ~exports:env.ServerEnv.exports)
                 ~cx
                 ~file_sig
                 ~ast
                 ~available_ast
-                ~exports:env.ServerEnv.exports
             in
             autocomplete_get_results typing ac_options trigger_character cursor_loc
         )

@@ -28,11 +28,12 @@ val mk_typing_artifacts :
   get_haste_name:(File_key.t -> string option) ->
   get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
   is_package_file:(string -> bool) ->
+  search_exported_values:(ac_options:ac_options -> string -> Export_search_types.search_results) ->
+  search_exported_types:(ac_options:ac_options -> string -> Export_search_types.search_results) ->
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   available_ast:Typed_ast_utils.available_ast ->
-  exports:Export_search.t ->
   typing
 
 type 'r autocomplete_service_result_generic =
