@@ -7,7 +7,7 @@
 
 val jsdoc_of_getdef_loc :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  reader:Parsing_heaps.Reader.reader ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   Loc.t ->
   Jsdoc.t option
 

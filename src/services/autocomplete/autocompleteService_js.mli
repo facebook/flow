@@ -23,7 +23,11 @@ type typing
 
 val mk_typing_artifacts :
   options:Options.t ->
-  reader:Parsing_heaps.Reader.reader ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
+  is_package_file:(string -> bool) ->
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->

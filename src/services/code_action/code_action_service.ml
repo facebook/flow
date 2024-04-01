@@ -54,17 +54,50 @@ let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_as
   ]
 
 let autofix_exports_code_actions
-    ~options ~cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
+    ~options
+    ~cx
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~ast
+    ~file_sig
+    ~tolerable_errors
+    ~typed_ast
+    ~diagnostics
+    uri
+    loc =
   let open Autofix_exports in
   let fixable_locs = set_of_fixable_signature_verification_locations tolerable_errors in
   if LocSet.mem loc fixable_locs then
-    fix_signature_verification_error_at_loc ~cx ~file_sig ~typed_ast ast loc
+    fix_signature_verification_error_at_loc
+      ~cx
+      ~loc_of_aloc
+      ~get_ast
+      ~get_haste_name
+      ~get_type_sig
+      ~file_sig
+      ~typed_ast
+      ast
+      loc
     |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
   else
     []
 
 let autofix_missing_local_annot_code_actions
-    ~options ~cx ~ast ~file_sig ~tolerable_errors:_ ~typed_ast ~diagnostics uri loc =
+    ~options
+    ~cx
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~ast
+    ~file_sig
+    ~tolerable_errors:_
+    ~typed_ast
+    ~diagnostics
+    uri
+    loc =
   let open Autofix_missing_local_annots in
   let fixable_locs = map_of_fixable_missing_local_params cx in
   let entry =
@@ -72,7 +105,17 @@ let autofix_missing_local_annot_code_actions
   in
   match entry with
   | Some (_, type_t) ->
-    fix_missing_param_annot_at_loc ~cx ~file_sig ~typed_ast ast loc type_t
+    fix_missing_param_annot_at_loc
+      ~cx
+      ~loc_of_aloc
+      ~get_ast
+      ~get_haste_name
+      ~get_type_sig
+      ~file_sig
+      ~typed_ast
+      ast
+      loc
+      type_t
     |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
   | None -> []
 
@@ -84,7 +127,10 @@ let refactor_extract_code_actions
     ~cx
     ~file_sig
     ~typed_ast
-    ~reader
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~only
     uri
     loc =
@@ -149,7 +195,10 @@ let refactor_extract_code_actions
           ~file
           ~file_sig
           ~typed_ast
-          ~reader
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
           ~support_experimental_snippet_text_edit
           ~extract_range:loc
         |> List.map lsp_action_from_refactor
@@ -204,9 +253,9 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
   else
     []
 
-let main_of_package ~reader package_dir =
+let main_of_package ~get_package_info package_dir =
   let file_key = File_key.JsonFile (package_dir ^ Filename.dir_sep ^ "package.json") in
-  match Parsing_heaps.Reader.get_package_info ~reader file_key with
+  match get_package_info file_key with
   | Some (Ok package) -> Package_json.main package
   | Some (Error _)
   | None ->
@@ -253,7 +302,7 @@ let string_of_path_parts parts =
 
     Lastly, if the path ends with [index.js] or [.js], those default suffixes are also
     removed. *)
-let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
+let node_path ~node_resolver_dirnames ~get_package_info ~src_dir require_path =
   let require_path = String_utils.rstrip require_path Files.flow_ext in
   let src_parts = Files.split_path src_dir in
   let req_parts = Files.split_path require_path in
@@ -263,7 +312,7 @@ let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
     let package_path =
       package_dir :: node_modules :: ancestor_rev |> Base.List.rev |> String.concat "/"
     in
-    (match main_of_package ~reader package_path with
+    (match main_of_package ~get_package_info package_path with
     | Some main when path_matches (String.concat "/" rest) main -> package_dir
     | _ -> string_of_path_parts (package_dir :: rest))
   | _ ->
@@ -279,16 +328,16 @@ let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
     filename, returns the path relative to [src_dir]. *)
-let path_of_modulename ~node_resolver_dirnames ~reader src_dir file_key = function
+let path_of_modulename ~node_resolver_dirnames ~get_package_info src_dir file_key = function
   | Some _ as string_module_name -> string_module_name
   | None ->
     Base.Option.map
       ~f:(fun src_dir ->
         let path = File_key.to_string (Files.chop_flow_ext file_key) in
-        node_path ~node_resolver_dirnames ~reader ~src_dir path)
+        node_path ~node_resolver_dirnames ~get_package_info ~src_dir path)
       src_dir
 
-let haste_package_path ~reader ~src_dir require_path =
+let haste_package_path ~get_package_info ~is_package_file ~src_dir require_path =
   match Files.split_path require_path |> Base.List.rev with
   | [] -> None
   | base :: parent_dir_names ->
@@ -297,9 +346,7 @@ let haste_package_path ~reader ~src_dir require_path =
       match remaining with
       | [] -> None
       | package_name_candidate :: parent_dir_names ->
-        let dependency = Parsing_heaps.get_dependency (Modulename.String package_name_candidate) in
-        (match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
-        | Some addr when Parsing_heaps.Reader.is_package_file ~reader addr ->
+        if is_package_file package_name_candidate then
           let package_path_parts = List.rev (package_name_candidate :: parent_dir_names) in
           let within_package =
             match find_ancestor_rev package_path_parts src_parts with
@@ -313,11 +360,14 @@ let haste_package_path ~reader ~src_dir require_path =
           else
             Some
               (match
-                 main_of_package ~reader (String.concat Filename.dir_sep package_path_parts)
+                 main_of_package
+                   ~get_package_info
+                   (String.concat Filename.dir_sep package_path_parts)
                with
               | Some main when path_matches (String.concat "/" acc) main -> package_name_candidate
               | _ -> string_of_path_parts (package_name_candidate :: acc))
-        | _ -> f (package_name_candidate :: acc) parent_dir_names)
+        else
+          f (package_name_candidate :: acc) parent_dir_names
     in
     f [base] parent_dir_names
 
@@ -329,31 +379,32 @@ type text_edits = {
 
 (** Generates the 'from' part of 'import ... from ...' required to import [source] from
     a file in [src_dir] *)
-let from_of_source ~options ~reader ~src_dir source =
+let from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir source =
   match source with
   | Export_index.Global -> None
   | Export_index.Builtin from -> Some from
   | Export_index.File_key from ->
-    (match Parsing_heaps.get_file_addr from with
-    | None -> None
-    | Some addr ->
-      (match Parsing_heaps.Reader.get_parse ~reader addr with
+    let module_name =
+      match get_haste_name from with
+      | Some module_name -> Some module_name
+      | None when Options.module_system options = Options.Haste ->
+        Base.Option.bind src_dir ~f:(fun src_dir ->
+            haste_package_path
+              ~get_package_info
+              ~is_package_file
+              ~src_dir
+              (File_key.to_string (Files.chop_flow_ext from))
+        )
       | None -> None
-      | Some _ ->
-        let module_name =
-          match Parsing_heaps.Reader.get_haste_name ~reader addr with
-          | Some module_name -> Some module_name
-          | None when Options.module_system options = Options.Haste ->
-            Base.Option.bind src_dir ~f:(fun src_dir ->
-                haste_package_path ~reader ~src_dir (File_key.to_string (Files.chop_flow_ext from))
-            )
-          | None -> None
-        in
-        let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
-        path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name))
+    in
+    let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+    path_of_modulename ~node_resolver_dirnames ~get_package_info src_dir from module_name
 
-let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
-  let from = from_of_source ~options ~reader ~src_dir source in
+let text_edits_of_import
+    ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir ~ast kind name source =
+  let from =
+    from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir source
+  in
   match from with
   | None -> None
   | Some from ->
@@ -401,8 +452,18 @@ let maybe_sort_by_usage ~imports_ranked_usage imports =
   else
     imports
 
-let suggest_imports ~options ~reader ~ast ~diagnostics ~imports_ranked_usage ~exports ~name uri loc
-    =
+let suggest_imports
+    ~options
+    ~get_haste_name
+    ~get_package_info
+    ~is_package_file
+    ~ast
+    ~diagnostics
+    ~imports_ranked_usage
+    ~exports
+    ~name
+    uri
+    loc =
   let open Lsp in
   let files =
     if Autofix_imports.loc_is_type ~ast loc then
@@ -426,7 +487,18 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~imports_ranked_usage ~ex
     |> Export_index.ExportMap.bindings
     |> maybe_sort_by_usage ~imports_ranked_usage
     |> Base.List.fold ~init:[] ~f:(fun acc ((source, export_kind), _num) ->
-           match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
+           match
+             text_edits_of_import
+               ~options
+               ~get_haste_name
+               ~get_package_info
+               ~is_package_file
+               ~src_dir
+               ~ast
+               export_kind
+               name
+               source
+           with
            | None -> acc
            | Some { edits; title; from = _ } ->
              let command =
@@ -471,8 +543,8 @@ let untyped_ast_transform transform ~cx:_ ~file_sig:_ ~ast ~typed_ast:_ loc =
   Some (transform ast loc)
 
 let autofix_in_upstream_file
-    ~reader
     ~cx
+    ~get_ast
     ~file_sig
     ~diagnostics
     ~ast
@@ -490,9 +562,10 @@ let autofix_in_upstream_file
       (* load ast of upstream file
          In order to appear in an error, a loc must have a source *)
       let source_file = Base.Option.value_exn src in
-      ( Parsing_heaps.Reader.get_ast_unsafe ~reader source_file,
-        source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string
-      )
+      match get_ast source_file with
+      | None -> (ast, uri)
+      | Some ast ->
+        (ast, source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string)
     else
       (ast, uri)
   in
@@ -934,7 +1007,11 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
 
 let code_actions_of_errors
     ~options
-    ~reader
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_package_info
+    ~is_package_file
     ~cx
     ~file_sig
     ~env
@@ -951,8 +1028,7 @@ let code_actions_of_errors
     Flow_error.ErrorSet.fold
       (fun error (actions, has_missing_import) ->
         let error_message =
-          Flow_error.msg_of_error error
-          |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
+          Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
         in
         let (suggest_imports_actions, has_missing_import) =
           match error_message with
@@ -964,7 +1040,9 @@ let code_actions_of_errors
                 let { ServerEnv.exports; _ } = env in
                 suggest_imports
                   ~options
-                  ~reader
+                  ~get_haste_name
+                  ~get_package_info
+                  ~is_package_file
                   ~ast
                   ~diagnostics
                   ~imports_ranked_usage
@@ -980,14 +1058,11 @@ let code_actions_of_errors
         in
         let quick_fix_actions =
           if include_quick_fixes then
-            ast_transforms_of_error
-              ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-              ~loc
-              error_message
+            ast_transforms_of_error ~loc_of_aloc ~loc error_message
             |> Base.List.filter_map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
                    autofix_in_upstream_file
-                     ~reader
                      ~cx
+                     ~get_ast
                      ~file_sig
                      ~diagnostics
                      ~ast
@@ -1151,7 +1226,12 @@ let code_actions_at_loc
     ~lsp_init_params
     ~imports_ranked_usage
     ~env
-    ~reader
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~get_package_info
+    ~is_package_file
     ~cx
     ~file_sig
     ~tolerable_errors
@@ -1168,6 +1248,10 @@ let code_actions_at_loc
     autofix_exports_code_actions
       ~options
       ~cx
+      ~loc_of_aloc
+      ~get_ast
+      ~get_haste_name
+      ~get_type_sig
       ~ast
       ~file_sig
       ~tolerable_errors
@@ -1184,13 +1268,20 @@ let code_actions_at_loc
         ~cx
         ~file_sig
         ~typed_ast
-        ~reader
+        ~loc_of_aloc
+        ~get_ast
+        ~get_haste_name
+        ~get_type_sig
         ~only
         uri
         loc
     @ autofix_missing_local_annot_code_actions
         ~options
         ~cx
+        ~loc_of_aloc
+        ~get_ast
+        ~get_haste_name
+        ~get_type_sig
         ~ast
         ~file_sig
         ~tolerable_errors
@@ -1204,7 +1295,11 @@ let code_actions_at_loc
   let error_fixes =
     code_actions_of_errors
       ~options
-      ~reader
+      ~loc_of_aloc
+      ~get_ast
+      ~get_haste_name
+      ~get_package_info
+      ~is_package_file
       ~cx
       ~file_sig
       ~env
@@ -1240,7 +1335,8 @@ module ExportKindMap = WrappedMap.Make (struct
 end)
 
 (** insert imports for all undefined-variable errors that have only one suggestion *)
-let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
+let autofix_imports
+    ~options ~env ~loc_of_aloc ~get_haste_name ~get_package_info ~is_package_file ~cx ~ast ~uri =
   let errors = Context.errors cx in
   let { ServerEnv.exports; _ } = env in
   let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
@@ -1249,8 +1345,7 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
     Flow_error.ErrorSet.fold
       (fun error imports ->
         match
-          Flow_error.msg_of_error error
-          |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
+          Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
         with
         | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
           when Options.autoimports options ->
@@ -1277,7 +1372,9 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
   let added_imports =
     ExportSourceMap.fold
       (fun source names_of_kinds added_imports ->
-        let from = from_of_source ~options ~reader ~src_dir source in
+        let from =
+          from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir source
+        in
         match from with
         | None -> added_imports
         | Some from ->
@@ -1328,7 +1425,16 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
   in
   edits
 
-let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
+let autofix_exports
+    ~options
+    ~master_cx
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~file_key
+    ~file_content =
   let open Autofix_exports in
   let file_artifacts =
     let ((_, parse_errs) as intermediate_result) =
@@ -1337,12 +1443,7 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts
-        ~options
-        ~profiling
-        env.ServerEnv.master_cx
-        file_key
-        intermediate_result
+      Type_contents.type_parse_artifacts ~options ~profiling master_cx file_key intermediate_result
   in
   match file_artifacts with
   | Ok
@@ -1351,13 +1452,32 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
       ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
     let (new_ast, it_errs) =
-      fix_signature_verification_errors ~file_key ~cx ~file_sig ~typed_ast ast sv_errors
+      fix_signature_verification_errors
+        ~file_key
+        ~cx
+        ~loc_of_aloc
+        ~get_ast
+        ~get_haste_name
+        ~get_type_sig
+        ~file_sig
+        ~typed_ast
+        ast
+        sv_errors
     in
     let opts = layout_options options in
     Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs)
   | Error _ -> Error "Failed to type-check file"
 
-let autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content =
+let autofix_missing_local_annot
+    ~options
+    ~master_cx
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~file_key
+    ~file_content =
   let open Autofix_missing_local_annots in
   let file_artifacts =
     let ((_, parse_errs) as intermediate_result) =
@@ -1366,19 +1486,24 @@ let autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts
-        ~options
-        ~profiling
-        env.ServerEnv.master_cx
-        file_key
-        intermediate_result
+      Type_contents.type_parse_artifacts ~options ~profiling master_cx file_key intermediate_result
   in
   match file_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; _ },
         Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }
       ) ->
-    let new_ast = fix_all_missing_param_annot_errors_in_file ~cx ~file_sig ~typed_ast ast in
+    let new_ast =
+      fix_all_missing_param_annot_errors_in_file
+        ~cx
+        ~loc_of_aloc
+        ~get_ast
+        ~get_haste_name
+        ~get_type_sig
+        ~file_sig
+        ~typed_ast
+        ast
+    in
     let opts = layout_options options in
     Ok (Insert_type.mk_patch ~opts ast new_ast file_content)
   | Error _ -> Error "Failed to type-check file"
@@ -1387,6 +1512,10 @@ let insert_type
     ~options
     ~env
     ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~file_key
     ~file_content
     ~target
@@ -1420,6 +1549,10 @@ let insert_type
        let new_ast =
          Insert_type.insert_type
            ~cx
+           ~loc_of_aloc
+           ~get_ast
+           ~get_haste_name
+           ~get_type_sig
            ~file_sig
            ~typed_ast
            ~omit_targ_defaults

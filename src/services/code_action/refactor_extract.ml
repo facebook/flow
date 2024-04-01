@@ -352,7 +352,7 @@ let available_refactors_for_statements
     ~async_function
     ~has_this_super
     ~typed_ast
-    ~reader
+    ~loc_of_aloc
     ~create_unique_name
     ~ast
     ~extracted_statements
@@ -373,7 +373,7 @@ let available_refactors_for_statements
     match
       InsertionPointCollectors.find_closest_enclosing_class
         ~typed_ast
-        ~reader
+        ~loc_of_aloc
         ~extracted_loc:extracted_statements_loc
     with
     | None -> []
@@ -441,7 +441,7 @@ let available_refactors_for_statements
            create_inner_function_refactor
            (InsertionPointCollectors.collect_function_method_inserting_points
               ~typed_ast
-              ~reader
+              ~loc_of_aloc
               ~extracted_loc:extracted_statements_loc
            )
     in
@@ -451,7 +451,17 @@ let available_refactors_for_statements
     extract_to_method_refactors @ extract_to_functions_refactors
 
 let extract_from_statements_refactors
-    ~ast ~cx ~file ~file_sig ~typed_ast ~reader ~create_unique_name extracted_statements =
+    ~ast
+    ~cx
+    ~file
+    ~file_sig
+    ~typed_ast
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~create_unique_name
+    extracted_statements =
   let { InformationCollectors.has_unwrapped_control_flow; async_function; has_this_super } =
     InformationCollectors.collect_statements_information extracted_statements
   in
@@ -502,7 +512,16 @@ let extract_from_statements_refactors
             @ escaping_definitions.VariableAnalysis.escaping_variables
             )
         in
-        TypeSynthesizer.create_synthesizer_context ~cx ~file ~file_sig ~typed_ast ~reader ~locs
+        TypeSynthesizer.create_synthesizer_context
+          ~cx
+          ~file
+          ~file_sig
+          ~typed_ast
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
+          ~locs
       in
       available_refactors_for_statements
         ~scope_info
@@ -513,7 +532,7 @@ let extract_from_statements_refactors
         ~async_function
         ~has_this_super
         ~typed_ast
-        ~reader
+        ~loc_of_aloc
         ~create_unique_name
         ~ast
         ~extracted_statements
@@ -771,7 +790,10 @@ let extract_from_expression_refactors
     ~file
     ~file_sig
     ~typed_ast
-    ~reader
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~create_unique_name
     { AstExtractor.constant_insertion_points; expression } =
   let { InformationCollectors.has_this_super; _ } =
@@ -791,7 +813,7 @@ let extract_from_expression_refactors
   let class_insertion_point =
     InsertionPointCollectors.find_closest_enclosing_class
       ~typed_ast
-      ~reader
+      ~loc_of_aloc
       ~extracted_loc:extracted_expression_loc
   in
   let extract_to_react_component_refactors =
@@ -803,7 +825,16 @@ let extract_from_expression_refactors
         |> LocSet.of_list
       in
       let type_synthesizer_context =
-        TypeSynthesizer.create_synthesizer_context ~cx ~file ~file_sig ~typed_ast ~reader ~locs
+        TypeSynthesizer.create_synthesizer_context
+          ~cx
+          ~file
+          ~file_sig
+          ~typed_ast
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
+          ~locs
       in
       create_expression_extract_to_react_component_refactor
         ~use_component_syntax:(Context.component_syntax cx)
@@ -866,7 +897,10 @@ let extract_from_type_refactors
     ~file
     ~file_sig
     ~typed_ast
-    ~reader
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~create_unique_name
     { AstExtractor.directly_containing_statement_loc; type_ } =
   let type_loc = fst type_ in
@@ -874,7 +908,7 @@ let extract_from_type_refactors
     match
       InsertionPointCollectors.collect_function_method_inserting_points
         ~typed_ast
-        ~reader
+        ~loc_of_aloc
         ~extracted_loc:type_loc
     with
     | [] -> []
@@ -889,7 +923,10 @@ let extract_from_type_refactors
           ~file
           ~file_sig
           ~typed_ast
-          ~reader
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
           ~locs:(LocSet.singleton type_loc)
       in
       let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; _ } =
@@ -954,7 +991,10 @@ let provide_available_refactors
     ~file
     ~file_sig
     ~typed_ast
-    ~reader
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~support_experimental_snippet_text_edit
     ~extract_range =
   let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
@@ -972,7 +1012,10 @@ let provide_available_refactors
            ~file
            ~file_sig
            ~typed_ast
-           ~reader
+           ~loc_of_aloc
+           ~get_ast
+           ~get_haste_name
+           ~get_type_sig
            ~create_unique_name
         )
       extracted_statements
@@ -987,7 +1030,10 @@ let provide_available_refactors
            ~file
            ~file_sig
            ~typed_ast
-           ~reader
+           ~loc_of_aloc
+           ~get_ast
+           ~get_haste_name
+           ~get_type_sig
            ~create_unique_name
         )
       extracted_expression
@@ -996,7 +1042,18 @@ let provide_available_refactors
     Base.Option.value_map
       ~default:[]
       ~f:
-        (extract_from_type_refactors ~ast ~cx ~file ~file_sig ~typed_ast ~reader ~create_unique_name)
+        (extract_from_type_refactors
+           ~ast
+           ~cx
+           ~file
+           ~file_sig
+           ~typed_ast
+           ~loc_of_aloc
+           ~get_ast
+           ~get_haste_name
+           ~get_type_sig
+           ~create_unique_name
+        )
       extracted_type
   in
   extract_from_statements_refactors

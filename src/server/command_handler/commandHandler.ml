@@ -246,6 +246,15 @@ let of_file_input ~options ~env file_input =
     | Error reason -> Error (Skipped reason)
     | Ok () -> Ok (file_key, file_contents))
 
+let get_haste_name ~reader f =
+  Parsing_heaps.get_file_addr f |> Base.Option.bind ~f:(Parsing_heaps.Reader.get_haste_name ~reader)
+
+let is_package_file ~reader module_name =
+  let dependency = Parsing_heaps.get_dependency (Modulename.String module_name) in
+  match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
+  | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr
+  | None -> false
+
 let get_status ~options env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
   let status_response =
@@ -340,7 +349,11 @@ let autocomplete
             let typing =
               AutocompleteService_js.mk_typing_artifacts
                 ~options
-                ~reader
+                ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+                ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+                ~get_haste_name:(get_haste_name ~reader)
+                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+                ~is_package_file:(is_package_file ~reader)
                 ~cx
                 ~file_sig
                 ~ast
@@ -638,7 +651,10 @@ let infer_type
       let get_def_documentation =
         match getdef_loc_result with
         | Ok [getdef_loc] ->
-          Find_documentation.jsdoc_of_getdef_loc ~ast ~reader getdef_loc
+          Find_documentation.jsdoc_of_getdef_loc
+            ~ast
+            ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+            getdef_loc
           |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
         | _ -> None
       in
@@ -677,6 +693,10 @@ let insert_type
     ~options
     ~env
     ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~file_input
     ~target
     ~verbose
@@ -690,6 +710,10 @@ let insert_type
     ~options
     ~env
     ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~file_key
     ~file_content
     ~target
@@ -697,15 +721,35 @@ let insert_type
     ~location_is_strict
     ~ambiguity_strategy
 
-let autofix_exports ~options ~env ~profiling ~input =
+let autofix_exports
+    ~options ~env ~profiling ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~input =
   let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
-  Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
+  Code_action_service.autofix_exports
+    ~options
+    ~master_cx:env.ServerEnv.master_cx
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~file_key
+    ~file_content
 
-let autofix_missing_local_annot ~options ~env ~profiling ~input =
+let autofix_missing_local_annot
+    ~options ~env ~profiling ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~input =
   let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
-  Code_action_service.autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content
+  Code_action_service.autofix_missing_local_annot
+    ~options
+    ~master_cx:env.ServerEnv.master_cx
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
+    ~file_key
+    ~file_content
 
 let collect_rage ~options ~reader ~env ~files =
   let items = [] in
@@ -1081,12 +1125,44 @@ let handle_autocomplete
   in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
-let handle_autofix_exports ~options ~input ~profiling ~env =
-  let result = try_with (fun () -> autofix_exports ~options ~env ~profiling ~input) in
+let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
+  let get_haste_name = get_haste_name ~reader in
+  let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
+  let result =
+    try_with (fun () ->
+        autofix_exports
+          ~options
+          ~env
+          ~profiling
+          ~input
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
+    )
+  in
   Lwt.return (ServerProt.Response.AUTOFIX_EXPORTS result, None)
 
-let handle_autofix_missing_local_annot ~options ~input ~profiling ~env =
-  let result = try_with (fun () -> autofix_missing_local_annot ~options ~env ~profiling ~input) in
+let handle_autofix_missing_local_annot ~options ~input ~profiling ~env ~reader =
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
+  let get_haste_name = get_haste_name ~reader in
+  let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
+  let result =
+    try_with (fun () ->
+        autofix_missing_local_annot
+          ~options
+          ~env
+          ~profiling
+          ~input
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
+    )
+  in
   Lwt.return (ServerProt.Response.AUTOFIX_MISSING_LOCAL_ANNOT result, None)
 
 let handle_check_file ~options ~force ~input ~profiling ~env =
@@ -1172,13 +1248,22 @@ let handle_insert_type
     ~location_is_strict
     ~ambiguity_strategy
     ~profiling
-    ~env =
+    ~env
+    ~reader =
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
+  let get_haste_name = get_haste_name ~reader in
+  let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
     try_with (fun _ ->
         insert_type
           ~options
           ~env
           ~profiling
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
           ~file_input
           ~target
           ~verbose
@@ -1269,7 +1354,12 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             ~lsp_init_params
             ~imports_ranked_usage
             ~env
-            ~reader
+            ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+            ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+            ~get_haste_name:(get_haste_name ~reader)
+            ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
+            ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+            ~is_package_file:(is_package_file ~reader)
             ~cx
             ~file_sig
             ~tolerable_errors
@@ -1324,7 +1414,21 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
     | Error _ -> Lwt.return (Ok [])
     | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast = _; obj_to_obj_map = _ })
       ->
-      Lwt.return (Ok (Code_action_service.autofix_imports ~options ~env ~reader ~cx ~ast ~uri)))
+      let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+      Lwt.return
+        (Ok
+           (Code_action_service.autofix_imports
+              ~options
+              ~env
+              ~loc_of_aloc
+              ~get_haste_name:(get_haste_name ~reader)
+              ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+              ~is_package_file:(is_package_file ~reader)
+              ~cx
+              ~ast
+              ~uri
+           )
+        ))
 
 let organize_imports ~options ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
@@ -1408,10 +1512,13 @@ let get_ephemeral_handler genv command =
       )
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
-    mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
+    mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options ~reader)
   | ServerProt.Request.AUTOFIX_MISSING_LOCAL_ANNOT { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
-    mk_parallelizable ~wait_for_recheck ~options (handle_autofix_missing_local_annot ~input ~options)
+    mk_parallelizable
+      ~wait_for_recheck
+      ~options
+      (handle_autofix_missing_local_annot ~input ~options ~reader)
   | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; wait_for_recheck } ->
     let options =
       {
@@ -1487,6 +1594,7 @@ let get_ephemeral_handler genv command =
          ~omit_targ_defaults
          ~location_is_strict
          ~ambiguity_strategy
+         ~reader
       )
   | ServerProt.Request.STATUS { include_warnings } ->
     let options =
@@ -2258,7 +2366,14 @@ let handle_persistent_signaturehelp_lsp
     | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
       let func_details =
         let cursor_loc = Loc.cursor (Some path) line col in
-        Signature_help.find_signatures ~reader ~cx ~file_sig ~ast ~typed_ast cursor_loc
+        Signature_help.find_signatures
+          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+          ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+          ~cx
+          ~file_sig
+          ~ast
+          ~typed_ast
+          cursor_loc
       in
       (match func_details with
       | Ok details ->

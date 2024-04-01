@@ -101,7 +101,13 @@ module ExportsHelper : sig
     default: bool;
   }
 
-  val resolve : use_mode -> ALoc.t -> string -> (import_info, Error.import_error) result
+  val resolve :
+    loc_of_aloc:(ALoc.t -> Loc.t) ->
+    get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
+    use_mode ->
+    ALoc.t ->
+    string ->
+    (import_info, Error.import_error) result
 end = struct
   type import_info = {
     import_kind: Ast.Statement.ImportDeclaration.import_kind;
@@ -111,8 +117,6 @@ end = struct
   open Type_sig
   open Type_sig_collections
   module P = Type_sig_pack
-
-  let reader = State_reader.create ()
 
   (* NOTE The checks below are only based on the name. Ideally we'd also match
    * with def_loc as well. This was not available for every case originally,
@@ -202,28 +206,29 @@ end = struct
 
   (* Try to find out whether a given symbol is exported and what kind of import
    * we need to use for it. *)
-  let resolve use_mode loc name =
+  let resolve ~loc_of_aloc ~get_type_sig use_mode loc name =
     match ALoc.source loc with
     | None -> Error Error.Loc_source_none
     | Some remote_file ->
-      let type_sig = Parsing_heaps.Reader.get_type_sig_unsafe ~reader remote_file in
-      let import_kind = AstHelper.mk_import_declaration_kind use_mode in
-      let import_info_opt =
-        Utils_js.lazy_seq
-          [
-            lazy (from_type_sig import_kind type_sig name);
-            lazy (from_react loc);
-            lazy (from_react_redux loc);
-          ]
-      in
-      begin
-        match import_info_opt with
-        | None ->
-          let table = Parsing_heaps.Reader.get_aloc_table_unsafe ~reader remote_file in
-          let loc = ALoc.to_loc (lazy table) loc in
-          Error (Error.No_matching_export (name, loc))
-        | Some import_info -> Ok import_info
-      end
+      (match get_type_sig remote_file with
+      | None -> Error (Error.No_matching_export (name, loc_of_aloc loc))
+      | Some type_sig ->
+        let import_kind = AstHelper.mk_import_declaration_kind use_mode in
+        let import_info_opt =
+          Utils_js.lazy_seq
+            [
+              lazy (from_type_sig import_kind type_sig name);
+              lazy (from_react loc);
+              lazy (from_react_redux loc);
+            ]
+        in
+        begin
+          match import_info_opt with
+          | None ->
+            let loc = loc_of_aloc loc in
+            Error (Error.No_matching_export (name, loc))
+          | Some import_info -> Ok import_info
+        end)
 end
 
 module ImportsHelper : sig
@@ -233,7 +238,10 @@ module ImportsHelper : sig
    * gathered and prepended to the file.
    *)
   class remote_converter :
-    iteration:int
+    loc_of_aloc:(ALoc.t -> Loc.t)
+    -> get_haste_name:(File_key.t -> string option)
+    -> get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option)
+    -> iteration:int
     -> file:File_key.t
     -> reserved_names:SSet.t
     -> object
@@ -459,7 +467,8 @@ end = struct
     let compare = Stdlib.compare
   end)
 
-  class remote_converter ~iteration ~file ~reserved_names =
+  class remote_converter ~loc_of_aloc ~get_haste_name ~get_type_sig ~iteration ~file ~reserved_names
+    =
     object (self)
       val mutable name_map = ImportedNameMap.empty
 
@@ -467,7 +476,6 @@ end = struct
 
       method private gen_import_stmt index use_mode remote_symbol
           : (import_declaration, Error.import_error) result =
-        let reader = State_reader.create () in
         let { Ty.sym_name = remote_name; sym_def_loc; _ } = remote_symbol in
         let module_name =
           match ALoc.source sym_def_loc with
@@ -480,17 +488,17 @@ end = struct
               Modulename.String "react"
             else if is_react_redux_file_key remote_source then
               Modulename.String "react-redux"
-            else
-              let addr = Parsing_heaps.get_file_addr_unsafe remote_source in
-              (match Parsing_heaps.Reader.get_haste_name ~reader addr with
+            else (
+              match get_haste_name remote_source with
               | Some name -> Modulename.String name
-              | None -> Modulename.Filename (Files.chop_flow_ext remote_source))
+              | None -> Modulename.Filename (Files.chop_flow_ext remote_source)
+            )
           | None -> failwith "No source"
         in
         (* TODO we should probably give up if we are trying to generate an import statement with
          * an internal name. However, to avoid a behavior change let's do the conversion for now. *)
         let remote_name = Reason.display_string_of_name remote_name in
-        ExportsHelper.resolve use_mode sym_def_loc remote_name
+        ExportsHelper.resolve ~loc_of_aloc ~get_type_sig use_mode sym_def_loc remote_name
         >>| fun { ExportsHelper.import_kind; default } ->
         let source = Modules.resolve file module_name in
         let local_name =

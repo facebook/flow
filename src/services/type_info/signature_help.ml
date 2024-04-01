@@ -7,8 +7,6 @@
 
 open Loc_collections
 
-let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
-
 let parameter_name is_opt name =
   let opt =
     if is_opt then
@@ -134,24 +132,24 @@ module Callee_finder = struct
      the latter covers the `f(x,| y)` case, where your cursor is after the
      comma and before the space; this is not contained in `x` nor `y`, but should
      select `y`. *)
-  let rec find_argument ~reader cursor arguments i =
+  let rec find_argument ~loc_of_aloc cursor arguments i =
     match arguments with
     | [] -> i
     | Flow_ast.Expression.(Expression ((arg_loc, _), _) | Spread (arg_loc, _)) :: rest ->
-      let arg_loc = loc_of_aloc ~reader arg_loc in
+      let arg_loc = loc_of_aloc arg_loc in
       (* if the cursor is within this arg, we obviously found it. if it's before the arg,
          but hasn't been found by earlier args, then we must be in the whitespace before
          the current arg, so we found it. *)
       if Reason.in_range cursor arg_loc || Loc.compare cursor arg_loc < 0 then
         i
       else
-        find_argument ~reader cursor rest (i + 1)
+        find_argument ~loc_of_aloc cursor rest (i + 1)
 
-  class finder ~(reader : State_reader.t) ~(cx : Context.t) (cursor : Loc.t) =
+  class finder ~loc_of_aloc ~(cx : Context.t) (cursor : Loc.t) =
     object (this)
       inherit Typed_ast_finder.type_parameter_mapper as super
 
-      method covers_target loc = Reason.in_range cursor (loc_of_aloc ~reader loc)
+      method covers_target loc = Reason.in_range cursor (loc_of_aloc loc)
 
       method find
           : 'a.
@@ -164,7 +162,7 @@ module Callee_finder = struct
           let (args_loc, { Flow_ast.Expression.ArgList.arguments; _ }) = arguments in
           let inside_loc =
             (* exclude the parens *)
-            let args_loc = loc_of_aloc ~reader args_loc in
+            let args_loc = loc_of_aloc args_loc in
             let start = args_loc.Loc.start in
             let start = { start with Loc.column = start.Loc.column + 1 } in
             ALoc.of_loc { args_loc with Loc.start }
@@ -174,8 +172,8 @@ module Callee_finder = struct
                so after this line we know we found the right call. *)
             let _ = recurse () in
 
-            let active_parameter = find_argument ~reader cursor arguments 0 in
-            let loc = loc_of_aloc ~reader callee_loc in
+            let active_parameter = find_argument ~loc_of_aloc cursor arguments 0 in
+            let loc = loc_of_aloc callee_loc in
             let type_ = get_callee_type () in
             this#annot_with_tparams (fun ~tparams_rev:_ ->
                 raise (Found (Some { type_; active_parameter; loc }))
@@ -253,8 +251,8 @@ module Callee_finder = struct
         | _ -> body
     end
 
-  let find_opt ~reader ~cx ~typed_ast loc =
-    let finder = new finder ~reader ~cx loc in
+  let find_opt ~loc_of_aloc ~cx ~typed_ast loc =
+    let finder = new finder ~loc_of_aloc ~cx loc in
     try
       let _ = finder#program typed_ast in
       None
@@ -290,8 +288,8 @@ let rec fix_alias_reason cx t =
     IntersectionT (r, InterRep.make t0 t1 ts)
   | _ -> t'
 
-let find_signatures ~reader ~cx ~file_sig ~ast ~typed_ast loc =
-  match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
+let find_signatures ~loc_of_aloc ~get_ast ~cx ~file_sig ~ast ~typed_ast loc =
+  match Callee_finder.find_opt ~loc_of_aloc ~cx ~typed_ast loc with
   | Some (t, active_parameter, callee_loc) ->
     let t' = fix_alias_reason cx t in
     let norm_options = Ty_normalizer_env.default_options in
@@ -302,7 +300,7 @@ let find_signatures ~reader ~cx ~file_sig ~ast ~typed_ast loc =
     let jsdoc =
       match
         GetDef_js.get_def
-          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+          ~loc_of_aloc
           ~cx
           ~file_sig
           ~ast
@@ -314,7 +312,7 @@ let find_signatures ~reader ~cx ~file_sig ~ast ~typed_ast loc =
       | GetDef_js.Get_def_result.Partial (locs, _, _)
         when LocSet.cardinal locs = 1 ->
         let getdef_loc = LocSet.choose locs in
-        Find_documentation.jsdoc_of_getdef_loc ~ast ~reader getdef_loc
+        Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast getdef_loc
       | _ -> None
     in
     (match ty with

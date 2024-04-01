@@ -538,7 +538,7 @@ function foo<A>() {
       let actual =
         InsertionPointCollectors.collect_function_method_inserting_points
           ~typed_ast
-          ~reader
+          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
           ~extracted_loc
         |> List.map
              (fun { InsertionPointCollectors.function_name; body_loc; is_method; tparams_rev } ->
@@ -580,7 +580,10 @@ let find_closest_enclosing_class_tests =
     let reader = State_reader.create () in
     let actual =
       match
-        InsertionPointCollectors.find_closest_enclosing_class ~typed_ast ~reader ~extracted_loc
+        InsertionPointCollectors.find_closest_enclosing_class
+          ~typed_ast
+          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+          ~extracted_loc
       with
       | None -> None
       | Some { InsertionPointCollectors.class_name; body_loc; tparams_rev } ->
@@ -1041,12 +1044,19 @@ let type_synthesizer_tests =
     let typed_ast = typed_ast_of_ast cx ast in
     let file_sig = file_sig_of_ast ast in
     let locs = LocSet.of_list locs in
+    let get_haste_name f =
+      let addr = Parsing_heaps.get_file_addr_unsafe f in
+      Parsing_heaps.Reader.get_haste_name ~reader addr
+    in
     TypeSynthesizer.create_synthesizer_context
       ~cx
       ~file:dummy_filename
       ~file_sig
       ~typed_ast
-      ~reader
+      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+      ~get_haste_name
+      ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
       ~locs
   in
   let pretty_print_type type_param_synthesizer = function

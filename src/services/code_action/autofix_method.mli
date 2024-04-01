@@ -5,7 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val find :
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
-  Loc.t ->
-  (Loc.t, Loc.t) Flow_ast.Class.Method.t Option.t
+val replace_method_at_target :
+  (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t

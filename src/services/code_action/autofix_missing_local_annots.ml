@@ -34,10 +34,15 @@ let map_of_fixable_missing_local_params cx =
   in
   Flow_error.ErrorSet.fold add_fixable_missing_local_annot_loc all_errors LocMap.empty
 
-let fix_missing_param_annot_at_loc ?remote_converter ~cx ~file_sig ~typed_ast =
+let fix_missing_param_annot_at_loc
+    ?remote_converter ~cx ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~file_sig ~typed_ast =
   let open Insert_type in
   insert_type_t
     ~cx
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~file_sig
     ~typed_ast
     ?remote_converter
@@ -45,12 +50,17 @@ let fix_missing_param_annot_at_loc ?remote_converter ~cx ~file_sig ~typed_ast =
     ~strict:false
     ~ambiguity_strategy:Autofix_options.Generalize
 
-let fix_all_missing_param_annot_errors_in_file ?remote_converter ~cx ~file_sig ~typed_ast =
+let fix_all_missing_param_annot_errors_in_file
+    ?remote_converter ~cx ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~file_sig ~typed_ast =
   let open Insert_type in
   let fixable_locs = map_of_fixable_missing_local_params cx in
   let fix_one_loc =
     insert_type_t
       ~cx
+      ~loc_of_aloc
+      ~get_ast
+      ~get_haste_name
+      ~get_type_sig
       ~file_sig
       ~typed_ast
       ?remote_converter

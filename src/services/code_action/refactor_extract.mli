@@ -18,7 +18,10 @@ val provide_available_refactors :
   file:File_key.t ->
   file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  reader:Parsing_heaps.Reader.reader ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   support_experimental_snippet_text_edit:bool ->
   extract_range:Loc.t ->
   refactor list

@@ -23,10 +23,15 @@ let set_of_fixable_signature_verification_locations tolerable_errors =
   in
   List.fold_left add_fixable_sig_ver_error LocSet.empty tolerable_errors
 
-let fix_signature_verification_error_at_loc ?remote_converter ~cx ~file_sig ~typed_ast =
+let fix_signature_verification_error_at_loc
+    ?remote_converter ~cx ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~file_sig ~typed_ast =
   let open Insert_type in
   insert_type
     ~cx
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_type_sig
     ~file_sig
     ~typed_ast
     ?remote_converter
@@ -34,17 +39,31 @@ let fix_signature_verification_error_at_loc ?remote_converter ~cx ~file_sig ~typ
     ~strict:false
     ~ambiguity_strategy:Autofix_options.Generalize
 
-let fix_signature_verification_errors ~file_key ~cx ~file_sig ~typed_ast =
+let fix_signature_verification_errors
+    ~file_key ~cx ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~file_sig ~typed_ast =
   let open Insert_type in
   let remote_converter =
     new Insert_type_imports.ImportsHelper.remote_converter
+      ~loc_of_aloc
+      ~get_haste_name
+      ~get_type_sig
       ~iteration:0
       ~file:file_key
       ~reserved_names:SSet.empty
   in
   let try_it loc (ast, it_errs) =
     try
-      ( fix_signature_verification_error_at_loc ~remote_converter ~cx ~file_sig ~typed_ast ast loc,
+      ( fix_signature_verification_error_at_loc
+          ~remote_converter
+          ~cx
+          ~loc_of_aloc
+          ~get_ast
+          ~get_haste_name
+          ~get_type_sig
+          ~file_sig
+          ~typed_ast
+          ast
+          loc,
         it_errs
       )
     with

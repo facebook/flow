@@ -25,7 +25,7 @@ module InsertionPointCollectors : sig
   (* Find locations to insert `newFunction`/`newMethod` definitions. *)
   val collect_function_method_inserting_points :
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-    reader:Parsing_heaps.Reader.reader ->
+    loc_of_aloc:(ALoc.t -> Loc.t) ->
     extracted_loc:Loc.t ->
     function_insertion_point list
 
@@ -34,7 +34,7 @@ module InsertionPointCollectors : sig
      if we want to extract to a method and call this.newMethod(); *)
   val find_closest_enclosing_class :
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-    reader:Parsing_heaps.Reader.reader ->
+    loc_of_aloc:(ALoc.t -> Loc.t) ->
     extracted_loc:Loc.t ->
     class_insertion_point option
 end
@@ -185,7 +185,10 @@ module TypeSynthesizer : sig
     file:File_key.t ->
     file_sig:File_sig.t ->
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-    reader:Parsing_heaps.Reader.reader ->
+    loc_of_aloc:(ALoc.t -> Loc.t) ->
+    get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+    get_haste_name:(File_key.t -> string option) ->
+    get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
     locs:Loc_collections.LocSet.t ->
     synthesizer_context
 

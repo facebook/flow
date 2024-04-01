@@ -59,7 +59,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/bar.js")
                None
@@ -70,7 +70,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/index.js")
                None
@@ -81,7 +81,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/bar.json")
                None
@@ -92,7 +92,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/index.json")
                None
@@ -103,7 +103,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a/b")
                (File_key.SourceFile "/path/to/root/a/node_modules/module/index.js")
                None
@@ -114,7 +114,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a")
                (File_key.SourceFile "/path/to/root/a/node_modules/module/index.js")
                None
@@ -125,7 +125,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a")
                (File_key.SourceFile "/path/to/root/a/b/node_modules/module/index.js")
                None
@@ -136,7 +136,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/a/b/node_modules/module/index.js")
                None
@@ -150,7 +150,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/node_modules/pkg_with_main/main.js")
                None
@@ -166,7 +166,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/node_modules/pkg_with_relative_main/main.js")
                None
@@ -182,7 +182,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
-               ~reader
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/node_modules/pkg_with_nested_main/dist/main.js")
                None

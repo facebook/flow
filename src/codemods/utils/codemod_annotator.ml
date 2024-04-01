@@ -171,9 +171,11 @@ module Make (Extra : BASE_STATS) = struct
       method private replace_type_node_with_ty =
         let run loc ty =
           let (acc', ty) =
-            let { Codemod_context.Typed.cx; file_sig; typed_ast; _ } = cctx in
+            let { Codemod_context.Typed.cx; file_sig; typed_ast; reader; _ } = cctx in
             Hardcoded_Ty_Fixes.run
               ~cx
+              ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
+              ~get_ast:(Parsing_heaps.Reader_dispatcher.get_ast ~reader)
               ~file_sig
               ~typed_ast
               ~lint_severities
@@ -212,9 +214,11 @@ module Make (Extra : BASE_STATS) = struct
             ('a, Error.kind) result =
         let run loc ty =
           let (acc', ty) =
-            let { Codemod_context.Typed.cx; file_sig; typed_ast; _ } = cctx in
+            let { Codemod_context.Typed.cx; reader; file_sig; typed_ast; _ } = cctx in
             Hardcoded_Ty_Fixes.run
               ~cx
+              ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
+              ~get_ast:(Parsing_heaps.Reader_dispatcher.get_ast ~reader)
               ~file_sig
               ~typed_ast
               ~lint_severities
@@ -358,9 +362,17 @@ module Make (Extra : BASE_STATS) = struct
         (* Gather used identifier names *)
         let reserved_names = Queries.used_names prog in
         let file = cctx.Codemod_context.Typed.file in
+        let reader = cctx.Codemod_context.Typed.reader in
+        let get_haste_name f =
+          let addr = Parsing_heaps.get_file_addr_unsafe f in
+          Parsing_heaps.Reader_dispatcher.get_haste_name ~reader addr
+        in
         remote_converter <-
           Some
             (new Insert_type_imports.ImportsHelper.remote_converter
+               ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
+               ~get_haste_name
+               ~get_type_sig:(Parsing_heaps.Reader_dispatcher.get_type_sig ~reader)
                ~iteration:cctx.Codemod_context.Typed.iteration
                ~file
                ~reserved_names

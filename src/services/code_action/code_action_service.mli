@@ -17,7 +17,9 @@ val layout_options : Options.t -> Js_layout_generator.opts
 
 val text_edits_of_import :
   options:Options.t ->
-  reader:State_reader.t ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
+  is_package_file:(string -> bool) ->
   src_dir:string option ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   Export_index.kind ->
@@ -54,7 +56,12 @@ val code_actions_at_loc :
   lsp_init_params:Lsp.Initialize.params ->
   imports_ranked_usage:bool ->
   env:ServerEnv.env ->
-  reader:Parsing_heaps.Reader.reader ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
+  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
+  is_package_file:(string -> bool) ->
   cx:Context.t ->
   file_sig:File_sig.t ->
   tolerable_errors:File_sig.tolerable_error list ->
@@ -72,7 +79,10 @@ val code_actions_at_loc :
 val autofix_imports :
   options:Options.t ->
   env:ServerEnv.env ->
-  reader:Parsing_heaps.Reader.reader ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
+  is_package_file:(string -> bool) ->
   cx:Context.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   uri:Lsp.DocumentUri.t ->
@@ -80,16 +90,24 @@ val autofix_imports :
 
 val autofix_exports :
   options:Options.t ->
-  env:ServerEnv.env ->
+  master_cx:Context.master_context ->
   profiling:Profiling_js.running ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_key:File_key.t ->
   file_content:string ->
   (Replacement_printer.patch * string list, string) result
 
 val autofix_missing_local_annot :
   options:Options.t ->
-  env:ServerEnv.env ->
+  master_cx:Context.master_context ->
   profiling:Profiling_js.running ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_key:File_key.t ->
   file_content:string ->
   (Replacement_printer.patch, string) result
@@ -98,6 +116,10 @@ val insert_type :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_key:File_key.t ->
   file_content:string ->
   target:Loc.t ->
@@ -112,7 +134,7 @@ val organize_imports :
 module For_tests : sig
   val path_of_modulename :
     node_resolver_dirnames:string list ->
-    reader:State_reader.t ->
+    get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
     string option ->
     File_key.t ->
     string option ->

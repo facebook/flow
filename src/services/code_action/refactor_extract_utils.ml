@@ -89,7 +89,7 @@ module InsertionPointCollectors = struct
         super#class_method meth
     end
 
-  class function_and_method_insertion_point_collector reader extracted_loc =
+  class function_and_method_insertion_point_collector ~loc_of_aloc extracted_loc =
     object (this)
       inherit Typed_ast_finder.type_parameter_mapper as type_parameter_mapper
 
@@ -106,7 +106,7 @@ module InsertionPointCollectors = struct
       val mutable acc = []
 
       method visit_named_function ~is_method ~function_name ~body_loc =
-        let body_loc = Parsing_heaps.Reader.loc_of_aloc ~reader body_loc in
+        let body_loc = loc_of_aloc body_loc in
         if Loc.contains body_loc extracted_loc then
           this#collect_name_and_loc ~is_method function_name body_loc |> this#annot_with_tparams
 
@@ -128,11 +128,11 @@ module InsertionPointCollectors = struct
         acc
     end
 
-  let collect_function_method_inserting_points ~typed_ast ~reader ~extracted_loc =
-    let collector = new function_and_method_insertion_point_collector reader extracted_loc in
+  let collect_function_method_inserting_points ~typed_ast ~loc_of_aloc ~extracted_loc =
+    let collector = new function_and_method_insertion_point_collector ~loc_of_aloc extracted_loc in
     collector#function_inserting_locs_with_typeparams typed_ast
 
-  class class_insertion_point_collector reader extracted_loc =
+  class class_insertion_point_collector ~loc_of_aloc extracted_loc =
     object (this)
       inherit Typed_ast_finder.type_parameter_mapper as super
 
@@ -149,7 +149,7 @@ module InsertionPointCollectors = struct
       method! class_ class_declaration =
         let open Flow_ast in
         let { Class.id; body = (body_aloc, _); tparams; _ } = class_declaration in
-        let body_loc = Parsing_heaps.Reader.loc_of_aloc ~reader body_aloc in
+        let body_loc = loc_of_aloc body_aloc in
         if Loc.contains extracted_loc body_loc then
           (* When the class is nested inside the extracted statements, we stop recursing down. *)
           class_declaration
@@ -169,8 +169,8 @@ module InsertionPointCollectors = struct
           super#class_ class_declaration
     end
 
-  let find_closest_enclosing_class ~typed_ast ~reader ~extracted_loc =
-    let collector = new class_insertion_point_collector reader extracted_loc in
+  let find_closest_enclosing_class ~typed_ast ~loc_of_aloc ~extracted_loc =
+    let collector = new class_insertion_point_collector ~loc_of_aloc extracted_loc in
     collector#closest_enclosing_class_scope typed_ast
 end
 
@@ -970,10 +970,14 @@ module TypeSynthesizer = struct
     file: File_key.t;
     file_sig: File_sig.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+    loc_of_aloc: ALoc.t -> Loc.t;
+    get_ast: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
+    get_haste_name: File_key.t -> string option;
+    get_type_sig: File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option;
     type_at_loc_map: (Type.typeparam list * Type.t) LocMap.t;
   }
 
-  class type_collector reader (locs : LocSet.t) =
+  class type_collector ~loc_of_aloc (locs : LocSet.t) =
     object (this)
       inherit Typed_ast_finder.type_parameter_mapper as super
 
@@ -989,12 +993,12 @@ module TypeSynthesizer = struct
         acc <- LocMap.add loc (tparams_rev, t) acc
 
       method! t_identifier (((aloc, t), _) as ident) =
-        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+        let loc = loc_of_aloc aloc in
         if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc t);
         ident
 
       method! type_ (((aloc, type_), _) as ast_type) =
-        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+        let loc = loc_of_aloc aloc in
         if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc type_);
         super#type_ ast_type
     end
@@ -1038,11 +1042,22 @@ module TypeSynthesizer = struct
     |> fst
     |> List.rev
 
-  let create_synthesizer_context ~cx ~file ~file_sig ~typed_ast ~reader ~locs =
-    let collector = new type_collector reader locs in
+  let create_synthesizer_context
+      ~cx ~file ~file_sig ~typed_ast ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~locs =
+    let collector = new type_collector ~loc_of_aloc locs in
     ignore (collector#program typed_ast);
     let type_at_loc_map = collector#collected_types in
-    { cx; file; file_sig; typed_ast; type_at_loc_map }
+    {
+      cx;
+      file;
+      file_sig;
+      typed_ast;
+      loc_of_aloc;
+      get_ast;
+      get_haste_name;
+      get_type_sig;
+      type_at_loc_map;
+    }
 
   type type_synthesizer_with_import_adder = {
     type_param_synthesizer:
@@ -1053,9 +1068,23 @@ module TypeSynthesizer = struct
     added_imports: unit -> (string * Autofix_imports.bindings) list;
   }
 
-  let create_type_synthesizer_with_import_adder { cx; file; file_sig; typed_ast; type_at_loc_map } =
+  let create_type_synthesizer_with_import_adder
+      {
+        cx;
+        file;
+        file_sig;
+        typed_ast;
+        loc_of_aloc;
+        get_ast;
+        get_haste_name;
+        get_type_sig;
+        type_at_loc_map;
+      } =
     let remote_converter =
       new Insert_type_imports.ImportsHelper.remote_converter
+        ~loc_of_aloc
+        ~get_haste_name
+        ~get_type_sig
         ~iteration:0
         ~file
         ~reserved_names:SSet.empty
@@ -1065,6 +1094,8 @@ module TypeSynthesizer = struct
         Ok
           (Insert_type.synth_type
              ~cx
+             ~loc_of_aloc
+             ~get_ast
              ~file_sig
              ~typed_ast
              ~omit_targ_defaults:false

@@ -770,14 +770,14 @@ end
  *)
 module GraphQL : sig
   val extract_graphql_fragment :
-    Context.t -> File_sig.t -> (ALoc.t, ALoc.t * Type.t) Ast.Program.t -> ALoc.t -> Ty.t option
+    Context.t ->
+    loc_of_aloc:(ALoc.t -> Loc.t) ->
+    get_ast:(File_key.t -> (Loc.t, Loc.t) Ast.Program.t option) ->
+    File_sig.t ->
+    (ALoc.t, ALoc.t * Type.t) Ast.Program.t ->
+    ALoc.t ->
+    Ty.t option
 end = struct
-  let reader = State_reader.create ()
-
-  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader
-
-  let abstract_reader = Abstract_state_reader.State_reader reader
-
   let rec visit_object_property_type defs tgt ~opt_chain ty p =
     let open Ast.Type.Object.Property in
     let (_, { key; value; optional; static = _; proto = _; _method = _; variance = _; comments = _ })
@@ -920,7 +920,7 @@ end = struct
     let (_, { statements; _ }) = prog in
     Base.List.find_map ~f:(visit_statement defs tgt) statements
 
-  let get_imported_ident cx (local_name, loc, import_mode, t) =
+  let get_imported_ident cx ~loc_of_aloc (local_name, loc, import_mode, t) =
     let t =
       match Ty_normalizer.Lookahead.peek cx t with
       | Ty_normalizer.Lookahead.LowerBounds [t] -> t
@@ -930,27 +930,29 @@ end = struct
     in
     (loc_of_aloc (TypeUtil.def_loc_of_t t), (loc, local_name, import_mode))
 
-  let extract_graphql_fragment cx file_sig typed_ast tgt_aloc =
+  let extract_graphql_fragment cx ~loc_of_aloc ~get_ast file_sig typed_ast tgt_aloc =
     let graphql_file = Base.Option.value_exn (ALoc.source tgt_aloc) in
-    let graphql_ast =
-      Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader:abstract_reader graphql_file
-    in
-    (* Collect information about imports in currect file to accurately compute
-     * wether the base GraphQL type is imported in the current file. *)
-    let defs =
-      Ty_normalizer_imports.extract_types cx file_sig (Some typed_ast)
-      |> List.map (get_imported_ident cx)
-      |> Loc_collections.LocMap.of_list
-    in
-    let tgt_loc = loc_of_aloc tgt_aloc in
-    let r = visit_program defs tgt_loc graphql_ast in
-    if Base.Option.is_none r then
-      Hh_logger.info "Failed to extract GraphQL type fragment %s" (Reason.string_of_loc tgt_loc);
-    r
+    match get_ast graphql_file with
+    | None -> None
+    | Some graphql_ast ->
+      (* Collect information about imports in currect file to accurately compute
+       * wether the base GraphQL type is imported in the current file. *)
+      let defs =
+        Ty_normalizer_imports.extract_types cx file_sig (Some typed_ast)
+        |> List.map (get_imported_ident ~loc_of_aloc cx)
+        |> Loc_collections.LocMap.of_list
+      in
+      let tgt_loc = loc_of_aloc tgt_aloc in
+      let r = visit_program defs tgt_loc graphql_ast in
+      if Base.Option.is_none r then
+        Hh_logger.info "Failed to extract GraphQL type fragment %s" (Reason.string_of_loc tgt_loc);
+      r
 end
 
 class type_normalization_hardcoded_fixes_mapper
   ~cx
+  ~loc_of_aloc
+  ~get_ast
   ~file_sig
   ~typed_ast
   ~lint_severities
@@ -1316,7 +1318,9 @@ class type_normalization_hardcoded_fixes_mapper
       | Ty.Obj { Ty.obj_def_loc = Some aloc; _ } ->
         let remote_file = Base.Option.value_exn (ALoc.source aloc) in
         if String.ends_with (File_key.to_string remote_file) ~suffix:"graphql.js" then
-          match GraphQL.extract_graphql_fragment cx file_sig typed_ast aloc with
+          match
+            GraphQL.extract_graphql_fragment cx ~loc_of_aloc ~get_ast file_sig typed_ast aloc
+          with
           | Some t -> t
           | None -> super#on_t env t
         else
@@ -1364,6 +1368,8 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
 
   let run
       ~cx
+      ~loc_of_aloc
+      ~get_ast
       ~file_sig
       ~typed_ast
       ~preserve_literals
@@ -1381,6 +1387,8 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
     let mapper =
       new type_normalization_hardcoded_fixes_mapper
         ~cx
+        ~loc_of_aloc
+        ~get_ast
         ~file_sig
         ~typed_ast
         ~lint_severities

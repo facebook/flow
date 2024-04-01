@@ -29,7 +29,12 @@ let assert_refactored
       ~file:dummy_filename
       ~file_sig:(file_sig_of_ast ast)
       ~typed_ast
-      ~reader
+      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+      ~get_haste_name:(fun f ->
+        let addr = Parsing_heaps.get_file_addr_unsafe f in
+        Parsing_heaps.Reader.get_haste_name ~reader addr)
+      ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
       ~support_experimental_snippet_text_edit
       ~extract_range
     |> List.map (fun { Refactor_extract.title; new_ast; _ } ->

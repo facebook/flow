@@ -10,8 +10,6 @@ open Loc_collections
 module Ast = Flow_ast
 module Statement = Fix_statement.Statement_
 
-let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
-
 let max_autoimport_suggestions = 100
 
 let default_autoimport_options =
@@ -355,7 +353,11 @@ let ty_normalizer_options = Ty_normalizer_env.{ default_options with expand_inte
 
 type typing = {
   options: Options.t;
-  reader: Parsing_heaps.Reader.reader;
+  loc_of_aloc: ALoc.t -> Loc.t;
+  get_ast: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
+  get_haste_name: File_key.t -> string option;
+  get_package_info: File_key.t -> (Package_json.t, unit) result option;
+  is_package_file: string -> bool;
   cx: Context.t;
   file_sig: File_sig.t;
   ast: (Loc.t, Loc.t) Flow_ast.Program.t;
@@ -364,7 +366,18 @@ type typing = {
   norm_genv: Ty_normalizer_env.genv;
 }
 
-let mk_typing_artifacts ~options ~reader ~cx ~file_sig ~ast ~available_ast ~exports =
+let mk_typing_artifacts
+    ~options
+    ~loc_of_aloc
+    ~get_ast
+    ~get_haste_name
+    ~get_package_info
+    ~is_package_file
+    ~cx
+    ~file_sig
+    ~ast
+    ~available_ast
+    ~exports =
   let norm_genv =
     Ty_normalizer_flow.mk_genv
       ~options:ty_normalizer_options
@@ -372,7 +385,20 @@ let mk_typing_artifacts ~options ~reader ~cx ~file_sig ~ast ~available_ast ~expo
       ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
       ~file_sig
   in
-  { options; reader; cx; file_sig; ast; available_ast; exports; norm_genv }
+  {
+    options;
+    loc_of_aloc;
+    get_ast;
+    get_haste_name;
+    get_package_info;
+    is_package_file;
+    cx;
+    file_sig;
+    ast;
+    available_ast;
+    exports;
+    norm_genv;
+  }
 
 type 'r ac_result = {
   result: 'r;
@@ -390,19 +416,19 @@ type autocomplete_service_result =
   ServerProt.Response.Completion.t autocomplete_service_result_generic
 [@@deriving eq, show]
 
-let jsdoc_of_def_loc { reader; ast; _ } def_loc =
-  loc_of_aloc ~reader def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~reader
+let jsdoc_of_def_loc { loc_of_aloc; get_ast; ast; _ } def_loc =
+  loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast
 
 let jsdoc_of_member typing info =
   match info.Ty_members.def_locs with
   | [def_loc] -> jsdoc_of_def_loc typing def_loc
   | _ -> None
 
-let jsdoc_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc =
+let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast ~file_sig ~ast ~available_ast loc =
   let open GetDef_js.Get_def_result in
   match
     GetDef_js.get_def
-      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      ~loc_of_aloc
       ~cx
       ~file_sig
       ~ast
@@ -414,7 +440,7 @@ let jsdoc_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc =
   | Partial (locs, _, _)
     when LocSet.cardinal locs = 1 ->
     let getdef_loc = LocSet.choose locs in
-    Find_documentation.jsdoc_of_getdef_loc ~ast ~reader getdef_loc
+    Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast getdef_loc
   | _ -> None
 
 let documentation_and_tags_of_jsdoc jsdoc =
@@ -430,9 +456,9 @@ let documentation_and_tags_of_member typing info =
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
-let documentation_and_tags_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc =
+let documentation_and_tags_of_loc ~cx ~loc_of_aloc ~get_ast ~file_sig ~ast ~available_ast loc =
   lazy
-    (jsdoc_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc
+    (jsdoc_of_loc ~get_ast ~cx ~loc_of_aloc ~file_sig ~ast ~available_ast loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
@@ -495,7 +521,7 @@ let members_of_type
       )
 
 let local_value_identifiers ~typing ~genv ~ac_loc =
-  let { reader; cx; ast; available_ast; file_sig; _ } = typing in
+  let { loc_of_aloc; get_ast; cx; ast; available_ast; file_sig; _ } = typing in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
   in
@@ -540,7 +566,7 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
            Type_env.checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc (ALoc.of_loc loc)
          in
          let documentation_and_tags =
-           documentation_and_tags_of_loc ~reader ~cx ~file_sig ~ast ~available_ast loc
+           documentation_and_tags_of_loc ~get_ast ~cx ~loc_of_aloc ~file_sig ~ast ~available_ast loc
          in
          ((name, documentation_and_tags), type_)
      )
@@ -656,9 +682,18 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
 
 let completion_item_of_autoimport
     ~typing ~src_dir ~edit_locs ~ranking_info { Export_search.name; source; kind } rank =
-  let { options; reader; ast; _ } = typing in
+  let { options; get_haste_name; get_package_info; is_package_file; ast; _ } = typing in
   match
-    Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
+    Code_action_service.text_edits_of_import
+      ~options
+      ~get_haste_name
+      ~get_package_info
+      ~is_package_file
+      ~src_dir
+      ~ast
+      kind
+      name
+      source
   with
   | None ->
     let itemDetail =
@@ -842,8 +877,8 @@ let autocomplete_id
     ~token
     ~type_ =
   let open AcCompletion in
-  let { reader; cx; options; norm_genv = genv; _ } = typing in
-  let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
+  let { loc_of_aloc; cx; options; norm_genv = genv; _ } = typing in
+  let ac_loc = loc_of_aloc ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
@@ -924,7 +959,7 @@ let autocomplete_id
   let items_rev =
     if include_keywords then
       let keywords =
-        Keywords.keywords_at_loc typing.ast (loc_of_aloc ~reader ac_aloc)
+        Keywords.keywords_at_loc typing.ast (loc_of_aloc ac_aloc)
         |> Base.List.map ~f:(AcCompletion.of_keyword ~edit_locs)
       in
       Base.List.rev_append keywords items_rev
@@ -1301,10 +1336,23 @@ let autocomplete_unqualified_type
     ~ac_loc
     ~edit_locs
     ~token =
-  let { options = _; reader; cx; file_sig; ast; available_ast; exports; norm_genv = genv } =
+  let {
+    options = _;
+    loc_of_aloc;
+    get_ast;
+    get_haste_name = _;
+    get_package_info = _;
+    is_package_file = _;
+    cx;
+    file_sig;
+    ast;
+    available_ast;
+    exports;
+    norm_genv = genv;
+  } =
     typing
   in
-  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
+  let ac_loc = loc_of_aloc ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
     []
@@ -1318,8 +1366,14 @@ let autocomplete_unqualified_type
     |> List.fold_left
          (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
            let documentation_and_tags =
-             loc_of_aloc ~reader aloc
-             |> documentation_and_tags_of_loc ~reader ~cx ~file_sig ~ast ~available_ast
+             documentation_and_tags_of_loc
+               ~get_ast
+               ~loc_of_aloc
+               ~cx
+               ~file_sig
+               ~ast
+               ~available_ast
+               (loc_of_aloc aloc)
            in
            match ty_result with
            | Ok elt ->
@@ -1665,9 +1719,9 @@ let rec binds_react = function
     in the file, we won't autoimport it, even if it's not in scope for the JSX
     component being completed. This is because imports are top-level so we'd cause
     potential shadowing issues elsewhere in the file. *)
-let should_autoimport_react ~options ~imports ~file_sig =
+let should_autoimport_react ~cx ~imports ~file_sig =
   if imports then
-    match Options.react_runtime options with
+    match Context.react_runtime cx with
     | Options.ReactRuntimeAutomatic -> false
     | Options.ReactRuntimeClassic ->
       let open File_sig in
@@ -1725,7 +1779,19 @@ let autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs =
   { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type_ =
-  let { options; reader; file_sig; ast; _ } = typing in
+  let {
+    options;
+    cx;
+    loc_of_aloc;
+    get_haste_name;
+    get_package_info;
+    is_package_file;
+    file_sig;
+    ast;
+    _;
+  } =
+    typing
+  in
   let results_id =
     autocomplete_id
       ~typing
@@ -1762,15 +1828,23 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
       errors_to_log = errors_to_log_id @ errors_to_log_jsx;
     }
   in
-  if should_autoimport_react ~options ~imports:ac_options.imports ~file_sig then
+  if should_autoimport_react ~cx ~imports:ac_options.imports ~file_sig then
     let open AcCompletion in
     let import_edit =
-      let src_dir = src_dir_of_loc (loc_of_aloc ~reader ac_loc) in
+      let src_dir = src_dir_of_loc (loc_of_aloc ac_loc) in
       let kind = Export_index.Namespace in
       let name = "React" in
-      (* TODO: make this configurable between React and react *)
       let source = Export_index.Builtin "react" in
-      Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
+      Code_action_service.text_edits_of_import
+        ~options
+        ~get_haste_name
+        ~get_package_info
+        ~is_package_file
+        ~src_dir
+        ~ast
+        kind
+        name
+        source
     in
     match import_edit with
     | None -> AcResult results
@@ -1864,7 +1938,7 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
   AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
-  let { options; reader; _ } = typing in
+  let { options; loc_of_aloc; get_ast; _ } = typing in
   let open Base.Result.Let_syntax in
   let%bind (mems, errors_to_log) =
     members_of_type
@@ -1881,8 +1955,7 @@ let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
          ~f:(fun (name, documentation_and_tags, { Ty_members.ty; def_locs; _ }) ->
            let open Base.Option in
            (* Find the AST node for member we want to override *)
-           def_locs |> Base.List.hd >>| loc_of_aloc ~reader >>= Find_method.find reader
-           >>| fun method_ ->
+           def_locs |> Base.List.hd >>| loc_of_aloc >>= Find_method.find ~get_ast >>| fun method_ ->
            autocomplete_create_result_method
              ~method_
              ~options
@@ -1982,9 +2055,9 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
     AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 (* Applicable error codes are those corresponding to errors on the next line *)
-let applicable_error_codes ~reader ~cx comment_loc =
+let applicable_error_codes ~loc_of_aloc ~cx comment_loc =
   let next_line =
-    comment_loc |> loc_of_aloc ~reader |> Loc.start_loc |> fun loc ->
+    comment_loc |> loc_of_aloc |> Loc.start_loc |> fun loc ->
     Loc.
       {
         loc with
@@ -1994,7 +2067,7 @@ let applicable_error_codes ~reader ~cx comment_loc =
   in
   let applies error_loc = Loc.lines_intersect next_line error_loc in
   let error_codes =
-    let loc_of_aloc = loc_of_aloc ~reader in
+    let loc_of_aloc = loc_of_aloc in
     let strip_root = Some (Context.root cx) in
     Flow_error.ErrorSet.fold
       (fun err acc ->
@@ -2014,12 +2087,12 @@ let has_leading text =
   let before = Base.String.rstrip before ~drop:(fun c -> not (Base.Char.is_whitespace c)) in
   Base.String.exists before ~f:(fun c -> not (Base.Char.is_whitespace c))
 
-let autocomplete_fixme ~reader ~cx ~edit_locs ~token ~text ~loc =
+let autocomplete_fixme ~loc_of_aloc ~cx ~edit_locs ~token ~text ~loc =
   if has_leading text then
     (* Don't suggest if there's leading text (the fixme would be invalid) *)
     []
   else
-    let error_codes = applicable_error_codes ~reader ~cx loc in
+    let error_codes = applicable_error_codes ~loc_of_aloc ~cx loc in
     Base.List.map error_codes ~f:(fun error_code ->
         let code_str = Error_codes.string_of_code error_code in
         let name = Printf.sprintf "$FlowFixMe[%s]" code_str in
@@ -2076,12 +2149,12 @@ let autocomplete_jsdoc ~token ~ast ~loc =
        )
     |> filter_by_token_and_sort token
 
-let autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc =
+let autocomplete_comment ~loc_of_aloc ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc =
   let items =
     match trigger_character with
     | Some "*"
     | None ->
-      let items_fixme = autocomplete_fixme ~reader ~cx ~edit_locs ~token ~text ~loc in
+      let items_fixme = autocomplete_fixme ~loc_of_aloc ~cx ~edit_locs ~token ~text ~loc in
       let items_jsdoc = autocomplete_jsdoc ~token ~ast ~loc in
       items_fixme @ items_jsdoc
     | _ -> []
@@ -2111,7 +2184,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
-  let { options; reader; cx; ast; available_ast; norm_genv = genv; _ } = typing in
+  let { options; loc_of_aloc; cx; ast; available_ast; norm_genv = genv; _ } = typing in
   let open Autocomplete_js in
   match process_location cx ~trigger_character ~cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
@@ -2128,7 +2201,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
        into the token, yielding "fooBarBaz", or they can choose to replace the token,
        yielding "fooBar". *)
     let edit_locs =
-      let replace_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
+      let replace_loc = loc_of_aloc ac_loc |> Autocomplete_sigil.remove_from_loc in
       (* invariant: the cursor must be inside ac_loc *)
       let insert_loc = Loc.btwn replace_loc cursor in
       (insert_loc, replace_loc)
@@ -2139,7 +2212,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_type_binding -> AcEmpty "TypeBinding"
       | Ac_ignored -> AcEmpty "Ignored"
       | Ac_comment { text; loc } ->
-        autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc
+        autocomplete_comment ~loc_of_aloc ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         (* TODO: include keywords *)

@@ -4,12 +4,10 @@
  (libraries
   codemod_annotate_exports_hardcoded
   flow_common
-  flow_common_lsp_conversions
+  flow_index
   flow_parser
   flow_parser_utils
-  flow_server_env
   flow_server_protocol
-  flow_service_inference
   flow_service_jsdoc
   flow_service_get_def)
  (preprocess

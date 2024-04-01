@@ -316,7 +316,7 @@ let search_jsdoc def_loc ast =
   with
   | FoundJsdoc documentation -> Some documentation
 
-let jsdoc_of_getdef_loc ~ast ~reader def_loc =
+let jsdoc_of_getdef_loc ~ast ~get_ast def_loc =
   let open Base.Option.Let_syntax in
   let%bind source = Loc.source def_loc in
   let current_ast_if_should_use =
@@ -330,7 +330,7 @@ let jsdoc_of_getdef_loc ~ast ~reader def_loc =
   let%bind ast =
     match current_ast_if_should_use with
     | Some _ as some_ast -> some_ast
-    | None -> Parsing_heaps.Reader.get_ast ~reader source
+    | None -> get_ast source
   in
   search_jsdoc def_loc ast
 

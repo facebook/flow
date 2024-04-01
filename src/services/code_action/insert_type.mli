@@ -53,6 +53,8 @@ val error_to_string : errors -> string
 val synth_type :
   ?size_limit:int ->
   cx:Context.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
@@ -74,6 +76,10 @@ val add_imports :
 
 val insert_type :
   cx:Context.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
@@ -86,6 +92,10 @@ val insert_type :
 
 val insert_type_t :
   cx:Context.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_name:(File_key.t -> string option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->

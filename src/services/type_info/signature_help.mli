@@ -14,7 +14,8 @@ val func_details :
   ServerProt.Response.func_details_result
 
 val find_signatures :
-  reader:State_reader.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
