@@ -1,13 +1,25 @@
 (library
+ (name flow_code_action_lib)
+ (wrapped false)
+ (modules
+  (:standard \ code_action_service))
+ (libraries
+  flow_common_lsp_conversions
+  flow_service_type_info
+  flow_typing
+  collections)
+ (preprocess
+  (pps ppx_deriving.std lwt_ppx ppx_let)))
+
+(library
  (name flow_code_action)
  (wrapped false)
+ (modules code_action_service)
  (libraries
   flow_server_env
   flow_server_protocol
   flow_service_inference
-  flow_service_type_info
-  flow_typing
-  collections)
+  flow_code_action_lib)
  (preprocess
   (pps ppx_deriving.std lwt_ppx ppx_let)))
 

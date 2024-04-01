@@ -215,7 +215,7 @@ let autocomplete_create_result_method
   let insert_text =
     (* Print the node to a string and replace the AUTO332 expression with an LSP snippet placeholder *)
     method_
-    |> Js_layout_generator.class_method ~opts:(Code_action_service.layout_options options)
+    |> Js_layout_generator.class_method ~opts:(Code_action_utils.layout_options options)
     |> Pretty_printer.print ~source_maps:None ~skip_endline:true
     |> Source.contents
     |> Base.String.substr_replace_first ~pattern:"AUTO332;" ~with_:"$0"
@@ -225,7 +225,7 @@ let autocomplete_create_result_method
     method_
     |> (fun (_, { Flow_ast.Class.Method.value; _ }) -> value)
     |> Js_layout_generator.function_params_and_return
-         ~opts:(Code_action_service.layout_options options)
+         ~opts:(Code_action_utils.layout_options options)
     |> Pretty_printer.print ~source_maps:None ~skip_endline:true
     |> Source.contents
     |> fun params_and_return -> params_and_return ^ "{ … }"
@@ -684,7 +684,7 @@ let completion_item_of_autoimport
     ~typing ~src_dir ~edit_locs ~ranking_info { Export_search.name; source; kind } rank =
   let { options; get_haste_name; get_package_info; is_package_file; ast; _ } = typing in
   match
-    Code_action_service.text_edits_of_import
+    Lsp_import_edits.text_edits_of_import
       ~options
       ~get_haste_name
       ~get_package_info
@@ -715,7 +715,7 @@ let completion_item_of_autoimport
       log_info = "global";
       insert_text_format = Lsp.Completion.PlainText;
     }
-  | Some { Code_action_service.title; edits; from } ->
+  | Some { Code_action_text_edits.title; edits; from } ->
     let itemDetail =
       match ranking_info with
       | Some ranking_info -> Some (title ^ "\n\n" ^ ranking_info)
@@ -1517,7 +1517,7 @@ let fix_locs_of_string_token token (insert_loc, replace_loc) =
   (insert_loc, replace_loc)
 
 let layout_options options token =
-  let opts = Code_action_service.layout_options options in
+  let opts = Code_action_utils.layout_options options in
   match quote_kind token with
   | Some `Single -> { opts with Js_layout_generator.single_quotes = true }
   | Some `Double -> { opts with Js_layout_generator.single_quotes = false }
@@ -1835,7 +1835,7 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
       let kind = Export_index.Namespace in
       let name = "React" in
       let source = Export_index.Builtin "react" in
-      Code_action_service.text_edits_of_import
+      Lsp_import_edits.text_edits_of_import
         ~options
         ~get_haste_name
         ~get_package_info
@@ -1848,7 +1848,7 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
     in
     match import_edit with
     | None -> AcResult results
-    | Some { Code_action_service.title = _; edits; from = _ } ->
+    | Some { Code_action_text_edits.title = _; edits; from = _ } ->
       let edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
       let { items; _ } = result in
       let items =

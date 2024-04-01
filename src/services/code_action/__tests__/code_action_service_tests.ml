@@ -6,7 +6,7 @@
  *)
 
 open OUnit2
-open Code_action_service.For_tests
+open Lsp_import_edits.For_tests
 
 let source_modulename path = Modulename.Filename (File_key.SourceFile path)
 

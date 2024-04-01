@@ -7,26 +7,6 @@
 
 val kind_is_supported : Lsp.CodeActionKind.t list option -> bool
 
-type text_edits = {
-  title: string;
-  edits: Lsp.TextEdit.t list;
-  from: string;
-}
-
-val layout_options : Options.t -> Js_layout_generator.opts
-
-val text_edits_of_import :
-  options:Options.t ->
-  get_haste_name:(File_key.t -> string option) ->
-  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
-  is_package_file:(string -> bool) ->
-  src_dir:string option ->
-  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  Export_index.kind ->
-  string ->
-  Export_index.source ->
-  text_edits option
-
 type ast_transform =
   cx:Context.t ->
   file_sig:File_sig.t ->
@@ -130,13 +110,3 @@ val insert_type :
 
 val organize_imports :
   options:Options.t -> ast:(Loc.t, Loc.t) Flow_ast.Program.t -> Lsp.TextEdit.t list
-
-module For_tests : sig
-  val path_of_modulename :
-    node_resolver_dirnames:string list ->
-    get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
-    string option ->
-    File_key.t ->
-    string option ->
-    string option
-end

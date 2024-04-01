@@ -55,7 +55,7 @@ let make_visitor :
     let ast' = mapper#program ast in
     let opts =
       {
-        (Code_action_service.layout_options options) with
+        (Code_action_utils.layout_options options) with
         Js_layout_generator.preserve_formatting = true (* minimizes changes *);
       }
     in
