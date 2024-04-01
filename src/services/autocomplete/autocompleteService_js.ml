@@ -681,7 +681,7 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
   (loc, newText)
 
 let completion_item_of_autoimport
-    ~typing ~src_dir ~edit_locs ~ranking_info { Export_search.name; source; kind } rank =
+    ~typing ~src_dir ~edit_locs ~ranking_info { Export_search_types.name; source; kind } rank =
   let { options; get_haste_name; get_package_info; is_package_file; ast; _ } = typing in
   match
     Lsp_import_edits.text_edits_of_import
@@ -810,7 +810,7 @@ let append_completion_items_of_autoimports
   let auto_imports_items_rev =
     Base.List.foldi
       ~init:[]
-      ~f:(fun i acc { Export_search.search_result = auto_import; score; weight } ->
+      ~f:(fun i acc { Export_search_types.search_result = auto_import; score; weight } ->
         let rank =
           (* after builtins *)
           if ac_options.imports_ranked_usage then
@@ -820,7 +820,7 @@ let append_completion_items_of_autoimports
             (* if not sorted server-side, use a constant sort text *)
             200
         in
-        let { Export_search.name; kind; source = _ } = auto_import in
+        let { Export_search_types.name; kind; source = _ } = auto_import in
         if is_reserved name kind || Base.Hash_set.mem locals name then
           (* exclude reserved words and already-defined locals, because they can't be imported
              without aliasing them, which we can't do automatically in autocomplete. for example,
@@ -981,7 +981,7 @@ let autocomplete_id
         (items_rev, true, false)
       else
         let locals = set_of_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) identifiers in
-        let { Export_search.results = auto_imports; is_incomplete } =
+        let { Export_search_types.results = auto_imports; is_incomplete } =
           let options =
             {
               default_autoimport_options with
@@ -1462,7 +1462,7 @@ let autocomplete_unqualified_type
         add_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) value_identifiers set;
         set
       in
-      let { Export_search.results = auto_imports; is_incomplete } =
+      let { Export_search_types.results = auto_imports; is_incomplete } =
         let (before, _after) = Autocomplete_sigil.remove token in
         let options =
           {

@@ -5,31 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Export_search_types
+
 type t = {
   index: Export_index.t;
   value_matcher: Fuzzy_path.t;
   type_matcher: Fuzzy_path.t;
 }
-
-type search_result = {
-  name: string;
-  source: Export_index.source;
-  kind: Export_index.kind;
-}
-[@@deriving show]
-
-type search_result_scored = {
-  search_result: search_result;
-  score: int;
-  weight: int;
-}
-[@@deriving show]
-
-type search_results = {
-  results: search_result_scored list;
-  is_incomplete: bool;
-}
-[@@deriving show]
 
 type search_options = Fuzzy_path.options = {
   first_match_can_be_weak: bool;

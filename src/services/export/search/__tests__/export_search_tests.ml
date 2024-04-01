@@ -7,6 +7,7 @@
 
 open OUnit2
 open Export_search
+open Export_search_types
 
 let default_type = Export_index.DefaultType
 
