@@ -38,7 +38,6 @@ type react_rules =
 type autocomplete_mode =
   | Ac_typed_ast
   | Ac_on_demand_typing
-  | Ac_both (* for comparison purposes *)
 
 type format = {
   opt_bracket_spacing: bool;

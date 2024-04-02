@@ -391,11 +391,7 @@ module Opts = struct
 
   let autocomplete_mode_parser =
     enum
-      [
-        ("typed_ast", Options.Ac_typed_ast);
-        ("on_demand", Options.Ac_on_demand_typing);
-        ("both", Options.Ac_both);
-      ]
+      [("typed_ast", Options.Ac_typed_ast); ("on_demand", Options.Ac_on_demand_typing)]
       (fun opts v -> Ok { opts with autocomplete_mode = Some v })
 
   let casting_syntax_parser =

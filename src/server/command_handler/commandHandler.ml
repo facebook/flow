@@ -349,17 +349,39 @@ let autocomplete
       (Error err_str, Some json_data_to_log)
     | (Some (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; requires; _ }), _errs)
       ->
-      let open AutocompleteService_js in
-      let ac_options =
-        {
-          AutocompleteService_js.imports;
-          imports_min_characters;
-          imports_ranked_usage;
-          imports_ranked_usage_boost_exact_match_min_length;
-          show_ranking_info;
-        }
+      let (cx, available_ast) =
+        match Options.autocomplete_mode options with
+        | Options.Ac_typed_ast ->
+          let (cx, typed_ast) =
+            Type_contents.check_contents
+              ~options
+              ~profiling
+              ~reader:(State_reader.create ())
+              env.master_cx
+              filename
+              info
+              ast
+              requires
+              file_sig
+          in
+          (cx, Typed_ast_utils.Typed_ast typed_ast)
+        | Options.Ac_on_demand_typing ->
+          let (cx, aloc_ast) =
+            Type_contents.compute_env_of_contents
+              ~options
+              ~profiling
+              ~reader:(State_reader.create ())
+              env.master_cx
+              filename
+              info
+              ast
+              requires
+              file_sig
+          in
+          (cx, Typed_ast_utils.ALoc_ast aloc_ast)
       in
-      let autocomplete_get_results cx available_ast =
+      let open AutocompleteService_js in
+      let (token_opt, ac_loc, ac_type_string, results_res) =
         Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
             let typing =
               AutocompleteService_js.mk_typing_artifacts
@@ -378,48 +400,17 @@ let autocomplete
                 ~ast
                 ~available_ast
             in
+            let ac_options =
+              {
+                AutocompleteService_js.imports;
+                imports_min_characters;
+                imports_ranked_usage;
+                imports_ranked_usage_boost_exact_match_min_length;
+                show_ranking_info;
+              }
+            in
             autocomplete_get_results typing ac_options trigger_character cursor_loc
         )
-      in
-      let autocomplete_fully_type_and_get_results () =
-        let (cx, typed_ast) =
-          Type_contents.check_contents
-            ~options
-            ~profiling
-            ~reader:(State_reader.create ())
-            env.master_cx
-            filename
-            info
-            ast
-            requires
-            file_sig
-        in
-        autocomplete_get_results cx (Typed_ast_utils.Typed_ast typed_ast)
-      in
-      let autocomplete_on_demand_get_results () =
-        let (cx, aloc_ast) =
-          Type_contents.compute_env_of_contents
-            ~options
-            ~profiling
-            ~reader:(State_reader.create ())
-            env.master_cx
-            filename
-            info
-            ast
-            requires
-            file_sig
-        in
-        autocomplete_get_results cx (Typed_ast_utils.ALoc_ast aloc_ast)
-      in
-      let ((token_opt, ac_loc, ac_type_string, results_res), initial_json_props) =
-        match Options.autocomplete_mode options with
-        | Options.Ac_typed_ast -> (autocomplete_fully_type_and_get_results (), initial_json_props)
-        | Options.Ac_on_demand_typing -> (autocomplete_on_demand_get_results (), initial_json_props)
-        | Options.Ac_both ->
-          let (_, _, _, r1) = autocomplete_on_demand_get_results () in
-          let ((_, _, _, r2) as result) = autocomplete_fully_type_and_get_results () in
-          let equal = AutocompleteService_js.equal_autocomplete_service_result r1 r2 in
-          (result, ("on_demand_compliance", Hh_json.JSON_Bool equal) :: initial_json_props)
       in
       (* Make sure hooks are unset *after* we've gotten the results to account for
        * on-demand type checking. *)
