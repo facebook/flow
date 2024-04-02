@@ -60,6 +60,19 @@ function setTypeAtPosFunction(flowService: ?FlowJsServices): void {
     );
 }
 
+let signatureHelpFunctionForMonaco = (value: string, position: Position): any =>
+  null;
+
+function setSignatureHelpFunction(flowService: ?FlowJsServices): void {
+  signatureHelpFunctionForMonaco = (value, position) =>
+    flowService?.signatureHelp(
+      '-',
+      value,
+      position.lineNumber,
+      position.column - 1,
+    );
+}
+
 monaco.languages.register({
   id: 'flow',
   extensions: ['.js', '.flow'],
@@ -180,6 +193,19 @@ monaco.languages.registerHoverProvider('flow', {
     };
   },
 });
+monaco.languages.registerSignatureHelpProvider('flow', {
+  signatureHelpTriggerCharacters: ['(', ','],
+  provideSignatureHelp(model, position) {
+    try {
+      const result = signatureHelpFunctionForMonaco(model.getValue(), position);
+      if (result == null) return null;
+      return {value: result, dispose() {}};
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  },
+});
 loader.config({monaco});
 
 export {
@@ -187,4 +213,5 @@ export {
   setAutoCompleteFunction,
   setGetDefFunction,
   setTypeAtPosFunction,
+  setSignatureHelpFunction,
 };

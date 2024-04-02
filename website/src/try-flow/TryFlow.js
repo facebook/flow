@@ -20,6 +20,7 @@ import {
   setAutoCompleteFunction,
   setGetDefFunction,
   setTypeAtPosFunction,
+  setSignatureHelpFunction,
 } from './configured-monaco';
 import FlowJsServices from './flow-services';
 import createTokensProvider from './tokens-theme-provider';
@@ -159,6 +160,7 @@ export default component TryFlow(
     setAutoCompleteFunction(flowService);
     setGetDefFunction(flowService);
     setTypeAtPosFunction(flowService);
+    setSignatureHelpFunction(flowService);
 
     const model = monaco.editor.getModels()[0];
     if (model == null || flowService == null) return;

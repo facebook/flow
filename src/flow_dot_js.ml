@@ -491,6 +491,40 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
         (loc, Ok (Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result))
     end
 
+let signature_help filename content line col js_config_object :
+    ((ServerProt.Response.func_details_result list * int) option, string) result =
+  let filename = File_key.SourceFile filename in
+  let root = File_path.dummy_path in
+  match parse_content filename content with
+  | Error _ -> Error "parse error"
+  | Ok (ast, file_sig) ->
+    let (_, docblock) =
+      Docblock_parser.(
+        parse_docblock
+          ~max_tokens:docblock_max_tokens
+          ~file_options:Files.default_options
+          filename
+          content
+      )
+    in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+    let cursor_loc = mk_loc filename line col in
+    let func_details =
+      Signature_help.find_signatures
+        ~loc_of_aloc
+        ~get_ast_from_shared_mem:(fun _ -> None)
+        ~cx
+        ~file_sig
+        ~ast
+        ~typed_ast
+        cursor_loc
+    in
+    begin
+      match func_details with
+      | Ok details -> Ok details
+      | Error _ -> Error "Failed to normalize type"
+    end
+
 let types_to_json types ~strip_root =
   Hh_json.(
     Reason.(
@@ -607,6 +641,46 @@ let completion_item_to_json
   in
   JSON_Object props
 
+let signature_to_json { ServerProt.Response.func_documentation; param_tys; return_ty } =
+  let open Hh_json in
+  let open Utils_js in
+  let documentation_props = function
+    | None -> []
+    | Some doc -> [("documentation", JSON_Object [("value", JSON_String doc)])]
+  in
+  let props = documentation_props func_documentation in
+  let props =
+    ( "parameters",
+      JSON_Array
+        (Base.List.map
+           param_tys
+           ~f:(fun { ServerProt.Response.param_documentation; param_name; param_ty } ->
+             JSON_Object
+               (("label", JSON_String (spf "%s: %s" param_name param_ty))
+               :: documentation_props param_documentation
+               )
+         )
+        )
+    )
+    :: props
+  in
+  let props =
+    let sig_str =
+      Utils_js.spf
+        "(%s): %s"
+        (Base.List.map
+           param_tys
+           ~f:(fun { ServerProt.Response.param_documentation = _; param_name; param_ty } ->
+             spf "%s: %s" param_name param_ty
+         )
+        |> Base.String.concat ~sep:", "
+        )
+        return_ty
+    in
+    ("label", JSON_String sig_str) :: props
+  in
+  JSON_Object props
+
 let autocomplete js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
   let content = Js.to_string js_content in
@@ -633,6 +707,24 @@ let get_def js_file js_content js_line js_col js_config_object =
     Hh_json.JSON_Array (List.map (Reason.json_of_loc ~strip_root:None ~offset_table:None) locs)
     |> js_of_json
   | Error msg -> failwith msg
+
+let signature_help js_file js_content js_line js_col js_config_object =
+  let filename = Js.to_string js_file in
+  let content = Js.to_string js_content in
+  let line = Js.parseInt js_line in
+  let col = Js.parseInt js_col in
+  match signature_help filename content line col js_config_object with
+  | Error msg -> failwith msg
+  | Ok None -> Js.Unsafe.inject Js.null
+  | Ok (Some (signatures, n)) ->
+    let open Hh_json in
+    JSON_Object
+      [
+        ("signatures", JSON_Array (Base.List.map signatures ~f:signature_to_json));
+        ("activeParameter", JSON_Number (string_of_int n));
+        ("activeSignature", JSON_Number "0");
+      ]
+    |> js_of_json
 
 let type_at_pos js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
@@ -789,5 +881,7 @@ let () = Js.Unsafe.set exports "parse" (Js.wrap_callback Flow_parser_js.parse)
 let () = Js.Unsafe.set exports "autocomplete" (Js.wrap_callback autocomplete)
 
 let () = Js.Unsafe.set exports "getDef" (Js.wrap_callback get_def)
+
+let () = Js.Unsafe.set exports "signatureHelp" (Js.wrap_callback signature_help)
 
 let () = Js.Unsafe.set exports "typeAtPos" (Js.wrap_callback type_at_pos)

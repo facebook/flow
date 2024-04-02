@@ -90,5 +90,12 @@ declare type FlowJs = {
     col: number,
     options: {[string]: mixed},
   ): string,
+  signatureHelp(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+    options: {[string]: mixed},
+  ): any,
   parse(body: string, options: FlowJsParseOptions): interface {},
 };

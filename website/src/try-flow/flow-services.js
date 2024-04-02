@@ -99,6 +99,15 @@ export default class FlowJsServices {
     return this._flow.typeAtPos(filename, body, line, col, this.config);
   }
 
+  signatureHelp(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+  ): any {
+    return this._flow.signatureHelp(filename, body, line, col, this.config);
+  }
+
   parseAstToJsonString(body: string): interface {} {
     return this._flow.parse(body, PARSE_OPTIONS);
   }
