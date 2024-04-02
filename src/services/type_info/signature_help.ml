@@ -7,6 +7,18 @@
 
 open Loc_collections
 
+type func_param_result = {
+  param_documentation: string option;
+  param_name: string;
+  param_ty: string;
+}
+
+type func_details_result = {
+  func_documentation: string option;
+  param_tys: func_param_result list;
+  return_ty: string;
+}
+
 let parameter_name is_opt name =
   let opt =
     if is_opt then
@@ -64,7 +76,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
         let param_name = parameter_name fp.Ty.prm_optional n in
         let param_ty = string_of_ty ~exact_by_default t in
         let param_documentation = documentation_of_param n in
-        { ServerProt.Response.param_name; param_ty; param_documentation })
+        { param_name; param_ty; param_documentation })
       params
   in
   let param_tys =
@@ -105,18 +117,18 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
           Base.List.rev els
           |> Base.List.map ~f:(fun (param_name, t) ->
                  let param_ty = string_of_ty ~exact_by_default t in
-                 { ServerProt.Response.param_name; param_ty; param_documentation }
+                 { param_name; param_ty; param_documentation }
              )
         | None ->
           let param_name = "..." ^ parameter_name false rest_param_name in
           let param_ty = string_of_ty ~exact_by_default t in
-          [{ ServerProt.Response.param_name; param_ty; param_documentation }]
+          [{ param_name; param_ty; param_documentation }]
       in
       param_tys @ rest
   in
   let return_ty = string_of_return_t ~exact_by_default return in
   let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
-  { ServerProt.Response.param_tys; return_ty; func_documentation }
+  { param_tys; return_ty; func_documentation }
 
 (* given a Loc.t within a function call or `new` expression, returns the type of the function/constructor being called *)
 module Callee_finder = struct

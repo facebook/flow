@@ -2429,6 +2429,28 @@ let handle_persistent_signaturehelp_lsp
       in
       (match func_details with
       | Ok details ->
+        let details =
+          match details with
+          | None -> None
+          | Some (details, n) ->
+            Some
+              ( Base.List.map
+                  details
+                  ~f:(fun { Signature_help.func_documentation; param_tys; return_ty } ->
+                    {
+                      ServerProt.Response.func_documentation;
+                      param_tys =
+                        Base.List.map
+                          param_tys
+                          ~f:(fun { Signature_help.param_documentation; param_name; param_ty } ->
+                            { ServerProt.Response.param_documentation; param_name; param_ty }
+                        );
+                      return_ty;
+                    }
+                ),
+                n
+              )
+        in
         let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
         let response = ResponseMessage (id, r) in
         let has_any_documentation =
