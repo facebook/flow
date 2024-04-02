@@ -11,7 +11,6 @@ module AcCompletion : sig
     insert: Loc.t;
     replace: Loc.t;
   }
-  [@@deriving eq]
 
   type completion_item = {
     kind: Lsp.Completion.completionItemKind option;
@@ -27,13 +26,11 @@ module AcCompletion : sig
     log_info: string;
     insert_text_format: Lsp.Completion.insertTextFormat;
   }
-  [@@deriving eq]
 
   type t = {
     items: completion_item list;
     is_incomplete: bool;
   }
-  [@@deriving eq]
 end
 
 type ac_options = {
@@ -72,10 +69,8 @@ type 'r autocomplete_service_result_generic =
   | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
-[@@deriving eq]
 
 type autocomplete_service_result = AcCompletion.t autocomplete_service_result_generic
-[@@deriving eq]
 
 val autocomplete_get_results :
   typing ->

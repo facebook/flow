@@ -16,7 +16,6 @@ module AcCompletion = struct
     insert: Loc.t;
     replace: Loc.t;
   }
-  [@@deriving eq]
 
   type completion_item = {
     kind: Lsp.Completion.completionItemKind option;
@@ -33,33 +32,10 @@ module AcCompletion = struct
     insert_text_format: Lsp.Completion.insertTextFormat;
   }
 
-  let opt_eq ~eq o1 o2 =
-    match (o1, o2) with
-    | (None, None) -> true
-    | (Some _, None)
-    | (None, Some _) ->
-      false
-    | (Some v1, Some v2) -> eq v1 v2
-
-  let equal_completion_item item1 item2 =
-    opt_eq ~eq:Lsp.Completion.equal_completionItemKind item1.kind item2.kind
-    && String.equal item1.name item2.name
-    && opt_eq ~eq:String.equal item1.labelDetail item2.labelDetail
-    && opt_eq ~eq:String.equal item1.description item2.description
-    && item1.itemDetail = item2.itemDetail
-    && opt_eq ~eq:equal_insert_replace_edit item1.text_edit item2.text_edit
-    && item1.additional_text_edits = item2.additional_text_edits
-    && opt_eq ~eq:String.equal item1.sort_text item2.sort_text
-    && item1.preselect = item2.preselect
-    && Lazy.force item1.documentation_and_tags = Lazy.force item2.documentation_and_tags
-    && String.equal item1.log_info item2.log_info
-    && Lsp.Completion.equal_insertTextFormat item1.insert_text_format item2.insert_text_format
-
   type t = {
     items: completion_item list;
     is_incomplete: bool;
   }
-  [@@deriving eq]
 
   let empty_documentation_and_tags = lazy (None, None)
 
@@ -392,16 +368,13 @@ type 'r ac_result = {
   result: 'r;
   errors_to_log: string list;
 }
-[@@deriving eq]
 
 type 'r autocomplete_service_result_generic =
   | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
-[@@deriving eq]
 
 type autocomplete_service_result = AcCompletion.t autocomplete_service_result_generic
-[@@deriving eq]
 
 let jsdoc_of_def_loc { loc_of_aloc; get_ast; ast; _ } def_loc =
   loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast
