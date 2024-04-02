@@ -83,10 +83,7 @@ end = struct
     let command_string = CommandSpec.name command in
     FlowEventLogger.set_command (Some command_string);
 
-    let init_id = Random_id.short_string () in
-    FlowEventLogger.init_flow_command ~init_id;
-
-    CommandUtils.run_command command argv
+    CommandUtils.run_command command argv ~init_id:(Random_id.short_string ())
 end
 
 let _ =
