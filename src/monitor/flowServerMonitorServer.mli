@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val send_request :
-  client:EphemeralConnection.t -> request:ServerProt.Request.command_with_context -> unit
+val send_request : client:EphemeralConnection.t -> request:ServerCommandWithContext.t -> unit
 
 val send_persistent_request :
   client_id:LspProt.client_id -> request:LspProt.request_with_metadata -> unit

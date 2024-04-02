@@ -435,7 +435,7 @@ let autocomplete
         let open Hh_json in
         match results_res with
         | AcResult { result; errors_to_log } ->
-          let { AcCompletion.items; is_incomplete } = result in
+          let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
           let result_string =
             match (items, errors_to_log) with
             | (_, []) -> "SUCCESS"
@@ -443,54 +443,9 @@ let autocomplete
             | (_ :: _, _ :: _) -> "PARTIAL"
           in
           let at_least_one_result_has_documentation =
-            Base.List.exists
-              items
-              ~f:(fun AcCompletion.{ documentation_and_tags = (lazy (docs, _)); _ } ->
-                Base.Option.is_some docs
+            Base.List.exists items ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                Base.Option.is_some documentation
             )
-          in
-          let result =
-            let open ServerProt.Response.Completion in
-            let items =
-              Base.List.map
-                items
-                ~f:(fun
-                     {
-                       AcCompletion.kind;
-                       name;
-                       labelDetail;
-                       description;
-                       itemDetail;
-                       text_edit;
-                       additional_text_edits;
-                       sort_text;
-                       preselect;
-                       documentation_and_tags = (lazy (documentation, tags));
-                       log_info;
-                       insert_text_format;
-                     }
-                   ->
-                  {
-                    ServerProt.Response.Completion.kind;
-                    name;
-                    labelDetail;
-                    description;
-                    itemDetail;
-                    text_edit =
-                      Base.Option.map text_edit ~f:(fun { AcCompletion.newText; insert; replace } ->
-                          { ServerProt.Response.newText; insert; replace }
-                      );
-                    additional_text_edits;
-                    sort_text;
-                    preselect;
-                    documentation;
-                    tags;
-                    log_info;
-                    insert_text_format;
-                  }
-              )
-            in
-            { items; is_incomplete }
           in
           ( Ok (token_opt, result, ac_loc, ac_type_string),
             ("result", JSON_String result_string)
@@ -1832,7 +1787,7 @@ let handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~worklo
   { WorkloadStream.workload_should_be_cancelled; workload_handler }
 
 let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
-  let { ServerProt.Request.client_logging_context = client_context; command } =
+  let { ServerCommandWithContext.client_logging_context = client_context; command } =
     command_with_context
   in
   let cmd_str = spf "%s: %s" request_id (ServerProt.Request.to_string command) in
@@ -2445,28 +2400,6 @@ let handle_persistent_signaturehelp_lsp
       in
       (match func_details with
       | Ok details ->
-        let details =
-          match details with
-          | None -> None
-          | Some (details, n) ->
-            Some
-              ( Base.List.map
-                  details
-                  ~f:(fun { Signature_help.func_documentation; param_tys; return_ty } ->
-                    {
-                      ServerProt.Response.func_documentation;
-                      param_tys =
-                        Base.List.map
-                          param_tys
-                          ~f:(fun { Signature_help.param_documentation; param_name; param_ty } ->
-                            { ServerProt.Response.param_documentation; param_name; param_ty }
-                        );
-                      return_ty;
-                    }
-                ),
-                n
-              )
-        in
         let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
         let response = ResponseMessage (id, r) in
         let has_any_documentation =

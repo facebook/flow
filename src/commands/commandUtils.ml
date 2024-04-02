@@ -1699,7 +1699,10 @@ let rec connect_and_make_request flowconfig_name =
   (* Sends the command over the socket *)
   let send_command ?timeout (oc : out_channel) (cmd : ServerProt.Request.command) : unit =
     let command =
-      { ServerProt.Request.client_logging_context = FlowEventLogger.get_context (); command = cmd }
+      {
+        ServerCommandWithContext.client_logging_context = FlowEventLogger.get_context ();
+        command = cmd;
+      }
     in
     Marshal_tools.to_fd_with_preamble ?timeout (Unix.descr_of_out_channel oc) command |> ignore;
     flush oc

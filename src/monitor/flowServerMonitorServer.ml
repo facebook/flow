@@ -24,7 +24,7 @@ module Logger = FlowServerMonitorLogger
 
 type command =
   | Write_ephemeral_request of {
-      request: ServerProt.Request.command_with_context;
+      request: ServerCommandWithContext.t;
       client: EphemeralConnection.t;
     }
   | Write_persistent_request of {
@@ -734,7 +734,7 @@ let start monitor_options =
 let send_request ~client ~request =
   Logger.debug
     "Adding request (%s) to the command stream"
-    (ServerProt.Request.to_string request.ServerProt.Request.command);
+    (ServerProt.Request.to_string request.ServerCommandWithContext.command);
   push_to_command_stream (Some (Write_ephemeral_request { request; client }))
 
 let send_persistent_request ~client_id ~request =

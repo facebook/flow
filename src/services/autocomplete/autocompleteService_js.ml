@@ -11,20 +11,14 @@ module Ast = Flow_ast
 module Statement = Fix_statement.Statement_
 
 module AcCompletion = struct
-  type insert_replace_edit = {
-    newText: string;
-    insert: Loc.t;
-    replace: Loc.t;
-  }
-
   type completion_item = {
     kind: Lsp.Completion.completionItemKind option;
     name: string;
     labelDetail: string option;  (** LSP's CompletionItemLabelDetails.detail *)
     description: string option;  (** LSP's CompletionItemLabelDetails.description *)
     itemDetail: string option;  (** LSP's CompletionItem.detail *)
-    text_edit: insert_replace_edit option;
-    additional_text_edits: (Loc.t * string) list;
+    text_edit: ServerProt.Response.insert_replace_edit option;
+    additional_text_edits: ServerProt.Response.textedit list;
     sort_text: string option;
     preselect: bool;
     documentation_and_tags: (string option * Lsp.CompletionItemTag.t list option) Lazy.t;
@@ -39,6 +33,46 @@ module AcCompletion = struct
 
   let empty_documentation_and_tags = lazy (None, None)
 
+  let to_server_prot_completion_item completion_item =
+    let {
+      kind;
+      name;
+      labelDetail;
+      description;
+      itemDetail;
+      text_edit;
+      additional_text_edits;
+      sort_text;
+      preselect;
+      documentation_and_tags = (lazy (documentation, tags));
+      log_info;
+      insert_text_format;
+    } =
+      completion_item
+    in
+    {
+      ServerProt.Response.Completion.kind;
+      name;
+      labelDetail;
+      description;
+      itemDetail;
+      text_edit;
+      additional_text_edits;
+      sort_text;
+      preselect;
+      documentation;
+      tags;
+      log_info;
+      insert_text_format;
+    }
+
+  let to_server_prot_completion_t t =
+    let { items; is_incomplete } = t in
+    {
+      ServerProt.Response.Completion.items = Base.List.map ~f:to_server_prot_completion_item items;
+      is_incomplete;
+    }
+
   let of_keyword ~edit_locs:(insert, replace) keyword =
     {
       kind = Some Lsp.Completion.Keyword;
@@ -46,7 +80,7 @@ module AcCompletion = struct
       labelDetail = None;
       description = None;
       itemDetail = None;
-      text_edit = Some { newText = keyword; insert; replace };
+      text_edit = Some { ServerProt.Response.newText = keyword; insert; replace };
       additional_text_edits = [];
       sort_text = Some (Printf.sprintf "%020u" 0);
       preselect = false;
@@ -118,7 +152,7 @@ let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
 
 let text_edit ?insert_text name (insert, replace) =
   let newText = Base.Option.value ~default:name insert_text in
-  { AcCompletion.newText; insert; replace }
+  { ServerProt.Response.newText; insert; replace }
 
 let detail_of_ty ~exact_by_default ty =
   let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
@@ -362,7 +396,8 @@ type 'r autocomplete_service_result_generic =
   | AcEmpty of string
   | AcFatalError of string
 
-type autocomplete_service_result = AcCompletion.t autocomplete_service_result_generic
+type autocomplete_service_result =
+  ServerProt.Response.Completion.t autocomplete_service_result_generic
 
 let jsdoc_of_def_loc { loc_of_aloc; get_ast_from_shared_mem; ast; _ } def_loc =
   loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem
@@ -2116,7 +2151,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
   match process_location cx ~trigger_character ~cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
-    let result = { AcCompletion.items = []; is_incomplete = false } in
+    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     ( None,
       None,
       "None",
@@ -2277,7 +2312,8 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
     in
     let result =
       match result with
-      | AcResult { result; errors_to_log } -> AcResult { result; errors_to_log }
+      | AcResult { result; errors_to_log } ->
+        AcResult { result = AcCompletion.to_server_prot_completion_t result; errors_to_log }
       | AcEmpty s -> AcEmpty s
       | AcFatalError e -> AcFatalError e
     in

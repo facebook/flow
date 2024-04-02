@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include
-  FlowServerMonitorConnection.CONNECTION
-    with type in_message := ServerCommandWithContext.t
-     and type out_message := MonitorProt.monitor_to_client_message
+type t = {
+  client_logging_context: FlowEventLogger.logging_context;
+  command: ServerProt.Request.command;
+}

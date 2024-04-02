@@ -5,34 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module AcCompletion : sig
-  type insert_replace_edit = {
-    newText: string;
-    insert: Loc.t;
-    replace: Loc.t;
-  }
-
-  type completion_item = {
-    kind: Lsp.Completion.completionItemKind option;
-    name: string;
-    labelDetail: string option;  (** LSP's CompletionItemLabelDetails.detail *)
-    description: string option;  (** LSP's CompletionItemLabelDetails.description *)
-    itemDetail: string option;  (** LSP's CompletionItem.detail *)
-    text_edit: insert_replace_edit option;
-    additional_text_edits: (Loc.t * string) list;
-    sort_text: string option;
-    preselect: bool;
-    documentation_and_tags: (string option * Lsp.CompletionItemTag.t list option) Lazy.t;
-    log_info: string;
-    insert_text_format: Lsp.Completion.insertTextFormat;
-  }
-
-  type t = {
-    items: completion_item list;
-    is_incomplete: bool;
-  }
-end
-
 type ac_options = {
   imports: bool;
   imports_min_characters: int;
@@ -66,7 +38,8 @@ type 'r autocomplete_service_result_generic =
   | AcEmpty of string
   | AcFatalError of string
 
-type autocomplete_service_result = AcCompletion.t autocomplete_service_result_generic
+type autocomplete_service_result =
+  ServerProt.Response.Completion.t autocomplete_service_result_generic
 
 val autocomplete_get_results :
   typing ->

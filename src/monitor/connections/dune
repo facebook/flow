@@ -4,7 +4,7 @@
  (libraries
   flow_common_lwt
   flow_monitor_logger
-  flow_server_protocol
+  flow_protocols
   lwt.unix
   utils_core
   flow_service_inference)

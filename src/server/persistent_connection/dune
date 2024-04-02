@@ -5,5 +5,5 @@
   flow_common_lsp_conversions
   flow_common_utils_filename_cache
   flow_monitor_rpc
-  flow_server_protocol
+  flow_protocols
   flow_types))

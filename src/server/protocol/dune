@@ -1,15 +1,27 @@
 (library
  (name flow_server_protocol)
  (wrapped false)
+ (modules serverProt)
  (libraries
   flow_autofix_options
   flow_common
-  flow_common_profiling
   flow_coverage
   flow_parser_utils_replacement_printer
   flow_server_status
   flow_typing
   lsp ; hack
+  )
+ (preprocess
+  (pps ppx_deriving.eq ppx_deriving.show)))
+
+(library
+ (name flow_protocols)
+ (wrapped false)
+ (modules
+  (:standard \ serverProt))
+ (libraries
+  flow_server_protocol
+  flow_common_profiling
   flow_exit)
  (preprocess
   (pps ppx_deriving.eq ppx_deriving.show)))

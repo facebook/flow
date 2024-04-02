@@ -37,7 +37,7 @@ type please_die_reason = MonitorExiting of (Exit.t * string)
 (* These are the messages that the monitor sends to the server *)
 type monitor_to_server_message =
   (* A request from an ephemeral socket connection. It expects a response *)
-  | Request of request_id * ServerProt.Request.command_with_context
+  | Request of request_id * ServerCommandWithContext.t
   (* A notification that there is a new persistent socket connection *)
   | NewPersistentConnection of LspProt.client_id * Lsp.Initialize.params
   (* A request from a persistent socket connection. It does not expect a response *)

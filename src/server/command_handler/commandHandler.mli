@@ -6,7 +6,7 @@
  *)
 
 val enqueue_or_handle_ephemeral :
-  ServerEnv.genv -> MonitorProt.request_id * ServerProt.Request.command_with_context -> unit
+  ServerEnv.genv -> MonitorProt.request_id * ServerCommandWithContext.t -> unit
 
 val enqueue_persistent :
   ServerEnv.genv -> LspProt.client_id -> LspProt.request_with_metadata -> unit

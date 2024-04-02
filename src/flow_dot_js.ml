@@ -353,7 +353,7 @@ let mk_loc file line col =
   }
 
 let autocomplete filename content line col js_config_object :
-    (AutocompleteService_js.AcCompletion.t, string) result =
+    (ServerProt.Response.Completion.t, string) result =
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
   let cursor_loc = Loc.cursor (Some filename) line col in
@@ -413,7 +413,7 @@ let autocomplete filename content line col js_config_object :
           loc
       in
       (match result with
-      | AcEmpty _ -> Ok { AcCompletion.items = []; is_incomplete = false }
+      | AcEmpty _ -> Ok { ServerProt.Response.Completion.items = []; is_incomplete = false }
       | AcFatalError msg -> Error msg
       | AcResult { result; errors_to_log = _ } -> Ok result)
   in
@@ -553,12 +553,13 @@ let loc_as_range_to_json loc =
 
 let completion_item_to_json
     {
-      AutocompleteService_js.AcCompletion.name;
+      ServerProt.Response.Completion.name;
       kind;
       description = _;
       itemDetail;
       labelDetail = _;
-      documentation_and_tags = (lazy (documentation, _));
+      documentation;
+      tags = _;
       preselect = _;
       sort_text = _;
       text_edit;
@@ -586,7 +587,7 @@ let completion_item_to_json
   let props =
     match text_edit with
     | None -> props
-    | Some { AutocompleteService_js.AcCompletion.newText; insert; replace } ->
+    | Some { ServerProt.Response.newText; insert; replace } ->
       ("insertText", JSON_String newText)
       :: ( "range",
            JSON_Object
@@ -612,7 +613,7 @@ let autocomplete js_file js_content js_line js_col js_config_object =
   let line = Js.parseInt js_line in
   let col = Js.parseInt js_col in
   match autocomplete filename content line col js_config_object with
-  | Ok { AutocompleteService_js.AcCompletion.items; is_incomplete } ->
+  | Ok { ServerProt.Response.Completion.items; is_incomplete } ->
     let open Hh_json in
     JSON_Object
       [

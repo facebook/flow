@@ -13,8 +13,8 @@
  (modules commandConnect commandConnectSimple commandMeanKill)
  (libraries
   flow_exit_status
+  flow_protocols
   flow_server_files
-  flow_server_protocol
   flow_server_status
   marshal_tools_lwt
   socket ; hack

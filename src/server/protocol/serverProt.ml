@@ -172,11 +172,6 @@ module Request = struct
         | `File file -> File_path.to_string file
       in
       Printf.sprintf "save-state %s" out
-
-  type command_with_context = {
-    client_logging_context: FlowEventLogger.logging_context;
-    command: command;
-  }
 end
 
 module Response = struct
