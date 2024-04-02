@@ -1,7 +1,7 @@
 (library
  (name fuzzy_score)
  (wrapped false)
- (libraries base utils_core))
+ (libraries base))
 
 (dirs
  (:standard __tests__))

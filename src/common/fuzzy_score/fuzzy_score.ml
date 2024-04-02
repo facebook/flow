@@ -362,8 +362,8 @@ let fuzzy_score
               fill_columns (column + 1) (word_pos + 1)
           and fill_columns column word_pos =
             try fill_columns_unsafe column word_pos with
-            | Invalid_argument msg as exn ->
-              let exn = Exception.wrap exn in
+            | Invalid_argument msg ->
+              let bt = Printexc.get_raw_backtrace () in
               let msg =
                 Printf.sprintf
                   "%s (pattern: %S, word: %S, row: %d, column: %d)"
@@ -373,7 +373,7 @@ let fuzzy_score
                   row
                   column
               in
-              Exception.raise_with_backtrace (Invalid_argument msg) exn
+              Printexc.raise_with_backtrace (Invalid_argument msg) bt
           in
           let column = fill_columns (min_word_match_pos_ - word_start + 1) min_word_match_pos_ in
 
