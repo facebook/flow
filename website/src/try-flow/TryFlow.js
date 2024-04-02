@@ -17,6 +17,7 @@ import TryFlowConfigEditor from './TryFlowConfigEditor';
 import TryFlowResults from './TryFlowResults';
 import {
   monaco,
+  setAutoCompleteFunction,
   setGetDefFunction,
   setTypeAtPosFunction,
 } from './configured-monaco';
@@ -155,6 +156,7 @@ export default component TryFlow(
   }
 
   function forceRecheck() {
+    setAutoCompleteFunction(flowService);
     setGetDefFunction(flowService);
     setTypeAtPosFunction(flowService);
 

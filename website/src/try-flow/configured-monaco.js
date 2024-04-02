@@ -15,6 +15,23 @@ import flowLanguageConfiguration from './flow-configuration.json';
 
 type Position = {lineNumber: number, column: number};
 
+let autoCompleteFunctionForMonaco = (
+  value: string,
+  position: Position,
+): any => {
+  throw JSON.stringify({position, error: 'not implemented'});
+};
+
+function setAutoCompleteFunction(flowService: ?FlowJsServices): void {
+  autoCompleteFunctionForMonaco = (value, position) =>
+    flowService?.autocomplete?.(
+      '-',
+      value,
+      position.lineNumber,
+      position.column - 1,
+    ) ?? {incomplete: false, suggestions: []};
+}
+
 let getDefFunctionForMonaco = (
   value: string,
   position: Position,
@@ -51,6 +68,87 @@ monaco.languages.register({
 monaco.languages.setLanguageConfiguration('flow', flowLanguageConfiguration);
 const languageId = monaco.languages.getEncodedLanguageId('flow');
 monaco.languages.setTokensProvider('flow', createTokensProvider(languageId));
+
+monaco.languages.registerCompletionItemProvider('flow', {
+  triggerCharacters: [
+    '.',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z',
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '[',
+    '"',
+    "'",
+  ],
+
+  provideCompletionItems(model, position) {
+    try {
+      const result = autoCompleteFunctionForMonaco(model.getValue(), position);
+      return result;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  },
+});
 monaco.languages.registerDefinitionProvider('flow', {
   provideDefinition(model, position) {
     try {
@@ -84,4 +182,9 @@ monaco.languages.registerHoverProvider('flow', {
 });
 loader.config({monaco});
 
-export {monaco, setGetDefFunction, setTypeAtPosFunction};
+export {
+  monaco,
+  setAutoCompleteFunction,
+  setGetDefFunction,
+  setTypeAtPosFunction,
+};

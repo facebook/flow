@@ -30,6 +30,5 @@
  (modules flow_lsp_conversions)
  (libraries
   flow_parser
-  ; flow_server_persistent_connection
   flow_server_protocol
   lsp))

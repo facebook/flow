@@ -70,3 +70,85 @@ if (
 ) {
   throw 'Incorrect get-def result';
 }
+
+if (
+  JSON.stringify(
+    flow.autocomplete(
+      'test.js',
+      'const foo = 1;\nconst bar = "foo";\nfo',
+      3,
+      2,
+      config,
+    ),
+    undefined,
+    2,
+  ) !==
+  `{
+  "incomplete": false,
+  "suggestions": [
+    {
+      "additionalTextEdits": [],
+      "insertText": "foo",
+      "range": {
+        "insert": {
+          "startLineNumber": 3,
+          "startColumn": 1,
+          "endLineNumber": 3,
+          "endColumn": 3
+        },
+        "replace": {
+          "startLineNumber": 3,
+          "startColumn": 1,
+          "endLineNumber": 3,
+          "endColumn": 2
+        }
+      },
+      "detail": "number",
+      "kind": 6,
+      "label": "foo"
+    },
+    {
+      "additionalTextEdits": [],
+      "insertText": "for",
+      "range": {
+        "insert": {
+          "startLineNumber": 3,
+          "startColumn": 1,
+          "endLineNumber": 3,
+          "endColumn": 3
+        },
+        "replace": {
+          "startLineNumber": 3,
+          "startColumn": 1,
+          "endLineNumber": 3,
+          "endColumn": 2
+        }
+      },
+      "kind": 14,
+      "label": "for"
+    },
+    {
+      "additionalTextEdits": [],
+      "insertText": "function",
+      "range": {
+        "insert": {
+          "startLineNumber": 3,
+          "startColumn": 1,
+          "endLineNumber": 3,
+          "endColumn": 3
+        },
+        "replace": {
+          "startLineNumber": 3,
+          "startColumn": 1,
+          "endLineNumber": 3,
+          "endColumn": 2
+        }
+      },
+      "kind": 14,
+      "label": "function"
+    }
+  ]
+}`
+) {
+  throw 'Invalid autocomplete result.';
+}

@@ -352,6 +352,70 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1 };
   }
 
+let autocomplete filename content line col js_config_object :
+    (AutocompleteService_js.AcCompletion.t, string) result =
+  let filename = File_key.SourceFile filename in
+  let root = File_path.dummy_path in
+  let cursor_loc = Loc.cursor (Some filename) line col in
+  let (content, _) = Autocomplete_sigil.add content line col in
+  Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
+  let r =
+    match parse_content filename content with
+    | Error _ -> Error "parse error"
+    | Ok (ast, file_sig) ->
+      let (_, docblock) =
+        Docblock_parser.(
+          parse_docblock
+            ~max_tokens:docblock_max_tokens
+            ~file_options:Files.default_options
+            filename
+            content
+        )
+      in
+      let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+      let loc = mk_loc filename line col in
+      let open AutocompleteService_js in
+      let artifacts =
+        let empty_exports_search_result =
+          { Export_search_types.results = []; is_incomplete = false }
+        in
+        mk_typing_artifacts
+          ~file_options:Files.default_options
+          ~layout_options:Js_layout_generator.default_opts
+          ~haste_module_system:false
+          ~loc_of_aloc
+          ~get_ast:(fun _ -> None)
+          ~get_haste_name:(fun _ -> None)
+          ~get_package_info:(fun _ -> None)
+          ~is_package_file:(fun _ -> false)
+          ~search_exported_values:(fun ~ac_options:_ _ -> empty_exports_search_result)
+          ~search_exported_types:(fun ~ac_options:_ _ -> empty_exports_search_result)
+          ~cx
+          ~file_sig
+          ~ast
+          ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
+      in
+      let (_, _, _, result) =
+        autocomplete_get_results
+          artifacts
+          {
+            imports = false;
+            imports_min_characters = 0;
+            imports_ranked_usage = false;
+            imports_ranked_usage_boost_exact_match_min_length = None;
+            show_ranking_info = false;
+          }
+          None
+          loc
+      in
+      (match result with
+      | AcEmpty _ -> Ok { AcCompletion.items = []; is_incomplete = false }
+      | AcFatalError msg -> Error msg
+      | AcResult { result; errors_to_log = _ } -> Ok result)
+  in
+  Autocomplete_js.autocomplete_unset_hooks ();
+  r
+
 let get_def filename content line col js_config_object : (Loc.t list, string) result =
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
@@ -471,6 +535,88 @@ let dump_types js_file js_content js_config_object =
     let strip_root = None in
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json
+
+let loc_as_range_to_json loc =
+  let open Hh_json in
+  let open Loc in
+  JSON_Object
+    [
+      ("startLineNumber", JSON_Number (string_of_int loc.start.line));
+      ("startColumn", JSON_Number (string_of_int (loc.start.column + 1)));
+      ("endLineNumber", JSON_Number (string_of_int loc._end.line));
+      ("endColumn", JSON_Number (string_of_int loc._end.column));
+    ]
+
+let completion_item_to_json
+    {
+      AutocompleteService_js.AcCompletion.name;
+      kind;
+      description = _;
+      itemDetail;
+      labelDetail = _;
+      documentation_and_tags = (lazy (documentation, _));
+      preselect = _;
+      sort_text = _;
+      text_edit;
+      insert_text_format = _;
+      additional_text_edits;
+      log_info = _;
+    } =
+  let open Hh_json in
+  let props = [("label", JSON_String name)] in
+  let props =
+    Base.Option.value_map ~default:props kind ~f:(fun k ->
+        ("kind", JSON_Number (Lsp.Completion.completionItemKind_to_enum k |> string_of_int))
+        :: props
+    )
+  in
+  (* { AutocompleteService_js.AcCompletion.insertText; edit; replace }; *)
+  let props =
+    Base.Option.value_map ~default:props itemDetail ~f:(fun s -> ("detail", JSON_String s) :: props)
+  in
+  let props =
+    Base.Option.value_map ~default:props documentation ~f:(fun docs ->
+        ("documentation", JSON_Object [("value", JSON_String docs)]) :: props
+    )
+  in
+  let props =
+    match text_edit with
+    | None -> props
+    | Some { AutocompleteService_js.AcCompletion.newText; insert; replace } ->
+      ("insertText", JSON_String newText)
+      :: ( "range",
+           JSON_Object
+             [("insert", loc_as_range_to_json insert); ("replace", loc_as_range_to_json replace)]
+         )
+      :: props
+  in
+  let props =
+    ( "additionalTextEdits",
+      JSON_Array
+        (Base.List.map additional_text_edits ~f:(fun (loc, text) ->
+             JSON_Object [("text", JSON_String text); ("range", loc_as_range_to_json loc)]
+         )
+        )
+    )
+    :: props
+  in
+  JSON_Object props
+
+let autocomplete js_file js_content js_line js_col js_config_object =
+  let filename = Js.to_string js_file in
+  let content = Js.to_string js_content in
+  let line = Js.parseInt js_line in
+  let col = Js.parseInt js_col in
+  match autocomplete filename content line col js_config_object with
+  | Ok { AutocompleteService_js.AcCompletion.items; is_incomplete } ->
+    let open Hh_json in
+    JSON_Object
+      [
+        ("incomplete", JSON_Bool is_incomplete);
+        ("suggestions", JSON_Array (List.map completion_item_to_json items));
+      ]
+    |> js_of_json
+  | Error msg -> failwith msg
 
 let get_def js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
@@ -634,6 +780,8 @@ let () = Js.Unsafe.set exports "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_
 let () = Js.Unsafe.set exports "flowVersion" (Js.string Flow_version.version)
 
 let () = Js.Unsafe.set exports "parse" (Js.wrap_callback Flow_parser_js.parse)
+
+let () = Js.Unsafe.set exports "autocomplete" (Js.wrap_callback autocomplete)
 
 let () = Js.Unsafe.set exports "getDef" (Js.wrap_callback get_def)
 

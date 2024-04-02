@@ -69,6 +69,13 @@ declare type FlowJs = {
     body: string,
     options: {[string]: mixed},
   ): $ReadOnlyArray<FlowJsError>,
+  autocomplete(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+    options: {[string]: mixed},
+  ): any,
   getDef(
     filename: string,
     body: string,
