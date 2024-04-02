@@ -1,13 +1,9 @@
 (library
- (name lsp)
+ (name lsp_writers)
  (wrapped false)
  (libraries
-  base
-  file_content
-  file_url
-  hh_json
-  flow_exit_status
-  utils_core)
+  lsp
+  jsonrpc)
  (preprocess
   (pps lwt_ppx ppx_deriving.show ppx_deriving.std ppx_deriving.enum ppx_deriving.eq)))
 

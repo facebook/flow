@@ -884,7 +884,7 @@ let show_connected_status (cenv : connected_env) : connected_env =
 let show_connected (env : connected_env) : server_state =
   (* report that we're connected to telemetry/connectionStatus *)
   let i_isConnected =
-    Lsp_helpers.notify_connectionStatus
+    Lsp_writers.notify_connectionStatus
       env.c_ienv.i_initialize_params
       to_stdout
       env.c_ienv.i_isConnected
@@ -897,7 +897,7 @@ let show_connected (env : connected_env) : server_state =
 
 let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_env) : server_state =
   if reason = CommandConnectSimple.Server_missing then
-    Lsp_helpers.log_info to_stdout "Starting Flow server";
+    Lsp_writers.log_info to_stdout "Starting Flow server";
 
   let (message, shortMessage, progress, total) =
     match (reason, env.d_server_status) with
@@ -930,7 +930,7 @@ let show_disconnected (code : FlowExit.t option) (message : string option) (env 
     : server_state =
   (* report that we're disconnected to telemetry/connectionStatus *)
   let i_isConnected =
-    Lsp_helpers.notify_connectionStatus
+    Lsp_writers.notify_connectionStatus
       env.d_ienv.i_initialize_params
       to_stdout
       env.d_ienv.i_isConnected
@@ -1750,7 +1750,7 @@ let try_connect ~version_mismatch_strategy flowconfig_name (env : disconnected_e
       ^ current_version_str
       ^ "\n"
     in
-    Lsp_helpers.telemetry_log to_stdout message;
+    Lsp_writers.telemetry_log to_stdout message;
     lsp_exit_bad ()
   );
   let start_env =
@@ -2672,7 +2672,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
       match state with
       | Initialized (Connected env) ->
         let i_isConnected =
-          Lsp_helpers.notify_connectionStatus
+          Lsp_writers.notify_connectionStatus
             env.c_ienv.i_initialize_params
             to_stdout
             env.c_ienv.i_isConnected
@@ -2690,7 +2690,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
     in
     let code = Base.Option.value_map code ~f:FlowExit.to_string ~default:"" in
     let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code message stack in
-    Lsp_helpers.telemetry_error to_stdout report;
+    Lsp_writers.telemetry_error to_stdout report;
     let (d_autostart, d_ienv) =
       match state with
       | Initialized
@@ -2731,7 +2731,7 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
     let stack = remote_stack ^ "---\n" ^ stack in
     main_log_error ~expected:true ("[Client recoverable] " ^ message) stack event;
     let report = Printf.sprintf "Client exception: %s\n%s" message stack in
-    Lsp_helpers.telemetry_error to_stdout report;
+    Lsp_writers.telemetry_error to_stdout report;
     state
   | Client_fatal_connection_exception { Marshal_tools.stack = remote_stack; message } ->
     let stack = remote_stack ^ "---\n" ^ stack in
@@ -2751,6 +2751,6 @@ and main_handle_error (exn : Exception.t) (state : state) (event : event option)
         let key = command_key_of_state state in
         let json = Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack)) in
         to_stdout json
-      | _ -> Lsp_helpers.telemetry_error to_stdout text
+      | _ -> Lsp_writers.telemetry_error to_stdout text
     in
     state

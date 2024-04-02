@@ -5,6 +5,8 @@
   flow_commands_utils
   flow_common_lsp_conversions
   flow_exit_status
-  logging_common_lwt)
+  jsonrpc
+  logging_common_lwt
+  lsp_writers)
  (preprocess
   (pps lwt_ppx)))

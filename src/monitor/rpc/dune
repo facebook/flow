@@ -3,5 +3,6 @@
  (wrapped false)
  (libraries
   flow_server_protocol
+  marshal_tools_lwt
   sys_utils ; hack
   ))
