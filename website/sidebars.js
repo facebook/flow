@@ -83,6 +83,7 @@ module.exports = {
       items: [
         'react/index',
         'react/component-syntax',
+        'react/hook-syntax',
         'react/function-and-class-components',
         'react/events',
         'react/refs',

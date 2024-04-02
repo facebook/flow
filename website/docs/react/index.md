@@ -20,9 +20,10 @@ React user who already uses Babel. If you need to setup Babel with Flow, you can
 follow [this guide](../tools/babel/).
 
 ## Check Out Component Syntax
-Flow supports a dedicated syntax for writing React components that we recommend instead of using regular
+Flow supports a dedicated syntax for writing React components and hooks that we recommend instead of using regular
 function/class components. Ensure you are set up using our [most up-to-date instructions to
-configure your toolchain](../install) and then take a look at the [Component Syntax](./component-syntax) docs.
+configure your toolchain](../install) and then take a look at the [Component Syntax](./component-syntax)
+and [Hook Syntax](./hook-syntax) docs.
 
 ## React Runtimes
 
