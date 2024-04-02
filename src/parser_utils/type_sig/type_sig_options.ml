@@ -14,6 +14,7 @@ type t = {
   exact_by_default: bool;
   enable_enums: bool;
   enable_component_syntax: bool;
+  component_syntax_enabled_in_config: bool;
   enable_ts_syntax: bool;
   hooklike_functions: bool;
   casting_syntax: Options.CastingSyntax.t;
@@ -57,6 +58,7 @@ let of_options options docblock locs_to_dirtify file =
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
+    component_syntax_enabled_in_config = Options.component_syntax options;
     enable_ts_syntax = Options.ts_syntax options;
     for_builtins = false;
     casting_syntax = Options.casting_syntax options;
@@ -78,6 +80,7 @@ let builtin_options options =
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = true;
+    component_syntax_enabled_in_config = Options.component_syntax options;
     enable_ts_syntax = false;
     hooklike_functions = Options.hooklike_functions options;
     casting_syntax = Options.casting_syntax options;

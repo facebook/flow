@@ -1616,7 +1616,7 @@ and function_type opts scope tbls xs f =
   let rest_param = function_type_rest_param opts scope tbls xs rp in
   let (return, predicate) = return_annot opts scope tbls xs r in
   let hook =
-    if hook then
+    if opts.component_syntax_enabled_in_config && hook then
       HookAnnot
     else
       NonHook
@@ -4498,9 +4498,13 @@ let declare_function_decl opts scope tbls decl =
                  None
              in
              let hook =
-               if hook then
+               if opts.component_syntax_enabled_in_config && hook then
                  HookAnnot
-               else if opts.hooklike_functions && Flow_ast_utils.hook_name name then
+               else if
+                 opts.component_syntax_enabled_in_config
+                 && opts.hooklike_functions
+                 && Flow_ast_utils.hook_name name
+               then
                  AnyHook
                else
                  NonHook

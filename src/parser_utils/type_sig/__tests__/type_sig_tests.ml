@@ -232,6 +232,7 @@ let sig_options
     exact_by_default;
     enable_enums;
     enable_component_syntax;
+    component_syntax_enabled_in_config = true;
     enable_ts_syntax;
     hooklike_functions;
     enable_relay_integration;

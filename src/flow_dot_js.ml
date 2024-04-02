@@ -92,6 +92,7 @@ let load_lib_files files =
       exact_by_default = true;
       enable_enums = true;
       enable_component_syntax = true;
+      component_syntax_enabled_in_config = true;
       enable_ts_syntax = true;
       hooklike_functions = true;
       casting_syntax = Options.CastingSyntax.Both;
