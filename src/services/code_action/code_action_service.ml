@@ -26,13 +26,20 @@ let include_add_missing_imports_action only = include_code_action ~only add_miss
 let include_organize_imports_actions only =
   include_code_action ~only Lsp.CodeActionKind.source_organize_imports
 
+let flow_loc_patch_to_lsp_edits =
+  Base.List.map ~f:(fun (loc, text) ->
+      { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
+  )
+
 let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_ast =
   let open Lsp in
   let diff = Insert_type.mk_diff ast new_ast in
   let opts = layout_options options in
   let edits =
     Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    |> Base.List.map ~f:(fun (loc, text) ->
+           { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
+       )
   in
   [
     CodeAction.Action
@@ -140,7 +147,7 @@ let refactor_extract_code_actions
           let edits =
             Autofix_imports.add_imports ~options:opts ~added_imports ast
             @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-            |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+            |> flow_loc_patch_to_lsp_edits
           in
           let diagnostic_title = "refactor_extract" in
           let open Lsp in
@@ -204,7 +211,7 @@ let insert_jsdoc_code_actions ~options ~ast uri loc =
     ast'
     |> Flow_ast_differ.program ast
     |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
-    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    |> flow_loc_patch_to_lsp_edits
     |> Base.List.map ~f:(fun edit ->
            (* This hack is needed because the differ doesn't differentiate between
               [comment; \n; node] and [comment; node] *)
@@ -230,7 +237,7 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
       ast'
       |> Flow_ast_differ.program ast
       |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
-      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+      |> flow_loc_patch_to_lsp_edits
       |> fun edits ->
       let open Lsp in
       [
@@ -288,7 +295,7 @@ let suggest_imports
     []
   else
     let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
-    let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
+    let error_range = Lsp.loc_to_lsp_range loc in
     let relevant_diagnostics =
       let open PublishDiagnostics in
       let lsp_code = StringCode Error_codes.(string_of_code CannotResolveName) in
@@ -388,7 +395,7 @@ let autofix_in_upstream_file
   transform ~cx ~file_sig ~ast ~typed_ast loc
   >>| Flow_ast_differ.program ast
   >>| Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
-  >>| Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+  >>| flow_loc_patch_to_lsp_edits
   >>= fun edits ->
   match edits with
   | [] -> None
@@ -921,7 +928,7 @@ let code_actions_of_errors
 let code_action_for_parser_error_with_suggestion
     acc diagnostics uri ~error_loc ~editor_loc title newText =
   if Loc.intersects error_loc editor_loc then
-    let error_range = Flow_lsp_conversions.loc_to_lsp_range error_loc in
+    let error_range = Lsp.loc_to_lsp_range error_loc in
     let open Lsp in
     let relevant_diagnostics =
       diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
@@ -1242,8 +1249,7 @@ let autofix_imports
   in
   let edits =
     let opts = layout_options options in
-    Autofix_imports.add_imports ~options:opts ~added_imports ast
-    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    Autofix_imports.add_imports ~options:opts ~added_imports ast |> flow_loc_patch_to_lsp_edits
   in
   edits
 
@@ -1396,7 +1402,6 @@ let insert_type
 let organize_imports ~options ~ast =
   let edits =
     let opts = layout_options options in
-    Autofix_imports.organize_imports ~options:opts ast
-    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    Autofix_imports.organize_imports ~options:opts ast |> flow_loc_patch_to_lsp_edits
   in
   edits

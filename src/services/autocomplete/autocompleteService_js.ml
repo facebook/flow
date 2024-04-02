@@ -664,7 +664,7 @@ let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
 
 let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
-  let loc = Flow_lsp_conversions.lsp_range_to_flow_loc range in
+  let loc = Lsp.lsp_range_to_flow_loc range in
   (loc, newText)
 
 let completion_item_of_autoimport

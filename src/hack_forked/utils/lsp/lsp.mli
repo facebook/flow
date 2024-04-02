@@ -38,6 +38,16 @@ type range = {
   end_: position;
 }
 
+val flow_position_to_lsp : int -> int -> position
+
+val lsp_position_to_flow : position -> int * int
+
+val lsp_position_to_flow_position : position -> Loc.position
+
+val lsp_range_to_flow_loc : ?source:File_key.t -> range -> Loc.t
+
+val loc_to_lsp_range : Loc.t -> range
+
 module Location : sig
   type t = {
     uri: DocumentUri.t;

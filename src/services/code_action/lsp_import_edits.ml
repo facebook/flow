@@ -198,7 +198,9 @@ let text_edits_of_import
     in
     let edits =
       Autofix_imports.add_import ~options:layout_options ~bindings ~from ast
-      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+      |> Base.List.map ~f:(fun (loc, text) ->
+             { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
+         )
     in
     Some { title; edits; from }
 

@@ -267,7 +267,7 @@ let provide_selection_ranges positions ast =
   let rev_results =
     List.fold_result
       ~f:(fun acc lsp_position ->
-        let position = Flow_lsp_conversions.lsp_position_to_flow_position lsp_position in
+        let position = Lsp.lsp_position_to_flow_position lsp_position in
         match selection_range_tree position ast with
         | Some range -> Ok (range :: acc)
         | None ->

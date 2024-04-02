@@ -61,7 +61,7 @@ let get_edits_for_file ~old_haste_name ~new_haste_name file_sig =
       let newText =
         Source.contents (Pretty_printer.print ~skip_endline:true ~source_maps:None string_layout)
       in
-      { Lsp.TextEdit.range = Flow_lsp_conversions.loc_to_lsp_range loc; newText } :: acc)
+      { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText } :: acc)
     loc_to_replacement_map
     []
 

@@ -67,6 +67,33 @@ type range = {
   end_: position;  (** the range's end position [exclusive] *)
 }
 
+let flow_position_to_lsp (line : int) (char : int) : position =
+  { line = max 0 (line - 1); character = char }
+
+let lsp_position_to_flow (position : position) : int * int =
+  (* Flow's line numbers are 1-indexed; LSP's are 0-indexed *)
+  let line = position.line + 1 in
+  let char = position.character in
+  (line, char)
+
+let lsp_position_to_flow_position p =
+  let (line, column) = lsp_position_to_flow p in
+  { Loc.line; column }
+
+let lsp_range_to_flow_loc ?source (range : range) =
+  {
+    Loc.source;
+    start = lsp_position_to_flow_position range.start;
+    _end = lsp_position_to_flow_position range.end_;
+  }
+
+let loc_to_lsp_range (loc : Loc.t) : range =
+  let loc_start = loc.Loc.start in
+  let loc_end = loc.Loc._end in
+  let start = flow_position_to_lsp loc_start.Loc.line loc_start.Loc.column in
+  let end_ = flow_position_to_lsp loc_end.Loc.line loc_end.Loc.column in
+  { start; end_ }
+
 (** Represents a location inside a resource, such as a line inside a text file *)
 module Location = struct
   type t = {

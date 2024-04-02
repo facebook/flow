@@ -1128,7 +1128,7 @@ let lsp_DocumentItem_to_flow (open_doc : Lsp.TextDocumentItem.t) : File_input.t 
 
 let diagnostic_of_parse_error (loc, parse_error) : PublishDiagnostics.diagnostic =
   {
-    Lsp.PublishDiagnostics.range = Flow_lsp_conversions.loc_to_lsp_range loc;
+    Lsp.PublishDiagnostics.range = Lsp.loc_to_lsp_range loc;
     severity = Some PublishDiagnostics.Error;
     code = Lsp.PublishDiagnostics.StringCode "ParseError";
     source = Some "Flow";

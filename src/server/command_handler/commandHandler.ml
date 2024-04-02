@@ -1093,8 +1093,7 @@ let auto_close_jsx ~options ~env ~profiling ~params ~client =
       | None -> (Ok None, None)
       | Some (Parse_artifacts { ast; _ }) ->
         let target_pos =
-          Flow_lsp_conversions.lsp_position_to_flow_position
-            params.TextDocumentPositionParams.position
+          Lsp.lsp_position_to_flow_position params.TextDocumentPositionParams.position
         in
         let edit = Auto_close_jsx.get_snippet ast target_pos in
         (Ok edit, None)
@@ -1121,13 +1120,12 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
       | Some (Parse_artifacts { ast; _ }) ->
         let result =
           let target_pos =
-            Flow_lsp_conversions.lsp_position_to_flow_position
-              params.TextDocumentPositionParams.position
+            Lsp.lsp_position_to_flow_position params.TextDocumentPositionParams.position
           in
           let target_loc = Loc.cursor (Some filename) target_pos.Loc.line target_pos.Loc.column in
           let linked_locs = Linked_editing_jsx.get_linked_locs ast target_loc in
           Base.Option.map linked_locs ~f:(fun linked_locs ->
-              let ranges = Base.List.map linked_locs ~f:Flow_lsp_conversions.loc_to_lsp_range in
+              let ranges = Base.List.map linked_locs ~f:Lsp.loc_to_lsp_range in
               { LinkedEditingRange.ranges; wordPattern = None }
           )
         in
@@ -1396,7 +1394,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             Typecheck_artifacts { cx; typed_ast; _ }
           ) ->
         let uri = TextDocumentIdentifier.(textDocument.uri) in
-        let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+        let loc = Lsp.lsp_range_to_flow_loc ~source:file_key range in
         let lsp_init_params = Persistent_connection.lsp_initialize_params client in
         let imports_ranked_usage = rank_autoimports_by_usage ~options client in
         let scope_info =
@@ -2718,11 +2716,7 @@ let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   (* All the locs are implicitly in the same file *)
   let ref_to_highlight (_, loc) =
-    Some
-      {
-        DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
-        kind = Some DocumentHighlight.Text;
-      }
+    Some { DocumentHighlight.range = Lsp.loc_to_lsp_range loc; kind = Some DocumentHighlight.Text }
   in
   let%lwt (result, extra_data) =
     map_local_find_references_results
@@ -2981,9 +2975,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
           final_candidate :: singles
       in
       (* Convert to LSP *)
-      let loc_to_lsp loc =
-        { TypeCoverage.range = Flow_lsp_conversions.loc_to_lsp_range loc; message = None }
-      in
+      let loc_to_lsp loc = { TypeCoverage.range = Lsp.loc_to_lsp_range loc; message = None } in
       let uncoveredRanges = Base.List.map singles ~f:loc_to_lsp in
       (* Send the results! *)
       let r =

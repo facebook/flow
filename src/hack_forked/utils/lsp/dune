@@ -6,8 +6,7 @@
   file_content
   file_url
   hh_json
-  flow_exit_status
-  utils_core)
+  flow_exit_status)
  (preprocess
   (pps lwt_ppx ppx_deriving.show ppx_deriving.std ppx_deriving.enum ppx_deriving.eq)))
 

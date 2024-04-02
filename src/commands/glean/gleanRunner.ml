@@ -39,8 +39,8 @@ module DocumentationFullspanMap = struct
     let comment_loc_map_ref = ref comment_loc_map in
     let add_to_map SymbolInformation.{ selectionRange; location = Location.{ range; _ }; _ } =
       let documentation = None in
-      let loc = Flow_lsp_conversions.lsp_range_to_flow_loc selectionRange ~source in
-      let span = Some (Flow_lsp_conversions.lsp_range_to_flow_loc range ~source) in
+      let loc = Lsp.lsp_range_to_flow_loc selectionRange ~source in
+      let span = Some (Lsp.lsp_range_to_flow_loc range ~source) in
       comment_loc_map_ref := LMap.add ~combine loc { documentation; span } !comment_loc_map_ref
     in
     List.iter add_to_map symbol_spans;

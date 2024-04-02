@@ -60,8 +60,8 @@ let kind_of_property is_method =
     Lsp.SymbolInformation.Property
 
 let mk ~loc ~selection ~name ?detail ~kind ~children () =
-  let range = Flow_lsp_conversions.loc_to_lsp_range loc in
-  let selectionRange = Flow_lsp_conversions.loc_to_lsp_range selection in
+  let range = Lsp.loc_to_lsp_range loc in
+  let selectionRange = Lsp.loc_to_lsp_range selection in
   { Lsp.DocumentSymbol.name; detail; kind; deprecated = false; range; selectionRange; children }
 
 class visitor =

@@ -4,7 +4,6 @@
  (modules
   (:standard \ code_action_service))
  (libraries
-  flow_common_lsp_conversions
   flow_service_type_info
   flow_typing
   collections)
