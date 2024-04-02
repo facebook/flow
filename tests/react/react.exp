@@ -1427,9 +1427,9 @@ References:
    useCallback_hook.js:4:3
      4|   React.useCallback(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:851:37
-   851|     declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:851:33
+   851|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:10:23
@@ -1572,9 +1572,9 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:776:32
-   776|     declare function useContext<T>(context: React$Context<T>): T;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:776:28
+   776|     declare hook useContext<T>(context: React$Context<T>): T;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:50:43
@@ -1586,9 +1586,9 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:776:32
-   776|     declare function useContext<T>(context: React$Context<T>): T;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:776:28
+   776|     declare hook useContext<T>(context: React$Context<T>): T;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ useContext_hook.js:52:4
@@ -1631,9 +1631,9 @@ Cannot call `React.useEffect` because function [1] requires another argument. [i
                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:827:31
-                                      v
-   827|     declare function useEffect(
+   <BUILTINS>/react.js:827:27
+                                  v
+   827|     declare hook useEffect(
    828|       create: () => MaybeCleanUpFn,
    829|       inputs?: ?$ReadOnlyArray<mixed>,
    830|     ): void;
@@ -1721,9 +1721,9 @@ Cannot call `React.useImperativeHandle` because function [1] requires another ar
                 ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:873:41
-                                                v---
-   873|     declare function useImperativeHandle<T>(
+   <BUILTINS>/react.js:873:37
+                                            v---
+   873|     declare hook useImperativeHandle<T>(
    874|       ref: React$RefSetter<T> | null | void,
    875|       create: () => T,
    876|       inputs: ?$ReadOnlyArray<mixed>,
@@ -1791,9 +1791,9 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
                 ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:840:37
-                                            v
-   840|     declare function useLayoutEffect(
+   <BUILTINS>/react.js:840:33
+                                        v
+   840|     declare hook useLayoutEffect(
    841|       create: () => MaybeCleanUpFn,
    842|       inputs?: ?$ReadOnlyArray<mixed>,
    843|     ): void;
@@ -1882,9 +1882,9 @@ Cannot call `React.useMemo` because function [1] requires another argument. [inc
                 ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:862:29
-                                    v---
-   862|     declare function useMemo<T>(
+   <BUILTINS>/react.js:862:25
+                                v---
+   862|     declare hook useMemo<T>(
    863|       create: () => T,
    864|       inputs: ?$ReadOnlyArray<mixed>,
    865|     ): T;
@@ -2055,9 +2055,9 @@ Cannot call `React.useReducer` because: [incompatible-call]
                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:796:32
-                                       v------
-   796|     declare function useReducer<S, A>(
+   <BUILTINS>/react.js:796:28
+                                   v------
+   796|     declare hook useReducer<S, A>(
    797|       reducer: (S, A) => S,
    798|       initialState: S,
    799|     ): [S, Dispatch<A>];
@@ -2065,17 +2065,17 @@ References:
    useReducer_hook.js:4:3
      4|   React.useReducer(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:801:32
-                                       v------
-   801|     declare function useReducer<S, A>(
+   <BUILTINS>/react.js:801:28
+                                   v------
+   801|     declare hook useReducer<S, A>(
    802|       reducer: (S, A) => S,
    803|       initialState: S,
    804|       init: void,
    805|     ): [S, Dispatch<A>];
             ------------------^ [3]
-   <BUILTINS>/react.js:807:32
-                                       v---------
-   807|     declare function useReducer<S, A, I>(
+   <BUILTINS>/react.js:807:28
+                                   v---------
+   807|     declare hook useReducer<S, A, I>(
    808|       reducer: (S, A) => S,
    809|       initialArg: I,
    810|       init: (I) => S,

@@ -1716,8 +1716,12 @@ Flags: --strip-root --pretty
 {
   "documentation":"`useState` is a React Hook that lets you add a\n[state variable](https://react.dev/learn/state-a-components-memory)\nto your component.\n\n**@see** https://react.dev/reference/react/useState",
   "types":{
-    "unevaluated":{"type":"<S>(initialState: ((() => S) | S)) => [S, ReactSetStateFunction<S>]"},
-    "evaluated":null
+    "unevaluated":{
+      "type":"hook <S>(initialState: ((() => S) | S)) => [S, ReactSetStateFunction<S>]"
+    },
+    "evaluated":{
+      "type":"hook <S>(initialState: ((() => S) | S)) => [S, ReactSetStateFunction<S>]"
+    }
   },
   "reasons":[],
   "loc":{
@@ -1739,9 +1743,11 @@ Flags: --strip-root --pretty
   "documentation":"`useReducer` is a React Hook that lets you add a\n[reducer](https://react.dev/learn/extracting-state-logic-into-a-reducer)\nto your component.\n\n**@see** https://react.dev/reference/react/useReducer",
   "types":{
     "unevaluated":{
-      "type":"(<S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (<S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (<S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
+      "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
     },
-    "evaluated":null
+    "evaluated":{
+      "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
+    }
   },
   "reasons":[],
   "loc":{

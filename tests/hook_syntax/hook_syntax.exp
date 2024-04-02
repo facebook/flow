@@ -1067,21 +1067,6 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ ref.js:6:15
-
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. [react-rule-hook]
-
-   ref.js:6:15
-   6|     const x = React.useRef(null); // unrelated error due to useRef not actually being a hook currently
-                    ^^^^^^^^^^^^^^^^^^
-
-References:
-   ref.js:6:15
-   6|     const x = React.useRef(null); // unrelated error due to useRef not actually being a hook currently
-                    ^^^^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------------- ref.js:7:5
 
 Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
@@ -2388,21 +2373,6 @@ References:
            ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- using_react.js:5:15
-
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. [react-rule-hook]
-
-   using_react.js:5:15
-   5|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
-                    ^^^^^^^^^^^^^^^^^^
-
-References:
-   using_react.js:5:15
-   5|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
-                    ^^^^^^^^^^^^ [1]
-
-
 Error --------------------------------------------------------------------------------------------- using_react.js:10:15
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -2418,4 +2388,4 @@ References:
 
 
 
-Found 165 errors
+Found 163 errors

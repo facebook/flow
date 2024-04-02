@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as HookReact from './hookReact';
 
 component Foo() {
-    const x = React.useRef(null); // error, because currently useRef is a function not a hook
+    const x = React.useRef(null); // OK, useRef is a hook
     return null;
 }
 
