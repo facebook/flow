@@ -579,8 +579,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.Class _
     | Ast.Expression.Import _
     | Ast.Expression.JSXFragment _
-    | Ast.Expression.Member _
     | Ast.Expression.MetaProperty _
+    | Ast.Expression.Member _
     | Ast.Expression.OptionalMember _
     | Ast.Expression.Sequence _
     | Ast.Expression.Super _
@@ -2696,6 +2696,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           []
         | _ -> hints
       in
+      let hints_before_synthesizable_check = hints in
       let hints =
         if expression_is_definitely_synthesizable ~autocomplete_hooks exp then
           []
@@ -2711,7 +2712,14 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
             (ExpressionDef { cond_context = cond; expr = exp; hints; chain = false })
         | _ -> ()
       end;
-      this#record_hint loc hints;
+      let () =
+        match expr with
+        (* Member expressions are always synthesizable, but we use hints on member expressions to avoid
+         * method-unbinding errors when the hint is a supertype of a mixed (which would make the method un-callable
+         *)
+        | Ast.Expression.Member _ -> this#record_hint loc hints_before_synthesizable_check
+        | _ -> this#record_hint loc hints
+      in
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hints:hints loc expr
       | Ast.Expression.ArrowFunction x ->

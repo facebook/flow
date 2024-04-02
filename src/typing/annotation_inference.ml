@@ -1051,6 +1051,7 @@ module rec ConsGen : S = struct
         ~method_accessible:false
         ~super
         ~lookup_kind:(Strict reason_instance)
+        ~hint:hint_unavailable
         inst
         propref
         reason_op

@@ -3739,7 +3739,14 @@ module Make
           | Some t -> t
           | None ->
             let use_op = Op (GetProperty (mk_expression_reason ex)) in
-            get_prop ~use_op ~cond cx expr_reason super_t (prop_reason, name)
+            get_prop
+              ~use_op
+              ~cond
+              ~hint:(Type_env.get_hint cx loc)
+              cx
+              expr_reason
+              super_t
+              (prop_reason, name)
         in
         let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
         let ast =
@@ -4078,7 +4085,14 @@ module Make
         let expr_reason = mk_expression_reason ex in
         let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
         let use_op = Op (GetProperty expr_reason) in
-        let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
+        let opt_use =
+          get_prop_opt_use
+            ~cond
+            expr_reason
+            ~use_op
+            ~hint:(Type_env.get_hint cx loc)
+            (prop_reason, name)
+        in
         let get_mem_t () _ obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
@@ -5282,7 +5296,7 @@ module Make
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
         let use_op = Op (GetProperty reason) in
-        get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
+        get_prop ~cond:None cx reason ~use_op ~hint:hint_unavailable react (reason, "Fragment")
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_opening_element, children_loc) in
@@ -5923,12 +5937,11 @@ module Make
      expressions out of `expression`, somewhat like what assignment_lhs does. That
      would make everything involving Refinement be in the same place.
   *)
-  and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
+  and get_prop_opt_use ~cond reason ~use_op ~hint (prop_reason, name) =
     let id = mk_id () in
     let prop_name = OrdinaryName name in
     if Base.Option.is_some cond then
-      OptTestPropT
-        (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint_unavailable)
+      OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
     else
       OptGetPropT
         {
@@ -5936,11 +5949,11 @@ module Make
           reason;
           id = Some id;
           propref = mk_named_prop ~reason:prop_reason prop_name;
-          hint = hint_unavailable;
+          hint;
         }
 
-  and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
-    let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
+  and get_prop ~cond cx reason ~use_op ~hint tobj (prop_reason, name) =
+    let opt_use = get_prop_opt_use ~cond reason ~use_op ~hint (prop_reason, name) in
     Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
         let get_prop_u = apply_opt_use opt_use t in
         Flow.flow cx (tobj, get_prop_u)
@@ -6504,7 +6517,16 @@ module Make
               let expr_reason = mk_expression_reason (loc, expr) in
               let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
               let use_op = Op (GetProperty expr_reason) in
-              let tout = get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name) in
+              let tout =
+                get_prop
+                  ~use_op
+                  ~hint:hint_unavailable
+                  ~cond:None
+                  cx
+                  expr_reason
+                  t
+                  (prop_reason, name)
+              in
               ( tout,
                 fun () ->
                   ( (loc, tout),

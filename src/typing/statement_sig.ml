@@ -269,6 +269,7 @@ module type S = sig
     Context.t ->
     Reason.t ->
     use_op:Type.use_op ->
+    hint:Type.lazy_hint_t ->
     Type.t ->
     Reason.t * string ->
     Type.t

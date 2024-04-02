@@ -1991,17 +1991,41 @@ let rec unbind_this_method = function
   | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
   | t -> t
 
-let check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p =
+let check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref ~hint p =
   match p with
   | Method { key_loc; type_ = t }
     when (not method_accessible)
          && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
-    let reason_op = reason_of_propref propref in
-    add_output
-      cx
-      ~trace
-      (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
-    Method { key_loc; type_ = unbind_this_method t }
+    let hint_result = (snd hint) reason_op in
+    let valid_hint_t =
+      match hint_result with
+      | HintAvailable (t, _) ->
+        let t =
+          match t with
+          | OpenT (_, id) ->
+            let (_, constraints) = Context.find_constraints cx id in
+            (match constraints with
+            | FullyResolved tvar -> Context.force_fully_resolved_tvar cx tvar
+            | Resolved t -> t
+            | Unresolved _ -> t)
+          | _ -> t
+        in
+        (match t with
+        | DefT (_, MixedT _)
+        | AnyT _ ->
+          Some t
+        | _ -> None)
+      | _ -> None
+    in
+    (match valid_hint_t with
+    | Some t -> Method { key_loc; type_ = t }
+    | None ->
+      let reason_op = reason_of_propref propref in
+      add_output
+        cx
+        ~trace
+        (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
+      Method { key_loc; type_ = unbind_this_method t })
   | _ -> p
 
 (* e.g. `0`, `-123, `234234` *)
@@ -2128,11 +2152,23 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | _ -> None
 
   let read_instance_prop
-      cx trace ~use_op ~instance_t ~id ~method_accessible ~super ~lookup_kind inst propref reason_op
-      =
+      cx
+      trace
+      ~use_op
+      ~instance_t
+      ~id
+      ~method_accessible
+      ~super
+      ~lookup_kind
+      ~hint
+      inst
+      propref
+      reason_op =
     match get_instance_prop cx trace ~use_op ~ignore_dicts:true inst propref reason_op with
     | Some (p, _target_kind) ->
-      let p = check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p in
+      let p =
+        check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref ~hint p
+      in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
       perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op None
     | None ->

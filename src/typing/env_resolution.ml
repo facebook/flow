@@ -129,7 +129,14 @@ let rec synthesizable_expression cx ?cond exp =
         let expr_reason = mk_expression_reason exp in
         let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
         let use_op = Op (GetProperty expr_reason) in
-        Statement.get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name)
+        Statement.get_prop
+          ~use_op (* TODO(jmbrown) This feels incorrect *)
+          ~hint:(Type_env.get_hint cx loc)
+          ~cond:None
+          cx
+          expr_reason
+          t
+          (prop_reason, name)
     in
     tout
   | _ -> expression cx ?cond exp

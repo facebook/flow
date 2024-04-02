@@ -3803,7 +3803,15 @@ struct
            with
           | Some (p, target_kind) ->
             let p =
-              check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p
+              check_method_unbinding
+                cx
+                trace
+                ~use_op
+                ~method_accessible
+                ~reason_op
+                ~propref
+                ~hint:hint_unavailable
+                p
             in
             (match kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
@@ -3932,7 +3940,7 @@ struct
           let t = TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l in
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
         | ( DefT (reason_instance, InstanceT { super; inst; _ }),
-            GetPropT { use_op; reason = reason_op; from_annot; id; propref; tout; hint = _ }
+            GetPropT { use_op; reason = reason_op; id; from_annot; propref; tout; hint }
           ) ->
           let method_accessible = from_annot in
           let lookup_action = ReadProp { use_op; obj_t = l; tout } in
@@ -3956,6 +3964,7 @@ struct
             ~method_accessible
             ~super
             ~lookup_kind
+            ~hint
             inst
             propref
             reason_op
@@ -4006,6 +4015,7 @@ struct
                   ~method_accessible:true
                   ~super
                   ~lookup_kind
+                  ~hint:hint_unavailable
                   inst
                   propref
                   reason_call
