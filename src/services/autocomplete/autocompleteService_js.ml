@@ -307,14 +307,10 @@ let autocomplete_create_result_elt
 let ty_normalizer_options = Ty_normalizer_env.{ default_options with expand_internal_types = true }
 
 type typing = {
-  file_options: Files.options;
   layout_options: Js_layout_generator.opts;
-  haste_module_system: bool;
   loc_of_aloc: ALoc.t -> Loc.t;
   get_ast_from_shared_mem: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
-  get_haste_name: File_key.t -> string option;
-  get_package_info: File_key.t -> (Package_json.t, unit) result option;
-  is_package_file: string -> bool;
+  module_system_info: Lsp_module_system_info.t;
   search_exported_values: ac_options:ac_options -> string -> Export_search_types.search_results;
   search_exported_types: ac_options:ac_options -> string -> Export_search_types.search_results;
   cx: Context.t;
@@ -325,14 +321,10 @@ type typing = {
 }
 
 let mk_typing_artifacts
-    ~file_options
     ~layout_options
-    ~haste_module_system
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
-    ~get_package_info
-    ~is_package_file
+    ~module_system_info
     ~search_exported_values
     ~search_exported_types
     ~cx
@@ -347,14 +339,10 @@ let mk_typing_artifacts
       ~file_sig
   in
   {
-    file_options;
     layout_options;
-    haste_module_system;
     loc_of_aloc;
     get_ast_from_shared_mem;
-    get_haste_name;
-    get_package_info;
-    is_package_file;
+    module_system_info;
     search_exported_values;
     search_exported_types;
     cx;
@@ -650,26 +638,11 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
 
 let completion_item_of_autoimport
     ~typing ~src_dir ~edit_locs ~ranking_info { Export_search_types.name; source; kind } rank =
-  let {
-    file_options;
-    layout_options;
-    haste_module_system;
-    get_haste_name;
-    get_package_info;
-    is_package_file;
-    ast;
-    _;
-  } =
-    typing
-  in
+  let { layout_options; module_system_info; ast; _ } = typing in
   match
     Lsp_import_edits.text_edits_of_import
-      ~file_options
       ~layout_options
-      ~haste_module_system
-      ~get_haste_name
-      ~get_package_info
-      ~is_package_file
+      ~module_system_info
       ~src_dir
       ~ast
       kind
@@ -1744,21 +1717,7 @@ let autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs =
   { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type_ =
-  let {
-    file_options;
-    layout_options;
-    haste_module_system;
-    cx;
-    loc_of_aloc;
-    get_haste_name;
-    get_package_info;
-    is_package_file;
-    file_sig;
-    ast;
-    _;
-  } =
-    typing
-  in
+  let { layout_options; module_system_info; cx; loc_of_aloc; file_sig; ast; _ } = typing in
   let results_id =
     autocomplete_id
       ~typing
@@ -1803,12 +1762,8 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
       let name = "React" in
       let source = Export_index.Builtin "react" in
       Lsp_import_edits.text_edits_of_import
-        ~file_options
         ~layout_options
-        ~haste_module_system
-        ~get_haste_name
-        ~get_package_info
-        ~is_package_file
+        ~module_system_info
         ~src_dir
         ~ast
         kind

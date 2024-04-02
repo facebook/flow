@@ -380,14 +380,18 @@ let autocomplete filename content line col js_config_object :
           { Export_search_types.results = []; is_incomplete = false }
         in
         mk_typing_artifacts
-          ~file_options:Files.default_options
           ~layout_options:Js_layout_generator.default_opts
-          ~haste_module_system:false
-          ~loc_of_aloc
           ~get_ast_from_shared_mem:(fun _ -> None)
-          ~get_haste_name:(fun _ -> None)
-          ~get_package_info:(fun _ -> None)
-          ~is_package_file:(fun _ -> false)
+          ~module_system_info:
+            Lsp_module_system_info.
+              {
+                file_options = Files.default_options;
+                haste_module_system = false;
+                get_haste_name = (fun _ -> None);
+                get_package_info = (fun _ -> None);
+                is_package_file = (fun _ -> false);
+              }
+          ~loc_of_aloc
           ~search_exported_values:(fun ~ac_options:_ _ -> empty_exports_search_result)
           ~search_exported_types:(fun ~ac_options:_ _ -> empty_exports_search_result)
           ~cx

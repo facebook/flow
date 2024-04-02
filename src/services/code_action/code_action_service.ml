@@ -273,10 +273,8 @@ let maybe_sort_by_usage ~imports_ranked_usage imports =
     imports
 
 let suggest_imports
-    ~options
-    ~get_haste_name
-    ~get_package_info
-    ~is_package_file
+    ~layout_options
+    ~module_system_info
     ~ast
     ~diagnostics
     ~imports_ranked_usage
@@ -309,12 +307,8 @@ let suggest_imports
     |> Base.List.fold ~init:[] ~f:(fun acc ((source, export_kind), _num) ->
            match
              Lsp_import_edits.text_edits_of_import
-               ~file_options:(Options.file_options options)
-               ~layout_options:(Code_action_utils.layout_options options)
-               ~haste_module_system:Options.(module_system options = Haste)
-               ~get_haste_name
-               ~get_package_info
-               ~is_package_file
+               ~layout_options
+               ~module_system_info
                ~src_dir
                ~ast
                export_kind
@@ -831,9 +825,7 @@ let code_actions_of_errors
     ~options
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
-    ~get_package_info
-    ~is_package_file
+    ~module_system_info
     ~cx
     ~file_sig
     ~env
@@ -861,10 +853,8 @@ let code_actions_of_errors
               if include_quick_fixes && Loc.intersects error_loc loc then
                 let { ServerEnv.exports; _ } = env in
                 suggest_imports
-                  ~options
-                  ~get_haste_name
-                  ~get_package_info
-                  ~is_package_file
+                  ~layout_options:(Code_action_utils.layout_options options)
+                  ~module_system_info
                   ~ast
                   ~diagnostics
                   ~imports_ranked_usage
@@ -1050,10 +1040,8 @@ let code_actions_at_loc
     ~env
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
     ~get_type_sig
-    ~get_package_info
-    ~is_package_file
+    ~module_system_info
     ~cx
     ~file_sig
     ~tolerable_errors
@@ -1072,7 +1060,7 @@ let code_actions_at_loc
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
       ~get_type_sig
       ~ast
       ~file_sig
@@ -1092,7 +1080,7 @@ let code_actions_at_loc
         ~typed_ast
         ~loc_of_aloc
         ~get_ast_from_shared_mem
-        ~get_haste_name
+        ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
         ~get_type_sig
         ~only
         uri
@@ -1102,7 +1090,7 @@ let code_actions_at_loc
         ~cx
         ~loc_of_aloc
         ~get_ast_from_shared_mem
-        ~get_haste_name
+        ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
         ~get_type_sig
         ~ast
         ~file_sig
@@ -1119,9 +1107,7 @@ let code_actions_at_loc
       ~options
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
-      ~get_package_info
-      ~is_package_file
+      ~module_system_info
       ~cx
       ~file_sig
       ~env
@@ -1157,8 +1143,7 @@ module ExportKindMap = WrappedMap.Make (struct
 end)
 
 (** insert imports for all undefined-variable errors that have only one suggestion *)
-let autofix_imports
-    ~options ~env ~loc_of_aloc ~get_haste_name ~get_package_info ~is_package_file ~cx ~ast ~uri =
+let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri =
   let errors = Context.errors cx in
   let { ServerEnv.exports; _ } = env in
   let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
@@ -1194,16 +1179,7 @@ let autofix_imports
   let added_imports =
     ExportSourceMap.fold
       (fun source names_of_kinds added_imports ->
-        let from =
-          Lsp_import_edits.from_of_source
-            ~file_options:(Options.file_options options)
-            ~haste_module_system:Options.(module_system options = Haste)
-            ~get_haste_name
-            ~get_package_info
-            ~is_package_file
-            ~src_dir
-            source
-        in
+        let from = Lsp_import_edits.from_of_source ~module_system_info ~src_dir source in
         match from with
         | None -> added_imports
         | Some from ->

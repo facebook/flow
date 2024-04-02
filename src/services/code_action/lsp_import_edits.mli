@@ -8,22 +8,14 @@
 (** Generates the 'from' part of 'import ... from ...' required to import [source] from
     a file in [src_dir] *)
 val from_of_source :
-  file_options:Files.options ->
-  haste_module_system:bool ->
-  get_haste_name:(File_key.t -> string option) ->
-  get_package_info:(File_key.t -> (Package_json.t, 'a) result option) ->
-  is_package_file:(string -> bool) ->
+  module_system_info:Lsp_module_system_info.t ->
   src_dir:string option ->
   Export_index.source ->
   string option
 
 val text_edits_of_import :
-  file_options:Files.options ->
   layout_options:Js_layout_generator.opts ->
-  haste_module_system:bool ->
-  get_haste_name:(File_key.t -> string option) ->
-  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
-  is_package_file:(string -> bool) ->
+  module_system_info:Lsp_module_system_info.t ->
   src_dir:string option ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   Export_index.kind ->

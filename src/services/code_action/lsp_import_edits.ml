@@ -6,6 +6,7 @@
  *)
 
 open Code_action_text_edits
+open Lsp_module_system_info
 
 let main_of_package ~get_package_info package_dir =
   let file_key = File_key.JsonFile (package_dir ^ Filename.dir_sep ^ "package.json") in
@@ -91,7 +92,7 @@ let path_of_modulename ~node_resolver_dirnames ~get_package_info src_dir file_ke
         node_path ~node_resolver_dirnames ~get_package_info ~src_dir path)
       src_dir
 
-let haste_package_path ~get_package_info ~is_package_file ~src_dir require_path =
+let haste_package_path ~module_system_info ~src_dir require_path =
   match Files.split_path require_path |> Base.List.rev with
   | [] -> None
   | base :: parent_dir_names ->
@@ -100,7 +101,7 @@ let haste_package_path ~get_package_info ~is_package_file ~src_dir require_path 
       match remaining with
       | [] -> None
       | package_name_candidate :: parent_dir_names ->
-        if is_package_file package_name_candidate then
+        if module_system_info.is_package_file package_name_candidate then
           let package_path_parts = List.rev (package_name_candidate :: parent_dir_names) in
           let within_package =
             match find_ancestor_rev package_path_parts src_parts with
@@ -115,7 +116,7 @@ let haste_package_path ~get_package_info ~is_package_file ~src_dir require_path 
             Some
               (match
                  main_of_package
-                   ~get_package_info
+                   ~get_package_info:module_system_info.get_package_info
                    (String.concat Filename.dir_sep package_path_parts)
                with
               | Some main when path_matches (String.concat "/" acc) main -> package_name_candidate
@@ -125,56 +126,33 @@ let haste_package_path ~get_package_info ~is_package_file ~src_dir require_path 
     in
     f [base] parent_dir_names
 
-let from_of_source
-    ~file_options
-    ~haste_module_system
-    ~get_haste_name
-    ~get_package_info
-    ~is_package_file
-    ~src_dir
-    source =
+let from_of_source ~module_system_info ~src_dir source =
   match source with
   | Export_index.Global -> None
   | Export_index.Builtin from -> Some from
   | Export_index.File_key from ->
     let module_name =
-      match get_haste_name from with
+      match module_system_info.get_haste_name from with
       | Some module_name -> Some module_name
-      | None when haste_module_system ->
+      | None when module_system_info.haste_module_system ->
         Base.Option.bind src_dir ~f:(fun src_dir ->
             haste_package_path
-              ~get_package_info
-              ~is_package_file
+              ~module_system_info
               ~src_dir
               (File_key.to_string (Files.chop_flow_ext from))
         )
       | None -> None
     in
-    let node_resolver_dirnames = Files.node_resolver_dirnames file_options in
-    path_of_modulename ~node_resolver_dirnames ~get_package_info src_dir from module_name
+    let node_resolver_dirnames = Files.node_resolver_dirnames module_system_info.file_options in
+    path_of_modulename
+      ~node_resolver_dirnames
+      ~get_package_info:module_system_info.get_package_info
+      src_dir
+      from
+      module_name
 
-let text_edits_of_import
-    ~file_options
-    ~layout_options
-    ~haste_module_system
-    ~get_haste_name
-    ~get_package_info
-    ~is_package_file
-    ~src_dir
-    ~ast
-    kind
-    name
-    source =
-  let from =
-    from_of_source
-      ~file_options
-      ~haste_module_system
-      ~get_haste_name
-      ~get_package_info
-      ~is_package_file
-      ~src_dir
-      source
-  in
+let text_edits_of_import ~layout_options ~module_system_info ~src_dir ~ast kind name source =
+  let from = from_of_source ~module_system_info ~src_dir source in
   match from with
   | None -> None
   | Some from ->

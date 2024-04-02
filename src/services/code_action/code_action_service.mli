@@ -38,10 +38,8 @@ val code_actions_at_loc :
   env:ServerEnv.env ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
-  get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
-  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
-  is_package_file:(string -> bool) ->
+  module_system_info:Lsp_module_system_info.t ->
   cx:Context.t ->
   file_sig:File_sig.t ->
   tolerable_errors:File_sig.tolerable_error list ->
@@ -60,9 +58,7 @@ val autofix_imports :
   options:Options.t ->
   env:ServerEnv.env ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_haste_name:(File_key.t -> string option) ->
-  get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
-  is_package_file:(string -> bool) ->
+  module_system_info:Lsp_module_system_info.t ->
   cx:Context.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   uri:Lsp.DocumentUri.t ->

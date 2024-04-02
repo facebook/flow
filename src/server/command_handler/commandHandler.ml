@@ -249,11 +249,21 @@ let of_file_input ~options ~env file_input =
 let get_haste_name ~reader f =
   Parsing_heaps.get_file_addr f |> Base.Option.bind ~f:(Parsing_heaps.Reader.get_haste_name ~reader)
 
-let is_package_file ~reader module_name =
-  let dependency = Parsing_heaps.get_dependency (Modulename.String module_name) in
-  match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
-  | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr
-  | None -> false
+let mk_module_system_info =
+  let is_package_file ~reader module_name =
+    let dependency = Parsing_heaps.get_dependency (Modulename.String module_name) in
+    match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
+    | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr
+    | None -> false
+  in
+  fun ~options ~reader ->
+    {
+      Lsp_module_system_info.file_options = Options.file_options options;
+      haste_module_system = Options.(module_system options = Haste);
+      get_haste_name = get_haste_name ~reader;
+      get_package_info = Parsing_heaps.Reader.get_package_info ~reader;
+      is_package_file = is_package_file ~reader;
+    }
 
 let get_status ~options env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
@@ -385,14 +395,10 @@ let autocomplete
         Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
             let typing =
               AutocompleteService_js.mk_typing_artifacts
-                ~file_options:(Options.file_options options)
                 ~layout_options:(Code_action_utils.layout_options options)
-                ~haste_module_system:Options.(module_system options = Haste)
+                ~module_system_info:(mk_module_system_info ~options ~reader)
                 ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
                 ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-                ~get_haste_name:(get_haste_name ~reader)
-                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
-                ~is_package_file:(is_package_file ~reader)
                 ~search_exported_values:(search_exported_values ~exports:env.ServerEnv.exports)
                 ~search_exported_types:(search_exported_types ~exports:env.ServerEnv.exports)
                 ~cx
@@ -1422,10 +1428,8 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             ~env
             ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
             ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-            ~get_haste_name:(get_haste_name ~reader)
             ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
-            ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
-            ~is_package_file:(is_package_file ~reader)
+            ~module_system_info:(mk_module_system_info ~options ~reader)
             ~cx
             ~file_sig
             ~tolerable_errors
@@ -1487,9 +1491,7 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
               ~options
               ~env
               ~loc_of_aloc
-              ~get_haste_name:(get_haste_name ~reader)
-              ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
-              ~is_package_file:(is_package_file ~reader)
+              ~module_system_info:(mk_module_system_info ~options ~reader)
               ~cx
               ~ast
               ~uri
