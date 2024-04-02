@@ -22,7 +22,9 @@ type 'r ac_result = {
 type typing
 
 val mk_typing_artifacts :
-  options:Options.t ->
+  file_options:Files.options ->
+  layout_options:Js_layout_generator.opts ->
+  haste_module_system:bool ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->

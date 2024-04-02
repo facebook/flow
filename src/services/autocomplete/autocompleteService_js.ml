@@ -185,7 +185,7 @@ let detail_of_ty_decl ~exact_by_default d =
 
 let autocomplete_create_result_method
     ~method_
-    ~options
+    ~layout_options
     ?(rank = 0)
     ?(preselect = false)
     ~documentation_and_tags
@@ -205,7 +205,7 @@ let autocomplete_create_result_method
   let insert_text =
     (* Print the node to a string and replace the AUTO332 expression with an LSP snippet placeholder *)
     method_
-    |> Js_layout_generator.class_method ~opts:(Code_action_utils.layout_options options)
+    |> Js_layout_generator.class_method ~opts:layout_options
     |> Pretty_printer.print ~source_maps:None ~skip_endline:true
     |> Source.contents
     |> Base.String.substr_replace_first ~pattern:"AUTO332;" ~with_:"$0"
@@ -214,8 +214,7 @@ let autocomplete_create_result_method
     (* Print just the params and return type to a string and add { ... } *)
     method_
     |> (fun (_, { Flow_ast.Class.Method.value; _ }) -> value)
-    |> Js_layout_generator.function_params_and_return
-         ~opts:(Code_action_utils.layout_options options)
+    |> Js_layout_generator.function_params_and_return ~opts:layout_options
     |> Pretty_printer.print ~source_maps:None ~skip_endline:true
     |> Source.contents
     |> fun params_and_return -> params_and_return ^ "{ … }"
@@ -342,7 +341,9 @@ let autocomplete_create_result_elt
 let ty_normalizer_options = Ty_normalizer_env.{ default_options with expand_internal_types = true }
 
 type typing = {
-  options: Options.t;
+  file_options: Files.options;
+  layout_options: Js_layout_generator.opts;
+  haste_module_system: bool;
   loc_of_aloc: ALoc.t -> Loc.t;
   get_ast: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
   get_haste_name: File_key.t -> string option;
@@ -358,7 +359,9 @@ type typing = {
 }
 
 let mk_typing_artifacts
-    ~options
+    ~file_options
+    ~layout_options
+    ~haste_module_system
     ~loc_of_aloc
     ~get_ast
     ~get_haste_name
@@ -378,7 +381,9 @@ let mk_typing_artifacts
       ~file_sig
   in
   {
-    options;
+    file_options;
+    layout_options;
+    haste_module_system;
     loc_of_aloc;
     get_ast;
     get_haste_name;
@@ -675,10 +680,23 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
 
 let completion_item_of_autoimport
     ~typing ~src_dir ~edit_locs ~ranking_info { Export_search_types.name; source; kind } rank =
-  let { options; get_haste_name; get_package_info; is_package_file; ast; _ } = typing in
+  let {
+    file_options;
+    layout_options;
+    haste_module_system;
+    get_haste_name;
+    get_package_info;
+    is_package_file;
+    ast;
+    _;
+  } =
+    typing
+  in
   match
     Lsp_import_edits.text_edits_of_import
-      ~options
+      ~file_options
+      ~layout_options
+      ~haste_module_system
       ~get_haste_name
       ~get_package_info
       ~is_package_file
@@ -870,11 +888,11 @@ let autocomplete_id
     ~token
     ~type_ =
   let open AcCompletion in
-  let { loc_of_aloc; cx; options; norm_genv = genv; _ } = typing in
+  let { loc_of_aloc; cx; layout_options; norm_genv = genv; _ } = typing in
   let ac_loc = loc_of_aloc ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
-  let prefer_single_quotes = Options.format_single_quotes options in
+  let prefer_single_quotes = layout_options.Js_layout_generator.single_quotes in
   let results =
     autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token
   in
@@ -1324,19 +1342,15 @@ let autocomplete_unqualified_type
     ~edit_locs
     ~token =
   let {
-    options = _;
     loc_of_aloc;
     get_ast;
-    get_haste_name = _;
-    get_package_info = _;
-    is_package_file = _;
-    search_exported_values = _;
     search_exported_types;
     cx;
     file_sig;
     ast;
     available_ast;
     norm_genv = genv;
+    _;
   } =
     typing
   in
@@ -1498,20 +1512,19 @@ let fix_locs_of_string_token token (insert_loc, replace_loc) =
   let replace_loc = fix_loc_of_string_token token replace_loc in
   (insert_loc, replace_loc)
 
-let layout_options options token =
-  let opts = Code_action_utils.layout_options options in
+let gen_layout_options opts token =
   match quote_kind token with
   | Some `Single -> { opts with Js_layout_generator.single_quotes = true }
   | Some `Double -> { opts with Js_layout_generator.single_quotes = false }
   | None -> opts
 
-let print_expression ~options ~token expression =
+let print_expression ~layout_options ~token expression =
   expression
-  |> Js_layout_generator.expression ~opts:(layout_options options token)
+  |> Js_layout_generator.expression ~opts:(gen_layout_options layout_options token)
   |> Pretty_printer.print ~source_maps:None ~skip_endline:true
   |> Source.contents
 
-let print_name_as_indexer ~options ~token name =
+let print_name_as_indexer ~layout_options ~token name =
   let expression =
     match Base.String.chop_prefix ~prefix:"@@" name with
     | None -> Ast_builder.Expressions.Literals.string name
@@ -1522,20 +1535,20 @@ let print_name_as_indexer ~options ~token name =
            (Ast_builder.Expressions.identifier "Symbol")
         )
   in
-  print_expression ~options ~token expression
+  print_expression ~layout_options ~token expression
 
-let print_name_as_indexer_with_edit_locs ~options ~token ~edit_locs name =
-  let (opt_single_quotes, edit_locs) =
+let print_name_as_indexer_with_edit_locs ~layout_options ~token ~edit_locs name =
+  let (single_quotes, edit_locs) =
     autocomplete_create_string_literal_edit_controls
-      ~prefer_single_quotes:(Options.format_single_quotes options)
+      ~prefer_single_quotes:layout_options.Js_layout_generator.single_quotes
       ~edit_locs
       ~token
   in
-  let options =
-    let open Options in
-    { options with opt_format = { options.opt_format with opt_single_quotes } }
+  let layout_options =
+    let open Js_layout_generator in
+    { layout_options with single_quotes }
   in
-  (print_name_as_indexer ~options ~token name, edit_locs)
+  (print_name_as_indexer ~layout_options ~token name, edit_locs)
 
 let autocomplete_member
     ~typing
@@ -1550,7 +1563,7 @@ let autocomplete_member
     ~member_loc
     ~is_type_annotation
     ~force_instance =
-  let { options; cx; _ } = typing in
+  let { layout_options; cx; _ } = typing in
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let exact_by_default = Context.exact_by_default cx in
   match members_of_type ~typing ~exclude_proto_members:false ~force_instance this with
@@ -1568,7 +1581,7 @@ let autocomplete_member
              let opt_chain_ty =
                Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (false, Ty.Void, ty, []))
              in
-             let name_as_indexer = lazy (print_name_as_indexer ~options ~token name) in
+             let name_as_indexer = lazy (print_name_as_indexer ~layout_options ~token name) in
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              let edit_loc_of_member_loc member_loc =
                if Loc.(member_loc.start.line = member_loc._end.line) then
@@ -1604,7 +1617,7 @@ let autocomplete_member
              | (false, _, Some _, _, _)
              | (_, true, Some _, _, _) ->
                let (insert_text, edit_locs) =
-                 print_name_as_indexer_with_edit_locs ~options ~token ~edit_locs name
+                 print_name_as_indexer_with_edit_locs ~layout_options ~token ~edit_locs name
                in
                autocomplete_create_result
                  ~insert_text
@@ -1762,7 +1775,9 @@ let autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs =
 
 let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type_ =
   let {
-    options;
+    file_options;
+    layout_options;
+    haste_module_system;
     cx;
     loc_of_aloc;
     get_haste_name;
@@ -1818,7 +1833,9 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
       let name = "React" in
       let source = Export_index.Builtin "react" in
       Lsp_import_edits.text_edits_of_import
-        ~options
+        ~file_options
+        ~layout_options
+        ~haste_module_system
         ~get_haste_name
         ~get_package_info
         ~is_package_file
@@ -1920,7 +1937,7 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
   AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
-  let { options; loc_of_aloc; get_ast; _ } = typing in
+  let { layout_options; loc_of_aloc; get_ast; _ } = typing in
   let open Base.Result.Let_syntax in
   let%bind (mems, errors_to_log) =
     members_of_type
@@ -1940,7 +1957,7 @@ let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
            def_locs |> Base.List.hd >>| loc_of_aloc >>= Find_method.find ~get_ast >>| fun method_ ->
            autocomplete_create_result_method
              ~method_
-             ~options
+             ~layout_options
              ~documentation_and_tags
              ~log_info:"class key"
              (name, edit_locs)
@@ -2018,7 +2035,9 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
                  (name, edit_locs)
                  ty
              else
-               let insert_text = print_name_as_indexer ~options:typing.options ~token name in
+               let insert_text =
+                 print_name_as_indexer ~layout_options:typing.layout_options ~token name
+               in
                autocomplete_create_result
                  ~insert_text
                  ~rank
@@ -2166,7 +2185,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
-  let { options; loc_of_aloc; cx; ast; available_ast; norm_genv = genv; _ } = typing in
+  let { layout_options; loc_of_aloc; cx; ast; available_ast; norm_genv = genv; _ } = typing in
   let open Autocomplete_js in
   match process_location cx ~trigger_character ~cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
@@ -2221,7 +2240,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_literal { lit_type = None } -> AcEmpty "Literal"
       | Ac_literal { lit_type = Some lit_type } ->
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
-        let prefer_single_quotes = Options.format_single_quotes options in
+        let prefer_single_quotes = layout_options.Js_layout_generator.single_quotes in
         let items =
           autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token
           |> filter_by_token_and_sort token

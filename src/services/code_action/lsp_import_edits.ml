@@ -125,7 +125,14 @@ let haste_package_path ~get_package_info ~is_package_file ~src_dir require_path 
     in
     f [base] parent_dir_names
 
-let from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir source =
+let from_of_source
+    ~file_options
+    ~haste_module_system
+    ~get_haste_name
+    ~get_package_info
+    ~is_package_file
+    ~src_dir
+    source =
   match source with
   | Export_index.Global -> None
   | Export_index.Builtin from -> Some from
@@ -133,7 +140,7 @@ let from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~
     let module_name =
       match get_haste_name from with
       | Some module_name -> Some module_name
-      | None when Options.module_system options = Options.Haste ->
+      | None when haste_module_system ->
         Base.Option.bind src_dir ~f:(fun src_dir ->
             haste_package_path
               ~get_package_info
@@ -143,13 +150,30 @@ let from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~
         )
       | None -> None
     in
-    let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+    let node_resolver_dirnames = Files.node_resolver_dirnames file_options in
     path_of_modulename ~node_resolver_dirnames ~get_package_info src_dir from module_name
 
 let text_edits_of_import
-    ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir ~ast kind name source =
+    ~file_options
+    ~layout_options
+    ~haste_module_system
+    ~get_haste_name
+    ~get_package_info
+    ~is_package_file
+    ~src_dir
+    ~ast
+    kind
+    name
+    source =
   let from =
-    from_of_source ~options ~get_haste_name ~get_package_info ~is_package_file ~src_dir source
+    from_of_source
+      ~file_options
+      ~haste_module_system
+      ~get_haste_name
+      ~get_package_info
+      ~is_package_file
+      ~src_dir
+      source
   in
   match from with
   | None -> None
@@ -173,8 +197,7 @@ let text_edits_of_import
       | Export_index.Namespace -> Autofix_imports.Namespace name
     in
     let edits =
-      let options = Code_action_utils.layout_options options in
-      Autofix_imports.add_import ~options ~bindings ~from ast
+      Autofix_imports.add_import ~options:layout_options ~bindings ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
     Some { title; edits; from }

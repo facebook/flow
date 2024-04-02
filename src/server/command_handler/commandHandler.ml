@@ -363,7 +363,9 @@ let autocomplete
         Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
             let typing =
               AutocompleteService_js.mk_typing_artifacts
-                ~options
+                ~file_options:(Options.file_options options)
+                ~layout_options:(Code_action_utils.layout_options options)
+                ~haste_module_system:Options.(module_system options = Haste)
                 ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
                 ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
                 ~get_haste_name:(get_haste_name ~reader)

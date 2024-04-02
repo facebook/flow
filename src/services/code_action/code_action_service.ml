@@ -302,7 +302,9 @@ let suggest_imports
     |> Base.List.fold ~init:[] ~f:(fun acc ((source, export_kind), _num) ->
            match
              Lsp_import_edits.text_edits_of_import
-               ~options
+               ~file_options:(Options.file_options options)
+               ~layout_options:(Code_action_utils.layout_options options)
+               ~haste_module_system:Options.(module_system options = Haste)
                ~get_haste_name
                ~get_package_info
                ~is_package_file
@@ -1187,7 +1189,8 @@ let autofix_imports
       (fun source names_of_kinds added_imports ->
         let from =
           Lsp_import_edits.from_of_source
-            ~options
+            ~file_options:(Options.file_options options)
+            ~haste_module_system:Options.(module_system options = Haste)
             ~get_haste_name
             ~get_package_info
             ~is_package_file

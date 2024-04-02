@@ -8,7 +8,8 @@
 (** Generates the 'from' part of 'import ... from ...' required to import [source] from
     a file in [src_dir] *)
 val from_of_source :
-  options:Options.t ->
+  file_options:Files.options ->
+  haste_module_system:bool ->
   get_haste_name:(File_key.t -> string option) ->
   get_package_info:(File_key.t -> (Package_json.t, 'a) result option) ->
   is_package_file:(string -> bool) ->
@@ -17,7 +18,9 @@ val from_of_source :
   string option
 
 val text_edits_of_import :
-  options:Options.t ->
+  file_options:Files.options ->
+  layout_options:Js_layout_generator.opts ->
+  haste_module_system:bool ->
   get_haste_name:(File_key.t -> string option) ->
   get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
   is_package_file:(string -> bool) ->
