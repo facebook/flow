@@ -429,7 +429,7 @@ let autocomplete
         let open Hh_json in
         match results_res with
         | AcResult { result; errors_to_log } ->
-          let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
+          let { AcCompletion.items; is_incomplete } = result in
           let result_string =
             match (items, errors_to_log) with
             | (_, []) -> "SUCCESS"
@@ -437,9 +437,54 @@ let autocomplete
             | (_ :: _, _ :: _) -> "PARTIAL"
           in
           let at_least_one_result_has_documentation =
-            Base.List.exists items ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
-                Base.Option.is_some documentation
+            Base.List.exists
+              items
+              ~f:(fun AcCompletion.{ documentation_and_tags = (lazy (docs, _)); _ } ->
+                Base.Option.is_some docs
             )
+          in
+          let result =
+            let open ServerProt.Response.Completion in
+            let items =
+              Base.List.map
+                items
+                ~f:(fun
+                     {
+                       AcCompletion.kind;
+                       name;
+                       labelDetail;
+                       description;
+                       itemDetail;
+                       text_edit;
+                       additional_text_edits;
+                       sort_text;
+                       preselect;
+                       documentation_and_tags = (lazy (documentation, tags));
+                       log_info;
+                       insert_text_format;
+                     }
+                   ->
+                  {
+                    ServerProt.Response.Completion.kind;
+                    name;
+                    labelDetail;
+                    description;
+                    itemDetail;
+                    text_edit =
+                      Base.Option.map text_edit ~f:(fun { AcCompletion.newText; insert; replace } ->
+                          { ServerProt.Response.newText; insert; replace }
+                      );
+                    additional_text_edits;
+                    sort_text;
+                    preselect;
+                    documentation;
+                    tags;
+                    log_info;
+                    insert_text_format;
+                  }
+              )
+            in
+            { items; is_incomplete }
           in
           ( Ok (token_opt, result, ac_loc, ac_type_string),
             ("result", JSON_String result_string)

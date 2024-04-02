@@ -11,14 +11,21 @@ module Ast = Flow_ast
 module Statement = Fix_statement.Statement_
 
 module AcCompletion = struct
+  type insert_replace_edit = {
+    newText: string;
+    insert: Loc.t;
+    replace: Loc.t;
+  }
+  [@@deriving eq]
+
   type completion_item = {
     kind: Lsp.Completion.completionItemKind option;
     name: string;
     labelDetail: string option;  (** LSP's CompletionItemLabelDetails.detail *)
     description: string option;  (** LSP's CompletionItemLabelDetails.description *)
     itemDetail: string option;  (** LSP's CompletionItem.detail *)
-    text_edit: ServerProt.Response.insert_replace_edit option;
-    additional_text_edits: ServerProt.Response.textedit list;
+    text_edit: insert_replace_edit option;
+    additional_text_edits: (Loc.t * string) list;
     sort_text: string option;
     preselect: bool;
     documentation_and_tags: (string option * Lsp.CompletionItemTag.t list option) Lazy.t;
@@ -26,52 +33,35 @@ module AcCompletion = struct
     insert_text_format: Lsp.Completion.insertTextFormat;
   }
 
+  let opt_eq ~eq o1 o2 =
+    match (o1, o2) with
+    | (None, None) -> true
+    | (Some _, None)
+    | (None, Some _) ->
+      false
+    | (Some v1, Some v2) -> eq v1 v2
+
+  let equal_completion_item item1 item2 =
+    opt_eq ~eq:Lsp.Completion.equal_completionItemKind item1.kind item2.kind
+    && String.equal item1.name item2.name
+    && opt_eq ~eq:String.equal item1.labelDetail item2.labelDetail
+    && opt_eq ~eq:String.equal item1.description item2.description
+    && item1.itemDetail = item2.itemDetail
+    && opt_eq ~eq:equal_insert_replace_edit item1.text_edit item2.text_edit
+    && item1.additional_text_edits = item2.additional_text_edits
+    && opt_eq ~eq:String.equal item1.sort_text item2.sort_text
+    && item1.preselect = item2.preselect
+    && Lazy.force item1.documentation_and_tags = Lazy.force item2.documentation_and_tags
+    && String.equal item1.log_info item2.log_info
+    && Lsp.Completion.equal_insertTextFormat item1.insert_text_format item2.insert_text_format
+
   type t = {
     items: completion_item list;
     is_incomplete: bool;
   }
+  [@@deriving eq]
 
   let empty_documentation_and_tags = lazy (None, None)
-
-  let to_server_prot_completion_item completion_item =
-    let {
-      kind;
-      name;
-      labelDetail;
-      description;
-      itemDetail;
-      text_edit;
-      additional_text_edits;
-      sort_text;
-      preselect;
-      documentation_and_tags = (lazy (documentation, tags));
-      log_info;
-      insert_text_format;
-    } =
-      completion_item
-    in
-    {
-      ServerProt.Response.Completion.kind;
-      name;
-      labelDetail;
-      description;
-      itemDetail;
-      text_edit;
-      additional_text_edits;
-      sort_text;
-      preselect;
-      documentation;
-      tags;
-      log_info;
-      insert_text_format;
-    }
-
-  let to_server_prot_completion_t t =
-    let { items; is_incomplete } = t in
-    {
-      ServerProt.Response.Completion.items = Base.List.map ~f:to_server_prot_completion_item items;
-      is_incomplete;
-    }
 
   let of_keyword ~edit_locs:(insert, replace) keyword =
     {
@@ -80,7 +70,7 @@ module AcCompletion = struct
       labelDetail = None;
       description = None;
       itemDetail = None;
-      text_edit = Some { ServerProt.Response.newText = keyword; insert; replace };
+      text_edit = Some { newText = keyword; insert; replace };
       additional_text_edits = [];
       sort_text = Some (Printf.sprintf "%020u" 0);
       preselect = false;
@@ -152,7 +142,7 @@ let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
 
 let text_edit ?insert_text name (insert, replace) =
   let newText = Base.Option.value ~default:name insert_text in
-  { ServerProt.Response.newText; insert; replace }
+  { AcCompletion.newText; insert; replace }
 
 let detail_of_ty ~exact_by_default ty =
   let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
@@ -402,17 +392,16 @@ type 'r ac_result = {
   result: 'r;
   errors_to_log: string list;
 }
-[@@deriving eq, show]
+[@@deriving eq]
 
 type 'r autocomplete_service_result_generic =
   | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
-[@@deriving eq, show]
+[@@deriving eq]
 
-type autocomplete_service_result =
-  ServerProt.Response.Completion.t autocomplete_service_result_generic
-[@@deriving eq, show]
+type autocomplete_service_result = AcCompletion.t autocomplete_service_result_generic
+[@@deriving eq]
 
 let jsdoc_of_def_loc { loc_of_aloc; get_ast; ast; _ } def_loc =
   loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast
@@ -2190,7 +2179,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
   match process_location cx ~trigger_character ~cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
-    let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
+    let result = { AcCompletion.items = []; is_incomplete = false } in
     ( None,
       None,
       "None",
@@ -2351,8 +2340,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
     in
     let result =
       match result with
-      | AcResult { result; errors_to_log } ->
-        AcResult { result = AcCompletion.to_server_prot_completion_t result; errors_to_log }
+      | AcResult { result; errors_to_log } -> AcResult { result; errors_to_log }
       | AcEmpty s -> AcEmpty s
       | AcFatalError e -> AcFatalError e
     in

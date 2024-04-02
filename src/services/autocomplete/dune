@@ -4,10 +4,9 @@
  (libraries
   fuzzy_score
   flow_search_types
-  flow_server_protocol
   flow_service_type_info
   flow_typing
   collections ; hack
   flow_code_action_lib)
  (preprocess
-  (pps ppx_deriving.eq ppx_deriving.show ppx_let)))
+  (pps ppx_deriving.eq ppx_let)))
