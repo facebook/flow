@@ -1,0 +1,4 @@
+[options]
+component_syntax=true
+no_flowlib=false
+all=true

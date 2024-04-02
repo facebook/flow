@@ -93,6 +93,10 @@ let free_var_finder cx ?(bound = Subst_name.Set.empty) t =
   let { free; _ } = visitor#type_ cx Polarity.Positive { free = Subst_name.Set.empty; bound } t in
   free
 
+let free_var_finder_in_destructor cx ?(bound = Subst_name.Set.empty) d =
+  let { free; _ } = visitor#destructor cx { free = Subst_name.Set.empty; bound } d in
+  free
+
 (** Substitute bound type variables with associated types in a type. **)
 
 let new_name name fvs =

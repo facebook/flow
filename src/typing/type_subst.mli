@@ -7,6 +7,9 @@
 
 val free_var_finder : Context.t -> ?bound:Subst_name.Set.t -> Type.t -> Subst_name.Set.t
 
+val free_var_finder_in_destructor :
+  Context.t -> ?bound:Subst_name.Set.t -> Type.destructor -> Subst_name.Set.t
+
 val new_name : Subst_name.t -> Subst_name.Set.t -> Subst_name.t
 
 val subst :

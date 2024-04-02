@@ -7477,6 +7477,19 @@ struct
         let void = VoidT.make reason in
         destruct_union ?f reason [t; void] upper
       in
+      let destruct_and_preserve_opaque_t r ({ underlying_t; super_t; _ } as opaquetype) =
+        let eval_t t =
+          let tvar = Tvar.mk_no_wrap cx reason in
+          (* We have to eagerly evaluate these destructors when possible because
+           * various other systems, like type_filter, expect OpaqueT underlying_t and
+           * super_t to be inspectable *)
+          eagerly_eval_destructor_if_resolved cx ~trace use_op reason t d tvar
+        in
+        let underlying_t = Base.Option.map ~f:eval_t underlying_t in
+        let super_t = Base.Option.map ~f:eval_t super_t in
+        let opaque_t = OpaqueT (r, { opaquetype with underlying_t; super_t }) in
+        rec_flow_t cx trace ~use_op (opaque_t, OpenT tout)
+      in
       let should_destruct_union () =
         match d with
         | ConditionalType { distributive_tparam_name; _ } -> Option.is_some distributive_tparam_name
@@ -7490,9 +7503,11 @@ struct
           | _ -> true)
         | _ -> true
       in
-      (match t with
-      | GenericT
-          { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name; no_infer }
+      (match (t, d) with
+      | ( GenericT
+            { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name; no_infer },
+          _
+        )
         when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
         eval_destructor
           cx
@@ -7502,21 +7517,25 @@ struct
           (GenericT { bound = t; reason = r; id; name; no_infer })
           d
           tout
-      | OpaqueT (r, { underlying_t = Some t; _ })
+      | (OpaqueT (r, opaquetype), ReactDRO _) -> destruct_and_preserve_opaque_t r opaquetype
+      | (OpaqueT (r, { underlying_t = Some t; _ }), _)
         when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
         eval_destructor cx ~trace use_op reason t d tout
       (* Specialize TypeAppTs before evaluating them so that we can handle special
          cases. Like the union case below. mk_typeapp_instance will return an AnnotT
          which will be fully resolved using the AnnotT case above. *)
-      | GenericT
-          {
-            bound =
-              TypeAppT { reason = _; use_op = use_op_tapp; type_; targs; from_value; use_desc = _ };
-            reason = reason_tapp;
-            id;
-            name;
-            no_infer;
-          } ->
+      | ( GenericT
+            {
+              bound =
+                TypeAppT
+                  { reason = _; use_op = use_op_tapp; type_; targs; from_value; use_desc = _ };
+              reason = reason_tapp;
+              id;
+              name;
+              no_infer;
+            },
+          _
+        ) ->
         let destructor = TypeDestructorT (use_op, reason, d) in
         let t =
           mk_typeapp_instance_annot
@@ -7538,8 +7557,10 @@ struct
               destructor,
             UseT (use_op, OpenT tout)
           )
-      | TypeAppT
-          { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc = _ } ->
+      | ( TypeAppT
+            { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc = _ },
+          _
+        ) ->
         let destructor = TypeDestructorT (use_op, reason, d) in
         let t =
           mk_typeapp_instance_annot
@@ -7559,39 +7580,47 @@ struct
          Instead, we preserve the union by pushing down the destructor onto the
          branches of the unions.
       *)
-      | UnionT (r, rep) when should_destruct_union () ->
+      | (UnionT (r, rep), _) when should_destruct_union () ->
         destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = UnionT (_, rep); id; name; no_infer }
+      | (GenericT { reason; bound = UnionT (_, rep); id; name; no_infer }, _)
         when should_destruct_union () ->
         destruct_union
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })
           reason
           (UnionRep.members rep)
           (UseT (use_op, OpenT tout))
-      | MaybeT (r, t) when should_destruct_union () ->
+      | (MaybeT (r, t), _) when should_destruct_union () ->
         destruct_maybe r t (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = MaybeT (_, t); id; name; no_infer } when should_destruct_union ()
-        ->
+      | (GenericT { reason; bound = MaybeT (_, t); id; name; no_infer }, _)
+        when should_destruct_union () ->
         destruct_maybe
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })
           reason
           t
           (UseT (use_op, OpenT tout))
-      | OptionalT { reason = r; type_ = t; use_desc = _ } when should_destruct_union () ->
+      | (OptionalT { reason = r; type_ = t; use_desc = _ }, _) when should_destruct_union () ->
         destruct_optional r t (UseT (unknown_use, OpenT tout))
-      | GenericT
-          { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name; no_infer }
+      | ( GenericT
+            {
+              reason;
+              bound = OptionalT { reason = _; type_ = t; use_desc = _ };
+              id;
+              name;
+              no_infer;
+            },
+          _
+        )
         when should_destruct_union () ->
         destruct_optional
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })
           reason
           t
           (UseT (use_op, OpenT tout))
-      | AnnotT (r, t, use_desc) ->
+      | (AnnotT (r, t, use_desc), _) ->
         let t = reposition_reason ~trace cx r ~use_desc t in
         let destructor = TypeDestructorT (use_op, reason, d) in
         rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
-      | GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id; no_infer } ->
+      | (GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id; no_infer }, _) ->
         let t = reposition_reason ~trace cx r ~use_desc t in
         let destructor = TypeDestructorT (use_op, reason, d) in
         rec_flow_t
@@ -7786,6 +7815,28 @@ struct
                   )
               )
           ))
+
+  and eagerly_eval_destructor_if_resolved cx ~trace use_op reason t d tvar =
+    eval_destructor cx ~trace use_op reason t d (reason, tvar);
+    let result = OpenT (reason, tvar) in
+    if
+      (not (Subst_name.Set.is_empty (Type_subst.free_var_finder cx t)))
+      || (not (Subst_name.Set.is_empty (Type_subst.free_var_finder_in_destructor cx d)))
+      || Tvar_resolver.has_unresolved_tvars cx t
+      || Tvar_resolver.has_unresolved_tvars_in_destructors cx d
+    then
+      result
+    else (
+      Tvar_resolver.resolve cx result;
+      let t = singleton_concrete_type_for_inspection cx reason result in
+      match t with
+      | OpenT (_, id) ->
+        let (_, constraints) = Context.find_constraints cx id in
+        (match constraints with
+        | FullyResolved t -> Context.force_fully_resolved_tvar cx t
+        | _ -> t)
+      | t -> t
+    )
 
   and mk_possibly_evaluated_destructor cx use_op reason t d id =
     let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
@@ -10740,6 +10791,12 @@ struct
   and possible_concrete_types_for_inspection cx t =
     possible_concrete_types (fun ident -> ConcretizeForInspection ident) cx t
 
+  and singleton_concrete_type_for_inspection cx reason t =
+    match possible_concrete_types_for_inspection cx reason t with
+    | [] -> EmptyT.make reason
+    | [t] -> t
+    | t1 :: t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
+
   and add_specialized_callee_method_action cx trace l = function
     | CallM { specialized_callee; _ }
     | ChainM { specialized_callee; _ } ->
@@ -10764,14 +10821,6 @@ module rec FlowJs : Flow_common.S = struct
   let react_subtype_class_component_render = React.subtype_class_component_render
 
   let react_get_config = React.get_config
-
-  (* Returns a list of concrete types after breaking up unions, maybe types, etc *)
-
-  let singleton_concrete_type_for_inspection cx reason t =
-    match possible_concrete_types_for_inspection cx reason t with
-    | [] -> EmptyT.make reason
-    | [t] -> t
-    | t1 :: t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
 
   let possible_concrete_types_for_imports_exports =
     possible_concrete_types (fun ident -> ConcretizeForImportsExports ident)
