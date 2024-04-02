@@ -15,9 +15,9 @@
 
 let max_len = 128
 
-let min_safe_integer = -9007199254740991
+let min_safe_integer = -2147483648
 
-let max_safe_integer = 9007199254740991
+let max_safe_integer = 2147483647
 
 type arrow =
   | Empty
