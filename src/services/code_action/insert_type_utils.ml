@@ -772,7 +772,7 @@ module GraphQL : sig
   val extract_graphql_fragment :
     Context.t ->
     loc_of_aloc:(ALoc.t -> Loc.t) ->
-    get_ast:(File_key.t -> (Loc.t, Loc.t) Ast.Program.t option) ->
+    get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Ast.Program.t option) ->
     File_sig.t ->
     (ALoc.t, ALoc.t * Type.t) Ast.Program.t ->
     ALoc.t ->
@@ -930,9 +930,10 @@ end = struct
     in
     (loc_of_aloc (TypeUtil.def_loc_of_t t), (loc, local_name, import_mode))
 
-  let extract_graphql_fragment cx ~loc_of_aloc ~get_ast file_sig typed_ast tgt_aloc =
+  let extract_graphql_fragment cx ~loc_of_aloc ~get_ast_from_shared_mem file_sig typed_ast tgt_aloc
+      =
     let graphql_file = Base.Option.value_exn (ALoc.source tgt_aloc) in
-    match get_ast graphql_file with
+    match get_ast_from_shared_mem graphql_file with
     | None -> None
     | Some graphql_ast ->
       (* Collect information about imports in currect file to accurately compute
@@ -952,7 +953,7 @@ end
 class type_normalization_hardcoded_fixes_mapper
   ~cx
   ~loc_of_aloc
-  ~get_ast
+  ~get_ast_from_shared_mem
   ~file_sig
   ~typed_ast
   ~lint_severities
@@ -1319,7 +1320,13 @@ class type_normalization_hardcoded_fixes_mapper
         let remote_file = Base.Option.value_exn (ALoc.source aloc) in
         if String.ends_with (File_key.to_string remote_file) ~suffix:"graphql.js" then
           match
-            GraphQL.extract_graphql_fragment cx ~loc_of_aloc ~get_ast file_sig typed_ast aloc
+            GraphQL.extract_graphql_fragment
+              cx
+              ~loc_of_aloc
+              ~get_ast_from_shared_mem
+              file_sig
+              typed_ast
+              aloc
           with
           | Some t -> t
           | None -> super#on_t env t
@@ -1369,7 +1376,7 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
   let run
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~file_sig
       ~typed_ast
       ~preserve_literals
@@ -1388,7 +1395,7 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
       new type_normalization_hardcoded_fixes_mapper
         ~cx
         ~loc_of_aloc
-        ~get_ast
+        ~get_ast_from_shared_mem
         ~file_sig
         ~typed_ast
         ~lint_severities

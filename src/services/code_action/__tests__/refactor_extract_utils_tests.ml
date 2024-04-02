@@ -1054,7 +1054,7 @@ let type_synthesizer_tests =
       ~file_sig
       ~typed_ast
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-      ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+      ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
       ~get_haste_name
       ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
       ~locs

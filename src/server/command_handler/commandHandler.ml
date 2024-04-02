@@ -389,7 +389,7 @@ let autocomplete
                 ~layout_options:(Code_action_utils.layout_options options)
                 ~haste_module_system:Options.(module_system options = Haste)
                 ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-                ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+                ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
                 ~get_haste_name:(get_haste_name ~reader)
                 ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                 ~is_package_file:(is_package_file ~reader)
@@ -707,7 +707,7 @@ let infer_type
         | Ok [getdef_loc] ->
           Find_documentation.jsdoc_of_getdef_loc
             ~ast
-            ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+            ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
             getdef_loc
           |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
         | _ -> None
@@ -748,7 +748,7 @@ let insert_type
     ~env
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_input
@@ -765,7 +765,7 @@ let insert_type
     ~env
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_key
@@ -776,7 +776,14 @@ let insert_type
     ~ambiguity_strategy
 
 let autofix_exports
-    ~options ~env ~profiling ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~input =
+    ~options
+    ~env
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_name
+    ~get_type_sig
+    ~input =
   let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
   Code_action_service.autofix_exports
@@ -784,14 +791,21 @@ let autofix_exports
     ~master_cx:env.ServerEnv.master_cx
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_key
     ~file_content
 
 let autofix_missing_local_annot
-    ~options ~env ~profiling ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~input =
+    ~options
+    ~env
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_name
+    ~get_type_sig
+    ~input =
   let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
   Code_action_service.autofix_missing_local_annot
@@ -799,7 +813,7 @@ let autofix_missing_local_annot
     ~master_cx:env.ServerEnv.master_cx
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_key
@@ -1179,7 +1193,7 @@ let handle_autocomplete
 
 let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
+  let get_ast_from_shared_mem = Parsing_heaps.Reader.get_ast ~reader in
   let get_haste_name = get_haste_name ~reader in
   let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
@@ -1190,7 +1204,7 @@ let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
           ~profiling
           ~input
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
     )
@@ -1199,7 +1213,7 @@ let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
 
 let handle_autofix_missing_local_annot ~options ~input ~profiling ~env ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
+  let get_ast_from_shared_mem = Parsing_heaps.Reader.get_ast ~reader in
   let get_haste_name = get_haste_name ~reader in
   let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
@@ -1210,7 +1224,7 @@ let handle_autofix_missing_local_annot ~options ~input ~profiling ~env ~reader =
           ~profiling
           ~input
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
     )
@@ -1303,7 +1317,7 @@ let handle_insert_type
     ~env
     ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
+  let get_ast_from_shared_mem = Parsing_heaps.Reader.get_ast ~reader in
   let get_haste_name = get_haste_name ~reader in
   let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
@@ -1313,7 +1327,7 @@ let handle_insert_type
           ~env
           ~profiling
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
           ~file_input
@@ -1407,7 +1421,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             ~imports_ranked_usage
             ~env
             ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-            ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+            ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
             ~get_haste_name:(get_haste_name ~reader)
             ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
             ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
@@ -2420,7 +2434,7 @@ let handle_persistent_signaturehelp_lsp
         let cursor_loc = Loc.cursor (Some path) line col in
         Signature_help.find_signatures
           ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-          ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
+          ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
           ~cx
           ~file_sig
           ~ast

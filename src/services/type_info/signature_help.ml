@@ -300,7 +300,7 @@ let rec fix_alias_reason cx t =
     IntersectionT (r, InterRep.make t0 t1 ts)
   | _ -> t'
 
-let find_signatures ~loc_of_aloc ~get_ast ~cx ~file_sig ~ast ~typed_ast loc =
+let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~loc_of_aloc ~cx ~typed_ast loc with
   | Some (t, active_parameter, callee_loc) ->
     let t' = fix_alias_reason cx t in
@@ -324,7 +324,7 @@ let find_signatures ~loc_of_aloc ~get_ast ~cx ~file_sig ~ast ~typed_ast loc =
       | GetDef_js.Get_def_result.Partial (locs, _, _)
         when LocSet.cardinal locs = 1 ->
         let getdef_loc = LocSet.choose locs in
-        Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast getdef_loc
+        Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem getdef_loc
       | _ -> None
     in
     (match ty with

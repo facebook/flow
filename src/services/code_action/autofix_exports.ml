@@ -24,12 +24,19 @@ let set_of_fixable_signature_verification_locations tolerable_errors =
   List.fold_left add_fixable_sig_ver_error LocSet.empty tolerable_errors
 
 let fix_signature_verification_error_at_loc
-    ?remote_converter ~cx ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~file_sig ~typed_ast =
+    ?remote_converter
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_name
+    ~get_type_sig
+    ~file_sig
+    ~typed_ast =
   let open Insert_type in
   insert_type
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_sig
@@ -40,7 +47,14 @@ let fix_signature_verification_error_at_loc
     ~ambiguity_strategy:Autofix_options.Generalize
 
 let fix_signature_verification_errors
-    ~file_key ~cx ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~file_sig ~typed_ast =
+    ~file_key
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_name
+    ~get_type_sig
+    ~file_sig
+    ~typed_ast =
   let open Insert_type in
   let remote_converter =
     new Insert_type_imports.ImportsHelper.remote_converter
@@ -57,7 +71,7 @@ let fix_signature_verification_errors
           ~remote_converter
           ~cx
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
           ~file_sig

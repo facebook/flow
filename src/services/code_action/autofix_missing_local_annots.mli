@@ -14,7 +14,7 @@ val fix_missing_param_annot_at_loc :
   ?remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   cx:Context.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_sig:File_sig.t ->
@@ -28,7 +28,7 @@ val fix_all_missing_param_annot_errors_in_file :
   ?remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   cx:Context.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_sig:File_sig.t ->

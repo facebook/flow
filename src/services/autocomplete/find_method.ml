@@ -70,10 +70,10 @@ let empty_method_of_property_type prop =
     )
   | _ -> None
 
-let find ~get_ast target_loc =
+let find ~get_ast_from_shared_mem target_loc =
   let open Base.Option.Let_syntax in
   let%bind source = Loc.source target_loc in
-  let%bind ast = get_ast source in
+  let%bind ast = get_ast_from_shared_mem source in
   try
     ignore ((new finder target_loc)#program ast);
     None

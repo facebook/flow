@@ -384,7 +384,7 @@ let autocomplete filename content line col js_config_object :
           ~layout_options:Js_layout_generator.default_opts
           ~haste_module_system:false
           ~loc_of_aloc
-          ~get_ast:(fun _ -> None)
+          ~get_ast_from_shared_mem:(fun _ -> None)
           ~get_haste_name:(fun _ -> None)
           ~get_package_info:(fun _ -> None)
           ~is_package_file:(fun _ -> false)

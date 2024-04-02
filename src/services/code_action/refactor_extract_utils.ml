@@ -971,7 +971,7 @@ module TypeSynthesizer = struct
     file_sig: File_sig.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     loc_of_aloc: ALoc.t -> Loc.t;
-    get_ast: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
+    get_ast_from_shared_mem: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
     get_haste_name: File_key.t -> string option;
     get_type_sig: File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option;
     type_at_loc_map: (Type.typeparam list * Type.t) LocMap.t;
@@ -1043,7 +1043,15 @@ module TypeSynthesizer = struct
     |> List.rev
 
   let create_synthesizer_context
-      ~cx ~file ~file_sig ~typed_ast ~loc_of_aloc ~get_ast ~get_haste_name ~get_type_sig ~locs =
+      ~cx
+      ~file
+      ~file_sig
+      ~typed_ast
+      ~loc_of_aloc
+      ~get_ast_from_shared_mem
+      ~get_haste_name
+      ~get_type_sig
+      ~locs =
     let collector = new type_collector ~loc_of_aloc locs in
     ignore (collector#program typed_ast);
     let type_at_loc_map = collector#collected_types in
@@ -1053,7 +1061,7 @@ module TypeSynthesizer = struct
       file_sig;
       typed_ast;
       loc_of_aloc;
-      get_ast;
+      get_ast_from_shared_mem;
       get_haste_name;
       get_type_sig;
       type_at_loc_map;
@@ -1075,7 +1083,7 @@ module TypeSynthesizer = struct
         file_sig;
         typed_ast;
         loc_of_aloc;
-        get_ast;
+        get_ast_from_shared_mem;
         get_haste_name;
         get_type_sig;
         type_at_loc_map;
@@ -1095,7 +1103,7 @@ module TypeSynthesizer = struct
           (Insert_type.synth_type
              ~cx
              ~loc_of_aloc
-             ~get_ast
+             ~get_ast_from_shared_mem
              ~file_sig
              ~typed_ast
              ~omit_targ_defaults:false

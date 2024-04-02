@@ -57,7 +57,7 @@ let autofix_exports_code_actions
     ~options
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~ast
@@ -73,7 +73,7 @@ let autofix_exports_code_actions
     fix_signature_verification_error_at_loc
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~get_haste_name
       ~get_type_sig
       ~file_sig
@@ -88,7 +88,7 @@ let autofix_missing_local_annot_code_actions
     ~options
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~ast
@@ -108,7 +108,7 @@ let autofix_missing_local_annot_code_actions
     fix_missing_param_annot_at_loc
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~get_haste_name
       ~get_type_sig
       ~file_sig
@@ -128,7 +128,7 @@ let refactor_extract_code_actions
     ~file_sig
     ~typed_ast
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~only
@@ -196,7 +196,7 @@ let refactor_extract_code_actions
           ~file_sig
           ~typed_ast
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
           ~support_experimental_snippet_text_edit
@@ -366,7 +366,7 @@ let untyped_ast_transform transform ~cx:_ ~file_sig:_ ~ast ~typed_ast:_ loc =
 
 let autofix_in_upstream_file
     ~cx
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~file_sig
     ~diagnostics
     ~ast
@@ -384,7 +384,7 @@ let autofix_in_upstream_file
       (* load ast of upstream file
          In order to appear in an error, a loc must have a source *)
       let source_file = Base.Option.value_exn src in
-      match get_ast source_file with
+      match get_ast_from_shared_mem source_file with
       | None -> (ast, uri)
       | Some ast ->
         (ast, source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string)
@@ -830,7 +830,7 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
 let code_actions_of_errors
     ~options
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_package_info
     ~is_package_file
@@ -884,7 +884,7 @@ let code_actions_of_errors
             |> Base.List.filter_map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
                    autofix_in_upstream_file
                      ~cx
-                     ~get_ast
+                     ~get_ast_from_shared_mem
                      ~file_sig
                      ~diagnostics
                      ~ast
@@ -1049,7 +1049,7 @@ let code_actions_at_loc
     ~imports_ranked_usage
     ~env
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~get_package_info
@@ -1071,7 +1071,7 @@ let code_actions_at_loc
       ~options
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~get_haste_name
       ~get_type_sig
       ~ast
@@ -1091,7 +1091,7 @@ let code_actions_at_loc
         ~file_sig
         ~typed_ast
         ~loc_of_aloc
-        ~get_ast
+        ~get_ast_from_shared_mem
         ~get_haste_name
         ~get_type_sig
         ~only
@@ -1101,7 +1101,7 @@ let code_actions_at_loc
         ~options
         ~cx
         ~loc_of_aloc
-        ~get_ast
+        ~get_ast_from_shared_mem
         ~get_haste_name
         ~get_type_sig
         ~ast
@@ -1118,7 +1118,7 @@ let code_actions_at_loc
     code_actions_of_errors
       ~options
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~get_haste_name
       ~get_package_info
       ~is_package_file
@@ -1258,7 +1258,7 @@ let autofix_exports
     ~master_cx
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_key
@@ -1284,7 +1284,7 @@ let autofix_exports
         ~file_key
         ~cx
         ~loc_of_aloc
-        ~get_ast
+        ~get_ast_from_shared_mem
         ~get_haste_name
         ~get_type_sig
         ~file_sig
@@ -1301,7 +1301,7 @@ let autofix_missing_local_annot
     ~master_cx
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_key
@@ -1325,7 +1325,7 @@ let autofix_missing_local_annot
       fix_all_missing_param_annot_errors_in_file
         ~cx
         ~loc_of_aloc
-        ~get_ast
+        ~get_ast_from_shared_mem
         ~get_haste_name
         ~get_type_sig
         ~file_sig
@@ -1341,7 +1341,7 @@ let insert_type
     ~env
     ~profiling
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_key
@@ -1378,7 +1378,7 @@ let insert_type
          Insert_type.insert_type
            ~cx
            ~loc_of_aloc
-           ~get_ast
+           ~get_ast_from_shared_mem
            ~get_haste_name
            ~get_type_sig
            ~file_sig

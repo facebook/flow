@@ -190,13 +190,20 @@ let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
 let serialize
-    ~cx ~loc_of_aloc ~get_ast ~file_sig ~typed_ast ?(imports_react = false) ~exact_by_default loc ty
-    =
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~file_sig
+    ~typed_ast
+    ?(imports_react = false)
+    ~exact_by_default
+    loc
+    ty =
   let mapper =
     new Utils.type_normalization_hardcoded_fixes_mapper
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~file_sig
       ~typed_ast
       ~lint_severities:LintSettings.empty_severities
@@ -214,7 +221,15 @@ let serialize
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
 
 let remove_ambiguous_types
-    ~cx ~loc_of_aloc ~get_ast ~file_sig ~typed_ast ~ambiguity_strategy ~exact_by_default ty loc =
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~file_sig
+    ~typed_ast
+    ~ambiguity_strategy
+    ~exact_by_default
+    ty
+    loc =
   let open Autofix_options in
   match ambiguity_strategy with
   | Fail -> begin
@@ -226,10 +241,24 @@ let remove_ambiguous_types
            {
              specialized =
                specialize_temporary_types ty
-               |> serialize ~cx ~loc_of_aloc ~get_ast ~file_sig ~typed_ast ~exact_by_default loc;
+               |> serialize
+                    ~cx
+                    ~loc_of_aloc
+                    ~get_ast_from_shared_mem
+                    ~file_sig
+                    ~typed_ast
+                    ~exact_by_default
+                    loc;
              generalized =
                generalize_temporary_types ty
-               |> serialize ~cx ~loc_of_aloc ~get_ast ~file_sig ~typed_ast ~exact_by_default loc;
+               |> serialize
+                    ~cx
+                    ~loc_of_aloc
+                    ~get_ast_from_shared_mem
+                    ~file_sig
+                    ~typed_ast
+                    ~exact_by_default
+                    loc;
            }
   end
   | Generalize -> generalize_temporary_types ty
@@ -404,7 +433,7 @@ let synth_type
     ?(size_limit = 30)
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
@@ -427,7 +456,7 @@ let synth_type
     remove_ambiguous_types
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~file_sig
       ~typed_ast
       ~ambiguity_strategy
@@ -457,7 +486,7 @@ let synth_type
     serialize
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~file_sig
       ~typed_ast
       ~imports_react
@@ -527,7 +556,7 @@ let add_imports remote_converter stmts =
 let insert_type_
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_sig
@@ -563,7 +592,7 @@ let insert_type_
     synth_type
       ~cx
       ~loc_of_aloc
-      ~get_ast
+      ~get_ast_from_shared_mem
       ~file_sig
       ~typed_ast
       ~omit_targ_defaults
@@ -581,7 +610,7 @@ let insert_type_
 let insert_type
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_sig
@@ -595,7 +624,7 @@ let insert_type
   insert_type_
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_sig
@@ -612,7 +641,7 @@ let insert_type
 let insert_type_t
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_sig
@@ -627,7 +656,7 @@ let insert_type_t
   insert_type_
     ~cx
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~file_sig

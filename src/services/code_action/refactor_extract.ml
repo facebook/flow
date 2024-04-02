@@ -457,7 +457,7 @@ let extract_from_statements_refactors
     ~file_sig
     ~typed_ast
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~create_unique_name
@@ -518,7 +518,7 @@ let extract_from_statements_refactors
           ~file_sig
           ~typed_ast
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
           ~locs
@@ -791,7 +791,7 @@ let extract_from_expression_refactors
     ~file_sig
     ~typed_ast
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~create_unique_name
@@ -831,7 +831,7 @@ let extract_from_expression_refactors
           ~file_sig
           ~typed_ast
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
           ~locs
@@ -898,7 +898,7 @@ let extract_from_type_refactors
     ~file_sig
     ~typed_ast
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~create_unique_name
@@ -924,7 +924,7 @@ let extract_from_type_refactors
           ~file_sig
           ~typed_ast
           ~loc_of_aloc
-          ~get_ast
+          ~get_ast_from_shared_mem
           ~get_haste_name
           ~get_type_sig
           ~locs:(LocSet.singleton type_loc)
@@ -992,7 +992,7 @@ let provide_available_refactors
     ~file_sig
     ~typed_ast
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
     ~support_experimental_snippet_text_edit
@@ -1013,7 +1013,7 @@ let provide_available_refactors
            ~file_sig
            ~typed_ast
            ~loc_of_aloc
-           ~get_ast
+           ~get_ast_from_shared_mem
            ~get_haste_name
            ~get_type_sig
            ~create_unique_name
@@ -1031,7 +1031,7 @@ let provide_available_refactors
            ~file_sig
            ~typed_ast
            ~loc_of_aloc
-           ~get_ast
+           ~get_ast_from_shared_mem
            ~get_haste_name
            ~get_type_sig
            ~create_unique_name
@@ -1049,7 +1049,7 @@ let provide_available_refactors
            ~file_sig
            ~typed_ast
            ~loc_of_aloc
-           ~get_ast
+           ~get_ast_from_shared_mem
            ~get_haste_name
            ~get_type_sig
            ~create_unique_name

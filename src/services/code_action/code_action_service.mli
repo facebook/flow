@@ -37,7 +37,7 @@ val code_actions_at_loc :
   imports_ranked_usage:bool ->
   env:ServerEnv.env ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
@@ -73,7 +73,7 @@ val autofix_exports :
   master_cx:Context.master_context ->
   profiling:Profiling_js.running ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_key:File_key.t ->
@@ -85,7 +85,7 @@ val autofix_missing_local_annot :
   master_cx:Context.master_context ->
   profiling:Profiling_js.running ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_key:File_key.t ->
@@ -97,7 +97,7 @@ val insert_type :
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
-  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   get_haste_name:(File_key.t -> string option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_key:File_key.t ->

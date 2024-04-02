@@ -175,7 +175,7 @@ module Make (Extra : BASE_STATS) = struct
             Hardcoded_Ty_Fixes.run
               ~cx
               ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
-              ~get_ast:(Parsing_heaps.Reader_dispatcher.get_ast ~reader)
+              ~get_ast_from_shared_mem:(Parsing_heaps.Reader_dispatcher.get_ast ~reader)
               ~file_sig
               ~typed_ast
               ~lint_severities
@@ -218,7 +218,7 @@ module Make (Extra : BASE_STATS) = struct
             Hardcoded_Ty_Fixes.run
               ~cx
               ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
-              ~get_ast:(Parsing_heaps.Reader_dispatcher.get_ast ~reader)
+              ~get_ast_from_shared_mem:(Parsing_heaps.Reader_dispatcher.get_ast ~reader)
               ~file_sig
               ~typed_ast
               ~lint_severities

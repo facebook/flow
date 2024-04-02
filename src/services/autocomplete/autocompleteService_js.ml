@@ -311,7 +311,7 @@ type typing = {
   layout_options: Js_layout_generator.opts;
   haste_module_system: bool;
   loc_of_aloc: ALoc.t -> Loc.t;
-  get_ast: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
+  get_ast_from_shared_mem: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
   get_haste_name: File_key.t -> string option;
   get_package_info: File_key.t -> (Package_json.t, unit) result option;
   is_package_file: string -> bool;
@@ -329,7 +329,7 @@ let mk_typing_artifacts
     ~layout_options
     ~haste_module_system
     ~loc_of_aloc
-    ~get_ast
+    ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_package_info
     ~is_package_file
@@ -351,7 +351,7 @@ let mk_typing_artifacts
     layout_options;
     haste_module_system;
     loc_of_aloc;
-    get_ast;
+    get_ast_from_shared_mem;
     get_haste_name;
     get_package_info;
     is_package_file;
@@ -376,15 +376,15 @@ type 'r autocomplete_service_result_generic =
 
 type autocomplete_service_result = AcCompletion.t autocomplete_service_result_generic
 
-let jsdoc_of_def_loc { loc_of_aloc; get_ast; ast; _ } def_loc =
-  loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast
+let jsdoc_of_def_loc { loc_of_aloc; get_ast_from_shared_mem; ast; _ } def_loc =
+  loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem
 
 let jsdoc_of_member typing info =
   match info.Ty_members.def_locs with
   | [def_loc] -> jsdoc_of_def_loc typing def_loc
   | _ -> None
 
-let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast ~file_sig ~ast ~available_ast loc =
+let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~available_ast loc =
   let open GetDef_js.Get_def_result in
   match
     GetDef_js.get_def
@@ -400,7 +400,7 @@ let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast ~file_sig ~ast ~available_ast loc =
   | Partial (locs, _, _)
     when LocSet.cardinal locs = 1 ->
     let getdef_loc = LocSet.choose locs in
-    Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast getdef_loc
+    Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem getdef_loc
   | _ -> None
 
 let documentation_and_tags_of_jsdoc jsdoc =
@@ -416,9 +416,10 @@ let documentation_and_tags_of_member typing info =
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
-let documentation_and_tags_of_loc ~cx ~loc_of_aloc ~get_ast ~file_sig ~ast ~available_ast loc =
+let documentation_and_tags_of_loc
+    ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~available_ast loc =
   lazy
-    (jsdoc_of_loc ~get_ast ~cx ~loc_of_aloc ~file_sig ~ast ~available_ast loc
+    (jsdoc_of_loc ~get_ast_from_shared_mem ~cx ~loc_of_aloc ~file_sig ~ast ~available_ast loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
@@ -481,7 +482,7 @@ let members_of_type
       )
 
 let local_value_identifiers ~typing ~genv ~ac_loc =
-  let { loc_of_aloc; get_ast; cx; ast; available_ast; file_sig; _ } = typing in
+  let { loc_of_aloc; get_ast_from_shared_mem; cx; ast; available_ast; file_sig; _ } = typing in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
   in
@@ -526,7 +527,14 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
            Type_env.checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc (ALoc.of_loc loc)
          in
          let documentation_and_tags =
-           documentation_and_tags_of_loc ~get_ast ~cx ~loc_of_aloc ~file_sig ~ast ~available_ast loc
+           documentation_and_tags_of_loc
+             ~get_ast_from_shared_mem
+             ~cx
+             ~loc_of_aloc
+             ~file_sig
+             ~ast
+             ~available_ast
+             loc
          in
          ((name, documentation_and_tags), type_)
      )
@@ -1305,7 +1313,7 @@ let autocomplete_unqualified_type
     ~token =
   let {
     loc_of_aloc;
-    get_ast;
+    get_ast_from_shared_mem;
     search_exported_types;
     cx;
     file_sig;
@@ -1331,7 +1339,7 @@ let autocomplete_unqualified_type
          (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
            let documentation_and_tags =
              documentation_and_tags_of_loc
-               ~get_ast
+               ~get_ast_from_shared_mem
                ~loc_of_aloc
                ~cx
                ~file_sig
@@ -1899,7 +1907,7 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
   AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
-  let { layout_options; loc_of_aloc; get_ast; _ } = typing in
+  let { layout_options; loc_of_aloc; get_ast_from_shared_mem; _ } = typing in
   let open Base.Result.Let_syntax in
   let%bind (mems, errors_to_log) =
     members_of_type
@@ -1916,7 +1924,8 @@ let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
          ~f:(fun (name, documentation_and_tags, { Ty_members.ty; def_locs; _ }) ->
            let open Base.Option in
            (* Find the AST node for member we want to override *)
-           def_locs |> Base.List.hd >>| loc_of_aloc >>= Find_method.find ~get_ast >>| fun method_ ->
+           def_locs |> Base.List.hd >>| loc_of_aloc >>= Find_method.find ~get_ast_from_shared_mem
+           >>| fun method_ ->
            autocomplete_create_result_method
              ~method_
              ~layout_options
