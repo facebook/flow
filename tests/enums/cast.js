@@ -69,3 +69,9 @@ sb as string | boolean; // Error
 
 S.A as interface {}; // Error
 S.A as empty; // Error
+
+type I<T> = T;
+{
+  declare const x: I<S>;
+  const s: string = x as string; // OK
+}

@@ -797,7 +797,11 @@ struct
           when union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype l u ->
           ()
         | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
-        | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
+        | (_, TypeCastT (use_op, cast_to_t)) ->
+          (match FlowJs.singleton_concrete_type_for_inspection cx (reason_of_t l) l with
+          | DefT (reason, EnumValueT enum) ->
+            rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, enum) })
+          | _ -> rec_flow cx trace (l, UseT (use_op, cast_to_t)))
         (**********************************************************************)
         (* enum cast e.g. `(x: T)` where `x` is an `EnumValueT`                    *)
         (* We allow enums to be explicitly cast to their representation type. *)
