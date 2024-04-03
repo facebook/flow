@@ -217,3 +217,11 @@ switch (x) {
   case E.XXX: break; // Error
   case E.B: break;
 }
+
+// Generic input
+function f12<T: E>(x: T) {
+  switch (x) { // Error
+    case x: break;
+  }
+}
+f12(E.A);

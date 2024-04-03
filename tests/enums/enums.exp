@@ -1989,6 +1989,21 @@ References:
              ^ [1]
 
 
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:224:10
+
+Invalid enum member check at case. Check must be dot-access of a member of `E` [1]. For example `case E.A:`.
+[invalid-exhaustive-check]
+
+   exhaustive-check.js:224:10
+   224|     case x: break;
+                 ^
+
+References:
+   exhaustive-check.js:222:23
+   222| function f12<T: E>(x: T) {
+                              ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- import-declared.js:6:1
 
 Cannot cast `F.M` to boolean because `F` [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -3993,7 +4008,7 @@ References:
 
 
 
-Found 238 errors
+Found 239 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

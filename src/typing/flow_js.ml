@@ -5403,116 +5403,6 @@ struct
         | (DefT (enum_reason, EnumObjectT _), GetDictValuesT (reason, result)) ->
           add_output cx ~trace (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
           rec_flow cx trace (AnyT.error reason, result)
-        (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
-        | ( DefT (enum_reason, EnumValueT enum),
-            EnumExhaustiveCheckT
-              {
-                reason = check_reason;
-                check =
-                  EnumExhaustiveCheckPossiblyValid
-                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case };
-                incomplete_out;
-                discriminant_after_check;
-              }
-          ) ->
-          enum_exhaustive_check
-            cx
-            ~trace
-            ~check_reason
-            ~enum_reason
-            ~enum
-            ~possible_checks
-            ~checks
-            ~default_case
-            ~incomplete_out
-            ~discriminant_after_check
-        (* Resolving the case tests. *)
-        | ( _,
-            EnumExhaustiveCheckT
-              {
-                reason = check_reason;
-                check =
-                  EnumExhaustiveCheckPossiblyValid
-                    {
-                      tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
-                      possible_checks;
-                      checks;
-                      default_case;
-                    };
-                incomplete_out;
-                discriminant_after_check;
-              }
-          ) ->
-          let (EnumCheck { member_name; _ }) = check in
-          let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
-          let checks =
-            match l with
-            | DefT (_, EnumObjectT { enum_id = enum_id_check; _ })
-              when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members
-              ->
-              check :: checks
-            (* If the check is not the same enum type, ignore it and continue. The user will
-             * still get an error as the comparison between discriminant and case test will fail. *)
-            | _ -> checks
-          in
-          enum_exhaustive_check
-            cx
-            ~trace
-            ~check_reason
-            ~enum_reason:discriminant_reason
-            ~enum:discriminant_enum
-            ~possible_checks
-            ~checks
-            ~default_case
-            ~incomplete_out
-            ~discriminant_after_check
-        | ( DefT (enum_reason, EnumValueT { members; _ }),
-            EnumExhaustiveCheckT
-              {
-                reason;
-                check = EnumExhaustiveCheckInvalid reasons;
-                incomplete_out;
-                discriminant_after_check = _;
-              }
-          ) ->
-          let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
-          List.iter
-            (fun reason ->
-              add_output cx (Error_message.EEnumInvalidCheck { reason; enum_reason; example_member }))
-            reasons;
-          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
-        (* If the discriminant is empty, the check is successful. *)
-        | ( DefT (_, EmptyT),
-            EnumExhaustiveCheckT
-              {
-                check =
-                  ( EnumExhaustiveCheckInvalid _
-                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
-                _;
-              }
-          ) ->
-          ()
-        (* Non-enum discriminants.
-         * If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
-         * away by each case), then `trigger` will be empty, which will prevent the implicit void
-         * return that could occur otherwise. *)
-        | ( _,
-            EnumExhaustiveCheckT
-              {
-                reason;
-                check =
-                  ( EnumExhaustiveCheckInvalid _
-                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
-                incomplete_out;
-                discriminant_after_check;
-              }
-          ) ->
-          enum_exhaustive_check_incomplete
-            cx
-            ~trace
-            ~reason
-            ?trigger:discriminant_after_check
-            incomplete_out
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
            Such tests are always non-strict, in that we don't immediately report an
@@ -5628,6 +5518,119 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (reposition_reason cx reason bound, u)
+        (**********************************)
+        (* Flow Enums exhaustive checking *)
+        (**********************************)
+        (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
+        | ( DefT (enum_reason, EnumValueT enum),
+            EnumExhaustiveCheckT
+              {
+                reason = check_reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case };
+                incomplete_out;
+                discriminant_after_check;
+              }
+          ) ->
+          enum_exhaustive_check
+            cx
+            ~trace
+            ~check_reason
+            ~enum_reason
+            ~enum
+            ~possible_checks
+            ~checks
+            ~default_case
+            ~incomplete_out
+            ~discriminant_after_check
+        (* Resolving the case tests. *)
+        | ( _,
+            EnumExhaustiveCheckT
+              {
+                reason = check_reason;
+                check =
+                  EnumExhaustiveCheckPossiblyValid
+                    {
+                      tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
+                      possible_checks;
+                      checks;
+                      default_case;
+                    };
+                incomplete_out;
+                discriminant_after_check;
+              }
+          ) ->
+          let (EnumCheck { member_name; _ }) = check in
+          let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
+          let checks =
+            match l with
+            | DefT (_, EnumObjectT { enum_id = enum_id_check; _ })
+              when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members
+              ->
+              check :: checks
+            (* If the check is not the same enum type, ignore it and continue. The user will
+             * still get an error as the comparison between discriminant and case test will fail. *)
+            | _ -> checks
+          in
+          enum_exhaustive_check
+            cx
+            ~trace
+            ~check_reason
+            ~enum_reason:discriminant_reason
+            ~enum:discriminant_enum
+            ~possible_checks
+            ~checks
+            ~default_case
+            ~incomplete_out
+            ~discriminant_after_check
+        | ( DefT (enum_reason, EnumValueT { members; _ }),
+            EnumExhaustiveCheckT
+              {
+                reason;
+                check = EnumExhaustiveCheckInvalid reasons;
+                incomplete_out;
+                discriminant_after_check = _;
+              }
+          ) ->
+          let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
+          List.iter
+            (fun reason ->
+              add_output cx (Error_message.EEnumInvalidCheck { reason; enum_reason; example_member }))
+            reasons;
+          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
+        (* If the discriminant is empty, the check is successful. *)
+        | ( DefT (_, EmptyT),
+            EnumExhaustiveCheckT
+              {
+                check =
+                  ( EnumExhaustiveCheckInvalid _
+                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
+                _;
+              }
+          ) ->
+          ()
+        (* Non-enum discriminants.
+         * If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
+         * away by each case), then `trigger` will be empty, which will prevent the implicit void
+         * return that could occur otherwise. *)
+        | ( _,
+            EnumExhaustiveCheckT
+              {
+                reason;
+                check =
+                  ( EnumExhaustiveCheckInvalid _
+                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
+                incomplete_out;
+                discriminant_after_check;
+              }
+          ) ->
+          enum_exhaustive_check_incomplete
+            cx
+            ~trace
+            ~reason
+            ?trigger:discriminant_after_check
+            incomplete_out
         (***************)
         (* unsupported *)
         (***************)
