@@ -24,6 +24,11 @@ function isLintSuppression(commentAST: {value: string}): boolean {
   return flowlintRegex.test(commentAST.value);
 }
 
+const eslintRegex = /eslint-disable/m;
+function isEsLintSuppression(value: string): boolean {
+  return eslintRegex.test(value);
+}
+
 const newlineRegex = /[\u2029\u2028\r\n]/;
 const edible = /[\t ]/;
 /* This is the most confusing part of this command. A simple version of this
@@ -428,6 +433,7 @@ function formatComment(
 
 module.exports = {
   isLintSuppression,
+  isEsLintSuppression,
   findStartOfLine,
   insertCommentToText,
   addCommentToText,

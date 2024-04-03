@@ -59,6 +59,56 @@ function test(name, fn) {
   collectedTests.push({name, fn});
 }
 
+test('updateSuppressionsInText does not remove eslint-disable comment', async () => {
+  const testInput = `
+// $FlowFixMe eslint-disable-next-line no-fallthrough
+const x = 4;
+`.trimLeft();
+
+  const loc = makeLoc(testInput, 1, 1, 1, 54);
+
+  const testOutput = `
+// $FlowFixMe eslint-disable-next-line no-fallthrough
+const x = 4;
+`.trimLeft();
+
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
+});
+
+test('updateSuppressionsInText does not remove eslint-disable multiline comment', async () => {
+  const testInput = `
+/* $FlowFixMe
+ * eslint-disable no-fallthrough
+ */
+const x = 4;
+`.trimLeft();
+
+  const loc = makeLoc(testInput, 1, 1, 3, 4);
+
+  const testOutput = `
+/* $FlowFixMe
+ * eslint-disable no-fallthrough
+ */
+const x = 4;
+`.trimLeft();
+
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
+});
+
 test('exec', async () => {
   expect(await exec('echo foo')).toBe('foo\n');
   expect(await exec('cat', {stdin: 'bar'})).toBe('bar');

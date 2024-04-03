@@ -25,6 +25,7 @@ const {readFile, writeFile} = require('fs').promises;
 const {
   removeUnusedErrorSuppressionFromText,
   isLintSuppression,
+  isEsLintSuppression,
   addCommentToText,
   findStartOfLine,
 } = require('../comment/commentMutator');
@@ -218,6 +219,12 @@ function updateErrorSuppression(
   }
   let innerOffset = commentStartOffset + 2; // `/*` and `//` are both 2 chars
   let text = contents.slice(innerOffset, endOffset).toString('utf8');
+
+  // do not remove the comment if it's a eslint suppression
+  // TODO update the logging provided in the end of the command
+  if (isEsLintSuppression(text)) {
+    return contents;
+  }
 
   const existingRoots = getSites(text); // may include unknown roots
   const roots = new Set([...existingRoots, ...knownRoots]);
