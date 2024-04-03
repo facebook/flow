@@ -36,6 +36,7 @@ let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
   | PropertyType { name; _ } -> spf "PropertyType %s" (display_string_of_name name)
   | ElementType _ -> "ElementType"
+  | EnumType -> "EnumType"
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
   | ReadOnlyType -> "ReadOnly"
@@ -270,7 +271,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, InstanceT inst_t) -> p ~extra:(instance_t inst_t) t
     | DefT (_, TypeT (kind, arg)) ->
       p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
-    | DefT (_, EnumValueT (AbstractEnum { representation_t })) ->
+    | DefT (_, EnumValueT (AbstractEnum { representation_t }))
+    | DefT (_, EnumObjectT { enum_info = AbstractEnum { representation_t }; _ }) ->
       p ~extra:(spf "abstract: %s" (kid representation_t)) t
     | DefT
         ( _,
@@ -282,7 +284,12 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT
         ( _,
           EnumObjectT
-            { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ }
+            {
+              enum_info =
+                ConcreteEnum
+                  { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ };
+              _;
+            }
         ) ->
       p ~extra:(spf "enum concrete: %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
@@ -975,6 +982,13 @@ and dump_use_t_ (depth, tvars) cx t =
         | EnumExhaustiveCheckInvalid _ -> "EnumExhaustiveCheckInvalid"
       in
       p ~extra:check_str t
+    | GetEnumT { kind; _ } ->
+      p
+        ~extra:
+          (match kind with
+          | `GetEnumObject -> "get enum object"
+          | `GetEnumValue -> "get enum value")
+        t
     | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | FilterMaybeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | DeepReadOnlyT ((_, tv), _, _) -> p ~extra:(tvar tv) t
@@ -1862,6 +1876,8 @@ let dump_error_message =
         | `ConcreteEnum -> "concrete"
         | `AbstractEnum -> "abstract")
         (Base.Option.value ~default:"<None>" representation_type)
+    | EEnumInvalidAbstractUse { reason; enum_reason } ->
+      spf "EEnumInvalidAbstractUse (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EAssignConstLikeBinding { loc; definition; binding_kind } ->
       spf
         "EAssignConstLikeBinding (%s) (%s) (%s)"

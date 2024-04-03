@@ -267,6 +267,7 @@ and utility =
   | Diff of t * t
   | Rest of t * t
   | ElementType of t * t
+  | Enum of t
   | NonMaybeType of t
   | ObjMap of t * t
   | ObjMapi of t * t
@@ -677,6 +678,7 @@ class ['A] comparator_ty =
       | Required _ -> 24
       | ObjMapConst _ -> 25
       | ReactCheckComponentRef _ -> 26
+      | Enum _ -> 27
 
     method tag_of_polarity _ =
       function
@@ -830,6 +832,7 @@ let string_of_utility_ctor = function
   | Partial _ -> "Partial"
   | Required _ -> "Required"
   | Exact _ -> "$Exact"
+  | Enum _ -> "Enum"
   | Diff _ -> "$Diff"
   | Rest _ -> "$Rest"
   | ElementType _ -> "$ElementType"
@@ -857,6 +860,7 @@ let types_of_utility = function
   | Diff (t1, t2) -> Some [t1; t2]
   | Rest (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
+  | Enum t -> Some [t]
   | NonMaybeType t -> Some [t]
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]

@@ -76,6 +76,7 @@ and reason_of_use_t = function
   | ElemT (_, reason, _, _) -> reason
   | EnumCastT { enum = (reason, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
+  | GetEnumT { reason; _ } -> reason
   | EqT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
   | ExportNamedT { reason; _ } -> reason
@@ -281,6 +282,7 @@ and mod_reason_of_use_t f = function
   | EnumCastT { use_op; enum = (reason, enum) } -> EnumCastT { use_op; enum = (f reason, enum) }
   | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
     EnumExhaustiveCheckT { reason = f reason; check; incomplete_out; discriminant_after_check }
+  | GetEnumT ({ reason; _ } as x) -> GetEnumT { x with reason = f reason }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
   | ConditionalT
       { use_op; reason; distributive_tparam_name; infer_tparams; extends_t; true_t; false_t; tout }
@@ -512,6 +514,7 @@ let rec util_use_op_of_use_t :
     util use_op (fun use_op -> TryRenderTypePromotionT { contents with use_op })
   | ValueToTypeReferenceT (use_op, reason, kind, t) ->
     util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
+  | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })
   | MakeExactT (_, _)
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)

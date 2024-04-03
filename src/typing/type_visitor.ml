@@ -110,8 +110,15 @@ class ['a] t =
       | NullT
       | VoidT ->
         acc
-      | EnumValueT (ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t })
-      | EnumObjectT { representation_t; _ } ->
+      | EnumValueT (ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t }) ->
+        let acc = self#type_ cx pole acc representation_t in
+        acc
+      | EnumObjectT
+          {
+            enum_value_t;
+            enum_info = ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t };
+          } ->
+        let acc = self#type_ cx pole acc enum_value_t in
         let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, funtype) ->
@@ -210,6 +217,7 @@ class ['a] t =
       | ReadOnlyType
       | PartialType
       | RequiredType
+      | EnumType
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType

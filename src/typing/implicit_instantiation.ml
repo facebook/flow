@@ -213,6 +213,26 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ReactCheckComponentRef
       | ReactPromoteRendersRepresentation _ ->
         UpperEmpty
+      | EnumType ->
+        merge_lower_or_upper_bounds r (OpenT tout)
+        |> bind_use_t_result ~f:(fun tout ->
+               Tvar.mk_no_wrap_where cx r (fun t' ->
+                   Flow.flow
+                     cx
+                     ( tout,
+                       GetEnumT
+                         {
+                           use_op = unknown_use;
+                           reason = r;
+                           orig_t = None;
+                           kind = `GetEnumValue;
+                           tout = OpenT t';
+                         }
+                     )
+               )
+               |> merge_lower_bounds cx
+               |> use_t_result_of_t_option
+           )
       | ReactElementPropsType
       | ReactElementConfigType ->
         merge_lower_or_upper_bounds r (OpenT tout)
@@ -336,6 +356,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | TypeCastT _
     | EnumCastT _
     | EnumExhaustiveCheckT _
+    | GetEnumT _
     | DebugPrintT _
     | DebugSleepT _
     | InvariantT _

@@ -2135,7 +2135,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let statics = (reason, Tvar.mk_no_wrap cx reason) in
       rec_flow cx trace (instance, GetStaticsT statics);
       rec_flow_t cx trace ~use_op (OpenT statics, u)
-    | (DefT (_, EnumObjectT { enum_id = id1; _ }), DefT (_, EnumObjectT { enum_id = id2; _ }))
+    (*********)
+    (* Enums *)
+    (*********)
+    | ( DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id1; _ }; _ }),
+        DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id2; _ }; _ })
+      )
       when ALoc.equal_id id1 id2 ->
       ()
     | ( DefT (_, EnumValueT (ConcreteEnum { enum_id = id1; _ })),
@@ -2147,22 +2152,32 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ( enum_reason_l,
             EnumObjectT
               {
-                enum_id = id1;
-                enum_name = n1;
-                members = m1;
-                representation_t = r1;
-                has_unknown_members = has_unknown1;
+                enum_info =
+                  ConcreteEnum
+                    {
+                      enum_id = id1;
+                      enum_name = n1;
+                      members = m1;
+                      representation_t = r1;
+                      has_unknown_members = has_unknown1;
+                    };
+                _;
               }
           ),
         DefT
           ( enum_reason_u,
             EnumObjectT
               {
-                enum_id = id2;
-                enum_name = n2;
-                members = m2;
-                representation_t = r2;
-                has_unknown_members = has_unknown2;
+                enum_info =
+                  ConcreteEnum
+                    {
+                      enum_id = id2;
+                      enum_name = n2;
+                      members = m2;
+                      representation_t = r2;
+                      has_unknown_members = has_unknown2;
+                    };
+                _;
               }
           )
       )
@@ -2207,6 +2222,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       in
       rec_flow_t cx trace ~use_op (r1, r2)
+    | ( DefT (_, EnumObjectT { enum_value_t = enum_value_t1; _ }),
+        DefT (_, EnumObjectT { enum_value_t = enum_value_t2; _ })
+      ) ->
+      rec_flow_t cx trace ~use_op (enum_value_t1, enum_value_t2)
     | ( DefT
           ( enum_reason_l,
             EnumValueT

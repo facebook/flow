@@ -2,7 +2,7 @@
 
 import {B} from './export-commonjs.js';
 import C from './export-commonjs-default.js';
-import D, {E, F, U} from './export.js';
+import D, {E, F, U, x} from './export.js';
 
 const {B: B2} = require('./export-commonjs.js');
 const C2 = require('./export-commonjs-default.js');
@@ -21,3 +21,5 @@ const c2: C2 = C2.A;
 const d2: D2 = D2.A;
 const e2: E2 = E2.A;
 const f2: F2 = F2.A;
+
+x as E; // OK

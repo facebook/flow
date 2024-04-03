@@ -5319,7 +5319,7 @@ struct
         (*********)
         (* enums *)
         (*********)
-        | ( DefT (enum_reason, EnumObjectT enum_info),
+        | ( DefT (enum_reason, EnumObjectT { enum_value_t; enum_info = ConcreteEnum enum_info }),
             GetPropT
               {
                 use_op;
@@ -5332,7 +5332,6 @@ struct
               }
           ) ->
           let access = (use_op, access_reason, None, (prop_reason, member_name)) in
-          let enum_value_t = mk_enum_type enum_reason enum_info in
           GetPropTKit.on_EnumObjectT
             cx
             trace
@@ -5359,13 +5358,17 @@ struct
                   hint;
                 }
             )
-        | ( DefT (enum_reason, EnumObjectT enum_info),
+        | ( DefT (_, EnumObjectT { enum_value_t; enum_info }),
             MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action)
           ) ->
           let t =
             Tvar.mk_no_wrap_where cx lookup_reason (fun tout ->
-                let enum_value_t = mk_enum_type enum_reason enum_info in
-                let { representation_t; _ } = enum_info in
+                let representation_t =
+                  match enum_info with
+                  | ConcreteEnum { representation_t; _ }
+                  | AbstractEnum { representation_t } ->
+                    representation_t
+                in
                 rec_flow
                   cx
                   trace
@@ -5560,6 +5563,25 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (reposition_reason cx reason bound, u)
+        (************)
+        (* GetEnumT *)
+        (************)
+        | ( DefT (enum_reason, EnumValueT enum_info),
+            GetEnumT { use_op; orig_t; kind = `GetEnumObject; tout; _ }
+          ) ->
+          let enum_value_t = Base.Option.value ~default:l orig_t in
+          rec_flow
+            cx
+            trace
+            (DefT (enum_reason, EnumObjectT { enum_value_t; enum_info }), UseT (use_op, tout))
+        | (_, GetEnumT { use_op; kind = `GetEnumObject; tout; _ }) ->
+          rec_flow cx trace (l, UseT (use_op, tout))
+        | ( DefT (_, EnumObjectT { enum_value_t; _ }),
+            GetEnumT { use_op; kind = `GetEnumValue; tout; _ }
+          ) ->
+          rec_flow cx trace (enum_value_t, UseT (use_op, tout))
+        | (_, GetEnumT { use_op; kind = `GetEnumValue; tout; _ }) ->
+          rec_flow cx trace (l, UseT (use_op, tout))
         (**********************************)
         (* Flow Enums exhaustive checking *)
         (**********************************)
@@ -5586,6 +5608,8 @@ struct
             ~default_case
             ~incomplete_out
             ~discriminant_after_check
+        | (DefT (enum_reason, EnumValueT (AbstractEnum _)), EnumExhaustiveCheckT { reason; _ }) ->
+          add_output cx (Error_message.EEnumInvalidAbstractUse { reason; enum_reason })
         (* Resolving the case tests. *)
         | ( _,
             EnumExhaustiveCheckT
@@ -5607,7 +5631,7 @@ struct
           let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
           let checks =
             match l with
-            | DefT (_, EnumObjectT { enum_id = enum_id_check; _ })
+            | DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = enum_id_check; _ }; _ })
               when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members
               ->
               check :: checks
@@ -5626,7 +5650,7 @@ struct
             ~default_case
             ~incomplete_out
             ~discriminant_after_check
-        | ( DefT (enum_reason, EnumValueT (ConcreteEnum { members; _ })),
+        | ( DefT (enum_reason, EnumValueT enum_info),
             EnumExhaustiveCheckT
               {
                 reason;
@@ -5635,7 +5659,11 @@ struct
                 discriminant_after_check = _;
               }
           ) ->
-          let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
+          let example_member =
+            match enum_info with
+            | ConcreteEnum { members; _ } -> SMap.choose_opt members |> Base.Option.map ~f:fst
+            | AbstractEnum _ -> None
+          in
           List.iter
             (fun reason ->
               add_output cx (Error_message.EEnumInvalidCheck { reason; enum_reason; example_member }))
@@ -6812,6 +6840,7 @@ struct
     | AssertExportIsTypeT _
     | ImplicitVoidReturnT _
     | GetElemT _
+    | GetEnumT _
     | GetKeysT _
     | GetPrivatePropT _
     | GetPropT _
@@ -7883,6 +7912,8 @@ struct
                     OpenT tout
                   )
               )
+            | EnumType ->
+              GetEnumT { use_op; reason; orig_t = Some t; kind = `GetEnumObject; tout = OpenT tout }
           ))
 
   and eagerly_eval_destructor_if_resolved cx ~trace use_op reason t d tvar =

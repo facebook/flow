@@ -531,6 +531,7 @@ type ('loc, 'a) annot =
       elem: 'a;
     }
   | EnumValue of 'loc * 'a
+  | Enum of 'loc * 'a
   | OptionalIndexedAccessNonMaybeType of {
       loc: 'loc;
       obj: 'a;

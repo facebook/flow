@@ -405,6 +405,7 @@ module Make (I : INPUT) : S = struct
         | ReactCheckComponentRef
         | ValuesType
         | TypeMap _
+        | EnumType
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
@@ -1798,6 +1799,7 @@ module Make (I : INPUT) : S = struct
         return ty
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
+      | T.EnumType -> return (Ty.Utility (Ty.Enum ty))
       | T.PartialType -> return (Ty.Utility (Ty.Partial ty))
       | T.RequiredType -> return (Ty.Utility (Ty.Required ty))
       | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
@@ -2416,9 +2418,13 @@ module Make (I : INPUT) : S = struct
         }
 
     and enum_t ~env ~inherited reason enum_info =
-      let { T.members; representation_t; _ } = enum_info in
-      let enum_t = T.mk_enum_type reason enum_info in
-      let enum_object_t = T.DefT (reason, T.EnumObjectT enum_info) in
+      let (members, representation_t) =
+        match enum_info with
+        | T.ConcreteEnum { T.members; representation_t; _ } -> (members, representation_t)
+        | T.AbstractEnum { representation_t } -> (SMap.empty, representation_t)
+      in
+      let enum_value_t = T.mk_enum_type reason enum_info in
+      let enum_object_t = T.DefT (reason, T.EnumObjectT { enum_value_t; enum_info }) in
       let%bind proto_ty =
         I.builtin_typeapp
           (Env.get_cx env)
@@ -2427,13 +2433,13 @@ module Make (I : INPUT) : S = struct
           ~app:app_on_generic
           reason
           "$EnumProto"
-          [enum_object_t; enum_t; representation_t]
+          [enum_object_t; enum_value_t; representation_t]
       in
-      let%map enum_ty = TypeConverter.convert_t ~env enum_t in
+      let%map enum_value_ty = TypeConverter.convert_t ~env enum_value_t in
       let members_ty =
         List.map
           (fun (name, loc) ->
-            let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
+            let prop = Ty.Field { t = enum_value_ty; polarity = Ty.Positive; optional = false } in
             Ty.NamedProp
               { name = OrdinaryName name; prop; inherited; source = Ty.Other; def_locs = [loc] })
           (SMap.bindings members)
@@ -2517,7 +2523,7 @@ module Make (I : INPUT) : S = struct
         this_class_t ~env ~inherited ~source ~imode (DefT (r, InstanceT t))
       | DefT (_, ClassT t) -> type__ ~env ~inherited ~source ~imode t
       | DefT (r, ArrT a) -> arr_t ~env ~inherited r a
-      | DefT (r, EnumObjectT e) -> enum_t ~env ~inherited r e
+      | DefT (r, EnumObjectT { enum_info; _ }) -> enum_t ~env ~inherited r enum_info
       | ThisInstanceT (r, { static; super; implements; inst }, _, _)
       | DefT (r, InstanceT { static; super; implements; inst }) ->
         instance_t ~env ~inherited ~source ~imode r static super implements inst

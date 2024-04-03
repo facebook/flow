@@ -241,7 +241,7 @@ class virtual ['a] t =
         else
           SpreadArg t'
 
-    method enum_concrete_info cx map_cx e =
+    method private enum_concrete_info cx map_cx e =
       let { enum_name; enum_id; members; representation_t; has_unknown_members } = e in
       let representation_t' = self#type_ cx map_cx representation_t in
       if representation_t' = representation_t then
@@ -308,12 +308,13 @@ class virtual ['a] t =
           t
         else
           EnumValueT enum_info'
-      | EnumObjectT enum_info ->
-        let enum_info' = self#enum_concrete_info cx map_cx enum_info in
-        if enum_info' == enum_info then
+      | EnumObjectT { enum_value_t; enum_info } ->
+        let enum_value_t' = self#type_ cx map_cx enum_value_t in
+        let enum_info' = self#enum_info cx map_cx enum_info in
+        if enum_value_t' == enum_value_t && enum_info' == enum_info then
           t
         else
-          EnumObjectT enum_info'
+          EnumObjectT { enum_value_t = enum_value_t'; enum_info = enum_info' }
       | InstanceT instance_t ->
         let instance_t' = self#instance_type cx map_cx instance_t in
         if instance_t' == instance_t then
@@ -578,7 +579,8 @@ class virtual ['a] t =
           OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type' }
       | ReadOnlyType -> t
       | RequiredType
-      | PartialType ->
+      | PartialType
+      | EnumType ->
         t
       | SpreadType (options, tlist, acc) ->
         let tlist' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) tlist in

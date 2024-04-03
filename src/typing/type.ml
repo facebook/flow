@@ -249,7 +249,10 @@ module rec TypeTerm : sig
     | RendersT of canonical_renders_form
     (* Enum types *)
     | EnumValueT of enum_info
-    | EnumObjectT of enum_concrete_info
+    | EnumObjectT of {
+        enum_value_t: t;
+        enum_info: enum_info;
+      }
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
    * The subtyping rules are much simpler to understand in these forms, so we use the
@@ -893,6 +896,14 @@ module rec TypeTerm : sig
         check: enum_possible_exhaustive_check_t;
         incomplete_out: t;
         discriminant_after_check: t option;
+      }
+    (* Used by `EnumType` type destructor - gets the EnumValueT or EnumObjectT from the other one. *)
+    | GetEnumT of {
+        use_op: use_op;
+        reason: reason;
+        orig_t: t option;
+        kind: [ `GetEnumObject | `GetEnumValue ];
+        tout: t;
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
@@ -1702,6 +1713,7 @@ module rec TypeTerm : sig
         property_type: t;
         mapped_type_flags: mapped_type_flags;
       }
+    | EnumType
 
   and mapped_type_homomorphic_flag =
     | Homomorphic
@@ -3387,6 +3399,7 @@ module AConstraint = struct
         reason: Reason.t;
         prop_ref: Reason.t * name;
       }
+    | Annot_GetEnumT of Reason.t
     | Annot_GetPropT of Reason.t * TypeTerm.use_op * TypeTerm.propref
     | Annot_GetElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* key *)
     | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
@@ -3489,6 +3502,7 @@ module AConstraint = struct
     | Annot_GetTypeFromNamespaceT _ -> "Annot_GetTypeFromNamespaceT"
     | Annot_GetPropT _ -> "Annot_GetPropT"
     | Annot_GetElemT _ -> "Annot_GetElemT"
+    | Annot_GetEnumT _ -> "Annot_GetEnumT"
     | Annot_ElemT _ -> "Annot_ElemT"
     | Annot_GetStaticsT _ -> "Annot_GetStaticsT"
     | Annot_LookupT _ -> "Annot_LookupT"
@@ -3526,6 +3540,7 @@ module AConstraint = struct
     | Annot_GetTypeFromNamespaceT { reason = r; _ }
     | Annot_GetPropT (r, _, _)
     | Annot_GetElemT (r, _, _)
+    | Annot_GetEnumT r
     | Annot_ElemT (r, _, _)
     | Annot_GetStaticsT r
     | Annot_LookupT (r, _, _, _)
@@ -3583,6 +3598,7 @@ module AConstraint = struct
     | Annot_ToStringT _
     | Annot_ObjRestT _
     | Annot_GetValuesT _
+    | Annot_GetEnumT _
     | Annot__Future_added_value__ _ ->
       None
 
@@ -4210,6 +4226,7 @@ let string_of_use_ctor = function
   | ElemT _ -> "ElemT"
   | EnumCastT _ -> "EnumCastT"
   | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"
+  | GetEnumT _ -> "GetEnumT"
   | ConditionalT _ -> "ConditionalT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
@@ -4564,7 +4581,11 @@ let mk_enum_type reason enum_info =
         | _ -> desc)
       reason
   in
-  DefT (reason, EnumValueT (ConcreteEnum enum_info))
+  DefT (reason, EnumValueT enum_info)
+
+let mk_enum_object_type reason enum_info =
+  let enum_value_t = mk_enum_type reason enum_info in
+  DefT (reason, EnumObjectT { enum_value_t; enum_info })
 
 let call_of_method_app
     call_this_t

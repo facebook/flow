@@ -570,6 +570,10 @@ and 'loc t' =
       representation_type: string option;
       casting_syntax: Options.CastingSyntax.t;
     }
+  | EEnumInvalidAbstractUse of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
   (* end enum error messages *)
   | EAssignConstLikeBinding of {
       loc: 'loc;
@@ -1362,6 +1366,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         representation_type;
         casting_syntax;
       }
+  | EEnumInvalidAbstractUse { reason; enum_reason } ->
+    EEnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EAssignConstLikeBinding { loc; definition; binding_kind } ->
     EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
   | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
@@ -1740,6 +1746,7 @@ let util_use_op_of_msg nope util = function
   | EEnumAllMembersAlreadyChecked _
   | EEnumNotAllChecked _
   | EEnumUnknownNotChecked _
+  | EEnumInvalidAbstractUse _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignConstLikeBinding _
@@ -1835,6 +1842,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
   | EEnumUnknownNotChecked { reason; _ }
+  | EEnumInvalidAbstractUse { reason; _ }
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
@@ -4699,6 +4707,17 @@ let friendly_message_of_msg loc_of_aloc msg =
       | _ -> None
     in
     IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }
+  | EEnumInvalidAbstractUse { reason; enum_reason } ->
+    let features =
+      [
+        text "Cannot exhaustively check ";
+        desc reason;
+        text " because ";
+        ref enum_reason;
+        text " is an abstract enum value, so has no members.";
+      ]
+    in
+    Normal { features }
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->
     let features =
       [
@@ -5851,6 +5870,7 @@ let error_code_of_message err : error_code option =
   end
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
   | EEnumInvalidObjectUtilType _ -> Some NotAnObject

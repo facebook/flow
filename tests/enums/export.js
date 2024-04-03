@@ -17,3 +17,7 @@ export enum U {
   B,
   ...
 }
+
+// Enum<>
+declare const X: Enum<E>;
+export const x = X.A;

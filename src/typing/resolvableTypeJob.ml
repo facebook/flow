@@ -226,6 +226,9 @@ and collect_of_type ?log_unresolved cx acc = function
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
   | DefT (_, EnumValueT enum_info) -> collect_of_enum_info ?log_unresolved cx acc enum_info
+  | DefT (_, EnumObjectT { enum_value_t; enum_info }) ->
+    let acc = collect_of_enum_info ?log_unresolved cx acc enum_info in
+    collect_of_type ?log_unresolved cx acc enum_value_t
   | DefT (_, NumT _)
   | DefT (_, StrT _)
   | DefT (_, BoolT _)
@@ -241,7 +244,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, SingletonStrT _)
   | DefT (_, SingletonBigIntT _)
   | DefT (_, CharSetT _)
-  | DefT (_, EnumObjectT _)
   | AnyT _ ->
     acc
   | FunProtoBindT _
@@ -261,6 +263,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | MakeHooklike -> acc
   | ReactCheckComponentRef -> acc
   | PropertyType _ -> acc
+  | EnumType -> acc
   | ElementType { index_type; _ } -> collect_of_type ?log_unresolved cx acc index_type
   | OptionalIndexedAccessResultType _ -> acc
   | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->

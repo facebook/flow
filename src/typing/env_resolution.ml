@@ -1052,8 +1052,9 @@ let resolve_declare_namespace cx loc ns =
 
 let resolve_enum cx id_loc enum_reason enum_loc name enum =
   if Context.enable_enums cx then
-    let enum_info = Statement.mk_enum cx ~enum_reason id_loc name enum in
-    (DefT (enum_reason, EnumObjectT enum_info), unknown_use)
+    let enum_info = ConcreteEnum (Statement.mk_enum cx ~enum_reason id_loc name enum) in
+    let t = mk_enum_object_type enum_reason enum_info in
+    (t, unknown_use)
   else (
     Flow_js_utils.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
     (AnyT.error enum_reason, unknown_use)

@@ -202,6 +202,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | DestructuringT (_, _, _, tvar, _) -> resolve_tvar tvar
   | ResolveUnionT { upper; _ } -> default_resolve_touts ~flow cx loc upper
   | TypeCastT (_, t) -> resolve t
+  | GetEnumT { tout; _ } -> resolve tout
   | EnumCastT _
   | EnumExhaustiveCheckT _ ->
     ()

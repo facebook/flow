@@ -274,9 +274,10 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
       rep_t Reason.RBigInt (BigIntT lit)
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
-  Type.(
-    DefT (reason, EnumObjectT { enum_name; enum_id; members; representation_t; has_unknown_members })
-  )
+  let enum_info =
+    Type.ConcreteEnum { Type.enum_name; enum_id; members; representation_t; has_unknown_members }
+  in
+  Type.mk_enum_object_type reason enum_info
 
 let merge_pattern file = function
   | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
@@ -674,6 +675,12 @@ and merge_annot env file = function
     let reason = Reason.(mk_annot_reason (REnum { name = None }) loc) in
     let representation_t = merge env file t in
     Type.(DefT (reason, EnumValueT (AbstractEnum { representation_t })))
+  | Enum (loc, t) ->
+    let reason = Reason.(mk_annot_reason (REnum { name = None }) loc) in
+    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
+    let t = merge env file t in
+    let id = eval_id_of_aloc file loc in
+    Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.EnumType), id))
   | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
     let object_type = merge env file obj in

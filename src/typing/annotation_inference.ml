@@ -39,6 +39,7 @@ let object_like_op = function
   | Annot_ObjKeyMirror _
   | Annot_ObjMapConst _
   | Annot_GetKeysT _
+  | Annot_GetEnumT _
   | Annot_DeepReadOnlyT _
   | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
@@ -500,6 +501,9 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (use_op, reason, ElementType { index_type }), _), _) ->
       let t = elab_t cx t (Annot_GetElemT (reason, use_op, index_type)) in
       elab_t cx t op
+    | (EvalT (t, TypeDestructorT (_, reason, EnumType), _), _) ->
+      let t = elab_t cx t (Annot_GetEnumT reason) in
+      elab_t cx t op
     | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMap _)), _), _) ->
       error_unsupported ~suggestion:"$ObjMapConst" cx t op
     | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMapi _)), _), _) ->
@@ -575,9 +579,9 @@ module rec ConsGen : S = struct
       (* a component syntax value annotation becomes an element of that component *)
       get_builtin_typeapp cx reason "React$Element" [l]
     | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
-    | (DefT (lreason, EnumObjectT enum_info), Annot_UseT_TypeT _) ->
-      (* an enum object value annotation becomes the enum type *)
-      mk_enum_type lreason enum_info
+    | (DefT (_, EnumObjectT { enum_value_t; _ }), Annot_UseT_TypeT _) ->
+      (* an enum object value annotation becomes the enum value type *)
+      enum_value_t
     | (DefT (enum_reason, EnumValueT _), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
       AnyT.error reason
@@ -1101,6 +1105,8 @@ module rec ConsGen : S = struct
       Flow_js_utils.obj_key_mirror cx o reason_op
     | (DefT (_, ObjT o), Annot_ObjMapConst (reason_op, target)) ->
       Flow_js_utils.obj_map_const cx o reason_op target
+    | (DefT (_, EnumValueT enum_info), Annot_GetEnumT reason) ->
+      DefT (reason, EnumObjectT { enum_value_t = t; enum_info })
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)
@@ -1138,11 +1144,10 @@ module rec ConsGen : S = struct
     (*********)
     (* Enums *)
     (*********)
-    | ( DefT (enum_reason, EnumObjectT enum_info),
+    | ( DefT (enum_reason, EnumObjectT { enum_value_t; enum_info = ConcreteEnum enum_info }),
         Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name; _ })
       ) ->
       let access = (use_op, access_reason, None, (prop_reason, name)) in
-      let enum_value_t = mk_enum_type enum_reason enum_info in
       GetPropTKit.on_EnumObjectT
         cx
         dummy_trace
