@@ -36,8 +36,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                      ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2044:25
-   2044| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:2046:25
+   2046| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
 
 
@@ -51,8 +51,8 @@ Cannot yield `42` because number [1], a primitive, cannot be used as a subtype o
                                    ^^ [1]
 
 References:
-   <BUILTINS>/core.js:1795:7
-   1795|     : $Iterable<Yield, Return, Next>;
+   <BUILTINS>/core.js:1797:7
+   1797|     : $Iterable<Yield, Return, Next>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

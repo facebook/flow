@@ -804,8 +804,8 @@ Error --------------------------------------------------------------------------
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1760:11
-   1760| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1762:11
+   1762| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
 
 
@@ -819,8 +819,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1755:11
-   1755| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1757:11
+   1757| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -833,8 +833,8 @@ Cannot return `(typeof x) == "number"` because `Generator` [1] is incompatible w
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1760:11
-   1760| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1762:11
+   1762| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
@@ -875,8 +875,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1935:15
-   1935| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1937:15
+   1937| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error
@@ -1182,8 +1182,8 @@ References:
    refinement.js:47:42
     47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:374:15
-   374| declare class Boolean {
+   <BUILTINS>/core.js:376:15
+   376| declare class Boolean {
                       ^^^^^^^ [4]
 
 
@@ -1201,8 +1201,8 @@ References:
    refinement.js:48:42
     48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:374:15
-   374| declare class Boolean {
+   <BUILTINS>/core.js:376:15
+   376| declare class Boolean {
                       ^^^^^^^ [2]
    refinement.js:40:35
     40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;

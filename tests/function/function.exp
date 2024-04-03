@@ -24,13 +24,13 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1153:22
+   <BUILTINS>/core.js:1155:22
                               v----------
-   1153| type $ArrayLike<T> = interface {
-   1154|   +[indexer: number]: T;
-   1155|   @@iterator(): Iterator<T>;
-   1156|   length: number;
-   1157| }
+   1155| type $ArrayLike<T> = interface {
+   1156|   +[indexer: number]: T;
+   1157|   @@iterator(): Iterator<T>;
+   1158|   length: number;
+   1159| }
          ^ [2]
 
 
@@ -93,16 +93,16 @@ Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. 
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1760:11
-   1760| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1762:11
+   1762| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1153:22
+   <BUILTINS>/core.js:1155:22
                               v----------
-   1153| type $ArrayLike<T> = interface {
-   1154|   +[indexer: number]: T;
-   1155|   @@iterator(): Iterator<T>;
-   1156|   length: number;
-   1157| }
+   1155| type $ArrayLike<T> = interface {
+   1156|   +[indexer: number]: T;
+   1157|   @@iterator(): Iterator<T>;
+   1158|   length: number;
+   1159| }
          ^ [2]
 
 
@@ -118,13 +118,13 @@ References:
    apply-array-like.js:16:17
      16| function * gen() {
                          ^ [1]
-   <BUILTINS>/core.js:1153:22
+   <BUILTINS>/core.js:1155:22
                               v----------
-   1153| type $ArrayLike<T> = interface {
-   1154|   +[indexer: number]: T;
-   1155|   @@iterator(): Iterator<T>;
-   1156|   length: number;
-   1157| }
+   1155| type $ArrayLike<T> = interface {
+   1156|   +[indexer: number]: T;
+   1157|   @@iterator(): Iterator<T>;
+   1158|   length: number;
+   1159| }
          ^ [2]
 
 
@@ -151,8 +151,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:360:18
-   360|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
+   <BUILTINS>/core.js:362:18
+   362|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -210,13 +210,13 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1153:22
+   <BUILTINS>/core.js:1155:22
                               v----------
-   1153| type $ArrayLike<T> = interface {
-   1154|   +[indexer: number]: T;
-   1155|   @@iterator(): Iterator<T>;
-   1156|   length: number;
-   1157| }
+   1155| type $ArrayLike<T> = interface {
+   1156|   +[indexer: number]: T;
+   1157|   @@iterator(): Iterator<T>;
+   1158|   length: number;
+   1159| }
          ^ [2]
 
 
@@ -623,8 +623,8 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
             ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:367:14
-   367|     +length: number;
+   <BUILTINS>/core.js:369:14
+   369|     +length: number;
                      ^^^^^^ [1]
    function.js:39:17
     39|     x.length as void; // error, it's a number
@@ -640,8 +640,8 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
             ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:367:14
-   367|     +length: number;
+   <BUILTINS>/core.js:369:14
+   369|     +length: number;
                      ^^^^^^ [1]
    function.js:40:17
     40|     y.length as void; // error, it's a number
@@ -657,8 +657,8 @@ Cannot cast `x.name` to undefined because string [1] is incompatible with undefi
             ^^^^^^
 
 References:
-   <BUILTINS>/core.js:371:12
-   371|     +name: string;
+   <BUILTINS>/core.js:373:12
+   373|     +name: string;
                    ^^^^^^ [1]
    function.js:42:15
     42|     x.name as void; // error, it's a string
@@ -674,8 +674,8 @@ Cannot cast `y.name` to undefined because string [1] is incompatible with undefi
             ^^^^^^
 
 References:
-   <BUILTINS>/core.js:371:12
-   371|     +name: string;
+   <BUILTINS>/core.js:373:12
+   373|     +name: string;
                    ^^^^^^ [1]
    function.js:43:15
     43|     y.name as void; // error, it's a string
