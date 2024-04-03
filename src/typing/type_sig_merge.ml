@@ -670,6 +670,10 @@ and merge_annot env file = function
     let index_type = merge env file elem in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType { index_type }), id))
+  | EnumValue (loc, t) ->
+    let reason = Reason.(mk_annot_reason (REnum { name = None }) loc) in
+    let representation_t = merge env file t in
+    Type.(DefT (reason, EnumValueT (AbstractEnum { representation_t })))
   | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
     let object_type = merge env file obj in

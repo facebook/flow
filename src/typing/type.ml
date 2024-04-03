@@ -248,8 +248,8 @@ module rec TypeTerm : sig
       }
     | RendersT of canonical_renders_form
     (* Enum types *)
-    | EnumValueT of enum_t
-    | EnumObjectT of enum_t
+    | EnumValueT of enum_info
+    | EnumObjectT of enum_concrete_info
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
    * The subtyping rules are much simpler to understand in these forms, so we use the
@@ -302,13 +302,17 @@ module rec TypeTerm : sig
     (* destructors that extract parts of various kinds of types *)
     | TypeDestructorT of use_op * reason * destructor
 
-  and enum_t = {
+  and enum_concrete_info = {
     enum_name: string;
     enum_id: ALoc.id;
     members: ALoc.t SMap.t;
     representation_t: t;
     has_unknown_members: bool;
   }
+
+  and enum_info =
+    | ConcreteEnum of enum_concrete_info
+    | AbstractEnum of { representation_t: t }
 
   and internal_t =
     (* toolkit for making choices *)
@@ -882,7 +886,7 @@ module rec TypeTerm : sig
     | TypeCastT of use_op * t
     | EnumCastT of {
         use_op: use_op;
-        enum: reason * enum_t;
+        enum: reason * enum_info;
       }
     | EnumExhaustiveCheckT of {
         reason: reason;
@@ -979,7 +983,7 @@ module rec TypeTerm : sig
   and enum_exhaustive_check_tool_t =
     | EnumResolveDiscriminant
     | EnumResolveCaseTest of {
-        discriminant_enum: enum_t;
+        discriminant_enum: enum_concrete_info;
         discriminant_reason: reason;
         check: enum_check_t;
       }
@@ -4551,7 +4555,7 @@ let apply_opt_use opt_use t_out =
     GetElemT { use_op; reason; id; from_annot; access_iterables = false; key_t; tout = t_out }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
-let mk_enum_type reason enum =
+let mk_enum_type reason enum_info =
   let reason =
     update_desc_reason
       (fun desc ->
@@ -4560,7 +4564,7 @@ let mk_enum_type reason enum =
         | _ -> desc)
       reason
   in
-  DefT (reason, EnumValueT enum)
+  DefT (reason, EnumValueT (ConcreteEnum enum_info))
 
 let call_of_method_app
     call_this_t

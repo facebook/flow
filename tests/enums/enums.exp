@@ -1,3 +1,225 @@
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:11:3
+
+Cannot cast `x` to `EnumValue` because string [1] is incompatible with number [2] in the enum's representation type.
+[incompatible-cast]
+
+   abstract-enum-value.js:11:3
+   11|   x as EnumValue<number>; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:1:6
+    1| enum E {A, B}
+            ^ [1]
+   abstract-enum-value.js:11:18
+   11|   x as EnumValue<number>; // ERROR
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:12:3
+
+Cannot cast `x` to `EnumValue` because string [1] is incompatible with object type [2] in the enum's representation
+type. [incompatible-cast]
+
+   abstract-enum-value.js:12:3
+   12|   x as EnumValue<{foo: 1}>; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:1:6
+    1| enum E {A, B}
+            ^ [1]
+   abstract-enum-value.js:12:18
+   12|   x as EnumValue<{foo: 1}>; // ERROR
+                        ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- abstract-enum-value.js:12:18
+
+Cannot instantiate `EnumValue` because in type argument `TRepresentationType`: [incompatible-type-arg]
+ - Either object type [1] is incompatible with string [2].
+ - Or object type [1] is incompatible with number [3].
+ - Or object type [1] is incompatible with symbol [4].
+ - Or object type [1] is incompatible with boolean [5].
+ - Or object type [1] is incompatible with bigint [6].
+
+   abstract-enum-value.js:12:18
+     12|   x as EnumValue<{foo: 1}>; // ERROR
+                          ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:2818:32
+   2818| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+                                        ^^^^^^ [2]
+   <BUILTINS>/core.js:2818:41
+   2818| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+                                                 ^^^^^^ [3]
+   <BUILTINS>/core.js:2818:50
+   2818| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+                                                          ^^^^^^ [4]
+   <BUILTINS>/core.js:2818:59
+   2818| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+                                                                   ^^^^^^^ [5]
+   <BUILTINS>/core.js:2818:69
+   2818| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+                                                                             ^^^^^^ [6]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:22:3
+
+Cannot cast `x` to empty because `EnumValue` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   abstract-enum-value.js:22:3
+   22|   x as empty; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:17:20
+   17|   declare const x: EnumValue<string>;
+                          ^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:22:8
+   22|   x as empty; // ERROR
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:23:3
+
+Cannot cast `x` to `E` because `EnumValue` [1] is incompatible with `E` [2]. [incompatible-cast]
+
+   abstract-enum-value.js:23:3
+   23|   x as E; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:17:20
+   17|   declare const x: EnumValue<string>;
+                          ^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:23:8
+   23|   x as E; // ERROR
+              ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:24:3
+
+Cannot cast `x` to number because `EnumValue` [1] is incompatible with number [2]. [incompatible-cast]
+
+   abstract-enum-value.js:24:3
+   24|   x as number; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:17:20
+   17|   declare const x: EnumValue<string>;
+                          ^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:24:8
+   24|   x as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:34:3
+
+Cannot cast `x` to boolean because `EnumValue` [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   abstract-enum-value.js:34:3
+   34|   x as boolean; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:31:35
+   31| function g<T: string | number>(x: EnumValue<T>): T {
+                                         ^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:34:8
+   34|   x as boolean; // ERROR
+              ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:35:3
+
+Cannot cast `x` to `EnumValue` because number [1] is incompatible with boolean [2] in the enum's representation type.
+[incompatible-cast]
+
+   abstract-enum-value.js:35:3
+     35|   x as EnumValue<boolean>; // ERROR
+           ^
+
+References:
+   <BUILTINS>/core.js:2832:16
+   2832| > = $EnumValue<TRepresentationType>;
+                        ^^^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:35:18
+     35|   x as EnumValue<boolean>; // ERROR
+                          ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:35:3
+
+Cannot cast `x` to `EnumValue` because string [1] is incompatible with boolean [2] in the enum's representation type.
+[incompatible-cast]
+
+   abstract-enum-value.js:35:3
+     35|   x as EnumValue<boolean>; // ERROR
+           ^
+
+References:
+   <BUILTINS>/core.js:2832:16
+   2832| > = $EnumValue<TRepresentationType>;
+                        ^^^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:35:18
+     35|   x as EnumValue<boolean>; // ERROR
+                          ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- abstract-enum-value.js:44:3
+
+Cannot cast `x` to `EnumValue` because undefined [1] is incompatible with `EnumValue` [2]. [incompatible-cast]
+
+   abstract-enum-value.js:44:3
+   44|   x as EnumValue<string>; // ERROR
+         ^
+
+References:
+   abstract-enum-value.js:42:40
+   42|   declare const x: EnumValue<string> | void;
+                                              ^^^^ [1]
+   abstract-enum-value.js:44:8
+   44|   x as EnumValue<string>; // ERROR
+              ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- abstract-enum-value.js:51:23
+
+Cannot assign `x` to `s` because enum [1] is incompatible with string [2]. [incompatible-type]
+
+   abstract-enum-value.js:51:23
+   51|     const s: string = x; // ERROR
+                             ^
+
+References:
+   abstract-enum-value.js:42:20
+   42|   declare const x: EnumValue<string> | void;
+                          ^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:51:14
+   51|     const s: string = x; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- abstract-enum-value.js:78:21
+
+Cannot assign `x` to `b` because `EnumValue` [1] is incompatible with string [2]. [incompatible-type]
+
+   abstract-enum-value.js:78:21
+   78|   const b: string = x; // ERROR
+                           ^
+
+References:
+   abstract-enum-value.js:76:20
+   76|   declare const x: EnumValue<string>;
+                          ^^^^^^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:78:12
+   78|   const b: string = x; // ERROR
+                  ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- cast.js:36:1
 
 Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2]. You can explicitly cast your enum
@@ -4008,7 +4230,7 @@ References:
 
 
 
-Found 239 errors
+Found 251 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

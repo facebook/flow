@@ -346,8 +346,8 @@ let post_process_errors original_errors =
       reason_lower = reason_lower'
       || is_not_duplicate
            (EIncompatibleWithUseOp { reason_lower = reason_lower'; reason_upper; use_op })
-    | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type; casting_syntax }
-      ->
+    | EEnumIncompatible
+        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
       let ((reason_lower', reason_upper), use_op) =
         dedupe_by_flip (reason_lower, reason_upper) use_op
       in
@@ -358,6 +358,7 @@ let post_process_errors original_errors =
                 reason_lower = reason_lower';
                 reason_upper;
                 use_op;
+                enum_kind;
                 representation_type;
                 casting_syntax;
               }
@@ -1374,7 +1375,7 @@ let rec make_error_printable :
     | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
       mk_incompatible_error reason_lower reason_upper use_op
     | (None, IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }) ->
-      mk_incompatible_error ~additional_message:suggestion reason_lower reason_upper use_op
+      mk_incompatible_error ?additional_message:suggestion reason_lower reason_upper use_op
     | (None, Error_message.Speculation { loc; use_op; branches }) ->
       mk_use_op_speculation_error loc use_op branches
     | (None, Error_message.Normal _)

@@ -1222,9 +1222,9 @@ module ValueToTypeReferenceTransform = struct
         fix_this_instance cx reason_op (inst_r, i, this, this_name)
       | _ -> it)
     | DefT (_, TypeT (_, t)) -> t
-    | DefT (lreason, EnumObjectT enum) ->
+    | DefT (lreason, EnumObjectT enum_info) ->
       (* an enum object value annotation becomes the enum type *)
-      mk_enum_type lreason enum
+      mk_enum_type lreason enum_info
     | DefT (enum_reason, EnumValueT _) ->
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason = reason_op; enum_reason });
       AnyT.error reason_op
@@ -1367,8 +1367,8 @@ module ImportTypeTKit = struct
     | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT inst); id }) ->
       Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
     | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) -> Some t
-    | DefT (enum_reason, EnumObjectT enum) ->
-      let enum_type = mk_enum_type enum_reason enum in
+    | DefT (enum_reason, EnumObjectT enum_info) ->
+      let enum_type = mk_enum_type enum_reason enum_info in
       Some (DefT (reason, TypeT (ImportEnumKind, enum_type)))
     | DefT (_, ReactAbstractComponentT _) -> Some t
     | NamespaceT _ -> Some t

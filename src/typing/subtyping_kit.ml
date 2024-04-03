@@ -2138,7 +2138,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (_, EnumObjectT { enum_id = id1; _ }), DefT (_, EnumObjectT { enum_id = id2; _ }))
       when ALoc.equal_id id1 id2 ->
       ()
-    | (DefT (_, EnumValueT { enum_id = id1; _ }), DefT (_, EnumValueT { enum_id = id2; _ }))
+    | ( DefT (_, EnumValueT (ConcreteEnum { enum_id = id1; _ })),
+        DefT (_, EnumValueT (ConcreteEnum { enum_id = id2; _ }))
+      )
       when ALoc.equal_id id1 id2 ->
       ()
     | ( DefT
@@ -2167,25 +2169,29 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( DefT
           ( enum_reason_l,
             EnumValueT
-              {
-                enum_id = id1;
-                enum_name = n1;
-                members = m1;
-                representation_t = r1;
-                has_unknown_members = has_unknown1;
-                _;
-              }
+              (ConcreteEnum
+                {
+                  enum_id = id1;
+                  enum_name = n1;
+                  members = m1;
+                  representation_t = r1;
+                  has_unknown_members = has_unknown1;
+                  _;
+                }
+                )
           ),
         DefT
           ( enum_reason_u,
             EnumValueT
-              {
-                enum_id = id2;
-                enum_name = n2;
-                members = m2;
-                representation_t = r2;
-                has_unknown_members = has_unknown2;
-              }
+              (ConcreteEnum
+                {
+                  enum_id = id2;
+                  enum_name = n2;
+                  members = m2;
+                  representation_t = r2;
+                  has_unknown_members = has_unknown2;
+                }
+                )
           )
       )
       when TypeUtil.nominal_id_have_same_logical_module
@@ -2201,8 +2207,34 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       in
       rec_flow_t cx trace ~use_op (r1, r2)
-    | (DefT (enum_reason, EnumValueT { representation_t; _ }), t)
+    | ( DefT
+          ( enum_reason_l,
+            EnumValueT
+              ( ConcreteEnum { representation_t = representation_t_l; _ }
+              | AbstractEnum { representation_t = representation_t_l } )
+          ),
+        DefT (enum_reason_u, EnumValueT (AbstractEnum { representation_t = representation_t_u }))
+      ) ->
+      let use_op =
+        Frame
+          ( EnumRepresentationTypeCompatibility { lower = enum_reason_l; upper = enum_reason_u },
+            use_op
+          )
+      in
+      rec_flow_t cx trace ~use_op (representation_t_l, representation_t_u)
+    | ( DefT
+          ( enum_reason,
+            EnumValueT
+              ((ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t }) as enum)
+          ),
+        t
+      )
       when TypeUtil.quick_subtype representation_t t ->
+      let enum_kind =
+        match enum with
+        | ConcreteEnum _ -> `ConcreteEnum
+        | AbstractEnum _ -> `AbstractEnum
+      in
       let representation_type =
         match representation_t with
         | DefT (_, BoolT _) -> Some "boolean"
@@ -2221,6 +2253,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
              reason_lower = enum_reason;
              reason_upper = reason_of_t t;
              use_op;
+             enum_kind;
              representation_type;
              casting_syntax;
            }

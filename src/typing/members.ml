@@ -706,9 +706,9 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     SuccessNamespace members
   | Success (DefT (_, FunT (static, _))) ->
     Success (extract_members_as_map ~exclude_proto_members cx static)
-  | Success (DefT (enum_reason, EnumObjectT enum) as enum_object_t) ->
-    let { members; representation_t; _ } = enum in
-    let enum_t = mk_enum_type enum_reason enum in
+  | Success (DefT (enum_reason, EnumObjectT enum_info) as enum_object_t) ->
+    let { members; representation_t; _ } = enum_info in
+    let enum_t = mk_enum_type enum_reason enum_info in
     let proto_members =
       if exclude_proto_members then
         SMap.empty

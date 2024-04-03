@@ -110,11 +110,8 @@ class ['a] t =
       | NullT
       | VoidT ->
         acc
-      | EnumValueT enum
-      | EnumObjectT enum ->
-        let { enum_name = _; enum_id = _; members = _; representation_t; has_unknown_members = _ } =
-          enum
-        in
+      | EnumValueT (ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t })
+      | EnumObjectT { representation_t; _ } ->
         let acc = self#type_ cx pole acc representation_t in
         acc
       | FunT (static, funtype) ->

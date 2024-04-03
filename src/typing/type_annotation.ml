@@ -1198,6 +1198,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               let reason = mk_annot_reason RObjectType loc in
               reconstruct_ast (AnyT.make AnnotatedAny reason) None
           )
+        | "$EnumValue" ->
+          let reason = mk_annot_reason (REnum { name = None }) loc in
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let representation_t = List.hd ts in
+              reconstruct_ast (DefT (reason, EnumValueT (AbstractEnum { representation_t }))) targs
+          )
         | "Function$Prototype$Apply" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let reason = mk_annot_reason RFunctionType loc in

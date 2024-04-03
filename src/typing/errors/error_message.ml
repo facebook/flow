@@ -566,6 +566,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
+      enum_kind: [ `ConcreteEnum | `AbstractEnum ];
       representation_type: string option;
       casting_syntax: Options.CastingSyntax.t;
     }
@@ -1350,12 +1351,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { reason = map_reason reason; enum_reason = map_reason enum_reason; example_member }
   | EEnumMemberUsedAsType { reason; enum_reason } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumIncompatible { use_op; reason_lower; reason_upper; representation_type; casting_syntax } ->
+  | EEnumIncompatible
+      { use_op; reason_lower; reason_upper; enum_kind; representation_type; casting_syntax } ->
     EEnumIncompatible
       {
         use_op = map_use_op use_op;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
+        enum_kind;
         representation_type;
         casting_syntax;
       }
@@ -2192,7 +2195,7 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
-      suggestion: Loc.t Flow_errors_utils.Friendly.message_feature list;
+      suggestion: Loc.t Flow_errors_utils.Friendly.message_feature list option;
     }
   | PropMissing of {
       loc: 'loc;
@@ -4667,10 +4670,11 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type; casting_syntax } ->
+  | EEnumIncompatible
+      { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
     let suggestion =
-      match representation_type with
-      | Some representation_type ->
+      match (enum_kind, representation_type) with
+      | (`ConcreteEnum, Some representation_type) ->
         let example =
           let open Options.CastingSyntax in
           match casting_syntax with
@@ -4679,13 +4683,14 @@ let friendly_message_of_msg loc_of_aloc msg =
           | As ->
             spf "<expr> as %s" representation_type
         in
-        [
-          text "You can explicitly cast your enum value to a ";
-          text representation_type;
-          text " using ";
-          code example;
-        ]
-      | None -> []
+        Some
+          [
+            text "You can explicitly cast your enum value to a ";
+            text representation_type;
+            text " using ";
+            code example;
+          ]
+      | _ -> None
     in
     IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->

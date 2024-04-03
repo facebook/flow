@@ -19,7 +19,10 @@ class virtual ['a] t :
 
     method dict_type : Context.t -> 'a -> Type.dicttype -> Type.dicttype
 
-    method enum : Context.t -> 'a -> Type.enum_t -> Type.enum_t
+    method enum_concrete_info :
+      Context.t -> 'a -> Type.enum_concrete_info -> Type.enum_concrete_info
+
+    method enum_info : Context.t -> 'a -> Type.enum_info -> Type.enum_info
 
     method virtual eval_id : Context.t -> 'a -> Type.Eval.id -> Type.Eval.id
 

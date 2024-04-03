@@ -270,17 +270,21 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, InstanceT inst_t) -> p ~extra:(instance_t inst_t) t
     | DefT (_, TypeT (kind, arg)) ->
       p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
+    | DefT (_, EnumValueT (AbstractEnum { representation_t })) ->
+      p ~extra:(spf "abstract: %s" (kid representation_t)) t
     | DefT
         ( _,
           EnumValueT
-            { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ }
+            (ConcreteEnum
+              { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ }
+              )
         )
     | DefT
         ( _,
           EnumObjectT
             { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ }
         ) ->
-      p ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t))) t
+      p ~extra:(spf "enum concrete: %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t; opaque_type_args; _ }) ->
       p
@@ -962,8 +966,8 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | ConcretizeTypeAppsT _ -> p t
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-    | EnumCastT { use_op = _; enum = (reason, enum) } ->
-      p ~reason:false ~extra:(kid (DefT (reason, EnumValueT enum))) t
+    | EnumCastT { use_op = _; enum = (reason, enum_info) } ->
+      p ~reason:false ~extra:(kid (DefT (reason, EnumValueT enum_info))) t
     | EnumExhaustiveCheckT { check; _ } ->
       let check_str =
         match check with
@@ -1847,12 +1851,16 @@ let dump_error_message =
     | EEnumMemberUsedAsType { reason; enum_reason } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumIncompatible
-        { reason_lower; reason_upper; use_op; representation_type; casting_syntax = _ } ->
+        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax = _ }
+      ->
       spf
-        "EEnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; representation_type = %s }"
+        "EEnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; enum_kind = %s; representation_type = %s }"
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
+        (match enum_kind with
+        | `ConcreteEnum -> "concrete"
+        | `AbstractEnum -> "abstract")
         (Base.Option.value ~default:"<None>" representation_type)
     | EAssignConstLikeBinding { loc; definition; binding_kind } ->
       spf

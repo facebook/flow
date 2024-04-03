@@ -236,7 +236,7 @@ module type S = sig
     ALoc.t ->
     string ->
     ALoc.t Ast.Statement.EnumDeclaration.body ->
-    Type.enum_t
+    Type.enum_concrete_info
 
   val optional_chain :
     cond:Type.cond_context Base.Option.t ->

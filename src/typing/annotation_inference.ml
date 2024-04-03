@@ -575,9 +575,9 @@ module rec ConsGen : S = struct
       (* a component syntax value annotation becomes an element of that component *)
       get_builtin_typeapp cx reason "React$Element" [l]
     | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
-    | (DefT (lreason, EnumObjectT enum), Annot_UseT_TypeT _) ->
+    | (DefT (lreason, EnumObjectT enum_info), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
-      mk_enum_type lreason enum
+      mk_enum_type lreason enum_info
     | (DefT (enum_reason, EnumValueT _), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
       AnyT.error reason

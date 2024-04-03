@@ -95,13 +95,17 @@ let detect_sketchy_null_checks cx tast =
             | DefT (_, NumT _) -> { exists_check with number_loc = t_loc }
             | DefT (_, BigIntT _) -> { exists_check with bigint_loc = t_loc }
             | DefT (_, MixedT _) -> { exists_check with mixed_loc = t_loc }
-            | DefT (_, EnumValueT { representation_t = DefT (_, BoolT _); _ }) ->
+            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, BoolT _); _ }))
+            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, BoolT _); _ })) ->
               { exists_check with enum_bool_loc = t_loc }
-            | DefT (_, EnumValueT { representation_t = DefT (_, StrT _); _ }) ->
+            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, StrT _); _ }))
+            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, StrT _); _ })) ->
               { exists_check with enum_string_loc = t_loc }
-            | DefT (_, EnumValueT { representation_t = DefT (_, NumT _); _ }) ->
+            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, NumT _); _ }))
+            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, NumT _); _ })) ->
               { exists_check with enum_number_loc = t_loc }
-            | DefT (_, EnumValueT { representation_t = DefT (_, BigIntT _); _ }) ->
+            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, BigIntT _); _ }))
+            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, BigIntT _); _ })) ->
               { exists_check with enum_bigint_loc = t_loc }
             | _ -> exists_check
           in

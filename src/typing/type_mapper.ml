@@ -241,13 +241,28 @@ class virtual ['a] t =
         else
           SpreadArg t'
 
-    method enum cx map_cx e =
+    method enum_concrete_info cx map_cx e =
       let { enum_name; enum_id; members; representation_t; has_unknown_members } = e in
       let representation_t' = self#type_ cx map_cx representation_t in
       if representation_t' = representation_t then
         e
       else
         { enum_name; enum_id; members; representation_t = representation_t'; has_unknown_members }
+
+    method enum_info cx map_cx e =
+      match e with
+      | ConcreteEnum enum_concrete_info ->
+        let enum_concrete_info' = self#enum_concrete_info cx map_cx enum_concrete_info in
+        if enum_concrete_info' == enum_concrete_info then
+          e
+        else
+          ConcreteEnum enum_concrete_info'
+      | AbstractEnum { representation_t } ->
+        let representation_t' = self#type_ cx map_cx representation_t in
+        if representation_t' = representation_t then
+          e
+        else
+          AbstractEnum { representation_t = representation_t' }
 
     method def_type cx map_cx t =
       match t with
@@ -287,18 +302,18 @@ class virtual ['a] t =
           t
         else
           ClassT t''
-      | EnumValueT enum ->
-        let enum' = self#enum cx map_cx enum in
-        if enum' == enum then
+      | EnumValueT enum_info ->
+        let enum_info' = self#enum_info cx map_cx enum_info in
+        if enum_info' == enum_info then
           t
         else
-          EnumValueT enum'
-      | EnumObjectT enum ->
-        let enum' = self#enum cx map_cx enum in
-        if enum' == enum then
+          EnumValueT enum_info'
+      | EnumObjectT enum_info ->
+        let enum_info' = self#enum_concrete_info cx map_cx enum_info in
+        if enum_info' == enum_info then
           t
         else
-          EnumObjectT enum'
+          EnumObjectT enum_info'
       | InstanceT instance_t ->
         let instance_t' = self#instance_type cx map_cx instance_t in
         if instance_t' == instance_t then

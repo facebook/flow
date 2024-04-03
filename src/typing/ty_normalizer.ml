@@ -2415,10 +2415,10 @@ module Make (I : INPUT) : S = struct
           obj_props;
         }
 
-    and enum_t ~env ~inherited reason enum =
-      let { T.members; representation_t; _ } = enum in
-      let enum_t = T.mk_enum_type reason enum in
-      let enum_object_t = T.DefT (reason, T.EnumObjectT enum) in
+    and enum_t ~env ~inherited reason enum_info =
+      let { T.members; representation_t; _ } = enum_info in
+      let enum_t = T.mk_enum_type reason enum_info in
+      let enum_object_t = T.DefT (reason, T.EnumObjectT enum_info) in
       let%bind proto_ty =
         I.builtin_typeapp
           (Env.get_cx env)

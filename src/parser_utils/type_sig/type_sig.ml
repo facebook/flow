@@ -530,6 +530,7 @@ type ('loc, 'a) annot =
       obj: 'a;
       elem: 'a;
     }
+  | EnumValue of 'loc * 'a
   | OptionalIndexedAccessNonMaybeType of {
       loc: 'loc;
       obj: 'a;

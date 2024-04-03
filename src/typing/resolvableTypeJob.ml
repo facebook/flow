@@ -225,6 +225,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
+  | DefT (_, EnumValueT enum_info) -> collect_of_enum_info ?log_unresolved cx acc enum_info
   | DefT (_, NumT _)
   | DefT (_, StrT _)
   | DefT (_, BoolT _)
@@ -240,7 +241,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, SingletonStrT _)
   | DefT (_, SingletonBigIntT _)
   | DefT (_, CharSetT _)
-  | DefT (_, EnumValueT _)
   | DefT (_, EnumObjectT _)
   | AnyT _ ->
     acc
@@ -413,3 +413,8 @@ and collect_of_use ?log_unresolved cx acc = function
     collect_of_types ?log_unresolved cx acc (arg_types @ [OpenT fct.call_tout])
   | GetPropT { tout; _ } -> collect_of_type ?log_unresolved cx acc (OpenT tout)
   | _ -> acc
+
+and collect_of_enum_info ?log_unresolved cx acc = function
+  | AbstractEnum { representation_t }
+  | ConcreteEnum { representation_t; _ } ->
+    collect_of_type ?log_unresolved cx acc representation_t

@@ -7978,8 +7978,8 @@ module Make
     let reason = mk_reason (REnum { name = Some name }) name_loc in
     let t =
       if Context.enable_enums cx then (
-        let enum_t = mk_enum cx ~enum_reason:reason name_loc name body in
-        let t = DefT (reason, EnumObjectT enum_t) in
+        let enum_info = mk_enum cx ~enum_reason:reason name_loc name body in
+        let t = DefT (reason, EnumObjectT enum_info) in
         let use_op =
           Op
             (AssignVar
