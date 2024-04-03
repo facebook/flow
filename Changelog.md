@@ -1,3 +1,27 @@
+### 0.233.0
+
+Likely to cause new Flow errors:
+  * Flow will now error on invalid type applications at the declaration site, if the type application does not use another generic type from an outer scope. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIACpYgC8WPspigCAA3AAdPxrLEAQQJuIAPMT0ggAHxkrEAei5WJMlAglCxUAgAHcYiB8iYSHBoEEIvYTCAkUA)
+  * We fixed a bug where we incorrectly unwrapped the opaque type to the underlying representation in refinements
+  * Predicate functions (%checks) can no longer be recursive
+  * Fixed subtyping of indexers in instances/interfaces
+  
+Notable bug fixes:
+  * We fixed some spurious errors regarding opaque type refinements. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCMAWyjg0AABA17PgWPAdvgwvghrgETkABQASlxwAAOlBcbiNEsqNhcfcMABHGT4ta4gBixAA3Cy2RzcFzcbZ7LiYMRkLiAPxiiCSqBS3FwGC4mnKiC4gC8ptxlIZzNZbKVxFxGBI6vspigCHFuIA9F6eV1eLiYWx8SaTJQIJRdUiWdGoDEQPkTCQcXHkCAIvYTCAkUA)
+  * We made a change to method-unbinding errors so that it no longer errors when in an any/mixed context. [This allows us to better support jest](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAIYAtlHBoDiFMZlAAKeTIHGnWgASmp+QgcDYAG4ADpQTlY644gBixBxwE5OJxmEo5LpQpxSM5sq5i2g9jxgoAvDidgB3fnESUchWkuoSckwYhWcV01k4gD01pxmrgww1EBxRCg-0oJOoEFm-HyJhIRKgQXyAAYrAAmADMEasoZASKAA)
+  * We fixed an issue where explicitly supplied JSX type arguments were ignored
+  * We fixed bigint Flow Enums that do not explicitly speicy `of bigint` during parsing. We were previously not correctly inferring that this was a bigint enum.
+  * flow.org/try now supports go-to-definition, autocomplete, and signature help
+
+Parser:
+  * Previously Flow outputs `ReadOnlyTypeAnnotation` in parser output for annotations like `readonly string[]`. Now we output it as `TypeOperator` with `"operator": "readonly"`
+
+IDE:
+  * Fix printer output of casting syntax when LHS of `as` or `as const` has low precedence
+
+Library Definitions:
+  * We migrated the built-in React library definitions to use component and hook syntax for various React-provided APIs. Look out for a blog post on our medium account for more details and see the [React section in our docs](https://flow.org/en/docs/react/component-syntax/)
+
 ### 0.232.0
 
 Likely to cause new Flow errors:
