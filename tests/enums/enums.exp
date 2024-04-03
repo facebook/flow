@@ -188,7 +188,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- abstract-enum-value.js:51:23
 
-Cannot assign `x` to `s` because enum [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `s` because enum [1] is incompatible with string [2]. You can explicitly cast your enum value to
+its representation type using `<expr>.valueOf()`. [incompatible-type]
 
    abstract-enum-value.js:51:23
    51|     const s: string = x; // ERROR
@@ -203,20 +204,21 @@ References:
                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- abstract-enum-value.js:78:21
+Error ------------------------------------------------------------------------------------- abstract-enum-value.js:79:21
 
-Cannot assign `x` to `b` because `EnumValue` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `c` because `EnumValue` [1] is incompatible with string [2]. You can explicitly cast your enum
+value to its representation type using `<expr>.valueOf()`. [incompatible-type]
 
-   abstract-enum-value.js:78:21
-   78|   const b: string = x; // ERROR
+   abstract-enum-value.js:79:21
+   79|   const c: string = x; // ERROR
                            ^
 
 References:
    abstract-enum-value.js:76:20
    76|   declare const x: EnumValue<string>;
                           ^^^^^^^^^^^^^^^^^ [1]
-   abstract-enum-value.js:78:12
-   78|   const b: string = x; // ERROR
+   abstract-enum-value.js:79:12
+   79|   const c: string = x; // ERROR
                   ^^^^^^ [2]
 
 
@@ -4229,8 +4231,59 @@ References:
                            ^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- value-of.js:6:3
 
-Found 251 errors
+Cannot cast `x.valueOf()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   value-of.js:6:3
+   6|   x.valueOf() as empty; // ERROR
+        ^^^^^^^^^^^
+
+References:
+   value-of.js:1:6
+   1| enum E {A, B}
+           ^ [1]
+   value-of.js:6:18
+   6|   x.valueOf() as empty; // ERROR
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- value-of.js:15:3
+
+Cannot cast `x.valueOf()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   value-of.js:15:3
+   15|   x.valueOf() as empty; // ERROR
+         ^^^^^^^^^^^
+
+References:
+   value-of.js:13:30
+   13|   declare const x: EnumValue<string>;
+                                    ^^^^^^ [1]
+   value-of.js:15:18
+   15|   x.valueOf() as empty; // ERROR
+                        ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- value-of.js:19:3
+
+Cannot cast `x.valueOf()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   value-of.js:19:3
+   19|   x.valueOf() as empty; // ERROR
+         ^^^^^^^^^^^
+
+References:
+   value-of.js:17:25
+   17| function f<T: EnumValue<string>>(x: T) {
+                               ^^^^^^ [1]
+   value-of.js:19:18
+   19|   x.valueOf() as empty; // ERROR
+                        ^^^^^ [2]
+
+
+
+Found 254 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

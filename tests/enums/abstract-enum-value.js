@@ -75,5 +75,6 @@ function g<T: string | number>(x: EnumValue<T>): T {
 {
   declare const x: EnumValue<string>;
   const a: string = x as string; // OK
-  const b: string = x; // ERROR
+  const b: string = x.valueOf(); // OK
+  const c: string = x; // ERROR
 }

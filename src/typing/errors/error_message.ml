@@ -4690,6 +4690,12 @@ let friendly_message_of_msg loc_of_aloc msg =
             text " using ";
             code example;
           ]
+      | (`AbstractEnum, _) ->
+        Some
+          [
+            text "You can explicitly cast your enum value to its representation type using ";
+            code "<expr>.valueOf()";
+          ]
       | _ -> None
     in
     IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }

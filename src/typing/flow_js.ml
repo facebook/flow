@@ -5416,6 +5416,35 @@ struct
         | (DefT (enum_reason, EnumObjectT _), GetDictValuesT (reason, result)) ->
           add_output cx ~trace (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
           rec_flow cx trace (AnyT.error reason, result)
+        | ( DefT
+              ( _,
+                EnumValueT (ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t })
+              ),
+            MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action)
+          ) ->
+          let enum_value_proto =
+            FlowJs.get_builtin_typeapp cx lookup_reason "$EnumValueProto" [l; representation_t]
+          in
+          let t =
+            Tvar.mk_no_wrap_where cx lookup_reason (fun tout ->
+                rec_flow
+                  cx
+                  trace
+                  ( enum_value_proto,
+                    GetPropT
+                      {
+                        use_op;
+                        reason = lookup_reason;
+                        id = None;
+                        from_annot = false;
+                        propref;
+                        tout;
+                        hint = hint_unavailable;
+                      }
+                  )
+            )
+          in
+          apply_method_action cx trace t use_op call_reason l action
         (**************************************************************************)
         (* TestPropT is emitted for property reads in the context of branch tests.
            Such tests are always non-strict, in that we don't immediately report an
