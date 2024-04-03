@@ -313,12 +313,6 @@ module rec ConsGen : S = struct
 
     let reposition cx ?trace:_ loc t = reposition cx loc t
 
-    let enum_proto cx ~reason (enum_reason, enum) =
-      let enum_object_t = DefT (enum_reason, EnumObjectT enum) in
-      let enum_t = DefT (enum_reason, EnumValueT enum) in
-      let { representation_t; _ } = enum in
-      get_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_t; representation_t]
-
     let cg_lookup cx _trace ~obj_t ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
         =
       cg_lookup_ cx use_op t reason_op propref obj_t
@@ -1144,11 +1138,19 @@ module rec ConsGen : S = struct
     (*********)
     (* Enums *)
     (*********)
-    | ( DefT (enum_reason, EnumObjectT enum),
+    | ( DefT (enum_reason, EnumObjectT enum_info),
         Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name; _ })
       ) ->
       let access = (use_op, access_reason, None, (prop_reason, name)) in
-      GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason enum access
+      let enum_value_t = mk_enum_type enum_reason enum_info in
+      GetPropTKit.on_EnumObjectT
+        cx
+        dummy_trace
+        enum_reason
+        ~enum_object_t:t
+        ~enum_value_t
+        ~enum_info
+        access
     | (DefT (enum_reason, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
       let reason = reason_of_t elem in
       Flow_js_utils.add_output

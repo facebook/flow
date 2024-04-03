@@ -852,6 +852,9 @@ let builtin_react_element_opaque_id cx =
     end
   | _ -> None
 
+let enum_proto cx ~reason ~enum_object_t ~enum_value_t ~representation_t =
+  lookup_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_value_t; representation_t]
+
 (**
  * Determines whether a property name should be considered "munged"/private when
  * the `munge_underscores` config option is set.
@@ -2078,8 +2081,6 @@ module type Get_prop_helper_sig = sig
 
   val mk_hooklike : Context.t -> use_op -> Type.t -> Type.t
 
-  val enum_proto : Context.t -> reason:Reason.t -> Reason.t * Type.enum_t -> Type.t
-
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
 
   val error_type : Context.t -> Type.trace -> Reason.t -> r
@@ -2186,9 +2187,9 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         super
         (reason_op, lookup_kind, propref, use_op, ids)
 
-  let on_EnumObjectT cx trace enum_reason enum access =
+  let on_EnumObjectT cx trace enum_reason ~enum_object_t ~enum_value_t ~enum_info access =
     let (_, access_reason, _, (prop_reason, member_name)) = access in
-    let { members; _ } = enum in
+    let { members; representation_t; _ } = enum_info in
     let error_invalid_access ~suggestion =
       let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
       add_output
@@ -2207,15 +2208,13 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     match member_name with
     | OrdinaryName name when is_valid_member_name name ->
       if SMap.mem name members then
-        let enum_type =
-          F.reposition cx ~trace (loc_of_reason access_reason) (mk_enum_type enum_reason enum)
-        in
-        F.return cx trace ~use_op:unknown_use enum_type
+        let enum_value_t = F.reposition cx ~trace (loc_of_reason access_reason) enum_value_t in
+        F.return cx trace ~use_op:unknown_use enum_value_t
       else
         let suggestion = typo_suggestion (SMap.keys members |> List.rev) name in
         error_invalid_access ~suggestion
     | OrdinaryName _ ->
-      let t = F.enum_proto cx ~reason:access_reason (enum_reason, enum) in
+      let t = enum_proto cx ~reason:access_reason ~enum_object_t ~enum_value_t ~representation_t in
       F.cg_get_prop cx trace t access
     | InternalName _
     | InternalModuleName _ ->

@@ -349,12 +349,6 @@ struct
         add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
 
-  let enum_proto cx ~reason (enum_reason, enum) =
-    let enum_object_t = DefT (enum_reason, EnumObjectT enum) in
-    let enum_t = DefT (enum_reason, EnumValueT enum) in
-    let { representation_t; _ } = enum in
-    FlowJs.get_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_t; representation_t]
-
   let mk_react_dro cx use_op dro t =
     let id = Eval.generate_id () in
     FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t (ReactDRO dro) id
@@ -372,8 +366,6 @@ struct
     let return cx ~use_op trace t tout = FlowJs.rec_flow_t cx ~use_op trace (t, OpenT tout)
 
     let dict_read_check = FlowJs.rec_flow_t
-
-    let enum_proto = enum_proto
 
     let reposition = FlowJs.reposition ?desc:None ?annot_loc:None
 
@@ -5314,7 +5306,7 @@ struct
         (*********)
         (* enums *)
         (*********)
-        | ( DefT (enum_reason, EnumObjectT enum),
+        | ( DefT (enum_reason, EnumObjectT enum_info),
             GetPropT
               {
                 use_op;
@@ -5327,7 +5319,16 @@ struct
               }
           ) ->
           let access = (use_op, access_reason, None, (prop_reason, member_name)) in
-          GetPropTKit.on_EnumObjectT cx trace enum_reason enum access tout
+          let enum_value_t = mk_enum_type enum_reason enum_info in
+          GetPropTKit.on_EnumObjectT
+            cx
+            trace
+            enum_reason
+            ~enum_object_t:l
+            ~enum_value_t
+            ~enum_info
+            access
+            tout
         | (DefT (_, EnumObjectT _), TestPropT { use_op = _; reason; id = _; propref; tout; hint })
           ->
           rec_flow
@@ -5345,15 +5346,22 @@ struct
                   hint;
                 }
             )
-        | ( DefT (enum_reason, EnumObjectT enum),
+        | ( DefT (enum_reason, EnumObjectT enum_info),
             MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action)
           ) ->
           let t =
             Tvar.mk_no_wrap_where cx lookup_reason (fun tout ->
+                let enum_value_t = mk_enum_type enum_reason enum_info in
+                let { representation_t; _ } = enum_info in
                 rec_flow
                   cx
                   trace
-                  ( enum_proto cx ~reason:lookup_reason (enum_reason, enum),
+                  ( enum_proto
+                      cx
+                      ~reason:lookup_reason
+                      ~enum_object_t:l
+                      ~enum_value_t
+                      ~representation_t,
                     GetPropT
                       {
                         use_op;
