@@ -2110,7 +2110,7 @@ let mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name kind =
 
 let enum_name_of_reason reason =
   match desc_of_reason reason with
-  | REnum name
+  | REnum { name = Some name }
   | RType (OrdinaryName name) ->
     Some name
   | _ -> None

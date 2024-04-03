@@ -4556,7 +4556,7 @@ let mk_enum_type reason enum =
     update_desc_reason
       (fun desc ->
         match desc with
-        | REnum name -> RType (OrdinaryName name)
+        | REnum { name = Some name } -> RType (OrdinaryName name)
         | _ -> desc)
       reason
   in

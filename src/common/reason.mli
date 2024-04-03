@@ -74,7 +74,7 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | RUnionEnum
-  | REnum of string
+  | REnum of { name: string option }
   | RThis
   | RThisType
   | RImplicitInstantiation

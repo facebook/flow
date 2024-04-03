@@ -110,7 +110,7 @@ type 'loc virtual_reason_desc =
   | RTemplateString
   | RUnknownString
   | RUnionEnum
-  | REnum of string (* name *)
+  | REnum of { name: string option }
   | RThis
   | RThisType
   | RImplicitInstantiation
@@ -615,7 +615,10 @@ let rec string_of_desc = function
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | RUnionEnum -> "literal union"
-  | REnum name -> spf "enum `%s`" name
+  | REnum { name } ->
+    (match name with
+    | Some name -> spf "enum `%s`" name
+    | None -> "enum")
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RImplicitInstantiation -> "implicit instantiation"

@@ -520,7 +520,8 @@ module Make (I : INPUT) : S = struct
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       let rec loop = function
-        | REnum name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
+        | REnum { name = Some name } ->
+          return (symbol_from_reason env reason (Reason.OrdinaryName name))
         | RTypeAlias (name, Some loc, _) ->
           return (symbol_from_loc env loc (Reason.OrdinaryName name))
         | RType name -> return (symbol_from_reason env reason name)

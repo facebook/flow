@@ -65,7 +65,7 @@ let def_reason = function
   | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
   | EnumBinding { id_loc; name; _ } ->
-    Reason.(mk_reason (REnum name) id_loc)
+    Reason.(mk_reason (REnum { name = Some name }) id_loc)
   | NamespaceBinding { id_loc; name; _ } -> Reason.(mk_reason (RNamespace name) id_loc)
 
 let remote_ref_reason = function
