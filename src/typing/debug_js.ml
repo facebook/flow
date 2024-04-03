@@ -1965,6 +1965,8 @@ let dump_error_message =
     | EUnionOptimization { loc; _ } -> spf "EUnionOptimization (%s)" (string_of_aloc loc)
     | EUnionOptimizationOnNonUnion { loc; _ } ->
       spf "EUnionOptimizationOnNonUnion (%s)" (string_of_aloc loc)
+    | ECannotCallReactComponent { reason } ->
+      spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let print_if_verbose_lazy

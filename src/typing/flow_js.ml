@@ -2977,6 +2977,12 @@ struct
           ) ->
           let statics = get_builtin_type cx ~trace r "React$AbstractComponentStatics" in
           rec_flow cx trace (statics, u)
+        (* Components can never be called *)
+        | ( DefT (r, ReactAbstractComponentT _),
+            CallT { use_op; reason; call_action = Funcalltype { call_tout; _ }; _ }
+          ) ->
+          add_output cx ~trace (Error_message.ECannotCallReactComponent { reason = r });
+          rec_flow_t cx trace ~use_op (AnyT.error reason, OpenT call_tout)
         (* Render Type Promotion *)
         (* A named AbstractComponent is turned into its corresponding render type *)
         | ( DefT

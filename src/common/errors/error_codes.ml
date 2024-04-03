@@ -12,6 +12,7 @@ type error_code =
   | ReactRuleHookIncompatible
   | ReactRuleHook
   | ReactRuleRef
+  | ReactRuleCallComponent
   | CannotDelete
   | CannotImplement
   | CannotInferType
@@ -215,7 +216,8 @@ let require_specific : error_code -> bool = function
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
   | ReactRuleHook
-  | ReactRuleRef ->
+  | ReactRuleRef
+  | ReactRuleCallComponent ->
     true
   | _ -> false
 
@@ -225,6 +227,7 @@ let string_of_code : error_code -> string = function
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
   | ReactRuleHook -> "react-rule-hook"
   | ReactRuleRef -> "react-rule-unsafe-ref"
+  | ReactRuleCallComponent -> "react-rule-call-component"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"

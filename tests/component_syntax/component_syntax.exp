@@ -607,6 +607,20 @@ References:
                    ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ call.js:5:1
+
+Cannot call component Foo [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
+
+   call.js:5:1
+   5| Foo(); // ERROR, even with fixme
+      ^^^
+
+References:
+   call.js:1:1
+   1| component Foo() {
+      ^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------- component_in_type_position.js:5:16
 
 Cannot assign `Foo` to `x` because component Foo [1] is incompatible with `Foo` element [2]. [incompatible-type]
@@ -1211,7 +1225,7 @@ Components may not be nested directly within other components.
 
 Error --------------------------------------------------------------------------------------------------- errors.js:45:1
 
-Cannot call `Baz` because component Baz [1] is not a function. [not-a-function]
+Cannot call component Baz [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
 
    errors.js:45:1
    45| Baz(); // error
@@ -1225,7 +1239,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:48:1
 
-Cannot call `Poly` because component Poly [1] is not a function. [not-a-function]
+Cannot call component Poly [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
 
    errors.js:48:1
    48| Poly(); // error
@@ -1239,7 +1253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:49:1
 
-Cannot call `Poly` because component Poly [1] is not a function. [not-a-function]
+Cannot call component Poly [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
 
    errors.js:49:1
    49| Poly<number>(); // error
@@ -3215,7 +3229,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 214 errors
+Found 215 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -704,6 +704,7 @@ and 'loc t' =
       loc: 'loc;
       arg: 'loc virtual_reason;
     }
+  | ECannotCallReactComponent of { reason: 'loc virtual_reason }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1512,6 +1513,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EUnionOptimization { loc = f loc; kind }
   | EUnionOptimizationOnNonUnion { loc; arg } ->
     EUnionOptimizationOnNonUnion { loc = f loc; arg = map_reason arg }
+  | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1781,7 +1783,8 @@ let util_use_op_of_msg nope util = function
   | EMissingPlatformSupport _
   | EUnionPartialOptimizationNonUniqueKey _
   | EUnionOptimization _
-  | EUnionOptimizationOnNonUnion _ ->
+  | EUnionOptimizationOnNonUnion _
+  | ECannotCallReactComponent _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1977,6 +1980,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (loc_of_reason reason)
+  | ECannotCallReactComponent { reason } -> Some (loc_of_reason reason)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; _ } -> Some loc
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
@@ -5682,6 +5686,15 @@ let friendly_message_of_msg loc_of_aloc msg =
       [text "Invalid use of $Flow$EnforceOptimized on non-union type "; ref arg; text "."]
     in
     Normal { features }
+  | ECannotCallReactComponent { reason } ->
+    let features =
+      [
+        text "Cannot call ";
+        ref reason;
+        text " because React components cannot be called. Use JSX instead.";
+      ]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -6028,3 +6041,4 @@ let error_code_of_message err : error_code option =
   | EUnionPartialOptimizationNonUniqueKey _ -> Some UnionPartiallyOptimizableNonUniqueKeys
   | EUnionOptimization _ -> Some UnionUnoptimizable
   | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable
+  | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
