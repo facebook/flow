@@ -474,24 +474,29 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let loc = mk_loc filename line col in
     let open Query_types in
-    let result =
-      type_at_pos_type
-        ~cx
-        ~file_sig
-        ~omit_targ_defaults:false
-        ~typed_ast
-        ~verbose_normalizer:false
-        ~max_depth:50
-        ~no_typed_ast_for_imports:false
-        loc
-    in
-    begin
-      match result with
-      | FailureNoMatch -> (Loc.none, Error "No match")
-      | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, result) ->
-        (loc, Ok (Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result))
-    end
+    if Js.Unsafe.get js_config_object "dev_only.type_repr" |> Js.to_bool then
+      match dump_type_at_pos ~cx ~typed_ast loc with
+      | None -> (Loc.none, Error "No match")
+      | Some (loc, s) -> (loc, Ok (Utils_js.spf "type_repr: %s" s))
+    else
+      let result =
+        type_at_pos_type
+          ~cx
+          ~file_sig
+          ~omit_targ_defaults:false
+          ~typed_ast
+          ~verbose_normalizer:false
+          ~max_depth:50
+          ~no_typed_ast_for_imports:false
+          loc
+      in
+      begin
+        match result with
+        | FailureNoMatch -> (Loc.none, Error "No match")
+        | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
+        | Success (loc, result) ->
+          (loc, Ok (Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result))
+      end
 
 let signature_help filename content line col js_config_object :
     ((ServerProt.Response.func_details_result list * int) option, string) result =
@@ -801,6 +806,13 @@ let () =
     "type": "bool",
     "default": false,
     "desc": "Changes the default type of 'catch' variables from 'any' to 'mixed'."
+  },
+  {
+    "key": "dev_only.type_repr",
+    "kind": "option",
+    "type": "bool",
+    "default": false,
+    "desc": "Show the underlying type representation for debugging purposes."
   },
   {
     "key": "deprecated-type",

@@ -188,6 +188,15 @@ monaco.languages.registerHoverProvider('flow', {
     // instead of a JS string, where the string value is hidden in a
     // `c` property.
     const typeAtPos = typeof result === 'string' ? result : result.c;
+    if (typeAtPos.startsWith('type_repr: ')) {
+      return {
+        contents: [
+          {
+            value: `\`\`\`ocaml\n${typeAtPos.substring('type_repr: '.length)}\n\`\`\``,
+          },
+        ],
+      };
+    }
     return {
       contents: [{value: `\`\`\`flow\n${typeAtPos}\n\`\`\``}],
     };
