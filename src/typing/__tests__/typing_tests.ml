@@ -7,7 +7,7 @@
 
 open OUnit2
 
-let tests = "typing" >::: [Type_hint_test.tests]
+let tests = "typing" >::: [Type_test.tests; Type_hint_test.tests]
 
 let _handle =
   let one_gig = 1024 * 1024 * 1024 in

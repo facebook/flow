@@ -3256,7 +3256,7 @@ module Constraint = struct
 
     val get_forced : t -> TypeTerm.t option
 
-    val map : f:(TypeTerm.t -> TypeTerm.t) -> t -> t
+    val map : on_error:(Reason.t -> TypeTerm.t) -> f:(TypeTerm.t -> TypeTerm.t) -> t -> t
   end = struct
     type state =
       | Unforced
@@ -3294,7 +3294,8 @@ module Constraint = struct
         None
       | Forced -> Some (Lazy.force_val s.valid)
 
-    let map ~f s = { valid = Lazy.map f s.valid; error_reason = s.error_reason; state = Unforced }
+    let map ~on_error ~f s =
+      { valid = lazy (f (force ~on_error s)); error_reason = s.error_reason; state = Unforced }
   end
 
   (** Constraints carry type information that narrows down the possible solutions

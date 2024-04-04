@@ -984,14 +984,14 @@ let find_root cx id = Type.Constraint.find_root cx.ccx.sig_cx.graph id
 
 let find_root_id cx id = Type.Constraint.find_root_id cx.ccx.sig_cx.graph id
 
+let on_cyclic_tvar_error cx reason =
+  let msg = Error_message.(ETrivialRecursiveDefinition (Reason.loc_of_reason reason, reason)) in
+  let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:cx.file msg in
+  add_error cx error;
+  Type.AnyT.error reason
+
 let force_fully_resolved_tvar cx =
-  let on_error reason =
-    let msg = Error_message.(ETrivialRecursiveDefinition (Reason.loc_of_reason reason, reason)) in
-    let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:cx.file msg in
-    add_error cx error;
-    Type.AnyT.error reason
-  in
-  Type.Constraint.ForcingState.force ~on_error
+  Type.Constraint.ForcingState.force ~on_error:(on_cyclic_tvar_error cx)
 
 let find_resolved =
   let rec loop cx seen t_in =

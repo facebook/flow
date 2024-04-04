@@ -648,6 +648,7 @@ let copier =
               failwith "unexpected unresolved constraint"
             | FullyResolved s ->
               ForcingState.map
+                ~on_error:(Context.on_cyclic_tvar_error src_cx)
                 ~f:(fun t ->
                   let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
                   t)
