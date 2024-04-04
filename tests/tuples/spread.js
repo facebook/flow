@@ -86,6 +86,29 @@ type WithTail<T> = [1, ...T];
 [1, 2, 3] as WithTail<[2, 3]>; // OK
 [1, 2, 66] as WithTail<[2, 3]>; // ERROR
 
-declare function f<T>(xs: [1, ...T]): void;
-f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
-f<[2, 3]>([ 1, 2, 3]); // OK
+// Tuple-like array spread
+{
+  const x = [1, 2];
+  type TupleArrSpread = [0, ...typeof x]; // OK
+  [0, 1, 2] as TupleArrSpread; // OK
+}
+
+declare function tail<T>(xs: [1, ...T]): T;
+tail<[2, 3]>([ 1, 2, 3]); // OK
+{
+  const x = tail([1]); // OK
+  x as []; // OK
+}
+{
+  const x = tail([1, 2, 3]);
+  x as [2, 3]; // OK
+  x as [1, 2, 3]; // ERROR
+}
+tail([666, 2, 3]); // ERROR
+tail([]); // ERROR
+
+declare function noReversal1<T>(xs: [1, ...T, 2]): T;
+noReversal1([1, 9, 2]); // ERROR
+
+declare function noReversal2<T>(xs: [...T, ...any]): T;
+noReversal2([1, 2, 3]); // ERROR

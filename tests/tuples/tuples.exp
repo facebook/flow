@@ -1211,22 +1211,94 @@ References:
                                   ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:90:1
+Error --------------------------------------------------------------------------------------------------- spread.js:92:8
 
-Cannot call `f` because `T` [1] is underconstrained by call of `f` [2]. Either add explicit type arguments or cast the
-expression to your expected type. [underconstrained-implicit-instantiation]
+Cannot declare `TupleArrSpread` [1] because the name is already bound. [name-already-bound]
 
-   spread.js:90:1
-   90| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
-       ^
+   spread.js:92:8
+   92|   type TupleArrSpread = [0, ...typeof x]; // OK
+              ^^^^^^^^^^^^^^
 
 References:
-   spread.js:89:20
-   89| declare function f<T>(xs: [1, ...T]): void;
-                          ^ [1]
-   spread.js:90:1
-   90| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
-       ^^^^^^^^^^^^ [2]
+   spread.js:80:8
+   80|   type TupleArrSpread = [0, ...typeof x]; // OK
+              ^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:105:3
+
+Cannot cast `x` to tuple type because `T` [1] has 2 elements but tuple type [2] has 3 elements. [invalid-tuple-arity]
+
+   spread.js:105:3
+   105|   x as [1, 2, 3]; // ERROR
+          ^
+
+References:
+   spread.js:96:37
+    96| declare function tail<T>(xs: [1, ...T]): T;
+                                            ^ [1]
+   spread.js:105:8
+   105|   x as [1, 2, 3]; // ERROR
+               ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:107:7
+
+Cannot call `tail` with array literal bound to `xs` because number [1] is incompatible with number literal `1` [2] in
+index 0. [incompatible-call]
+
+   spread.js:107:7
+   107| tail([666, 2, 3]); // ERROR
+              ^^^ [1]
+
+References:
+   spread.js:96:31
+    96| declare function tail<T>(xs: [1, ...T]): T;
+                                      ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:108:6
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   108| tail([]); // ERROR
+             ^^
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:111:1
+
+Cannot call `noReversal1` because `T` [1] is underconstrained by call of `noReversal1` [2]. Either add explicit type
+arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   spread.js:111:1
+   111| noReversal1([1, 9, 2]); // ERROR
+        ^^^^^^^^^^^
+
+References:
+   spread.js:110:30
+   110| declare function noReversal1<T>(xs: [1, ...T, 2]): T;
+                                     ^ [1]
+   spread.js:111:1
+   111| noReversal1([1, 9, 2]); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:114:1
+
+Cannot call `noReversal2` because `T` [1] is underconstrained by call of `noReversal2` [2]. Either add explicit type
+arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   spread.js:114:1
+   114| noReversal2([1, 2, 3]); // ERROR
+        ^^^^^^^^^^^
+
+References:
+   spread.js:113:30
+   113| declare function noReversal2<T>(xs: [...T, ...any]): T;
+                                     ^ [1]
+   spread.js:114:1
+   114| noReversal2([1, 2, 3]); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- too-few.js:5:5
@@ -1998,4 +2070,4 @@ References:
 
 
 
-Found 125 errors
+Found 130 errors

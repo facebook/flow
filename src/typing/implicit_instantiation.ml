@@ -278,7 +278,27 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> merge_lower_bounds cx
                |> use_t_result_of_t_option
            )
-      | SpreadTupleType _ -> UpperNonT u)
+      | SpreadTupleType { reason_tuple = _; reason_spread; resolved; unresolved } ->
+        let is_spread = function
+          | ResolvedArg _ -> false
+          | ResolvedSpreadArg _
+          | ResolvedAnySpreadArg _ ->
+            true
+        in
+        (* Reverse if the spread is the last item in the tuple and there are
+           no other spreads. *)
+        (match (unresolved, Base.List.exists ~f:is_spread resolved) with
+        | ([], false) ->
+          let n = List.length resolved in
+          merge_lower_or_upper_bounds r (OpenT tout)
+          |> bind_use_t_result ~f:(fun t ->
+                 Tvar.mk_where cx reason_spread (fun t' ->
+                     Flow.flow cx (t, ArrRestT (unknown_use, reason_spread, n, t'))
+                 )
+                 |> merge_lower_bounds cx
+                 |> use_t_result_of_t_option
+             )
+        | _ -> UpperNonT u))
     | UseT (_, t) -> UpperT t
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with

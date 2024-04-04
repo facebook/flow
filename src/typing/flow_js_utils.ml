@@ -2685,7 +2685,7 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
         match (el, first_spread) with
         | (UnresolvedArg (el, generic), None) ->
           ((el, generic) :: resolved, unresolved, first_spread)
-        | (UnresolvedSpreadArg t, None) -> (resolved, unresolved, Some (reason, t))
+        | (UnresolvedSpreadArg t, None) -> (resolved, unresolved, Some (reason_of_t t, t))
         | (_, Some _) -> (resolved, el :: unresolved, first_spread)
     )
   in
