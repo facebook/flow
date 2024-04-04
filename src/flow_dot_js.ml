@@ -179,6 +179,7 @@ let merge_custom_check_config js_config_object metadata =
   let enable_const_params =
     Js.Unsafe.get js_config_object "experimental.const_params" |> Js.to_bool
   in
+  let ts_syntax = Js.Unsafe.get js_config_object "experimental.ts_syntax" |> Js.to_bool in
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
   let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
   let react_runtime =
@@ -197,6 +198,7 @@ let merge_custom_check_config js_config_object metadata =
     enable_enums;
     exact_by_default;
     react_runtime;
+    ts_syntax;
     use_mixed_in_catch_variables;
   }
 
@@ -777,6 +779,13 @@ let () =
     "type": "bool",
     "default": false,
     "desc": "Treat all function parameters as const bindings, banning reassignment."
+  },
+  {
+    "key": "experimental.ts_syntax",
+    "kind": "option",
+    "type": "bool",
+    "default": true,
+    "desc": "Make Flow accept and translate some TS syntax automatically."
   },
   {
     "key": "react.runtime",
