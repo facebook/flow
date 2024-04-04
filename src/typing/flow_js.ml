@@ -134,15 +134,20 @@ let strict_equatable_error cond_context (l, r) =
   | (AnyT _, _)
   | (_, AnyT _) ->
     None
-  (* No comparisons of enum objects are allowed. *)
-  | (DefT (_, EnumObjectT _), _)
-  | (_, DefT (_, EnumObjectT _)) ->
-    Some (Lazy.force comparison_error)
-  (* We allow comparison between enums of the same type. *)
+  (* We allow comparison between enums and enum values with the same id. *)
+  | ( DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id1; _ }; _ }),
+      DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id2; _ }; _ })
+    )
   | ( DefT (_, EnumValueT (ConcreteEnum { enum_id = id1; _ })),
       DefT (_, EnumValueT (ConcreteEnum { enum_id = id2; _ }))
     )
     when ALoc.equal_id id1 id2 ->
+    None
+  (* We allow comparison between abstract and concrete enums and enum values. *)
+  | (DefT (_, EnumObjectT _), DefT (_, EnumObjectT { enum_info = AbstractEnum _; _ }))
+  | (DefT (_, EnumObjectT { enum_info = AbstractEnum _; _ }), DefT (_, EnumObjectT _))
+  | (DefT (_, EnumValueT _), DefT (_, EnumValueT (AbstractEnum _)))
+  | (DefT (_, EnumValueT (AbstractEnum _)), DefT (_, EnumValueT _)) ->
     None
   (* We allow the comparison of enums to null and void outside of switches. *)
   | (DefT (_, EnumValueT _), DefT (_, (NullT | VoidT)))
@@ -155,7 +160,9 @@ let strict_equatable_error cond_context (l, r) =
   end
   (* We don't allow the comparison of enums and other types in general. *)
   | (DefT (_, EnumValueT _), _)
-  | (_, DefT (_, EnumValueT _)) ->
+  | (_, DefT (_, EnumValueT _))
+  | (DefT (_, EnumObjectT _), _)
+  | (_, DefT (_, EnumObjectT _)) ->
     Some (Lazy.force comparison_error)
   (* We don't check other strict equality comparisons. *)
   | _ -> None

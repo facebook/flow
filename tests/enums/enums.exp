@@ -1079,6 +1079,23 @@ References:
             ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- equality.js:63:1
+
+Cannot compare enum `E` [1] to enum `F` [2]. [invalid-compare]
+
+   equality.js:63:1
+   63| E === F; // ERROR
+       ^
+
+References:
+   equality.js:3:6
+    3| enum E {
+            ^ [1]
+   equality.js:8:6
+    8| enum F {
+            ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- error-access.js:9:13
 
 Cannot access `C` because `C` is not a member of enum `E` [1]. [invalid-enum-access]
@@ -4419,7 +4436,7 @@ References:
 
 
 
-Found 262 errors
+Found 263 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

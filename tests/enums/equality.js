@@ -57,3 +57,7 @@ for (; e === E.A;) {} // OK
 switch (true) {
   case s === E.A: break; // Error
 }
+
+// Equality of enums
+E === E; // OK
+E === F; // ERROR

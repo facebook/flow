@@ -78,3 +78,15 @@ function g<T: string | number>(x: EnumValue<T>): T {
   const b: string = x.valueOf(); // OK
   const c: string = x; // ERROR
 }
+
+// Strict Equality
+{
+  declare const x: E;
+  declare const y: EnumValue<>;
+  x === y; // OK
+  y === x; // OK
+
+  declare const z: EnumValue<>;
+  y === z; // OK
+  z === y; // OK
+}

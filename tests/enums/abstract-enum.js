@@ -40,3 +40,14 @@ f<string, E, typeof E>(E); // OK
 f(E); // OK
 
 f(true); // ERROR
+
+// Strict Equality
+{
+  declare const x: Enum<>;
+  E === x; // OK
+  x === E; // OK
+
+  declare const y: Enum<>;
+  x === y; // OK
+  y === x; // OK
+}
