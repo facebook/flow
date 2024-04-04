@@ -2238,7 +2238,7 @@ struct
             | DefT (_, ArrT arrtype) ->
               (* Arrays *)
               (match (rrt_resolve_to, arrtype) with
-              | (ResolveSpreadsToTupleType _, (ArrayAT _ | ROArrayAT _)) ->
+              | (ResolveSpreadsToTupleType _, (ArrayAT { tuple_view = None; _ } | ROArrayAT _)) ->
                 (* Only tuples can be spread into tuple types. *)
                 add_output
                   cx

@@ -54,6 +54,11 @@ type ArraySpread = [...Array<mixed>]; // ERROR
   declare const x: ArraySpread;
   x as empty; // OK
 }
+type ROArraySpread = [...$ReadOnlyArray<mixed>]; // ERROR
+{
+  declare const x: ROArraySpread;
+  x as empty; // OK
+}
 
 // Spreading `any`
 type AnySpread = [1, 2, ...any]; // OK
@@ -67,6 +72,13 @@ type EmptySpread = [1, 2, ...empty]; // OK
 {
   declare const x: AnySpread;
   x as empty; // OK
+}
+
+// Tuple-like array spread
+{
+  const x = [1, 2];
+  type TupleArrSpread = [0, ...typeof x]; // OK
+  [0, 1, 2] as TupleArrSpread; // OK
 }
 
 // Generics
