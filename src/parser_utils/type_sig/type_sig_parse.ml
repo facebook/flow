@@ -3555,7 +3555,7 @@ and function_def_helper =
       match id with
       | _ when hook -> HookDecl fun_loc
       | Some (_, { Ast.Identifier.name; _ })
-        when opts.hooklike_functions && Flow_ast_utils.hook_name name ->
+        when opts.hook_compatibility && Flow_ast_utils.hook_name name ->
         AnyHook
       | _ -> NonHook
     in
@@ -4516,7 +4516,7 @@ let declare_function_decl opts scope tbls decl =
                  HookAnnot
                else if
                  opts.component_syntax_enabled_in_config
-                 && opts.hooklike_functions
+                 && opts.hook_compatibility
                  && Flow_ast_utils.hook_name name
                then
                  AnyHook

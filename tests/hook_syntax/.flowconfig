@@ -1,6 +1,6 @@
 [options]
 component_syntax=true
-experimental.component_syntax.hooklike_functions=false
+experimental.component_syntax.hook_compatibility=false
 all=true
 no_flowlib=false
 

@@ -94,7 +94,7 @@ let load_lib_files files =
       enable_component_syntax = true;
       component_syntax_enabled_in_config = true;
       enable_ts_syntax = true;
-      hooklike_functions = true;
+      hook_compatibility = true;
       casting_syntax = Options.CastingSyntax.Both;
       for_builtins = true;
       locs_to_dirtify = [];
@@ -120,8 +120,9 @@ let stub_metadata ~root ~checked =
     babel_loose_array_spread = false;
     casting_syntax = Options.CastingSyntax.Both;
     component_syntax = true;
-    hooklike_functions = true;
-    hooklike_functions_includes = [];
+    hook_compatibility = true;
+    hook_compatibility_includes = [];
+    hook_compatibility_excludes = [];
     react_rules =
       Options.
         [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];

@@ -133,7 +133,7 @@ let hook_callee cx t =
       |> Base.List.fold ~init:AnyCallee ~f:merge
     | UnionT (_, rep) ->
       UnionRep.members rep |> Base.List.fold ~init:AnyCallee ~f:(fun acc t -> merge (recur t) acc)
-    | IntersectionT _ when Context.hooklike_functions cx ->
+    | IntersectionT _ when Context.hook_compatibility cx ->
       (* We can't easily handle intersections with the HooklikeT destructor, so if we're
          in compatibility mode, let's just punt on enforcement *)
       AnyCallee
@@ -488,7 +488,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
           || is_probably_function_component
           || Base.Option.is_some (Flow_ast_utils.hook_function fn)
           )
-          && Context.hooklike_functions cx
+          && Context.hook_compatibility cx
         in
         in_function_component <- next_in_function_component;
         let res = super#function_ fn in
@@ -501,7 +501,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
       let callee_ty =
         match callee_exp with
         | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
-          when Context.hooklike_functions cx && name <> "require" ->
+          when Context.hook_compatibility cx && name <> "require" ->
           (* If we're in compatibility mode, we want to bail on intersections. But
              the typed AST records the type of the overload we've selected, so we
              never see the intersection to realize we need to bail! Instead in this
@@ -570,7 +570,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
       let cur_declaring = declaring_function_component in
       let next_declaring =
         match argument with
-        | Some (_, Ast.Expression.(ArrowFunction _ | Function _)) -> Context.hooklike_functions cx
+        | Some (_, Ast.Expression.(ArrowFunction _ | Function _)) -> Context.hook_compatibility cx
         | _ -> false
       in
       declaring_function_component <- next_declaring;
@@ -582,7 +582,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
       let cur_declaring = declaring_function_component in
       let next_declaring =
         match argument with
-        | Ast.Expression.(ArrowFunction _ | Function _) -> Context.hooklike_functions cx
+        | Ast.Expression.(ArrowFunction _ | Function _) -> Context.hook_compatibility cx
         | _ -> false
       in
       declaring_function_component <- next_declaring;
@@ -602,7 +602,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
             ),
             Some (_, Ast.Expression.(ArrowFunction _ | Function _))
           ) ->
-          Context.hooklike_functions cx && (Flow_ast_utils.hook_name name || componentlike_name name)
+          Context.hook_compatibility cx && (Flow_ast_utils.hook_name name || componentlike_name name)
         | _ -> false
       in
       declaring_function_component <- next_declaring;
@@ -774,7 +774,7 @@ and component_ast_visitor cx is_hook rrid =
       let callee_ty =
         match callee_exp with
         | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
-          when Context.hooklike_functions cx && name <> "require" ->
+          when Context.hook_compatibility cx && name <> "require" ->
           (* If we're in compatibility mode, we want to bail on intersections. But
              the typed AST records the type of the overload we've selected, so we
              never see the intersection to realize we need to bail! Instead in this

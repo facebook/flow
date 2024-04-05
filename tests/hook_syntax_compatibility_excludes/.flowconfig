@@ -1,0 +1,8 @@
+[options]
+experimental.component_syntax=true
+experimental.react_rule=rulesOfHooks
+experimental.component_syntax.hook_compatibility=true
+experimental.component_syntax.hook_compatibility.excludes=<PROJECT_ROOT>/exclude_provider.js
+experimental.component_syntax.hook_compatibility.excludes=<PROJECT_ROOT>/exclude.js
+all=true
+no_flowlib=false

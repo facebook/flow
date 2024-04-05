@@ -457,7 +457,7 @@ let merge_exports =
       |> copy_star_exports file reason (stars, type_stars)
 
 let make_hooklike file hooklike t =
-  if hooklike && Context.hooklike_functions file.cx then
+  if hooklike && Context.hook_compatibility file.cx then
     Type.EvalT
       ( t,
         Type.TypeDestructorT

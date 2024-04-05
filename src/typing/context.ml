@@ -38,8 +38,9 @@ type metadata = {
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
-  hooklike_functions_includes: string list;
-  hooklike_functions: bool;
+  hook_compatibility_excludes: string list;
+  hook_compatibility_includes: string list;
+  hook_compatibility: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
   enable_as_const: bool;
@@ -254,8 +255,9 @@ let metadata_of_options options =
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     casting_syntax = Options.casting_syntax options;
     component_syntax = Options.component_syntax options;
-    hooklike_functions_includes = Options.hooklike_functions_includes options;
-    hooklike_functions = Options.hooklike_functions options;
+    hook_compatibility_excludes = Options.hook_compatibility_excludes options;
+    hook_compatibility_includes = Options.hook_compatibility_includes options;
+    hook_compatibility = Options.hook_compatibility options;
     react_rules = Options.react_rules options;
     react_rules_always = false;
     enable_as_const = Options.as_const options;
@@ -455,8 +457,9 @@ let casting_syntax cx = cx.metadata.casting_syntax
 
 let component_syntax cx = cx.metadata.component_syntax || File_key.is_lib_file cx.file
 
-let hooklike_functions cx =
-  cx.metadata.hooklike_functions || in_dirlist cx cx.metadata.hooklike_functions_includes
+let hook_compatibility cx =
+  (cx.metadata.hook_compatibility || in_dirlist cx cx.metadata.hook_compatibility_includes)
+  && not (in_dirlist cx cx.metadata.hook_compatibility_excludes)
 
 let react_rules_always cx = cx.metadata.react_rules_always
 

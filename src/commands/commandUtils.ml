@@ -1379,11 +1379,15 @@ let make_options
     opt_as_const = Base.Option.value ~default:false (FlowConfig.enable_as_const flowconfig);
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
     opt_react_rules = FlowConfig.react_rules flowconfig;
-    opt_hooklike_functions = FlowConfig.hooklike_functions flowconfig;
-    opt_hooklike_functions_includes =
+    opt_hook_compatibility = FlowConfig.hook_compatibility flowconfig;
+    opt_hook_compatibility_includes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.hooklike_functions_includes flowconfig);
+        (FlowConfig.hook_compatibility_includes flowconfig);
+    opt_hook_compatibility_excludes =
+      Base.List.map
+        ~f:(Files.expand_project_root_token ~root)
+        (FlowConfig.hook_compatibility_excludes flowconfig);
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;

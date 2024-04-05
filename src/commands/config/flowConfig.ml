@@ -55,8 +55,9 @@ module Opts = struct
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
-    hooklike_functions: bool;
-    hooklike_functions_includes: string list;
+    hook_compatibility: bool;
+    hook_compatibility_includes: string list;
+    hook_compatibility_excludes: string list;
     react_rules: Options.react_rules list;
     emoji: bool option;
     enable_as_const: bool option;
@@ -184,8 +185,9 @@ module Opts = struct
       channel_mode = None;
       casting_syntax = None;
       component_syntax = false;
-      hooklike_functions = true;
-      hooklike_functions_includes = [];
+      hook_compatibility = true;
+      hook_compatibility_includes = [];
+      hook_compatibility_excludes = [];
       react_rules = [];
       emoji = None;
       enable_as_const = None;
@@ -556,14 +558,21 @@ module Opts = struct
       ]
       (fun opts v -> Ok { opts with react_rules = v :: opts.react_rules })
 
-  let hooklike_functions_includes_parser =
+  let hook_compatibility_includes_parser =
     string
-      ~init:(fun opts -> { opts with hooklike_functions_includes = [] })
+      ~init:(fun opts -> { opts with hook_compatibility_includes = [] })
       ~multiple:true
       (fun opts v ->
-        Ok { opts with hooklike_functions_includes = v :: opts.hooklike_functions_includes })
+        Ok { opts with hook_compatibility_includes = v :: opts.hook_compatibility_includes })
 
-  let hooklike_functions_parser = boolean (fun opts v -> Ok { opts with hooklike_functions = v })
+  let hook_compatibility_excludes_parser =
+    string
+      ~init:(fun opts -> { opts with hook_compatibility_excludes = [] })
+      ~multiple:true
+      (fun opts v ->
+        Ok { opts with hook_compatibility_excludes = v :: opts.hook_compatibility_excludes })
+
+  let hook_compatibility_parser = boolean (fun opts v -> Ok { opts with hook_compatibility = v })
 
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
@@ -896,9 +905,19 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
       ("experimental.component_syntax", component_syntax_parser);
-      ("experimental.component_syntax.hooklike_functions", hooklike_functions_parser);
+      ("experimental.component_syntax.hook_compatibility", hook_compatibility_parser);
+      ("experimental.component_syntax.hooklike_functions", hook_compatibility_parser);
+      ( "experimental.component_syntax.hook_compatibility.includes",
+        hook_compatibility_includes_parser
+      );
       ( "experimental.component_syntax.hooklike_functions.includes",
-        hooklike_functions_includes_parser
+        hook_compatibility_includes_parser
+      );
+      ( "experimental.component_syntax.hook_compatibility.excludes",
+        hook_compatibility_excludes_parser
+      );
+      ( "experimental.component_syntax.hooklike_functions.excludes",
+        hook_compatibility_excludes_parser
       );
       ("experimental.react_rule", react_rules_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
@@ -1552,9 +1571,11 @@ let channel_mode c = c.options.Opts.channel_mode
 
 let component_syntax c = c.options.Opts.component_syntax
 
-let hooklike_functions_includes c = c.options.Opts.hooklike_functions_includes
+let hook_compatibility_includes c = c.options.Opts.hook_compatibility_includes
 
-let hooklike_functions c = c.options.Opts.hooklike_functions
+let hook_compatibility_excludes c = c.options.Opts.hook_compatibility_excludes
+
+let hook_compatibility c = c.options.Opts.hook_compatibility
 
 let react_rules c = c.options.Opts.react_rules
 

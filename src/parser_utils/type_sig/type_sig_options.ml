@@ -16,7 +16,7 @@ type t = {
   enable_component_syntax: bool;
   component_syntax_enabled_in_config: bool;
   enable_ts_syntax: bool;
-  hooklike_functions: bool;
+  hook_compatibility: bool;
   casting_syntax: Options.CastingSyntax.t;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
@@ -51,7 +51,7 @@ let of_options options docblock locs_to_dirtify file =
     enable_relay_integration;
     relay_integration_module_prefix;
     locs_to_dirtify;
-    hooklike_functions = Options.hooklike_functions options;
+    hook_compatibility = Options.hook_compatibility_in_file options file;
     suppress_types = Options.suppress_types options;
     facebook_fbt = Options.facebook_fbt options;
     max_literal_len = Options.max_literal_length options;
@@ -82,7 +82,7 @@ let builtin_options options =
     enable_component_syntax = true;
     component_syntax_enabled_in_config = Options.component_syntax options;
     enable_ts_syntax = false;
-    hooklike_functions = Options.hooklike_functions options;
+    hook_compatibility = Options.hook_compatibility options;
     casting_syntax = Options.casting_syntax options;
     for_builtins = true;
     locs_to_dirtify = [];

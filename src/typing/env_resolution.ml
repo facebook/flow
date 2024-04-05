@@ -55,7 +55,7 @@ let expression cx ?cond exp =
   t
 
 let make_hooklike cx t =
-  if Context.hooklike_functions cx then
+  if Context.hook_compatibility cx then
     Flow_js.mk_possibly_evaluated_destructor
       cx
       unknown_use

@@ -75,8 +75,9 @@ type metadata = {
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
-  hooklike_functions_includes: string list;
-  hooklike_functions: bool;
+  hook_compatibility_excludes: string list;
+  hook_compatibility_includes: string list;
+  hook_compatibility: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
   enable_as_const: bool;
@@ -160,7 +161,7 @@ val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
 
-val hooklike_functions : t -> bool
+val hook_compatibility : t -> bool
 
 val react_rule_enabled : t -> Options.react_rules -> bool
 

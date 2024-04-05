@@ -88,9 +88,11 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
 
-val hooklike_functions_includes : config -> string list
+val hook_compatibility_excludes : config -> string list
 
-val hooklike_functions : config -> bool
+val hook_compatibility_includes : config -> string list
+
+val hook_compatibility : config -> bool
 
 val react_rules : config -> Options.react_rules list
 

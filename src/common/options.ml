@@ -82,8 +82,9 @@ type t = {
   opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
-  opt_hooklike_functions_includes: string list;
-  opt_hooklike_functions: bool;
+  opt_hook_compatibility_includes: string list;
+  opt_hook_compatibility_excludes: string list;
+  opt_hook_compatibility: bool;
   opt_react_rules: react_rules list;
   opt_debug: bool;
   opt_enable_const_params: bool;
@@ -190,20 +191,33 @@ let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
 
-let hooklike_functions opts = opts.opt_hooklike_functions
+let hook_compatibility opts = opts.opt_hook_compatibility
 
-let hooklike_functions_includes opts = opts.opt_hooklike_functions_includes
+let hook_compatibility_includes opts = opts.opt_hook_compatibility_includes
 
-let hooklike_functions_in_file opts file =
-  hooklike_functions opts
-  || begin
-       match hooklike_functions_includes opts with
-       | [] -> false
-       | dirs ->
-         let filename = File_key.to_string file in
-         let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-         List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
-     end
+let hook_compatibility_excludes opts = opts.opt_hook_compatibility_excludes
+
+let hook_compatibility_in_file opts file =
+  let included =
+    hook_compatibility opts
+    || begin
+         match hook_compatibility_includes opts with
+         | [] -> false
+         | dirs ->
+           let filename = File_key.to_string file in
+           let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+           List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+       end
+  in
+  let excluded =
+    match hook_compatibility_excludes opts with
+    | [] -> false
+    | dirs ->
+      let filename = File_key.to_string file in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+  in
+  included && not excluded
 
 let typecheck_component_syntax_in_file opts file =
   component_syntax opts || File_key.is_lib_file file

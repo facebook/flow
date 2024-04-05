@@ -2105,7 +2105,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let t =
         match propref with
         | Named { name = OrdinaryName name; _ }
-          when Context.hooklike_functions cx && Flow_ast_utils.hook_name name ->
+          when Context.hook_compatibility cx && Flow_ast_utils.hook_name name ->
           F.mk_hooklike cx use_op t
         | _ -> t
       in

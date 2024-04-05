@@ -2,9 +2,9 @@ import * as IP from './include_provider';
 import * as XP from './exclude_provider';
 
 function FunctionComponent() {
-    IP.useFoo(); // error
+    IP.useFoo(); // ok
     IP.useBar(); // ok
-    XP.useFoo(); // error
+    XP.useFoo(); // ok
     XP.useBar(); // ok
 }
 
@@ -12,6 +12,6 @@ component Component() {
     IP.useFoo(); // ok
     IP.useBar(); // ok
     XP.useFoo(); // ok
-    XP.useBar(); // error
+    XP.useBar(); // ok
     return null;
 }
