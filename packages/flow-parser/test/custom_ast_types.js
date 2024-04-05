@@ -132,8 +132,30 @@ function custom_ast_types(fork) {
         def('EnumNumberBody'),
         def('EnumStringBody'),
         def('EnumSymbolBody'),
+        def('EnumBigIntBody'),
       ),
     );
+
+  def('EnumDeclaration').field(
+    'body',
+    or(
+      def('EnumBooleanBody'),
+      def('EnumNumberBody'),
+      def('EnumStringBody'),
+      def('EnumSymbolBody'),
+      def('EnumBigIntBody'), // <-- ADDITION
+    ),
+  );
+
+  def('EnumBigIntBody')
+    .build('members', 'explicitType')
+    .field('members', [def('EnumBigIntMember')])
+    .field('explicitType', Boolean);
+
+  def('EnumBigIntMember')
+    .build('id', 'init')
+    .field('id', def('Identifier'))
+    .field('init', def('Literal'));
 
   def('DeclareNamespace')
     .bases('Declaration')
