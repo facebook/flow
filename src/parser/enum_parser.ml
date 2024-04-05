@@ -64,24 +64,37 @@ end = struct
       true
     | _ -> false
 
+  let number_init env loc ~neg ~leading ~kind ~raw =
+    let value = Parse.number env kind raw in
+    let (value, raw) =
+      if neg then
+        (-.value, "-" ^ raw)
+      else
+        (value, raw)
+    in
+    let trailing = Eat.trailing_comments env in
+    if end_of_member_init env then
+      NumberInit
+        ( loc,
+          {
+            NumberLiteral.value;
+            raw;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          }
+        )
+    else
+      InvalidInit loc
+
   let member_init env =
     let loc = Peek.loc env in
     let leading = Peek.comments env in
     match Peek.token env with
-    | T_NUMBER { kind; raw } ->
-      let value = Parse.number env kind raw in
-      let trailing = Eat.trailing_comments env in
-      if end_of_member_init env then
-        NumberInit
-          ( loc,
-            {
-              NumberLiteral.value;
-              raw;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            }
-          )
-      else
-        InvalidInit loc
+    | T_MINUS ->
+      Eat.token env;
+      (match Peek.token env with
+      | T_NUMBER { kind; raw } -> number_init env loc ~neg:true ~leading ~kind ~raw
+      | _ -> InvalidInit loc)
+    | T_NUMBER { kind; raw } -> number_init env loc ~neg:false ~leading ~kind ~raw
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
