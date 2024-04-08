@@ -3282,10 +3282,7 @@ module Constraint = struct
         s.state <- Forced;
         t
       | Forced -> Lazy.force_val s.valid
-      | Forcing ->
-        let t = on_error (Base.Option.value_exn s.error_reason) in
-        s.state <- Forced;
-        t
+      | Forcing -> on_error (Base.Option.value_exn s.error_reason)
 
     let get_forced s =
       match s.state with

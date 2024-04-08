@@ -57,6 +57,24 @@ let forcing_state_tests =
       let s' = Constraint.ForcingState.map ~on_error:AnyT.error ~f:Base.Fn.id s in
       assert_forced_to_any s'
     );
+    ( "invalid_self_recursive_force_twice" >:: fun _ ->
+      let rec s_lazy =
+        lazy
+          (Constraint.ForcingState.of_lazy_t
+             ~error_reason:Reason.(locationless_reason RNull)
+             ( lazy
+               (let (_ : Type.t) =
+                  Constraint.ForcingState.force ~on_error:AnyT.error (Lazy.force s_lazy)
+                in
+                Constraint.ForcingState.force ~on_error:AnyT.error (Lazy.force s_lazy)
+               )
+               )
+          )
+      in
+      let s = Lazy.force s_lazy in
+      let s' = Constraint.ForcingState.map ~on_error:AnyT.error ~f:Base.Fn.id s in
+      assert_forced_to_any s'
+    );
   ]
 
 let tests = "type" >::: ["forcing_state" >::: forcing_state_tests]
