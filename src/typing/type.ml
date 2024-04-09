@@ -2508,22 +2508,25 @@ end = struct
     | NoCandidateMembers
     | NoCommonKeys
 
-  (** union rep is:
-      - list of members in declaration order, with at least 2 elements
-      - optional source location of the union
-      - if union is an enum (set of singletons over a common base)
-        then Some (base, set)
-        (additional specializations probably to come)
-   *)
-  type t =
-    TypeTerm.t * TypeTerm.t * TypeTerm.t list * ALoc.id option * finally_optimized_rep option ref
+  type t = {
+    t0: TypeTerm.t;
+    t1: TypeTerm.t;
+    ts: TypeTerm.t list;
+    (* optional source location of the union,
+     * used as identity of the union for fast-path check. *)
+    source_aloc: ALoc.id option;
+    (* if union is an enum (set of singletons over a common base) then Some (base, set)
+     * (additional specializations probably to come) *)
+    specialization: finally_optimized_rep option ref;
+  }
 
-  let same_source (_, _, _, s1, _) (_, _, _, s2, _) =
+  let same_source { source_aloc = s1; _ } { source_aloc = s2; _ } =
     match (s1, s2) with
     | (Some id1, Some id2) -> id1 = id2
     | _ -> false
 
-  let same_structure (t0, t1, ts, _, _) (t0', t1', ts', _, _) = t0 = t0' && t1 = t1' && ts = ts'
+  let same_structure { t0; t1; ts; _ } { t0 = t0'; t1 = t1'; ts = ts'; _ } =
+    t0 = t0' && t1 = t1' && ts = ts'
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
@@ -2540,20 +2543,20 @@ end = struct
       let enum =
         Base.Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> EnumUnion tset)
       in
-      (t0, t1, ts, source_aloc, ref enum)
+      { t0; t1; ts; source_aloc; specialization = ref enum }
 
-  let members (t0, t1, ts, _, _) = t0 :: t1 :: ts
+  let members { t0; t1; ts; _ } = t0 :: t1 :: ts
 
-  let members_nel (t0, t1, ts, _, _) = (t0, (t1, ts))
+  let members_nel { t0; t1; ts; _ } = (t0, (t1, ts))
 
-  let cons t0 (t1, t2, ts, _, _) = make t0 t1 (t2 :: ts)
+  let cons t0 { t0 = t1; t1 = t2; ts; _ } = make t0 t1 (t2 :: ts)
 
   let rev_append rep1 rep2 =
     match List.rev_append (members rep1) (members rep2) with
     | t0 :: t1 :: ts -> make t0 t1 ts
     | _ -> failwith "impossible"
 
-  let ident_map ?(always_keep_source = false) f ((t0, t1, ts, source, _) as rep) =
+  let ident_map ?(always_keep_source = false) f ({ t0; t1; ts; source_aloc = source; _ } as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
     let ts_ = ListUtils.ident_map f ts in
@@ -2569,7 +2572,7 @@ end = struct
     else
       rep
 
-  let specialized_reason ~reason_of_t r (_, _, _, _, specialization) =
+  let specialized_reason ~reason_of_t r { specialization; _ } =
     match !specialization with
     | Some Empty -> replace_desc_reason REmpty r
     | Some (Singleton t) -> reason_of_t t
@@ -2578,7 +2581,7 @@ end = struct
 
   (********** Optimizations **********)
 
-  let is_optimized_finally (_, _, _, _, specialization) = !specialization <> None
+  let is_optimized_finally { specialization; _ } = !specialization <> None
 
   (* Private helper, must be called after full resolution. Ideally would be returned as a bit by
      TypeTerm.union_flatten, and kept in sync there. *)
@@ -2752,7 +2755,7 @@ end = struct
 
   let set_optimize rep opt =
     Base.Result.iter opt ~f:(fun opt ->
-        let (_, _, _, _, specialization) = rep in
+        let { specialization; _ } = rep in
         specialization := Some opt
     )
 
@@ -2765,7 +2768,7 @@ end = struct
     if Base.Option.is_none (has_unflattened_types ts) then
       match enum_optimize ts with
       | Ok (EnumUnion _ as opt) ->
-        let (_, _, _, _, specialization) = rep in
+        let { specialization; _ } = rep in
         specialization := Some opt
       | _ -> ()
 
@@ -2790,7 +2793,7 @@ end = struct
     | (No, No) -> No
 
   (* assume we know that l is a canonizable type *)
-  let quick_mem_enum ~quick_subtype l (_t0, _t1, _ts, _source, specialization) =
+  let quick_mem_enum ~quick_subtype l { specialization; _ } =
     match canon l with
     | Some tcanon -> begin
       match !specialization with
@@ -2846,8 +2849,7 @@ end = struct
       Unknown
 
   (* we know that l is an object type or exact object type *)
-  let quick_mem_disjoint_union
-      ~find_resolved ~find_props ~quick_subtype l (_t0, _t1, _ts, _source, specialization) =
+  let quick_mem_disjoint_union ~find_resolved ~find_props ~quick_subtype l { specialization; _ } =
     match props_of find_props l with
     | Some prop_map -> begin
       match !specialization with
@@ -2867,7 +2869,7 @@ end = struct
     end
     | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
 
-  let check_enum (_, _, _, _, specialization) =
+  let check_enum { specialization; _ } =
     match !specialization with
     | Some (EnumUnion enums) -> Some enums
     | _ -> None
@@ -2883,7 +2885,7 @@ end = struct
     | Some (PartiallyOptimizedUnionEnum _) -> "Partially Optimized Enum"
     | None -> "No Specialization"
 
-  let string_of_specialization (_, _, _, _, spec) = string_of_specialization_ !spec
+  let string_of_specialization { specialization; _ } = string_of_specialization_ !specialization
 end
 
 (* We encapsulate IntersectionT's internal structure.
