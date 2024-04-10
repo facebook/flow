@@ -110,6 +110,44 @@ class jsdoc_documentation_searcher find =
       find id_loc comments;
       super#component_declaration loc c
 
+    method! component_param_name
+        (param_name : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.param_name) =
+      let open Ast.Statement.ComponentDeclaration in
+      begin
+        match param_name with
+        | Param.Identifier (id_loc, { Ast.Identifier.comments; _ }) -> find id_loc comments
+        | Param.StringLiteral (lit_loc, { Ast.StringLiteral.comments; _ }) -> find lit_loc comments
+      end;
+      super#component_param_name param_name
+
+    method! component_param_pattern pattern =
+      begin
+        match pattern with
+        | ( _,
+            Ast.Pattern.(
+              Identifier Identifier.{ name = (id_loc, { Ast.Identifier.comments; _ }); _ })
+          ) ->
+          find id_loc comments
+        | _ -> ()
+      end;
+      super#component_param_pattern pattern
+
+    method! component_rest_param expr =
+      let open Ast.Statement.ComponentDeclaration.RestParam in
+      let (_, { argument; comments }) = expr in
+      begin
+        match argument with
+        | ( _,
+            Ast.Pattern.(
+              Identifier
+                Identifier.{ name = (id_loc, { Ast.Identifier.comments = inner_comments; _ }); _ })
+          ) ->
+          find id_loc comments;
+          find id_loc inner_comments
+        | _ -> ()
+      end;
+      super#component_rest_param expr
+
     method! declare_variable stmt_loc decl =
       let open Ast.Statement.DeclareVariable in
       let { id = (loc, _); comments; _ } = decl in

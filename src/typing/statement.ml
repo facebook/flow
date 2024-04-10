@@ -7177,7 +7177,10 @@ module Make
     in
     let mk_rest cx tparams_map rest =
       let ( loc,
-            { Ast.Statement.ComponentDeclaration.RestParam.argument = (ploc, patt); comments = _ }
+            {
+              Ast.Statement.ComponentDeclaration.RestParam.argument = (ploc, patt);
+              comments = rest_comments;
+            }
           ) =
         rest
       in
@@ -7199,6 +7202,7 @@ module Make
                ploc;
                pattern = Component_sig_types.DeclarationParamConfig.Id id;
                has_anno = has_param_anno;
+               comments = rest_comments;
              }
           )
       | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
@@ -7209,7 +7213,7 @@ module Make
         in
         Ok
           (Component_sig_types.DeclarationParamConfig.Rest
-             { t; loc; ploc; pattern; has_anno = has_param_anno }
+             { t; loc; ploc; pattern; has_anno = has_param_anno; comments = rest_comments }
           )
       | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
         Flow_js.add_output cx Error_message.(EInvalidComponentRestParam ploc);
@@ -7220,7 +7224,7 @@ module Make
         in
         Ok
           (Component_sig_types.DeclarationParamConfig.Rest
-             { t; loc; ploc; pattern; has_anno = has_param_anno }
+             { t; loc; ploc; pattern; has_anno = has_param_anno; comments = rest_comments }
           )
       | Ast.Pattern.Expression _ -> Error Error_message.(EInvalidComponentRestParam ploc)
     in

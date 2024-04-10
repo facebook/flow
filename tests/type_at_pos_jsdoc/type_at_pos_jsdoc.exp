@@ -1785,7 +1785,64 @@ Flags: --strip-root --pretty
   "end":9
 }
 
-components.js:8:4
+components.js:10:4
+Flags: --strip-root --pretty
+{
+  "documentation":"doc 1",
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"components.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":3,"offset":107},
+    "end":{"line":10,"column":5,"offset":110}
+  },
+  "path":"components.js",
+  "line":10,
+  "endline":10,
+  "start":3,
+  "end":5
+}
+
+components.js:13:7
+Flags: --strip-root --pretty
+{
+  "documentation":"doc 2",
+  "types":{"unevaluated":{"type":"{baz: string}"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"components.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":6,"offset":145},
+    "end":{"line":13,"column":9,"offset":149}
+  },
+  "path":"components.js",
+  "line":13,
+  "endline":13,
+  "start":6,
+  "end":9
+}
+
+components.js:16:6
+Flags: --strip-root --pretty
+{
+  "documentation":"doc 3",
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"components.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":5,"offset":182},
+    "end":{"line":16,"column":7,"offset":185}
+  },
+  "path":"components.js",
+  "line":16,
+  "endline":16,
+  "start":5,
+  "end":7
+}
+
+components.js:25:4
 Flags: --strip-root --pretty
 {
   "documentation":"This is the component Foo!",
@@ -1794,12 +1851,50 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"components.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":3,"offset":69},
-    "end":{"line":8,"column":5,"offset":72}
+    "start":{"line":25,"column":3,"offset":263},
+    "end":{"line":25,"column":5,"offset":266}
   },
   "path":"components.js",
-  "line":8,
-  "endline":8,
+  "line":25,
+  "endline":25,
+  "start":3,
+  "end":5
+}
+
+components.js:29:4
+Flags: --strip-root --pretty
+{
+  "documentation":"doc 1",
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"components.js",
+    "type":"SourceFile",
+    "start":{"line":29,"column":3,"offset":281},
+    "end":{"line":29,"column":5,"offset":284}
+  },
+  "path":"components.js",
+  "line":29,
+  "endline":29,
+  "start":3,
+  "end":5
+}
+
+components.js:31:4
+Flags: --strip-root --pretty
+{
+  "documentation":"doc 3",
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "reasons":[],
+  "loc":{
+    "source":"components.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":3,"offset":298},
+    "end":{"line":31,"column":5,"offset":301}
+  },
+  "path":"components.js",
+  "line":31,
+  "endline":31,
   "start":3,
   "end":5
 }

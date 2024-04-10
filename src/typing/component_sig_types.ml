@@ -110,6 +110,7 @@ module DeclarationParamConfig = struct
         ploc: ALoc.t;
         pattern: pattern;
         has_anno: bool;
+        comments: (ALoc.t, unit) Ast.Syntax.t option;
       }
 end
 

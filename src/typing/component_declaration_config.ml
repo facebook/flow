@@ -144,14 +144,14 @@ struct
         }
       )
 
-  let eval_rest cx (Rest { t; loc; ploc; pattern; has_anno }) =
+  let eval_rest cx (Rest { t; loc; ploc; pattern; has_anno; comments = rest_comments }) =
     match pattern with
     | Id id ->
       ( loc,
         {
           Ast.Statement.ComponentDeclaration.RestParam.argument =
             ((ploc, t), Ast.Pattern.Identifier id);
-          comments = None;
+          comments = rest_comments;
         }
       )
     | Object { annot; properties; comments } ->
@@ -164,7 +164,7 @@ struct
         {
           Ast.Statement.ComponentDeclaration.RestParam.argument =
             ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
-          comments = None;
+          comments = rest_comments;
         }
       )
     | Array { annot; elements; comments } ->
@@ -177,7 +177,7 @@ struct
         {
           Ast.Statement.ComponentDeclaration.RestParam.argument =
             ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
-          comments = None;
+          comments = rest_comments;
         }
       )
 end
