@@ -1010,6 +1010,18 @@ let find_root_id cx id = Type.Constraint.find_root_id cx.ccx.sig_cx.graph id
 let on_cyclic_tvar_error cx reason =
   let msg = Error_message.(ETrivialRecursiveDefinition (Reason.loc_of_reason reason, reason)) in
   let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:cx.file msg in
+  if is_verbose cx then
+    Utils_js.prerr_endlinef
+      "\nCyclic type: %s"
+      (Reason.dump_reason
+         ~strip_root:
+           ( if should_strip_root cx then
+             Some (root cx)
+           else
+             None
+           )
+         reason
+      );
   add_error cx error;
   Type.AnyT.error reason
 
