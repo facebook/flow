@@ -1666,13 +1666,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*********************************************)
 
     (* ObjT -> ObjT *)
-    | ( DefT (lreason, ObjT ({ props_tmap = lflds; _ } as l_obj)),
-        DefT (ureason, ObjT ({ props_tmap = uflds; _ } as u_obj))
+    | ( DefT (lreason, ObjT ({ props_tmap = lflds; call_t = l_call_id; _ } as l_obj)),
+        DefT (ureason, ObjT ({ props_tmap = uflds; call_t = r_call_id; _ } as u_obj))
       ) ->
       let u_deft = u in
       Type_inference_hooks_js.dispatch_obj_to_obj_hook cx l u_deft;
       let print_fast_path = Context.is_verbose cx in
-      if Properties.equal_id lflds uflds then (
+      if Properties.equal_id lflds uflds && l_call_id = r_call_id then (
         if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: yes"
       ) else (
         if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: no";

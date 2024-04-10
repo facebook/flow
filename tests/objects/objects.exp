@@ -167,6 +167,24 @@ References:
                                ^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------- different_call_prop_no_fast_path.js:8:1
+
+Cannot cast `MyThunk` to `ThunkType` because number [1] is incompatible with string [2] in the return value.
+[incompatible-cast]
+
+   different_call_prop_no_fast_path.js:8:1
+   8| MyThunk as ThunkType<string>; // error: number ~> string
+      ^^^^^^^
+
+References:
+   different_call_prop_no_fast_path.js:7:36
+   7| declare const MyThunk: MyThunkType<number>;
+                                         ^^^^^^ [1]
+   different_call_prop_no_fast_path.js:8:22
+   8| MyThunk as ThunkType<string>; // error: number ~> string
+                           ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- objects.js:4:3
 
 Cannot get `x.foo` because property `foo` is missing in object type [1]. [prop-missing]
@@ -364,4 +382,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors
