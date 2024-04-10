@@ -7447,67 +7447,59 @@ struct
         | Default -> PredicateT (NotP VoidP, tvar)
       )
 
-  and mk_type_destructor cx ~trace use_op reason t d id =
-    let evaluated = Context.evaluated cx in
+  and evaluate_type_destructor cx ~trace use_op reason t d tvar =
     (* As an optimization, unwrap resolved tvars so that they are only evaluated
      * once to an annotation instead of a tvar that gets a bound on both sides. *)
     let t = drop_resolved cx t in
+    match t with
+    | OpenT _
+    | GenericT { bound = OpenT _; _ } ->
+      let x =
+        EvalTypeDestructorT
+          { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
+      in
+      rec_flow cx trace (t, x)
+    | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id; no_infer } ->
+      let x =
+        EvalTypeDestructorT
+          {
+            destructor_use_op = use_op;
+            reason;
+            repos = Some (r, use_desc);
+            destructor = d;
+            tout = tvar;
+          }
+      in
+      rec_flow cx trace (GenericT { reason; name; id; bound = t; no_infer }, x)
+    | EvalT _ ->
+      let x =
+        EvalTypeDestructorT
+          { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
+      in
+      rec_flow cx trace (t, x)
+    | AnnotT (r, t, use_desc) ->
+      let x =
+        EvalTypeDestructorT
+          {
+            destructor_use_op = use_op;
+            reason;
+            repos = Some (r, use_desc);
+            destructor = d;
+            tout = tvar;
+          }
+      in
+      rec_flow cx trace (t, x)
+    | _ -> eval_destructor cx ~trace use_op reason t d tvar
+
+  and mk_type_destructor cx ~trace use_op reason t d id =
+    let evaluated = Context.evaluated cx in
     let result =
       match Eval.Map.find_opt id evaluated with
       | Some cached_t -> cached_t
       | None ->
-        (* The OpenT branch is a correct implementation of type destructors for all
-         * types. However, because it adds a constraint to both sides of a type we may
-         * end up doing some work twice. So as an optimization for concrete types
-         * we have a fall-through branch that only evaluates our type destructor once.
-         * The second branch then uses AnnotT to both concretize the result for use
-         * as a lower or upper bound and prevent new bounds from being added to
-         * the result.
-         *)
-        let f tvar =
-          match t with
-          | OpenT _
-          | GenericT { bound = OpenT _; _ } ->
-            let x =
-              EvalTypeDestructorT
-                { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
-            in
-            rec_flow cx trace (t, x)
-          | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id; no_infer } ->
-            let x =
-              EvalTypeDestructorT
-                {
-                  destructor_use_op = use_op;
-                  reason;
-                  repos = Some (r, use_desc);
-                  destructor = d;
-                  tout = tvar;
-                }
-            in
-            rec_flow cx trace (GenericT { reason; name; id; bound = t; no_infer }, x)
-          | EvalT _ ->
-            let x =
-              EvalTypeDestructorT
-                { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
-            in
-            rec_flow cx trace (t, x)
-          | AnnotT (r, t, use_desc) ->
-            let x =
-              EvalTypeDestructorT
-                {
-                  destructor_use_op = use_op;
-                  reason;
-                  repos = Some (r, use_desc);
-                  destructor = d;
-                  tout = tvar;
-                }
-            in
-            rec_flow cx trace (t, x)
-          | _ -> eval_destructor cx ~trace use_op reason t d tvar
-        in
         Tvar.mk_no_wrap_where cx reason (fun tvar ->
             Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
-            f tvar
+            evaluate_type_destructor cx ~trace use_op reason t d tvar
         )
     in
     if
