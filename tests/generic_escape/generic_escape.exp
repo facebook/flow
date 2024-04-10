@@ -648,9 +648,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:81:10
 
-Cannot assign `y` to `x1` because mixed [1] is incompatible with `x1` (resolved to type `empty`) [2]. All writes to `x1`
-must be compatible with the type of its initializer [2]. Add an annotation to `x1` [2] if a different type is desired.
-[incompatible-type]
+Cannot assign `y` to `x1` because mixed [1] is incompatible with empty [2]. All writes to `x1` must be compatible with
+the type of its initializer [2]. Add an annotation to `x1` [2] if a different type is desired. [incompatible-type]
 
    misc.js:81:10
    81|     x1 = y;
@@ -667,9 +666,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:87:10
 
-Cannot assign `y` to `x2` because mixed [1] is incompatible with `x2` (resolved to type `empty`) [2]. All writes to `x2`
-must be compatible with the type of its initializer [2]. Add an annotation to `x2` [2] if a different type is desired.
-[incompatible-type]
+Cannot assign `y` to `x2` because mixed [1] is incompatible with empty [2]. All writes to `x2` must be compatible with
+the type of its initializer [2]. Add an annotation to `x2` [2] if a different type is desired. [incompatible-type]
 
    misc.js:87:10
    87|     x2 = y;
@@ -686,9 +684,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:93:10
 
-Cannot assign `y` to `x3` because mixed [1] is incompatible with `x3` (resolved to type `empty`) [2]. All writes to `x3`
-must be compatible with the type of its initializer [2]. Add an annotation to `x3` [2] if a different type is desired.
-[incompatible-type]
+Cannot assign `y` to `x3` because mixed [1] is incompatible with empty [2]. All writes to `x3` must be compatible with
+the type of its initializer [2]. Add an annotation to `x3` [2] if a different type is desired. [incompatible-type]
 
    misc.js:93:10
    93|     x3 = y;

@@ -1185,6 +1185,7 @@ let dump_error_message =
     | UnexpectedModuleT _ -> "UnexpectedModuleT"
     | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
+    | ForcedReadOfUnderResolutionTvar _ -> "ForcedReadOfUnderResolutionTvar"
     | MethodNotAFunction -> "MethodNotAFunction"
     | OptionalMethod -> "OptionalMethod"
     | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"

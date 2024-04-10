@@ -582,19 +582,12 @@ References:
               ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ immediate_cycle.js:1:14
+Error ------------------------------------------------------------------------------------------ immediate_cycle.js:1:10
 
-Cannot assign object literal to `x` because object literal [1] is incompatible with `x` (resolved to type `empty`) [2].
-[incompatible-type]
+Invalid trivially recursive definition of `X`.  [recursive-definition]
 
-   immediate_cycle.js:1:14
    1| const x: X = {}; // error {} ~> empty
-                   ^^ [1]
-
-References:
-   immediate_cycle.js:1:7
-   1| const x: X = {}; // error {} ~> empty
-            ^ [2]
+               ^
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:7:12

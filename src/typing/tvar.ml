@@ -39,11 +39,10 @@ let mk_fully_resolved_helper cx reason state =
   Context.set_graph cx (IMap.add id node (Context.graph cx));
   Type.OpenT (reason, id)
 
-let mk_fully_resolved_lazy cx reason lazy_t =
-  mk_fully_resolved_helper
-    cx
-    reason
-    (Type.Constraint.ForcingState.of_lazy_t ~error_reason:reason lazy_t)
+let mk_fully_resolved_lazy cx reason ?(force_post_component = true) lazy_t =
+  let state = Type.Constraint.ForcingState.of_lazy_t ~error_reason:reason lazy_t in
+  if force_post_component then Context.add_post_component_tvar_forcing_state cx state;
+  mk_fully_resolved_helper cx reason state
 
 let mk_fully_resolved cx reason t =
   mk_fully_resolved_helper cx reason (Type.Constraint.ForcingState.of_non_lazy_t t)

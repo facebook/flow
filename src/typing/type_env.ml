@@ -10,6 +10,7 @@ open Type
 open Reason
 open Loc_collections
 module EnvMap = Env_api.EnvMap
+module EnvSet = Env_api.EnvSet
 
 let ( +> ) f g x = g (f x)
 
@@ -110,29 +111,17 @@ let t_option_value_exn cx loc t =
 (* Helpers **************)
 (************************)
 
-let checked_find_loc_env_write_opt cx kind loc =
-  let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
+let checked_find_loc_env_write_opt cx kind loc : Type.t option =
+  let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   match
     (EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries, Loc_env.find_write env kind loc)
   with
-  | (Some Env_api.NonAssigningWrite, t_opt) -> t_opt
+  | (Some Env_api.NonAssigningWrite, None) -> None
+  | (Some Env_api.NonAssigningWrite, Some (Loc_env.TypeEntry { t; _ })) -> Some t
   | (_, None) ->
     Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc));
     None
-  | (_, Some (OpenT (_, id) as t)) ->
-    if not (Loc_env.is_readable env kind loc) then (
-      Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnreachedTvar kind));
-      Some t
-    ) else if not (Env_api.EnvSet.mem (kind, loc) under_resolution) then (
-      match Context.find_graph cx id with
-      | Type.Constraint.FullyResolved _ -> Some t
-      | _ ->
-        Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind));
-        Some t
-    ) else
-      Some t
-  | (_, Some t) ->
-    assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)
+  | (_, Some (Loc_env.TypeEntry { t; state = _ })) -> Some t
 
 let checked_find_loc_env_write cx kind loc =
   checked_find_loc_env_write_opt cx kind loc |> t_option_value_exn cx loc
@@ -530,7 +519,9 @@ let res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
     in
     t |> refine cx reason loc refi
   in
-  res_of_state write_locs val_id refi
+  match res_of_state write_locs val_id refi with
+  | Ok t -> Ok (Tvar_resolver.resolved_t cx t)
+  | Error (t, err) -> Error (Tvar_resolver.resolved_t cx t, err)
 
 let type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
   res_of_state ~lookup_mode cx env loc reason write_locs val_id refi
@@ -791,23 +782,47 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
         in
         Context.add_post_inference_subtyping_check cx t use_op general
 
+let make_env_entries_under_resolution cx entries =
+  let env = Context.environment cx in
+  let update ((def_loc_kind, loc) as key) =
+    match EnvMap.find_opt key env.Loc_env.types with
+    | None -> ()
+    | Some (Loc_env.TypeEntry { t; state }) ->
+      let reason = TypeUtil.reason_of_t t in
+      state :=
+        lazy
+          ( Flow_js_utils.add_output
+              cx
+              Error_message.(EInternal (loc, ForcedReadOfUnderResolutionTvar def_loc_kind));
+            AnyT.error reason
+          )
+  in
+  EnvSet.iter update entries
+
 (* Resolve `t` with the entry in the loc_env's map. This allows it to be looked up for Write
  * entries reported by the name_resolver as well as providers for the provider analysis *)
-let resolve_env_entry ~use_op ~update_reason cx t kind loc =
+let resolve_env_entry ~use_op:_ ~update_reason cx t kind loc =
   Debug_js.Verbose.print_if_verbose
     cx
     [spf "writing to %s %s" (Env_api.show_def_loc_type kind) (Reason.string_of_aloc loc)];
-  (match checked_find_loc_env_write_opt cx kind loc with
-  | None ->
-    (* If we don't see a spot for this write, it's because it's never read from. *)
-    ()
-  | Some w -> Flow_js.unify cx ~use_op w t);
+  let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+  (match
+     (EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries, Loc_env.find_write env kind loc)
+   with
+  | (Some Env_api.NonAssigningWrite, _) -> ()
+  | (_, None) -> Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc))
+  | (_, Some (Loc_env.TypeEntry { t = _; state })) ->
+    Tvar_resolver.resolve cx t;
+    state :=
+      lazy
+        (* Unwrap possible OpenT so that OpenT doesn't wrap another OpenT.
+         * This has to be done lazily, so that we don't force tvars until we
+         * resolved all entries in a component. *)
+        (match t with
+        | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, EmptyT)) cx r id
+        | t -> t));
   if update_reason then
-    let env = Context.environment cx in
-    let env = Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t) in
-    Context.set_environment cx env
-  else
-    ()
+    Context.set_environment cx (Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t))
 
 let subtype_entry cx ~use_op t loc =
   let env = Context.environment cx in
@@ -879,19 +894,41 @@ let init_env cx toplevel_scope_kind =
       match env_entry with
       | Env_api.AssigningWrite reason
       | Env_api.GlobalWrite reason ->
-        let t = Tvar.mk cx reason in
-        Loc_env.initialize env def_loc_type loc t
+        let state =
+          ref
+            ( lazy
+              ( Flow_js_utils.add_output
+                  cx
+                  Error_message.(EInternal (loc_of_reason reason, ReadOfUnreachedTvar def_loc_type));
+                AnyT.error reason
+              )
+              )
+        in
+        let t =
+          Tvar.mk_fully_resolved_lazy
+            cx
+            reason
+            (* During initialization, all these lazy tvars are created, but not all of them are
+             * ready for forcing. The ones that are ready for forcing will be separately added to
+             * the list after each component resolution. *)
+            ~force_post_component:false
+            (lazy (Lazy.force !state))
+        in
+        Loc_env.initialize env def_loc_type loc (Loc_env.TypeEntry { t; state })
       | Env_api.NonAssigningWrite ->
         if is_provider cx loc then
           (* If an illegal write is considered as a provider, we still need to give it a
              slot to prevent crashing in code that queries provider types. *)
           let reason = mk_reason (RCustom "non-assigning provider") loc in
+          let state = ref (lazy (AnyT.error reason)) in
           let t =
-            Tvar.mk_no_wrap_where cx reason (fun (_, id) ->
-                Flow_js.resolve_id cx id (AnyT.error reason)
-            )
+            Tvar.mk_fully_resolved_lazy
+              cx
+              reason
+              ~force_post_component:false
+              (lazy (Lazy.force !state))
           in
-          Loc_env.initialize env def_loc_type loc t
+          Loc_env.initialize env def_loc_type loc (Loc_env.TypeEntry { t; state })
         else
           env
     in
@@ -915,9 +952,7 @@ let init_env cx toplevel_scope_kind =
            | _ -> initialize_entry def_loc_type loc env_entry env)
          var_info.Env_api.env_entries
   in
-  let env =
-    { env with Loc_env.scope_kind = toplevel_scope_kind; readable = Env_api.EnvSet.empty }
-  in
+  let env = { env with Loc_env.scope_kind = toplevel_scope_kind } in
   Context.set_environment cx env
 
 let discriminant_after_negated_cases cx switch_loc refinement_key_opt =

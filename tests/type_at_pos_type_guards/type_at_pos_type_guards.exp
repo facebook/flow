@@ -87,7 +87,7 @@ Flags:
   in_05: C,
   in_06: empty,
   in_07: empty,
-  in_08: C,
+  in_08: T05,
   in_09: empty
 }
 test.js:59:11,59:13
@@ -117,7 +117,7 @@ Flags:
   in_05: empty,
   in_06: empty,
   in_07: {+f: string},
-  in_08: {+f: string},
+  in_08: T07,
   in_09: empty
 }
 test.js:75:11,75:13

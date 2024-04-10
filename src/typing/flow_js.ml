@@ -7947,8 +7947,15 @@ struct
 
   and mk_possibly_evaluated_destructor cx use_op reason t d id =
     let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
-    if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
-      ignore @@ mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id;
+    ( if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
+      let (t : Type.t) =
+        Tvar.mk_fully_resolved_lazy
+          cx
+          reason
+          (lazy (mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id))
+      in
+      ignore t
+    );
     eval_t
 
   and variance_check cx ?trace tparams polarity = function

@@ -1268,7 +1268,7 @@ subst.js:22:7 = {
   "end":8
 }
 type-alias.js:3:6 = {
-  "types":{"unevaluated":{"type":"type A = empty"},"evaluated":null},
+  "types":{"unevaluated":{"type":"type A = A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",

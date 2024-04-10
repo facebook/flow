@@ -13,27 +13,31 @@ open Loc_collections
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
 
+type type_entry =
+  | TypeEntry of {
+      t: Type.t;
+      state: Type.t lazy_t ref;
+    }
+
 type t = {
-  types: Type.t EnvMap.t;
+  types: type_entry EnvMap.t;
   tparams: (Subst_name.t * Type.typeparam * Type.t) ALocMap.t;
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
   scope_kind: Name_def.scope_kind;
-  readable: EnvSet.t;
-  under_resolution: EnvSet.t;
   hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
   pred_func_map: Type.pred_funcall_info Lazy.t ALocMap.t;
   name_defs: Name_def.env_entries_map;
 }
 
-let initialize info def_loc_kind loc t =
+let initialize info def_loc_kind loc state =
   let types =
     EnvMap.update
       (def_loc_kind, loc)
       (function
         | Some _ -> failwith (Utils_js.spf "%s already initialized" (Reason.string_of_aloc loc))
-        | None -> Some t)
+        | None -> Some state)
       info.types
   in
   { info with types }
@@ -44,13 +48,12 @@ let update_reason ({ types; _ } as info) def_loc_kind loc reason =
     EnvMap.update
       (def_loc_kind, loc)
       (function
-        | Some t -> Some (TypeUtil.mod_reason_of_t f t)
+        | Some (TypeEntry { t; state }) ->
+          Some (TypeEntry { t = TypeUtil.mod_reason_of_t f t; state })
         | None -> failwith "Cannot update reason on non-existent entry")
       types
   in
   { info with types }
-
-let is_readable { readable; _ } def_loc_kind loc = EnvSet.mem (def_loc_kind, loc) readable
 
 let find_write { types; _ } def_loc_kind loc = EnvMap.find_opt (def_loc_kind, loc) types
 
@@ -64,9 +67,7 @@ let empty scope_kind =
     class_bindings = ALocMap.empty;
     class_stack = [];
     scope_kind;
-    readable = EnvSet.empty;
     hint_map = ALocMap.empty;
-    under_resolution = EnvSet.empty;
     pred_func_map = ALocMap.empty;
     name_defs = EnvMap.empty;
   }

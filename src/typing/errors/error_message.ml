@@ -780,6 +780,7 @@ and internal_error =
   | UnexpectedModuleT of string
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
+  | ForcedReadOfUnderResolutionTvar of Env_api.def_loc_type
   | EnvInvariant of Env_api.env_invariant_failure
   | ImplicitInstantiationInvariant of string
 
@@ -2132,6 +2133,10 @@ let string_of_internal_error = function
     spf "read of %s entry which has not been prepared for typechecking" (Env_api.show_def_loc_type k)
   | ReadOfUnresolvedTvar k ->
     spf "read of %s entry from previous component is not FullyResolved" (Env_api.show_def_loc_type k)
+  | ForcedReadOfUnderResolutionTvar k ->
+    spf
+      "forced read of %s entry from component is not yet FullyResolved"
+      (Env_api.show_def_loc_type k)
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
   | UnsupportedGuardPredicate pred -> spf "unsupported guard predicate (%s)" pred

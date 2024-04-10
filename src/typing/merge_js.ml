@@ -5,6 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+let force_lazy_tvars cx =
+  Context.post_component_tvar_forcing_states cx
+  |> Base.List.iter ~f:(fun s -> ignore @@ Context.force_fully_resolved_tvar cx s)
+
 let detect_sketchy_null_checks cx tast =
   Exists_marker.mark cx tast;
   let add_error ~loc ~null_loc kind falsy_loc =
@@ -588,6 +592,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  * which require complete knowledge of tvar bounds.
  *)
 let post_merge_checks cx ast tast metadata =
+  force_lazy_tvars cx;
   check_react_rules cx tast;
   check_multiplatform_conformance cx ast tast;
   check_polarity cx;

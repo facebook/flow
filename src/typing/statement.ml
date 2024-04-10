@@ -6518,14 +6518,13 @@ module Make
               let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
               let use_op = Op (GetProperty expr_reason) in
               let tout =
-                get_prop
-                  ~use_op
-                  ~hint:hint_unavailable
-                  ~cond:None
+                Type_annotation_cons_gen.FlowJS.get_prop
                   cx
-                  expr_reason
+                  use_op
+                  ~op_reason:expr_reason
+                  prop_reason
+                  (OrdinaryName name)
                   t
-                  (prop_reason, name)
               in
               ( tout,
                 fun () ->

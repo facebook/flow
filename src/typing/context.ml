@@ -175,6 +175,7 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
+  mutable post_component_tvar_forcing_states: Type.Constraint.ForcingState.t list;
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
@@ -367,6 +368,7 @@ let make_ccx () =
     synthesis_produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
+    post_component_tvar_forcing_states = [];
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
     renders_type_argument_validations = [];
@@ -578,6 +580,11 @@ let ts_syntax cx = cx.metadata.ts_syntax
 
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
+let post_component_tvar_forcing_states cx =
+  let states = cx.ccx.post_component_tvar_forcing_states in
+  cx.ccx.post_component_tvar_forcing_states <- [];
+  states
+
 let post_inference_polarity_checks cx = cx.ccx.post_inference_polarity_checks
 
 let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
@@ -687,6 +694,9 @@ let mk_placeholder cx reason =
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
+
+let add_post_component_tvar_forcing_state cx state =
+  cx.ccx.post_component_tvar_forcing_states <- state :: cx.ccx.post_component_tvar_forcing_states
 
 let add_post_inference_polarity_check cx tparams polarity t =
   cx.ccx.post_inference_polarity_checks <-
@@ -849,6 +859,16 @@ let run_in_synthesis_mode cx f =
     )
   in
   (!produced_placeholders, result)
+
+let run_in_signature_tvar_env cx f =
+  let saved_speculation_state = !(cx.ccx.speculation_state) in
+  let saved_typing_mode = cx.typing_mode in
+  cx.ccx.speculation_state := [];
+  cx.typing_mode <- CheckingMode;
+  let result = f () in
+  cx.typing_mode <- saved_typing_mode;
+  cx.ccx.speculation_state := saved_speculation_state;
+  result
 
 let run_in_hint_eval_mode cx f =
   let old_typing_mode = cx.typing_mode in

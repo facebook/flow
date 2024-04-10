@@ -856,14 +856,18 @@ let rec resolve_binding cx reason loc b =
             DestructInfer
         in
         let t =
-          Tvar.mk_no_wrap_where cx reason (fun tout ->
-              Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+          Type_operation_utils.TvarUtils.map_on_resolved_type cx reason t (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+              )
           )
         in
         if has_default then
           let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
-          Tvar.mk_no_wrap_where cx reason (fun tout ->
-              Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+          Type_operation_utils.TvarUtils.map_on_resolved_type cx reason t (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+              )
           )
         else
           t
@@ -1457,10 +1461,7 @@ let resolve_component cx graph component =
   let f () =
     let entries_for_resolution =
       let entries = entries_of_component graph component in
-      let ({ Loc_env.readable; _ } as env) = Context.environment cx in
-      Context.set_environment
-        cx
-        { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
+      Type_env.make_env_entries_under_resolution cx entries;
       entries
     in
     resolve_component_type_params cx graph component;
@@ -1470,11 +1471,28 @@ let resolve_component cx graph component =
       | Singleton elt -> resolve_element elt
       | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
     in
+    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"]);
+    Debug_js.Verbose.print_if_verbose_lazy
+      cx
+      (lazy ["Forcing all lazy tvars after resolving component"]);
     let env = Context.environment cx in
     EnvSet.iter
       (fun (kind, loc) ->
-        Loc_env.find_write env kind loc |> Base.Option.iter ~f:(Tvar_resolver.resolve cx))
+        Loc_env.find_write env kind loc
+        |> Base.Option.iter ~f:(fun (Loc_env.TypeEntry { t; state = _ }) ->
+               match t with
+               | OpenT (_, id) ->
+                 (match Context.find_graph cx id with
+                 | Type.Constraint.FullyResolved s ->
+                   Context.add_post_component_tvar_forcing_state cx s
+                 | _ -> ())
+               | _ -> ()
+           ))
       entries_for_resolution;
-    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
+    Context.post_component_tvar_forcing_states cx
+    |> Base.List.iter ~f:(fun s -> ignore @@ Context.force_fully_resolved_tvar cx s);
+    Debug_js.Verbose.print_if_verbose_lazy
+      cx
+      (lazy ["Forced all lazy tvars after resolving component"])
   in
   log_slow_to_check ~f
