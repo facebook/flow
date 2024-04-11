@@ -114,7 +114,7 @@ class mapper target =
     method! switch_case case = this#with_context SwitchCase (fun () -> super#switch_case case)
 
     method! identifier (loc, id) =
-      if this#is_target loc then raise (Found context);
+      if this#target_contained_by loc then raise (Found context);
       super#identifier (loc, id)
   end
 
@@ -130,7 +130,9 @@ let keywords_of_context context =
   | _ -> []
 
 let keywords_at_loc ast loc =
-  let mapper = new mapper loc in
+  (* We're looking for an identifier, considering the first character is equivalent. *)
+  let target = Loc.first_char loc in
+  let mapper = new mapper target in
   try
     ignore (mapper#program ast);
     []
