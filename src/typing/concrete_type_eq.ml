@@ -63,4 +63,12 @@ let rec eq cx t1 t2 =
       (match Base.List.for_all2 (UnionRep.members rep1) (UnionRep.members rep2) ~f:(eq cx) with
       | Base.List.Or_unequal_lengths.Ok result -> result
       | Base.List.Or_unequal_lengths.Unequal_lengths -> false)
+    | (EvalT (_, _, id), _) ->
+      (match Type.Eval.Map.find_opt id (Context.evaluated cx) with
+      | Some t -> eq cx t t2
+      | None -> compare t1 (swap_reason t2 t1) = 0)
+    | (_, EvalT (_, _, id)) ->
+      (match Type.Eval.Map.find_opt id (Context.evaluated cx) with
+      | Some t -> eq cx t1 t
+      | None -> compare t1 (swap_reason t2 t1) = 0)
     | _ -> compare t1 (swap_reason t2 t1) = 0
