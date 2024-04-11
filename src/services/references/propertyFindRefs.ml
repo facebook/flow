@@ -112,7 +112,7 @@ module Potential_ordinary_refs_search = struct
                 )
               when attribute_name = target_name ->
               let (_, component_t) = annot_of_jsx_name component_name in
-              let reason = Reason.mk_reason (Reason.RCustom "") loc in
+              let reason = Reason.mk_reason Reason.RReactProps loc in
               let props_object =
                 Tvar.mk_where cx reason (fun tvar ->
                     let use_op = Type.Op Type.UnknownUse in
