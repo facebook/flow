@@ -12,7 +12,7 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
   open Type
   open TypeUtil
 
-  let map_on_resolved_type = Type_operation_utils.TvarUtils.map_on_resolved_type
+  let map_on_resolved_type = Flow_js_utils.map_on_resolved_type
 
   let specialize cx c use_op reason_op reason_tapp targs =
     let open Type in

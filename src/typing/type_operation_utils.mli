@@ -11,11 +11,6 @@
 module Ast = Flow_ast
 open Reason
 
-module TvarUtils : sig
-  val map_on_resolved_type :
-    ?filter_empty:bool -> Context.t -> reason -> Type.t -> (Type.t -> Type.t) -> Type.t
-end
-
 module Import_export : sig
   val concretize_module_type :
     Context.t -> Reason.t -> Type.t -> (Type.moduletype, Reason.reason * Type.any_source) result

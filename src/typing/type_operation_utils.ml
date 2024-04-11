@@ -11,46 +11,6 @@ open Reason
 open Type
 open Utils_js
 
-module TvarUtils = struct
-  (* We choose a depth of 3 because it's sufficient to unwrap OpenT(AnnotT(OpenT)), which is the most
-     complicated case known. If we run into issues in the future, we can increase the depth limit. *)
-  let rec unwrap_open_and_annot_t ?filter_empty cx ?(depth = 3) = function
-    | AnnotT (r, t, use_desc) as annot_t when depth >= 0 ->
-      let t' = unwrap_open_and_annot_t cx ~depth:(depth - 1) t in
-      if t' == t then
-        annot_t
-      else
-        AnnotT (r, t', use_desc)
-    | OpaqueT (r, opq) as t ->
-      let super_t =
-        OptionUtils.ident_map (unwrap_open_and_annot_t ?filter_empty cx ~depth) opq.super_t
-      in
-      let underlying_t =
-        OptionUtils.ident_map (unwrap_open_and_annot_t ?filter_empty cx ~depth) opq.underlying_t
-      in
-      if super_t == opq.super_t && underlying_t == opq.underlying_t then
-        t
-      else
-        OpaqueT (r, { opq with super_t; underlying_t })
-    | OpenT (r, id) when depth >= 0 ->
-      (match Context.find_graph cx id with
-      | Type.Constraint.FullyResolved s ->
-        Context.force_fully_resolved_tvar cx s |> unwrap_open_and_annot_t cx ~depth:(depth - 1)
-      | _ -> failwith (spf "tvar (%s, %d) is not fully resolved" (dump_reason r) id))
-    | t -> t
-
-  let map_on_resolved_type ?filter_empty cx reason_op l f =
-    Tvar.mk_fully_resolved_lazy
-      cx
-      reason_op
-      ( lazy
-        (Context.run_in_signature_tvar_env cx (fun () ->
-             f l |> unwrap_open_and_annot_t ?filter_empty cx
-         )
-        )
-        )
-end
-
 module Import_export = struct
   let concretize_module_type cx get_reason module_t =
     match Flow.possible_concrete_types_for_inspection cx get_reason module_t with

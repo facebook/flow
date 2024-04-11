@@ -856,7 +856,7 @@ let rec resolve_binding cx reason loc b =
             DestructInfer
         in
         let t =
-          Type_operation_utils.TvarUtils.map_on_resolved_type cx reason t (fun t ->
+          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
                   Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
               )
@@ -864,7 +864,7 @@ let rec resolve_binding cx reason loc b =
         in
         if has_default then
           let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
-          Type_operation_utils.TvarUtils.map_on_resolved_type cx reason t (fun t ->
+          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
                   Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
               )
