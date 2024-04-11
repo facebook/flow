@@ -215,7 +215,11 @@ module Friendly = struct
     else
       Reference (desc, loc)
 
+  let no_desc_ref_map map_loc loc = Reference ([], map_loc loc)
+
   let ref r = ref_map Fun.id r
+
+  let no_desc_ref = no_desc_ref_map Fun.id
 
   (* Concatenates a list of messages with a conjunction according to the "rules"
    * of the English language. *)

@@ -2237,6 +2237,7 @@ let friendly_message_of_msg loc_of_aloc msg =
   let text = Flow_errors_utils.Friendly.text in
   let code = Flow_errors_utils.Friendly.code in
   let ref = Flow_errors_utils.Friendly.ref_map loc_of_aloc in
+  let no_desc_ref = Flow_errors_utils.Friendly.no_desc_ref_map loc_of_aloc in
   let desc = Flow_errors_utils.Friendly.desc in
   let msg_export prefix export_name =
     if export_name = "default" then
@@ -3077,10 +3078,8 @@ let friendly_message_of_msg loc_of_aloc msg =
     let loc_str =
       match write_locs with
       | [] -> [text "in this function"]
-      | [loc] -> [text "in"; ref (mk_reason (RCustom "") loc)]
-      | _ ->
-        text "in the following statements:"
-        :: Base.List.map write_locs ~f:(fun loc -> ref (mk_reason (RCustom "") loc))
+      | [loc] -> [text "in"; no_desc_ref loc]
+      | _ -> text "in the following statements:" :: Base.List.map write_locs ~f:no_desc_ref
     in
     Normal
       {
@@ -3097,10 +3096,8 @@ let friendly_message_of_msg loc_of_aloc msg =
     let loc_str =
       match call_locs with
       | [] -> [text "in this function"]
-      | [loc] -> [text "in"; ref (mk_reason (RCustom "") loc)]
-      | _ ->
-        text "in the following expressions:"
-        :: Base.List.map call_locs ~f:(fun loc -> ref (mk_reason (RCustom "") loc))
+      | [loc] -> [text "in"; no_desc_ref loc]
+      | _ -> text "in the following expressions:" :: Base.List.map call_locs ~f:no_desc_ref
     in
     Normal
       {
@@ -4827,9 +4824,7 @@ let friendly_message_of_msg loc_of_aloc msg =
             ref reason;
             text " should be annotated, because it is only initialized in a generic context";
           ]
-          @ (Base.List.map possible_generic_escape_locs ~f:(fun loc ->
-                 ref (mk_reason (RCustom "") loc)
-             )
+          @ (Base.List.map possible_generic_escape_locs ~f:no_desc_ref
             |> Base.List.intersperse ~sep:(text ",")
             );
       }
@@ -4882,9 +4877,7 @@ let friendly_message_of_msg loc_of_aloc msg =
             null_ref;
             text " and in generic context";
           ]
-          @ (Base.List.map possible_generic_escape_locs ~f:(fun loc ->
-                 ref (mk_reason (RCustom "") loc)
-             )
+          @ (Base.List.map possible_generic_escape_locs ~f:no_desc_ref
             |> Base.List.intersperse ~sep:(text ",")
             );
       }
@@ -5086,10 +5079,7 @@ let friendly_message_of_msg loc_of_aloc msg =
             ([], tl)
         in
         ( ref (mk_reason (RCustom "itself") hd),
-          (Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl
-          |> List.flatten
-          )
-          @ suffix
+          (Base.List.map ~f:(fun loc -> [text ", "; no_desc_ref loc]) tl |> List.flatten) @ suffix
         )
       | [] -> (text "itself", [])
     in
@@ -5109,7 +5099,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         ]
       | [Env_api.Object { loc; props }] ->
         [ref (mk_reason (RCustom "this definition") loc); text " or to its properties"]
-        @ Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) props
+        @ Base.List.map ~f:no_desc_ref props
       | ls ->
         let (locs, properties) =
           Base.List.fold
@@ -5131,14 +5121,11 @@ let friendly_message_of_msg loc_of_aloc msg =
               else
                 text "this object property"
             in
-            text " or to "
-            :: these
-            :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) properties
+            text " or to " :: these :: Base.List.map ~f:no_desc_ref properties
           else
             []
         in
-        (text "these definitions" :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) locs)
-        @ props
+        (text "these definitions" :: Base.List.map ~f:no_desc_ref locs) @ props
     in
     let features =
       [
@@ -5169,8 +5156,7 @@ let friendly_message_of_msg loc_of_aloc msg =
                   ([], tl)
               in
               let tl_dep =
-                Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
-                |> List.flatten
+                Base.List.map ~f:(fun loc -> [text ","; no_desc_ref loc]) tl |> List.flatten
               in
               Some
                 ([
@@ -5199,9 +5185,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     in
     let locs = Base.List.take (Base.List.dedup_and_sort ~compare locs) 10 in
     let properties = Base.List.dedup_and_sort ~compare properties in
-    let annot_message ls =
-      Base.List.map ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)) ls
-    in
+    let annot_message ls = Base.List.map ~f:no_desc_ref ls in
     let features =
       text
         "The following definitions recursively depend on each other, and Flow cannot compute their types:\n"

@@ -747,7 +747,7 @@ let rec make_error_printable :
           | [r] -> [text "its "; ref (mk_reason (RCustom ("initial " ^ noun)) r)]
           | providers ->
             text (spf "one of its initial %ss" noun)
-            :: (Base.List.map ~f:(fun r -> ref (mk_reason (RCustom "") r)) providers
+            :: (Base.List.map ~f:(Friendly.no_desc_ref_map loc_of_aloc) providers
                |> Base.List.intersperse ~sep:(text ",")
                )
         in
