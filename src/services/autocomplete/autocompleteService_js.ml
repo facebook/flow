@@ -390,14 +390,17 @@ type 'r ac_result = {
   result: 'r;
   errors_to_log: string list;
 }
+[@@deriving eq]
 
 type 'r autocomplete_service_result_generic =
   | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
+[@@deriving eq]
 
 type autocomplete_service_result =
   ServerProt.Response.Completion.t autocomplete_service_result_generic
+[@@deriving eq]
 
 let jsdoc_of_def_loc { loc_of_aloc; get_ast_from_shared_mem; ast; _ } def_loc =
   loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem
@@ -2145,10 +2148,15 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_element _ -> "Ac_jsx_element"
   | Ac_jsx_attribute _ -> "Acjsx"
 
-let autocomplete_get_results typing ac_options trigger_character cursor =
+let autocomplete_get_results typing ac_options trigger_character cursor canon_token =
   let { layout_options; loc_of_aloc; cx; ast; available_ast; norm_genv = genv; _ } = typing in
   let open Autocomplete_js in
-  match process_location cx ~trigger_character ~cursor ~available_ast with
+  (* Since the AST that is provided to `process_location` is in canonical terms,
+   * we also need to adjust the cursor. *)
+  let canon_cursor =
+    Base.Option.value_map ~default:cursor ~f:Autocomplete_sigil.Canonical.cursor canon_token
+  in
+  match process_location cx ~trigger_character ~cursor:canon_cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
@@ -2158,6 +2166,17 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] }
     )
   | Ok (Some { tparams_rev; ac_loc; token; autocomplete_type }) ->
+    (* The remaining processing of the autocomplete result is done assuming non-
+     * canonical terms. We need to revert the canonicalization that happened
+     * earlier on. This typically means converting a canonical token ("AUTO332")
+     * to "fooAUTO332Baz", where "foo" and "Baz" are the prefix and suffix of the
+     * token around the cursor. `ac_loc` is adjusted accordingly. *)
+    let (ac_loc, token) =
+      match canon_token with
+      | None -> (ac_loc, token)
+      | Some canon ->
+        Autocomplete_sigil.Canonical.to_relative_ac_results ~canon (loc_of_aloc ac_loc) token
+    in
     (* say you're completing `foo|Baz`. the token is "fooBaz" and ac_loc points at
        "fooAUTO332Baz". if the suggestion is "fooBar", the user can choose to insert
        into the token, yielding "fooBarBaz", or they can choose to replace the token,

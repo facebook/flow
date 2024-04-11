@@ -574,3 +574,22 @@ let jsx_pragma_expression =
 let string_is_valid_identifier_name str =
   let lexbuf = Sedlexing.Utf8.from_string str in
   Flow_lexer.is_valid_identifier_name lexbuf
+
+(**
+ * Returns the string and location of the first identifier in [input] for which
+ * [predicate] holds.
+ *)
+let find_ident ~predicate input =
+  let env = init_env ~token_sink:None ~parse_options:None None input in
+  let rec loop token =
+    match token with
+    | T_EOF -> None
+    | _ ->
+      let loc = Peek.loc env in
+      (match token with
+      | T_IDENTIFIER { value = s; _ } when predicate s -> Some (loc, s)
+      | _ ->
+        Eat.token env;
+        loop (Peek.token env))
+  in
+  loop (Peek.token env)

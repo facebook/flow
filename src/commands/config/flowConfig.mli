@@ -66,6 +66,8 @@ val enabled_rollouts : config -> string SMap.t
 (* options *)
 val all : config -> bool option
 
+val autocomplete_canonical : config -> Options.autocomplete_canonical option
+
 val autocomplete_mode : config -> Options.autocomplete_mode option
 
 val autoimports : config -> bool option

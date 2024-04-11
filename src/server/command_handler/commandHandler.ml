@@ -420,16 +420,26 @@ let autocomplete_on_parsed
     ~imports_min_characters
     ~imports_ranked_usage
     ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info =
+    ~show_ranking_info
+    ~canonical =
   let cursor_loc =
     let (line, column) = cursor in
     Loc.cursor (Some filename) line column
   in
-  let (contents, broader_context) =
+  (* Assuming input request at `foo.bar|`, [contents] will include `foo.AUTO332`.
+   * We will refer to this form of contents as canonical. *)
+  let (contents, broader_context, canon_token) =
     let (line, column) = cursor in
-    Autocomplete_sigil.add contents line column
+    if canonical then
+      Autocomplete_sigil.add_canonical (Some filename) contents line column
+    else
+      let (contents, broader_context) = Autocomplete_sigil.add contents line column in
+      (contents, broader_context, None)
   in
-  Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
+  let canon_cursor =
+    Base.Option.value_map ~default:cursor_loc ~f:Autocomplete_sigil.Canonical.cursor canon_token
+  in
+  Autocomplete_js.autocomplete_set_hooks ~cursor:canon_cursor;
   let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
   let initial_json_props =
     let open Hh_json in
@@ -477,7 +487,7 @@ let autocomplete_on_parsed
                 show_ranking_info;
               }
             in
-            autocomplete_get_results typing ac_options trigger_character cursor_loc
+            autocomplete_get_results typing ac_options trigger_character cursor_loc canon_token
         )
       in
       Some (info, parse_errors, token_opt, ac_loc, ac_type_string, results_res)
@@ -509,7 +519,7 @@ let autocomplete
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
   | Ok (filename, contents) ->
-    let (initial_json_props, ac_result) =
+    let autocomplete =
       autocomplete_on_parsed
         ~filename
         ~contents
@@ -524,6 +534,24 @@ let autocomplete
         ~imports_ranked_usage
         ~imports_ranked_usage_boost_exact_match_min_length
         ~show_ranking_info
+    in
+    let autocomplete_canonical () = autocomplete ~canonical:true in
+    let autocomplete_classic () = autocomplete ~canonical:false in
+    let (initial_json_props, ac_result) =
+      match Options.autocomplete_canonical options with
+      | Options.Ac_classic -> autocomplete_classic ()
+      | Options.Ac_canonical -> autocomplete_canonical ()
+      | Options.Ac_both ->
+        let (_, result_1) = autocomplete_canonical () in
+        let (json_2, result_2) = autocomplete_classic () in
+        let equal =
+          match (result_1, result_2) with
+          | (None, None) -> true
+          | (Some (_, _, _, _, _, r1), Some (_, _, _, _, _, r2)) ->
+            AutocompleteService_js.equal_autocomplete_service_result r1 r2
+          | (_, _) -> false
+        in
+        (("canonical_compliance", Hh_json.JSON_Bool equal) :: json_2, result_2)
     in
     json_of_autocomplete_result initial_json_props ac_result
 

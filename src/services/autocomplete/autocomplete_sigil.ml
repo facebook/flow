@@ -39,6 +39,108 @@ let add contents line column =
     ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil (line + 1))
   )
 
+module Canonical = struct
+  type token = {
+    cursor: Loc.t;
+    prefix_and_suffix: (string * string) option;
+  }
+
+  let cursor { cursor; _ } = cursor
+
+  let mk ~span ~prefix ~suffix =
+    { cursor = Loc.start_loc span; prefix_and_suffix = Some (prefix, suffix) }
+
+  let to_relative_ac_results ~canon:{ prefix_and_suffix; _ } ac_loc token =
+    let open Loc in
+    let { start; _end; _ } = ac_loc in
+    let loc =
+      if start.line = _end.line then
+        let column =
+          match prefix_and_suffix with
+          | Some (prefix, suffix) ->
+            start.column + String.length prefix + String.length suffix + String.length sigil
+          | None -> _end.column
+        in
+        ALoc.of_loc { ac_loc with _end = { _end with column } }
+      else
+        ALoc.of_loc ac_loc
+    in
+    let token =
+      match prefix_and_suffix with
+      | Some (prefix, suffix) -> prefix ^ token ^ suffix
+      | None -> token
+    in
+    (loc, token)
+end
+
+(*
+ * Let's assume that the input file's contents include `foo.bar| + 1`, where `|`
+ * denotes the position of the cursor, this function returns new contents where
+ * the above segment has been replaced with `foo.AUTO332 + 1`. Notice that we
+ * have removed the prefix `bar` before adding the sigil. In fact, all input
+ * contents `foo.|`, `foo.b|`, `foo.ba|`, etc. produce the same canonical output
+ * content `foo.AUTO332`. The reason for this is that for the purposes of type
+ * inference the canonical output is equivalent to including the various
+ * prefixes before the sigil. Having a single form to represent all these forms
+ * enables caching of typing artifacts for autocomplete.
+ *
+ * When this function succeds in adding a canonical form for the token under
+ * cursor, it will return a [canon_token] structure. This structure includes
+ * information used in typechecking the canonical form of the contents, and also
+ * in restoring the results of `Autocomplete_js.process_location` to a form that
+ * can be further processed by AutocompleteServices_js.
+ *)
+let add_canonical source contents loc_line column =
+  let line = loc_line - 1 in
+  let (contents_with_sigil, canon_token) =
+    match Line.split_nth contents line with
+    | None -> (contents, None)
+    | Some (pre, line_str, post) ->
+      let length = String.length line_str in
+      let line_str =
+        if length >= column then
+          let start = String.sub line_str 0 column in
+          let end_ = String.sub line_str column (length - column) in
+          start ^ sigil ^ end_
+        else
+          line_str
+      in
+      let (line_str, canon_token) =
+        match
+          Parser_flow.find_ident ~predicate:(Base.String.is_substring ~substring:sigil) line_str
+        with
+        | Some ({ Loc.start; source = _; _end }, pattern) ->
+          (* Since we parsed this as a single line, we need to adjust line and source. *)
+          let index_of_pattern = Base.String.substr_index_exn pattern ~pattern:sigil in
+          let prefix = Base.String.prefix pattern index_of_pattern in
+          let suffix =
+            Base.String.drop_prefix pattern index_of_pattern
+            |> Base.String.chop_prefix ~prefix:sigil
+            |> Base.Option.value_exn
+          in
+          let loc =
+            {
+              Loc.start = { start with Loc.line = loc_line };
+              source;
+              _end = { _end with Loc.line = loc_line };
+            }
+          in
+          ( Base.String.substr_replace_first ~pattern ~with_:sigil line_str,
+            Some (Canonical.mk ~prefix ~suffix ~span:loc)
+          )
+        | None -> (line_str, None)
+      in
+      (pre ^ line_str ^ post, canon_token)
+  in
+  let broader_context =
+    let f (_, x, _) = x in
+    let default = "" in
+    Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil (line - 1))
+    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil line)
+    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil (line + 1))
+  in
+  (contents_with_sigil, broader_context, canon_token)
+
 (**
  * the autocomplete sigil inserts `sigil_len` characters, which are included
  * in `ac_loc` returned by `Autocomplete_js`. They need to be removed before

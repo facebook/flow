@@ -360,8 +360,13 @@ let autocomplete filename content line col js_config_object :
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
   let cursor_loc = Loc.cursor (Some filename) line col in
-  let (content, _) = Autocomplete_sigil.add content line col in
-  Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
+  let (content, _, canon_token) =
+    Autocomplete_sigil.add_canonical (Some filename) content line col
+  in
+  let canon_cursor =
+    Base.Option.value_map ~default:cursor_loc ~f:Autocomplete_sigil.Canonical.cursor canon_token
+  in
+  Autocomplete_js.autocomplete_set_hooks ~cursor:canon_cursor;
   let r =
     match parse_content filename content with
     | Error _ -> Error "parse error"
@@ -414,6 +419,7 @@ let autocomplete filename content line col js_config_object :
           }
           None
           loc
+          canon_token
       in
       (match result with
       | AcEmpty _ -> Ok { ServerProt.Response.Completion.items = []; is_incomplete = false }

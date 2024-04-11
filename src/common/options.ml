@@ -39,6 +39,11 @@ type autocomplete_mode =
   | Ac_typed_ast
   | Ac_on_demand_typing
 
+type autocomplete_canonical =
+  | Ac_canonical
+  | Ac_classic
+  | Ac_both (* for comparison purposes *)
+
 type format = {
   opt_bracket_spacing: bool;
   opt_single_quotes: bool;
@@ -71,6 +76,7 @@ type t = {
   opt_all: bool;
   opt_as_const: bool;
   opt_any_propagation: bool;
+  opt_autocomplete_canonical: autocomplete_canonical;
   opt_autocomplete_mode: autocomplete_mode;
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
@@ -167,6 +173,8 @@ let all opts = opts.opt_all
 let as_const opts = opts.opt_as_const
 
 let any_propagation opts = opts.opt_any_propagation
+
+let autocomplete_canonical opts = opts.opt_autocomplete_canonical
 
 let autocomplete_mode opts = opts.opt_autocomplete_mode
 
