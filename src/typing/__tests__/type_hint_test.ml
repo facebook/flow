@@ -68,7 +68,7 @@ let dummy_filename = File_key.SourceFile ""
 
 let dummy_loc = Loc.mk_loc ~source:dummy_filename (0, 0) (0, 0) |> ALoc.of_loc
 
-let dummy_reason = locationless_reason (RCustom "dummy_reason")
+let dummy_reason = locationless_reason RAnyExplicit
 
 (**************************)
 (* Parse and convert type *)

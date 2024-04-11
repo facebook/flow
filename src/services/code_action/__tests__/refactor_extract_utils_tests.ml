@@ -80,7 +80,7 @@ let dummy_context () =
   let root = File_path.dummy_path in
   let reason =
     let loc = ALoc.none in
-    let desc = Reason.RCustom "Explicit any used in refactor_extract_functioon tests" in
+    let desc = Reason.RAnyExplicit in
     Reason.mk_reason desc loc
   in
   (* Add builtins that will be used by tests. *)

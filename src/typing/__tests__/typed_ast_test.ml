@@ -93,7 +93,7 @@ let before_and_after_stmts file_name =
   let mk_builtins _cx =
     let reason =
       let loc = ALoc.none in
-      let desc = Reason.RCustom "Explicit any used in type_ast tests" in
+      let desc = Reason.RAnyExplicit in
       Reason.mk_reason desc loc
     in
     Builtins.of_name_map
