@@ -375,6 +375,38 @@ let json_of_autocomplete_result initial_json_props = function
     let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
     (response, Some (Hh_json.JSON_Object json_props_to_log))
 
+let type_check_for_autocomplete ~options ~profiling master_cx filename parse_artifacts =
+  let (Parse_artifacts { docblock; ast; requires; file_sig; _ }) = parse_artifacts in
+  match Options.autocomplete_mode options with
+  | Options.Ac_typed_ast ->
+    let (cx, typed_ast) =
+      Type_contents.check_contents
+        ~options
+        ~profiling
+        ~reader:(State_reader.create ())
+        master_cx
+        filename
+        docblock
+        ast
+        requires
+        file_sig
+    in
+    (cx, Typed_ast_utils.Typed_ast typed_ast)
+  | Options.Ac_on_demand_typing ->
+    let (cx, aloc_ast) =
+      Type_contents.compute_env_of_contents
+        ~options
+        ~profiling
+        ~reader:(State_reader.create ())
+        master_cx
+        filename
+        docblock
+        ast
+        requires
+        file_sig
+    in
+    (cx, Typed_ast_utils.ALoc_ast aloc_ast)
+
 let autocomplete
     ~trigger_character
     ~reader
@@ -417,38 +449,12 @@ let autocomplete
     let ac_typing_artifacts =
       match parse_result with
       | (None, _parse_errors) -> None
-      | (Some (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; requires; _ }), _errs)
-        ->
+      | (Some parse_artifacts, _errs) ->
+        let (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ }) =
+          parse_artifacts
+        in
         let (cx, available_ast) =
-          match Options.autocomplete_mode options with
-          | Options.Ac_typed_ast ->
-            let (cx, typed_ast) =
-              Type_contents.check_contents
-                ~options
-                ~profiling
-                ~reader:(State_reader.create ())
-                env.master_cx
-                filename
-                info
-                ast
-                requires
-                file_sig
-            in
-            (cx, Typed_ast_utils.Typed_ast typed_ast)
-          | Options.Ac_on_demand_typing ->
-            let (cx, aloc_ast) =
-              Type_contents.compute_env_of_contents
-                ~options
-                ~profiling
-                ~reader:(State_reader.create ())
-                env.master_cx
-                filename
-                info
-                ast
-                requires
-                file_sig
-            in
-            (cx, Typed_ast_utils.ALoc_ast aloc_ast)
+          type_check_for_autocomplete ~options ~profiling env.master_cx filename parse_artifacts
         in
         Some (info, file_sig, ast, parse_errors, cx, available_ast)
     in
