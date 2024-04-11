@@ -407,6 +407,86 @@ let type_check_for_autocomplete ~options ~profiling master_cx filename parse_art
     in
     (cx, Typed_ast_utils.ALoc_ast aloc_ast)
 
+let autocomplete_on_parsed
+    ~filename
+    ~contents
+    ~trigger_character
+    ~reader
+    ~options
+    ~env
+    ~profiling
+    ~cursor
+    ~imports
+    ~imports_min_characters
+    ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
+    ~show_ranking_info =
+  let cursor_loc =
+    let (line, column) = cursor in
+    Loc.cursor (Some filename) line column
+  in
+  let (contents, broader_context) =
+    let (line, column) = cursor in
+    Autocomplete_sigil.add contents line column
+  in
+  Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
+  let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
+  let initial_json_props =
+    let open Hh_json in
+    [
+      ("ac_trigger", JSON_String (Base.Option.value trigger_character ~default:"None"));
+      ("broader_context", JSON_String broader_context);
+    ]
+  in
+  let ac_typing_artifacts =
+    match parse_result with
+    | (None, _parse_errors) -> None
+    | (Some parse_artifacts, _errs) ->
+      let (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ }) = parse_artifacts in
+      let (cx, available_ast) =
+        type_check_for_autocomplete ~options ~profiling env.master_cx filename parse_artifacts
+      in
+      Some (info, file_sig, ast, parse_errors, cx, available_ast)
+  in
+  let ac_result =
+    match ac_typing_artifacts with
+    | None -> None
+    | Some (info, file_sig, ast, parse_errors, cx, available_ast) ->
+      let open AutocompleteService_js in
+      let (token_opt, ac_loc, ac_type_string, results_res) =
+        Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
+            let typing =
+              AutocompleteService_js.mk_typing_artifacts
+                ~layout_options:(Code_action_utils.layout_options options)
+                ~module_system_info:(mk_module_system_info ~options ~reader)
+                ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+                ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
+                ~search_exported_values:(search_exported_values ~exports:env.ServerEnv.exports)
+                ~search_exported_types:(search_exported_types ~exports:env.ServerEnv.exports)
+                ~cx
+                ~file_sig
+                ~ast
+                ~available_ast
+            in
+            let ac_options =
+              {
+                AutocompleteService_js.imports;
+                imports_min_characters;
+                imports_ranked_usage;
+                imports_ranked_usage_boost_exact_match_min_length;
+                show_ranking_info;
+              }
+            in
+            autocomplete_get_results typing ac_options trigger_character cursor_loc
+        )
+      in
+      Some (info, parse_errors, token_opt, ac_loc, ac_type_string, results_res)
+  in
+  (* Make sure hooks are unset *after* we've gotten the results to account for
+   * on-demand type checking. *)
+  Autocomplete_js.autocomplete_unset_hooks ();
+  (initial_json_props, ac_result)
+
 let autocomplete
     ~trigger_character
     ~reader
@@ -429,72 +509,22 @@ let autocomplete
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
   | Ok (filename, contents) ->
-    let cursor_loc =
-      let (line, column) = cursor in
-      Loc.cursor (Some filename) line column
+    let (initial_json_props, ac_result) =
+      autocomplete_on_parsed
+        ~filename
+        ~contents
+        ~trigger_character
+        ~reader
+        ~options
+        ~env
+        ~profiling
+        ~cursor
+        ~imports
+        ~imports_min_characters
+        ~imports_ranked_usage
+        ~imports_ranked_usage_boost_exact_match_min_length
+        ~show_ranking_info
     in
-    let (contents, broader_context) =
-      let (line, column) = cursor in
-      Autocomplete_sigil.add contents line column
-    in
-    Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
-    let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
-    let initial_json_props =
-      let open Hh_json in
-      [
-        ("ac_trigger", JSON_String (Base.Option.value trigger_character ~default:"None"));
-        ("broader_context", JSON_String broader_context);
-      ]
-    in
-    let ac_typing_artifacts =
-      match parse_result with
-      | (None, _parse_errors) -> None
-      | (Some parse_artifacts, _errs) ->
-        let (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ }) =
-          parse_artifacts
-        in
-        let (cx, available_ast) =
-          type_check_for_autocomplete ~options ~profiling env.master_cx filename parse_artifacts
-        in
-        Some (info, file_sig, ast, parse_errors, cx, available_ast)
-    in
-    let ac_result =
-      match ac_typing_artifacts with
-      | None -> None
-      | Some (info, file_sig, ast, parse_errors, cx, available_ast) ->
-        let open AutocompleteService_js in
-        let (token_opt, ac_loc, ac_type_string, results_res) =
-          Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
-              let typing =
-                AutocompleteService_js.mk_typing_artifacts
-                  ~layout_options:(Code_action_utils.layout_options options)
-                  ~module_system_info:(mk_module_system_info ~options ~reader)
-                  ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-                  ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-                  ~search_exported_values:(search_exported_values ~exports:env.ServerEnv.exports)
-                  ~search_exported_types:(search_exported_types ~exports:env.ServerEnv.exports)
-                  ~cx
-                  ~file_sig
-                  ~ast
-                  ~available_ast
-              in
-              let ac_options =
-                {
-                  AutocompleteService_js.imports;
-                  imports_min_characters;
-                  imports_ranked_usage;
-                  imports_ranked_usage_boost_exact_match_min_length;
-                  show_ranking_info;
-                }
-              in
-              autocomplete_get_results typing ac_options trigger_character cursor_loc
-          )
-        in
-        Some (info, parse_errors, token_opt, ac_loc, ac_type_string, results_res)
-    in
-    (* Make sure hooks are unset *after* we've gotten the results to account for
-     * on-demand type checking. *)
-    Autocomplete_js.autocomplete_unset_hooks ();
     json_of_autocomplete_result initial_json_props ac_result
 
 let check_file ~options ~env ~profiling ~force file_input =
