@@ -44,17 +44,20 @@ type single_client = {
   mutable outstanding_handlers: unit Lsp.lsp_handler Lsp.IdMap.t;
   mutable autocomplete_token: autocomplete_token option;
   mutable autocomplete_session_length: int;
+  autocomplete_artifacts_cache:
+    (Types_js_types.autocomplete_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
 }
 
 type t = Prot.client_id list
 
 let cache_max_size = 10
 
-let remove_cache_entry client filename =
+let remove_cache_entry ~autocomplete client filename =
   (* get_def, coverage, etc. all construct a File_key.SourceFile, which is then used as a key
      * here. *)
   let file_key = File_key.SourceFile filename in
-  FilenameCache.remove_entry file_key client.type_parse_artifacts_cache
+  FilenameCache.remove_entry file_key client.type_parse_artifacts_cache;
+  if autocomplete then FilenameCache.remove_entry file_key client.autocomplete_artifacts_cache
 
 let active_clients : single_client IMap.t ref = ref IMap.empty
 
@@ -132,6 +135,7 @@ let add_client client_id lsp_initialize_params =
       outstanding_handlers = Lsp.IdMap.empty;
       autocomplete_token = None;
       autocomplete_session_length = 0;
+      autocomplete_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
     }
   in
   active_clients := IMap.add client_id new_client !active_clients;
@@ -192,7 +196,7 @@ let client_did_open (client : single_client) ~(files : (string * string) Nel.t) 
   (match Nel.length files with
   | 1 -> Hh_logger.info "Client #%d opened %s" client.client_id (files |> Nel.hd |> fst)
   | len -> Hh_logger.info "Client #%d opened %d files" client.client_id len);
-  Nel.iter (fun (filename, _content) -> remove_cache_entry client filename) files;
+  Nel.iter (fun (filename, _content) -> remove_cache_entry ~autocomplete:true client filename) files;
   let add_file acc (filename, content) = SMap.add filename content acc in
   let new_opened_files = Nel.fold_left add_file client.opened_files files in
   (* SMap.add ensures physical equality if the map is unchanged, since 4.0.3,
@@ -210,7 +214,7 @@ let client_did_change
     (fn : string)
     (changes : Lsp.DidChange.textDocumentContentChangeEvent list) :
     (unit, string * Utils.callstack) result =
-  remove_cache_entry client fn;
+  remove_cache_entry ~autocomplete:false client fn;
   try
     let content = SMap.find fn client.opened_files in
     match Lsp_helpers.apply_changes content changes with
@@ -229,7 +233,7 @@ let client_did_close (client : single_client) ~(filenames : string Nel.t) : bool
   (match Nel.length filenames with
   | 1 -> Hh_logger.info "Client #%d closed %s" client.client_id (filenames |> Nel.hd)
   | len -> Hh_logger.info "Client #%d closed %d files" client.client_id len);
-  Nel.iter (remove_cache_entry client) filenames;
+  Nel.iter (remove_cache_entry ~autocomplete:true client) filenames;
   let remove_file acc filename = SMap.remove filename acc in
   let new_opened_files = Nel.fold_left remove_file client.opened_files filenames in
   (* SMap.remove ensures physical equality if the set is unchanged,
@@ -289,9 +293,13 @@ let client_config client = client.client_config
 
 let type_parse_artifacts_cache client = client.type_parse_artifacts_cache
 
+let autocomplete_artifacts_cache client = client.autocomplete_artifacts_cache
+
 let clear_type_parse_artifacts_caches () =
   IMap.iter
-    (fun _key client -> FilenameCache.clear client.type_parse_artifacts_cache)
+    (fun _key client ->
+      FilenameCache.clear client.type_parse_artifacts_cache;
+      FilenameCache.clear client.autocomplete_artifacts_cache)
     !active_clients
 
 let push_outstanding_handler client id handler =

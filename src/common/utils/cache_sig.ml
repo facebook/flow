@@ -23,5 +23,5 @@ module type S = sig
    * missed. *)
   val with_cache : key -> 'a Lwt.t Lazy.t -> 'a t -> ('a * bool) Lwt.t
 
-  val with_cache_sync : key -> 'a Lazy.t -> 'a t -> 'a * bool
+  val with_cache_sync : cond:('a -> bool) -> key -> 'a Lazy.t -> 'a t -> 'a * bool
 end

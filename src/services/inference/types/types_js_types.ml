@@ -25,6 +25,9 @@ type typecheck_artifacts =
 
 type file_artifacts = parse_artifacts * typecheck_artifacts
 
+type autocomplete_artifacts =
+  string (* contents *) * parse_artifacts * Context.t * Typed_ast_utils.available_ast
+
 type duration = float
 
 type check_type_result =

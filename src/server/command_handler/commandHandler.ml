@@ -45,7 +45,9 @@ let type_parse_artifacts_with_cache
            (Lazy.force artifacts)
         )
     in
-    let (result, did_hit) = FilenameCache.with_cache_sync file lazy_result cache in
+    let (result, did_hit) =
+      FilenameCache.with_cache_sync ~cond:(fun _ -> true) file lazy_result cache
+    in
     (result, Some did_hit)
 
 let add_cache_hit_data_to_json json_props did_hit =
@@ -407,6 +409,28 @@ let type_check_for_autocomplete ~options ~profiling master_cx filename parse_art
     in
     (cx, Typed_ast_utils.ALoc_ast aloc_ast)
 
+let type_parse_artifacts_for_ac_with_cache
+    ~options ~profiling ~type_parse_artifacts_cache ~cached master_cx file contents artifacts =
+  let type_parse_artifacts =
+    lazy
+      (match Lazy.force artifacts with
+      | (None, errs) -> Error errs
+      | (Some parse_artifacts, _errs) ->
+        let (cx, available_ast) =
+          type_check_for_autocomplete ~options ~profiling master_cx file parse_artifacts
+        in
+        Ok (contents, parse_artifacts, cx, available_ast))
+  in
+  let cond = function
+    | Error _ -> false (* we can't tell there's a match *)
+    | Ok (contents', _, _, _) -> contents = contents'
+  in
+  match type_parse_artifacts_cache with
+  | Some cache when cached ->
+    let (result, did_hit) = FilenameCache.with_cache_sync ~cond file type_parse_artifacts cache in
+    (result, Some did_hit)
+  | _ -> (Lazy.force type_parse_artifacts, None)
+
 let autocomplete_on_parsed
     ~filename
     ~contents
@@ -414,6 +438,7 @@ let autocomplete_on_parsed
     ~reader
     ~options
     ~env
+    ~client
     ~profiling
     ~cursor
     ~imports
@@ -440,7 +465,6 @@ let autocomplete_on_parsed
     Base.Option.value_map ~default:cursor_loc ~f:Autocomplete_sigil.Canonical.cursor canon_token
   in
   Autocomplete_js.autocomplete_set_hooks ~cursor:canon_cursor;
-  let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
   let initial_json_props =
     let open Hh_json in
     [
@@ -448,14 +472,29 @@ let autocomplete_on_parsed
       ("broader_context", JSON_String broader_context);
     ]
   in
+  let type_parse_artifacts_cache =
+    Base.Option.map client ~f:Persistent_connection.autocomplete_artifacts_cache
+  in
+  (* Parse the canonical contents into a canonical AST. *)
+  let parse_result = lazy (Type_contents.parse_contents ~options ~profiling contents filename) in
+  (* Perform type inference over the canonical AST. *)
+  let (file_artifacts_result, did_hit) =
+    type_parse_artifacts_for_ac_with_cache
+      ~options
+      ~profiling
+      ~type_parse_artifacts_cache
+      ~cached:canonical
+      env.master_cx
+      filename
+      contents
+      parse_result
+  in
+  let initial_json_props = add_cache_hit_data_to_json initial_json_props did_hit in
   let ac_typing_artifacts =
-    match parse_result with
-    | (None, _parse_errors) -> None
-    | (Some parse_artifacts, _errs) ->
+    match file_artifacts_result with
+    | Error _ -> None
+    | Ok (_contents, parse_artifacts, cx, available_ast) ->
       let (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ }) = parse_artifacts in
-      let (cx, available_ast) =
-        type_check_for_autocomplete ~options ~profiling env.master_cx filename parse_artifacts
-      in
       Some (info, file_sig, ast, parse_errors, cx, available_ast)
   in
   let ac_result =
@@ -502,6 +541,7 @@ let autocomplete
     ~reader
     ~options
     ~env
+    ~client
     ~profiling
     ~input
     ~cursor
@@ -527,6 +567,7 @@ let autocomplete
         ~reader
         ~options
         ~env
+        ~client
         ~profiling
         ~cursor
         ~imports
@@ -1213,6 +1254,7 @@ let handle_autocomplete
           ~reader
           ~options
           ~env
+          ~client:None
           ~profiling
           ~input
           ~cursor
@@ -2334,6 +2376,7 @@ let handle_persistent_autocomplete_lsp
       ~reader
       ~options
       ~env
+      ~client:(Some client)
       ~profiling
       ~input:file_input
       ~cursor:(line, char)

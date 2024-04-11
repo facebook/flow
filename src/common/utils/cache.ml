@@ -76,12 +76,12 @@ module Make (Map : WrappedMap.S) = struct
       Lwt.return (value, false)
     | Some result -> Lwt.return (result, true)
 
-  let with_cache_sync key value cache =
+  let with_cache_sync ~cond key value cache =
     let cached_result = get_from_cache key cache in
     match cached_result with
-    | None ->
+    | Some result when cond result -> (result, true)
+    | _ ->
       let value = Lazy.force value in
       add_after_miss key value cache;
       (value, false)
-    | Some result -> (result, true)
 end
