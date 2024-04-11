@@ -642,7 +642,11 @@ and component_ast_visitor cx is_hook rrid =
         | NotR r -> not (not_refines_safe r)
         | SentinelR ("current", loc) ->
           is_nullish
-            (Type_env.find_write cx Env_api.ExpressionLoc (Reason.mk_reason (RCustom "") loc))
+            (Type_env.find_write
+               cx
+               Env_api.ExpressionLoc
+               (mk_reason (RMember { object_ = "ref"; property = "current" }) loc)
+            )
         | PropNullishR { propname = "current"; _ } -> true
         | _ -> false
       and not_refines_safe refi =
