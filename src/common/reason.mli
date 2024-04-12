@@ -123,7 +123,6 @@ type 'loc virtual_reason_desc =
   | RRestParameter of string option
   | RPatternParameter of string
   | RIdentifier of name
-  | RUnknownParameter of string
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option
   | RProperty of name option

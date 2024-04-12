@@ -1190,30 +1190,6 @@ let rec make_error_printable :
               code (string_of_int n);
               text " characters are not treated as literals";
             ]
-        | (RUnknownParameter n, _) ->
-          let message =
-            [
-              ref lower;
-              text " is incompatible with ";
-              ref upper;
-              text " (consider adding a type annotation to ";
-              ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) lower);
-              text ")";
-            ]
-          in
-          make_error lower message
-        | (_, RUnknownParameter n) ->
-          let message =
-            [
-              ref lower;
-              text " is incompatible with ";
-              ref upper;
-              text " (consider adding a type annotation to ";
-              ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) upper);
-              text ")";
-            ]
-          in
-          make_error lower message
         | _ -> make_error lower [ref lower; text " is incompatible with "; ref upper]
       end)
   in
