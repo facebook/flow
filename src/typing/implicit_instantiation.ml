@@ -1603,23 +1603,28 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
 
   let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
     if
-      Context.in_implicit_instantiation cx
-      && (Tvar_resolver.has_unresolved_tvars_or_placeholders cx check_t
-         || Tvar_resolver.has_unresolved_tvars_or_placeholders cx extends_t
-         || Tvar_resolver.has_unresolved_tvars_or_placeholders cx true_t
-         || Tvar_resolver.has_unresolved_tvars_or_placeholders cx false_t
-         )
+      Tvar_resolver.has_placeholders cx check_t
+      || Tvar_resolver.has_placeholders cx extends_t
+      || Tvar_resolver.has_placeholders cx true_t
+      || Tvar_resolver.has_placeholders cx false_t
     then (
       Debug_js.Verbose.print_if_verbose
         cx
-        [
-          "Conditional type refuses to evaluate because ";
-          "we are in implicit instantiation, and we don't have fully resolved inputs";
-        ];
+        ["Conditional type refuses to evaluate because we have placeholders"];
+      (* Placeholder in, placeholder out *)
+      Context.mk_placeholder cx reason
+    ) else if
+        Context.in_implicit_instantiation cx
+        && (Tvar_resolver.has_unresolved_tvars cx check_t
+           || Tvar_resolver.has_unresolved_tvars cx extends_t
+           || Tvar_resolver.has_unresolved_tvars cx true_t
+           || Tvar_resolver.has_unresolved_tvars cx false_t
+           )
+      then
       (* When we are in nested instantiation, we can't meaningfully decide which branch to take,
          so we will give up and produce placeholder instead. *)
       Context.mk_placeholder cx reason
-    ) else
+    else
       let t =
         match
           Context.run_in_implicit_instantiation_mode cx (fun () ->
