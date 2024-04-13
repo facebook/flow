@@ -16,13 +16,25 @@ switch (o.p) {
     break;
 }
 
-if (x === 'foo') {}
-if (x === 'bar') {} // Error
-if (x === 1) {} // Error
+function literal_in_right() {
+  if (x === 'foo') {}
+  if (x === 'bar') {} // Error
+  if (x === 1) {} // Error
 
-if (o.p === 'foo') {}
-if (o.p === 'bar') {} // Error
-if (o.p === 1) {} // Error
+  if (o.p === 'foo') {}
+  if (o.p === 'bar') {} // Error
+  if (o.p === 1) {} // Error
+}
+
+function literal_in_left() {
+  if ('foo' === x) {}
+  if ('bar' === x) {} // Error
+  if (1 === x) {} // Error
+
+  if ('foo' === o.p) {}
+  if ('bar' === o.p) {} // Error
+  if (1 === o.p) {} // Error
+}
 
 // Even if the predicate is not used in refinements, we still error on literal subtyping
 if (true && (false || x === 'bar')) {} // Error
