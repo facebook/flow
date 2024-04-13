@@ -562,20 +562,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (((_, false_t), _) as false_type) = convert env false_type in
       let t =
         let reason = mk_reason RConditionalType loc in
-        let use_op =
-          Op
-            (ConditionalTypeEval
-               {
-                 check_type_reason = reason_of_t check_t;
-                 extends_type_reason = reason_of_t extends_t;
-               }
-            )
-        in
         let destructor =
           ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
         in
         let cx = env.cx in
-        mk_type_destructor cx use_op reason check_t destructor (mk_eval_id cx loc)
+        mk_type_destructor cx unknown_use reason check_t destructor (mk_eval_id cx loc)
       in
       ( (loc, t),
         Conditional { Conditional.check_type; extends_type; true_type; false_type; comments }

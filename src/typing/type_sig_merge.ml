@@ -807,20 +807,11 @@ and merge_annot env file = function
       in
       let true_t = merge { env with tps = tps_for_true_type } file true_type in
       let false_t = merge env file false_type in
-      let use_op =
-        Type.Op
-          (Type.ConditionalTypeEval
-             {
-               check_type_reason = TypeUtil.reason_of_t check_t;
-               extends_type_reason = TypeUtil.reason_of_t extends_t;
-             }
-          )
-      in
       Type.(
         EvalT
           ( check_t,
             TypeDestructorT
-              ( use_op,
+              ( unknown_use,
                 reason,
                 ConditionalType
                   { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }

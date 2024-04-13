@@ -617,12 +617,6 @@ let rec make_error_printable :
           frames
           bound
           [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
-      | Op (ConditionalTypeEval { check_type_reason; extends_type_reason }) ->
-        root
-          loc
-          frames
-          check_type_reason
-          [text "Cannot check "; desc check_type_reason; text " against "; desc extends_type_reason]
       | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
       | Op (JSXCreateElement { op; component; _ }) ->
         root_with_specific_reason

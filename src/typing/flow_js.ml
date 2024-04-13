@@ -8919,7 +8919,6 @@ struct
               | GetProperty _
               | IndexedTypeAccess _
               | InferBoundCompatibilityCheck _
-              | ConditionalTypeEval _
               | EvalMappedType _
               | SetProperty _
               | UpdateProperty _

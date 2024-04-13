@@ -399,10 +399,6 @@ module rec TypeTerm : sig
         _object: 'loc virtual_reason;
         index: 'loc virtual_reason;
       }
-    | ConditionalTypeEval of {
-        check_type_reason: 'loc virtual_reason;
-        extends_type_reason: 'loc virtual_reason;
-      }
     | InitField of {
         op: 'loc virtual_reason;
         body: 'loc virtual_reason;
@@ -4135,7 +4131,6 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | GetProperty _ -> "GetProperty"
   | IndexedTypeAccess _ -> "IndexedTypeAccess"
   | InferBoundCompatibilityCheck _ -> "InferBoundCompatibilityCheck"
-  | ConditionalTypeEval _ -> "ConditionalTypeEval"
   | JSXCreateElement _ -> "JSXCreateElement"
   | ReactCreateElementCall _ -> "ReactCreateElementCall"
   | ReactGetIntrinsic _ -> "ReactGetIntrinsic"
