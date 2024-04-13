@@ -273,22 +273,22 @@ Cannot compare string [1] with property `type` of `o` [2] because: [incompatible
  - Or string [1] is incompatible with string literal `baz` [5].
 
    test.js:75:8
-   75|   case 'qux': // error
-              ^^^^^ [1]
+    75|   case 'qux': // error
+               ^^^^^ [1]
 
 References:
-   test.js:59:13
-   59| declare var o: DisjointUnion;
-                   ^ [2]
+   test.js:110:20
+   110| if (KeyObj.ERR === o.type) {} // error
+                           ^ [2]
    test.js:58:30
-   58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                    ^^^^^ [3]
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                     ^^^^^ [3]
    test.js:58:48
-   58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                      ^^^^^ [4]
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                       ^^^^^ [4]
    test.js:58:66
-   58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                                        ^^^^^ [5]
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                         ^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:76:6
@@ -316,22 +316,22 @@ Cannot compare number [1] with property `type` of `o` [2] because: [incompatible
  - Or number [1] is incompatible with string literal `baz` [5].
 
    test.js:85:8
-   85|   case 3: // error
-              ^ [1]
+    85|   case 3: // error
+               ^ [1]
 
 References:
-   test.js:59:13
-   59| declare var o: DisjointUnion;
-                   ^ [2]
+   test.js:110:20
+   110| if (KeyObj.ERR === o.type) {} // error
+                           ^ [2]
    test.js:58:30
-   58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                    ^^^^^ [3]
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                     ^^^^^ [3]
    test.js:58:48
-   58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                      ^^^^^ [4]
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                       ^^^^^ [4]
    test.js:58:66
-   58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
-                                                                        ^^^^^ [5]
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                         ^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:90:11
@@ -482,9 +482,9 @@ Cannot compare number [1] with property `field` of `obj` [2] because number [1] 
                                             ^ [1]
 
 References:
-   test.js:98:13
-   98| declare var obj: Obj;
-                   ^^^ [2]
+   test.js:99:24
+   99| if (obj.field === 1 || obj.field === 2) {} // error
+                              ^^^ [2]
    test.js:97:22
    97| type Obj = { field : string };
                             ^^^^^^ [3]
@@ -508,24 +508,6 @@ References:
                              ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:100:38
-
-Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
-[incompatible-type]
-
-   test.js:100:38
-   100| if (obj.field === 1 && obj.field === 2) {} // error
-                                             ^ [1]
-
-References:
-   test.js:98:13
-    98| declare var obj: Obj;
-                    ^^^ [2]
-   test.js:97:22
-    97| type Obj = { field : string };
-                             ^^^^^^ [3]
-
-
 Error --------------------------------------------------------------------------------------------------- test.js:109:16
 
 Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
@@ -538,9 +520,38 @@ Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incomp
                        ^^^^^^^^^^ [1]
 
 References:
-   test.js:59:13
-    59| declare var o: DisjointUnion;
-                    ^ [2]
+   test.js:110:20
+   110| if (KeyObj.ERR === o.type) {} // error
+                           ^ [2]
+   test.js:106:10
+   106|   "ERR": 'err',
+                 ^^^^^ [3]
+   test.js:58:30
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                     ^^^^^ [4]
+   test.js:58:48
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                       ^^^^^ [5]
+   test.js:58:66
+    58| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                         ^^^^^ [6]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:110:5
+
+Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
+ - Either string [3] is incompatible with string literal `foo` [4].
+ - Or string [3] is incompatible with string literal `bar` [5].
+ - Or string [3] is incompatible with string literal `baz` [6].
+
+   test.js:110:5
+   110| if (KeyObj.ERR === o.type) {} // error
+            ^^^^^^^^^^ [1]
+
+References:
+   test.js:110:20
+   110| if (KeyObj.ERR === o.type) {} // error
+                           ^ [2]
    test.js:106:10
    106|   "ERR": 'err',
                  ^^^^^ [3]
@@ -567,9 +578,9 @@ Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incomp
                ^^^^^^^^^^ [1]
 
 References:
-   test.js:59:13
-    59| declare var o: DisjointUnion;
-                    ^ [2]
+   test.js:110:20
+   110| if (KeyObj.ERR === o.type) {} // error
+                           ^ [2]
    test.js:106:10
    106|   "ERR": 'err',
                  ^^^^^ [3]

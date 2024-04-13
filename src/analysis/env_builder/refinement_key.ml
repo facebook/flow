@@ -21,16 +21,18 @@ module type REFINEMENT_KEY = sig
     projections: proj list;
   }
 
-  type t = {
-    loc: L.t;
+  type 'b t_ = {
+    loc: 'b;
     lookup: lookup;
   }
+
+  type t = L.t t_
 
   val debug_string_of_t : t -> string
 
   val of_optional_chain : ('a, L.t) Ast.Expression.t -> t option
 
-  val of_expression : ('a, L.t) Ast.Expression.t -> t option
+  val of_expression : ('a, 'b) Ast.Expression.t -> 'b t_ option
 
   val of_argument : ('a, L.t) Ast.Expression.expression_or_spread -> t option
 
@@ -62,10 +64,12 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
     projections: proj list;
   }
 
-  and t = {
-    loc: L.t;
+  type 'b t_ = {
+    loc: 'b;
     lookup: lookup;
   }
+
+  type t = L.t t_
 
   (* These functions are all either slightly modified or directly copied from src/typing/refinement.ml.
    * Eventually this module will replace that one. *)

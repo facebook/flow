@@ -221,9 +221,9 @@ Cannot compare string [1] with property `p` of `o` [2] because string [1] is inc
                                      ^^^^^ [1]
 
 References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+   test.js:41:23
+   41| if (true && (false || o.p === 'bar')) {} // Error
+                             ^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -254,9 +254,9 @@ Cannot compare number [1] with property `p` of `o` [2] because number [1] is inc
                                      ^ [1]
 
 References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+   test.js:41:23
+   41| if (true && (false || o.p === 'bar')) {} // Error
+                             ^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]

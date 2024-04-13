@@ -268,14 +268,10 @@ let detect_matching_props_violations cx =
     | _ -> false
   in
   let matching_props_checks =
-    Base.List.filter_map (Context.matching_props cx) ~f:(fun (prop_name, other_loc, obj_loc) ->
-        let sentinel = Type_env.checked_find_loc_env_write cx Env_api.ExpressionLoc other_loc in
+    Base.List.filter_map (Context.matching_props cx) ~f:(fun (prop_name, sentinel, obj_t) ->
         match peek cx sentinel with
         (* Limit the check to promitive literal sentinels *)
-        | [t] when is_lit t ->
-          let env = Context.environment cx in
-          let obj_t = Type_env.provider_type_for_def_loc cx env obj_loc in
-          Some (TypeUtil.reason_of_t sentinel, prop_name, sentinel, obj_t)
+        | [t] when is_lit t -> Some (TypeUtil.reason_of_t sentinel, prop_name, sentinel, obj_t)
         | _ -> None
     )
   in

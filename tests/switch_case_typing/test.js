@@ -107,7 +107,7 @@ const KeyObj = {
 };
 
 if (o.type === KeyObj.ERR) {} // error
-if (KeyObj.ERR === o.type) {} // TODO error
+if (KeyObj.ERR === o.type) {} // error
 
 switch (o.type) {
   case KeyObj.FOO:

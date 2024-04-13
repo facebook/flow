@@ -257,7 +257,7 @@ val ts_syntax : t -> bool
 
 val type_graph : t -> Graph_explorer.graph
 
-val matching_props : t -> (string * ALoc.t * ALoc.t) list
+val matching_props : t -> (string * Type.t * Type.t) list
 
 val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
 
@@ -333,7 +333,7 @@ val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
 val mk_placeholder : t -> Reason.t -> Type.t
 
-val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
+val add_matching_props : t -> string * Type.t * Type.t -> unit
 
 val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 

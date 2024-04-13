@@ -4937,14 +4937,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             (match (RefinementKey.of_expression _object, sentinel) with
             | (Some refinement_key, Some sentinel) ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
-              ( if RefinementKey.(refinement_key.lookup.projections) = [] then
-                let { val_ref = _; def_loc; _ } =
-                  this#env_read RefinementKey.(refinement_key.lookup.base)
-                in
-                Base.Option.iter def_loc ~f:(fun def_loc ->
-                    Context.add_matching_props cx (prop_name, other_loc, def_loc)
-                )
-              );
               let write_entries =
                 EnvMap.add
                   (Env_api.ExpressionLoc, other_loc)
@@ -4996,14 +4988,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             (match RefinementKey.of_expression _object with
             | Some refinement_key ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
-              ( if RefinementKey.(refinement_key.lookup.projections) = [] then
-                let { val_ref = _; def_loc; _ } =
-                  this#env_read RefinementKey.(refinement_key.lookup.base)
-                in
-                Base.Option.iter def_loc ~f:(fun def_loc ->
-                    Context.add_matching_props cx (prop_name, other_loc, def_loc)
-                )
-              );
               let write_entries =
                 EnvMap.add
                   (Env_api.ExpressionLoc, other_loc)

@@ -174,7 +174,7 @@ type component_t = {
   instantiation_stack: TypeAppExpansion.entry list ref;
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
-  mutable matching_props: (string * ALoc.t * ALoc.t) list;
+  mutable matching_props: (string * Type.t * Type.t) list;
   mutable post_component_tvar_forcing_states: Type.Constraint.ForcingState.t list;
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;

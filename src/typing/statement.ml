@@ -4640,6 +4640,31 @@ module Make
         left
         right
 
+  and matching_prop_check cx left right =
+    let open Ast.Expression in
+    let left =
+      match left with
+      | (annot, OptionalMember { OptionalMember.member; _ }) -> (annot, Member member)
+      | _ -> left
+    in
+    match left with
+    | ( _,
+        Member
+          {
+            Member._object = ((_, obj_t), _) as obj;
+            property =
+              ( Member.PropertyIdentifier (_, { Ast.Identifier.name = pname; _ })
+              | Member.PropertyExpression (_, StringLiteral { Ast.StringLiteral.value = pname; _ })
+                );
+            _;
+          }
+      ) ->
+      let ((_, other_t), _) = right in
+      Base.Option.iter (Eq_test.refinement_of_expr obj) ~f:(fun _ ->
+          Context.add_matching_props cx (pname, other_t, obj_t)
+      )
+    | _ -> ()
+
   (* traverse a binary expression, return result type *)
   and binary cx loc ~cond { Ast.Expression.Binary.operator; left; right; comments } =
     let open Ast.Expression.Binary in
@@ -4674,6 +4699,15 @@ module Make
       let reconstruct_ast = visit_eq_test cx ~cond loc left right in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
+      Base.Option.iter
+        ~f:(fun _ ->
+          matching_prop_check cx left right;
+          (* If this is a switch statement only consider the case where the object
+           * access in the discriminant. *)
+          match cond with
+          | Some (SwitchTest _) -> ()
+          | _ -> matching_prop_check cx right left)
+        cond;
       let desc =
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
