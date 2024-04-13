@@ -95,3 +95,21 @@ function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
   if (b3 !== true) {} // ok
   if (b3 !== false) {} // ok
 }
+
+function complex_expression (
+  x: () => Literal,
+  o: () => {p: Literal},
+  m: {p: {q: Literal}},
+) {
+  if (x() === 'foo') {}
+  if (x() === 'bar') {} // TODO Error
+  if (x() === 1) {} // TODO Error
+
+  if (o().p === 'foo') {}
+  if (o().p === 'bar') {} // Error
+  if (o().p === 1) {} // Error
+
+  if (m.p.q === 'foo') {}
+  if (m.p.q === 'bar') {} // Error
+  if (m.p.q === 1) {} // Error
+}

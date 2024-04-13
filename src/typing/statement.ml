@@ -4651,7 +4651,7 @@ module Make
     | ( _,
         Member
           {
-            Member._object = ((_, obj_t), _) as obj;
+            Member._object = ((_, obj_t), _);
             property =
               ( Member.PropertyIdentifier (_, { Ast.Identifier.name = pname; _ })
               | Member.PropertyExpression (_, StringLiteral { Ast.StringLiteral.value = pname; _ })
@@ -4660,9 +4660,7 @@ module Make
           }
       ) ->
       let ((_, other_t), _) = right in
-      Base.Option.iter (Eq_test.refinement_of_expr obj) ~f:(fun _ ->
-          Context.add_matching_props cx (pname, other_t, obj_t)
-      )
+      Context.add_matching_props cx (pname, other_t, obj_t)
     | _ -> ()
 
   (* traverse a binary expression, return result type *)

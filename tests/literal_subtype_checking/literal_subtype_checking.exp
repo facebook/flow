@@ -538,5 +538,77 @@ References:
                                                            ^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:109:17
 
-Found 32 errors
+Cannot compare string [1] with property `p` of call of `o` [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:109:17
+   109|   if (o().p === 'bar') {} // Error
+                        ^^^^^ [1]
+
+References:
+   test.js:109:7
+   109|   if (o().p === 'bar') {} // Error
+              ^^^ [2]
+   test.js:101:16
+   101|   o: () => {p: Literal},
+                       ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:110:17
+
+Cannot compare number [1] with property `p` of call of `o` [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:110:17
+   110|   if (o().p === 1) {} // Error
+                        ^ [1]
+
+References:
+   test.js:110:7
+   110|   if (o().p === 1) {} // Error
+              ^^^ [2]
+   test.js:101:16
+   101|   o: () => {p: Literal},
+                       ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:113:17
+
+Cannot compare string [1] with property `q` of `m.p` [2] because string [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:113:17
+   113|   if (m.p.q === 'bar') {} // Error
+                        ^^^^^ [1]
+
+References:
+   test.js:113:7
+   113|   if (m.p.q === 'bar') {} // Error
+              ^^^ [2]
+   test.js:102:14
+   102|   m: {p: {q: Literal}},
+                     ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:114:17
+
+Cannot compare number [1] with property `q` of `m.p` [2] because number [1] is incompatible with string literal
+`foo` [3]. [incompatible-type]
+
+   test.js:114:17
+   114|   if (m.p.q === 1) {} // Error
+                        ^ [1]
+
+References:
+   test.js:114:7
+   114|   if (m.p.q === 1) {} // Error
+              ^^^ [2]
+   test.js:102:14
+   102|   m: {p: {q: Literal}},
+                     ^^^^^^^ [3]
+
+
+
+Found 36 errors

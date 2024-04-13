@@ -48,15 +48,11 @@ let extract_bigint_literal node =
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
-  module RefinementKey : Refinement_key.REFINEMENT_KEY with module L = Loc_sig.ALocS
-
   val jsx_attributes_possible_sentinel_refinements :
     (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list -> Hint.sentinel_refinement SMap.t
 
   val object_properties_possible_sentinel_refinements :
     (ALoc.t, ALoc.t) Ast.Expression.Object.property list -> Hint.sentinel_refinement SMap.t
-
-  val refinement_of_expr : ('a, 'b) Ast.Expression.t -> 'b RefinementKey.t_ option
 
   val visit_eq_test :
     on_type_of_test:
@@ -182,8 +178,6 @@ module Make
         | _ -> acc)
       | Ast.Expression.Object.SpreadProperty _ -> acc
     )
-
-  let refinement_of_expr = RefinementKey.of_expression
 
   let visit_eq_test
       ~on_type_of_test
