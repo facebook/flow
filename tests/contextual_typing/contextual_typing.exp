@@ -1190,7 +1190,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `elem` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    unions.js:49:5
-   49|     elem as empty;
+   49|     elem as empty; // error number ~> empty
            ^^^^
 
 References:
@@ -1198,7 +1198,7 @@ References:
    46|   declare var mixedArray1: Array<string> | Array<number>;
                                         ^^^^^^ [1]
    unions.js:49:13
-   49|     elem as empty;
+   49|     elem as empty; // error number ~> empty
                    ^^^^^ [2]
 
 
@@ -1207,7 +1207,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    unions.js:49:5
-   49|     elem as empty;
+   49|     elem as empty; // error number ~> empty
            ^^^^
 
 References:
@@ -1215,26 +1215,43 @@ References:
    46|   declare var mixedArray1: Array<string> | Array<number>;
                                                         ^^^^^^ [1]
    unions.js:49:13
-   49|     elem as empty;
+   49|     elem as empty; // error number ~> empty
                    ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- unions.js:57:5
+Error --------------------------------------------------------------------------------------------------- unions.js:56:5
 
 Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   unions.js:57:5
-   57|     elem as empty;
+   unions.js:56:5
+   56|     elem as empty; // error number ~> empty
            ^^^^
 
 References:
-   unions.js:54:49
-   54|   declare var mixedArray2: Array<empty> | Array<number>;
+   unions.js:53:49
+   53|   declare var mixedArray2: Array<empty> | Array<number>;
                                                        ^^^^^^ [1]
-   unions.js:57:13
-   57|     elem as empty;
+   unions.js:56:13
+   56|     elem as empty; // error number ~> empty
                    ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- unions.js:62:5
 
-Found 89 errors
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   unions.js:62:5
+   62|     x as empty; // error number ~> empty
+           ^
+
+References:
+   unions.js:60:34
+   60|   declare var mixedArray3: Array<number> | Array<empty>;
+                                        ^^^^^^ [1]
+   unions.js:62:10
+   62|     x as empty; // error number ~> empty
+                ^^^^^ [2]
+
+
+
+Found 90 errors

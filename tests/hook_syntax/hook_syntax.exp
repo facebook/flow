@@ -1761,7 +1761,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:824:7
 
-Cannot assign function to `j` because function [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign function to `j` because function [1] is incompatible with empty [2]. [incompatible-type]
 
    rules_of_hooks.js:824:7
               v------------------------------

@@ -441,8 +441,8 @@ References:
 Error --------------------------------------------------------------------------------------- regression_tests.js:167:14
 
 Cannot assign `C` to `foo` because: [incompatible-type]
- - Either class `C` [1] is incompatible with number [2].
- - Or class `C` [1] is incompatible with undefined [2].
+ - Either class `C` [1] is incompatible with empty [2].
+ - Or class `C` [1] is incompatible with number [3].
 
    regression_tests.js:167:14
    167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
@@ -452,9 +452,12 @@ References:
    regression_tests.js:166:9
    166|   class C {
                 ^ [1]
+   regression_tests.js:167:8
+   167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+               ^^^ [2]
    regression_tests.js:167:44
    167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
-                                                   ^^^^^^ [2]
+                                                   ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------- synthesizable_object.js:2:38

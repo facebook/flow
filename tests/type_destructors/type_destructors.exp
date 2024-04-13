@@ -71,9 +71,9 @@ Cannot cast `0` to `$NonMaybeType` because number [1] is incompatible with empty
        ^ [1]
 
 References:
-   non_maybe_type.js:10:20
+   non_maybe_type.js:10:6
    10| 0 as $NonMaybeType<null>; // error
-                          ^^^^ [2]
+            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:1
@@ -113,9 +113,9 @@ Cannot cast `'hi'` to `$NonMaybeType` because string [1] is incompatible with em
        ^^^^ [1]
 
 References:
-   non_maybe_type.js:49:23
+   non_maybe_type.js:49:9
    49| 'hi' as $NonMaybeType<empty>; // Error
-                             ^^^^^ [2]
+               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:53:1
@@ -507,9 +507,9 @@ References:
    tvar5.js:4:28
    4| declare var foo: $ReadOnly<{foo: string}>;
                                  ^^^^^^^^^^^^^ [1]
-   tvar5.js:5:20
-   5| unReadOnly(foo) as empty; // error
-                         ^^^^^ [2]
+   tvar5.js:3:39
+   3| declare function unReadOnly<T>(thing: $ReadOnly<T>): T;
+                                            ^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:2:40

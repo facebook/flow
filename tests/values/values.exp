@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- classes.js:24:2
 
-Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:24:2
    24| ('yo': $Values<NoProps>); // Error: There are no properties.
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:25:2
 
-Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `123` to `$Values` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:25:2
    25| (123: $Values<NoProps>); // Error: There are no properties.
@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:26:3
 
-Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast function to `$Values` because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:26:3
    26| ((() => {}): $Values<NoProps>); // Error: There are no properties.
@@ -42,7 +42,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:27:2
 
-Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:27:2
    27| (true: $Values<NoProps>); // Error: There are no properties.
@@ -56,7 +56,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:29:2
 
-Cannot cast `'yo'` to `$Values` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'yo'` to `$Values` because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:29:2
    29| ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
@@ -70,7 +70,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:30:2
 
-Cannot cast `123` to `$Values` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `123` to `$Values` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:30:2
    30| (123: $Values<NoReadProps>); // Error: There are no readable properties.
@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:31:3
 
-Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast function to `$Values` because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:31:3
    31| ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
@@ -98,7 +98,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:32:2
 
-Cannot cast `true` to `$Values` because boolean [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `true` to `$Values` because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
    classes.js:32:2
    32| (true: $Values<NoReadProps>); // Error: There are no readable properties.
@@ -284,7 +284,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:4:2
 
-Cannot cast `123` to `NoProps` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `123` to `NoProps` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    object_types.js:4:2
    4| (123: NoProps); // Error: There are no props.
@@ -298,7 +298,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:5:2
 
-Cannot cast `345` to `NoReadProps` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `345` to `NoReadProps` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    object_types.js:5:2
    5| (345: NoReadProps); // Error: There are no props which can be read.
@@ -632,7 +632,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:121:2
 
-Cannot cast `1` to `$Values` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `1` to `$Values` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    object_types.js:121:2
    121| (1: $Values<IfaceWithWriteOnlyDict>); // ERROR

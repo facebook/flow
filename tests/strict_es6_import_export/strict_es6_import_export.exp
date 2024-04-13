@@ -303,7 +303,7 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
 
-Cannot assign `Foo` to `y` because module `./foo` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign `Foo` to `y` because module `./foo` [1] is incompatible with empty [2]. [incompatible-type]
 
    import_star_invalid_use.js:29:12
    29| const {y = Foo} = Foo;

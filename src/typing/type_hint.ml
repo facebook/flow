@@ -27,7 +27,7 @@ let in_sandbox_cx cx t ~f =
       let original_errors = Context.errors cx in
       let no_lowers _ = raise UnconstrainedTvarException in
       Context.reset_errors cx Flow_error.ErrorSet.empty;
-      match f (Tvar_resolver.resolved_t cx ~no_lowers t) with
+      match f (Tvar_resolver.resolved_t cx ~no_lowers ~filter_empty:false t) with
       | (exception Flow_js_utils.SpeculationSingletonError)
       | (exception UnconstrainedTvarException)
       | (exception DecompFuncParamOutOfBoundsException) ->
@@ -635,7 +635,7 @@ and fully_resolve_final_result cx t kind =
     EncounteredPlaceholder
   ) else
     let no_lowers _ = raise UnconstrainedTvarException in
-    match Tvar_resolver.resolved_t cx ~no_lowers t with
+    match Tvar_resolver.resolved_t cx ~no_lowers ~filter_empty:false t with
     | exception UnconstrainedTvarException -> DecompositionError
     | t -> HintAvailable (t, kind)
 

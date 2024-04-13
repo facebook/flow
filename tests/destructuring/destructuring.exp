@@ -1125,7 +1125,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:30
 
-Cannot assign string to `defaults` because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign string to `defaults` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_missing_props.js:3:30
    3| var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
@@ -1184,7 +1184,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:32
 
-Cannot assign string to `defaults2` because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign string to `defaults2` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_missing_props.js:9:32
    9| var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
@@ -1254,8 +1254,7 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:21:12
 
-Cannot assign string to `qux` because string [1] is incompatible with `void` (due to access of non-existent property
-`qux`) [2]. [incompatible-type]
+Cannot assign string to `qux` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_missing_props.js:21:12
    21| var {qux = 'string'} = obj; // Error, qux missing
@@ -1269,7 +1268,7 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:27:18
 
-Cannot assign string to `defaultProps` because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign string to `defaultProps` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_missing_props.js:27:18
    27|   defaultProps = 'default',

@@ -188,8 +188,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- abstract-enum-value.js:51:23
 
-Cannot assign `x` to `s` because enum [1] is incompatible with string [2]. You can explicitly cast your enum value to
-its representation type using `<expr>.valueOf()`. [incompatible-type]
+Cannot assign `x` to `s` because `EnumValue` [1] is incompatible with string [2]. You can explicitly cast your enum
+value to its representation type using `<expr>.valueOf()`. [incompatible-type]
 
    abstract-enum-value.js:51:23
    51|     const s: string = x; // ERROR

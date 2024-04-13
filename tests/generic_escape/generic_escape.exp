@@ -626,9 +626,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:75:10
 
-Cannot assign `y` to `x0` because mixed [1] is incompatible with unknown element of empty array [2]. All writes to `x0`
-must be compatible with the type of its initializer [3]. Add an annotation to `x0` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign `y` to `x0` because mixed [1] is incompatible with empty [2]. All writes to `x0` must be compatible with
+the type of its initializer [2]. Add an annotation to `x0` [2] if a different type is desired. [incompatible-type]
 
    misc.js:75:10
    75|     x0 = y;
@@ -638,12 +637,9 @@ References:
    misc.js:74:20
    74|   function f<X>(y: X) {
                           ^ [1]
-   misc.js:73:16
-   73| for (var x0 of []) {
-                      ^^ [2]
    misc.js:73:10
    73| for (var x0 of []) {
-                ^^ [3]
+                ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:81:10

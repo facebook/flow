@@ -111,7 +111,7 @@ let default_no_lowers r =
  * and are currently not detectable by the name_def_ordering checks since the cycle
  * involves an annotation.
  *)
-class resolver ~no_lowers =
+class resolver ~no_lowers ~filter_empty =
   object (this)
     inherit [ISet.t * ISet.t] Type_visitor.t as super
 
@@ -128,7 +128,7 @@ class resolver ~no_lowers =
         | _ when ISet.mem root_id seen -> (seen, ISet.empty)
         | _ ->
           let t =
-            match Flow_js_utils.merge_tvar_opt cx r root_id with
+            match Flow_js_utils.merge_tvar_opt ~filter_empty cx r root_id with
             | Some t -> t
             | None -> no_lowers r
           in
@@ -156,13 +156,13 @@ class resolver ~no_lowers =
       | t -> super#type_ cx pole (seen, ISet.empty) t
   end
 
-let resolve ?(no_lowers = default_no_lowers) cx t =
-  let resolver = new resolver ~no_lowers in
+let resolve ?(no_lowers = default_no_lowers) ?(filter_empty = true) cx t =
+  let resolver = new resolver ~no_lowers ~filter_empty in
   let (_ : ISet.t * ISet.t) = resolver#type_ cx Polarity.Positive (ISet.empty, ISet.empty) t in
   ()
 
-let resolved_t ?(no_lowers = default_no_lowers) cx t =
-  resolve ~no_lowers cx t;
+let resolved_t ?(no_lowers = default_no_lowers) ?(filter_empty = true) cx t =
+  resolve ~no_lowers ~filter_empty cx t;
   t
 
 let mk_tvar_and_fully_resolve_where cx reason f =
