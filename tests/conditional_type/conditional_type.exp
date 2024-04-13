@@ -1,3 +1,17 @@
+Error ------------------------------------------------------------------------------------ allow_underconstrained.js:7:1
+
+Cannot cast `1` to `Bar` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   allow_underconstrained.js:7:1
+   7| 1 as Bar; // error: Bar = string
+      ^ [1]
+
+References:
+   allow_underconstrained.js:7:6
+   7| 1 as Bar; // error: Bar = string
+           ^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- basic.js:3:35
 
 Cannot assign `0` to `num` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -1004,7 +1018,7 @@ References:
 
 
 
-Found 65 errors
+Found 66 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

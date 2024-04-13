@@ -1241,7 +1241,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           let tparam = Subst_name.Map.find name tparams_map in
           let polarity = Marked.get name marked_tparams in
           let { inferred; _ } =
-            pin_type cx ~use_op tparam polarity ~default_bound:None reason targ
+            pin_type cx ~use_op tparam polarity ~default_bound:(Some bound) reason targ
           in
           if speculative_subtyping_succeeds ~upper_unresolved:false unknown_use inferred bound then
             Base.Continue_or_stop.Continue (Subst_name.Map.add name inferred map)
