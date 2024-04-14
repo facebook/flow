@@ -158,7 +158,7 @@ static int win32_getpagesize(void) {
 #define WORD_SIZE sizeof(value)
 
 #define __ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
-#define ALIGN(x, a) __ALIGN_MASK(x, (typeof(x))(a)-1)
+#define ALIGN(x, a) __ALIGN_MASK(x, (typeof(x))(a) - 1)
 #define CACHE_ALIGN(x) ALIGN(x, CACHE_LINE_SIZE)
 #define WORD_ALIGN(x) ALIGN(x, WORD_SIZE)
 
@@ -330,7 +330,7 @@ static _Bool should_scan(hh_tag_t tag) {
 
 // During GC, we read words from the heap which might be an addr or a header,
 // and we need to distinguish between them.
-#define Is_addr(x) (((x)&0b11) == 0)
+#define Is_addr(x) (((x) & 0b11) == 0)
 
 // The low 2 bits of headers are reserved for GC. The white bit pattern
 // denotes an unmarked object, black denotes a marked object, and blue denotes a
@@ -339,7 +339,7 @@ static _Bool should_scan(hh_tag_t tag) {
 #define Color_black 0b11
 #define Color_blue 0b10
 
-#define Obj_color(hd) ((hd)&0b11)
+#define Obj_color(hd) ((hd) & 0b11)
 
 #define Is_white(hd) (Obj_color(hd) == Color_white)
 #define Is_black(hd) (Obj_color(hd) == Color_black)

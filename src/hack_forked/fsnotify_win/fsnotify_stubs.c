@@ -141,8 +141,8 @@ static value parse_events(struct events* events) {
       if (fileInfo->NextEntryOffset == 0)
         break;
       FILE_NOTIFY_INFORMATION* old = fileInfo;
-      fileInfo =
-          (FILE_NOTIFY_INFORMATION*)((char*)fileInfo + fileInfo->NextEntryOffset);
+      fileInfo = (FILE_NOTIFY_INFORMATION*)((char*)fileInfo +
+                                            fileInfo->NextEntryOffset);
       free(old);
     }
     // Next event
