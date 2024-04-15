@@ -566,7 +566,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
-      enum_kind: [ `ConcreteEnum | `AbstractEnum ];
+      enum_kind: enum_kind;
       representation_type: string option;
       casting_syntax: Options.CastingSyntax.t;
     }
@@ -710,6 +710,10 @@ and 'loc t' =
       arg: 'loc virtual_reason;
     }
   | ECannotCallReactComponent of { reason: 'loc virtual_reason }
+
+and enum_kind =
+  | ConcreteEnumKind
+  | AbstractEnumKind
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -2208,7 +2212,9 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
-      suggestion: Loc.t Flow_errors_utils.Friendly.message_feature list option;
+      enum_kind: enum_kind;
+      representation_type: string option;
+      casting_syntax: Options.CastingSyntax.t;
     }
   | PropMissing of {
       loc: 'loc;
@@ -4682,33 +4688,8 @@ let friendly_message_of_msg loc_of_aloc msg =
     Normal { features }
   | EEnumIncompatible
       { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
-    let suggestion =
-      match (enum_kind, representation_type) with
-      | (`ConcreteEnum, Some representation_type) ->
-        let example =
-          let open Options.CastingSyntax in
-          match casting_syntax with
-          | Colon -> spf "(<expr>: %s)" representation_type
-          | Both
-          | As ->
-            spf "<expr> as %s" representation_type
-        in
-        Some
-          [
-            text "You can explicitly cast your enum value to a ";
-            text representation_type;
-            text " using ";
-            code example;
-          ]
-      | (`AbstractEnum, _) ->
-        Some
-          [
-            text "You can explicitly cast your enum value to its representation type using ";
-            code "<expr>.valueOf()";
-          ]
-      | _ -> None
-    in
-    IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }
+    IncompatibleEnum
+      { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
   | EEnumInvalidAbstractUse { reason; enum_reason } ->
     let features =
       [

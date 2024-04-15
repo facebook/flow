@@ -960,8 +960,8 @@ end = struct
             Flow_error.ErrorSet.empty
         in
         let errors =
-          Flow_error.make_errors_printable
-            loc_of_aloc
+          Flow_intermediate_error.make_errors_printable
+            ~loc_of_aloc
             ~strip_root:(Some (Options.root options))
             errors
         in

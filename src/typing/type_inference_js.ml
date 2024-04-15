@@ -409,7 +409,7 @@ let infer_ast ~lint_severities cx filename metadata loc_comments aloc_ast =
   Context.add_severity_covers cx severity_cover;
   Context.add_error_suppressions cx suppressions;
   List.iter (Flow_js.add_output cx) suppression_errors;
-  Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
+  Context.reset_errors cx (Flow_intermediate_error.post_process_errors (Context.errors cx));
   tast
 
 class lib_def_loc_mapper_and_validator cx =
@@ -534,7 +534,7 @@ let infer_lib_file ~lint_severities cx file_key metadata loc_comments aloc_ast =
   Context.add_severity_covers cx severity_cover;
   Context.add_error_suppressions cx suppressions;
   List.iter (Flow_js.add_output cx) suppression_errors;
-  Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
+  Context.reset_errors cx (Flow_intermediate_error.post_process_errors (Context.errors cx));
   tast
 
 let infer_file ~lint_severities cx file_key metadata all_comments aloc_ast =

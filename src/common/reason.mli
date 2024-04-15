@@ -293,6 +293,8 @@ val is_constant_reason : 'loc virtual_reason -> bool
 
 val is_nullish_reason : 'loc virtual_reason -> bool
 
+val is_scalar_reason_desc : 'loc virtual_reason_desc -> bool
+
 val is_scalar_reason : 'loc virtual_reason -> bool
 
 val is_array_reason : 'loc virtual_reason -> bool
@@ -317,6 +319,8 @@ val loc_of_reason : 'loc virtual_reason -> 'loc
 val def_loc_of_reason : 'loc virtual_reason -> 'loc
 
 val annot_loc_of_reason : 'loc virtual_reason -> 'loc option
+
+val unwrap_reason_desc : 'loc virtual_reason_desc -> 'loc virtual_reason_desc
 
 val desc_of_reason : ?unwrap:bool -> 'loc virtual_reason -> 'loc virtual_reason_desc
 

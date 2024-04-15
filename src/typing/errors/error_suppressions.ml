@@ -307,7 +307,11 @@ let filter_suppressed_errors ~root ~file_options ~loc_of_aloc suppressions error
   (* Filter out suppressed errors. also track which suppressions are used. *)
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
-      let error = Flow_error.make_error_printable loc_of_aloc ~strip_root:(Some root) error in
+      let error =
+        error
+        |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
+        |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:(Some root)
+      in
       match check ~root ~file_options error suppressions unused with
       | None -> acc
       | Some (severity, used, unused) ->

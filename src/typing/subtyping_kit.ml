@@ -2251,8 +2251,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when TypeUtil.quick_subtype representation_t t ->
       let enum_kind =
         match enum with
-        | ConcreteEnum _ -> `ConcreteEnum
-        | AbstractEnum _ -> `AbstractEnum
+        | ConcreteEnum _ -> Error_message.ConcreteEnumKind
+        | AbstractEnum _ -> Error_message.AbstractEnumKind
       in
       let representation_type =
         match representation_t with

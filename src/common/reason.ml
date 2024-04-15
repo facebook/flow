@@ -810,18 +810,17 @@ let string_of_reason ?(strip_root = None) r =
 let dump_reason ?(strip_root = None) r =
   spf "%s: %S" (string_of_aloc ~strip_root (loc_of_reason r)) (string_of_desc r.desc)
 
-let desc_of_reason =
-  let rec loop = function
-    | RTypeAlias (_, _, desc)
-    | RUnionBranching (desc, _) ->
-      loop desc
-    | desc -> desc
-  in
-  fun ?(unwrap = true) r ->
-    if not unwrap then
-      r.desc
-    else
-      loop r.desc
+let rec unwrap_reason_desc = function
+  | RTypeAlias (_, _, desc)
+  | RUnionBranching (desc, _) ->
+    unwrap_reason_desc desc
+  | desc -> desc
+
+let desc_of_reason ?(unwrap = true) r =
+  if not unwrap then
+    r.desc
+  else
+    unwrap_reason_desc r.desc
 
 let internal_name name = InternalName name
 
@@ -1365,8 +1364,8 @@ let unknown_elem_empty_array_desc = RCustom "unknown element type of empty array
  *   of arrays and tuples.
  * - `Unclassified: Everything else which hasn't been classified yet.
  *)
-let classification_of_reason r =
-  match desc_of_reason ~unwrap:true r with
+let classification_of_reason_desc desc =
+  match unwrap_reason_desc desc with
   | RNumber
   | RBigInt
   | RString
@@ -1564,13 +1563,15 @@ let classification_of_reason r =
   | RTypeGuardParam _ ->
     `Unclassified
 
-let is_nullish_reason r = classification_of_reason r = `Nullish
+let is_nullish_reason r = classification_of_reason_desc r.desc = `Nullish
 
-let is_scalar_reason r =
-  let c = classification_of_reason r in
+let is_scalar_reason_desc desc =
+  let c = classification_of_reason_desc desc in
   c = `Scalar || c = `Nullish
 
-let is_array_reason r = classification_of_reason r = `Array
+let is_scalar_reason r = is_scalar_reason_desc r.desc
+
+let is_array_reason r = classification_of_reason_desc r.desc = `Array
 
 let invalidate_rtype_alias = function
   | RTypeAlias (name, Some _, desc) -> RTypeAlias (name, None, desc)

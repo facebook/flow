@@ -159,7 +159,9 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     in
     (errors, warnings)
   | Error errors ->
-    let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors in
+    let errors =
+      Flow_intermediate_error.make_errors_printable ~loc_of_aloc ~strip_root:(Some root) errors
+    in
     (errors, Flow_errors_utils.ConcreteLocPrintableErrorSet.empty)
 
 (** Resolves dependencies specifically for checking contents, rather than for

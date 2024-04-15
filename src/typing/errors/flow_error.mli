@@ -32,18 +32,3 @@ module ErrorSet : Flow_set.S with type elt = ALoc.t t
 module ConcreteErrorSet : Flow_set.S with type elt = Loc.t t
 
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
-
-val post_process_errors : ErrorSet.t -> ErrorSet.t
-
-val make_error_printable :
-  ('loc -> Loc.t) ->
-  strip_root:File_path.t option ->
-  ?speculation:bool ->
-  'loc t ->
-  Loc.t Flow_errors_utils.printable_error
-
-val make_errors_printable :
-  (ALoc.t -> Loc.t) ->
-  strip_root:File_path.t option ->
-  ErrorSet.t ->
-  Flow_errors_utils.ConcreteLocPrintableErrorSet.t

@@ -1874,8 +1874,8 @@ let dump_error_message =
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
         (match enum_kind with
-        | `ConcreteEnum -> "concrete"
-        | `AbstractEnum -> "abstract")
+        | ConcreteEnumKind -> "concrete"
+        | AbstractEnumKind -> "abstract")
         (Base.Option.value ~default:"<None>" representation_type)
     | EEnumInvalidAbstractUse { reason; enum_reason } ->
       spf "EEnumInvalidAbstractUse (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)

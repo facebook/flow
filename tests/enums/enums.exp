@@ -464,29 +464,6 @@ References:
 Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
 
 Cannot cast `BS.A` to union type because: [incompatible-cast]
- - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
-   `<expr> as boolean`.
- - Or `B` [1] is incompatible with string [3].
-
-   cast.js:65:1
-   65| BS.A as string | boolean; // Error
-       ^^^^
-
-References:
-   cast.js:3:6
-    3| enum B of boolean {
-            ^ [1]
-   cast.js:65:18
-   65| BS.A as string | boolean; // Error
-                        ^^^^^^^ [2]
-   cast.js:65:9
-   65| BS.A as string | boolean; // Error
-               ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
-
-Cannot cast `BS.A` to union type because: [incompatible-cast]
  - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
    `<expr> as string`.
  - Or `S` [1] is incompatible with boolean [3].
@@ -505,6 +482,29 @@ References:
    cast.js:65:18
    65| BS.A as string | boolean; // Error
                         ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
+
+Cannot cast `BS.A` to union type because: [incompatible-cast]
+ - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
+   `<expr> as boolean`.
+ - Or `B` [1] is incompatible with string [3].
+
+   cast.js:65:1
+   65| BS.A as string | boolean; // Error
+       ^^^^
+
+References:
+   cast.js:3:6
+    3| enum B of boolean {
+            ^ [1]
+   cast.js:65:18
+   65| BS.A as string | boolean; // Error
+                        ^^^^^^^ [2]
+   cast.js:65:9
+   65| BS.A as string | boolean; // Error
+               ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:68:1

@@ -194,13 +194,22 @@ module Friendly = struct
 
   let code s = Inline [Code s]
 
-  let desc_helper r =
-    let desc = desc_of_reason ~unwrap:(is_scalar_reason r) r in
+  let desc_of_reason_desc_help desc =
+    let desc =
+      if is_scalar_reason_desc desc then
+        unwrap_reason_desc desc
+      else
+        desc
+    in
     match desc with
     | RCode code -> [Code code]
     | _ -> message_inlines_of_string (string_of_desc desc)
 
+  let desc_helper r = desc_of_reason_desc_help (desc_of_reason ~unwrap:false r)
+
   let desc r = Inline (desc_helper r)
+
+  let desc_of_reason_desc desc = Inline (desc_of_reason_desc_help desc)
 
   let ref_map map_loc r =
     let desc = desc_helper r in

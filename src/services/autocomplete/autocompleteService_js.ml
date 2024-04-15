@@ -2036,7 +2036,11 @@ let applicable_error_codes ~loc_of_aloc ~cx comment_loc =
     let strip_root = Some (Context.root cx) in
     Flow_error.ErrorSet.fold
       (fun err acc ->
-        let err = Flow_error.make_error_printable loc_of_aloc ~strip_root err in
+        let err =
+          err
+          |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
+          |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root
+        in
         let loc = Flow_errors_utils.loc_of_printable_error err in
         match Flow_errors_utils.code_of_printable_error err with
         | Some code when applies loc -> code :: acc

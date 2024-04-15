@@ -32,7 +32,8 @@ let add_suppression_warnings root checked unused warnings =
           let err =
             let msg = Error_message.EUnusedSuppression loc in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
-            |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
+            |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
+            |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
           in
           let file_warnings =
             FilenameMap.find_opt source_file warnings
@@ -55,7 +56,8 @@ let add_suppression_warnings root checked unused warnings =
       let err =
         Error_message.ECodelessSuppression (loc, code)
         |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-        |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
+        |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
+        |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
       in
       let file_warnings =
         FilenameMap.find_opt source_file warnings
@@ -73,7 +75,8 @@ let collate_duplicate_providers ~update root =
     let err =
       Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
       |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:duplicate
-      |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
+      |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
+      |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
     in
     update provider_file duplicate err acc
   in
