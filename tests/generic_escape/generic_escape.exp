@@ -698,9 +698,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:120:9
 
-Cannot assign `x` to `aaa` because object type [1] is incompatible with number [2]. All writes to `aaa` must be
-compatible with the type of its initializer [3]. Add an annotation to `aaa` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign `x` to `aaa` because `T` [1] is incompatible with number [2]. All writes to `aaa` must be compatible with
+the type of its initializer [3]. Add an annotation to `aaa` [3] if a different type is desired. [incompatible-type]
 
    misc.js:120:9
    120|   aaa = x;

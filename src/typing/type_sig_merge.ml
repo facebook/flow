@@ -635,7 +635,6 @@ and merge_annot env file = function
     let t = merge env file t in
     let open Type in
     (match t with
-    | ExactT (_, DefT (r, ObjT o))
     | DefT (r, ObjT o) ->
       let r = Reason.(replace_desc_reason RObjectLit r) in
       let obj_kind =
@@ -1008,12 +1007,17 @@ and merge_annot env file = function
     let props = SMap.map (merge_obj_annot_prop env file) props |> NameUtils.namemap_of_smap in
     let mk_object call proto =
       let id = Type.Properties.id_of_aloc_id ~type_sig:true (Context.make_aloc_id file.cx loc) in
-      let t = Obj_type.mk_with_proto file.cx reason proto ?call ~props ~obj_kind ~id in
+      let obj_type =
+        let flags = { Type.obj_kind; frozen = false; react_dro = None } in
+        let call = Base.Option.map call ~f:(Context.make_call_prop file.cx) in
+        Context.add_property_map file.cx id props;
+        Type.mk_objecttype ~flags ~call id proto
+      in
       if obj_kind = Type.Exact then
-        let exact_reason = Reason.(mk_annot_reason (RExactType RObjectType) loc) in
-        Type.ExactT (exact_reason, t)
+        let reason_op = Reason.(mk_annot_reason (RExactType RObjectType) loc) in
+        TypeUtil.make_exact_object ~reason_op ~reason_obj:reason obj_type
       else
-        t
+        Type.DefT (reason, Type.ObjT obj_type)
     in
     begin
       match proto with

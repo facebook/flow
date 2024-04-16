@@ -1812,7 +1812,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     (t_opt, tast_opt)
 
   and convert_temporary_object = function
-    | ExactT (_, DefT (r, ObjT o))
     | DefT (r, ObjT o) ->
       let r = replace_desc_reason RObjectLit r in
       let obj_kind =
@@ -1986,15 +1985,18 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             Inexact
       in
       let flags = { obj_kind; frozen = false; react_dro = None } in
-      DefT (mk_annot_reason RObjectType loc, ObjT (mk_objecttype ~flags ~call pmap proto))
+      (mk_annot_reason RObjectType loc, mk_objecttype ~flags ~call pmap proto)
     in
     let mk_object_annot cx loc ~exact call dict pmap proto =
       let exact = exact && dict = None in
-      let t = mk_object cx loc ~src_loc:true ~exact call dict pmap proto in
+      let (reason_obj, obj_t) = mk_object cx loc ~src_loc:true ~exact call dict pmap proto in
       if exact then
-        ExactT (mk_annot_reason (RExactType RObjectType) loc, t)
+        TypeUtil.make_exact_object
+          ~reason_op:(mk_annot_reason (RExactType RObjectType) loc)
+          ~reason_obj
+          obj_t
       else
-        t
+        DefT (reason_obj, ObjT obj_t)
     in
     let open Ast.Type in
     let named_property env loc acc prop =

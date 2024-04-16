@@ -220,6 +220,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | _ -> ());
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
+      if not (Obj_type.is_exact lflags.obj_kind) then
+        exact_obj_error
+          cx
+          trace
+          lflags.obj_kind
+          ~use_op
+          ~exact_reason:ureason
+          (DefT (lreason, ObjT l_obj));
       Context.iter_real_props cx lflds (fun name _ ->
           if not (Context.has_prop cx uflds name) then
             let use_op =
@@ -1036,11 +1044,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * any particular member of the intersection doing so completely.
      * Here we trap object UBs with more than one property, and
      * decompose them into singletons.
+     *
+     * This trap is skipped for exact objects, since intersections of inexact objects
+     * can never satisfy exact objects, but it might cause spurious errors.
+     *
      * Note: should be able to do this with LookupT rather than
      * slices, but that approach behaves in nonobvious ways. TODO why?
      *)
     | (IntersectionT _, DefT (r, ObjT { flags; props_tmap; proto_t; call_t; reachable_targs = _ }))
-      when NameUtils.Map.cardinal (Context.find_props cx props_tmap) > 1 ->
+      when NameUtils.Map.cardinal (Context.find_props cx props_tmap) > 1 && flags.obj_kind <> Exact
+      ->
       Context.iter_real_props cx props_tmap (fun x p ->
           let pmap = NameUtils.Map.singleton x p in
           let id = Context.generate_property_map cx pmap in

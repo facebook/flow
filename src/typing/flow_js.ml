@@ -9415,6 +9415,18 @@ struct
         | ( DefT (lreason, ObjT { props_tmap = lflds; flags = lflags; _ }),
             DefT (ureason, ObjT { props_tmap = uflds; flags = uflags; _ })
           ) ->
+          if
+            (not (Obj_type.is_exact lflags.obj_kind))
+            && (not (is_literal_object_reason ureason))
+            && Obj_type.is_exact uflags.obj_kind
+          then
+            exact_obj_error cx trace lflags.obj_kind ~use_op ~exact_reason:ureason t1;
+          if
+            (not (Obj_type.is_exact uflags.obj_kind))
+            && (not (is_literal_object_reason lreason))
+            && Obj_type.is_exact lflags.obj_kind
+          then
+            exact_obj_error cx trace uflags.obj_kind ~use_op ~exact_reason:lreason t2;
           (* ensure the keys and values are compatible with each other. *)
           let ldict = Obj_type.get_dict_opt lflags.obj_kind in
           let udict = Obj_type.get_dict_opt uflags.obj_kind in
