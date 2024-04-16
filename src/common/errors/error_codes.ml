@@ -40,7 +40,6 @@ type error_code =
   | DuplicateModule
   | EmptyArrayNoAnnot
   | EnumValueAsType
-  | EscapedGeneric
   | ExponentialSpread
   | ExportRenamedDefault
   | ExportValueAsType
@@ -256,7 +255,6 @@ let string_of_code : error_code -> string = function
   | DuplicateJsxRuntimeDecl -> "duplicate-jsx-runtime-decl"
   | DuplicateModule -> "duplicate-module"
   | EnumValueAsType -> "enum-value-as-type"
-  | EscapedGeneric -> "escaped-generic"
   | ExponentialSpread -> "exponential-spread"
   | ExportRenamedDefault -> "export-renamed-default"
   | ExportValueAsType -> "export-value-as-type"

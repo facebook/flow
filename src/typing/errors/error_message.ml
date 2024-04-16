@@ -217,15 +217,6 @@ and 'loc t' =
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
-  | EEscapedGeneric of {
-      use_op: 'loc virtual_use_op;
-      reason: 'loc virtual_reason;
-      blame_reason: 'loc virtual_reason;
-      annot_reason: 'loc virtual_reason option;
-      bound_name: string;
-      bound_loc: 'loc;
-      is_this: bool;
-    }
   | ETupleArityMismatch of
       ('loc virtual_reason * 'loc virtual_reason) * (int * int) * (int * int) * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
@@ -1126,18 +1117,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
   | ENonStrictEqualityComparison (r1, r2) ->
     ENonStrictEqualityComparison (map_reason r1, map_reason r2)
-  | EEscapedGeneric { reason; blame_reason; annot_reason; use_op; bound_name; bound_loc; is_this }
-    ->
-    EEscapedGeneric
-      {
-        reason = map_reason reason;
-        blame_reason = map_reason blame_reason;
-        annot_reason = Base.Option.map ~f:map_reason annot_reason;
-        use_op = map_use_op use_op;
-        bound_loc = f bound_loc;
-        bound_name;
-        is_this;
-      }
   | ESpeculationAmbiguous
       { reason; prev_case = (prev_i, prev_case_reason); case = (i, case_reason); cases } ->
     ESpeculationAmbiguous
@@ -1627,12 +1606,6 @@ let util_use_op_of_msg nope util = function
     )
   | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
     util use_op (fun use_op -> ECannotResolveOpenTvar { use_op; reason; blame_reasons })
-  | EEscapedGeneric { reason; blame_reason; annot_reason; use_op; bound_name; bound_loc; is_this }
-    ->
-    util use_op (fun use_op ->
-        EEscapedGeneric
-          { reason; blame_reason; annot_reason; use_op; bound_loc; bound_name; is_this }
-    )
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     util use_op (fun use_op ->
         EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
@@ -2036,7 +2009,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExpectedNumberLit _
   | EExpectedStringLit _
   | EExpectedBigIntLit _
-  | EEscapedGeneric _
   | EIncompatibleProp _
   | EIncompatible _
   | ECannotResolveOpenTvar _
@@ -3846,101 +3818,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       {
         loc = loc_of_reason unused_reason;
         features = [text msg; text " "; ref def_reason];
-        explanation = None;
-        use_op;
-      }
-  | EEscapedGeneric
-      { is_this = false; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name }
-    when blame_reason = reason ->
-    let features =
-      [
-        text "type variable ";
-        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
-        text " cannot escape from the scope in which it was ";
-        ref (mk_reason (RCustom "defined") bound_loc);
-      ]
-    in
-    let annot_features =
-      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
-      )
-    in
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        features = features @ annot_features;
-        explanation = None;
-        use_op;
-      }
-  | EEscapedGeneric
-      { is_this = false; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name } ->
-    let features =
-      [
-        ref reason;
-        text " contains type variable ";
-        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
-        text " which cannot escape from the scope in which it was ";
-        ref (mk_reason (RCustom "defined") bound_loc);
-      ]
-    in
-    let annot_features =
-      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
-      )
-    in
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        features = features @ annot_features;
-        explanation = None;
-        use_op;
-      }
-  | EEscapedGeneric
-      { is_this = true; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name }
-    when match desc_of_reason reason with
-         | RThis
-         | RThisType ->
-           true
-         | _ -> reason = blame_reason ->
-    let features =
-      [
-        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
-        text " cannot escape from its ";
-        ref (mk_reason (RCustom "class") bound_loc);
-      ]
-    in
-    let annot_features =
-      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
-      )
-    in
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        features = features @ annot_features;
-        explanation = None;
-        use_op;
-      }
-  | EEscapedGeneric
-      { is_this = true; reason; blame_reason; annot_reason; use_op; bound_loc; bound_name } ->
-    let features =
-      [
-        ref reason;
-        text " contains ";
-        ref (replace_desc_reason (RCustom (spf "`%s`" bound_name)) blame_reason);
-        text " which cannot escape from its ";
-        ref (mk_reason (RCustom "class") bound_loc);
-      ]
-    in
-    let annot_features =
-      Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
-      )
-    in
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        features = features @ annot_features;
         explanation = None;
         use_op;
       }
@@ -5844,7 +5721,6 @@ let error_code_of_message err : error_code option =
   | EEnumNotAllChecked { default_case = None; _ } -> Some InvalidExhaustiveCheck
   | EEnumNotAllChecked { default_case = Some _; _ } -> Some RequireExplicitEnumSwitchCases
   | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
-  | EEscapedGeneric _ -> Some EscapedGeneric
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType

@@ -1664,12 +1664,6 @@ let dump_error_message =
         param_count
         (string_of_use_op use_op)
     | EUnsupportedSetProto reason -> spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
-    | EEscapedGeneric { reason; use_op; bound_name; _ } ->
-      spf
-        "EEscapedGeneric { reason = %s; use_op = %s; bound_name = %s; _ }"
-        (dump_reason cx reason)
-        (string_of_use_op use_op)
-        bound_name
     | EDuplicateModuleProvider { module_name; provider; conflict } ->
       spf
         "EDuplicateModuleProvider (%S, %s, %s)"
