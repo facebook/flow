@@ -2573,7 +2573,7 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
-let find_local_references ~reader ~file_artifacts ~kind file_key pos :
+let find_local_references ~loc_of_aloc ~file_artifacts ~kind file_key pos :
     ((Get_def_types.def_info * FindRefsTypes.find_refs_ok, string) result * Hh_json.json option)
     Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
@@ -2581,7 +2581,7 @@ let find_local_references ~reader ~file_artifacts ~kind file_key pos :
   let%lwt refs_results =
     let results =
       FindRefs_js.find_local_refs
-        ~reader
+        ~loc_of_aloc
         ~file_key
         ~parse_artifacts
         ~typecheck_artifacts
@@ -2613,8 +2613,8 @@ let find_local_references ~reader ~file_artifacts ~kind file_key pos :
   in
   Lwt.return (refs_results, extra_data)
 
-let map_local_find_references_results ~reader ~options ~client ~profiling ~env ~f text_doc_position
-    =
+let map_local_find_references_results
+    ~loc_of_aloc ~options ~client ~profiling ~env ~f text_doc_position =
   let (file_artifacts_opt, extra_parse_data) =
     get_file_artifacts ~options ~client ~profiling ~env text_doc_position
   in
@@ -2622,7 +2622,7 @@ let map_local_find_references_results ~reader ~options ~client ~profiling ~env ~
   | Ok (Some (file_artifacts, file_key)) ->
     let%lwt (local_refs, extra_data) =
       find_local_references
-        ~reader
+        ~loc_of_aloc
         ~file_artifacts
         ~kind:FindRefsTypes.FindReferences
         file_key
@@ -2639,7 +2639,7 @@ let map_local_find_references_results ~reader ~options ~client ~profiling ~env ~
   | Error _ as err -> Lwt.return (err, extra_parse_data)
 
 let handle_global_find_references
-    ~reader
+    ~loc_of_aloc
     ~options
     ~id
     ~metadata
@@ -2681,7 +2681,7 @@ let handle_global_find_references
     let (line, col) = Flow_lsp_conversions.position_of_document_position text_doc_position in
     (match
        FindRefs_js.find_local_refs
-         ~reader
+         ~loc_of_aloc
          ~file_key
          ~parse_artifacts
          ~typecheck_artifacts
@@ -2760,13 +2760,13 @@ let handle_global_find_references
         def_locs;
       Lwt.return (env, LspProt.LspFromServer None, LspProt.empty_metadata))
 
-let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~client ~profiling ~env
-    =
+let handle_persistent_find_references
+    ~loc_of_aloc ~options ~id ~params ~metadata ~client ~profiling ~env =
   let text_doc_position = params.FindReferences.loc in
   let ref_to_location (_, loc) = Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok in
   if Options.global_find_ref options then
     handle_global_find_references
-      ~reader
+      ~loc_of_aloc
       ~options
       ~id
       ~metadata
@@ -2787,7 +2787,7 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
   else
     let%lwt (result, extra_data) =
       map_local_find_references_results
-        ~reader
+        ~loc_of_aloc
         ~options
         ~client
         ~profiling
@@ -2806,14 +2806,14 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
       Lwt.return (env, resp, metadata)
 
 let handle_persistent_document_highlight
-    ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
+    ~loc_of_aloc ~options ~id ~params ~metadata ~client ~profiling ~env =
   (* All the locs are implicitly in the same file *)
   let ref_to_highlight (_, loc) =
     Some { DocumentHighlight.range = Lsp.loc_to_lsp_range loc; kind = Some DocumentHighlight.Text }
   in
   let%lwt (result, extra_data) =
     map_local_find_references_results
-      ~reader
+      ~loc_of_aloc
       ~options
       ~client
       ~profiling
@@ -2834,7 +2834,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
   let text_doc_position = TextDocumentPositionParams.{ textDocument; position } in
   if Options.global_rename options then
     handle_global_find_references
-      ~reader
+      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       ~options
       ~id
       ~metadata
@@ -2903,7 +2903,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
         let global = Options.global_rename options in
         let%lwt (all_refs, extra_data) =
           find_local_references
-            ~reader
+            ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
             ~file_artifacts
             ~kind:FindRefsTypes.Rename
             file_key
@@ -3428,6 +3428,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   let open LspProt in
   let options = genv.ServerEnv.options in
   let reader = State_reader.create () in
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   match request with
   | LspToServer (RequestMessage (id, _))
     when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
@@ -3530,10 +3531,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_document_highlight ~reader ~options ~id ~params ~metadata)
+      (handle_persistent_document_highlight ~loc_of_aloc ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
     Handle_nonparallelizable_persistent
-      (handle_persistent_find_references ~reader ~options ~id ~params ~metadata)
+      (handle_persistent_find_references ~loc_of_aloc ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, RenameRequest params)) ->
     Handle_nonparallelizable_persistent
       (handle_persistent_rename ~reader ~options ~id ~params ~metadata)

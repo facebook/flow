@@ -6,7 +6,7 @@
  *)
 
 val find_local_refs :
-  reader:State_reader.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   file_key:File_key.t ->
   parse_artifacts:Types_js_types.parse_artifacts ->
   typecheck_artifacts:Types_js_types.typecheck_artifacts ->

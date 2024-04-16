@@ -68,7 +68,7 @@ let local_refs_of_find_ref_request
     merge_with_var_refs prop_refs
   | Get_def_types.NoDefinition no_def_reason -> Ok (FindRefsTypes.NoDefinition no_def_reason)
 
-let find_local_refs ~reader ~file_key ~parse_artifacts ~typecheck_artifacts ~kind ~line ~col =
+let find_local_refs ~loc_of_aloc ~file_key ~parse_artifacts ~typecheck_artifacts ~kind ~line ~col =
   let open Base.Result.Let_syntax in
   let ast_info =
     match parse_artifacts with
@@ -76,7 +76,7 @@ let find_local_refs ~reader ~file_key ~parse_artifacts ~typecheck_artifacts ~kin
   in
   let%bind def_info =
     GetDefUtils.get_def_info
-      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      ~loc_of_aloc
       ~purpose:Get_def_types.Purpose.FindReferences
       ast_info
       typecheck_artifacts
@@ -84,7 +84,7 @@ let find_local_refs ~reader ~file_key ~parse_artifacts ~typecheck_artifacts ~kin
   in
   let%bind result =
     local_refs_of_find_ref_request
-      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      ~loc_of_aloc
       ast_info
       typecheck_artifacts
       file_key

@@ -280,8 +280,7 @@ let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key = functi
       :: Base.List.map references ~f:(fun l -> (FindRefsTypes.PropertyAccess, l))
       )
 
-let find_local_refs ~reader file_key ast_info type_info loc =
-  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+let find_local_refs ~loc_of_aloc file_key ast_info type_info loc =
   match get_property_def_info ~loc_of_aloc type_info loc with
   | Error _ as err -> err
   | Ok None -> Ok None

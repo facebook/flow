@@ -14,7 +14,7 @@ val property_find_refs_in_file :
   (FindRefsTypes.single_ref list, string) result
 
 val find_local_refs :
-  reader:State_reader.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   File_key.t ->
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->
