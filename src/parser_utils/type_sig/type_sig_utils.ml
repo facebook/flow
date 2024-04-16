@@ -15,10 +15,10 @@ module Pack = Type_sig_pack
    proceses of combining deals with overridden definitions. Finally, the
    resolved builtins are merged. Declared modules can depend on each other, so
    they are treated like a cycle. *)
-let parse_lib opts scope locs ast =
+let parse_lib opts scope tbls ast =
   let open Parse in
   let (_, { Flow_ast.Program.statements = stmts; _ }) = ast in
-  List.iter (statement opts scope locs) stmts
+  List.iter (statement opts scope tbls) stmts
 
 let parse_libs opts ordered_asts =
   let open Parse in
