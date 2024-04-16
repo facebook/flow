@@ -354,7 +354,6 @@ and 'loc t' =
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
-  | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
   | EMissingLocalAnnotation of {
       reason: 'loc virtual_reason;
       hint_available: bool;
@@ -1179,7 +1178,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
-  | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
   | EMissingLocalAnnotation { reason; hint_available; from_generic_function } ->
     EMissingLocalAnnotation { reason = map_reason reason; hint_available; from_generic_function }
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
@@ -1652,7 +1650,6 @@ let util_use_op_of_msg nope util = function
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
-  | EMissingAnnotation _
   | EMissingLocalAnnotation _
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
@@ -1801,7 +1798,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInstanceofRHS reason
   | EArithmeticOperand reason
   | ERecursionLimit (reason, _)
-  | EMissingAnnotation (reason, _)
   | EMissingLocalAnnotation { reason; _ }
   | EComponentMissingReturn reason
   | ENestedComponent reason
@@ -3203,31 +3199,6 @@ let friendly_message_of_msg loc_of_aloc msg =
     Normal { features }
   | EUseArrayLiteral _ ->
     Normal { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
-  | EMissingAnnotation (reason, _) ->
-    let default = [text "Missing type annotation for "; desc reason; text "."] in
-    let features =
-      match desc_of_reason reason with
-      | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
-        let reason_op = mk_reason reason_op_desc reason_op_loc in
-        let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
-        default
-        @ [
-            text " ";
-            desc reason;
-            text " is a type parameter declared in ";
-            ref reason_tapp;
-            text " and was implicitly instantiated at ";
-            ref reason_op;
-            text ".";
-          ]
-      | _ -> default
-    in
-    (* We don't collect trace info in the assert_ground_visitor because traces
-     * represent tests of lower bounds to upper bounds, and the assert_ground
-     * visitor is just visiting types. Instead, we collect a list of types we
-     * visited to get to the missing annotation error and report that as the
-     * trace *)
-    Normal { features }
   | EMissingLocalAnnotation { reason; hint_available; from_generic_function } ->
     if hint_available then
       Normal
@@ -5777,7 +5748,6 @@ let error_code_of_message err : error_code option =
   | EInvalidInfer _ -> Some InvalidInfer
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
-  | EMissingAnnotation _ -> Some MissingAnnot
   | EMissingLocalAnnotation { reason; hint_available = _; from_generic_function = _ } -> begin
     match desc_of_reason reason with
     | RImplicitThis _ -> Some MissingThisAnnot

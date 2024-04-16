@@ -110,7 +110,6 @@ type error_code =
   | LintSetting
   | MalformedPackage
   | MethodUnbinding
-  | MissingAnnot
   | MissingLocalAnnot
   | MissingThisAnnot
   | MissingArg
@@ -325,7 +324,6 @@ let string_of_code : error_code -> string = function
   | LintSetting -> "lint-setting"
   | MalformedPackage -> "malformed-package"
   | MethodUnbinding -> "method-unbinding"
-  | MissingAnnot -> "missing-annot"
   | MissingLocalAnnot -> "missing-local-annot"
   | MissingThisAnnot -> "missing-this-annot"
   | MissingArg -> "missing-arg"
