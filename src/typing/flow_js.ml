@@ -7940,13 +7940,30 @@ struct
   and mk_possibly_evaluated_destructor cx use_op reason t d id =
     let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
     ( if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
-      let (t : Type.t) =
-        Tvar.mk_fully_resolved_lazy
-          cx
-          reason
-          (lazy (mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id))
-      in
-      ignore t
+      let evaluated = Context.evaluated cx in
+      match Eval.Map.find_opt id evaluated with
+      | Some _ -> ()
+      | None ->
+        let trace = Trace.dummy_trace in
+        if
+          Tvar_resolver.has_unresolved_tvars cx t
+          || Tvar_resolver.has_unresolved_tvars_in_destructors cx d
+        then
+          ignore
+          @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                 Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
+                 evaluate_type_destructor cx ~trace use_op reason t d tvar
+             )
+        else
+          let result =
+            Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+                Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
+                  cx
+                  reason
+                  (evaluate_type_destructor cx ~trace use_op reason t d)
+            )
+          in
+          Context.set_evaluated cx (Eval.Map.add id result evaluated)
     );
     eval_t
 

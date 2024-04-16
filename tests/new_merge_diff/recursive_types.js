@@ -11,5 +11,5 @@ export type S = string | R; // okay
 export type R = { p: S };
 
 declare export class C {
-  static R: { ...typeof C.R }; // TODO error
+  static R: { ...typeof C.R }; // error
 }

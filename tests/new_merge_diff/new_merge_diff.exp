@@ -147,8 +147,16 @@ References:
                              ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- recursive_types.js:14:13
 
-Found 12 errors
+Invalid trivially recursive definition of object type.  [recursive-definition]
+
+   14|   static R: { ...typeof C.R }; // error
+                   ^^^^^^^^^^^^^^^^^
+
+
+
+Found 13 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
