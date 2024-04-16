@@ -8,6 +8,7 @@
 open Type
 open Reason
 open Utils_js
+open Flow_intermediate_error_types
 
 exception EDebugThrow of ALoc.t
 
@@ -2228,7 +2229,7 @@ type 'loc friendly_message_recipe =
       loc: 'loc;
       features: Loc.t Flow_errors_utils.Friendly.message_feature list;
       use_op: 'loc Type.virtual_use_op;
-      explanation: Loc.t Flow_errors_utils.Friendly.message_feature list option;
+      explanation: 'loc explanation option;
     }
   | PropPolarityMismatch of {
       prop: string option;
@@ -4923,12 +4924,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         loc;
         features = lower @ [text " but "] @ upper;
         use_op;
-        explanation =
-          Some
-            [
-              text
-                "React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally";
-            ];
+        explanation = Some ExplanationReactHookIncompatibleWithNormalFunctions;
       }
   | EHookUniqueIncompatible { use_op; lower; upper } ->
     UseOp
@@ -4936,12 +4932,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         loc = loc_of_reason lower;
         features = [ref lower; text " and "; ref upper; text " are different React hooks"];
         use_op;
-        explanation =
-          Some
-            [
-              text
-                "Different React hooks are not compatible with each other, because hooks cannot be called conditionally";
-            ];
+        explanation = Some ExplanationReactHookIncompatibleWithEachOther;
       }
   | EHookNaming _ ->
     Normal { features = [text "Hooks must have names that begin with "; code "use"; text "."] }

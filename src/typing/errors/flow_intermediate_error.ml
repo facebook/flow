@@ -1002,7 +1002,6 @@ let rec make_intermediate_error :
         (Flow_error.code_of_error error)
         (MessageAlreadyFriendlyPrinted features)
     | (None, UseOp { loc; features; use_op; explanation }) ->
-      let explanation = Base.Option.map explanation ~f:(fun e -> ExplanationAlreadyPrinted e) in
       mk_use_op_error loc use_op ?explanation (MessageAlreadyFriendlyPrinted features)
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion
@@ -1061,7 +1060,6 @@ let to_printable_error :
   let ref = Friendly.ref_map loc_of_aloc in
   let desc = Friendly.desc_of_reason_desc in
   let explanation_to_friendly_msgs = function
-    | ExplanationAlreadyPrinted features -> features
     | ExplanationAbstractEnumCasting ->
       [
         text "You can explicitly cast your enum value to its representation type using ";
@@ -1159,6 +1157,16 @@ let to_printable_error :
         text "React ";
         ref (mk_reason (RCustom "hook arguments") props_loc);
         text " and their nested elements cannot be written to";
+      ]
+    | ExplanationReactHookIncompatibleWithEachOther ->
+      [
+        text
+          "Different React hooks are not compatible with each other, because hooks cannot be called conditionally";
+      ]
+    | ExplanationReactHookIncompatibleWithNormalFunctions ->
+      [
+        text
+          "React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally";
       ]
     | ExplanationReactHookReturnDeepReadOnly hook_loc ->
       [

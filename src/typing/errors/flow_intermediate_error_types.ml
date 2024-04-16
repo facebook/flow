@@ -9,7 +9,6 @@ open Reason
 
 type 'loc explanation =
   | ExplanationAbstractEnumCasting
-  | ExplanationAlreadyPrinted of Loc.t Flow_errors_utils.Friendly.message_feature list
   | ExplanationArrayInvariantTyping
   | ExplanationConstrainedAssign of {
       name: string;
@@ -26,6 +25,8 @@ type 'loc explanation =
   | ExplanationReactComponentPropsDeepReadOnly of 'loc
   | ExplanationReactComponentRefRequirement
   | ExplanationReactHookArgsDeepReadOnly of 'loc
+  | ExplanationReactHookIncompatibleWithEachOther
+  | ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly of 'loc
   | ExplanationRenderTypeRequirement
   | ExplanationTypeGuardCompatibility
