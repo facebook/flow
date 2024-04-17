@@ -1,3 +1,47 @@
+Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:4:5
+
+Cannot call `bad.get` because: [incompatible-call]
+ - Either cannot access object with computed property using string [1].
+ - Or function type [2] requires another argument from call of method `get` [3].
+
+   bad_interaction_with_evalt.js:4:5
+   4| bad.get() as Obj2; // error: TODO should not error here, since annotation error should be non-speculative
+          ^^^
+
+References:
+   exported_bad_evalt.js:8:26
+   8| export type Bad = C<Obj2[string]>;
+                               ^^^^^^ [1]
+   exported_bad_evalt.js:3:3
+   3|   get(v: T): T;
+        ^^^^^^^^^^^^ [2]
+   bad_interaction_with_evalt.js:4:1
+   4| bad.get() as Obj2; // error: TODO should not error here, since annotation error should be non-speculative
+      ^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:5:5
+
+Cannot call `bad.get` because: [incompatible-call]
+ - Either number [1] is incompatible with empty [2].
+ - Or no arguments are expected by function type [3].
+
+   bad_interaction_with_evalt.js:5:5
+   5| bad.get(1) as Obj2; // error: TODO spurious incompatible with empty
+          ^^^
+
+References:
+   bad_interaction_with_evalt.js:5:9
+   5| bad.get(1) as Obj2; // error: TODO spurious incompatible with empty
+              ^ [1]
+   exported_bad_evalt.js:8:21
+   8| export type Bad = C<Obj2[string]>;
+                          ^^^^^^^^^^^^ [2]
+   exported_bad_evalt.js:2:3
+   2|   get(): T | null;
+        ^^^^^^^^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:13
 
 Cannot cast `any` to object type because boolean [1] is incompatible with number literal `2` [2] in property `b`.
@@ -2449,6 +2493,14 @@ References:
                                                      ^^ [4]
 
 
+Error --------------------------------------------------------------------------------------- exported_bad_evalt.js:8:26
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   8| export type Bad = C<Obj2[string]>;
+                               ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ intersection-function.js:19:1
 
 Cannot call `a` because: [incompatible-call]
@@ -3881,7 +3933,7 @@ References:
 
 
 
-Found 183 errors
+Found 186 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

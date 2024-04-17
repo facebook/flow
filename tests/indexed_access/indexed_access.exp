@@ -676,127 +676,135 @@ References:
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:44:24
+Error ---------------------------------------------------------------------------------------------------- test.js:44:25
 
 Cannot access string literal `bork` on `Obj` because property `bork` is missing in `Obj` [1]. [prop-missing]
 
-   test.js:44:24
-   44| type Nonexistant = Obj['bork']; // Error
-                              ^^^^^^
+   test.js:44:25
+   44| type Nonexistant1 = Obj['bork']; // Error
+                               ^^^^^^
 
 References:
-   test.js:44:20
-   44| type Nonexistant = Obj['bork']; // Error
-                          ^^^ [1]
+   test.js:44:21
+   44| type Nonexistant1 = Obj['bork']; // Error
+                           ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:47:27
+Error ---------------------------------------------------------------------------------------------------- test.js:47:25
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   47| type Nonexistant2 = Obj[string]; // Error
+                               ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:50:27
 
 Cannot access boolean on `Arr` because boolean [1] is not an array index. [incompatible-use]
 
-   47| type ArrNonexistant = Arr[boolean]; // Error
+   50| type ArrNonexistant = Arr[boolean]; // Error
                                  ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:50:10
+Error ---------------------------------------------------------------------------------------------------- test.js:53:10
 
 Cannot access string literal `x` on undefined because property `x` is missing in undefined [1]. [incompatible-use]
 
-   test.js:50:10
-   50| (1: void['x']); // Error
+   test.js:53:10
+   53| (1: void['x']); // Error
                 ^^^
 
 References:
-   test.js:50:5
-   50| (1: void['x']); // Error
+   test.js:53:5
+   53| (1: void['x']); // Error
            ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:51:10
+Error ---------------------------------------------------------------------------------------------------- test.js:54:10
 
 Cannot access string literal `x` on null because property `x` is missing in null [1]. [incompatible-use]
 
-   test.js:51:10
-   51| (1: null['x']); // Error
+   test.js:54:10
+   54| (1: null['x']); // Error
                 ^^^
 
 References:
-   test.js:51:5
-   51| (1: null['x']); // Error
+   test.js:54:5
+   54| (1: null['x']); // Error
            ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:62:2
+Error ----------------------------------------------------------------------------------------------------- test.js:65:2
 
 Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:62:2
-   62| ('xx': O['bar']); // Error
+   test.js:65:2
+   65| ('xx': O['bar']); // Error
         ^^^^ [1]
 
 References:
-   test.js:57:8
-   57|   bar: number;
+   test.js:60:8
+   60|   bar: number;
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:71:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
 Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:71:2
-   71| ('xx': C['bar']); // Error
+   test.js:74:2
+   74| ('xx': C['bar']); // Error
         ^^^^ [1]
 
 References:
-   test.js:66:8
-   66|   bar: number;
+   test.js:69:8
+   69|   bar: number;
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:80:2
+Error ----------------------------------------------------------------------------------------------------- test.js:83:2
 
 Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:80:2
-   80| ('xx': I['bar']); // ERROR
+   test.js:83:2
+   83| ('xx': I['bar']); // ERROR
         ^^^^ [1]
 
 References:
-   test.js:75:8
-   75|   bar: number;
+   test.js:78:8
+   78|   bar: number;
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:86:8
+Error ----------------------------------------------------------------------------------------------------- test.js:89:8
 
 Cannot cast function to indexed access because boolean [1] is incompatible with number [2] in the return value.
 [incompatible-cast]
 
-   test.js:86:8
-   86| (() => true) as M['method']; // ERROR
+   test.js:89:8
+   89| (() => true) as M['method']; // ERROR
               ^^^^ [1]
 
 References:
-   test.js:83:13
-   83|   method(): number;
+   test.js:86:13
+   86|   method(): number;
                    ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:91:5
+Error ----------------------------------------------------------------------------------------------------- test.js:94:5
 
 Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:91:5
-   91|     f() as empty; // ERROR
+   test.js:94:5
+   94|     f() as empty; // ERROR
            ^^^
 
 References:
-   test.js:83:13
-   83|   method(): number;
+   test.js:86:13
+   86|   method(): number;
                    ^^^^^^ [1]
-   test.js:91:12
-   91|     f() as empty; // ERROR
+   test.js:94:12
+   94|     f() as empty; // ERROR
                   ^^^^^ [2]
 
 
@@ -871,7 +879,7 @@ References:
 
 
 
-Found 53 errors
+Found 54 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

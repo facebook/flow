@@ -289,6 +289,14 @@ An annotation on `item` is required because Flow cannot infer its type from loca
                  ^^^^
 
 
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:21:13
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   21| id({[str]: (item) => 1}); // error
+                   ^^^^
+
+
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:23:15
 
 An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
@@ -1254,4 +1262,4 @@ References:
 
 
 
-Found 90 errors
+Found 91 errors

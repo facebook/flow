@@ -18,7 +18,7 @@ id(async () => (item) => 1); // error
 // Decomp_ObjProp
 id({foo: (item) => 1}); // error
 // Decomp_ObjComputed
-id({[str]: (item) => 1}); // TODO: missing missing-local-annot
+id({[str]: (item) => 1}); // error
 // Decomp_ObjSpread
 id({...{foo: (item) => 1}}); // error
 // Decomp_ArrElement
