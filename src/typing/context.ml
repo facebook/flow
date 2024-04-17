@@ -38,8 +38,8 @@ type metadata = {
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
-  hook_compatibility_excludes: string list;
-  hook_compatibility_includes: string list;
+  hook_compatibility_excludes: Str.regexp list;
+  hook_compatibility_includes: Str.regexp list;
   hook_compatibility: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
@@ -453,15 +453,15 @@ let in_dirlist cx dirs =
   | _ :: _ ->
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+    List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
 
 let casting_syntax cx = cx.metadata.casting_syntax
 
 let component_syntax cx = cx.metadata.component_syntax || File_key.is_lib_file cx.file
 
 let hook_compatibility cx =
-  (cx.metadata.hook_compatibility || in_dirlist cx cx.metadata.hook_compatibility_includes)
-  && not (in_dirlist cx cx.metadata.hook_compatibility_excludes)
+  in_dirlist cx cx.metadata.hook_compatibility_includes
+  || (cx.metadata.hook_compatibility && not (in_dirlist cx cx.metadata.hook_compatibility_excludes))
 
 let react_rules_always cx = cx.metadata.react_rules_always
 

@@ -88,8 +88,8 @@ type t = {
   opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
-  opt_hook_compatibility_includes: string list;
-  opt_hook_compatibility_excludes: string list;
+  opt_hook_compatibility_includes: Str.regexp list;
+  opt_hook_compatibility_excludes: Str.regexp list;
   opt_hook_compatibility: bool;
   opt_react_rules: react_rules list;
   opt_debug: bool;
@@ -206,16 +206,14 @@ let hook_compatibility_includes opts = opts.opt_hook_compatibility_includes
 let hook_compatibility_excludes opts = opts.opt_hook_compatibility_excludes
 
 let hook_compatibility_in_file opts file =
+  let enabled = hook_compatibility opts in
   let included =
-    hook_compatibility opts
-    || begin
-         match hook_compatibility_includes opts with
-         | [] -> false
-         | dirs ->
-           let filename = File_key.to_string file in
-           let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-           List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
-       end
+    match hook_compatibility_includes opts with
+    | [] -> false
+    | dirs ->
+      let filename = File_key.to_string file in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
   in
   let excluded =
     match hook_compatibility_excludes opts with
@@ -223,9 +221,9 @@ let hook_compatibility_in_file opts file =
     | dirs ->
       let filename = File_key.to_string file in
       let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+      List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
   in
-  included && not excluded
+  included || (enabled && not excluded)
 
 let typecheck_component_syntax_in_file opts file =
   component_syntax opts || File_key.is_lib_file file
