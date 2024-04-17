@@ -1541,7 +1541,6 @@ let dump_error_message =
     | EAmbiguousNumericKeyWithVariance loc ->
       spf "EAmbiguousNumericKeyWithVariance (%s)" (string_of_aloc loc)
     | EPredicateFuncTooShort { loc; _ } -> spf "EPredicateFuncTooShort (%s)" (string_of_aloc loc)
-    | EFunPredInvalidIndex loc -> spf "EFunPredInvalidIndex (%s)" (string_of_aloc loc)
     | EPredicateFuncArityMismatch { use_op; _ } ->
       spf "EPredicateFuncArityMismatch (%s)" (string_of_use_op use_op)
     | EPredicateFuncIncompatibility { use_op; _ } ->

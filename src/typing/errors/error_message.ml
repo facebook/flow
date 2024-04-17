@@ -331,7 +331,6 @@ and 'loc t' =
       pred_reason: 'loc virtual_reason;
       binding_reason: 'loc virtual_reason;
     }
-  | EFunPredInvalidIndex of 'loc
   | ETypeGuardIndexMismatch of {
       use_op: 'loc virtual_use_op;
       reasons: 'loc virtual_reason * 'loc virtual_reason;
@@ -1172,7 +1171,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | ETypeGuardIncompatibleWithFunctionKind { loc; kind } ->
     ETypeGuardIncompatibleWithFunctionKind { loc = f loc; kind }
-  | EFunPredInvalidIndex loc -> EFunPredInvalidIndex (f loc)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
@@ -1642,7 +1640,6 @@ let util_use_op_of_msg nope util = function
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
-  | EFunPredInvalidIndex _
   | ETypeGuardIndexMismatch _
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
@@ -1924,7 +1921,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETrivialRecursiveDefinition (loc, _)
   | EInvalidCatchParameterAnnotation loc
   | EInvalidMappedType { loc; _ }
-  | EFunPredInvalidIndex loc
   | EPredicateFuncTooShort { loc; _ }
   | ETSSyntax { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
@@ -3012,16 +3008,6 @@ let friendly_message_of_msg loc_of_aloc msg =
           ];
         use_op;
         explanation = None;
-      }
-  | EFunPredInvalidIndex _ ->
-    Normal
-      {
-        features =
-          [
-            text "The index position of a ";
-            code "$Refine";
-            text " type needs to be a positive integer.";
-          ];
       }
   | EPredicateInvalidParameter { pred_reason; binding_reason } ->
     Normal
@@ -5677,7 +5663,6 @@ let error_code_of_message err : error_code option =
   | EFunctionCallExtraArg _ -> Some ExtraArg
   | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
-  | EFunPredInvalidIndex _
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
   | ETypeGuardIndexMismatch _
