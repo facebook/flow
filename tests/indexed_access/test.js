@@ -41,8 +41,11 @@ declare var o: Obj;
 (f({foo: true, baz: 'hi', bort: 1}): boolean); // OK
 (f(o): string); // Error
 
-type Nonexistant = Obj['bork']; // Error
-(1: Nonexistant);
+type Nonexistant1 = Obj['bork']; // Error
+(1: Nonexistant1);
+
+type Nonexistant2 = Obj[string]; // Error
+(1: Nonexistant2);
 
 type ArrNonexistant = Arr[boolean]; // Error
 (1: ArrNonexistant);

@@ -2284,7 +2284,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       Some (OrdinaryField { type_ = value; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
-  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
+  let read_obj_prop cx trace ~from_annot ~use_op o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, ObjT o) in
     match get_obj_prop cx trace o propref reason_op with
     | Some (p, _target_kind) ->
@@ -2317,6 +2317,16 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
         | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
+        | GenericT { bound = DefT (_, StrT _); _ }
+        | DefT (_, StrT _)
+          when from_annot ->
+          let reason_prop = reason_of_t elem_t in
+          let kind = Error_message.InvalidObjKey.Other in
+          add_output
+            cx
+            ~trace
+            (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
+          F.error_type cx trace reason_op
         | GenericT { bound = DefT (_, StrT _); _ }
         | DefT (_, StrT _) ->
           (* string keys are unsoundly allowed, but there's nothing else to
