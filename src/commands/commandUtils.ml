@@ -1382,11 +1382,11 @@ let make_options
     opt_hook_compatibility = FlowConfig.hook_compatibility flowconfig;
     opt_hook_compatibility_includes =
       Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.hook_compatibility_includes flowconfig);
     opt_hook_compatibility_excludes =
       Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.hook_compatibility_excludes flowconfig);
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
