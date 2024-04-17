@@ -1567,7 +1567,6 @@ let dump_error_message =
         (string_of_aloc entry_loc)
     | ERecursionLimit (reason1, reason2) ->
       spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-    | EUnsafeGetSet loc -> spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
     | EUninitializedInstanceProperty (loc, err) ->
       spf
         "EUninitializedInstanceProperty (%s, %s)"

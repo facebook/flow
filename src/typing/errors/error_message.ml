@@ -363,7 +363,6 @@ and 'loc t' =
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EEnumsNotEnabled of 'loc
-  | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
@@ -1182,7 +1181,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EMissingLocalAnnotation { reason = map_reason reason; hint_available; from_generic_function }
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
-  | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
@@ -1653,7 +1651,6 @@ let util_use_op_of_msg nope util = function
   | EMissingLocalAnnotation _
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
-  | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EEnumsNotEnabled _
   | EIndeterminateModuleType _
@@ -1905,7 +1902,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EEnumsNotEnabled loc
-  | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
@@ -2052,7 +2048,6 @@ let kind_of_msg =
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
-    | EUnsafeGetSet _
     | EEnumsNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
@@ -3294,21 +3289,6 @@ let friendly_message_of_msg loc_of_aloc msg =
     in
     Normal { features }
   | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
-  | EUnsafeGetSet _ ->
-    let features =
-      [
-        text "Potentially unsafe get/set usage. Getters and setters with side ";
-        text "effects are potentially unsafe and so disabled by default. You may ";
-        text "opt-in to using them anyway by putting ";
-        code "unsafe.enable_getters_and_setters";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
   | EUninitializedInstanceProperty (_loc, err) ->
     let open Lints in
     let features =
@@ -5805,7 +5785,6 @@ let error_code_of_message err : error_code option =
   | EUnexpectedThisType _ -> Some IllegalThis
   | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EUnreachable _ -> Some UnreachableCode
-  | EUnsafeGetSet _ -> Some IllegalGetSet
   | EUnsupportedExact (_, _) -> Some InvalidExact
   | EUnsupportedImplements _ -> Some CannotImplement
   | EUnsupportedKeyInObject _ -> Some IllegalKey

@@ -47,7 +47,6 @@ type error_code =
   | ExtraTypeArg
   | FunctionPredicate
   | IllegalEnum
-  | IllegalGetSet
   | IllegalKey
   | IllegalNewArray
   | IllegalThis
@@ -261,7 +260,6 @@ let string_of_code : error_code -> string = function
   | ExtraTypeArg -> "extra-type-arg"
   | FunctionPredicate -> "function-predicate"
   | IllegalEnum -> "illegal-enum"
-  | IllegalGetSet -> "illegal-get-set"
   | IllegalKey -> "illegal-key"
   | IllegalNewArray -> "illegal-new-array"
   | IllegalThis -> "illegal-this"
