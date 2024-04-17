@@ -872,7 +872,6 @@ and ts_syntax_kind =
 and invalid_mapped_type_error_kind =
   | InterfaceOrDeclaredClass
   | ExtraProperties
-  | RequiredInlineKeyof
   | ExplicitExactOrInexact
   | RemoveOptionality
 
@@ -5300,13 +5299,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         [text "Mapped Types are not supported in interfaces or declared classes."]
       | ExtraProperties ->
         [text "Mapped Types cannot be used when other properties or indexers are present."]
-      | RequiredInlineKeyof ->
-        [
-          text
-            "Fully general mapped types are not supported yet. All mapped types must use an inline keyof: ";
-          code "{[key in keyof O]: T}";
-          text ".";
-        ]
       | ExplicitExactOrInexact ->
         [
           text "Mapped Types take on the exactness of the argument passed to keyof. They do not ";

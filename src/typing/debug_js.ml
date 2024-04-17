@@ -1962,7 +1962,6 @@ let dump_error_message =
           match kind with
           | InterfaceOrDeclaredClass -> "InterfaceOrDeclaredClass"
           | ExtraProperties -> "ExtraProperties"
-          | RequiredInlineKeyof -> "RequiredInlineKeyof"
           | ExplicitExactOrInexact -> "ExplicitExactOrInexact"
           | RemoveOptionality -> "RemoveOptionality"
         )
