@@ -1,3 +1,30 @@
+### 0.234.0
+
+Likely to cause new Flow errors:
+* Flow might catch more inexact incompatible with exact errors. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABLZ7JyKgposhOQAKYBWcX0gCUnIAvAA+TkNCBwNgAbgAOlBNWzcBzudBeQLlABGIXC42chQLKBsEici0Afk5AAUqFluAAeYD0hVC43S+WK5Vq7VzXUsfV2CSWxTKABMZu9AYVSpVGq+sYkFowdpWxggMD5Geiqs5AHoy5yoBBLdQIJROTgYPXZLXKPWqxAAO6ao0SOOcnOcvPYAtFvuliuRrLCLlpNv1zW5EANEwkODQJIZewmED0oA)
+* Fixed a bug that leads to Flow sometimes ignoring differences in call props of an object. New errors might be exposed. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABAAVWoPLac1YAHgASgA+dkAXnZwHZAAoAJTIdlC9n0gDcAB0fKt2QBZWjc3n84zCsWSg1QPmC0UaqAaJ5UbDs2z2XX6nkWxV682W43CEQ3EU2r3urbsjAkLkho3YAX2UxQBCB9kAemT7JMlAglEVfpu7IAfmK4xUkPwGiYSHBoEkMvYTCB6UA)
+* We rewrite the way we generate types for annotations. We will now detect and error on trivially recursive types like `type T = T` or `type Foo = typeof foo; const foo: Foo = ...`. In addition to this, you might see some errors being moved around.
+* Fixed Flow Enums exhaustive checking logic when input is a generic.
+* Invalid indexed access types with string index, like {foo: string}[string], will now error instead of silently making it `any`.
+
+New Features:
+* You can have a tuple spread of a generic in the parameter of a function and not have to supply the relevant type argument if that spread is the only spread in that tuple, and it is the last element of that tuple.
+* Negative numbers are now allowed in Flow Enum values.
+* Allow Flow Enums to be cast to their representation type when the cast expression is typed as a generic type.
+* Added a new global type `EnumValue<>`, which represents all Flow Enum values. You can constrain the enum values to those with a particular representation type by supplying the type argument, e.g. `EnumValue<string>`.
+* Added a new global type `Enum<>`, which represents all Flow Enums (this is a complement to the new `EnumValue` type). You can constrain the enums to ones which have a particular enum value, e.g. `Enum<>` is the same as `Enum<EnumValue<>>`, and the type of all enums with string representation types is `Enum<EnumValue<string>>`. These "abstract enums" have no know members, so you can't access members or exhaustively check them, but you can use methods such as `.members()`, `.cast()`, etc.
+* Allow `===` comparison of abstract Flow Enums as well as Enums themselves with the same ID.
+* You can now cast Flow Enum values to their representation type using `.valueOf()`, e.g. `enum E {A, B}; const s: string = E.A.valueOf()`.
+
+Notable bug fixes:
+* We now error more reliably in the matching property tests, for example when the object part is a complex expression. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIADJwQHcLEAXixAHIYMRSQBuAA6UDpMAWyjg0CxkBEjFK8nwClq1xZUCxAAo6VisfJkMKAJTEgB8uPxJm4vFFWIgkqFMqJ8uAjEleIJuBRqpEkt1ZoAjvrFTQjcaoDLgKq4DBhfJNcSiSTyZTHUjna6he6tV6yZhKKS-ViAPTRrFQCAAdyxJkoECBAbdHq9JIAjFHY-GkynqOmSHTM0KIJqrIxPd6KRBI1jgP7BViXcLq1La-Ww1Rm62Y3GE8nU2XK93ezmsfmW0jh0Wx6WM-T252hSJa1YLX2fU2-ZWt4wd3vw4OF4XRyW06uxRvj6eZ3Oh1fi+PV0iYiB8iYSAKgnyAAGKwACYAGZwKsICQCRIA)
+* Fixed spurious errors in propagating type hints. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCAB0oBollRsAACWz2fERRjIfHAfEAbXspigCAAuuSAILUOgAHlp6QQAD58UiANxYrE43B4-HHfFQZzYclc+n4gA++OwIgetCFUFJVOl5gZ+IAvNSGQL8QB6M34gDucGGUogEhV1AglHxp1oJJd2GF2LqYpYEqoUplrMoLLZtE5Um5Sql0xMPM1uuwoasMBdAFElDkABTJw184BY-H4uAwfE5lrGCDl-MG+v4jEgeUIJsASgpxZLJIwjB1Mv1RqpJvNlptdqgDqdlBdbqgHpEXq7SKxSLbApiIHyJhIcGgQXyAAYrAAmADMZ6sh5ASKAA)
+* Infer type in a conditional type is now allowed to be underconstrained. When the true branch is taken, this underconstrained infer type will be pinned to the upper bound. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABAAJPCeACMAB4ACoAPnZAF52YL2QoFlA2CR2UdcOyAD7sgDaFUxlHZAA0ALrsgD8evZyEV1xMAG4ADo+VbsgBixHFXJ5JgFSuFVvZAHpfeyIFteOzZg04BB8oNpdQIJQ7bz2RgFc6ID7-YGtubU66iiU2Ha7WzsG7cJ4AExC0USqUywTyi3HVUarUmU11uUK+ymKAIQ0m3Vmi0iG62+0cgBCVFd3LLJkrXvTAaDIbDEajtBjlDjCaTCqnlCXW7j5oPru7FQQdtyIAaJhIEagSQy9hMIHpQA)
+* Add `Enum` and `EnumValue` to `$NotNullOrVoid` - previously there was no supertype for all enum values or enums.
+
+IDE:
+* We now show jsdoc information on component props with component syntax.
+
 ### 0.233.0
 
 Likely to cause new Flow errors:
@@ -5,7 +32,7 @@ Likely to cause new Flow errors:
   * We fixed a bug where we incorrectly unwrapped the opaque type to the underlying representation in refinements
   * Predicate functions (%checks) can no longer be recursive
   * Fixed subtyping of indexers in instances/interfaces
-  
+
 Notable bug fixes:
   * We fixed some spurious errors regarding opaque type refinements. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCMAWyjg0AABA17PgWPAdvgwvghrgETkABQASlxwAAOlBcbiNEsqNhcfcMABHGT4ta4gBixAA3Cy2RzcFzcbZ7LiYMRkLiAPxiiCSqBS3FwGC4mnKiC4gC8ptxlIZzNZbKVxFxGBI6vspigCHFuIA9F6eV1eLiYWx8SaTJQIJRdUiWdGoDEQPkTCQcXHkCAIvYTCAkUA)
   * We made a change to method-unbinding errors so that it no longer errors when in an any/mixed context. [This allows us to better support jest](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAIYAtlHBoDiFMZlAAKeTIHGnWgASmp+QgcDYAG4ADpQTlY644gBixBxwE5OJxmEo5LpQpxSM5sq5i2g9jxgoAvDidgB3fnESUchWkuoSckwYhWcV01k4gD01pxmrgww1EBxRCg-0oJOoEFm-HyJhIRKgQXyAAYrAAmADMEasoZASKAA)
