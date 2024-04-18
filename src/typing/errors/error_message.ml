@@ -2298,33 +2298,8 @@ let friendly_message_of_msg loc_of_aloc msg =
       }
   | EUnionSpeculationFailed { use_op; reason; reason_op = _; branches } ->
     Speculation { loc = loc_of_reason reason; use_op; branches }
-  | ESpeculationAmbiguous
-      { reason = _; prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
-    let prev_case_r =
-      mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
-    in
-    let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
-    let features =
-      [
-        text "Could not decide which case to select, since ";
-        ref prev_case_r;
-        text " ";
-        text "may work but if it doesn't ";
-        ref case_r;
-        text " looks promising ";
-        text "too. To fix add a type annotation ";
-      ]
-      @ Flow_errors_utils.Friendly.conjunction_concat
-          ~conjunction:"or"
-          (Base.List.map
-             ~f:(fun case_r ->
-               let text = "to " ^ string_of_desc (desc_of_reason case_r) in
-               [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
-             case_rs
-          )
-      @ [text "."]
-    in
-    Normal (MessageAlreadyFriendlyPrinted features)
+  | ESpeculationAmbiguous { reason = _; prev_case; case; cases } ->
+    Normal (MesssageSpeculationAmbiguous { prev_case; case; cases })
   | EIncompatibleWithExact (reasons, use_op, kind) ->
     let (lower, upper) = reasons in
     let object_kind =

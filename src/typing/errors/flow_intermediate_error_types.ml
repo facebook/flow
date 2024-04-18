@@ -715,6 +715,11 @@ type 'loc message =
       falsy_loc: 'loc;
       null_loc: 'loc;
     }
+  | MesssageSpeculationAmbiguous of {
+      prev_case: int * 'loc virtual_reason;
+      case: int * 'loc virtual_reason;
+      cases: 'loc virtual_reason list;
+    }
   | MessageSuppressionMalformedCode
   | MessageSuppressionMissingCode of string
   | MessageThisInComponent of 'loc
