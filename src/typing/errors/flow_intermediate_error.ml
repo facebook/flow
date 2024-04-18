@@ -996,8 +996,8 @@ let rec make_intermediate_error :
     match (loc, friendly_message_of_msg loc_of_aloc msg) with
     | (Some loc, Error_message.Normal message) ->
       mk_error ~trace_reasons ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
-    | (None, UseOp { loc; features; use_op; explanation }) ->
-      mk_use_op_error loc use_op ?explanation (MessageAlreadyFriendlyPrinted features)
+    | (None, UseOp { loc; message; use_op; explanation }) ->
+      mk_use_op_error loc use_op ?explanation message
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion
     | ( None,
@@ -3078,6 +3078,10 @@ let to_printable_error :
           text " in ";
           ref upper;
         ]
+    | MessagePropNotReadable x ->
+      mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not readable"]
+    | MessagePropNotWritable x ->
+      mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not writable"]
     | MessageReactIntrinsicOverlap { use; def; type_; mixed } ->
       [
         text "The name of intrinsic element ";

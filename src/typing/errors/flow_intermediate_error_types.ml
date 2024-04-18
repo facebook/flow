@@ -685,6 +685,8 @@ type 'loc message =
       upole: Polarity.t;
       prop: string option;
     }
+  | MessagePropNotReadable of name option
+  | MessagePropNotWritable of name option
   | MessageReactIntrinsicOverlap of {
       use: 'loc virtual_reason;
       def: 'loc;

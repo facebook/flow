@@ -1995,7 +1995,7 @@ type 'loc friendly_message_recipe =
   | Normal of 'loc message
   | UseOp of {
       loc: 'loc;
-      features: Loc.t Flow_errors_utils.Friendly.message_feature list;
+      message: 'loc message;
       use_op: 'loc Type.virtual_use_op;
       explanation: 'loc explanation option;
     }
@@ -2102,8 +2102,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason_prop;
-        features =
-          mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not readable"];
+        message = MessagePropNotReadable x;
         use_op;
         explanation = None;
       }
@@ -2111,8 +2110,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason_prop;
-        features =
-          mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not writable"];
+        message = MessagePropNotWritable x;
         use_op;
         explanation = None;
       }
@@ -2148,7 +2146,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = [ref reason; text " could either behave like a string or like a number"];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [ref reason; text " could either behave like a string or like a number"];
         use_op;
         explanation = None;
       }
@@ -2169,16 +2169,17 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features =
-          [
-            ref lower;
-            text " has ";
-            text (str_of_arity arity1);
-            text " but ";
-            ref upper;
-            text " has ";
-            text (str_of_arity arity2);
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              ref lower;
+              text " has ";
+              text (str_of_arity arity1);
+              text " but ";
+              ref upper;
+              text " has ";
+              text (str_of_arity arity2);
+            ];
         use_op;
         explanation = None;
       }
@@ -2192,13 +2193,14 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features =
-          [
-            ref lower;
-            text " has an unknown number of elements, so is ";
-            text "incompatible with ";
-            ref upper;
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              ref lower;
+              text " has an unknown number of elements, so is ";
+              text "incompatible with ";
+              ref upper;
+            ];
         use_op;
         explanation = None;
       }
@@ -2206,21 +2208,22 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features =
-          [
-            ref reason_op;
-            text
-              (spf
-                 " only has %d element%s, so index %s is out of bounds"
-                 length
-                 ( if length == 1 then
-                   ""
-                 else
-                   "s"
-                 )
-                 index
-              );
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              ref reason_op;
+              text
+                (spf
+                   " only has %d element%s, so index %s is out of bounds"
+                   length
+                   ( if length == 1 then
+                     ""
+                   else
+                     "s"
+                   )
+                   index
+                );
+            ];
         use_op;
         explanation = None;
       }
@@ -2231,12 +2234,13 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features =
-          [
-            text "the index into a tuple must be an integer, but ";
-            index_ref;
-            text " is not an integer";
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              text "the index into a tuple must be an integer, but ";
+              index_ref;
+              text " is not an integer";
+            ];
         use_op;
         explanation = None;
       }
@@ -2244,7 +2248,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = [text "the index must be statically known to write a tuple element"];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [text "the index must be statically known to write a tuple element"];
         use_op;
         explanation = None;
       }
@@ -2252,7 +2258,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable";
+        message =
+          MessageAlreadyFriendlyPrinted
+            (mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable");
         use_op;
         explanation = None;
       }
@@ -2260,7 +2268,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "writable";
+        message =
+          MessageAlreadyFriendlyPrinted
+            (mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "writable");
         use_op;
         explanation = None;
       }
@@ -2271,19 +2281,20 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason_lower;
-        features =
-          [
-            text "tuple element at index ";
-            code (string_of_int index);
-            text " is ";
-            text expected;
-            text " in ";
-            ref reason_lower;
-            text " but ";
-            text actual;
-            text " in ";
-            ref reason_upper;
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              text "tuple element at index ";
+              code (string_of_int index);
+              text " is ";
+              text expected;
+              text " in ";
+              ref reason_lower;
+              text " but ";
+              text actual;
+              text " in ";
+              ref reason_upper;
+            ];
         use_op;
         explanation = None;
       }
@@ -2292,7 +2303,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features = [text "read-only arrays cannot be written to"];
+        message = MessageAlreadyFriendlyPrinted [text "read-only arrays cannot be written to"];
         use_op;
         explanation = None;
       }
@@ -2310,7 +2321,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features = [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
         use_op;
         explanation = None;
       }
@@ -2318,7 +2331,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features = [ref lower; text " is incompatible with indexed "; ref upper];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [ref lower; text " is incompatible with indexed "; ref upper];
         use_op;
         explanation = None;
       }
@@ -2343,9 +2358,11 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason invalid_reason;
-        features =
-          [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-          @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids;
+        message =
+          MessageAlreadyFriendlyPrinted
+            ([ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
+            @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids
+            );
         use_op;
         explanation = None;
       }
@@ -2356,17 +2373,18 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features =
-          [
-            text "arity ";
-            text (string_of_int n1);
-            text " of ";
-            ref lower;
-            text " is incompatible with arity ";
-            text (string_of_int n2);
-            text " of ";
-            ref upper;
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              text "arity ";
+              text (string_of_int n1);
+              text " of ";
+              ref lower;
+              text " is incompatible with arity ";
+              text (string_of_int n2);
+              text " of ";
+              ref upper;
+            ];
         use_op;
         explanation = None;
       }
@@ -2374,13 +2392,14 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features =
-          [
-            ref lower;
-            text ", a non-predicate function, is incompatible with ";
-            ref upper;
-            text ", which is a predicate function";
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              ref lower;
+              text ", a non-predicate function, is incompatible with ";
+              ref upper;
+              text ", which is a predicate function";
+            ];
         use_op;
         explanation = None;
       }
@@ -2390,7 +2409,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features = [ref lower; text " does not appear in the same position as "; ref upper];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [ref lower; text " does not appear in the same position as "; ref upper];
         use_op;
         explanation = None;
       }
@@ -2471,7 +2492,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = [ref reason; text " is not an object"];
+        message = MessageAlreadyFriendlyPrinted [ref reason; text " is not an object"];
         explanation = None;
         use_op;
       }
@@ -2497,7 +2518,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = [ref reason; text " is not a React component"];
+        message = MessageAlreadyFriendlyPrinted [ref reason; text " is not a React component"];
         use_op;
         explanation = None;
       }
@@ -2505,7 +2526,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = [ref reason; text " cannot calculate config"];
+        message = MessageAlreadyFriendlyPrinted [ref reason; text " cannot calculate config"];
         use_op;
         explanation = None;
       }
@@ -2519,13 +2540,15 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        features =
-          [
-            text "Flow cannot infer the type of ";
-            ref reason;
-            text ". Please provide an annotation for ";
-          ]
-          @ refs blame_reasons;
+        message =
+          MessageAlreadyFriendlyPrinted
+            ([
+               text "Flow cannot infer the type of ";
+               ref reason;
+               text ". Please provide an annotation for ";
+             ]
+            @ refs blame_reasons
+            );
         use_op;
         explanation = None;
       }
@@ -2545,7 +2568,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason unused_reason;
-        features = [text msg; text " "; ref def_reason];
+        message = MessageAlreadyFriendlyPrinted [text msg; text " "; ref def_reason];
         explanation = None;
         use_op;
       }
@@ -2595,7 +2618,13 @@ let friendly_message_of_msg loc_of_aloc msg =
         text " to turn it into an object and attempt to use it as a subtype of an interface";
       ]
     in
-    UseOp { loc = loc_of_reason reason; features; explanation = None; use_op }
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        message = MessageAlreadyFriendlyPrinted features;
+        explanation = None;
+        use_op;
+      }
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     let features =
       [
@@ -2607,7 +2636,13 @@ let friendly_message_of_msg loc_of_aloc msg =
         text "track the own-ness of their properties. Try using an object type instead";
       ]
     in
-    UseOp { loc = loc_of_reason spread_reason; features; explanation = None; use_op }
+    UseOp
+      {
+        loc = loc_of_reason spread_reason;
+        message = MessageAlreadyFriendlyPrinted features;
+        explanation = None;
+        use_op;
+      }
   | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
     let features =
       [
@@ -2623,7 +2658,13 @@ let friendly_message_of_msg loc_of_aloc msg =
         text " first or remove the indexer";
       ]
     in
-    UseOp { loc = loc_of_reason spread_reason; features; explanation = None; use_op }
+    UseOp
+      {
+        loc = loc_of_reason spread_reason;
+        message = MessageAlreadyFriendlyPrinted features;
+        explanation = None;
+        use_op;
+      }
   | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
     ->
     let (error_reason, fix_suggestion) =
@@ -2658,7 +2699,13 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
       @ fix_suggestion
     in
-    UseOp { loc = loc_of_reason spread_reason; features; explanation = None; use_op }
+    UseOp
+      {
+        loc = loc_of_reason spread_reason;
+        message = MessageAlreadyFriendlyPrinted features;
+        explanation = None;
+        use_op;
+      }
   | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
     ->
     let features =
@@ -2677,7 +2724,13 @@ let friendly_message_of_msg loc_of_aloc msg =
         text " exact";
       ]
     in
-    UseOp { loc = loc_of_reason spread_reason; features; explanation = None; use_op }
+    UseOp
+      {
+        loc = loc_of_reason spread_reason;
+        message = MessageAlreadyFriendlyPrinted features;
+        explanation = None;
+        use_op;
+      }
   | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
     Normal (MessageExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 })
   | EComputedPropertyWithUnion reason -> Normal (MessageCannotUseComputedPropertyWithUnion reason)
@@ -2781,13 +2834,15 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         use_op;
-        features =
-          [
-            ref reason_tparam;
-            text " is underconstrained by ";
-            ref reason_call;
-            text ". Either add explicit type arguments or cast the expression to your expected type";
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              ref reason_tparam;
+              text " is underconstrained by ";
+              ref reason_call;
+              text
+                ". Either add explicit type arguments or cast the expression to your expected type";
+            ];
         loc = loc_of_reason reason_call;
         explanation = None;
       }
@@ -2802,7 +2857,13 @@ let friendly_message_of_msg loc_of_aloc msg =
         text " as an interface";
       ]
     in
-    UseOp { loc = loc_of_reason reason_class; features; explanation = None; use_op }
+    UseOp
+      {
+        loc = loc_of_reason reason_class;
+        message = MessageAlreadyFriendlyPrinted features;
+        explanation = None;
+        use_op;
+      }
   | EMethodUnbinding { use_op; reason_op; reason_prop } ->
     let context =
       Flow_errors_utils.Friendly.(
@@ -2812,10 +2873,14 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason_op;
-        features =
-          [
-            ref reason_op; text " cannot be unbound from the "; context; text " where it was defined";
-          ];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [
+              ref reason_op;
+              text " cannot be unbound from the ";
+              context;
+              text " where it was defined";
+            ];
         use_op;
         explanation = None;
       }
@@ -2836,7 +2901,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc;
-        features = lower @ [text " but "] @ upper;
+        message = MessageAlreadyFriendlyPrinted (lower @ [text " but "] @ upper);
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithNormalFunctions;
       }
@@ -2844,7 +2909,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        features = [ref lower; text " and "; ref upper; text " are different React hooks"];
+        message =
+          MessageAlreadyFriendlyPrinted
+            [ref lower; text " and "; ref upper; text " are different React hooks"];
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithEachOther;
       }
