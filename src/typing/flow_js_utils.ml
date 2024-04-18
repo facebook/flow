@@ -920,11 +920,7 @@ let map_obj cx o reason_op ~map_t ~map_field =
     }
   in
   let reason = replace_desc_reason RObjectType reason_op in
-  let t = DefT (reason, ObjT { o with props_tmap; flags }) in
-  if Obj_type.is_exact o.flags.obj_kind then
-    ExactT (reason, t)
-  else
-    t
+  DefT (reason, ObjT { o with props_tmap; flags })
 
 let obj_key_mirror cx o reason_op =
   let map_t key t =
