@@ -1421,7 +1421,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (fun index -> function
             | None -> ()
             | Some key ->
-              let pred = LatentR { func; targs; arguments; index = index + 1 } in
+              let pred = LatentR { func; targs; arguments; index } in
               this#add_single_refinement key (L.LSet.singleton callee_loc, pred);
               this#add_pred_func_info callee_loc (call_exp, func, targs, arguments))
           refinement_keys_by_arg

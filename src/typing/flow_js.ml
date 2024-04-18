@@ -2590,7 +2590,7 @@ struct
           ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
-          match (Base.List.nth params (idx - 1), predicate) with
+          match (Base.List.nth params idx, predicate) with
           | (None, _) ->
             let msg =
               Error_message.EPredicateFuncTooShort

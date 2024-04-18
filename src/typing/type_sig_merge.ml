@@ -1730,7 +1730,7 @@ and merge_predicate env file (loc, p) =
       in
       Nel.fold_left
         (fun (pos1, neg1) (key, i) ->
-          let (pos2, neg2) = singleton key (Type.LatentP (call_info, i + 1)) in
+          let (pos2, neg2) = singleton key (Type.LatentP (call_info, i)) in
           (pred_and pos1 pos2, pred_or neg1 neg2))
         (Key_map.empty, Key_map.empty)
         keys
