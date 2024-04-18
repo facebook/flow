@@ -1376,8 +1376,6 @@ let dump_error_message =
         (string_of_use_op use_op)
     | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
       spf "EPlatformSpecificImplementationModuleLookupFailed(%s)" name
-    | EAdditionMixed (reason, use_op) ->
-      spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
     | EComparison (reason1, reason2) ->
       spf "EComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | ENonStrictEqualityComparison (reason1, reason2) ->

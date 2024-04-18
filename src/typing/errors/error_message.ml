@@ -111,7 +111,6 @@ and 'loc t' =
       loc: 'loc;
       name: string;
     }
-  | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of
@@ -827,7 +826,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; name } ->
     EPlatformSpecificImplementationModuleLookupFailed { loc = f loc; name }
-  | EAdditionMixed (r, op) -> EAdditionMixed (map_reason r, map_use_op op)
   | ETupleArityMismatch ((r1, r2), l, i, op) ->
     ETupleArityMismatch ((map_reason r1, map_reason r2), l, i, map_use_op op)
   | ENonLitArrayToTuple ((r1, r2), op) ->
@@ -1348,7 +1346,6 @@ let util_use_op_of_msg nope util = function
   | EPropPolarityMismatch (rs, p, ps, op) ->
     util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
   | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
-  | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
   | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
   | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
   | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
@@ -1795,7 +1792,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETupleNonIntegerIndex _
   | ENonLitArrayToTuple _
   | ETupleArityMismatch _
-  | EAdditionMixed _
   | EPrivateLookupFailed _
   | EPropPolarityMismatch _
   | EPropNotReadable _
@@ -2142,16 +2138,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       }
   | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
     Normal (MessagePlatformSpecificImplementationModuleLookupFailed name)
-  | EAdditionMixed (reason, use_op) ->
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [ref reason; text " could either behave like a string or like a number"];
-        use_op;
-        explanation = None;
-      }
   | EComparison (lower, upper) -> Normal (MessageCannotCompare { lower; upper })
   | ENonStrictEqualityComparison (lower, upper) ->
     Normal (MessageCannotCompareNonStrict { lower; upper })
@@ -3080,7 +3066,6 @@ let error_code_of_upper_kind = function
 
 let error_code_of_message err : error_code option =
   match err with
-  | EAdditionMixed _ -> Some UnclearAddition
   | EArithmeticOperand _ -> Some UnsafeArith
   | EInvalidBinaryArith { kind = (_, op); _ } -> begin
     match op with
