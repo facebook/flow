@@ -3414,7 +3414,12 @@ struct
               match arg with
               | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
               | SpreadArg t ->
-                add_output cx ~trace Error_message.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.EUnsupportedSyntax
+                     (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
+                  ))
             call_args_tlist;
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
         | ( CustomFunT (_, DebugThrow),
@@ -4918,11 +4923,26 @@ struct
               in
               rec_flow_t cx trace ~use_op:unknown_use (func, t)
             | [SpreadArg t1; SpreadArg t2] ->
-              add_output cx ~trace Error_message.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument));
-              add_output cx ~trace Error_message.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument))
+              add_output
+                cx
+                ~trace
+                (Error_message.EUnsupportedSyntax
+                   (loc_of_t t1, Flow_intermediate_error_types.SpreadArgument)
+                );
+              add_output
+                cx
+                ~trace
+                (Error_message.EUnsupportedSyntax
+                   (loc_of_t t2, Flow_intermediate_error_types.SpreadArgument)
+                )
             | [SpreadArg t]
             | [Arg _; SpreadArg t] ->
-              add_output cx ~trace Error_message.(EUnsupportedSyntax (loc_of_t t, SpreadArgument))
+              add_output
+                cx
+                ~trace
+                (Error_message.EUnsupportedSyntax
+                   (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
+                )
             | _ :: _ :: _ :: _ ->
               Error_message.EFunctionCallExtraArg
                 (mk_reason RFunctionUnusedArgument (loc_of_reason lreason), lreason, 2, use_op)
@@ -6172,7 +6192,7 @@ struct
                 )
           )
         | (DefT (reason, NumT lit), WriteComputedObjPropCheckT { reason_key; _ }) ->
-          let kind = Error_message.InvalidObjKey.kind_of_num_lit lit in
+          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
           add_output
             cx
             ~trace
@@ -6183,7 +6203,7 @@ struct
             cx
             ~trace
             (Error_message.EObjectComputedPropertyAssign
-               (reason, reason_key, Error_message.InvalidObjKey.Other)
+               (reason, reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
             )
         | _ ->
           add_output
@@ -10686,7 +10706,10 @@ struct
     | SpreadArg arr ->
       let reason = reason_of_t arr in
       let loc = loc_of_t arr in
-      add_output cx ~trace Error_message.(EUnsupportedSyntax (loc, SpreadArgument));
+      add_output
+        cx
+        ~trace
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.SpreadArgument));
       AnyT.error reason
 
   (* Wrapper functions around __flow that manage traces. Use these functions for

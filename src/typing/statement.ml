@@ -242,7 +242,7 @@ module Make
              {
                loc;
                obj_kind = `Literal;
-               key_error_kind = Error_message.InvalidObjKey.kind_of_num_value value;
+               key_error_kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value;
              }
           )
     | P.BigIntLiteral (loc, _)
@@ -250,7 +250,11 @@ module Make
     | P.Computed (loc, _) ->
       Error
         (Error_message.EUnsupportedKeyInObject
-           { loc; obj_kind = `Literal; key_error_kind = Error_message.InvalidObjKey.Other }
+           {
+             loc;
+             obj_kind = `Literal;
+             key_error_kind = Flow_intermediate_error_types.InvalidObjKey.Other;
+           }
         )
 
   let convert_call_targs =
@@ -746,7 +750,9 @@ module Make
         false
       | _ -> true
     then
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, AsConstOnNonLiteral))
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.AsConstOnNonLiteral))
 
   (*********)
   (* Types *)
@@ -991,7 +997,11 @@ module Make
             comments;
           }
         | (loc, _) ->
-          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
+          Flow.add_output
+            cx
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.CatchParameterDeclaration)
+            );
           Tast_utils.error_mapper#catch_clause catch_clause)
       | None ->
         let body = statement_list cx b.Block.body in
@@ -1070,7 +1080,9 @@ module Make
     | (loc, Break { Break.label; comments }) -> (loc, Break { Break.label; comments })
     | (loc, Continue { Continue.label; comments }) -> (loc, Continue { Continue.label; comments })
     | (loc, With _) as s ->
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, WithStatement));
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.WithStatement));
       Tast_utils.error_mapper#statement s
     | (loc, DeclareTypeAlias alias) ->
       let (_, type_alias_ast) = type_alias cx loc alias in
@@ -1434,7 +1446,9 @@ module Make
       let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
       (loc, ComponentDeclaration (reconstruct_component params_ast body_ast general))
     | (loc, ComponentDeclaration comp) ->
-      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ComponentSyntax));
       (loc, ComponentDeclaration (Tast_utils.error_mapper#component_declaration comp))
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in
@@ -1907,9 +1921,12 @@ module Make
     if not (File_key.is_lib_file (Context.file cx) && Type_env.in_global_scope cx) then
       Flow_js_utils.add_output
         cx
-        Error_message.(
-          EUnsupportedSyntax
-            (id_loc, ContextDependentUnsupportedStatement NonLibdefToplevelDeclareModule)
+        (Error_message.EUnsupportedSyntax
+           ( id_loc,
+             Flow_intermediate_error_types.(
+               ContextDependentUnsupportedStatement NonLibdefToplevelDeclareModule
+             )
+           )
         );
     let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) = body in
     let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
@@ -1925,11 +1942,12 @@ module Make
         | Error kind ->
           Flow_js_utils.add_output
             cx
-            Error_message.(
-              EUnsupportedSyntax
-                ( loc,
-                  ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareModule kind)
-                )
+            (Error_message.EUnsupportedSyntax
+               ( loc,
+                 Flow_intermediate_error_types.(
+                   ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareModule kind)
+                 )
+               )
             )
     );
     let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
@@ -1988,7 +2006,9 @@ module Make
         let reason = mk_reason (RNamespace name) name_loc in
         let t = Module_info_analyzer.analyze_declare_namespace cx reason body_statements in
         if not (File_key.is_lib_file (Context.file cx) || Context.namespaces cx) then
-          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.DeclareNamespace));
         (t, ((name_loc, t), { Ast.Identifier.name; comments }))
       in
       (t, { Ast.Statement.DeclareNamespace.id; body; comments })
@@ -2144,7 +2164,11 @@ module Make
        `enable_getters_and_setters` config option *)
     | Property (loc, Property.Get { key = Property.Computed _; _ })
     | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           (loc, Flow_intermediate_error_types.ObjectPropertyComputedGetSet)
+        );
       (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
     (* computed LHS silently ignored for now *)
     | Property (_, Property.Init { key = Property.Computed _; _ })
@@ -2962,7 +2986,9 @@ module Make
       | Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = _ }) ->
         Flow.add_output
           cx
-          Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression))
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.PredicateDeclarationWithoutExpression)
+          )
       | _ -> ());
       let reason = func_reason ~async ~generator sig_loc in
       let (t, func) =
@@ -3216,7 +3242,10 @@ module Make
       let t = Flow.get_builtin_type cx reason "Import$Meta" in
       ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
     | MetaProperty _ ->
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MetaPropertyExpression)
+        );
       Tast_utils.error_mapper#expression ex
     | Import { Import.argument = (source_loc, argument); comments } ->
       let t module_name =
@@ -3248,7 +3277,11 @@ module Make
       | _ ->
         let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals then (
-          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ImportDynamicArgument));
+          Flow.add_output
+            cx
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.ImportDynamicArgument)
+            );
           Tast_utils.error_mapper#expression ex
         ) else
           Tast_utils.unchecked_mapper#expression ex)
@@ -3419,7 +3452,11 @@ module Make
             ignore (arg_list cx arguments);
             let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
             if not ignore_non_literals then
-              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
+              Flow.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (loc, Flow_intermediate_error_types.RequireDynamicArgument)
+                );
             (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         in
         let id_t = MixedT.at callee_loc in
@@ -3701,7 +3738,11 @@ module Make
             )
           | (_, (_, { ArgList.arguments = Spread _ :: _; comments = _ })) ->
             ignore (arg_list cx arguments);
-            Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
+            Flow.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.InvariantSpreadArgument)
+              );
             let t = AnyT.at (AnyError None) loc in
             (t, Tast_utils.error_mapper#arg_list arguments)
           | (Some _, arguments) ->
@@ -5707,7 +5748,11 @@ module Make
           ~f:(function
             | UnresolvedArg (TupleElement { t; _ }, _) -> t
             | UnresolvedSpreadArg a ->
-              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc_children, SpreadArgument));
+              Flow.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (loc_children, Flow_intermediate_error_types.SpreadArgument)
+                );
               reason_of_t a |> AnyT.error)
           children
       in
@@ -7080,7 +7125,11 @@ module Make
                         _;
                       }
                     ) ) as elem ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
+                Flow.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.ClassPropertyLiteral)
+                  );
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
@@ -7090,7 +7139,11 @@ module Make
                 | Body.Property
                     (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ }) ) as elem
                 ->
-                Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
+                Flow.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.ClassPropertyComputed)
+                  );
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
@@ -7350,7 +7403,11 @@ module Make
           | Ast.Function.BodyExpression (loc, _) -> loc
           | Ast.Function.BodyBlock (loc, _) -> loc
         in
-        Flow_js.add_output cx Error_message.(EUnsupportedSyntax (body_loc, PredicateInvalidBody))
+        Flow_js.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (body_loc, Flow_intermediate_error_types.PredicateInvalidBody)
+          )
       end;
       match pred_synth with
       | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> begin
@@ -7700,7 +7757,9 @@ module Make
             let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
             Flow_js_utils.add_output
               cx
-              (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.UserDefinedTypeGuards)
+              );
             ( Annotated (AnyT.at (AnyError None) loc),
               Ast.Function.ReturnAnnot.TypeGuard t_ast',
               None
@@ -7722,7 +7781,9 @@ module Make
             Flow_js.add_output cx (Error_message.EDeprecatedPredicate loc);
             Flow_js.add_output
               cx
-              Error_message.(EUnsupportedSyntax (expr_loc, PredicateDeclarationForImplementation));
+              (Error_message.EUnsupportedSyntax
+                 (expr_loc, Flow_intermediate_error_types.PredicateDeclarationForImplementation)
+              );
             (Inferred (AnyT.error ret_reason), Some (Tast_utils.error_mapper#predicate pred))
           | _ -> (return_t, Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate)
         in
@@ -7902,9 +7963,11 @@ module Make
         cx
         (match l with
         | Declare_function_utils.PredicateDeclarationWithoutExpression loc ->
-          Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression))
+          Error_message.EUnsupportedSyntax
+            (loc, Flow_intermediate_error_types.PredicateDeclarationWithoutExpression)
         | Declare_function_utils.PredicateDeclarationAnonymousParameters loc ->
-          Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationAnonymousParameters)))
+          Error_message.EUnsupportedSyntax
+            (loc, Flow_intermediate_error_types.PredicateDeclarationAnonymousParameters))
     in
     let copy_t (_, t) l = (l, t) in
     let loc_of_tloc = fst in

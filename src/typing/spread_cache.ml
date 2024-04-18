@@ -23,7 +23,7 @@
 
 open Utils_js
 
-type reason_state = ALoc.t Error_message.exponential_spread_reason_group
+type reason_state = ALoc.t Flow_intermediate_error_types.exponential_spread_reason_group
 
 type cache_state =
   (int option * (Type.Object.slice * reason_state) IMap.t, reason_state * reason_state) result
@@ -42,7 +42,7 @@ let add_lower_bound cache spread_id resolve_idx r objtypes =
     | Ok (idx_option, map) ->
       let (map', has_multiple_lower_bounds) =
         let (new_entry, has_multiple_lower_bounds) =
-          let open Error_message in
+          let open Flow_intermediate_error_types in
           match IMap.find_opt resolve_idx map with
           | None ->
             ((Nel.hd objtypes, { first_reason = r; second_reason = None }), Nel.length objtypes <> 1)

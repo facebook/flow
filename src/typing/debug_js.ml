@@ -1532,7 +1532,7 @@ let dump_error_message =
         |> Base.String.concat ~sep:", "
         )
     | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
-      let key_error_kind = Error_message.InvalidObjKey.str_of_kind key_error_kind in
+      let key_error_kind = Flow_intermediate_error_types.InvalidObjKey.str_of_kind key_error_kind in
       let obj_kind =
         match obj_kind with
         | `Type -> "type"
@@ -1620,14 +1620,14 @@ let dump_error_message =
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EInstanceofRHS reason -> spf "EInstanceofRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2, kind) ->
-      let kind = Error_message.InvalidObjKey.str_of_kind kind in
+      let kind = Flow_intermediate_error_types.InvalidObjKey.str_of_kind kind in
       spf
         "EObjectComputedPropertyAccess (%s, %s, %s)"
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         kind
     | EObjectComputedPropertyAssign (reason1, reason2, kind) ->
-      let kind = Error_message.InvalidObjKey.str_of_kind kind in
+      let kind = Flow_intermediate_error_types.InvalidObjKey.str_of_kind kind in
       spf
         "EObjectComputedPropertyAssign (%s, %s, %s)"
         (dump_reason cx reason1)
@@ -1674,14 +1674,15 @@ let dump_error_message =
         "EDocblockError (%s, %s)"
         (string_of_aloc loc)
         (match err with
-        | MultipleFlowAttributes -> "MultipleFlowAttributes"
-        | InvalidFlowMode _ -> "InvalidFlowMode"
-        | MultipleJSXAttributes -> "MultipleJSXAttributes"
-        | InvalidJSXAttribute _ -> "InvalidJSXAttribute"
-        | MultipleJSXRuntimeAttributes -> "MultipleJSXRuntimeAttributes"
-        | InvalidJSXRuntimeAttribute -> "InvalidJSXRuntimeAttribute"
-        | InvalidSupportsPlatform _ -> "InvalidSupportsPlatform"
-        | DisallowedSupportsPlatform -> "DisallowedSupportsPlatform")
+        | Flow_intermediate_error_types.MultipleFlowAttributes -> "MultipleFlowAttributes"
+        | Flow_intermediate_error_types.InvalidFlowMode _ -> "InvalidFlowMode"
+        | Flow_intermediate_error_types.MultipleJSXAttributes -> "MultipleJSXAttributes"
+        | Flow_intermediate_error_types.InvalidJSXAttribute _ -> "InvalidJSXAttribute"
+        | Flow_intermediate_error_types.MultipleJSXRuntimeAttributes ->
+          "MultipleJSXRuntimeAttributes"
+        | Flow_intermediate_error_types.InvalidJSXRuntimeAttribute -> "InvalidJSXRuntimeAttribute"
+        | Flow_intermediate_error_types.InvalidSupportsPlatform _ -> "InvalidSupportsPlatform"
+        | Flow_intermediate_error_types.DisallowedSupportsPlatform -> "DisallowedSupportsPlatform")
     | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EAmbiguousObjectType loc -> spf "EAmbiguousObjectType (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->
@@ -1695,7 +1696,7 @@ let dump_error_message =
     | EDeprecatedDollarObjMap loc -> spf "EDeprecatedDollarObjMap (%s)" (string_of_aloc loc)
     | EDeprecatedPredicate loc -> spf "EDeprecatedPredicate (%s)" (string_of_aloc loc)
     | EIncorrectTypeWithReplacement { loc; kind } ->
-      let deprecated_name = Error_message.IncorrectType.incorrect_of_kind kind in
+      let deprecated_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
       spf "EIncorrectTypeWithReplacement (%s) (%s)" (string_of_aloc loc) deprecated_name
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
@@ -1793,7 +1794,7 @@ let dump_error_message =
         (dump_reason cx object2_reason)
         (string_of_use_op use_op)
     | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
-      let format_reason_group { first_reason; second_reason } =
+      let format_reason_group { Flow_intermediate_error_types.first_reason; second_reason } =
         spf
           "[%s; %s]"
           (dump_reason cx first_reason)
@@ -1875,7 +1876,7 @@ let dump_error_message =
         "EAssignConstLikeBinding (%s) (%s) (%s)"
         (string_of_aloc loc)
         (dump_reason cx definition)
-        (string_of_assigned_const_like_binding_type binding_kind)
+        (Flow_intermediate_error_types.string_of_assigned_const_like_binding_type binding_kind)
     | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
       spf
         "ECannotResolveOpenTvar (%s) (%s) (%s)"

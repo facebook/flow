@@ -2317,7 +2317,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | DefT (_, StrT _)
           when from_annot ->
           let reason_prop = reason_of_t elem_t in
-          let kind = Error_message.InvalidObjKey.Other in
+          let kind = Flow_intermediate_error_types.InvalidObjKey.Other in
           add_output
             cx
             ~trace
@@ -2331,7 +2331,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | GenericT { bound = DefT (_, NumT lit); _ }
         | DefT (_, NumT lit) ->
           let reason_prop = reason_of_t elem_t in
-          let kind = Error_message.InvalidObjKey.kind_of_num_lit lit in
+          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
           add_output
             cx
             ~trace
@@ -2343,7 +2343,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
             cx
             ~trace
             (Error_message.EObjectComputedPropertyAccess
-               (reason_op, reason_prop, Error_message.InvalidObjKey.Other)
+               (reason_op, reason_prop, Flow_intermediate_error_types.InvalidObjKey.Other)
             );
           F.error_type cx trace reason_op))
 end

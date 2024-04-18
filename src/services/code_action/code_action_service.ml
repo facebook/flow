@@ -701,8 +701,8 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
     else
       []
   | Error_message.EIncorrectTypeWithReplacement { kind; loc = error_loc } ->
-    let incorrect_name = Error_message.IncorrectType.incorrect_of_kind kind in
-    let replacement_name = Error_message.IncorrectType.replacement_of_kind kind in
+    let incorrect_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
+    let replacement_name = Flow_intermediate_error_types.IncorrectType.replacement_of_kind kind in
     let title = Printf.sprintf "Convert to `%s`" replacement_name in
     let diagnostic_title = Printf.sprintf "convert_%s_type" incorrect_name in
     if loc_opt_intersects ~error_loc ~loc then
@@ -721,7 +721,8 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
     if loc_opt_intersects ~error_loc ~loc then
       match (renders_variant, invalid_render_type_kind) with
       | ( Flow_ast.Type.Renders.Star,
-          (Error_message.InvalidRendersNullVoidFalse | Error_message.InvalidRendersIterable)
+          ( Flow_intermediate_error_types.InvalidRendersNullVoidFalse
+          | Flow_intermediate_error_types.InvalidRendersIterable )
         ) ->
         [
           {
@@ -732,7 +733,7 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
             target_loc = error_loc;
           };
         ]
-      | (Flow_ast.Type.Renders.Maybe, Error_message.InvalidRendersNullVoidFalse) ->
+      | (Flow_ast.Type.Renders.Maybe, Flow_intermediate_error_types.InvalidRendersNullVoidFalse) ->
         [
           {
             title = "Simplify `renders?`";
@@ -742,7 +743,7 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
             target_loc = error_loc;
           };
         ]
-      | (_, Error_message.InvalidRendersNullVoidFalse) ->
+      | (_, Flow_intermediate_error_types.InvalidRendersNullVoidFalse) ->
         [
           {
             title = "Switch to `renders?`";
@@ -752,7 +753,7 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
             target_loc = error_loc;
           };
         ]
-      | (_, Error_message.InvalidRendersIterable) ->
+      | (_, Flow_intermediate_error_types.InvalidRendersIterable) ->
         [
           {
             title = "Switch to `renders*`";

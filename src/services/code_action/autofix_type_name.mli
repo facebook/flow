@@ -6,7 +6,7 @@
  *)
 
 val convert_type :
-  Error_message.IncorrectType.t ->
+  Flow_intermediate_error_types.IncorrectType.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t

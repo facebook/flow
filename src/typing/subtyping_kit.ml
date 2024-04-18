@@ -1642,6 +1642,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (reason, StrT (Literal (_, name))), DefT (reason_op, CharSetT chars)) ->
       let str = display_string_of_name name in
       let module CharSet = String_utils.CharSet in
+      let open Flow_intermediate_error_types in
       Error_message.(
         let (invalid, _) =
           String_utils.fold_left

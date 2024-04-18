@@ -706,23 +706,32 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | (Bindings.(Class | DeclaredClass), AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
-          Error_message.(
-            EAssignConstLikeBinding
-              { loc = assignment_loc; definition = def_reason; binding_kind = ClassNameBinding }
+          (Error_message.EAssignConstLikeBinding
+             {
+               loc = assignment_loc;
+               definition = def_reason;
+               binding_kind = Flow_intermediate_error_types.ClassNameBinding;
+             }
           )
       | (Bindings.Function, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
-          Error_message.(
-            EAssignConstLikeBinding
-              { loc = assignment_loc; definition = def_reason; binding_kind = FunctionNameBinding }
+          (Error_message.EAssignConstLikeBinding
+             {
+               loc = assignment_loc;
+               definition = def_reason;
+               binding_kind = Flow_intermediate_error_types.FunctionNameBinding;
+             }
           )
       | (Bindings.Component, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
-          Error_message.(
-            EAssignConstLikeBinding
-              { loc = assignment_loc; definition = def_reason; binding_kind = ComponentNameBinding }
+          (Error_message.EAssignConstLikeBinding
+             {
+               loc = assignment_loc;
+               definition = def_reason;
+               binding_kind = Flow_intermediate_error_types.ComponentNameBinding;
+             }
           )
       | (Bindings.Import, AssignmentWrite) ->
         Some
@@ -732,14 +741,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | (Bindings.DeclaredFunction _, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
-          Error_message.(
-            EAssignConstLikeBinding
-              {
-                loc = assignment_loc;
-                definition = def_reason;
-                (* The error message is unaffected by the predicate flag *)
-                binding_kind = DeclaredFunctionNameBinding;
-              }
+          (Error_message.EAssignConstLikeBinding
+             {
+               loc = assignment_loc;
+               definition = def_reason;
+               (* The error message is unaffected by the predicate flag *)
+               binding_kind = Flow_intermediate_error_types.DeclaredFunctionNameBinding;
+             }
           )
       | ( Bindings.(Var | DeclaredVar),
           (LetBinding | ClassBinding | ConstBinding | FunctionBinding | ComponentBinding)

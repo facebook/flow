@@ -162,7 +162,9 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     | Property.BigIntLiteral (loc, _) ->
       Flow_js.add_output
         cx
-        Error_message.(EUnsupportedSyntax (loc, DestructuringObjectPropertyLiteralNonString));
+        (Error_message.EUnsupportedSyntax
+           (loc, Flow_intermediate_error_types.DestructuringObjectPropertyLiteralNonString)
+        );
       (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
   let identifier cx ~f acc name_loc name =
@@ -215,7 +217,11 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     let check_for_invalid_annot annot =
       match (acc.has_parent, annot) with
       | (true, Ast.Type.Available (loc, _)) ->
-        Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, AnnotationInsideDestructuring))
+        Flow_js.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.AnnotationInsideDestructuring)
+          )
       | _ -> ()
     in
     let open Ast.Pattern in
@@ -241,7 +247,9 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       | Expression e ->
         Flow_js.add_output
           cx
-          Error_message.(EUnsupportedSyntax (loc, DestructuringExpressionPattern));
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.DestructuringExpressionPattern)
+          );
         Expression (Tast_utils.error_mapper#expression e)
     )
 

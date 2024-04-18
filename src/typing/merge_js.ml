@@ -367,28 +367,29 @@ let validate_renders_type_arguments cx =
              | t ->
                Flow_js_utils.add_output
                  cx
-                 Error_message.(
-                   EInvalidRendersTypeArgument
-                     {
-                       loc;
-                       renders_variant;
-                       invalid_render_type_kind = InvalidRendersStructural (TypeUtil.reason_of_t t);
-                       invalid_type_reasons = Nel.one invalid_type_reason;
-                     }
+                 (Error_message.EInvalidRendersTypeArgument
+                    {
+                      loc;
+                      renders_variant;
+                      invalid_render_type_kind =
+                        Flow_intermediate_error_types.InvalidRendersStructural
+                          (TypeUtil.reason_of_t t);
+                      invalid_type_reasons = Nel.one invalid_type_reason;
+                    }
                  )
          )
     | DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
     | t ->
       Flow_js_utils.add_output
         cx
-        Error_message.(
-          EInvalidRendersTypeArgument
-            {
-              loc;
-              renders_variant;
-              invalid_render_type_kind = InvalidRendersNonNominalElement (TypeUtil.reason_of_t t);
-              invalid_type_reasons = Nel.one invalid_type_reason;
-            }
+        (Error_message.EInvalidRendersTypeArgument
+           {
+             loc;
+             renders_variant;
+             invalid_render_type_kind =
+               Flow_intermediate_error_types.InvalidRendersNonNominalElement (TypeUtil.reason_of_t t);
+             invalid_type_reasons = Nel.one invalid_type_reason;
+           }
         )
   in
   let validate_element ~allow_generic loc renders_variant = function
@@ -398,14 +399,13 @@ let validate_renders_type_arguments cx =
       else
         Flow_js_utils.add_output
           cx
-          Error_message.(
-            EInvalidRendersTypeArgument
-              {
-                loc;
-                renders_variant;
-                invalid_render_type_kind = InvalidRendersGenericT;
-                invalid_type_reasons = Nel.one reason;
-              }
+          (Error_message.EInvalidRendersTypeArgument
+             {
+               loc;
+               renders_variant;
+               invalid_render_type_kind = Flow_intermediate_error_types.InvalidRendersGenericT;
+               invalid_type_reasons = Nel.one reason;
+             }
           );
       None
     | OpaqueT (r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: _; _ })
@@ -431,14 +431,13 @@ let validate_renders_type_arguments cx =
       else (
         Flow_js_utils.add_output
           cx
-          Error_message.(
-            EInvalidRendersTypeArgument
-              {
-                loc;
-                renders_variant;
-                invalid_render_type_kind = UncategorizedInvalidRenders;
-                invalid_type_reasons = Nel.one r;
-              }
+          (Error_message.EInvalidRendersTypeArgument
+             {
+               loc;
+               renders_variant;
+               invalid_render_type_kind = Flow_intermediate_error_types.UncategorizedInvalidRenders;
+               invalid_type_reasons = Nel.one r;
+             }
           );
         None
       )
@@ -469,17 +468,18 @@ let validate_renders_type_arguments cx =
     |> Base.Option.iter ~f:(fun (invalid_type_reasons, kind) ->
            Flow_js_utils.add_output
              cx
-             Error_message.(
-               EInvalidRendersTypeArgument
-                 {
-                   loc;
-                   renders_variant;
-                   invalid_render_type_kind =
-                     (match kind with
-                     | `InvalidRendersNullVoidFalse -> Error_message.InvalidRendersNullVoidFalse
-                     | `InvalidRendersIterable -> Error_message.InvalidRendersIterable);
-                   invalid_type_reasons;
-                 }
+             (Error_message.EInvalidRendersTypeArgument
+                {
+                  loc;
+                  renders_variant;
+                  invalid_render_type_kind =
+                    (match kind with
+                    | `InvalidRendersNullVoidFalse ->
+                      Flow_intermediate_error_types.InvalidRendersNullVoidFalse
+                    | `InvalidRendersIterable ->
+                      Flow_intermediate_error_types.InvalidRendersIterable);
+                  invalid_type_reasons;
+                }
              )
        )
   in

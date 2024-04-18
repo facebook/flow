@@ -7,6 +7,170 @@
 
 open Reason
 
+type assigned_const_like_binding_type =
+  | ClassNameBinding
+  | FunctionNameBinding
+  | DeclaredFunctionNameBinding
+  | ComponentNameBinding
+
+let string_of_assigned_const_like_binding_type = function
+  | ClassNameBinding -> "class"
+  | FunctionNameBinding -> "function"
+  | DeclaredFunctionNameBinding -> "declared function"
+  | ComponentNameBinding -> "component"
+
+type docblock_error =
+  | MultipleFlowAttributes
+  | InvalidFlowMode of string
+  | MultipleJSXAttributes
+  | InvalidJSXAttribute of string option
+  | MultipleJSXRuntimeAttributes
+  | InvalidJSXRuntimeAttribute
+  | InvalidSupportsPlatform of string
+  | DisallowedSupportsPlatform
+
+type 'loc exponential_spread_reason_group = {
+  first_reason: 'loc virtual_reason;
+  second_reason: 'loc virtual_reason option;
+}
+
+type context_dependent_unsupported_statement =
+  | ToplevelLibraryImport
+  | NonLibdefToplevelDeclareModule
+  | UnsupportedStatementInLibdef of string
+  | UnsupportedStatementInDeclareModule of string
+  | UnsupportedStatementInDeclareNamespace of string
+
+type unsupported_syntax =
+  | AnnotationInsideDestructuring
+  | AsConstOnNonLiteral
+  | ExistsType
+  | MetaPropertyExpression
+  | ObjectPropertyGetSet
+  | ObjectPropertyComputedGetSet
+  | InvariantSpreadArgument
+  | ClassPropertyLiteral
+  | ClassPropertyComputed
+  | RequireDynamicArgument
+  | CatchParameterDeclaration
+  | DestructuringObjectPropertyLiteralNonString
+  | DestructuringExpressionPattern
+  | JSXTypeArgs
+  | PredicateDeclarationForImplementation
+  | PredicateDeclarationWithoutExpression
+  | PredicateDeclarationAnonymousParameters
+  | PredicateInvalidBody
+  | MultipleIndexers
+  | MultipleProtos
+  | ExplicitCallAfterProto
+  | ExplicitProtoAfterCall
+  | SpreadArgument
+  | ImportDynamicArgument
+  | IllegalName
+  | UserDefinedTypeGuards
+  | UnsupportedInternalSlot of {
+      name: string;
+      static: bool;
+    }
+  | ContextDependentUnsupportedStatement of context_dependent_unsupported_statement
+  | WithStatement
+  | ComponentSyntax
+  | DeclareNamespace
+
+type 'loc invalid_render_type_kind =
+  | InvalidRendersNullVoidFalse
+  | InvalidRendersIterable
+  | InvalidRendersStructural of 'loc virtual_reason
+  | InvalidRendersNonNominalElement of 'loc virtual_reason
+  | InvalidRendersGenericT
+  | UncategorizedInvalidRenders
+
+type invalid_char_set =
+  | DuplicateChar of Char.t
+  | InvalidChar of Char.t
+
+module InvalidCharSetSet = Flow_set.Make (struct
+  type t = invalid_char_set
+
+  let compare = Stdlib.compare
+end)
+
+module IncorrectType = struct
+  type t =
+    | Partial
+    | Shape
+    | TSReadonly
+    | TSReadonlyArray
+    | TSReadonlyMap
+    | TSReadonlySet
+    | TSNonNullable
+
+  let incorrect_of_kind = function
+    | Partial -> "$Partial"
+    | Shape -> "$Shape"
+    | TSReadonly -> "Readonly"
+    | TSReadonlyArray -> "ReadonlyArray"
+    | TSReadonlyMap -> "ReadonlyMap"
+    | TSReadonlySet -> "ReadonlySet"
+    | TSNonNullable -> "NonNullable"
+
+  let replacement_of_kind = function
+    | Partial -> "Partial"
+    | Shape -> "Partial"
+    | TSReadonly -> "$ReadOnly"
+    | TSReadonlyArray -> "$ReadOnlyArray"
+    | TSReadonlyMap -> "$ReadOnlyMap"
+    | TSReadonlySet -> "$ReadOnlySet"
+    | TSNonNullable -> "$NonMaybeType"
+
+  type error_type =
+    | DeprecatedUtility
+    | TSType
+
+  let error_type_of_kind = function
+    | Partial
+    | Shape ->
+      DeprecatedUtility
+    | TSReadonly
+    | TSReadonlyArray
+    | TSReadonlyMap
+    | TSReadonlySet
+    | TSNonNullable ->
+      TSType
+end
+
+module InvalidObjKey = struct
+  type t =
+    | Other
+    | NumberNonLit
+    | NumberNonInt
+    | NumberTooLarge
+    | NumberTooSmall
+
+  let kind_of_num_value value =
+    if not (Float.is_integer value) then
+      NumberNonInt
+    else if value > Js_number.max_safe_integer then
+      NumberTooLarge
+    else if value < Js_number.min_safe_integer then
+      NumberTooSmall
+    else
+      Other
+
+  let kind_of_num_lit = function
+    | Type.Truthy
+    | Type.AnyLiteral ->
+      NumberNonLit
+    | Type.Literal (_, (value, _)) -> kind_of_num_value value
+
+  let str_of_kind = function
+    | Other -> "other"
+    | NumberNonLit -> "number not literal"
+    | NumberNonInt -> "number non-int"
+    | NumberTooLarge -> "number too large"
+    | NumberTooSmall -> "number too small"
+end
+
 type 'loc explanation =
   | ExplanationAbstractEnumCasting
   | ExplanationArrayInvariantTyping
@@ -146,10 +310,210 @@ type 'loc root_message =
 
 type 'loc message =
   | MessageAlreadyFriendlyPrinted of Loc.t Flow_errors_utils.Friendly.message_feature list
+  | MessagePlainTextReservedForInternalErrorOnly of string
+  | MessageAlreadyExhaustivelyCheckOneEnumMember of {
+      description: 'loc virtual_reason_desc;
+      member_name: string;
+      prev_check_reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageAlreadyExhaustivelyCheckAllEnumMembers of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageAmbiguousNumericKeyWithVariance
+  | MessageAmbiguousObjectType
+  | MessageAnyValueUsedAsType of 'loc virtual_reason_desc
+  | MessageCannotAccessEnumMember of {
+      member_name: name option;
+      suggestion: string option;
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageCannotAccessObjectWithComputedProp of {
+      reason_prop: 'loc virtual_reason;
+      kind: InvalidObjKey.t;
+    }
+  | MessageCannotAccessReactRefInRender of {
+      usage: 'loc virtual_reason;
+      in_hook: bool;
+    }
+  | MessageCannotApplyNonPolymorphicType
+  | MessageCannotAssignToObjectWithComputedProp of 'loc virtual_reason
+  | MessageCannotAssignToObjectWithComputedPropWithKey of {
+      reason_prop: 'loc virtual_reason;
+      reason_key: 'loc virtual_reason;
+      kind: InvalidObjKey.t;
+    }
   | MessageCannotAssignToOptionalTupleElement of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
+  | MessageCannotAssignToInvalidLHS
+  | MessageCannotBuildTypedInterface of 'loc Signature_error.t
+  | MessageCannotCallMaybeReactHook of {
+      callee_loc: 'loc;
+      hooks: 'loc list;
+      non_hooks: 'loc list;
+    }
+  | MessageCannotCallNonReactHookWithIllegalName of 'loc
+  | MessageCannotCallObjectFunctionOnEnum of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageCannotCallReactComponent of 'loc virtual_reason
+  | MessageCannotCallReactFunctionWithoutAtLeastNArgs of {
+      fn_name: string;
+      n: int;
+    }
+  | MessageCannotCallReactHookConditionally of 'loc
+  | MessageCannotCallReactHookInNonComponentOrHook of 'loc
+  | MessageCannotCallReactHookWithIllegalName of 'loc
+  | MessageCannotChangeEnumMember of 'loc virtual_reason
+  | MessageCannotCompare of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageCannotCompareNonStrict of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageCannotCreateExactType of 'loc virtual_reason
+  | MessageCannotDeclareAlreadyBoundName of concrete_reason
+  | MessageCannotDelete of 'loc virtual_reason
+  | MessageCannotDetermineEmptyArrayLiteralType
+  | MessageCannotDetermineModuleType
+  | MessageCannotExportRenamedDefault of {
+      name: string option;
+      is_reexport: bool;
+    }
+  | MessageCannotExhaustivelyCheckAbstractEnums of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageCannotExhaustivelyCheckEnumWithUnknowns of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageCannotImplementNonInterface of 'loc virtual_reason_desc
+  | MessageCannotInstantiateObjectUtilTypeWithEnum of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageCannotIterateEnum of {
+      reason: 'loc virtual_reason;
+      for_in: bool;
+    }
+  | MessageCannotIterateWithForIn of 'loc virtual_reason
+  | MessageCannotMutateThisPrototype
+  | MessageCannotNestComponents
+  | MessageCannotOptimizeUnionDueToNonUniqueKeys of
+      'loc virtual_reason Nel.t Type.UnionRep.UnionEnumMap.t NameUtils.Map.t
+  | MessageCannotOptimizeUnionInternally of 'loc Type.UnionRep.optimized_error
+  | MessageCannotPassReactRefAsArgument of {
+      usage: 'loc virtual_reason;
+      in_hook: bool;
+    }
+  | MessageCannotPerformArithOnNonNumbersOrBigInt of 'loc virtual_reason
+  | MessageCannotPerformBigIntRShift3 of 'loc virtual_reason
+  | MessageCannotPerformBigIntUnaryPlus of 'loc virtual_reason
+  | MessageCannotPerformBinaryArith of {
+      kind: Type.ArithKind.t;
+      reason_l: 'loc virtual_reason;
+      reason_r: 'loc virtual_reason;
+    }
+  | MessageCannotReassignConstant of concrete_reason
+  | MessageCannotReassignConstantLikeBinding of {
+      definition: 'loc virtual_reason;
+      binding_kind: assigned_const_like_binding_type;
+    }
+  | MessageCannotReassignEnum of concrete_reason
+  | MessageCannotReassignImport of concrete_reason
+  | MessageCannotRedeclareVar of concrete_reason
+  | MessageCannotReferencePredicateParameter of {
+      pred_reason: 'loc virtual_reason;
+      binding_reason: 'loc virtual_reason;
+    }
+  | MessageCannotResolveBuiltin of {
+      name: name;
+      potential_generator: string option;
+    }
+  | MessageCannotUseAsConstructor of 'loc virtual_reason
+  | MessageCannotUseAsPrototype of 'loc virtual_reason
+  | MessageCannotUseAsSuperClass of 'loc virtual_reason
+  | MessageCannotUseBeforeDeclaration of concrete_reason
+  | MessageCannotUseComputedPropertyWithUnion of 'loc virtual_reason
+  | MessageCannotUseDefaultImportWithDestrucuturing
+  | MessageCannotUseDollarCharset
+  | MessageCannotUseDollarExports
+  | MessageCannotUseDollarPropertyType
+  | MessageCannotUseEnumMemberUsedAsType of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageCannotUseExportInNonLegalToplevelContext of string
+  | MessageCannotUseImportStar of 'loc virtual_reason
+  | MessageCannotUseInOperatorDueToBadLHS of 'loc virtual_reason
+  | MessageCannotUseInOperatorDueToBadRHS of 'loc virtual_reason
+  | MessageCannotUseInstanceOfOperatorDueToBadRHS of 'loc virtual_reason
+  | MessageCannotUseMixedImportAndRequire of 'loc virtual_reason
+  | MessageCannotUseNonPolymorphicTypeWithTypeArgs of {
+      is_new: bool;
+      reason_arity: 'loc virtual_reason;
+      expected_arity: int;
+    }
+  | MessageCannotUseTypeDueToPolarityMismatch of {
+      reason_targ: 'loc virtual_reason;
+      expected_polarity: Polarity.t;
+      actual_polarity: Polarity.t;
+    }
+  | MessageCannotUseTypeForAnnotationInference of {
+      reason_op: 'loc virtual_reason;
+      reason: 'loc virtual_reason;
+      suggestion: string option;
+    }
+  | MessageCannotUseTypeGuardWithFunctionParamHavoced of {
+      type_guard_desc: 'loc virtual_reason_desc;
+      param_reason: 'loc virtual_reason;
+      call_locs: 'loc list;
+    }
+  | MessageCannotUseTypeInValuePosition of {
+      reason: concrete_reason;
+      type_only_namespace: bool;
+      imported_name: string option;
+    }
+  | MessageCannotUseTypeWithInvalidTypeArgs of {
+      reason_main: 'loc virtual_reason;
+      reason_tapp: 'loc virtual_reason;
+    }
+  | MessageCannotUseTypeWithoutAnyTypeArgs of {
+      reason_arity: 'loc virtual_reason;
+      min_arity: int;
+      max_arity: int;
+    }
+  | MessageCannotUseTypeWithoutAtLeastNTypeArgs of int
+  | MessageCannotUseTypeWithoutExactlyNTypeArgs of int
+  | MessageCannotUseTypeWithTooFewTypeArgs of {
+      reason_arity: 'loc virtual_reason;
+      n: int;
+    }
+  | MessageCannotUseTypeWithTooManyTypeArgs of {
+      reason_arity: 'loc virtual_reason;
+      n: int;
+    }
+  | MessageComponentMissingReturn of 'loc virtual_reason
+  | MessageComponentNonUpperCase
+  | MessageDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc Env_api.annot_loc list) Nel.t
+  | MessageDefinitionInvalidRecursive of {
+      description: 'loc virtual_reason_desc;
+      recursion: 'loc list;
+      annot_locs: 'loc Env_api.annot_loc list;
+    }
+  | MessageDeprecatedBool
+  | MessageDeprecatedDollarCall
+  | MessageDeprecatedObjMap
+  | MessageDeprecatedPredicate
+  | MessageDocblockError of docblock_error
   | MessageDoesNotRender of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
@@ -175,10 +539,34 @@ type 'loc message =
       value: 'loc virtual_reason;
       def: 'loc virtual_reason;
     }
+  | MessageDuplicateClassMember of {
+      name: string;
+      static: bool;
+    }
+  | MessageDuplicateEnumMember of {
+      enum_reason: 'loc virtual_reason;
+      prev_use_loc: 'loc;
+    }
+  | MessageDuplicateModuleProvider of {
+      module_name: string;
+      provider: 'loc;
+      conflict: 'loc;
+    }
+  | MessageEnumsNotEnabled
+  | MessageExponentialSpread of {
+      reason: 'loc virtual_reason;
+      reasons_for_operand1: 'loc exponential_spread_reason_group;
+      reasons_for_operand2: 'loc exponential_spread_reason_group;
+    }
+  | MessageExportValueAsType of string
   | MessageFunctionRequiresAnotherArgument of {
       def: 'loc virtual_reason;
       from: 'loc virtual_reason option;
     }
+  | MessageImplicitInexactObject
+  | MessageImportTypeAsTypeof of string
+  | MessageImportTypeAsValue of string
+  | MessageImportValueAsType of string
   | MessageIncompatibleImplicitReturn of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
@@ -193,19 +581,97 @@ type 'loc message =
       source_type: 'loc virtual_reason;
       mapped_type: 'loc virtual_reason;
     }
+  | MessageIncomplateExhausiveCheckEnum of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+      left_to_check: string list;
+      default_case: 'loc virtual_reason option;
+    }
+  | MessageIncorrectType of IncorrectType.t
   | MessageInvalidArgument of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
+  | MessageInvalidCatchParameterAnnotation
+  | MessageInvalidComponentRestParam
+  | MessageInvalidEnumMemberCheck of {
+      description: 'loc virtual_reason_desc;
+      enum_reason: 'loc virtual_reason;
+      example_member: string option;
+    }
+  | MessageInvalidGenericRef of string
+  | MessageInvalidGraphQL of Graphql.error
+  | MessageInvalidHookNaming
+  | MessageInvalidImportStarUse of 'loc virtual_reason
+  | MessageInvalidInferType
+  | MessageInvalidLintSettings of LintSettings.lint_parse_error
+  | MessageInvalidMappedTypeInInterfaceOrDeclaredClass
+  | MessageInvalidMappedTypeWithExactOrInexact
+  | MessageInvalidMappedTypeWithExtraProps
+  | MessageInvalidMappedTypeWithOptionalityRemoval
+  | MessageInvalidRefPropertyType of string
+  | MessageInvalidRefPropertyInSpread of {
+      ref_loc: 'loc;
+      spread_loc: 'loc;
+    }
+  | MessageInvalidRendersTypeArgument of {
+      renders_variant: Flow_ast.Type.Renders.variant;
+      invalid_render_type_kind: 'loc invalid_render_type_kind;
+      invalid_type_reasons: 'loc virtual_reason Nel.t;
+    }
+  | MessageInvalidSelfReferencingTypeAnnotation of {
+      name: string;
+      loc: 'loc;
+    }
+  | MessageInvalidTrivialRecursiveDefinition of 'loc virtual_reason_desc
+  | MessageInvalidTupleRequiredAfterOptional of {
+      reason_tuple: 'loc virtual_reason;
+      reason_required: 'loc virtual_reason;
+      reason_optional: 'loc virtual_reason;
+    }
+  | MessageInvalidTupleTypeSpread of 'loc virtual_reason
+  | MessageInvalidTypeCastingSyntax of Options.CastingSyntax.t
+  | MessageInvalidTypeGuardFunctionKind of string
+  | MessageInvalidTypeGuardFunctionWritten of {
+      type_guard_reason: 'loc virtual_reason;
+      write_locs: 'loc list;
+    }
+  | MessageInvalidTypeGuardParamUnbound of 'loc virtual_reason
+  | MessageInvalidUseOfFlowEnforceOptimized of 'loc virtual_reason
   | MessageLowerIsNot of {
       lower: 'loc virtual_reason;
       desc: string;
+    }
+  | MessageMissingAnnotation of 'loc virtual_reason_desc
+  | MessageMissingAnnotationDueToContextualTypingFailure of 'loc virtual_reason_desc
+  | MessageMissingAnnotationForGenericFunction of 'loc virtual_reason_desc
+  | MessageMissingPlatformSupport of {
+      available_platforms: SSet.t;
+      required_platforms: SSet.t;
+    }
+  | MessageNoDefaultExport of {
+      module_name: string;
+      suggestion: string option;
+    }
+  | MessageNoNamedExport of {
+      module_name: string;
+      export_name: string;
+      suggestion: string option;
     }
   | MessageNonLiteralString of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
       n: int;
     }
+  | MessageNonConstVarExport of 'loc virtual_reason option
+  | MessageNonStrictImport
+  | MessageNonToplevelExport
+  | MessageOnlyDefaultExport of {
+      module_name: string;
+      export_name: string;
+    }
+  | MessageParseError of Parse_error.t
+  | MessagePlatformSpecificImplementationModuleLookupFailed of string
   | MessagePropMissing of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason option;
@@ -219,8 +685,82 @@ type 'loc message =
       upole: Polarity.t;
       prop: string option;
     }
+  | MessageReactIntrinsicOverlap of {
+      use: 'loc virtual_reason;
+      def: 'loc;
+      type_: 'loc;
+      mixed: bool;
+    }
+  | MessageRecursionLimitExceeded
+  | MessageRedeclareComponentProp of {
+      first: 'loc virtual_reason;
+      second_loc: 'loc;
+      spread_loc: 'loc;
+    }
+  | MessageShouldAnnotateVariableOnlyInitializedInGenericContext of {
+      reason: 'loc virtual_reason;
+      possible_generic_escape_locs: 'loc list;
+    }
+  | MessageShouldAnnotateVariableUsedInGenericContext of {
+      reason: 'loc virtual_reason;
+      null_loc: 'loc;
+      initialized: bool;
+      possible_generic_escape_locs: 'loc list;
+    }
   | MessageShouldNotBeCoerced of 'loc virtual_reason
+  | MessageShouldUseArrayLiteral
+  | MessageSketchyNumber of 'loc virtual_reason
+  | MessageSketchyNullCheck of {
+      kind: Lints.sketchy_null_kind;
+      falsy_loc: 'loc;
+      null_loc: 'loc;
+    }
+  | MessageSuppressionMalformedCode
+  | MessageSuppressionMissingCode of string
+  | MessageThisInComponent of 'loc
+  | MessageThisInExportedFunction
+  | MessageThisInObject of 'loc virtual_reason
+  | MessageTSAsConst of Options.CastingSyntax.t
+  | MessageTSKeyofType
+  | MessageTSNeverType
+  | MessageTSParamExtends
+  | MessageTSReadonlyOperatorOnArray
+  | MessageTSReadonlyOperatorOnTuple
+  | MessageTSReadonlyType
+  | MessageTSSatisfiesType of Options.CastingSyntax.t
+  | MessageTSVarianceIn
+  | MessageTSVarianceInOut
+  | MessageTSVarianceOut
+  | MessageTSVarianceReadOnly
+  | MessageTSUndefinedType
+  | MessageTSUnknownType
+  | MessageUnclearType
+  | MessageUnexpectedTemporaryBaseType
+  | MessageUnexpectedUseOfThisType
+  | MessageUninitializedInstanceProperty of Lints.property_assignment_kind
   | MessageUnknownParameterTypes of 'loc virtual_reason
+  | MessageUnnecessaryDeclareTypeOnlyExport
+  | MessageUnnecessaryInvariant of 'loc virtual_reason
+  | MessageUnnecessaryOptionalChain of 'loc virtual_reason
+  | MessageUnreachableCode
+  | MessageUnsafeGetterSetter
+  | MessageUnsupportedKeyInObject of {
+      key_error_kind: InvalidObjKey.t;
+      obj_kind: [ `Type | `Literal ];
+    }
+  | MessageUnsupportedSyntax of unsupported_syntax
+  | MessageUnsupportedVarianceAnnotation of string
+  | MessageUntypedImport of string
+  | MessageUntypedTypeImport of string
+  | MessageUnusedPromiseInAsyncScope
+  | MessageUnusedPromiseInSyncScope
+  | MessageUnusedSuppression
+  | MessageValueUsedAsType of 'loc virtual_reason_desc
+  | MessageVariableNeverInitAssignedAnnotated of 'loc virtual_reason
+  | MessageVariableOnlyAssignedByNull of {
+      reason: 'loc virtual_reason;
+      null_loc: 'loc option;
+    }
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;

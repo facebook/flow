@@ -875,7 +875,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           error_type
             cx
             loc
-            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.Partial })
+            (Error_message.EIncorrectTypeWithReplacement
+               { loc; kind = Flow_intermediate_error_types.IncorrectType.Partial }
+            )
             t_ast
         (* Partial<T> makes all of `T`'s properties optional *)
         | "Partial" ->
@@ -902,7 +904,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           error_type
             cx
             loc
-            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.Shape })
+            (Error_message.EIncorrectTypeWithReplacement
+               { loc; kind = Flow_intermediate_error_types.IncorrectType.Shape }
+            )
             t_ast
         (* $Diff<T, S> *)
         | "$Diff" ->
@@ -1384,7 +1388,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             error_type
               cx
               loc
-              Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonly })
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonly }
+              )
               t_ast
         | "ReadonlyArray" ->
           if Context.ts_syntax cx then
@@ -1399,21 +1405,25 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             error_type
               cx
               loc
-              Error_message.(
-                EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyArray }
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyArray }
               )
               t_ast
         | "ReadonlyMap" when not (Context.ts_syntax cx) ->
           error_type
             cx
             loc
-            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyMap })
+            (Error_message.EIncorrectTypeWithReplacement
+               { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyMap }
+            )
             t_ast
         | "ReadonlySet" when not (Context.ts_syntax cx) ->
           error_type
             cx
             loc
-            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlySet })
+            (Error_message.EIncorrectTypeWithReplacement
+               { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlySet }
+            )
             t_ast
         | "NonNullable" ->
           if Context.ts_syntax cx then
@@ -1429,8 +1439,8 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             error_type
               cx
               loc
-              Error_message.(
-                EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSNonNullable }
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.TSNonNullable }
               )
               t_ast
         (* other applications with id as head expr *)
@@ -1794,7 +1804,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           }
       )
     | (loc, (Exists _ as t_ast)) ->
-      Flow_js_utils.add_output env.cx Error_message.(EUnsupportedSyntax (loc, ExistsType));
+      Flow_js_utils.add_output
+        env.cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ExistsType));
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
 
   and convert_list =
@@ -1930,18 +1942,18 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           Some (Slice { dict; pmap })
 
       let add_call c = function
-        | { proto = Some _; _ } -> Error Error_message.ExplicitCallAfterProto
+        | { proto = Some _; _ } -> Error Flow_intermediate_error_types.ExplicitCallAfterProto
         | acc -> Ok { acc with calls = c :: acc.calls }
 
       let add_dict d = function
-        | { dict = Some _; _ } -> Error Error_message.MultipleIndexers
+        | { dict = Some _; _ } -> Error Flow_intermediate_error_types.MultipleIndexers
         | acc -> Ok { acc with dict = Some d }
 
       let add_prop f acc = { acc with pmap = f acc.pmap }
 
       let add_proto p = function
-        | { proto = Some _; _ } -> Error Error_message.MultipleProtos
-        | { calls = _ :: _; _ } -> Error Error_message.ExplicitProtoAfterCall
+        | { proto = Some _; _ } -> Error Flow_intermediate_error_types.MultipleProtos
+        | { calls = _ :: _; _ } -> Error Flow_intermediate_error_types.ExplicitProtoAfterCall
         | acc -> Ok { acc with proto = Some p }
 
       let add_spread t acc =
@@ -2076,7 +2088,8 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                    {
                      loc;
                      obj_kind = `Type;
-                     key_error_kind = Error_message.InvalidObjKey.kind_of_num_value value;
+                     key_error_kind =
+                       Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value;
                    }
                 );
               let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
@@ -2088,7 +2101,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           Flow_js_utils.add_output
             env.cx
             (Error_message.EUnsupportedKeyInObject
-               { loc; obj_kind = `Type; key_error_kind = Error_message.InvalidObjKey.Other }
+               {
+                 loc;
+                 obj_kind = `Type;
+                 key_error_kind = Flow_intermediate_error_types.InvalidObjKey.Other;
+               }
             );
           let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
           (acc, prop_ast))
@@ -2135,7 +2152,8 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | { Object.Property.value = Object.Property.Get _ | Object.Property.Set _; _ } ->
         Flow_js_utils.add_output
           env.cx
-          Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ObjectPropertyGetSet)
+          );
         let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
         (acc, prop_ast)
     in
@@ -2215,8 +2233,10 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           else (
             Flow_js_utils.add_output
               env.cx
-              Error_message.(
-                EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static = false })
+              (Error_message.EUnsupportedSyntax
+                 ( loc,
+                   Flow_intermediate_error_types.UnsupportedInternalSlot { name; static = false }
+                 )
               );
             (acc, Tast_utils.error_mapper#object_type_property prop)
           )
@@ -2454,7 +2474,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     | TypeGuard (loc, guard) ->
       Flow_js_utils.add_output
         env.cx
-        (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.UserDefinedTypeGuards));
       let guard' = Tast_utils.error_mapper#type_guard (loc, guard) in
       (AnyT.at (AnyError None) loc, TypeGuard guard', None)
 
@@ -2768,7 +2788,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               when Class_type_sig.has_indexer ~static x ->
               Flow_js_utils.add_output
                 env.cx
-                Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
+                (Error_message.EUnsupportedSyntax
+                   (loc, Flow_intermediate_error_types.MultipleIndexers)
+                );
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
               let { Indexer.id; key; value; static; variance; _ } = indexer in
@@ -2810,7 +2832,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   | (_, Property.Computed (loc, _), _) ->
                     Flow_js_utils.add_output
                       env.cx
-                      (Error_message.EUnsupportedSyntax (loc, Error_message.IllegalName));
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.IllegalName)
+                      );
                     (x, Tast_utils.error_mapper#object_property_type (loc, prop))
                   | ( true,
                       Property.Identifier
@@ -2963,7 +2987,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               else (
                 Flow_js_utils.add_output
                   env.cx
-                  Error_message.(EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static }));
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.UnsupportedInternalSlot { name; static })
+                  );
                 (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
               )
             | SpreadProperty (loc, _) as prop ->
@@ -3076,7 +3102,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     fun env reason ~id_opt tparams params renders ->
       if not (Context.component_syntax env.cx) then begin
         let loc = loc_of_reason reason in
-        Flow_js_utils.add_output env.cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ComponentSyntax));
         let t = AnyT.at (AnyError None) loc in
         ( t,
           Base.Option.map ~f:Tast_utils.error_mapper#type_params tparams,

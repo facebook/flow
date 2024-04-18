@@ -14,109 +14,6 @@ exception EDebugThrow of ALoc.t
 
 exception ECheckTimeout of float * string
 
-type invalid_char_set =
-  | DuplicateChar of Char.t
-  | InvalidChar of Char.t
-
-module InvalidCharSetSet = Flow_set.Make (struct
-  type t = invalid_char_set
-
-  let compare = Stdlib.compare
-end)
-
-module IncorrectType = struct
-  type t =
-    | Partial
-    | Shape
-    | TSReadonly
-    | TSReadonlyArray
-    | TSReadonlyMap
-    | TSReadonlySet
-    | TSNonNullable
-
-  let incorrect_of_kind = function
-    | Partial -> "$Partial"
-    | Shape -> "$Shape"
-    | TSReadonly -> "Readonly"
-    | TSReadonlyArray -> "ReadonlyArray"
-    | TSReadonlyMap -> "ReadonlyMap"
-    | TSReadonlySet -> "ReadonlySet"
-    | TSNonNullable -> "NonNullable"
-
-  let replacement_of_kind = function
-    | Partial -> "Partial"
-    | Shape -> "Partial"
-    | TSReadonly -> "$ReadOnly"
-    | TSReadonlyArray -> "$ReadOnlyArray"
-    | TSReadonlyMap -> "$ReadOnlyMap"
-    | TSReadonlySet -> "$ReadOnlySet"
-    | TSNonNullable -> "$NonMaybeType"
-
-  type error_type =
-    | DeprecatedUtility
-    | TSType
-
-  let error_type_of_kind = function
-    | Partial
-    | Shape ->
-      DeprecatedUtility
-    | TSReadonly
-    | TSReadonlyArray
-    | TSReadonlyMap
-    | TSReadonlySet
-    | TSNonNullable ->
-      TSType
-end
-
-module InvalidObjKey = struct
-  type t =
-    | Other
-    | NumberNonLit
-    | NumberNonInt
-    | NumberTooLarge
-    | NumberTooSmall
-
-  let kind_of_num_value value =
-    if not (Float.is_integer value) then
-      NumberNonInt
-    else if value > Js_number.max_safe_integer then
-      NumberTooLarge
-    else if value < Js_number.min_safe_integer then
-      NumberTooSmall
-    else
-      Other
-
-  let kind_of_num_lit = function
-    | Truthy
-    | AnyLiteral ->
-      NumberNonLit
-    | Literal (_, (value, _)) -> kind_of_num_value value
-
-  let str_of_kind = function
-    | Other -> "other"
-    | NumberNonLit -> "number not literal"
-    | NumberNonInt -> "number non-int"
-    | NumberTooLarge -> "number too large"
-    | NumberTooSmall -> "number too small"
-
-  let msg_of_kind kind =
-    let text = Flow_errors_utils.Friendly.text in
-    let code = Flow_errors_utils.Friendly.code in
-    match kind with
-    | Other -> None
-    | NumberNonLit ->
-      Some [text " Only number literals are allowed, not "; code "number"; text " in general."]
-    | NumberNonInt -> Some [text " Only integer-like number literals are allowed."]
-    | NumberTooLarge ->
-      Some
-        [text " Number literals must not be larger than "; code "Number.MAX_SAFE_INTEGER"; text "."]
-    | NumberTooSmall ->
-      Some
-        [
-          text " Number literals must not be smaller than "; code "Number.MIN_SAFE_INTEGER"; text ".";
-        ]
-end
-
 type t = ALoc.t t'
 
 and 'loc t' =
@@ -703,11 +600,6 @@ and 'loc null_write = {
   initialized: bool;
 }
 
-and 'loc exponential_spread_reason_group = {
-  first_reason: 'loc virtual_reason;
-  second_reason: 'loc virtual_reason option;
-}
-
 and ref_in_render_kind =
   | Argument
   | Access
@@ -729,22 +621,6 @@ and binding_error =
   | EConstParamReassigned
   | EImportReassigned
   | EEnumReassigned
-
-and assigned_const_like_binding_type =
-  | ClassNameBinding
-  | FunctionNameBinding
-  | DeclaredFunctionNameBinding
-  | ComponentNameBinding
-
-and docblock_error =
-  | MultipleFlowAttributes
-  | InvalidFlowMode of string
-  | MultipleJSXAttributes
-  | InvalidJSXAttribute of string option
-  | MultipleJSXRuntimeAttributes
-  | InvalidJSXRuntimeAttribute
-  | InvalidSupportsPlatform of string
-  | DisallowedSupportsPlatform
 
 and internal_error =
   | MethodNotAFunction
@@ -771,49 +647,6 @@ and internal_error =
   | ForcedReadOfUnderResolutionTvar of Env_api.def_loc_type
   | EnvInvariant of Env_api.env_invariant_failure
   | ImplicitInstantiationInvariant of string
-
-and unsupported_syntax =
-  | AnnotationInsideDestructuring
-  | AsConstOnNonLiteral
-  | ExistsType
-  | MetaPropertyExpression
-  | ObjectPropertyGetSet
-  | ObjectPropertyComputedGetSet
-  | InvariantSpreadArgument
-  | ClassPropertyLiteral
-  | ClassPropertyComputed
-  | RequireDynamicArgument
-  | CatchParameterDeclaration
-  | DestructuringObjectPropertyLiteralNonString
-  | DestructuringExpressionPattern
-  | JSXTypeArgs
-  | PredicateDeclarationForImplementation
-  | PredicateDeclarationWithoutExpression
-  | PredicateDeclarationAnonymousParameters
-  | PredicateInvalidBody
-  | MultipleIndexers
-  | MultipleProtos
-  | ExplicitCallAfterProto
-  | ExplicitProtoAfterCall
-  | SpreadArgument
-  | ImportDynamicArgument
-  | IllegalName
-  | UserDefinedTypeGuards
-  | UnsupportedInternalSlot of {
-      name: string;
-      static: bool;
-    }
-  | ContextDependentUnsupportedStatement of context_dependent_unsupported_statement
-  | WithStatement
-  | ComponentSyntax
-  | DeclareNamespace
-
-and context_dependent_unsupported_statement =
-  | ToplevelLibraryImport
-  | NonLibdefToplevelDeclareModule
-  | UnsupportedStatementInLibdef of string
-  | UnsupportedStatementInDeclareModule of string
-  | UnsupportedStatementInDeclareNamespace of string
 
 and lower_kind =
   | Possibly_null
@@ -869,14 +702,6 @@ and invalid_mapped_type_error_kind =
   | ExplicitExactOrInexact
   | RemoveOptionality
 
-and 'loc invalid_render_type_kind =
-  | InvalidRendersNullVoidFalse
-  | InvalidRendersIterable
-  | InvalidRendersStructural of 'loc virtual_reason
-  | InvalidRendersNonNominalElement of 'loc virtual_reason
-  | InvalidRendersGenericT
-  | UncategorizedInvalidRenders
-
 and 'l hook_rule =
   | ConditionalHook
   | HookHasIllegalName
@@ -886,12 +711,6 @@ and 'l hook_rule =
       non_hooks: 'l list;
     }
   | HookNotInComponentOrHook
-
-let string_of_assigned_const_like_binding_type = function
-  | ClassNameBinding -> "class"
-  | FunctionNameBinding -> "function"
-  | DeclaredFunctionNameBinding -> "declared function"
-  | ComponentNameBinding -> "component"
 
 let string_of_invalid_render_type_kind = function
   | InvalidRendersNullVoidFalse -> "null | void | false"
@@ -2173,7 +1992,7 @@ type 'loc friendly_message_recipe =
       reason_obj: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
     }
-  | Normal of { features: Loc.t Flow_errors_utils.Friendly.message_feature list }
+  | Normal of 'loc message
   | UseOp of {
       loc: 'loc;
       features: Loc.t Flow_errors_utils.Friendly.message_feature list;
@@ -2193,14 +2012,6 @@ let friendly_message_of_msg loc_of_aloc msg =
   let text = Flow_errors_utils.Friendly.text in
   let code = Flow_errors_utils.Friendly.code in
   let ref = Flow_errors_utils.Friendly.ref_map loc_of_aloc in
-  let no_desc_ref = Flow_errors_utils.Friendly.no_desc_ref_map loc_of_aloc in
-  let desc = Flow_errors_utils.Friendly.desc in
-  let msg_export prefix export_name =
-    if export_name = "default" then
-      (text "", text "the default export")
-    else
-      (text prefix, code export_name)
-  in
   match msg with
   | EIncompatible
       { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
@@ -2234,305 +2045,42 @@ let friendly_message_of_msg loc_of_aloc msg =
         suggestion = None;
         use_op = Base.Option.value ~default:unknown_use use_op;
       }
-  | EDebugPrint (_, str) -> Normal { features = [text str] }
+  | EDebugPrint (_, str) -> Normal (MessagePlainTextReservedForInternalErrorOnly str)
   | EExportValueAsType (_, export_name) ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot export the value ";
-            code (display_string_of_name export_name);
-            text " as a type.";
-          ];
-      }
-  | EImportValueAsType (_, export_name) ->
-    let (prefix, export) = msg_export "the value " export_name in
-    let features =
-      [
-        text "Cannot import ";
-        prefix;
-        export;
-        text " as a type. ";
-        code "import type";
-        text " only works on type exports like type aliases, ";
-        text "interfaces, and classes. If you intended to import the type of a ";
-        text "value use ";
-        code "import typeof";
-        text " instead.";
-      ]
-    in
-    Normal { features }
-  | EImportTypeAsTypeof (_, export_name) ->
-    let (prefix, export) = msg_export "the type " export_name in
-    let features =
-      [
-        text "Cannot import ";
-        prefix;
-        export;
-        text " as a type. ";
-        code "import typeof";
-        text " only works on value exports like variables, ";
-        text "functions, and classes. If you intended to import a type use ";
-        code "import type";
-        text " instead.";
-      ]
-    in
-    Normal { features }
-  | EImportTypeAsValue (_, export_name) ->
-    let (prefix, export) = msg_export "the type " export_name in
-    let features =
-      [
-        text "Cannot import ";
-        prefix;
-        export;
-        text " as a value. ";
-        text "Use ";
-        code "import type";
-        text " instead.";
-      ]
-    in
-    Normal { features }
+    Normal (MessageExportValueAsType (display_string_of_name export_name))
+  | EImportValueAsType (_, export_name) -> Normal (MessageImportValueAsType export_name)
+  | EImportTypeAsTypeof (_, export_name) -> Normal (MessageImportTypeAsTypeof export_name)
+  | EImportTypeAsValue (_, export_name) -> Normal (MessageImportTypeAsValue export_name)
   | ENoDefaultExport (_, module_name, suggestion) ->
-    let features =
-      [
-        text "Cannot import a default export because there is no default export ";
-        text "in ";
-        code module_name;
-        text ".";
-      ]
-      @
-      match suggestion with
-      | None -> []
-      | Some suggestion ->
-        [
-          text " ";
-          text "Did you mean ";
-          code (spf "import {%s} from \"%s\"" suggestion module_name);
-          text "?";
-        ]
-    in
-    Normal { features }
+    Normal (MessageNoDefaultExport { module_name; suggestion })
   | EOnlyDefaultExport (_, module_name, export_name) ->
-    let features =
-      [
-        text "Cannot import ";
-        code export_name;
-        text " because ";
-        text "there is no ";
-        code export_name;
-        text " export in ";
-        code module_name;
-        text ". Did you mean ";
-        code (spf "import %s from \"...\"" export_name);
-        text "?";
-      ]
-    in
-    Normal { features }
+    Normal (MessageOnlyDefaultExport { module_name; export_name })
   | ENoNamedExport (_, module_name, export_name, suggestion) ->
-    let features =
-      [
-        text "Cannot import ";
-        code export_name;
-        text " because ";
-        text "there is no ";
-        code export_name;
-        text " export in ";
-        code module_name;
-        text ".";
-      ]
-      @
-      match suggestion with
-      | None -> []
-      | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
-    in
-    Normal { features }
+    Normal (MessageNoNamedExport { module_name; export_name; suggestion })
   | EMissingTypeArgs { reason_op = _; reason_tapp; reason_arity; min_arity; max_arity } ->
-    let (arity, args) =
-      if min_arity = max_arity then
-        ( spf "%d" max_arity,
-          if max_arity = 1 then
-            "argument"
-          else
-            "arguments"
-        )
-      else
-        (spf "%d-%d" min_arity max_arity, "arguments")
-    in
     let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-    let features =
-      [text "Cannot use "; ref reason_arity; text (spf " without %s type %s." arity args)]
-    in
-    Normal { features }
+    Normal (MessageCannotUseTypeWithoutAnyTypeArgs { reason_arity; min_arity; max_arity })
   | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
     let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-    let features =
-      [
-        text "Cannot use ";
-        ref reason_arity;
-        text " with more than ";
-        text
-          (spf
-             "%n type %s."
-             n
-             ( if n == 1 then
-               "argument"
-             else
-               "arguments"
-             )
-          );
-      ]
-    in
-    Normal { features }
+    Normal (MessageCannotUseTypeWithTooManyTypeArgs { reason_arity; n })
   | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
     let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-    let features =
-      [
-        text "Cannot use ";
-        ref reason_arity;
-        text " with fewer than ";
-        text
-          (spf
-             "%n type %s."
-             n
-             ( if n == 1 then
-               "argument"
-             else
-               "arguments"
-             )
-          );
-      ]
-    in
-    Normal { features }
+    Normal (MessageCannotUseTypeWithTooFewTypeArgs { reason_arity; n })
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
-    let features =
-      [text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument"]
-    in
-    Normal { features }
-  | EInvalidInfer _ ->
-    let features =
-      [
-        text "Invalid infer type declaration. ";
-        code "infer";
-        text " declarations are only permitted in the ";
-        code "extends";
-        text " clause of a conditional type.";
-      ]
-    in
-    Normal { features }
-  | EInvalidExtends reason ->
-    let features =
-      [
-        text "Cannot use ";
-        ref reason;
-        text " as a superclass. Only variables and member expressions may be extended";
-      ]
-    in
-    Normal { features }
+    Normal (MessageCannotUseTypeWithInvalidTypeArgs { reason_main; reason_tapp })
+  | EInvalidInfer _ -> Normal MessageInvalidInferType
+  | EInvalidExtends reason -> Normal (MessageCannotUseAsSuperClass reason)
   | ETypeParamArity (_, n) ->
     if n = 0 then
-      Normal { features = [text "Cannot apply type because it is not a polymorphic type."] }
+      Normal MessageCannotApplyNonPolymorphicType
     else
-      let features =
-        [
-          text "Cannot use type without exactly ";
-          text
-            (spf
-               "%n type %s."
-               n
-               ( if n == 1 then
-                 "argument"
-               else
-                 "arguments"
-               )
-            );
-        ]
-      in
-      Normal { features }
-  | ETypeParamMinArity (_, n) ->
-    let features =
-      [
-        text "Cannot use type without at least ";
-        text
-          (spf
-             "%n type %s."
-             n
-             ( if n == 1 then
-               "argument"
-             else
-               "arguments"
-             )
-          );
-      ]
-    in
-    Normal { features }
-  | ECallTypeArity { call_loc = _; is_new; reason_arity; expected_arity = n } ->
-    let use =
-      if is_new then
-        "construct "
-      else
-        "call "
-    in
-    if n = 0 then
-      let features =
-        [
-          text "Cannot ";
-          text use;
-          text "non-polymorphic ";
-          ref reason_arity;
-          text " with type arguments.";
-        ]
-      in
-      Normal { features }
-    else
-      let features =
-        [
-          text "Cannot ";
-          text use;
-          ref reason_arity;
-          text " without exactly ";
-          text
-            (spf
-               "%n type argument%s."
-               n
-               ( if n == 1 then
-                 ""
-               else
-                 "s"
-               )
-            );
-        ]
-      in
-      Normal { features }
+      Normal (MessageCannotUseTypeWithoutExactlyNTypeArgs n)
+  | ETypeParamMinArity (_, n) -> Normal (MessageCannotUseTypeWithoutAtLeastNTypeArgs n)
+  | ECallTypeArity { call_loc = _; is_new; reason_arity; expected_arity } ->
+    Normal (MessageCannotUseNonPolymorphicTypeWithTypeArgs { is_new; reason_arity; expected_arity })
   | EAnyValueUsedAsType { reason_use } ->
-    let features =
-      [
-        text "Cannot use ";
-        desc reason_use;
-        text " as a type because it is an ";
-        code "any";
-        text "-typed value. ";
-        text "Type ";
-        desc reason_use;
-        text " properly, so it is no longer ";
-        code "any";
-        text "-typed, to use it as an annotation.";
-      ]
-    in
-    Normal { features }
-  | EValueUsedAsType { reason_use } ->
-    let features =
-      [
-        text "Cannot use ";
-        desc reason_use;
-        text " as a type. ";
-        text "A name can be used as a type only if it refers to ";
-        text "a type, interface, class, or enum definition. ";
-        text "To get the type of a non-class value, use ";
-        code "typeof";
-        text ".";
-      ]
-    in
-    Normal { features }
+    Normal (MessageAnyValueUsedAsType (desc_of_reason reason_use))
+  | EValueUsedAsType { reason_use } -> Normal (MessageValueUsedAsType (desc_of_reason reason_use))
   | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
   | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
@@ -2580,47 +2128,11 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
       }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
-    let polarity_string = function
-      | Polarity.Positive -> "output"
-      | Polarity.Negative -> "input"
-      | Polarity.Neutral -> "input/output"
-    in
-    let expected_polarity = polarity_string expected_polarity in
-    let actual_polarity = polarity_string actual_polarity in
     let reason_targ = mk_reason (RIdentifier (OrdinaryName name)) (def_loc_of_reason reason) in
-    let features =
-      [
-        text "Cannot use ";
-        ref reason_targ;
-        text (" in an " ^ actual_polarity ^ " ");
-        text "position because ";
-        ref reason_targ;
-        text " is expected to occur only in ";
-        text (expected_polarity ^ " positions.");
-      ]
-    in
-    Normal { features }
-  | EBuiltinLookupFailed { reason; name; potential_generator } ->
-    let features =
-      if is_internal_module_name name then
-        let potential_generator_features =
-          match potential_generator with
-          | Some generator ->
-            [
-              text " Try running the command ";
-              code generator;
-              text " to generate the missing module.";
-            ]
-          | None -> []
-        in
-        [text "Cannot resolve module "; code (uninternal_name name); text "."]
-        @ potential_generator_features
-      else if is_internal_name name then
-        [text "Cannot resolve name "; desc reason; text "."]
-      else
-        [text "Cannot resolve name "; code (display_string_of_name name); text "."]
-    in
-    Normal { features }
+    Normal
+      (MessageCannotUseTypeDueToPolarityMismatch { reason_targ; expected_polarity; actual_polarity })
+  | EBuiltinLookupFailed { reason = _; name; potential_generator } ->
+    Normal (MessageCannotResolveBuiltin { name; potential_generator })
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
       {
@@ -2631,17 +2143,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         suggestion = None;
       }
   | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
-    let features =
-      [
-        text "Cannot resolve platform-specific implementation module ";
-        code name;
-        text ". ";
-        text "All platform-specific implementations must exist for this interface. ";
-        text "Read the docs on Flow's multi-platform support for more information: ";
-        text "https://flow.org/en/docs/react/multiplatform";
-      ]
-    in
-    Normal { features }
+    Normal (MessagePlatformSpecificImplementationModuleLookupFailed name)
   | EAdditionMixed (reason, use_op) ->
     UseOp
       {
@@ -2650,26 +2152,9 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         explanation = None;
       }
-  | EComparison (lower, upper) ->
-    Normal { features = [text "Cannot compare "; ref lower; text " to "; ref upper; text "."] }
+  | EComparison (lower, upper) -> Normal (MessageCannotCompare { lower; upper })
   | ENonStrictEqualityComparison (lower, upper) ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot compare ";
-            ref lower;
-            text " to ";
-            ref upper;
-            text " with a non-strict equality check. ";
-            text "Make sure the arguments are valid, ";
-            text "or try using strict equality (";
-            code "===";
-            text " or ";
-            code "!==";
-            text ") instead.";
-          ];
-      }
+    Normal (MessageCannotCompareNonStrict { lower; upper })
   | ETupleArityMismatch (reasons, arity1, arity2, use_op) ->
     let (lower, upper) = reasons in
     let str_of_arity (num_req, num_total) =
@@ -2698,21 +2183,10 @@ let friendly_message_of_msg loc_of_aloc msg =
         explanation = None;
       }
   | ETupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional } ->
-    let features =
-      [
-        text "Invalid ";
-        ref reason_tuple;
-        text ", required ";
-        ref reason_required;
-        text " must be after optional ";
-        ref reason_optional;
-        text ".";
-      ]
-    in
-    Normal { features }
+    Normal
+      (MessageInvalidTupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional })
   | ETupleInvalidTypeSpread { reason_arg; reason_spread = _ } ->
-    let features = [text "Cannot spread non-tuple ("; ref reason_arg; text ") into tuple type."] in
-    Normal { features }
+    Normal (MessageInvalidTupleTypeSpread reason_arg)
   | ENonLitArrayToTuple (reasons, use_op) ->
     let (lower, upper) = reasons in
     UseOp
@@ -2850,7 +2324,7 @@ let friendly_message_of_msg loc_of_aloc msg =
           )
       @ [text "."]
     in
-    Normal { features }
+    Normal (MessageAlreadyFriendlyPrinted features)
   | EIncompatibleWithExact (reasons, use_op, kind) ->
     let (lower, upper) = reasons in
     let object_kind =
@@ -2873,40 +2347,11 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         explanation = None;
       }
-  | EUnsupportedExact (_, lower) ->
-    Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
-  | EUnexpectedThisType _ ->
-    Normal { features = [text "Unexpected use of "; code "this"; text " type."] }
-  | EPropertyTypeAnnot _ ->
-    let features =
-      [
-        text "Cannot use ";
-        code "$PropertyType";
-        text " because the second ";
-        text "type argument must be a string literal.";
-      ]
-    in
-    Normal { features }
-  | EExportsAnnot _ ->
-    let features =
-      [
-        text "Cannot use ";
-        code "$Exports";
-        text " because the first type ";
-        text "argument must be a string literal.";
-      ]
-    in
-    Normal { features }
-  | ECharSetAnnot _ ->
-    let features =
-      [
-        text "Cannot use ";
-        code "$CharSet";
-        text " because the first type ";
-        text "argument must be a string literal.";
-      ]
-    in
-    Normal { features }
+  | EUnsupportedExact (_, lower) -> Normal (MessageCannotCreateExactType lower)
+  | EUnexpectedThisType _ -> Normal MessageUnexpectedUseOfThisType
+  | EPropertyTypeAnnot _ -> Normal MessageCannotUseDollarPropertyType
+  | EExportsAnnot _ -> Normal MessageCannotUseDollarExports
+  | ECharSetAnnot _ -> Normal MessageCannotUseDollarCharset
   | EInvalidCharSet { invalid = (invalid_reason, invalid_chars); valid = valid_reason; use_op } ->
     let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
     let invalids =
@@ -2930,28 +2375,8 @@ let friendly_message_of_msg loc_of_aloc msg =
         explanation = None;
       }
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
-    let suffix =
-      Base.Option.value
-        ~default:[text " Only identifier, string literal, and number literal keys are allowed."]
-        (InvalidObjKey.msg_of_kind key_error_kind)
-    in
-    let obj_kind =
-      match obj_kind with
-      | `Type -> "type"
-      | `Literal -> "literal"
-    in
-    let features = [text "Unsupported key in object "; text obj_kind; text "."] @ suffix in
-    Normal { features }
-  | EAmbiguousNumericKeyWithVariance _ ->
-    let features =
-      [
-        text "Cannot mix number literal keys and variance annotations, ";
-        text "as the variance annotation could be interpreted as negating or ";
-        text "making positive the number literal. ";
-        text "Consider using a string literal key name to disambiguate.";
-      ]
-    in
-    Normal { features }
+    Normal (MessageUnsupportedKeyInObject { key_error_kind; obj_kind })
+  | EAmbiguousNumericKeyWithVariance _ -> Normal MessageAmbiguousNumericKeyWithVariance
   | EPredicateFuncArityMismatch { use_op; reasons = (lower, upper); arities = (n1, n2) } ->
     UseOp
       {
@@ -2985,11 +2410,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         explanation = None;
       }
   | EPredicateInvalidParameter { pred_reason; binding_reason } ->
-    Normal
-      {
-        features =
-          [text "A "; ref pred_reason; text " cannot reference "; ref binding_reason; text "."];
-      }
+    Normal (MessageCannotReferencePredicateParameter { pred_reason; binding_reason })
   | ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) } ->
     UseOp
       {
@@ -2998,185 +2419,29 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         explanation = None;
       }
-  | ETypeGuardParamUnbound reason ->
-    Normal
-      {
-        features =
-          [text "Cannot find "; ref reason; text " in the parameters of this function (type)."];
-      }
+  | ETypeGuardParamUnbound reason -> Normal (MessageInvalidTypeGuardParamUnbound reason)
   | ETypeGuardFunctionInvalidWrites { reason = _; type_guard_reason; write_locs } ->
-    let loc_str =
-      match write_locs with
-      | [] -> [text "in this function"]
-      | [loc] -> [text "in"; no_desc_ref loc]
-      | _ -> text "in the following statements:" :: Base.List.map write_locs ~f:no_desc_ref
-    in
-    Normal
-      {
-        features =
-          [
-            text "Cannot use ";
-            ref type_guard_reason;
-            text " because at this return point it is writen to ";
-          ]
-          @ loc_str
-          @ [text "."];
-      }
+    Normal (MessageInvalidTypeGuardFunctionWritten { type_guard_reason; write_locs })
   | ETypeGuardFunctionParamHavoced { type_guard_reason; param_reason; call_locs } ->
-    let loc_str =
-      match call_locs with
-      | [] -> [text "in this function"]
-      | [loc] -> [text "in"; no_desc_ref loc]
-      | _ -> text "in the following expressions:" :: Base.List.map call_locs ~f:no_desc_ref
-    in
     Normal
-      {
-        features =
-          [
-            text "Cannot use ";
-            desc type_guard_reason;
-            text ", because ";
-            ref param_reason;
-            text " is reassigned ";
-          ]
-          @ loc_str
-          @ [text "."];
-      }
+      (MessageCannotUseTypeGuardWithFunctionParamHavoced
+         { type_guard_desc = desc_of_reason type_guard_reason; param_reason; call_locs }
+      )
   | ETypeGuardIncompatibleWithFunctionKind { kind; _ } ->
-    Normal
-      { features = [text "Cannot declare a type guard on a(n) "; text kind; text " function."] }
+    Normal (MessageInvalidTypeGuardFunctionKind kind)
   | EInternal (_, internal_error) ->
     let msg = string_of_internal_error internal_error in
-    Normal { features = [text (spf "Internal error: %s" msg)] }
+    Normal (MessagePlainTextReservedForInternalErrorOnly (spf "Internal error: %s" msg))
   | EUnsupportedSyntax (_, unsupported_syntax) ->
-    let features =
-      match unsupported_syntax with
-      | MetaPropertyExpression -> [text "Not supported."]
-      | ExistsType ->
-        [
-          text "The existential type ";
-          code "*";
-          text " is deprecated. This syntax is no longer supported.";
-        ]
-      | AnnotationInsideDestructuring ->
-        [
-          text "Annotations inside of destructuring are not supported. ";
-          text "Annotate the top-level pattern instead. ";
-          text "For example, instead of the invalid ";
-          code "const [a: number, b: string] = ...";
-          text " do ";
-          code "const [a, b]: [number, string] = ...";
-          text ".";
-        ]
-      | AsConstOnNonLiteral ->
-        [
-          text "The ";
-          code "as const";
-          text " assertion can only be used on string, numeric, boolean, object, ";
-          text "or array literals.";
-        ]
-      | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
-      | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
-      | InvariantSpreadArgument ->
-        [text "Unsupported arguments in call to "; code "invariant"; text "."]
-      | ClassPropertyLiteral -> [text "Literal properties not yet supported."]
-      | ClassPropertyComputed -> [text "Computed property keys not supported."]
-      | RequireDynamicArgument ->
-        [text "The parameter passed to "; code "require"; text " must be a string literal."]
-      | ImportDynamicArgument ->
-        [text "The parameter passed to "; code "import"; text " must be a string literal."]
-      | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
-      | DestructuringObjectPropertyLiteralNonString ->
-        [text "Unsupported non-string literal object property in destructuring."]
-      | DestructuringExpressionPattern -> [text "Unsupported expression pattern in destructuring."]
-      | JSXTypeArgs -> [text "Flow doesn't support JSX type arguments."]
-      | PredicateDeclarationForImplementation ->
-        [text "Cannot declare predicate when a function body is present."]
-      | PredicateDeclarationWithoutExpression ->
-        [text "Predicate function declarations need to declare a "; text "predicate expression."]
-      | PredicateDeclarationAnonymousParameters ->
-        [text "Predicate function declarations cannot use anonymous "; text "function parameters."]
-      | PredicateInvalidBody ->
-        [
-          text "Invalid body for predicate function. Expected a simple return ";
-          text "statement as body.";
-        ]
-      | MultipleIndexers -> [text "Multiple indexers are not supported."]
-      | MultipleProtos -> [text "Multiple prototypes specified."]
-      | ExplicitCallAfterProto -> [text "Unexpected call property after explicit prototype."]
-      | ExplicitProtoAfterCall -> [text "Unexpected prototype after call property."]
-      | SpreadArgument -> [text "A spread argument is unsupported here."]
-      | IllegalName -> [text "Illegal name."]
-      | UserDefinedTypeGuards -> [text "User defined type guards are not yet supported."]
-      | UnsupportedInternalSlot { name; static = false } ->
-        [text "Unsupported internal slot "; code name; text "."]
-      | UnsupportedInternalSlot { name; static = true } ->
-        [text "Unsupported static internal slot "; code name; text "."]
-      | WithStatement -> [text "Flow doesn't support "; code "with"; text " statements."]
-      | ComponentSyntax -> [text "Component syntax is not enabled."]
-      | ContextDependentUnsupportedStatement ToplevelLibraryImport ->
-        [
-          text "Cannot use an import statement at the toplevel of a library file. ";
-          text "Import statements may only appear inside a ";
-          code "declare module";
-          text ". The statement will be ignored.";
-        ]
-      | ContextDependentUnsupportedStatement NonLibdefToplevelDeclareModule ->
-        [
-          code "declare module";
-          text " statement is only supported at the toplevel of a library file.";
-        ]
-      | ContextDependentUnsupportedStatement (UnsupportedStatementInLibdef kind) ->
-        [
-          text "Cannot use ";
-          text kind;
-          text " statements in a library file. ";
-          text "The statement will be ignored.";
-        ]
-      | ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareModule kind) ->
-        [
-          text "Cannot use ";
-          text kind;
-          text " statements with in ";
-          code "declare module";
-          text ". The statement will be ignored.";
-        ]
-      | ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareNamespace kind) ->
-        [
-          text "Cannot use ";
-          text kind;
-          text " statements with in ";
-          code "declare namespace";
-          text ". The statement will be ignored.";
-        ]
-      | DeclareNamespace -> [code "declare namespace"; text " statement is not supported yet."]
-    in
-    Normal { features }
-  | EUseArrayLiteral _ ->
-    Normal { features = [text "Use an array literal instead of "; code "new Array(...)"; text "."] }
+    Normal (MessageUnsupportedSyntax unsupported_syntax)
+  | EUseArrayLiteral _ -> Normal MessageShouldUseArrayLiteral
   | EMissingLocalAnnotation { reason; hint_available; from_generic_function } ->
     if hint_available then
-      Normal
-        {
-          features =
-            [
-              text "An annotation on ";
-              desc reason;
-              text " is required because Flow cannot infer its type from local context.";
-            ];
-        }
+      Normal (MessageMissingAnnotationDueToContextualTypingFailure (desc_of_reason reason))
     else if from_generic_function then
-      Normal
-        {
-          features =
-            [
-              text "Missing an annotation on ";
-              desc reason;
-              text " because generic functions must be fully annotated.";
-            ];
-        }
+      Normal (MessageMissingAnnotationForGenericFunction (desc_of_reason reason))
     else
-      Normal { features = [text "Missing an annotation on "; desc reason; text "."] }
+      Normal (MessageMissingAnnotation (desc_of_reason reason))
   | EBindingError (binding_error, _, x, entry_loc) ->
     let desc =
       match x with
@@ -3187,298 +2452,46 @@ let friendly_message_of_msg loc_of_aloc msg =
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (ALoc.to_loc_exn entry_loc) in
-    let ref_x = Flow_errors_utils.Friendly.ref x in
-    let type_as_value_msg ~type_only_namespace =
-      if type_only_namespace then
-        [
-          text "Cannot use type-only namespace ";
-          ref_x;
-          text " as a value. ";
-          text "Type-only namespaces are erased and don't exist at runtime.";
-        ]
-      else
-        [
-          text "Cannot use type ";
-          ref_x;
-          text " as a value. ";
-          text "Types are erased and don't exist at runtime.";
-        ]
-    in
-    let features =
+    let msg =
       match binding_error with
-      | ENameAlreadyBound ->
-        [text "Cannot declare "; ref_x; text " because the name is already bound."]
-      | EVarRedeclaration ->
-        [text "Cannot declare "; ref_x; text " because var redeclaration is not supported."]
-      | EReferencedBeforeDeclaration ->
-        if desc = RThis || desc = RSuper then
-          [
-            text "Must call ";
-            code "super";
-            text " before accessing ";
-            ref_x;
-            text " in a derived constructor.";
-          ]
-        else
-          [
-            text "Cannot use variable ";
-            ref_x;
-            text " because the declaration ";
-            text "either comes later or was skipped.";
-          ]
+      | ENameAlreadyBound -> MessageCannotDeclareAlreadyBoundName x
+      | EVarRedeclaration -> MessageCannotRedeclareVar x
+      | EReferencedBeforeDeclaration -> MessageCannotUseBeforeDeclaration x
       | ETypeInValuePosition { imported = true; type_only_namespace; name } ->
-        type_as_value_msg ~type_only_namespace
-        @ [
-            text " If the exported binding can also be used as a value, try importing it using ";
-            code (spf "import %s" name);
-            text " instead of ";
-            code (spf "import type %s" name);
-            text " and ";
-            code (spf "import {%s}" name);
-            text " instead of ";
-            code (spf "import type {%s}" name);
-            text ".";
-          ]
+        MessageCannotUseTypeInValuePosition
+          { reason = x; type_only_namespace; imported_name = Some name }
       | ETypeInValuePosition { imported = false; type_only_namespace; name = _ } ->
-        type_as_value_msg ~type_only_namespace
+        MessageCannotUseTypeInValuePosition
+          { reason = x; type_only_namespace; imported_name = None }
       | EConstReassigned
       | EConstParamReassigned ->
-        [text "Cannot reassign constant "; ref_x; text "."]
-      | EImportReassigned -> [text "Cannot reassign import "; ref_x; text "."]
-      | EEnumReassigned -> [text "Cannot reassign enum "; ref_x; text "."]
+        MessageCannotReassignConstant x
+      | EImportReassigned -> MessageCannotReassignImport x
+      | EEnumReassigned -> MessageCannotReassignEnum x
     in
-    Normal { features }
-  | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
-  | EUninitializedInstanceProperty (_loc, err) ->
-    let open Lints in
-    let features =
-      match err with
-      | PropertyNotDefinitelyInitialized ->
-        [
-          text "Class property not definitely initialized in the constructor. ";
-          text "Can you add an assignment to the property declaration?";
-        ]
-      | ReadFromUninitializedProperty ->
-        [
-          text "It is unsafe to read from a class property before it is ";
-          text "definitely initialized.";
-        ]
-      | MethodCallBeforeEverythingInitialized ->
-        [
-          text "It is unsafe to call a method in the constructor before all ";
-          text "class properties are definitely initialized.";
-        ]
-      | PropertyFunctionCallBeforeEverythingInitialized ->
-        [
-          text "It is unsafe to call a property function in the constructor ";
-          text "before all class properties are definitely initialized.";
-        ]
-      | ThisBeforeEverythingInitialized ->
-        [
-          text "It is unsafe to use ";
-          code "this";
-          text " in the constructor ";
-          text "before all class properties are definitely initialized.";
-        ]
-    in
-    Normal { features }
-  | EEnumsNotEnabled _ ->
-    let features =
-      [
-        text "Flow Enums are not enabled. ";
-        text "You may opt-in to using enums by putting ";
-        code "enums=true";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
-      ]
-    in
-    Normal { features }
-  | EIndeterminateModuleType _ ->
-    let features =
-      [
-        text "Unable to determine module type (CommonJS vs ES) if both an export ";
-        text "statement and ";
-        code "module.exports";
-        text " are used in the ";
-        text "same module!";
-      ]
-    in
-    Normal { features }
-  | EBadExportPosition _ -> Normal { features = [text "Exports can only appear at the top level"] }
-  | EBadExportContext (name, _) ->
-    Normal
-      {
-        features =
-          [code name; text " may only be used as part of a legal top level export statement"];
-      }
+    Normal msg
+  | ERecursionLimit _ -> Normal MessageRecursionLimitExceeded
+  | EUninitializedInstanceProperty (_loc, err) -> Normal (MessageUninitializedInstanceProperty err)
+  | EEnumsNotEnabled _ -> Normal MessageEnumsNotEnabled
+  | EIndeterminateModuleType _ -> Normal MessageCannotDetermineModuleType
+  | EBadExportPosition _ -> Normal MessageNonToplevelExport
+  | EBadExportContext (name, _) -> Normal (MessageCannotUseExportInNonLegalToplevelContext name)
   | EBadDefaultImportAccess (_, import_star_reason) ->
-    Normal
-      {
-        features =
-          [
-            text "The default export of a module cannot be accessed from an ";
-            ref import_star_reason;
-            text " object. To use the default export you must import it directly.";
-          ];
-      }
-  | EBadDefaultImportDestructuring _ ->
-    Normal
-      {
-        features =
-          [
-            text "The default export of a module cannot be accessed from import destructuring. ";
-            text "To use the default export you must import it directly.";
-          ];
-      }
+    Normal (MessageInvalidImportStarUse import_star_reason)
+  | EBadDefaultImportDestructuring _ -> Normal MessageCannotUseDefaultImportWithDestrucuturing
   | EInvalidImportStarUse (_, import_star_reason) ->
-    Normal
-      {
-        features =
-          [
-            ref import_star_reason;
-            text " object can only be used by accessing one of its named exports";
-            text " with a member access or destructuring.";
-          ];
-      }
-  | ENonConstVarExport (_, decl_reason) ->
-    let reason_opt =
-      match decl_reason with
-      | Some reason -> [text "variable "; ref reason]
-      | None -> [text "variable"]
-    in
-    Normal
-      {
-        features =
-          List.concat
-            [
-              [text "Cannot export "];
-              reason_opt;
-              [
-                text " declared using ";
-                code "var";
-                text " or ";
-                code "let";
-                text ". All exported variables must be ";
-                code "const";
-                text ".";
-              ];
-            ];
-      }
-  | EThisInExportedFunction _ ->
-    Normal { features = [text "Cannot use "; code "this"; text " in an exported function."] }
+    Normal (MessageCannotUseImportStar import_star_reason)
+  | ENonConstVarExport (_, decl_reason) -> Normal (MessageNonConstVarExport decl_reason)
+  | EThisInExportedFunction _ -> Normal MessageThisInExportedFunction
   | EMixedImportAndRequire (_, import_reason) ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot use a mix of non-type toplevel ";
-            ref import_reason;
-            text " and ";
-            code "require";
-            text " statements in the same file.";
-          ];
-      }
-  | EUnsupportedVarianceAnnotation (_, kind) ->
-    Normal
-      {
-        features =
-          [text "Variance modifiers cannot appear on a type parameter of a "; text kind; text "."];
-      }
+    Normal (MessageCannotUseMixedImportAndRequire import_reason)
+  | EUnsupportedVarianceAnnotation (_, kind) -> Normal (MessageUnsupportedVarianceAnnotation kind)
   | EExportRenamedDefault { loc = _; name; is_reexport } ->
-    let reexport_message () =
-      [
-        text "If you intended to set the default export please ";
-        code "import";
-        text " and then ";
-        code "export default";
-        text " instead.";
-      ]
-    in
-    let features =
-      match (name, is_reexport) with
-      | (None, _) ->
-        [
-          text "Cannot set the default export of a module by re-exporting the ";
-          code "default";
-          text " property. ";
-        ]
-        @ reexport_message ()
-      | (Some name, true) ->
-        [
-          text "Cannot set the default export of a module by re-exporting ";
-          code name;
-          text " as ";
-          code "default";
-          text ". ";
-        ]
-        @ reexport_message ()
-      | (Some name, false) ->
-        [
-          text "Cannot set the default export of a module by renaming ";
-          code name;
-          text " to ";
-          code "default";
-          text ". If you intended to set the default export use ";
-          code (spf "export default %s" name);
-          text " instead.";
-        ]
-    in
-    Normal { features }
-  | EUnexpectedTemporaryBaseType _ ->
-    Normal
-      {
-        features =
-          [text "The type argument of a temporary base type must be a compatible literal type"];
-      }
-  | ECannotDelete (_, expr) ->
-    let features =
-      [
-        text "Cannot delete ";
-        ref expr;
-        text " because only member expressions and variables can be deleted.";
-      ]
-    in
-    Normal { features }
-  | ESignatureVerification sve ->
-    Signature_error.(
-      let features =
-        match sve with
-        | ExpectedAnnotation (_, sort) ->
-          [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
-        | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
-        | UnexpectedArraySpread _ -> [text "Unexpected spread in array:"]
-        | UnexpectedArrayHole _ -> [text "Unexpected array hole:"]
-        | EmptyArray _ ->
-          [
-            text "Cannot determine the element type of an empty array. ";
-            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
-          ]
-        | EmptyObject _ ->
-          [
-            text "Cannot determine types of initialized properties of an empty object. ";
-            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
-          ]
-        | UnexpectedExpression (_, esort) ->
-          [
-            text
-              (spf
-                 "Cannot determine the type of this %s. "
-                 (Flow_ast_utils.ExpressionSort.to_string esort)
-              );
-            text "Please provide an annotation, e.g., by adding a type cast around this expression.";
-          ]
-      in
-      let features =
-        text "Cannot build a typed interface for this module. "
-        :: text "You should annotate the exports of this module with types. "
-        :: features
-      in
-      Normal { features }
-    )
-  | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
+    Normal (MessageCannotExportRenamedDefault { name; is_reexport })
+  | EUnexpectedTemporaryBaseType _ -> Normal MessageUnexpectedTemporaryBaseType
+  | ECannotDelete (_, expr) -> Normal (MessageCannotDelete expr)
+  | ESignatureVerification sve -> Normal (MessageCannotBuildTypedInterface sve)
+  | EUnreachable _ -> Normal MessageUnreachableCode
   | EInvalidObjectKit { reason; reason_op = _; use_op } ->
     UseOp
       {
@@ -3487,140 +2500,24 @@ let friendly_message_of_msg loc_of_aloc msg =
         explanation = None;
         use_op;
       }
-  | EInvalidTypeof (_, typename) ->
-    let features =
-      [
-        text "Cannot compare the result of ";
-        code "typeof";
-        text " to string ";
-        text "literal ";
-        code typename;
-        text " because it is not a valid ";
-        code "typeof";
-        text " return value.";
-      ]
-    in
-    Normal { features }
-  | EInvalidRef (_, typename) ->
-    let features =
-      [
-        text "Cannot use ";
-        code typename;
-        text " in a ";
-        code "ref";
-        text " property because it is a type parameter. The ";
-        code "ref";
-        text " property cannot be generic.";
-      ]
-    in
-    Normal { features }
-  | EArithmeticOperand reason ->
-    let features =
-      [
-        text "Cannot perform arithmetic operation because ";
-        ref reason;
-        text " ";
-        text "is not a number or bigint.";
-      ]
-    in
-    Normal { features }
-  | EBinaryInLHS reason ->
-    (* TODO: or symbol *)
-    let features =
-      [
-        text "Cannot use ";
-        code "in";
-        text " because on the left-hand side, ";
-        ref reason;
-        text " must be a string or number.";
-      ]
-    in
-    Normal { features }
-  | EBinaryInRHS reason ->
-    let features =
-      [
-        text "Cannot use ";
-        code "in";
-        text " because on the right-hand side, ";
-        ref reason;
-        text " must be an object or array.";
-      ]
-    in
-    Normal { features }
-  | EForInRHS reason ->
-    let features =
-      [
-        text "Cannot iterate using a ";
-        code "for...in";
-        text " statement ";
-        text "because ";
-        ref reason;
-        text " is not an object, null, or undefined.";
-      ]
-    in
-    Normal { features }
-  | EInstanceofRHS reason ->
-    let features =
-      [
-        text "The right-hand side of an ";
-        code "instanceof";
-        text " expression must be an object, but got ";
-        ref reason;
-        text ".";
-      ]
-    in
-    Normal { features }
+  | EInvalidTypeof (_, typename) -> Normal (MessageInvalidGenericRef typename)
+  | EInvalidRef (_, typename) -> Normal (MessageInvalidRefPropertyType typename)
+  | EArithmeticOperand reason -> Normal (MessageCannotPerformArithOnNonNumbersOrBigInt reason)
+  | EBinaryInLHS reason -> Normal (MessageCannotUseInOperatorDueToBadLHS reason)
+  | EBinaryInRHS reason -> Normal (MessageCannotUseInOperatorDueToBadRHS reason)
+  | EForInRHS reason -> Normal (MessageCannotIterateWithForIn reason)
+  | EInstanceofRHS reason -> Normal (MessageCannotUseInstanceOfOperatorDueToBadRHS reason)
   | EObjectComputedPropertyAccess (_, reason_prop, kind) ->
-    let suffix = Base.Option.value ~default:[] (InvalidObjKey.msg_of_kind kind) in
-    Normal
-      {
-        features =
-          [text "Cannot access object with computed property using "; ref reason_prop; text "."]
-          @ suffix;
-      }
+    Normal (MessageCannotAccessObjectWithComputedProp { reason_prop; kind })
   | EObjectComputedPropertyAssign (reason_prop, Some reason_key, kind) ->
-    let suffix =
-      match InvalidObjKey.msg_of_kind kind with
-      | Some msg -> msg
-      | None ->
-        [
-          text " Computed properties may only be numeric or string literal values,";
-          text " but this one is a ";
-          ref reason_prop;
-          text ". Can you add an appropriate type annotation to ";
-          ref reason_key;
-          text "?";
-          text
-            " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
-        ]
-    in
-    Normal
-      {
-        features =
-          [text "Cannot use "; ref reason_key; text " to assign a computed property."] @ suffix;
-      }
+    Normal (MessageCannotAssignToObjectWithComputedPropWithKey { reason_prop; reason_key; kind })
   | EObjectComputedPropertyAssign (reason_prop, None, _) ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot use ";
-            ref reason_prop;
-            text " to assign a computed property.";
-            text " Computed properties may only be numeric or string literal values.";
-            text
-              " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
-          ];
-      }
-  | EInvalidLHSInAssignment _ ->
-    Normal { features = [text "Invalid left-hand side in assignment expression."] }
+    Normal (MessageCannotAssignToObjectWithComputedProp reason_prop)
+  | EInvalidLHSInAssignment _ -> Normal MessageCannotAssignToInvalidLHS
   | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
   | EUnsupportedImplements reason ->
-    Normal
-      {
-        features = [text "Cannot implement "; desc reason; text " because it is not an interface."];
-      }
+    Normal (MessageCannotImplementNonInterface (desc_of_reason reason))
   | ENotAReactComponent { reason; use_op } ->
     UseOp
       {
@@ -3657,67 +2554,12 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         explanation = None;
       }
-  | EReactElementFunArity (_, fn, n) ->
-    let features =
-      [
-        text "Cannot call ";
-        code ("React." ^ fn);
-        text " ";
-        text
-          (spf
-             "without at least %d argument%s."
-             n
-             ( if n == 1 then
-               ""
-             else
-               "s"
-             )
-          );
-      ]
-    in
-    Normal { features }
+  | EReactElementFunArity (_, fn_name, n) ->
+    Normal (MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name; n })
   | EReactRefInRender { usage; kind = Argument; in_hook } ->
-    let context =
-      if in_hook then
-        text "within hooks"
-      else
-        text "during render"
-    in
-    let features =
-      [
-        text "Cannot pass ";
-        ref usage;
-        text " as an argument because ";
-        code "ref";
-        text " values may not be passed to functions because they could read the ref value (";
-        code "current";
-        text ") property) ";
-        context;
-        text ". (https://react.dev/reference/react/useRef).";
-      ]
-    in
-    Normal { features }
+    Normal (MessageCannotPassReactRefAsArgument { usage; in_hook })
   | EReactRefInRender { usage; kind = Access; in_hook } ->
-    let context =
-      if in_hook then
-        text "within hooks"
-      else
-        text "during render"
-    in
-    let features =
-      [
-        text "Cannot read ";
-        code "current";
-        text " from ";
-        ref usage;
-        text " because ";
-        code "ref";
-        text " values may not be read ";
-        context;
-        text ". (https://react.dev/reference/react/useRef).";
-      ]
-    in
-    Normal { features }
+    Normal (MessageCannotAccessReactRefInRender { usage; in_hook })
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
     let msg =
       match param_count with
@@ -3732,372 +2574,34 @@ let friendly_message_of_msg loc_of_aloc msg =
         explanation = None;
         use_op;
       }
-  | EUnsupportedSetProto _ -> Normal { features = [text "Mutating this prototype is unsupported."] }
+  | EUnsupportedSetProto _ -> Normal MessageCannotMutateThisPrototype
   | EDuplicateModuleProvider { module_name; provider; conflict } ->
-    let file_of_loc l = l |> loc_of_aloc |> Loc.source in
-    let features =
-      match (file_of_loc provider, file_of_loc conflict) with
-      | (Some provider_file, Some conflict_file)
-        when File_key.check_suffix provider_file Files.flow_ext
-             && File_key.check_suffix conflict_file ".js" ->
-        [
-          text "This file is being illegally shadowed by the ";
-          ref (mk_reason (RCustom "js.flow file") provider);
-          text ". This file can only be shadowed by a js.flow file ";
-          text "in the same directory with the same base name.";
-        ]
-      | _ ->
-        [
-          text "Duplicate module provider for ";
-          code module_name;
-          text ". Change ";
-          text "either this module provider or the ";
-          ref (mk_reason (RCustom "current module provider") provider);
-          text ".";
-        ]
-    in
-    Normal { features }
-  | EParseError (_, parse_error) ->
-    Normal
-      { features = Flow_errors_utils.Friendly.message_of_string (Parse_error.PP.error parse_error) }
-  | EDocblockError (_, err) ->
-    let features =
-      match err with
-      | MultipleFlowAttributes ->
-        [
-          text "Unexpected ";
-          code "@flow";
-          text " declaration. Only one per ";
-          text "file is allowed.";
-        ]
-      | InvalidFlowMode s ->
-        [
-          code (spf "@flow %s" s);
-          text " is not a valid ";
-          code "@flow";
-          text " mode. Valid ones are: ";
-          code "@flow";
-          text ", ";
-          code "@flow strict";
-          text ", and ";
-          code "@flow strict-local";
-          text ".";
-        ]
-      | MultipleJSXAttributes ->
-        [
-          text "Unexpected ";
-          code "@jsx";
-          text " declaration. Only one per ";
-          text "file is allowed.";
-        ]
-      | InvalidJSXAttribute first_error ->
-        [
-          text "Invalid ";
-          code "@jsx";
-          text " declaration. Should have the form ";
-          code "@jsx LeftHandSideExpression";
-          text " with no spaces.";
-        ]
-        @
-        (match first_error with
-        | None -> []
-        | Some first_error -> [text (spf " Parse error: %s." first_error)])
-      | MultipleJSXRuntimeAttributes ->
-        [
-          text "Unexpected ";
-          code "@jsxRuntime";
-          text " declaration. Only one per ";
-          text "file is allowed.";
-        ]
-      | InvalidJSXRuntimeAttribute ->
-        [
-          text "Invalid ";
-          code "@jsxRuntime";
-          text " declaration. The only supported values are ";
-          code "classic";
-          text " and ";
-          code "automatic";
-          text ".";
-        ]
-      | InvalidSupportsPlatform p ->
-        [
-          text "Invalid ";
-          code "@supportsPlatform";
-          text " declaration. ";
-          code p;
-          text " is not configured in ";
-          code "experimental.multi_platform.extensions";
-          text " in your flow config.";
-        ]
-      | DisallowedSupportsPlatform ->
-        [code "@supportsPlatform"; text " declaration is disallowed in platform specific files."]
-    in
-    Normal { features }
-  | EImplicitInexactObject _ ->
-    let features =
-      [
-        text "Please add ";
-        code "...";
-        text " to the end of the list of ";
-        text "properties to express an inexact object type.";
-      ]
-    in
-    Normal { features }
-  | EAmbiguousObjectType _ ->
-    let features =
-      [
-        text "Please write this object type as explicitly exact (use ";
-        code "{|";
-        text " and ";
-        code "|}";
-        text " instead of ";
-        code "{";
-        text " and ";
-        code "}";
-        text ") or as explicitly inexact (add ";
-        code "...";
-        text " to the end of the list of properties).";
-      ]
-    in
-    Normal { features }
-  | EUntypedTypeImport (_, module_name) ->
-    let features =
-      [
-        text "Importing a type from an untyped module makes it ";
-        code "any";
-        text " ";
-        text "and is not safe! Did you mean to add ";
-        code "// @flow";
-        text " to ";
-        text "the top of ";
-        code module_name;
-        text "?";
-      ]
-    in
-    Normal { features }
-  | EUntypedImport (_, module_name) ->
-    let features =
-      [
-        text "Importing from an untyped module makes it ";
-        code "any";
-        text " ";
-        text "and is not safe! Did you mean to add ";
-        code "// @flow";
-        text " ";
-        text "to the top of ";
-        code module_name;
-        text "?";
-      ]
-    in
-    Normal { features }
-  | ENonstrictImport _ ->
-    let features =
-      [
-        text "Dependencies of a ";
-        code "@flow strict";
-        text " module must ";
-        text "also be ";
-        code "@flow strict";
-        text "!";
-      ]
-    in
-    Normal { features }
-  | EUnclearType _ ->
-    let features =
-      [
-        text "Unclear type. Using ";
-        code "any";
-        text ", ";
-        code "Object";
-        text ", or ";
-        code "Function";
-        text " types is not safe!";
-      ]
-    in
-    Normal { features }
-  | EDeprecatedBool _ ->
-    Normal { features = [text "Deprecated type. Use "; code "boolean"; text " instead."] }
-  | EDeprecatedDollarCall _ ->
-    Normal
-      {
-        features =
-          [
-            text "Deprecated type. Use conditional types instead. ";
-            text
-              "See https://flow.org/en/docs/types/conditional/ for more information on conditional types.";
-          ];
-      }
-  | EDeprecatedDollarObjMap _ ->
-    Normal
-      {
-        features =
-          [
-            text "Deprecated type. Use mapped types instead. ";
-            text
-              "See https://flow.org/en/docs/types/mapped-types/ for more information on mapped types.";
-          ];
-      }
-  | EDeprecatedPredicate _ ->
-    Normal
-      {
-        features =
-          [
-            text "Deprecated type. Use type guards instead. ";
-            text
-              "See https://flow.org/en/docs/types/type-guards/ for more information on type guards.";
-          ];
-      }
-  | EIncorrectTypeWithReplacement { kind; _ } ->
-    let open IncorrectType in
-    let incorrect_name = incorrect_of_kind kind in
-    let replacement_name = replacement_of_kind kind in
-    let features =
-      match error_type_of_kind kind with
-      | DeprecatedUtility ->
-        [
-          text "The utility type ";
-          code incorrect_name;
-          text " is deprecated, use ";
-          code replacement_name;
-          text " instead.";
-        ]
-      | TSType ->
-        [
-          text "The equivalent of TypeScript's ";
-          code incorrect_name;
-          text " type in Flow is ";
-          code replacement_name;
-          text ".";
-        ]
-    in
-    Normal { features }
-  | EUnsafeGettersSetters _ ->
-    Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
-  | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
-  | ECodelessSuppression (_, c) ->
-    Normal
-      {
-        features =
-          [
-            text
-              "Suppression is missing a code. Please update this suppression to use an error code: ";
-            code ("$FlowFixMe[" ^ c ^ "]");
-          ];
-      }
-  | ELintSetting (_, kind) ->
-    let features =
-      match kind with
-      | LintSettings.Redundant_argument ->
-        [text "Redundant argument. This argument doesn't change any lint settings."]
-      | LintSettings.Overwritten_argument ->
-        [
-          text "Redundant argument. The values set by this argument are ";
-          text "overwritten later in this comment.";
-        ]
-      | LintSettings.Naked_comment ->
-        [text "Malformed lint rule. At least one argument is required."]
-      | LintSettings.Nonexistent_rule ->
-        [
-          text "Nonexistent/misspelled lint rule. Perhaps you have a ";
-          text "missing/extra ";
-          code ",";
-          text "?";
-        ]
-      | LintSettings.Invalid_setting ->
-        [text "Invalid setting. Valid settings are error, warn, and off."]
-      | LintSettings.Malformed_argument ->
-        [
-          text "Malformed lint rule. Properly formed rules contain a single ";
-          code ":";
-          text " character. Perhaps you have a missing/extra ";
-          code ",";
-          text "?";
-        ]
-    in
-    Normal { features }
-  | ESketchyNullLint { kind = sketchy_kind; loc = _; falsy_loc; null_loc } ->
-    let (type_str, value_str) =
-      match sketchy_kind with
-      | Lints.SketchyNullBool -> ("boolean", "false")
-      | Lints.SketchyNullNumber -> ("number", "0")
-      | Lints.SketchyNullBigInt -> ("bigint", "0n")
-      | Lints.SketchyNullString -> ("string", "an empty string")
-      | Lints.SketchyNullMixed -> ("mixed", "false")
-      | Lints.SketchyNullEnumBool -> ("boolean enum", "false at runtime")
-      | Lints.SketchyNullEnumNumber -> ("number enum", "0 at runtime")
-      | Lints.SketchyNullEnumBigInt -> ("bigint enum", "0n at runtime")
-      | Lints.SketchyNullEnumString -> ("string enum", "an empty string at runtime")
-    in
-    let features =
-      [
-        text "Sketchy null check on ";
-        ref (mk_reason (RCustom type_str) falsy_loc);
-        text " ";
-        text "which is potentially ";
-        text value_str;
-        text ". Perhaps you meant to ";
-        text "check for ";
-        ref (mk_reason RNullOrVoid null_loc);
-        text "?";
-      ]
-    in
-    Normal { features }
-  | ESketchyNumberLint (_, reason) ->
-    let features =
-      [
-        text "Avoid using ";
-        code "&&";
-        text " to check the value of ";
-        ref reason;
-        text ". ";
-        text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
-        text "explicit default instead.";
-      ]
-    in
-    Normal { features }
-  | EInvalidConstructor reason ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot use ";
-            code "new";
-            text " on ";
-            ref reason;
-            text ". Only classes can be constructed.";
-          ];
-      }
-  | EInvalidPrototype (_, reason) ->
-    Normal
-      {
-        features =
-          [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."];
-      }
-  | EUnnecessaryOptionalChain (_, lhs_reason) ->
-    let features =
-      [
-        text "This use of optional chaining (";
-        code "?.";
-        text ") is unnecessary because ";
-        ref lhs_reason;
-        text " cannot be nullish or because an earlier ";
-        code "?.";
-        text " will short-circuit the nullish case.";
-      ]
-    in
-    Normal { features }
-  | EUnnecessaryInvariant (_, reason) ->
-    let features =
-      [
-        text "This use of `invariant` is unnecessary because "; ref reason; text " is always truthy.";
-      ]
-    in
-    Normal { features }
-  | EUnnecessaryDeclareTypeOnlyExport _ ->
-    let features =
-      [text "The "; code "declare"; text " keyword is unnecessary for type exports."]
-    in
-    Normal { features }
+    Normal (MessageDuplicateModuleProvider { module_name; provider; conflict })
+  | EParseError (_, parse_error) -> Normal (MessageParseError parse_error)
+  | EDocblockError (_, err) -> Normal (MessageDocblockError err)
+  | EImplicitInexactObject _ -> Normal MessageImplicitInexactObject
+  | EAmbiguousObjectType _ -> Normal MessageAmbiguousObjectType
+  | EUntypedTypeImport (_, module_name) -> Normal (MessageUntypedTypeImport module_name)
+  | EUntypedImport (_, module_name) -> Normal (MessageUntypedImport module_name)
+  | ENonstrictImport _ -> Normal MessageNonStrictImport
+  | EUnclearType _ -> Normal MessageUnclearType
+  | EDeprecatedBool _ -> Normal MessageDeprecatedBool
+  | EDeprecatedDollarCall _ -> Normal MessageDeprecatedDollarCall
+  | EDeprecatedDollarObjMap _ -> Normal MessageDeprecatedObjMap
+  | EDeprecatedPredicate _ -> Normal MessageDeprecatedPredicate
+  | EIncorrectTypeWithReplacement { kind; _ } -> Normal (MessageIncorrectType kind)
+  | EUnsafeGettersSetters _ -> Normal MessageUnsafeGetterSetter
+  | EUnusedSuppression _ -> Normal MessageUnusedSuppression
+  | ECodelessSuppression (_, c) -> Normal (MessageSuppressionMissingCode c)
+  | ELintSetting (_, kind) -> Normal (MessageInvalidLintSettings kind)
+  | ESketchyNullLint { kind; loc = _; falsy_loc; null_loc } ->
+    Normal (MessageSketchyNullCheck { kind; falsy_loc; null_loc })
+  | ESketchyNumberLint (_, reason) -> Normal (MessageSketchyNumber reason)
+  | EInvalidConstructor reason -> Normal (MessageCannotUseAsConstructor reason)
+  | EInvalidPrototype (_, reason) -> Normal (MessageCannotUseAsPrototype reason)
+  | EUnnecessaryOptionalChain (_, lhs_reason) -> Normal (MessageUnnecessaryOptionalChain lhs_reason)
+  | EUnnecessaryInvariant (_, reason) -> Normal (MessageUnnecessaryInvariant reason)
+  | EUnnecessaryDeclareTypeOnlyExport _ -> Normal MessageUnnecessaryDeclareTypeOnlyExport
   | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
     let kind_str =
       match kind with
@@ -4200,457 +2704,104 @@ let friendly_message_of_msg loc_of_aloc msg =
     in
     UseOp { loc = loc_of_reason spread_reason; features; explanation = None; use_op }
   | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
-    let format_reason_group { first_reason; second_reason } =
-      match second_reason with
-      | None -> [ref first_reason]
-      | Some second_reason ->
-        [text "inferred union from "; ref first_reason; text " | "; ref second_reason]
-    in
-    let union_refs =
-      let reasons_for_operand1 = format_reason_group reasons_for_operand1 in
-      let reasons_for_operand2 = format_reason_group reasons_for_operand2 in
-      reasons_for_operand1 @ [text " and "] @ reasons_for_operand2
-    in
-    let features =
-      [
-        text "Computing ";
-        ref reason;
-        text " may lead to an exponentially large number of cases to reason about because ";
-      ]
-      @ union_refs
-      @ [
-          text
-            " are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.";
-          text
-            " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
-        ]
-    in
-    Normal { features }
-  | EComputedPropertyWithUnion computed_property_reason ->
-    let features =
-      [
-        text "Cannot use ";
-        ref computed_property_reason;
-        text " as a computed property.";
-        text " Computed properties may only be primitive literal values, but the type of ";
-        ref computed_property_reason;
-        text " is a union. Can you add a literal type annotation to ";
-        ref computed_property_reason;
-        text "?";
-        text " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
-      ]
-    in
-    Normal { features }
+    Normal (MessageExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 })
+  | EComputedPropertyWithUnion reason -> Normal (MessageCannotUseComputedPropertyWithUnion reason)
   | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
-    let features =
-      [text "Cannot access "; desc reason]
-      @
-      match member_name with
-      | Some name ->
-        let name = display_string_of_name name in
-        [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
-        @ Base.Option.value_map suggestion ~default:[] ~f:(fun suggestion ->
-              [text " Did you mean the member "; code suggestion; text "?"]
-          )
-      | None ->
-        [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
-    in
-    Normal { features }
-  | EEnumModification { enum_reason; _ } ->
-    let features =
-      [text "Cannot change member of "; ref enum_reason; text " because enums are frozen."]
-    in
-    Normal { features }
+    Normal
+      (MessageCannotAccessEnumMember
+         { member_name; suggestion; description = desc_of_reason reason; enum_reason }
+      )
+  | EEnumModification { enum_reason; _ } -> Normal (MessageCannotChangeEnumMember enum_reason)
   | EEnumMemberDuplicateValue { prev_use_loc; enum_reason; _ } ->
-    let features =
-      [
-        text "Invalid enum member initializer. Initializers need to be unique, but this one ";
-        text "has already been used for a ";
-        ref (mk_reason (RCustom "previous member") prev_use_loc);
-        text " of ";
-        ref enum_reason;
-        text ".";
-      ]
-    in
-    Normal { features }
+    Normal (MessageDuplicateEnumMember { prev_use_loc; enum_reason })
   | EEnumInvalidObjectUtilType { reason; enum_reason } ->
-    let suggestion =
-      match enum_name_of_reason enum_reason with
-      | Some enum_name ->
-        [
-          text " ";
-          text "You can use the enum's name ";
-          code enum_name;
-          text " as the type of its members.";
-        ]
-      | None -> []
-    in
-    let features =
-      [
-        text "Cannot instantiate ";
-        desc reason;
-        text " because ";
-        ref enum_reason;
-        text " is not an object.";
-      ]
-      @ suggestion
-    in
-    Normal { features }
+    Normal
+      (MessageCannotInstantiateObjectUtilTypeWithEnum
+         { description = desc_of_reason reason; enum_reason }
+      )
   | EEnumInvalidObjectFunction { reason; enum_reason } ->
-    let suggestion =
-      match enum_name_of_reason enum_reason with
-      | Some enum_name ->
-        [
-          text " ";
-          text "You can use ";
-          code (spf "%s.members()" enum_name);
-          text " to get an iterator of the enum's members. ";
-          text "You can turn that into an array using ";
-          code "Array.from";
-          text ", which optionally takes a second argument if you wish to also map over the result.";
-        ]
-      | None -> []
-    in
-    let features =
-      [
-        text "Cannot call function ";
-        ref reason;
-        text " with argument ";
-        ref enum_reason;
-        text " because it is not an object.";
-      ]
-      @ suggestion
-    in
-    Normal { features }
-  | EEnumNotIterable { reason; for_in } ->
-    let features =
-      if for_in then
-        let suggestion =
-          match enum_name_of_reason reason with
-          | Some enum_name ->
-            [
-              text " ";
-              text "You can use ";
-              code (spf "for (... of %s.members()) { ... }" enum_name);
-              text " to iterate over the enum's members.";
-            ]
-          | None -> []
-        in
-        [
-          text "Cannot iterate using a ";
-          code "for...in";
-          text " loop because ";
-          ref reason;
-          text " is not an object, null, or undefined.";
-        ]
-        @ suggestion
-      else
-        let suggestion =
-          match enum_name_of_reason reason with
-          | Some enum_name ->
-            [
-              text " ";
-              text "You can use ";
-              code (spf "%s.members()" enum_name);
-              text " to get an iterator for the enum's members.";
-            ]
-          | None -> []
-        in
-        [desc reason; text " is not an iterable."] @ suggestion
-    in
-    Normal { features }
+    Normal (MessageCannotCallObjectFunctionOnEnum { reason; enum_reason })
+  | EEnumNotIterable { reason; for_in } -> Normal (MessageCannotIterateEnum { reason; for_in })
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
-    let features =
-      [
-        text "Invalid exhaustive check: ";
-        desc reason;
-        text " checks for enum member ";
-        code member_name;
-        text " of ";
-        ref enum_reason;
-        text ", but member ";
-        code member_name;
-        text " was already checked at ";
-        ref prev_check_reason;
-        text ".";
-      ]
-    in
-    Normal { features }
+    Normal
+      (MessageAlreadyExhaustivelyCheckOneEnumMember
+         { description = desc_of_reason reason; prev_check_reason; enum_reason; member_name }
+      )
   | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
-    let features =
-      [
-        text "Invalid exhaustive check: ";
-        desc reason;
-        text " checks for additional enum members of ";
-        ref enum_reason;
-        text ", but all of its members have already been checked.";
-      ]
-    in
-    Normal { features }
+    Normal
+      (MessageAlreadyExhaustivelyCheckAllEnumMembers
+         { description = desc_of_reason reason; enum_reason }
+      )
   | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
-    let left_to_check_features =
-      match left_to_check with
-      | [member_to_check] ->
-        [text "the member "; code member_to_check; text " of enum "; ref enum_reason; text " has"]
-      | _ ->
-        let number_to_check = List.length left_to_check in
-        let members_features =
-          if number_to_check > 5 then
-            let max_display_amount = 4 in
-            (Base.List.take left_to_check max_display_amount
-            |> Base.List.bind ~f:(fun member -> [code member; text ", "])
-            )
-            @ [text (spf "and %d others" (number_to_check - max_display_amount))]
-          else
-            Flow_errors_utils.Friendly.conjunction_concat
-              (Base.List.map ~f:(fun member -> [code member]) left_to_check)
-        in
-        (text "the members " :: members_features)
-        @ [text " of enum "; ref enum_reason; text " have"]
-    in
-    let default_features =
-      match default_case with
-      | Some default_reason ->
-        [
-          text " The ";
-          ref default_reason;
-          text " does not check for the missing members as the ";
-          code (Lints.string_of_kind Lints.RequireExplicitEnumSwitchCases);
-          text " lint has been enabled.";
-        ]
-      | None -> []
-    in
-    let features =
-      (text "Incomplete exhaustive check: " :: left_to_check_features)
-      @ [text " not been considered in check of "; desc reason; text "."]
-      @ default_features
-    in
-    Normal { features }
+    Normal
+      (MessageIncomplateExhausiveCheckEnum
+         { description = desc_of_reason reason; enum_reason; left_to_check; default_case }
+      )
   | EEnumUnknownNotChecked { reason; enum_reason } ->
-    let features =
-      [
-        text "Missing ";
-        code "default";
-        text " case in the check of ";
-        desc reason;
-        text ". ";
-        ref enum_reason;
-        text " has unknown members (specified using ";
-        code "...";
-        text ") so checking it requires the use of a ";
-        code "default";
-        text " case to cover those members.";
-      ]
-    in
-    Normal { features }
+    Normal
+      (MessageCannotExhaustivelyCheckEnumWithUnknowns
+         { description = desc_of_reason reason; enum_reason }
+      )
   | EEnumInvalidCheck { reason; enum_reason; example_member } ->
-    let suggestion =
-      match enum_name_of_reason enum_reason with
-      | Some enum_name ->
-        let example_member = Base.Option.value ~default:"A" example_member in
-        [text " "; text "For example "; code (spf "case %s.%s:" enum_name example_member); text "."]
-      | None -> []
-    in
-    let features =
-      [
-        text "Invalid enum member check at ";
-        desc reason;
-        text ". Check must be dot-access of a member of ";
-        ref enum_reason;
-        text ".";
-      ]
-      @ suggestion
-    in
-    Normal { features }
+    Normal
+      (MessageInvalidEnumMemberCheck
+         { description = desc_of_reason reason; enum_reason; example_member }
+      )
   | EEnumMemberUsedAsType { reason; enum_reason } ->
-    let features =
-      [
-        text "Cannot use ";
-        desc reason;
-        text " as a type. ";
-        text "Enum members are not separate types. ";
-        text "Only the enum itself, ";
-        ref enum_reason;
-        text ", is a type.";
-      ]
-    in
-    Normal { features }
+    Normal
+      (MessageCannotUseEnumMemberUsedAsType { description = desc_of_reason reason; enum_reason })
   | EEnumIncompatible
       { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
     IncompatibleEnum
       { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
   | EEnumInvalidAbstractUse { reason; enum_reason } ->
-    let features =
-      [
-        text "Cannot exhaustively check ";
-        desc reason;
-        text " because ";
-        ref enum_reason;
-        text " is an abstract enum value, so has no members.";
-      ]
-    in
-    Normal { features }
+    Normal
+      (MessageCannotExhaustivelyCheckAbstractEnums
+         { description = desc_of_reason reason; enum_reason }
+      )
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->
-    let features =
-      [
-        text "Cannot reassign ";
-        text (string_of_assigned_const_like_binding_type binding_kind);
-        text " binding ";
-        ref definition;
-        text ".";
-      ]
-    in
-    Normal { features }
-  | EMalformedCode _ ->
-    Normal
-      {
-        features =
-          [
-            text "Suppression contains a malformed error code. Suppressions with error codes ";
-            text "should be formatted as ";
-            code "$FlowFixMe[<CODE>]";
-            text ".";
-          ];
-      }
-  | EObjectThisReference (_, reason) ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot reference ";
-            code "this";
-            text " from within ";
-            ref reason;
-            text ". For safety, Flow restricts access to ";
-            code "this";
-            text " inside object methods since these methods may be unbound and rebound.";
-            text " Consider replacing the reference to ";
-            code "this";
-            text " with the name of the object, or rewriting the object as a class.";
-          ];
-      }
+    Normal (MessageCannotReassignConstantLikeBinding { definition; binding_kind })
+  | EMalformedCode _ -> Normal MessageSuppressionMalformedCode
+  | EObjectThisReference (_, reason) -> Normal (MessageThisInObject reason)
   | EComponentThisReference { component_loc; this_loc = _ } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot reference ";
-            code "this";
-            text " from within ";
-            ref (mk_reason (RCustom "component declaration") component_loc);
-          ];
-      }
-  | EComponentCase _ ->
-    Normal { features = [text "Component identifiers must begin with an upper-case character"] }
-  | EComponentMissingReturn reason ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot declare component because ";
-            ref reason;
-            text
-              " is not guaranteed to reach a return statement. An explicit return statement must be included for all possible branches.";
-          ];
-      }
-  | ENestedComponent _ ->
-    Normal { features = [text "Components may not be nested directly within other components."] }
+    Normal (MessageThisInComponent component_loc)
+  | EComponentCase _ -> Normal MessageComponentNonUpperCase
+  | EComponentMissingReturn reason -> Normal (MessageComponentMissingReturn reason)
+  | ENestedComponent _ -> Normal MessageCannotNestComponents
   | EDuplicateClassMember { name; static; _ } ->
-    let member_type =
-      if static then
-        "Static class"
-      else
-        "Class"
-    in
-    Normal
-      {
-        features =
-          [
-            code name;
-            text " has already been declared in this class. ";
-            text member_type;
-            text " member names must be unique.";
-          ];
-      }
-  | EEmptyArrayNoProvider { loc = _ } ->
-    Normal
-      {
-        features =
-          [text "Cannot determine type of empty array literal. Please provide an annotation."];
-      }
+    Normal (MessageDuplicateClassMember { name; static })
+  | EEmptyArrayNoProvider { loc = _ } -> Normal MessageCannotDetermineEmptyArrayLiteralType
   | EInvalidDeclaration
       { declaration = reason; null_write = None; possible_generic_escape_locs = [] } ->
-    Normal
-      {
-        features =
-          [text "Variable "; ref reason; text " is never initialized, annotated, or assigned to."];
-      }
+    Normal (MessageVariableNeverInitAssignedAnnotated reason)
   | EInvalidDeclaration { declaration = reason; null_write = None; possible_generic_escape_locs } ->
     Normal
-      {
-        features =
-          [
-            text "Variable ";
-            ref reason;
-            text " should be annotated, because it is only initialized in a generic context";
-          ]
-          @ (Base.List.map possible_generic_escape_locs ~f:no_desc_ref
-            |> Base.List.intersperse ~sep:(text ",")
-            );
-      }
+      (MessageShouldAnnotateVariableOnlyInitializedInGenericContext
+         { reason; possible_generic_escape_locs }
+      )
   | EInvalidDeclaration
       {
         declaration = reason;
         null_write = Some { null_loc; initialized };
         possible_generic_escape_locs = [];
       } ->
-    let null_ref =
+    let null_loc =
       if initialized then
-        code "null"
+        None
       else
-        ref (mk_reason (RCode "null") null_loc)
+        Some null_loc
     in
-    Normal
-      {
-        features =
-          [
-            text "Variable ";
-            ref reason;
-            text " is only ever assigned to by ";
-            null_ref;
-            text ". This is likely unintended; if it is intended, annotate ";
-            desc reason;
-            text " with ";
-            code ": null";
-            text " to disambiguate.";
-          ];
-      }
+    Normal (MessageVariableOnlyAssignedByNull { reason; null_loc })
   | EInvalidDeclaration
       {
         declaration = reason;
         null_write = Some { null_loc; initialized };
         possible_generic_escape_locs;
       } ->
-    let null_ref =
-      if initialized then
-        code "null"
-      else
-        ref (mk_reason (RCode "null") null_loc)
-    in
     Normal
-      {
-        features =
-          [
-            text "Variable ";
-            ref reason;
-            text " should be annotated, because it is only ever assigned to by ";
-            null_ref;
-            text " and in generic context";
-          ]
-          @ (Base.List.map possible_generic_escape_locs ~f:no_desc_ref
-            |> Base.List.intersperse ~sep:(text ",")
-            );
-      }
+      (MessageShouldAnnotateVariableUsedInGenericContext
+         { reason; null_loc; initialized; possible_generic_escape_locs }
+      )
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; use_op; bound = _ } ->
     UseOp
       {
@@ -4722,751 +2873,89 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithEachOther;
       }
-  | EHookNaming _ ->
-    Normal { features = [text "Hooks must have names that begin with "; code "use"; text "."] }
+  | EHookNaming _ -> Normal MessageInvalidHookNaming
   | EHookRuleViolation { callee_loc; hook_rule = ConditionalHook; call_loc = _ } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot call ";
-            ref (mk_reason (RCustom "hook") callee_loc);
-            text " because React hooks cannot be called in conditional contexts.";
-          ];
-      }
+    Normal (MessageCannotCallReactHookConditionally callee_loc)
   | EHookRuleViolation { callee_loc; hook_rule = HookHasIllegalName; call_loc = _ } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot call hook because ";
-            ref (mk_reason (RCustom "callee") callee_loc);
-            text "'s name does not conform to React hook rules. Hook names must begin with ";
-            code "use";
-            text " followed by a capitalized letter.";
-          ];
-      }
+    Normal (MessageCannotCallReactHookWithIllegalName callee_loc)
   | EHookRuleViolation { callee_loc; hook_rule = MaybeHook { hooks; non_hooks }; call_loc = _ } ->
-    let hook_blame =
-      match hooks with
-      | [] -> [text "React hook"]
-      | x :: _ -> [ref (mk_reason (RCustom "React hook") x)]
-    in
-    let non_hook_blame =
-      match non_hooks with
-      | [] -> [text "regular function definition"]
-      | x :: _ -> [text "regular "; ref (mk_reason (RCustom "function definition") x)]
-    in
-    Normal
-      {
-        features =
-          [
-            text "Cannot call function because ";
-            ref (mk_reason (RCustom "callee") callee_loc);
-            (* Kinda crummy, hopefully doesn't come up often *)
-            text " may be a ";
-          ]
-          @ hook_blame
-          @ [text " or may be a "]
-          @ non_hook_blame
-          @ [
-              text
-                ". Function callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a component renders.";
-            ];
-      }
+    Normal (MessageCannotCallMaybeReactHook { callee_loc; hooks; non_hooks })
   | EHookRuleViolation { callee_loc; hook_rule = NonHookHasIllegalName; call_loc = _ } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot call function because ";
-            ref (mk_reason (RCustom "callee") callee_loc);
-            text " has a name that indicates it is a React hook (starting with ";
-            code "use";
-            text ") but it is defined as a non-hook function.";
-          ];
-      }
+    Normal (MessageCannotCallNonReactHookWithIllegalName callee_loc)
   | EHookRuleViolation { callee_loc; hook_rule = HookNotInComponentOrHook; call_loc = _ } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot call ";
-            ref (mk_reason (RCustom "hook") callee_loc);
-            text " because React hooks can only be called within components or hooks.";
-          ];
-      }
-  | EInvalidGraphQL (_, err) ->
-    let features =
-      match err with
-      | Graphql.InvalidTaggedTemplate ->
-        [text "Template literal substitutions are not allowed in GraphQL literals."]
-      | Graphql.InvalidGraphQL ->
-        [text "Expected a GraphQL fragment, query, mutation, or subscription."]
-    in
-    Normal { features }
+    Normal (MessageCannotCallReactHookInNonComponentOrHook callee_loc)
+  | EInvalidGraphQL (_, err) -> Normal (MessageInvalidGraphQL err)
   | EAnnotationInference (_, reason_op, reason, suggestion) ->
-    let suggestion =
-      match suggestion with
-      | Some util -> [text " (Try using the "; code util; text " utility type instead.)"]
-      | None -> []
-    in
-    let features =
-      [
-        text "Cannot use ";
-        desc (replace_desc_reason (desc_of_reason reason_op) reason_op);
-        text " on ";
-        ref (replace_desc_reason (Reason.desc_of_reason reason) reason);
-        text " in an export position. ";
-        text "Please provide an (alternative) annotation for ";
-        ref reason_op;
-        text ".";
-      ]
-      @ suggestion
-    in
-    Normal { features }
+    Normal (MessageCannotUseTypeForAnnotationInference { reason_op; reason; suggestion })
   | ETrivialRecursiveDefinition (_, reason) ->
-    let features = [text "Invalid trivially recursive definition of "; desc reason; text ". "] in
-    Normal { features }
+    Normal (MessageInvalidTrivialRecursiveDefinition (desc_of_reason reason))
   | ERecursiveDefinition { reason; recursion; annot_locs } ->
-    let (itself, tl_recur) =
-      match recursion with
-      | hd :: tl ->
-        let (suffix, tl) =
-          if List.length tl > 4 then
-            ([text ", [...]"], Base.List.take tl 4)
-          else
-            ([], tl)
-        in
-        ( ref (mk_reason (RCustom "itself") hd),
-          (Base.List.map ~f:(fun loc -> [text ", "; no_desc_ref loc]) tl |> List.flatten) @ suffix
-        )
-      | [] -> (text "itself", [])
-    in
-    let annot_message =
-      match annot_locs with
-      | [] -> [text "this definition"]
-      | [Env_api.Loc loc]
-      | [Env_api.Object { loc; props = [] }] ->
-        [ref (mk_reason (RCustom "this definition") loc)]
-      | [Env_api.Object { loc; props }] when List.length props > 5 ->
-        [ref (mk_reason (RCustom "this definition") loc)]
-      | [Env_api.Object { loc; props = [prop] }] ->
-        [
-          ref (mk_reason (RCustom "this definition") loc);
-          text "or to";
-          ref (mk_reason (RCustom "its property") prop);
-        ]
-      | [Env_api.Object { loc; props }] ->
-        [ref (mk_reason (RCustom "this definition") loc); text " or to its properties"]
-        @ Base.List.map ~f:no_desc_ref props
-      | ls ->
-        let (locs, properties) =
-          Base.List.fold
-            ~init:([], [])
-            ~f:(fun (locs, properties) annot_locs ->
-              match annot_locs with
-              | Env_api.Loc l -> (l :: locs, properties)
-              | Env_api.Object { loc; props } -> (loc :: locs, props @ properties))
-            ls
-        in
-        let compare a b = Loc.compare (loc_of_aloc a) (loc_of_aloc b) in
-        let locs = Base.List.take (Base.List.dedup_and_sort ~compare locs) 10 in
-        let properties = Base.List.dedup_and_sort ~compare properties in
-        let props =
-          if List.length properties <= 5 && List.length properties > 0 then
-            let these =
-              if List.length properties > 1 then
-                text "these object properties"
-              else
-                text "this object property"
-            in
-            text " or to " :: these :: Base.List.map ~f:no_desc_ref properties
-          else
-            []
-        in
-        (text "these definitions" :: Base.List.map ~f:no_desc_ref locs) @ props
-    in
-    let features =
-      [
-        text "Cannot compute a type for ";
-        desc reason;
-        text " because its definition includes references to ";
-        itself;
-      ]
-      @ tl_recur
-      @ (text ". Please add an annotation to " :: annot_message)
-    in
-    Normal { features }
-  | EDefinitionCycle dependencies ->
-    let compare a b = Loc.compare (loc_of_aloc a) (loc_of_aloc b) in
-    let deps =
-      Base.List.filter_mapi
-        ~f:
-          (fun i -> function
-            | (_, [], _) -> None
-            | _ when i = 10 -> Some [text " - ...\n"]
-            | _ when i > 10 -> None
-            | (reason, (_ :: _ as dep), _) ->
-              let (hd, tl) = Base.List.dedup_and_sort ~compare dep |> Nel.of_list_exn in
-              let (suffix, tl) =
-                if List.length tl > 4 then
-                  ([text ", [...]"], Base.List.take tl 4)
-                else
-                  ([], tl)
-              in
-              let tl_dep =
-                Base.List.map ~f:(fun loc -> [text ","; no_desc_ref loc]) tl |> List.flatten
-              in
-              Some
-                ([
-                   text " - ";
-                   ref reason;
-                   text " depends on ";
-                   ref (mk_reason (RCustom "other definition") hd);
-                 ]
-                @ tl_dep
-                @ suffix
-                @ [text "\n"]
-                ))
-        (Nel.to_list dependencies)
-      |> List.flatten
-    in
-    let (locs, properties) =
-      Base.List.fold
-        ~init:([], [])
-        ~f:(fun (locs, properties) (_, _, annot_locs) ->
-          Base.List.fold annot_locs ~init:(locs, properties) ~f:(fun (locs, properties) annot_loc ->
-              match annot_loc with
-              | Env_api.Loc l -> (l :: locs, properties)
-              | Env_api.Object { loc; props } -> (loc :: locs, props @ properties)
-          ))
-        (Nel.to_list dependencies)
-    in
-    let locs = Base.List.take (Base.List.dedup_and_sort ~compare locs) 10 in
-    let properties = Base.List.dedup_and_sort ~compare properties in
-    let annot_message ls = Base.List.map ~f:no_desc_ref ls in
-    let features =
-      text
-        "The following definitions recursively depend on each other, and Flow cannot compute their types:\n"
-      :: deps
-      @ (text "Please add type annotations to these definitions" :: annot_message locs)
-    in
-    let features =
-      if List.length properties <= 5 && List.length properties > 0 then
-        features @ (text " or to these object properties" :: annot_message properties)
-      else
-        features
-    in
-    Normal { features }
+    Normal
+      (MessageDefinitionInvalidRecursive
+         { description = desc_of_reason reason; recursion; annot_locs }
+      )
+  | EDefinitionCycle dependencies -> Normal (MessageDefinitionCycle dependencies)
   | EReferenceInAnnotation (_, name, loc) ->
-    Normal
-      {
-        features =
-          [
-            text "Invalid type annotation for ";
-            code name;
-            text ". It contains a ";
-            ref (mk_reason (RCustom "reference") loc);
-            text " to the binding being declared.";
-          ];
-      }
-  | EUnusedPromise { async; _ } ->
-    Normal
-      {
-        features =
-          ( if async then
-            [
-              code "Promise";
-              text " in async scope is unused. Did you mean to ";
-              code "await";
-              text " it?";
-            ]
-          else
-            [
-              code "Promise";
-              text
-                " in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or .finally.";
-            ]
-          );
-      }
+    Normal (MessageInvalidSelfReferencingTypeAnnotation { name; loc })
+  | EUnusedPromise { async = true; _ } -> Normal MessageUnusedPromiseInAsyncScope
+  | EUnusedPromise { async = false; _ } -> Normal MessageUnusedPromiseInSyncScope
   | EReactIntrinsicOverlap { use; def; type_; mixed } ->
-    Normal
-      {
-        features =
-          [
-            text "The name of intrinsic element ";
-            ref use;
-            text " overlaps with a ";
-            ref (mk_reason (RCustom "local definition") def);
-            text " which has a ";
-            ref (mk_reason (RCustom "type") type_);
-            text " that ";
-            ( if mixed then
-              text "may"
-            else
-              text "can"
-            );
-            text
-              " be instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition";
-          ];
-      }
-  | EInvalidComponentRestParam _ ->
-    Normal
-      {
-        features =
-          [
-            text "You may only use an identifier or a destructured object as a component rest param.";
-          ];
-      }
-  | EBigIntRShift3 reason ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot perform unsigned right shift because ";
-            ref reason;
-            text " ";
-            text "is a bigint, and all bigints are signed.";
-          ];
-      }
-  | EBigIntNumCoerce reason ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot perform unary plus because a ";
-            ref reason;
-            text " ";
-            text "cannot be coerced to number.";
-          ];
-      }
-  | EInvalidCatchParameterAnnotation _ ->
-    Normal
-      {
-        features =
-          [
-            text "Invalid catch parameter type annotation. ";
-            text "Annotation must be ";
-            code "any";
-            text " or ";
-            code "mixed";
-            text " if specified.";
-          ];
-      }
+    Normal (MessageReactIntrinsicOverlap { use; def; type_; mixed })
+  | EInvalidComponentRestParam _ -> Normal MessageInvalidComponentRestParam
+  | EBigIntRShift3 reason -> Normal (MessageCannotPerformBigIntRShift3 reason)
+  | EBigIntNumCoerce reason -> Normal (MessageCannotPerformBigIntUnaryPlus reason)
+  | EInvalidCatchParameterAnnotation _ -> Normal MessageInvalidCatchParameterAnnotation
   | ETSSyntax { kind; _ } -> begin
     match kind with
-    | TSUnknown ->
-      Normal
-        {
-          features =
-            [
-              text "The equivalent of TypeScript's ";
-              code "unknown";
-              text " type in Flow is ";
-              code "mixed";
-              text ".";
-            ];
-        }
-    | TSNever ->
-      Normal
-        {
-          features =
-            [
-              text "The closest equivalent of TypeScript's ";
-              code "never";
-              text " type in Flow is ";
-              code "empty";
-              text ".";
-            ];
-        }
-    | TSUndefined ->
-      Normal
-        {
-          features =
-            [
-              text "The equivalent of TypeScript's ";
-              code "undefined";
-              text " type in Flow is ";
-              code "void";
-              text ". ";
-              text "Flow does not have separate ";
-              code "void";
-              text " and ";
-              code "undefined";
-              text " types.";
-            ];
-        }
-    | TSKeyof ->
-      Normal
-        {
-          features =
-            [
-              code "keyof";
-              text " is only supported when used inline in a mapped type. ";
-              text "The equivalent of TypeScript's ";
-              code "keyof";
-              text " type operator in Flow is the ";
-              code "$Keys";
-              text " utility type, used in the form ";
-              code "$Keys<T>";
-              text ".";
-            ];
-        }
-    | TSTypeParamExtends ->
-      Normal
-        {
-          features =
-            [
-              text "While TypeScript uses ";
-              code "extends";
-              text " to specify type parameter bounds, Flow uses ";
-              code ":";
-              text " in the form ";
-              code "type T<A: B> = ...";
-              text ".";
-            ];
-        }
-    | TSReadonlyVariance ->
-      Normal
-        {
-          features =
-            [
-              text "While TypeScript uses ";
-              code "readonly";
-              text " to specify read only properties, Flow uses ";
-              code "+";
-              text " in the form ";
-              code "+foo: T";
-              text " for class and object type properties, and ";
-              code "+[string]: T";
-              text " for dictionaries.";
-            ];
-        }
-    | TSInOutVariance `In ->
-      Normal
-        {
-          features =
-            [
-              text "The equivalent of TypeScript's ";
-              code "in";
-              text " variance annotation is ";
-              code "-";
-              text " in Flow.";
-            ];
-        }
-    | TSInOutVariance `Out ->
-      Normal
-        {
-          features =
-            [
-              text "The equivalent of TypeScript's ";
-              code "out";
-              text " variance annotation is ";
-              code "+";
-              text " in Flow.";
-            ];
-        }
-    | TSInOutVariance `InOut ->
-      Normal
-        {
-          features =
-            [
-              text "The equivalent of TypeScript's ";
-              code "in out";
-              text " variance annotation in Flow is to simply leave it out - ";
-              text "it's the default if you don't have a variance annotation.";
-            ];
-        }
-    | TSAsConst enabled_casting_syntax ->
-      let (example, _) = type_casting_examples enabled_casting_syntax in
-      let features =
-        [
-          code "as const";
-          text " syntax is not enabled by default. ";
-          text "Try adding a type annotation instead. ";
-          text "You can cast an expression to a type using the form ";
-          code example;
-          text ". ";
-          text "Alternatively, you can enable experimental support for ";
-          text "the feature by setting ";
-          code "experimental.as_const=true";
-          text " in your flow config.";
-        ]
-      in
-      Normal { features }
+    | TSUnknown -> Normal MessageTSUnknownType
+    | TSNever -> Normal MessageTSNeverType
+    | TSUndefined -> Normal MessageTSUndefinedType
+    | TSKeyof -> Normal MessageTSKeyofType
+    | TSTypeParamExtends -> Normal MessageTSParamExtends
+    | TSReadonlyVariance -> Normal MessageTSVarianceReadOnly
+    | TSInOutVariance `In -> Normal MessageTSVarianceIn
+    | TSInOutVariance `Out -> Normal MessageTSVarianceOut
+    | TSInOutVariance `InOut -> Normal MessageTSVarianceInOut
+    | TSAsConst enabled_casting_syntax -> Normal (MessageTSAsConst enabled_casting_syntax)
     | TSSatisfiesType enabled_casting_syntax ->
-      let (example, _) = type_casting_examples enabled_casting_syntax in
-      let features =
-        [
-          text "The closest equivalent of TypeScript's ";
-          code "satisfies";
-          text " expression in Flow is to do a cast in the form ";
-          code example;
-          text ".";
-        ]
-      in
-      Normal { features }
+      Normal (MessageTSSatisfiesType enabled_casting_syntax)
     | TSReadonlyType (Some arg_kind) ->
-      let (arg_type, example) =
-        match arg_kind with
-        | `Tuple -> ("a tuple", "$ReadOnly<[T, S]>")
-        | `Array -> ("an array", "$ReadOnlyArray<T>")
-      in
-      let features =
-        [
-          text "The equivalent of TypeScript's ";
-          code "readonly";
-          text " type operator applied to ";
-          text arg_type;
-          text " type is ";
-          code example;
-          text ".";
-        ]
-      in
-      Normal { features }
-    | TSReadonlyType None ->
-      let features =
-        [
-          text "TypeScript's ";
-          code "readonly";
-          text " type operator is not valid in Flow. ";
-          text "For array types, you can use ";
-          code "$ReadOnlyArray<T>";
-          text ". For object and tuple types you can use ";
-          code "$ReadOnly<T>";
-          text ".";
-        ]
-      in
-      Normal { features }
+      (match arg_kind with
+      | `Tuple -> Normal MessageTSReadonlyOperatorOnTuple
+      | `Array -> Normal MessageTSReadonlyOperatorOnArray)
+    | TSReadonlyType None -> Normal MessageTSReadonlyType
   end
   | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot use operator `";
-            text (Type.ArithKind.string_of_arith_kind kind);
-            text "` with operands ";
-            ref reason_l;
-            text " and ";
-            ref reason_r;
-          ];
-      }
+    Normal (MessageCannotPerformBinaryArith { kind; reason_l; reason_r })
   | EInvalidMappedType { kind; _ } ->
-    let features =
+    let msg =
       match kind with
-      | InterfaceOrDeclaredClass ->
-        [text "Mapped Types are not supported in interfaces or declared classes."]
-      | ExtraProperties ->
-        [text "Mapped Types cannot be used when other properties or indexers are present."]
-      | ExplicitExactOrInexact ->
-        [
-          text "Mapped Types take on the exactness of the argument passed to keyof. They do not ";
-          text "support explicit exact or inexact syntax.";
-        ]
-      | RemoveOptionality -> [text "Mapped Types do not yet support optionality removal."]
+      | InterfaceOrDeclaredClass -> MessageInvalidMappedTypeInInterfaceOrDeclaredClass
+      | ExtraProperties -> MessageInvalidMappedTypeWithExtraProps
+      | ExplicitExactOrInexact -> MessageInvalidMappedTypeWithExactOrInexact
+      | RemoveOptionality -> MessageInvalidMappedTypeWithOptionalityRemoval
     in
-    Normal { features }
+    Normal msg
   | EDuplicateComponentProp { spread; first; second } ->
-    let features =
-      [
-        text "Component property ";
-        ref first;
-        text " is ";
-        ref (mk_reason (RCustom "re-declared") second);
-        text " within a ";
-        ref (mk_reason (RCustom "spread") spread);
-        text ". Property names may only be have one definition within a component";
-      ]
-    in
-    Normal { features }
-  | ERefComponentProp { spread; loc } ->
-    let features =
-      [
-        text "Components do not support ";
-        ref (mk_reason (RCustom "ref properties") loc);
-        text " within ";
-        ref (mk_reason (RCustom "spreads") spread);
-      ]
-    in
-    Normal { features }
+    Normal (MessageRedeclareComponentProp { first; second_loc = second; spread_loc = spread })
+  | ERefComponentProp { spread = spread_loc; loc = ref_loc } ->
+    Normal (MessageInvalidRefPropertyInSpread { ref_loc; spread_loc })
   | EInvalidRendersTypeArgument
       { loc = _; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
-    let additional_explanation =
-      match (invalid_render_type_kind, renders_variant) with
-      | (InvalidRendersStructural r, _) ->
-        [
-          text " You can only use an element of ";
-          code "AbstractComponent";
-          text " when the third type argument is a render type and ";
-          ref r;
-          text " is not a render type.";
-        ]
-      | (InvalidRendersNonNominalElement r, _) ->
-        [
-          text " Only elements of a component-syntax components can appear in renders but ";
-          ref r;
-          text " is not a component-syntax component.";
-        ]
-      | (InvalidRendersNullVoidFalse, Flow_ast.Type.Renders.Maybe) ->
-        [
-          text " Only elements of a component-syntax components can appear in renders. ";
-          code "renders?";
-          text " already includes React nodes that render nothing.";
-        ]
-      | (InvalidRendersNullVoidFalse, Flow_ast.Type.Renders.Star) ->
-        [
-          text " Only elements of a component-syntax components can appear in renders. ";
-          code "renders*";
-          text " already includes React nodes that render nothing.";
-        ]
-      | (InvalidRendersIterable, Flow_ast.Type.Renders.Star) ->
-        [
-          text " Only elements of a component-syntax components can appear in renders. ";
-          code "renders*";
-          text
-            " already models rendering any amount of children in all possible nesting structures.";
-        ]
-      | (InvalidRendersNullVoidFalse, _) ->
-        [
-          text " Only elements of a component-syntax components can appear in renders. ";
-          text "If you want to express the idea of rendering zero or one item, please use ";
-          code "renders?";
-          text " instead.";
-        ]
-      | (InvalidRendersIterable, _) ->
-        [
-          text " Only elements of a component-syntax components can appear in renders. ";
-          text "If you want to express the idea of rendering zero or more items, please use ";
-          code "renders*";
-          text " instead.";
-        ]
-      | (InvalidRendersGenericT, _) ->
-        [
-          text
-            " Generic type renders are only allowed in rendering declaration of component syntax components.";
-        ]
-      | (UncategorizedInvalidRenders, _) -> []
-    in
-    let rec refs = function
-      | (r, []) -> [ref r]
-      | (r1, [r2]) -> [ref r1; text " and "; ref r2]
-      | (r1, r2 :: rs) -> [ref r1; text ", "] @ refs (r2, rs)
-    in
-    let features =
-      [text "Cannot use "]
-      @ refs invalid_type_reasons
-      @ [text " as the type argument of renders type."]
-      @ additional_explanation
-    in
-    Normal { features }
+    Normal
+      (MessageInvalidRendersTypeArgument
+         { renders_variant; invalid_render_type_kind; invalid_type_reasons }
+      )
   | EInvalidTypeCastSyntax { enabled_casting_syntax; _ } ->
-    let (valid, invalid) = type_casting_examples enabled_casting_syntax in
-    let features =
-      [
-        text "Invalid type cast syntax. Use the form ";
-        code valid;
-        text " instead of the form ";
-        code invalid;
-        text ".";
-      ]
-    in
-    Normal { features }
+    Normal (MessageInvalidTypeCastingSyntax enabled_casting_syntax)
   | EMissingPlatformSupport { loc = _; available_platforms; required_platforms } ->
-    let missing_platforms = SSet.diff required_platforms available_platforms |> SSet.elements in
-    let platform_features = function
-      | [] -> [text "no platforms"]
-      | [p] -> [text "the "; code p; text " platform"]
-      | p1 :: ps ->
-        let rec loop = function
-          | [] -> []
-          | p :: rest -> text ", " :: code p :: loop rest
-        in
-        text "the following platforms: " :: code p1 :: loop ps
-    in
-    let features =
-      [text "The imported module supports "]
-      @ platform_features (SSet.elements available_platforms)
-      @ [text ", but the current module requires the support of "]
-      @ platform_features (SSet.elements required_platforms)
-      @ [text ". Support for "]
-      @ platform_features missing_platforms
-      @ [text " is missing."]
-    in
-    Normal { features }
+    Normal (MessageMissingPlatformSupport { available_platforms; required_platforms })
   | EUnionPartialOptimizationNonUniqueKey { loc = _; non_unique_keys } ->
-    let string_of_union_enum =
-      let open Type.UnionEnum in
-      function
-      | Str s -> code (spf "`%s`" (display_string_of_name s))
-      | Num f -> code (spf "%f" f)
-      | Bool b -> code (spf "%b" b)
-      | BigInt (_, b) -> code b
-      | Void -> code "undefined"
-      | Null -> code "null"
-    in
-    let string_of_non_unique_key (name, map) =
-      let ref_texts (r0, rs) = ref r0 :: List.concat_map (fun r -> [text ", "; ref r]) rs in
-      map
-      |> Type.UnionRep.UnionEnumMap.bindings
-      |> List.concat_map (fun (enum, rs) ->
-             [
-               text "\n - Key ";
-               code (display_string_of_name name);
-               text " has value ";
-               string_of_union_enum enum;
-               text " in ";
-             ]
-             @ ref_texts rs
-             @ [text "."]
-         )
-    in
-    let keys =
-      non_unique_keys |> NameUtils.Map.bindings |> Base.List.concat_map ~f:string_of_non_unique_key
-    in
-    let features =
-      text
-        "Union could not be fully optimized internally. The following keys have non-unique values:"
-      :: keys
-    in
-    Normal { features }
-  | EUnionOptimization { loc = _; kind } ->
-    let kind =
-      let open Type.UnionRep in
-      match kind with
-      | ContainsUnresolved r ->
-        [
-          text "The form of ";
-          ref r;
-          text " is not supported for optimization. ";
-          text "Try replacing this type with a simpler alternative.";
-        ]
-      | NoCandidateMembers ->
-        [
-          text "The union needs to include in its members ";
-          text "at least one of: ";
-          text "object type, string literal, numeric literal, ";
-          text "boolean literal, void or null types.";
-        ]
-      | NoCommonKeys -> [text "There are no common keys among the members of the union."]
-    in
-    let features = text "Union could not be optimized internally. " :: kind in
-    Normal { features }
+    Normal (MessageCannotOptimizeUnionDueToNonUniqueKeys non_unique_keys)
+  | EUnionOptimization { loc = _; kind } -> Normal (MessageCannotOptimizeUnionInternally kind)
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
-    let features =
-      [text "Invalid use of $Flow$EnforceOptimized on non-union type "; ref arg; text "."]
-    in
-    Normal { features }
-  | ECannotCallReactComponent { reason } ->
-    let features =
-      [
-        text "Cannot call ";
-        ref reason;
-        text " because React components cannot be called. Use JSX instead.";
-      ]
-    in
-    Normal { features }
+    Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
+  | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
 
 let defered_in_speculation = function
   | EUntypedTypeImport _

@@ -12,15 +12,21 @@ let error_of_docblock_error ~source_file (loc, err) =
     Error_message.EDocblockError
       ( ALoc.of_loc loc,
         match err with
-        | Docblock_parser.MultipleFlowAttributes -> Error_message.MultipleFlowAttributes
-        | Docblock_parser.InvalidFlowMode s -> Error_message.InvalidFlowMode s
-        | Docblock_parser.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
+        | Docblock_parser.MultipleFlowAttributes ->
+          Flow_intermediate_error_types.MultipleFlowAttributes
+        | Docblock_parser.InvalidFlowMode s -> Flow_intermediate_error_types.InvalidFlowMode s
+        | Docblock_parser.MultipleJSXAttributes ->
+          Flow_intermediate_error_types.MultipleJSXAttributes
         | Docblock_parser.InvalidJSXAttribute first_error ->
-          Error_message.InvalidJSXAttribute first_error
-        | Docblock_parser.MultipleJSXRuntimeAttributes -> Error_message.MultipleJSXRuntimeAttributes
-        | Docblock_parser.InvalidJSXRuntimeAttribute -> Error_message.InvalidJSXRuntimeAttribute
-        | Docblock_parser.InvalidSupportsPlatform p -> Error_message.InvalidSupportsPlatform p
-        | Docblock_parser.DisallowedSupportsPlatform -> Error_message.DisallowedSupportsPlatform
+          Flow_intermediate_error_types.InvalidJSXAttribute first_error
+        | Docblock_parser.MultipleJSXRuntimeAttributes ->
+          Flow_intermediate_error_types.MultipleJSXRuntimeAttributes
+        | Docblock_parser.InvalidJSXRuntimeAttribute ->
+          Flow_intermediate_error_types.InvalidJSXRuntimeAttribute
+        | Docblock_parser.InvalidSupportsPlatform p ->
+          Flow_intermediate_error_types.InvalidSupportsPlatform p
+        | Docblock_parser.DisallowedSupportsPlatform ->
+          Flow_intermediate_error_types.DisallowedSupportsPlatform
       )
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err

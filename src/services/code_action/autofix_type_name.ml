@@ -28,7 +28,7 @@ class mapper target_loc ~incorrect_name ~replacement_name =
   end
 
 let convert_type kind ast loc =
-  let incorrect_name = Error_message.IncorrectType.incorrect_of_kind kind in
-  let replacement_name = Error_message.IncorrectType.replacement_of_kind kind in
+  let incorrect_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
+  let replacement_name = Flow_intermediate_error_types.IncorrectType.replacement_of_kind kind in
   let mapper = new mapper loc ~incorrect_name ~replacement_name in
   mapper#program ast

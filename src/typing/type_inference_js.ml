@@ -415,10 +415,12 @@ let infer_ast ~lint_severities cx filename metadata loc_comments aloc_ast =
 class lib_def_loc_mapper_and_validator cx =
   let stmt_validator ~in_toplevel_scope (loc, stmt) =
     let error kind =
-      Error_message.(
-        EUnsupportedSyntax
-          (loc, ContextDependentUnsupportedStatement (UnsupportedStatementInLibdef kind))
-      )
+      Error_message.EUnsupportedSyntax
+        ( loc,
+          Flow_intermediate_error_types.(
+            ContextDependentUnsupportedStatement (UnsupportedStatementInLibdef kind)
+          )
+        )
     in
     let error_opt =
       let open Flow_ast.Statement in
@@ -449,8 +451,12 @@ class lib_def_loc_mapper_and_validator cx =
       | ImportDeclaration _ ->
         if in_toplevel_scope then
           Some
-            Error_message.(
-              EUnsupportedSyntax (loc, ContextDependentUnsupportedStatement ToplevelLibraryImport)
+            (Error_message.EUnsupportedSyntax
+               ( loc,
+                 Flow_intermediate_error_types.(
+                   ContextDependentUnsupportedStatement ToplevelLibraryImport
+                 )
+               )
             )
         else
           None

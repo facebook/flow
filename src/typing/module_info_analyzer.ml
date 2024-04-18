@@ -565,11 +565,12 @@ let analyze_declare_namespace cx reason statements =
       | Error kind ->
         Flow_js_utils.add_output
           cx
-          Error_message.(
-            EUnsupportedSyntax
-              ( loc,
-                ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareNamespace kind)
-              )
+          (Error_message.EUnsupportedSyntax
+             ( loc,
+               Flow_intermediate_error_types.(
+                 ContextDependentUnsupportedStatement (UnsupportedStatementInDeclareNamespace kind)
+               )
+             )
           );
         ()
   );

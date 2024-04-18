@@ -380,7 +380,11 @@ let resolve_annotated_function
 
 let resolve_annotated_component cx scope_kind reason tparams_map component_loc component =
   if not (Context.component_syntax cx) then begin
-    Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (component_loc, ComponentSyntax));
+    Flow_js_utils.add_output
+      cx
+      (Error_message.EUnsupportedSyntax
+         (component_loc, Flow_intermediate_error_types.ComponentSyntax)
+      );
     (AnyT.at (AnyError None) component_loc, unknown_use)
   end else begin
     if scope_kind = ComponentBody then begin
