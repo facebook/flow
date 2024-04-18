@@ -312,12 +312,6 @@ and 'loc t' =
       key_error_kind: InvalidObjKey.t;
     }
   | EAmbiguousNumericKeyWithVariance of 'loc
-  | EPredicateFuncTooShort of {
-      loc: 'loc;
-      pred_func: 'loc virtual_reason;
-      pred_func_param_num: int;
-      index: int;
-    }
   | EPredicateFuncArityMismatch of {
       use_op: 'loc virtual_use_op;
       reasons: 'loc virtual_reason * 'loc virtual_reason;
@@ -770,6 +764,7 @@ and internal_error =
   | UnexpectedAnnotationInference of string
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
+  | MissingPredicateParam of int
   | UnexpectedModuleT of string
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
@@ -1140,9 +1135,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
     EUnsupportedKeyInObject { loc = f loc; obj_kind; key_error_kind }
   | EAmbiguousNumericKeyWithVariance loc -> EAmbiguousNumericKeyWithVariance (f loc)
-  | EPredicateFuncTooShort { loc; pred_func; pred_func_param_num; index } ->
-    EPredicateFuncTooShort
-      { loc = f loc; pred_func = map_reason pred_func; pred_func_param_num; index }
   | EPredicateFuncArityMismatch { use_op; reasons = (r1, r2); arities } ->
     EPredicateFuncArityMismatch
       { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2); arities }
@@ -1636,7 +1628,6 @@ let util_use_op_of_msg nope util = function
   | ECharSetAnnot _
   | EUnsupportedKeyInObject _
   | EAmbiguousNumericKeyWithVariance _
-  | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
@@ -1921,7 +1912,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETrivialRecursiveDefinition (loc, _)
   | EInvalidCatchParameterAnnotation loc
   | EInvalidMappedType { loc; _ }
-  | EPredicateFuncTooShort { loc; _ }
   | ETSSyntax { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
   | EDuplicateComponentProp { spread = loc; _ }
@@ -2117,6 +2107,7 @@ let string_of_internal_error = function
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
   | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
+  | MissingPredicateParam i -> spf "missing predicate param at index %d" i
   | EnvInvariant (Env_api.NameDefOrderingFailure { all; roots; missing_roots }) ->
     let all = Base.List.map ~f:ALoc.debug_to_string all |> String.concat "," in
     let roots = Base.List.map ~f:ALoc.debug_to_string roots |> String.concat "," in
@@ -2961,22 +2952,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EPredicateFuncTooShort { loc = _; pred_func; pred_func_param_num; index } ->
-    Normal
-      {
-        features =
-          [
-            text "Cannot pass in ";
-            code (string_of_int index);
-            text " as the index in a ";
-            code "$Refine";
-            text " operation, because ";
-            ref pred_func;
-            text " only accepts ";
-            text (string_of_int pred_func_param_num);
-            text " parameters.";
-          ];
-      }
   | EPredicateFuncArityMismatch { use_op; reasons = (lower, upper); arities = (n1, n2) } ->
     UseOp
       {
@@ -5661,7 +5636,6 @@ let error_code_of_message err : error_code option =
   | EForInRHS _ -> Some InvalidInRhs
   | EInstanceofRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
-  | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _

@@ -2585,26 +2585,16 @@ struct
            `params`) raise errors, but also propagate the unrefined types (as if the
            refinement never took place).
         *)
-        | ( DefT (lreason, FunT (_, { params; predicate = Some predicate; _ })),
+        | ( DefT (_, FunT (_, { params; predicate = Some predicate; _ })),
             CallLatentPredT { use_op = _; reason; targs = _; argts = _; sense; idx; tin; tout }
           ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
           match (Base.List.nth params idx, predicate) with
-          | (None, _) ->
-            let msg =
-              Error_message.EPredicateFuncTooShort
-                {
-                  loc = loc_of_reason reason;
-                  pred_func = lreason;
-                  pred_func_param_num = List.length params;
-                  index = idx;
-                }
-            in
-            add_output cx ~trace msg;
-            rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+          | (None, _)
           | (Some (None, _), _) ->
-            (* Already an unsupported-syntax error on the definition side of the function. *)
+            let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
+            add_output cx ~trace msg;
             rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
           | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
             let key = (OrdinaryName name, []) in

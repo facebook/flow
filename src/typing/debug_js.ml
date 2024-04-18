@@ -1203,6 +1203,7 @@ let dump_error_message =
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
     | MissingEnvRead _ -> "MissingEnvRead"
     | MissingEnvWrite _ -> "MissingEnvWrite"
+    | MissingPredicateParam _ -> "MissingPredicateParam"
     | EnvInvariant _ -> "EnvInvariant"
     | ImplicitInstantiationInvariant _ -> "ImplicitInstantiationInvariant"
   in
@@ -1540,7 +1541,6 @@ let dump_error_message =
       spf "EUnsupportedKeyInObject (%s, %s, %s)" (string_of_aloc loc) obj_kind key_error_kind
     | EAmbiguousNumericKeyWithVariance loc ->
       spf "EAmbiguousNumericKeyWithVariance (%s)" (string_of_aloc loc)
-    | EPredicateFuncTooShort { loc; _ } -> spf "EPredicateFuncTooShort (%s)" (string_of_aloc loc)
     | EPredicateFuncArityMismatch { use_op; _ } ->
       spf "EPredicateFuncArityMismatch (%s)" (string_of_use_op use_op)
     | EPredicateFuncIncompatibility { use_op; _ } ->
