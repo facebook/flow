@@ -15,7 +15,6 @@ type error_code =
   | ReactRuleCallComponent
   | CannotDelete
   | CannotImplement
-  | CannotInferType
   | CannotRead
   | CannotReassignConstLike
   | CannotResolveModule
@@ -227,7 +226,6 @@ let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"
-  | CannotInferType -> "cannot-infer-type"
   | CannotRead -> "cannot-read"
   | CannotReassignConstLike -> "cannot-reassign"
   | CannotResolveModule -> "cannot-resolve-module"

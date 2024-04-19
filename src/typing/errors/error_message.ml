@@ -459,11 +459,6 @@ and 'loc t' =
       definition: 'loc virtual_reason;
       binding_kind: assigned_const_like_binding_type;
     }
-  | ECannotResolveOpenTvar of {
-      use_op: 'loc virtual_use_op;
-      reason: 'loc virtual_reason;
-      blame_reasons: 'loc virtual_reason list;
-    }
   | EMalformedCode of 'loc
   | EImplicitInstantiationUnderconstrainedError of {
       reason_call: 'loc virtual_reason;
@@ -1157,13 +1152,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EEnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EAssignConstLikeBinding { loc; definition; binding_kind } ->
     EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
-  | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
-    ECannotResolveOpenTvar
-      {
-        use_op = map_use_op use_op;
-        reason = map_reason reason;
-        blame_reasons = Base.List.map ~f:map_reason blame_reasons;
-      }
   | EMalformedCode loc -> EMalformedCode (f loc)
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     EImplicitInstantiationUnderconstrainedError
@@ -1405,8 +1393,6 @@ let util_use_op_of_msg nope util = function
         EInexactMayOverwriteIndexer
           { spread_reason; key_reason; value_reason; object2_reason; use_op }
     )
-  | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
-    util use_op (fun use_op -> ECannotResolveOpenTvar { use_op; reason; blame_reasons })
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     util use_op (fun use_op ->
         EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
@@ -1803,7 +1789,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExpectedBigIntLit _
   | EIncompatibleProp _
   | EIncompatible _
-  | ECannotResolveOpenTvar _
   | EMethodUnbinding _
   | EHookIncompatible _
   | EHookUniqueIncompatible _
@@ -2516,28 +2501,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         explanation = None;
       }
-  | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
-    let rec refs = function
-      | [] -> failwith "cannot have empty reason list"
-      | [r] -> [ref r]
-      | [r1; r2] -> [ref r1; text " and "; ref r2]
-      | r1 :: rs -> [ref r1; text ", "] @ refs rs
-    in
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            ([
-               text "Flow cannot infer the type of ";
-               ref reason;
-               text ". Please provide an annotation for ";
-             ]
-            @ refs blame_reasons
-            );
-        use_op;
-        explanation = None;
-      }
   | EReactElementFunArity (_, fn_name, n) ->
     Normal (MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name; n })
   | EReactRefInRender { usage; kind = Argument; in_hook } ->
@@ -3101,7 +3064,6 @@ let error_code_of_message err : error_code option =
   | EPlatformSpecificImplementationModuleLookupFailed _ -> Some CannotResolveModule
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete
-  | ECannotResolveOpenTvar _ -> Some CannotInferType
   | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
   | ECannotSpreadInterface _ -> Some CannotSpreadInterface
   | ECharSetAnnot _ -> Some InvalidCharsetTypeArg

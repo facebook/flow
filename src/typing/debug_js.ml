@@ -1875,12 +1875,6 @@ let dump_error_message =
         (string_of_aloc loc)
         (dump_reason cx definition)
         (Flow_intermediate_error_types.string_of_assigned_const_like_binding_type binding_kind)
-    | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
-      spf
-        "ECannotResolveOpenTvar (%s) (%s) (%s)"
-        (string_of_use_op use_op)
-        (dump_reason cx reason)
-        (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
     | EObjectThisReference (loc, r) ->
       spf "EObjectThisReference (%s, %s)" (string_of_aloc loc) (dump_reason cx r)
