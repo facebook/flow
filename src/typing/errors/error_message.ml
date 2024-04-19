@@ -2711,7 +2711,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       )
   | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
     Normal
-      (MessageIncomplateExhausiveCheckEnum
+      (MessageIncompleteExhausiveCheckEnum
          { description = desc_of_reason reason; enum_reason; left_to_check; default_case }
       )
   | EEnumUnknownNotChecked { reason; enum_reason } ->

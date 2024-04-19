@@ -581,7 +581,7 @@ type 'loc message =
       source_type: 'loc virtual_reason;
       mapped_type: 'loc virtual_reason;
     }
-  | MessageIncomplateExhausiveCheckEnum of {
+  | MessageIncompleteExhausiveCheckEnum of {
       description: 'loc virtual_reason_desc;
       enum_reason: 'loc virtual_reason;
       left_to_check: string list;

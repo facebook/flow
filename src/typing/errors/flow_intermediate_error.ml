@@ -2620,7 +2620,7 @@ let to_printable_error :
         text ", so it cannot be used to generate keys for ";
         ref mapped_type;
       ]
-    | MessageIncomplateExhausiveCheckEnum { description; enum_reason; left_to_check; default_case }
+    | MessageIncompleteExhausiveCheckEnum { description; enum_reason; left_to_check; default_case }
       ->
       let left_to_check_features =
         match left_to_check with
