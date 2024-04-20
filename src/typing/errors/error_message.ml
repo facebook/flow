@@ -598,10 +598,6 @@ and ref_in_render_kind =
   | Argument
   | Access
 
-and exactness_error_kind =
-  | Indexer
-  | Inexact
-
 and binding_error =
   | ENameAlreadyBound
   | EVarRedeclaration
@@ -1989,11 +1985,7 @@ type 'loc friendly_message_recipe =
       use_op: 'loc Type.virtual_use_op;
     }
 
-let friendly_message_of_msg loc_of_aloc msg =
-  let text = Flow_errors_utils.Friendly.text in
-  let code = Flow_errors_utils.Friendly.code in
-  let ref = Flow_errors_utils.Friendly.ref_map loc_of_aloc in
-  match msg with
+let friendly_message_of_msg = function
   | EIncompatible
       { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
     if branches = [] then
@@ -2126,31 +2118,11 @@ let friendly_message_of_msg loc_of_aloc msg =
   | EComparison (lower, upper) -> Normal (MessageCannotCompare { lower; upper })
   | ENonStrictEqualityComparison (lower, upper) ->
     Normal (MessageCannotCompareNonStrict { lower; upper })
-  | ETupleArityMismatch (reasons, arity1, arity2, use_op) ->
-    let (lower, upper) = reasons in
-    let str_of_arity (num_req, num_total) =
-      if num_req = num_total then
-        if num_total = 1 then
-          spf "%d element" num_total
-        else
-          spf "%d elements" num_total
-      else
-        spf "%d-%d elements" num_req num_total
-    in
+  | ETupleArityMismatch ((lower, upper), lower_arity, upper_arity, use_op) ->
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              ref lower;
-              text " has ";
-              text (str_of_arity arity1);
-              text " but ";
-              ref upper;
-              text " has ";
-              text (str_of_arity arity2);
-            ];
+        message = MessageIncompatibleTupleArity { lower; lower_arity; upper; upper_arity };
         use_op;
         explanation = None;
       }
@@ -2159,19 +2131,11 @@ let friendly_message_of_msg loc_of_aloc msg =
       (MessageInvalidTupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional })
   | ETupleInvalidTypeSpread { reason_arg; reason_spread = _ } ->
     Normal (MessageInvalidTupleTypeSpread reason_arg)
-  | ENonLitArrayToTuple (reasons, use_op) ->
-    let (lower, upper) = reasons in
+  | ENonLitArrayToTuple ((lower, upper), use_op) ->
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              ref lower;
-              text " has an unknown number of elements, so is ";
-              text "incompatible with ";
-              ref upper;
-            ];
+        message = MessageIncompatibleNonLiteralArrayToTuple { lower; upper };
         use_op;
         explanation = None;
       }
@@ -2179,39 +2143,15 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              ref reason_op;
-              text
-                (spf
-                   " only has %d element%s, so index %s is out of bounds"
-                   length
-                   ( if length == 1 then
-                     ""
-                   else
-                     "s"
-                   )
-                   index
-                );
-            ];
+        message = MessageTupleIndexOutOfBound { reason_op; length; index };
         use_op;
         explanation = None;
       }
   | ETupleNonIntegerIndex { reason; index; use_op } ->
-    let index_ref =
-      Flow_errors_utils.Friendly.(Reference ([Code index], loc_of_aloc (def_loc_of_reason reason)))
-    in
     UseOp
       {
         loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              text "the index into a tuple must be an integer, but ";
-              index_ref;
-              text " is not an integer";
-            ];
+        message = MessageTupleNonIntegerIndex { index_def_loc = def_loc_of_reason reason; index };
         use_op;
         explanation = None;
       }
@@ -2219,9 +2159,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [text "the index must be statically known to write a tuple element"];
+        message = MessageTupleNonStaticallyKnownIndex;
         use_op;
         explanation = None;
       }
@@ -2229,9 +2167,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            (mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable");
+        message = MessageTupleElementNotReadable { reason; index; name };
         use_op;
         explanation = None;
       }
@@ -2239,33 +2175,18 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message =
-          MessageAlreadyFriendlyPrinted
-            (mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "writable");
+        message = MessageTupleElementNotWritable { reason; index; name };
         use_op;
         explanation = None;
       }
   | ETupleElementPolarityMismatch
       { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op } ->
-    let expected = polarity_explanation (polarity_lower, polarity_upper) in
-    let actual = polarity_explanation (polarity_upper, polarity_lower) in
     UseOp
       {
         loc = loc_of_reason reason_lower;
         message =
-          MessageAlreadyFriendlyPrinted
-            [
-              text "tuple element at index ";
-              code (string_of_int index);
-              text " is ";
-              text expected;
-              text " in ";
-              ref reason_lower;
-              text " but ";
-              text actual;
-              text " in ";
-              ref reason_upper;
-            ];
+          MessageTuplePolarityMismatch
+            { index; reason_lower; reason_upper; polarity_lower; polarity_upper };
         use_op;
         explanation = None;
       }
@@ -2274,7 +2195,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        message = MessageAlreadyFriendlyPrinted [text "read-only arrays cannot be written to"];
+        message = MessageReadonlyArraysCannotBeWrittenTo;
         use_op;
         explanation = None;
       }
@@ -2282,19 +2203,11 @@ let friendly_message_of_msg loc_of_aloc msg =
     Speculation { loc = loc_of_reason reason; use_op; branches }
   | ESpeculationAmbiguous { reason = _; prev_case; case; cases } ->
     Normal (MesssageSpeculationAmbiguous { prev_case; case; cases })
-  | EIncompatibleWithExact (reasons, use_op, kind) ->
-    let (lower, upper) = reasons in
-    let object_kind =
-      match kind with
-      | Indexer -> "indexed "
-      | Inexact -> "inexact "
-    in
+  | EIncompatibleWithExact ((lower, upper), use_op, kind) ->
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
+        message = MessageIncompatibleWithExact { kind; lower; upper };
         use_op;
         explanation = None;
       }
@@ -2302,9 +2215,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [ref lower; text " is incompatible with indexed "; ref upper];
+        message = MessageIncompatibleWithIndexed { lower; upper };
         use_op;
         explanation = None;
       }
@@ -2315,47 +2226,23 @@ let friendly_message_of_msg loc_of_aloc msg =
   | ECharSetAnnot _ -> Normal MessageCannotUseDollarCharset
   | EInvalidCharSet { invalid = (invalid_reason, invalid_chars); valid = valid_reason; use_op } ->
     let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
-    let invalids =
-      InvalidCharSetSet.fold
-        (fun c acc ->
-          match c with
-          | InvalidChar c ->
-            [code (Base.String.of_char c); text " is not a member of the set"] :: acc
-          | DuplicateChar c -> [code (Base.String.of_char c); text " is duplicated"] :: acc)
-        invalid_chars
-        []
-      |> List.rev
-    in
     UseOp
       {
         loc = loc_of_reason invalid_reason;
         message =
-          MessageAlreadyFriendlyPrinted
-            ([ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-            @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids
-            );
+          MessageIncompatibleWithDollarCharSet { invalid_reason; invalid_chars; valid_reason };
         use_op;
         explanation = None;
       }
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
     Normal (MessageUnsupportedKeyInObject { key_error_kind; obj_kind })
   | EAmbiguousNumericKeyWithVariance _ -> Normal MessageAmbiguousNumericKeyWithVariance
-  | EPredicateFuncArityMismatch { use_op; reasons = (lower, upper); arities = (n1, n2) } ->
+  | EPredicateFuncArityMismatch
+      { use_op; reasons = (lower, upper); arities = (lower_arity, upper_arity) } ->
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              text "arity ";
-              text (string_of_int n1);
-              text " of ";
-              ref lower;
-              text " is incompatible with arity ";
-              text (string_of_int n2);
-              text " of ";
-              ref upper;
-            ];
+        message = MessageIncompatibleArity { lower; lower_arity; upper; upper_arity };
         use_op;
         explanation = None;
       }
@@ -2363,14 +2250,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              ref lower;
-              text ", a non-predicate function, is incompatible with ";
-              ref upper;
-              text ", which is a predicate function";
-            ];
+        message = MessageIncompatibleNonPredicateToPredicate { lower; upper };
         use_op;
         explanation = None;
       }
@@ -2380,9 +2260,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [ref lower; text " does not appear in the same position as "; ref upper];
+        message = MessageTypeGuardIndexMismatch { lower; upper };
         use_op;
         explanation = None;
       }
@@ -2463,7 +2341,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message = MessageAlreadyFriendlyPrinted [ref reason; text " is not an object"];
+        message = MessageLowerIsNotObject reason;
         explanation = None;
         use_op;
       }
@@ -2489,7 +2367,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message = MessageAlreadyFriendlyPrinted [ref reason; text " is not a React component"];
+        message = MessageLowerIsNotReactComponent reason;
         use_op;
         explanation = None;
       }
@@ -2497,7 +2375,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason reason;
-        message = MessageAlreadyFriendlyPrinted [ref reason; text " cannot calculate config"];
+        message = MessageCannotCalculateReactConfig reason;
         use_op;
         explanation = None;
       }
@@ -2508,16 +2386,10 @@ let friendly_message_of_msg loc_of_aloc msg =
   | EReactRefInRender { usage; kind = Access; in_hook } ->
     Normal (MessageCannotAccessReactRefInRender { usage; in_hook })
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
-    let msg =
-      match param_count with
-      | 0 -> "no arguments are expected by"
-      | 1 -> "no more than 1 argument is expected by"
-      | n -> spf "no more than %d arguments are expected by" n
-    in
     UseOp
       {
         loc = loc_of_reason unused_reason;
-        message = MessageAlreadyFriendlyPrinted [text msg; text " "; ref def_reason];
+        message = MessageCannotCallFunctionWithExtraArg { def_reason; param_count };
         explanation = None;
         use_op;
       }
@@ -2550,133 +2422,49 @@ let friendly_message_of_msg loc_of_aloc msg =
   | EUnnecessaryInvariant (_, reason) -> Normal (MessageUnnecessaryInvariant reason)
   | EUnnecessaryDeclareTypeOnlyExport _ -> Normal MessageUnnecessaryDeclareTypeOnlyExport
   | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
-    let kind_str =
-      match kind with
-      | `Boolean -> "Boolean"
-      | `Number -> "Number"
-      | `String -> "String"
-    in
-    let features =
-      [
-        ref reason;
-        text ", a primitive, cannot be used as a subtype of ";
-        ref interface_reason;
-        text ". ";
-        text "You can wrap it in ";
-        code (spf "new %s(...))" kind_str);
-        text " to turn it into an object and attempt to use it as a subtype of an interface";
-      ]
-    in
     UseOp
       {
         loc = loc_of_reason reason;
-        message = MessageAlreadyFriendlyPrinted features;
+        message = MessageCannotUsePrimitiveAsInterface { reason; interface_reason; kind };
         explanation = None;
         use_op;
       }
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
-    let features =
-      [
-        text "Flow cannot determine a type for ";
-        ref spread_reason;
-        text ". ";
-        ref interface_reason;
-        text " cannot be spread because interfaces do not ";
-        text "track the own-ness of their properties. Try using an object type instead";
-      ]
-    in
     UseOp
       {
         loc = loc_of_reason spread_reason;
-        message = MessageAlreadyFriendlyPrinted features;
+        message = MessageCannotSpreadInterface { spread_reason; interface_reason };
         explanation = None;
         use_op;
       }
   | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
-    let features =
-      [
-        text "Flow cannot determine a type for ";
-        ref spread_reason;
-        text ". ";
-        ref object_reason;
-        text " cannot be spread because the indexer ";
-        ref key_reason;
-        text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
-        text "Try spreading ";
-        ref object_reason;
-        text " first or remove the indexer";
-      ]
-    in
     UseOp
       {
         loc = loc_of_reason spread_reason;
-        message = MessageAlreadyFriendlyPrinted features;
+        message =
+          MessageCannotSpreadDueToPotentialOverwrite { spread_reason; object_reason; key_reason };
         explanation = None;
         use_op;
       }
   | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
     ->
-    let (error_reason, fix_suggestion) =
-      match error_kind with
-      | Inexact -> ("is inexact", [text " Try making "; ref object2_reason; text " exact"])
-      | Indexer ->
-        ( "has an indexer",
-          [
-            text " Try removing the indexer in ";
-            ref object2_reason;
-            text " or make ";
-            code (display_string_of_name propname);
-            text " a required property";
-          ]
-        )
-    in
-    let features =
-      [
-        text "Flow cannot determine a type for ";
-        ref spread_reason;
-        text ". ";
-        ref object2_reason;
-        text " ";
-        text error_reason;
-        text ", so it may contain ";
-        code (display_string_of_name propname);
-        text " with a type that conflicts with ";
-        code (display_string_of_name propname);
-        text "'s definition in ";
-        ref object1_reason;
-        text ".";
-      ]
-      @ fix_suggestion
-    in
     UseOp
       {
         loc = loc_of_reason spread_reason;
-        message = MessageAlreadyFriendlyPrinted features;
+        message =
+          MessageCannotSpreadGeneral
+            { spread_reason; object1_reason; object2_reason; propname; error_kind };
         explanation = None;
         use_op;
       }
   | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
     ->
-    let features =
-      [
-        text "Flow cannot determine a type for ";
-        ref spread_reason;
-        text ". ";
-        ref object2_reason;
-        text " is inexact and may ";
-        text "have a property key that conflicts with ";
-        ref key_reason;
-        text " or a property value that conflicts with ";
-        ref value_reason;
-        text ". Try making ";
-        ref object2_reason;
-        text " exact";
-      ]
-    in
     UseOp
       {
         loc = loc_of_reason spread_reason;
-        message = MessageAlreadyFriendlyPrinted features;
+        message =
+          MessageCannotSpreadInexactMayOverwriteIndexer
+            { spread_reason; key_reason; value_reason; object2_reason };
         explanation = None;
         use_op;
       }
@@ -2783,74 +2571,33 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         use_op;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              ref reason_tparam;
-              text " is underconstrained by ";
-              ref reason_call;
-              text
-                ". Either add explicit type arguments or cast the expression to your expected type";
-            ];
+        message = MessageUnderconstrainedImplicitInstantiaton { reason_call; reason_tparam };
         loc = loc_of_reason reason_call;
         explanation = None;
       }
   | EClassToObject (reason_class, reason_obj, use_op) ->
-    let features =
-      [
-        ref reason_class;
-        text " is not a subtype of ";
-        ref reason_obj;
-        text ". Class instances are not subtypes of object types; consider rewriting ";
-        ref reason_obj;
-        text " as an interface";
-      ]
-    in
     UseOp
       {
         loc = loc_of_reason reason_class;
-        message = MessageAlreadyFriendlyPrinted features;
+        message = MessageIncompatibleClassToObject { reason_class; reason_obj };
         explanation = None;
         use_op;
       }
   | EMethodUnbinding { use_op; reason_op; reason_prop } ->
-    let context =
-      Flow_errors_utils.Friendly.(
-        Reference ([Text "context"], loc_of_aloc (def_loc_of_reason reason_prop))
-      )
-    in
     UseOp
       {
         loc = loc_of_reason reason_op;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [
-              ref reason_op;
-              text " cannot be unbound from the ";
-              context;
-              text " where it was defined";
-            ];
+        message = MessageMethodUnbinding { reason_op; context_loc = def_loc_of_reason reason_prop };
         use_op;
         explanation = None;
       }
   | EHookIncompatible { use_op; lower; upper; lower_is_hook; hook_is_annot } ->
-    let loc = loc_of_reason lower in
-    let (lower, upper) =
-      let hook_wording =
-        if hook_is_annot then
-          text "hook type annotation"
-        else
-          text "hook"
-      in
-      if lower_is_hook then
-        ([ref lower; text " is a React "; hook_wording], [ref upper; text " is not a hook"])
-      else
-        ([ref lower; text " is not a React hook"], [ref upper; text " is a "; hook_wording])
-    in
     UseOp
       {
-        loc;
-        message = MessageAlreadyFriendlyPrinted (lower @ [text " but "] @ upper);
+        loc = loc_of_reason lower;
+        message =
+          MessageIncompatibleReactHooksWithNonReactHook
+            { lower; upper; lower_is_hook; hook_is_annot };
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithNormalFunctions;
       }
@@ -2858,9 +2605,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp
       {
         loc = loc_of_reason lower;
-        message =
-          MessageAlreadyFriendlyPrinted
-            [ref lower; text " and "; ref upper; text " are different React hooks"];
+        message = MessageIncompatibleReactHooksDueToUniqueness { lower; upper };
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithEachOther;
       }
@@ -3135,8 +2880,8 @@ let error_code_of_message err : error_code option =
   | EIncompatibleProp { use_op = Some use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType
   | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
-  | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
-  | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
+  | EIncompatibleWithExact (_, _, UnexpectedInexact) -> Some IncompatibleExact
+  | EIncompatibleWithExact (_, _, UnexpectedIndexer) -> Some IncompatibleIndexer
   | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
   | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ } ->
@@ -3207,8 +2952,8 @@ let error_code_of_message err : error_code option =
   | ETypeParamMinArity (_, _) -> Some MissingTypeArg
   | EUnableToSpread { error_kind; _ } -> begin
     match error_kind with
-    | Inexact -> Some CannotSpreadInexact
-    | Indexer -> Some CannotSpreadIndexer
+    | UnexpectedInexact -> Some CannotSpreadInexact
+    | UnexpectedIndexer -> Some CannotSpreadIndexer
   end
   | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis

@@ -1699,7 +1699,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         ~trace
-        (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
+        (Error_message.EIncompatibleWithExact
+           (reasons, use_op, Flow_intermediate_error_types.UnexpectedInexact)
+        )
     | ( DefT
           ( lreason,
             InstanceT
@@ -2005,7 +2007,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output
           cx
           ~trace
-          (Error_message.EIncompatibleWithExact (reasons, use_op, Error_message.Inexact))
+          (Error_message.EIncompatibleWithExact
+             (reasons, use_op, Flow_intermediate_error_types.UnexpectedInexact)
+          )
       | Indexed _ ->
         add_output cx ~trace (Error_message.EFunctionIncompatibleWithIndexer (reasons, use_op))
       | _ -> failwith "Impossible")

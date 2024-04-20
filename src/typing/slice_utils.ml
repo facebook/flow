@@ -386,7 +386,7 @@ let spread2
                              object1_reason = r1;
                              object2_reason = r2;
                              propname = x;
-                             error_kind = Error_message.Inexact;
+                             error_kind = Flow_intermediate_error_types.UnexpectedInexact;
                              use_op;
                            }
                         )
@@ -418,9 +418,9 @@ let spread2
                    when opt2 ->
                    let error_kind =
                      if dict1 <> None then
-                       Error_message.Indexer
+                       Flow_intermediate_error_types.UnexpectedIndexer
                      else
-                       Error_message.Inexact
+                       Flow_intermediate_error_types.UnexpectedInexact
                    in
                    let inexact_reason =
                      match inexact_reason1 with
@@ -600,7 +600,9 @@ let object_spread
         | Annot { make_exact } when make_exact && obj_kind = Inexact ->
           add_output
             cx
-            (Error_message.EIncompatibleWithExact ((r, reason), use_op, Error_message.Inexact))
+            (Error_message.EIncompatibleWithExact
+               ((r, reason), use_op, Flow_intermediate_error_types.UnexpectedInexact)
+            )
         | _ -> ())
       x;
     let resolved = Object.Spread.ResolvedSlice x in

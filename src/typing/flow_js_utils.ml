@@ -512,8 +512,8 @@ let add_annot_inference_error ~src_cx ~dst_cx msg : unit = add_output_generic ~s
 let exact_obj_error cx trace obj_kind ~use_op ~exact_reason l =
   let error_kind =
     match obj_kind with
-    | Indexed _ -> Error_message.Indexer
-    | _ -> Error_message.Inexact
+    | Indexed _ -> Flow_intermediate_error_types.UnexpectedIndexer
+    | _ -> Flow_intermediate_error_types.UnexpectedInexact
   in
   let reasons = FlowError.ordered_reasons (reason_of_t l, exact_reason) in
   add_output cx ~trace (Error_message.EIncompatibleWithExact (reasons, use_op, error_kind))

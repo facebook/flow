@@ -29,6 +29,10 @@ type docblock_error =
   | InvalidSupportsPlatform of string
   | DisallowedSupportsPlatform
 
+type exactness_error_kind =
+  | UnexpectedIndexer
+  | UnexpectedInexact
+
 type 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
   second_reason: 'loc virtual_reason option;
@@ -309,7 +313,6 @@ type 'loc root_message =
   | RootCannotYield of 'loc virtual_reason_desc
 
 type 'loc message =
-  | MessageAlreadyFriendlyPrinted of Loc.t Flow_errors_utils.Friendly.message_feature list
   | MessagePlainTextReservedForInternalErrorOnly of string
   | MessageAlreadyExhaustivelyCheckOneEnumMember of {
       description: 'loc virtual_reason_desc;
@@ -351,6 +354,7 @@ type 'loc message =
     }
   | MessageCannotAssignToInvalidLHS
   | MessageCannotBuildTypedInterface of 'loc Signature_error.t
+  | MessageCannotCalculateReactConfig of 'loc virtual_reason
   | MessageCannotCallMaybeReactHook of {
       callee_loc: 'loc;
       hooks: 'loc list;
@@ -369,6 +373,10 @@ type 'loc message =
   | MessageCannotCallReactHookConditionally of 'loc
   | MessageCannotCallReactHookInNonComponentOrHook of 'loc
   | MessageCannotCallReactHookWithIllegalName of 'loc
+  | MessageCannotCallFunctionWithExtraArg of {
+      def_reason: 'loc virtual_reason;
+      param_count: int;
+    }
   | MessageCannotChangeEnumMember of 'loc virtual_reason
   | MessageCannotCompare of {
       lower: 'loc virtual_reason;
@@ -438,6 +446,28 @@ type 'loc message =
       name: name;
       potential_generator: string option;
     }
+  | MessageCannotSpreadDueToPotentialOverwrite of {
+      spread_reason: 'loc virtual_reason;
+      object_reason: 'loc virtual_reason;
+      key_reason: 'loc virtual_reason;
+    }
+  | MessageCannotSpreadGeneral of {
+      spread_reason: 'loc virtual_reason;
+      object1_reason: 'loc virtual_reason;
+      object2_reason: 'loc virtual_reason;
+      propname: name;
+      error_kind: exactness_error_kind;
+    }
+  | MessageCannotSpreadInexactMayOverwriteIndexer of {
+      spread_reason: 'loc virtual_reason;
+      object2_reason: 'loc virtual_reason;
+      key_reason: 'loc virtual_reason;
+      value_reason: 'loc virtual_reason;
+    }
+  | MessageCannotSpreadInterface of {
+      spread_reason: 'loc virtual_reason;
+      interface_reason: 'loc virtual_reason;
+    }
   | MessageCannotUseAsConstructor of 'loc virtual_reason
   | MessageCannotUseAsPrototype of 'loc virtual_reason
   | MessageCannotUseAsSuperClass of 'loc virtual_reason
@@ -461,6 +491,11 @@ type 'loc message =
       is_new: bool;
       reason_arity: 'loc virtual_reason;
       expected_arity: int;
+    }
+  | MessageCannotUsePrimitiveAsInterface of {
+      reason: 'loc virtual_reason;
+      interface_reason: 'loc virtual_reason;
+      kind: [ `Boolean | `Number | `String ];
     }
   | MessageCannotUseTypeDueToPolarityMismatch of {
       reason_targ: 'loc virtual_reason;
@@ -567,10 +602,26 @@ type 'loc message =
   | MessageImportTypeAsTypeof of string
   | MessageImportTypeAsValue of string
   | MessageImportValueAsType of string
+  | MessageIncompatibleArity of {
+      lower: 'loc virtual_reason;
+      lower_arity: int;
+      upper: 'loc virtual_reason;
+      upper_arity: int;
+    }
+  | MessageIncompatibleTupleArity of {
+      lower: 'loc virtual_reason;
+      lower_arity: int * int;
+      upper: 'loc virtual_reason;
+      upper_arity: int * int;
+    }
   | MessageIncompatibleImplicitReturn of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
       return: 'loc virtual_reason;
+    }
+  | MessageIncompatibleClassToObject of {
+      reason_class: 'loc virtual_reason;
+      reason_obj: 'loc virtual_reason;
     }
   | MessageIncompatibleComponentRestParam of 'loc virtual_reason
   | MessageIncompatibleGeneral of {
@@ -580,6 +631,38 @@ type 'loc message =
   | MessageIncompatibleMappedTypeKey of {
       source_type: 'loc virtual_reason;
       mapped_type: 'loc virtual_reason;
+    }
+  | MessageIncompatibleNonLiteralArrayToTuple of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleNonPredicateToPredicate of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleReactHooksDueToUniqueness of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleReactHooksWithNonReactHook of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+      lower_is_hook: bool;
+      hook_is_annot: bool;
+    }
+  | MessageIncompatibleWithDollarCharSet of {
+      invalid_reason: 'loc virtual_reason;
+      invalid_chars: InvalidCharSetSet.t;
+      valid_reason: 'loc virtual_reason;
+    }
+  | MessageIncompatibleWithExact of {
+      kind: exactness_error_kind;
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleWithIndexed of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
     }
   | MessageIncompleteExhausiveCheckEnum of {
       description: 'loc virtual_reason_desc;
@@ -642,6 +725,12 @@ type 'loc message =
       lower: 'loc virtual_reason;
       desc: string;
     }
+  | MessageLowerIsNotObject of 'loc virtual_reason
+  | MessageLowerIsNotReactComponent of 'loc virtual_reason
+  | MessageMethodUnbinding of {
+      reason_op: 'loc virtual_reason;
+      context_loc: 'loc;
+    }
   | MessageMissingAnnotation of 'loc virtual_reason_desc
   | MessageMissingAnnotationDueToContextualTypingFailure of 'loc virtual_reason_desc
   | MessageMissingAnnotationForGenericFunction of 'loc virtual_reason_desc
@@ -693,6 +782,7 @@ type 'loc message =
       type_: 'loc;
       mixed: bool;
     }
+  | MessageReadonlyArraysCannotBeWrittenTo
   | MessageRecursionLimitExceeded
   | MessageRedeclareComponentProp of {
       first: 'loc virtual_reason;
@@ -741,7 +831,42 @@ type 'loc message =
   | MessageTSVarianceReadOnly
   | MessageTSUndefinedType
   | MessageTSUnknownType
+  | MessageTupleElementNotReadable of {
+      reason: 'loc virtual_reason;
+      index: int;
+      name: string option;
+    }
+  | MessageTupleElementNotWritable of {
+      reason: 'loc virtual_reason;
+      index: int;
+      name: string option;
+    }
+  | MessageTupleIndexOutOfBound of {
+      reason_op: 'loc virtual_reason;
+      length: int;
+      index: string;
+    }
+  | MessageTupleNonIntegerIndex of {
+      index_def_loc: 'loc;
+      index: string;
+    }
+  | MessageTupleNonStaticallyKnownIndex
+  | MessageTuplePolarityMismatch of {
+      index: int;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      polarity_lower: Polarity.t;
+      polarity_upper: Polarity.t;
+    }
+  | MessageTypeGuardIndexMismatch of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
   | MessageUnclearType
+  | MessageUnderconstrainedImplicitInstantiaton of {
+      reason_call: 'loc virtual_reason;
+      reason_tparam: 'loc virtual_reason;
+    }
   | MessageUnexpectedTemporaryBaseType
   | MessageUnexpectedUseOfThisType
   | MessageUninitializedInstanceProperty of Lints.property_assignment_kind

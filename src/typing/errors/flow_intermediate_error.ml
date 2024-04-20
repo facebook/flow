@@ -993,7 +993,7 @@ let rec make_intermediate_error :
   in
 
   let intermediate_error =
-    match (loc, friendly_message_of_msg loc_of_aloc msg) with
+    match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal message) ->
       mk_error ~trace_reasons ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
     | (None, UseOp { loc; message; use_op; explanation }) ->
@@ -1075,6 +1075,16 @@ let to_printable_error :
         [
           text " Number literals must not be smaller than "; code "Number.MIN_SAFE_INTEGER"; text ".";
         ]
+  in
+  let mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name kind =
+    let open Flow_errors_utils.Friendly in
+    let index_ref =
+      Reference ([Code (string_of_int index)], loc_of_aloc (def_loc_of_reason reason))
+    in
+    let label =
+      Base.Option.value_map name ~default:[] ~f:(fun name -> [text " labeled "; code name])
+    in
+    [text "tuple element at index "; index_ref] @ label @ [text " is not "; text kind]
   in
   let explanation_to_friendly_msgs = function
     | ExplanationAbstractEnumCasting ->
@@ -1301,7 +1311,6 @@ let to_printable_error :
     | RootCannotYield value -> [text "Cannot yield "; desc value]
   in
   let msg_to_friendly_msgs = function
-    | MessageAlreadyFriendlyPrinted features -> features
     | MessagePlainTextReservedForInternalErrorOnly s -> [text s]
     | MessageAlreadyExhaustivelyCheckOneEnumMember
         { description; prev_check_reason; enum_reason; member_name } ->
@@ -1464,6 +1473,7 @@ let to_printable_error :
       text "Cannot build a typed interface for this module. "
       :: text "You should annotate the exports of this module with types. "
       :: features
+    | MessageCannotCalculateReactConfig reason -> [ref reason; text " cannot calculate config"]
     | MessageCannotCallMaybeReactHook { callee_loc; hooks; non_hooks } ->
       let hook_blame =
         match hooks with
@@ -1562,6 +1572,14 @@ let to_printable_error :
         code "use";
         text " followed by a capitalized letter.";
       ]
+    | MessageCannotCallFunctionWithExtraArg { def_reason; param_count } ->
+      let msg =
+        match param_count with
+        | 0 -> "no arguments are expected by"
+        | 1 -> "no more than 1 argument is expected by"
+        | n -> spf "no more than %d arguments are expected by" n
+      in
+      [text msg; text " "; ref def_reason]
     | MessageCannotChangeEnumMember enum_reason ->
       [text "Cannot change member of "; ref enum_reason; text " because enums are frozen."]
     | MessageCannotCompare { lower; upper } ->
@@ -1862,6 +1880,77 @@ let to_printable_error :
         @ potential_generator_features
       else
         [text "Cannot resolve name "; code (display_string_of_name name); text "."]
+    | MessageCannotSpreadDueToPotentialOverwrite { spread_reason; object_reason; key_reason } ->
+      [
+        text "Flow cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref object_reason;
+        text " cannot be spread because the indexer ";
+        ref key_reason;
+        text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
+        text "Try spreading ";
+        ref object_reason;
+        text " first or remove the indexer";
+      ]
+    | MessageCannotSpreadGeneral
+        { spread_reason; object1_reason; object2_reason; propname; error_kind } ->
+      let (error_reason, fix_suggestion) =
+        match error_kind with
+        | UnexpectedInexact ->
+          ("is inexact", [text " Try making "; ref object2_reason; text " exact"])
+        | UnexpectedIndexer ->
+          ( "has an indexer",
+            [
+              text " Try removing the indexer in ";
+              ref object2_reason;
+              text " or make ";
+              code (display_string_of_name propname);
+              text " a required property";
+            ]
+          )
+      in
+      [
+        text "Flow cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref object2_reason;
+        text " ";
+        text error_reason;
+        text ", so it may contain ";
+        code (display_string_of_name propname);
+        text " with a type that conflicts with ";
+        code (display_string_of_name propname);
+        text "'s definition in ";
+        ref object1_reason;
+        text ".";
+      ]
+      @ fix_suggestion
+    | MessageCannotSpreadInexactMayOverwriteIndexer
+        { spread_reason; key_reason; value_reason; object2_reason } ->
+      [
+        text "Flow cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref object2_reason;
+        text " is inexact and may ";
+        text "have a property key that conflicts with ";
+        ref key_reason;
+        text " or a property value that conflicts with ";
+        ref value_reason;
+        text ". Try making ";
+        ref object2_reason;
+        text " exact";
+      ]
+    | MessageCannotSpreadInterface { spread_reason; interface_reason } ->
+      [
+        text "Flow cannot determine a type for ";
+        ref spread_reason;
+        text ". ";
+        ref interface_reason;
+        text " cannot be spread because interfaces do not ";
+        text "track the own-ness of their properties. Try using an object type instead";
+      ]
     | MessageCannotUseAsConstructor reason ->
       [
         text "Cannot use ";
@@ -2016,6 +2105,22 @@ let to_printable_error :
                )
             );
         ]
+    | MessageCannotUsePrimitiveAsInterface { reason; interface_reason; kind } ->
+      let kind_str =
+        match kind with
+        | `Boolean -> "Boolean"
+        | `Number -> "Number"
+        | `String -> "String"
+      in
+      [
+        ref reason;
+        text ", a primitive, cannot be used as a subtype of ";
+        ref interface_reason;
+        text ". ";
+        text "You can wrap it in ";
+        code (spf "new %s(...))" kind_str);
+        text " to turn it into an object and attempt to use it as a subtype of an interface";
+      ]
     | MessageCannotUseTypeDueToPolarityMismatch { reason_targ; expected_polarity; actual_polarity }
       ->
       let polarity_string = function
@@ -2594,6 +2699,36 @@ let to_printable_error :
         code "import typeof";
         text " instead.";
       ]
+    | MessageIncompatibleArity { lower; lower_arity; upper; upper_arity } ->
+      [
+        text "arity ";
+        text (string_of_int lower_arity);
+        text " of ";
+        ref lower;
+        text " is incompatible with arity ";
+        text (string_of_int upper_arity);
+        text " of ";
+        ref upper;
+      ]
+    | MessageIncompatibleTupleArity { lower; lower_arity; upper; upper_arity } ->
+      let str_of_arity (num_req, num_total) =
+        if num_req = num_total then
+          if num_total = 1 then
+            spf "%d element" num_total
+          else
+            spf "%d elements" num_total
+        else
+          spf "%d-%d elements" num_req num_total
+      in
+      [
+        ref lower;
+        text " has ";
+        text (str_of_arity lower_arity);
+        text " but ";
+        ref upper;
+        text " has ";
+        text (str_of_arity upper_arity);
+      ]
     | MessageIncompatibleImplicitReturn { lower; upper; return } ->
       let upper_loc = loc_of_aloc (loc_of_reason upper) in
       let return_loc = loc_of_aloc (loc_of_reason return) in
@@ -2603,6 +2738,15 @@ let to_printable_error :
         [text "implicitly-returned "; desc (desc_of_reason upper)]
       else
         [ref upper]
+    | MessageIncompatibleClassToObject { reason_class; reason_obj } ->
+      [
+        ref reason_class;
+        text " is not a subtype of ";
+        ref reason_obj;
+        text ". Class instances are not subtypes of object types; consider rewriting ";
+        ref reason_obj;
+        text " as an interface";
+      ]
     | MessageIncompatibleComponentRestParam rest_param ->
       [
         text "Cannot use ";
@@ -2620,6 +2764,60 @@ let to_printable_error :
         text ", so it cannot be used to generate keys for ";
         ref mapped_type;
       ]
+    | MessageIncompatibleNonLiteralArrayToTuple { lower; upper } ->
+      [
+        ref lower;
+        text " has an unknown number of elements, so is ";
+        text "incompatible with ";
+        ref upper;
+      ]
+    | MessageIncompatibleNonPredicateToPredicate { lower; upper } ->
+      [
+        ref lower;
+        text ", a non-predicate function, is incompatible with ";
+        ref upper;
+        text ", which is a predicate function";
+      ]
+    | MessageIncompatibleReactHooksDueToUniqueness { lower; upper } ->
+      [ref lower; text " and "; ref upper; text " are different React hooks"]
+    | MessageIncompatibleReactHooksWithNonReactHook { lower; upper; lower_is_hook; hook_is_annot }
+      ->
+      let (lower, upper) =
+        let hook_wording =
+          if hook_is_annot then
+            text "hook type annotation"
+          else
+            text "hook"
+        in
+        if lower_is_hook then
+          ([ref lower; text " is a React "; hook_wording], [ref upper; text " is not a hook"])
+        else
+          ([ref lower; text " is not a React hook"], [ref upper; text " is a "; hook_wording])
+      in
+      lower @ [text " but "] @ upper
+    | MessageIncompatibleWithDollarCharSet { invalid_reason; invalid_chars; valid_reason } ->
+      let invalids =
+        InvalidCharSetSet.fold
+          (fun c acc ->
+            match c with
+            | InvalidChar c ->
+              [code (Base.String.of_char c); text " is not a member of the set"] :: acc
+            | DuplicateChar c -> [code (Base.String.of_char c); text " is duplicated"] :: acc)
+          invalid_chars
+          []
+        |> List.rev
+      in
+      [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
+      @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids
+    | MessageIncompatibleWithExact { kind; lower; upper } ->
+      let object_kind =
+        match kind with
+        | UnexpectedIndexer -> "indexed "
+        | UnexpectedInexact -> "inexact "
+      in
+      [text object_kind; ref lower; text " is incompatible with exact "; ref upper]
+    | MessageIncompatibleWithIndexed { lower; upper } ->
+      [ref lower; text " is incompatible with indexed "; ref upper]
     | MessageIncompleteExhausiveCheckEnum { description; enum_reason; left_to_check; default_case }
       ->
       let left_to_check_features =
@@ -2931,6 +3129,15 @@ let to_printable_error :
         text " because generic functions must be fully annotated.";
       ]
     | MessageLowerIsNot { lower; desc } -> [ref lower; text " is not "; text desc]
+    | MessageLowerIsNotObject lower -> [ref lower; text " is not an object"]
+    | MessageLowerIsNotReactComponent lower -> [ref lower; text " is not a React component"]
+    | MessageMethodUnbinding { reason_op; context_loc } ->
+      [
+        ref reason_op;
+        text " cannot be unbound from the ";
+        Friendly.(Reference ([Text "context"], loc_of_aloc context_loc));
+        text " where it was defined";
+      ]
     | MessageMissingPlatformSupport { available_platforms; required_platforms } ->
       let missing_platforms = SSet.diff required_platforms available_platforms |> SSet.elements in
       let platform_features = function
@@ -3099,6 +3306,7 @@ let to_printable_error :
         text
           " be instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition";
       ]
+    | MessageReadonlyArraysCannotBeWrittenTo -> [text "read-only arrays cannot be written to"]
     | MessageRecursionLimitExceeded -> [text "*** Recursion limit exceeded ***"]
     | MessageRedeclareComponentProp { first; second_loc; spread_loc } ->
       [
@@ -3379,6 +3587,58 @@ let to_printable_error :
         code "Function";
         text " types is not safe!";
       ]
+    | MessageUnderconstrainedImplicitInstantiaton { reason_call; reason_tparam } ->
+      [
+        ref reason_tparam;
+        text " is underconstrained by ";
+        ref reason_call;
+        text ". Either add explicit type arguments or cast the expression to your expected type";
+      ]
+    | MessageTupleElementNotReadable { reason; index; name } ->
+      mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable"
+    | MessageTupleElementNotWritable { reason; index; name } ->
+      mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "writable"
+    | MessageTupleIndexOutOfBound { reason_op; length; index } ->
+      [
+        ref reason_op;
+        text
+          (spf
+             " only has %d element%s, so index %s is out of bounds"
+             length
+             ( if length == 1 then
+               ""
+             else
+               "s"
+             )
+             index
+          );
+      ]
+    | MessageTupleNonIntegerIndex { index_def_loc; index } ->
+      [
+        text "the index into a tuple must be an integer, but ";
+        Friendly.(Reference ([Code index], loc_of_aloc index_def_loc));
+        text " is not an integer";
+      ]
+    | MessageTupleNonStaticallyKnownIndex ->
+      [text "the index must be statically known to write a tuple element"]
+    | MessageTuplePolarityMismatch
+        { index; reason_lower; reason_upper; polarity_lower; polarity_upper } ->
+      let expected = polarity_explanation (polarity_lower, polarity_upper) in
+      let actual = polarity_explanation (polarity_upper, polarity_lower) in
+      [
+        text "tuple element at index ";
+        code (string_of_int index);
+        text " is ";
+        text expected;
+        text " in ";
+        ref reason_lower;
+        text " but ";
+        text actual;
+        text " in ";
+        ref reason_upper;
+      ]
+    | MessageTypeGuardIndexMismatch { lower; upper } ->
+      [ref lower; text " does not appear in the same position as "; ref upper]
     | MessageUnexpectedTemporaryBaseType ->
       [text "The type argument of a temporary base type must be a compatible literal type"]
     | MessageUnexpectedUseOfThisType -> [text "Unexpected use of "; code "this"; text " type."]
