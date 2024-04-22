@@ -315,9 +315,15 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
           let%lwt (env, first_internal_error) = program_init profiling in
           let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
-          let collated_errors = (errors, warnings, suppressed_errors) in
           let%lwt print_errors =
             Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
+                let suppressed_errors =
+                  if Options.include_suppressions options then
+                    suppressed_errors
+                  else
+                    []
+                in
+                let collated_errors = (errors, warnings, suppressed_errors) in
                 Lwt.return (format_errors collated_errors)
             )
           in

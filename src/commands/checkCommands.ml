@@ -25,12 +25,6 @@ let format_errors
     else
       Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
   in
-  let suppressed_errors =
-    if Options.include_suppressions options then
-      suppressed_errors
-    else
-      []
-  in
   let strip_root =
     if Options.should_strip_root options then
       Some (Options.root options)
