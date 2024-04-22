@@ -721,12 +721,22 @@ type 'loc message =
     }
   | MessageInvalidTypeGuardParamUnbound of 'loc virtual_reason
   | MessageInvalidUseOfFlowEnforceOptimized of 'loc virtual_reason
-  | MessageLowerIsNot of {
-      lower: 'loc virtual_reason;
-      desc: string;
-    }
+  | MessageLowerIsNotArray of 'loc virtual_reason
+  | MessageLowerIsNotArrayIndex of 'loc virtual_reason
+  | MessageLowerIsNotClass of 'loc virtual_reason
+  | MessageLowerIsNotClassWithPrivateProps of 'loc virtual_reason
+  | MessageLowerIsNotFunction of 'loc virtual_reason
+  | MessageLowerIsNotFunctionType of 'loc virtual_reason
+  | MessageLowerIsNotInheritable of 'loc virtual_reason
+  | MessageLowerIsNotInstanceType of 'loc virtual_reason
+  | MessageLowerIsNotNumber of 'loc virtual_reason
   | MessageLowerIsNotObject of 'loc virtual_reason
+  | MessageLowerIsNotPolymorphicType of 'loc virtual_reason
   | MessageLowerIsNotReactComponent of 'loc virtual_reason
+  | MessageLowerIsNotSupportedByUnclassifiedUse of {
+      lower: 'loc virtual_reason;
+      ctor: string;
+    }
   | MessageMethodUnbinding of {
       reason_op: 'loc virtual_reason;
       context_loc: 'loc;

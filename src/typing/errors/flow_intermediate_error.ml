@@ -923,32 +923,32 @@ let rec make_intermediate_error :
    * incompatibilities in general. *)
   let mk_incompatible_use_error use_loc use_kind lower upper use_op =
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
-    let nope desc = mk_use_op_error use_loc use_op (MessageLowerIsNot { lower; desc }) in
+    let use_op_error = mk_use_op_error use_loc use_op in
     match use_kind with
-    | IncompatibleElemTOfArrT -> nope "an array index"
+    | IncompatibleElemTOfArrT -> use_op_error (MessageLowerIsNotArrayIndex lower)
     | IncompatibleGetPrivatePropT
     | IncompatibleSetPrivatePropT ->
-      nope "a class with private properties"
+      mk_use_op_error use_loc use_op (MessageLowerIsNotClassWithPrivateProps lower)
     | IncompatibleMixedCallT -> mk_use_op_error use_loc use_op (MessageUnknownParameterTypes lower)
-    | IncompatibleCallT -> nope "a function"
+    | IncompatibleCallT -> mk_use_op_error use_loc use_op (MessageLowerIsNotFunction lower)
     | IncompatibleObjAssignFromTSpread
     | IncompatibleArrRestT ->
-      nope "an array"
+      mk_use_op_error use_loc use_op (MessageLowerIsNotArray lower)
     | IncompatibleObjAssignFromT
     | IncompatibleObjRestT
     | IncompatibleGetKeysT
     | IncompatibleGetValuesT ->
-      nope "an object"
+      mk_use_op_error use_loc use_op (MessageLowerIsNotObject lower)
     | IncompatibleMapTypeTObject ->
       mk_use_op_error use_loc use_op (MessageInvalidArgument { lower; upper })
     | IncompatibleMixinT
     | IncompatibleThisSpecializeT ->
-      nope "a class"
+      mk_use_op_error use_loc use_op (MessageLowerIsNotClass lower)
     | IncompatibleSpecializeT
     | IncompatibleVarianceCheckT ->
-      nope "a polymorphic type"
-    | IncompatibleSuperT -> nope "inheritable"
-    | IncompatibleUnaryArithT -> nope "a number"
+      mk_use_op_error use_loc use_op (MessageLowerIsNotPolymorphicType lower)
+    | IncompatibleSuperT -> mk_use_op_error use_loc use_op (MessageLowerIsNotInheritable lower)
+    | IncompatibleUnaryArithT -> mk_use_op_error use_loc use_op (MessageLowerIsNotNumber lower)
     | IncompatibleGetPropT (prop_loc, prop)
     | IncompatibleSetPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
@@ -963,12 +963,13 @@ let rec make_intermediate_error :
     | IncompatibleSetElemT prop_loc
     | IncompatibleCallElemT prop_loc ->
       mk_prop_missing_error prop_loc None lower use_op None
-    | IncompatibleGetStaticsT -> nope "an instance type"
-    | IncompatibleBindT -> nope "a function type"
+    | IncompatibleGetStaticsT -> mk_use_op_error use_loc use_op (MessageLowerIsNotInstanceType lower)
+    | IncompatibleBindT -> mk_use_op_error use_loc use_op (MessageLowerIsNotFunctionType lower)
     (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
        to throw on a use type, so mark the error instead *)
-    | IncompatibleUnclassified ctor -> nope (spf "supported by unclassified use %s" ctor)
+    | IncompatibleUnclassified ctor ->
+      mk_use_op_error use_loc use_op (MessageLowerIsNotSupportedByUnclassifiedUse { lower; ctor })
   in
   (* When an object property has a polarity that is incompatible with another
    * error then we create one of these errors. We use terms like "read-only" and
@@ -3128,9 +3129,21 @@ let to_printable_error :
         desc d;
         text " because generic functions must be fully annotated.";
       ]
-    | MessageLowerIsNot { lower; desc } -> [ref lower; text " is not "; text desc]
+    | MessageLowerIsNotArray lower -> [ref lower; text " is not an array"]
+    | MessageLowerIsNotArrayIndex lower -> [ref lower; text " is not an array index"]
+    | MessageLowerIsNotClass lower -> [ref lower; text " is not a class"]
+    | MessageLowerIsNotClassWithPrivateProps lower ->
+      [ref lower; text " is not a class with private properties"]
+    | MessageLowerIsNotFunction lower -> [ref lower; text " is not a function"]
+    | MessageLowerIsNotFunctionType lower -> [ref lower; text " is not a function type"]
+    | MessageLowerIsNotInheritable lower -> [ref lower; text " is not inheritable"]
+    | MessageLowerIsNotInstanceType lower -> [ref lower; text " is not an instance type"]
+    | MessageLowerIsNotNumber lower -> [ref lower; text " is not a number"]
     | MessageLowerIsNotObject lower -> [ref lower; text " is not an object"]
+    | MessageLowerIsNotPolymorphicType lower -> [ref lower; text " is not a polymorphic type"]
     | MessageLowerIsNotReactComponent lower -> [ref lower; text " is not a React component"]
+    | MessageLowerIsNotSupportedByUnclassifiedUse { lower; ctor } ->
+      [ref lower; text " is not supported by unclassified use "; text ctor]
     | MessageMethodUnbinding { reason_op; context_loc } ->
       [
         ref reason_op;
