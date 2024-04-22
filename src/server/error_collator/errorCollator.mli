@@ -53,8 +53,14 @@ val get_without_suppressed :
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   * Flow_errors_utils.ConcreteLocPrintableErrorSet.t
 
-val get :
+val get_old :
   ServerEnv.env ->
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   * Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   * (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list
+
+val get :
+  ServerEnv.env ->
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * (ALoc.t Flow_intermediate_error_types.intermediate_error * Loc_collections.LocSet.t) list

@@ -23,13 +23,20 @@ let empty_error_state_timestamps =
     timestamp_start_of_non_zero_subtyping_errors_all_in_one_file = None;
   }
 
+type collated_suppressed_errors =
+  | EmptyCollatedSuppressedErrors
+  | OldCollatedSuppressedErrors of
+      (Loc.t printable_error * Loc_collections.LocSet.t) list Utils_js.FilenameMap.t
+  | NewCollatedSuppressedErrors of
+      (ALoc.t Flow_intermediate_error_types.intermediate_error * Loc_collections.LocSet.t) list
+      Utils_js.FilenameMap.t
+
 type t = {
   collated_duplicate_providers_errors: (Loc.t printable_error * File_key.t * File_key.t) list;
   collated_local_errors: ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
   collated_merge_errors: ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
   collated_warning_map: ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
-  collated_suppressed_errors:
-    (Loc.t printable_error * Loc_collections.LocSet.t) list Utils_js.FilenameMap.t;
+  collated_suppressed_errors: collated_suppressed_errors;
   error_state_timestamps: error_state_timestamps;
 }
 
@@ -39,7 +46,7 @@ let empty =
     collated_local_errors = FilenameMap.empty;
     collated_merge_errors = FilenameMap.empty;
     collated_warning_map = FilenameMap.empty;
-    collated_suppressed_errors = FilenameMap.empty;
+    collated_suppressed_errors = EmptyCollatedSuppressedErrors;
     error_state_timestamps = empty_error_state_timestamps;
   }
 
@@ -64,7 +71,13 @@ let clear_all files errors =
         collated_local_errors = FilenameMap.remove file collated_local_errors;
         collated_merge_errors = FilenameMap.remove file collated_merge_errors;
         collated_warning_map = FilenameMap.remove file collated_warning_map;
-        collated_suppressed_errors = FilenameMap.remove file collated_suppressed_errors;
+        collated_suppressed_errors =
+          (match collated_suppressed_errors with
+          | EmptyCollatedSuppressedErrors -> EmptyCollatedSuppressedErrors
+          | OldCollatedSuppressedErrors map ->
+            OldCollatedSuppressedErrors (FilenameMap.remove file map)
+          | NewCollatedSuppressedErrors map ->
+            NewCollatedSuppressedErrors (FilenameMap.remove file map));
         error_state_timestamps;
       })
     files
@@ -86,7 +99,13 @@ let clear_merge files errors =
         collated_local_errors;
         collated_merge_errors = FilenameMap.remove file collated_merge_errors;
         collated_warning_map = FilenameMap.remove file collated_warning_map;
-        collated_suppressed_errors = FilenameMap.remove file collated_suppressed_errors;
+        collated_suppressed_errors =
+          (match collated_suppressed_errors with
+          | EmptyCollatedSuppressedErrors -> EmptyCollatedSuppressedErrors
+          | OldCollatedSuppressedErrors map ->
+            OldCollatedSuppressedErrors (FilenameMap.remove file map)
+          | NewCollatedSuppressedErrors map ->
+            NewCollatedSuppressedErrors (FilenameMap.remove file map));
         error_state_timestamps;
       })
     files

@@ -267,28 +267,57 @@ let mk_module_system_info =
       is_package_file = is_package_file ~reader;
     }
 
-let get_status ~options env =
+let get_status ~options ~reader env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
   let status_response =
     (* collate errors by origin *)
-    let (errors, warnings, suppressed_errors) =
-      if Options.include_suppressions options then
-        ErrorCollator.get env
-      else
-        let (errors, warnings) = ErrorCollator.get_without_suppressed env in
-        (errors, warnings, [])
-    in
-    let warnings =
-      if Options.should_include_warnings options then
-        warnings
-      else
-        Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
-    in
-    (* TODO: check status.directory *)
-    status_log errors;
-    FlowEventLogger.status_response
-      ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
-    convert_errors ~errors ~warnings ~suppressed_errors
+    if Options.faster_error_collation options then (
+      let (errors, warnings, suppressed_errors) =
+        if Options.include_suppressions options then
+          ErrorCollator.get env
+        else
+          let (errors, warnings) = ErrorCollator.get_without_suppressed env in
+          (errors, warnings, [])
+      in
+      let warnings =
+        if Options.should_include_warnings options then
+          warnings
+        else
+          Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+      in
+      (* TODO: check status.directory *)
+      status_log errors;
+      FlowEventLogger.status_response
+        ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
+      let to_printable =
+        Flow_intermediate_error.to_printable_error
+          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+          ~strip_root:
+            (Base.Option.some_if (Options.should_strip_root options) (Options.root options))
+      in
+      let suppressed_errors =
+        Base.List.map suppressed_errors ~f:(fun (e, loc_set) -> (to_printable e, loc_set))
+      in
+      convert_errors ~errors ~warnings ~suppressed_errors
+    ) else
+      let (errors, warnings, suppressed_errors) =
+        if Options.include_suppressions options then
+          ErrorCollator.get_old env
+        else
+          let (errors, warnings) = ErrorCollator.get_without_suppressed env in
+          (errors, warnings, [])
+      in
+      let warnings =
+        if Options.should_include_warnings options then
+          warnings
+        else
+          Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+      in
+      (* TODO: check status.directory *)
+      status_log errors;
+      FlowEventLogger.status_response
+        ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
+      convert_errors ~errors ~warnings ~suppressed_errors
   in
   (status_response, lazy_stats)
 
@@ -1426,8 +1455,8 @@ let handle_rage ~reader ~options ~files ~profiling:_ ~env =
   let items = collect_rage ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
 
-let handle_status ~options ~profiling:_ ~env =
-  let (status_response, lazy_stats) = get_status ~options env in
+let handle_status ~reader ~options ~profiling:_ ~env =
+  let (status_response, lazy_stats) = get_status ~options ~reader env in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
 let handle_save_state ~options ~out ~genv ~profiling ~env =
@@ -1750,7 +1779,7 @@ let get_ephemeral_handler genv command =
      * coworkers and users, glevi decided that users would rather that `flow status` always waits
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
-    Handle_nonparallelizable (handle_status ~options)
+    Handle_nonparallelizable (handle_status ~reader ~options)
   | ServerProt.Request.SAVE_STATE { out } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)

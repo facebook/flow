@@ -314,20 +314,46 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
           let%lwt (env, first_internal_error) = program_init profiling in
-          let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
-          let%lwt print_errors =
-            Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
-                let suppressed_errors =
-                  if Options.include_suppressions options then
-                    suppressed_errors
-                  else
-                    []
-                in
-                let collated_errors = (errors, warnings, suppressed_errors) in
-                Lwt.return (format_errors collated_errors)
-            )
-          in
-          Lwt.return (print_errors, errors, warnings, first_internal_error)
+          if Options.faster_error_collation options then
+            let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
+            let%lwt print_errors =
+              Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
+                  let to_printable =
+                    let reader = State_reader.create () in
+                    let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+                    let strip_root =
+                      Base.Option.some_if (Options.should_strip_root options) (Options.root options)
+                    in
+                    Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root
+                  in
+                  let suppressed_errors =
+                    if Options.include_suppressions options then
+                      Base.List.map suppressed_errors ~f:(fun (e, loc_set) ->
+                          (to_printable e, loc_set)
+                      )
+                    else
+                      []
+                  in
+                  let collated_errors = (errors, warnings, suppressed_errors) in
+                  Lwt.return (format_errors collated_errors)
+              )
+            in
+            Lwt.return (print_errors, errors, warnings, first_internal_error)
+          else
+            let (errors, warnings, suppressed_errors) = ErrorCollator.get_old env in
+            let%lwt print_errors =
+              Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
+                  let suppressed_errors =
+                    if Options.include_suppressions options then
+                      suppressed_errors
+                    else
+                      []
+                  in
+                  let collated_errors = (errors, warnings, suppressed_errors) in
+                  Lwt.return (format_errors collated_errors)
+              )
+            in
+            Lwt.return (print_errors, errors, warnings, first_internal_error)
       )
     in
     print_errors profiling;
