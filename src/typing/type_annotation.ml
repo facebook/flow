@@ -482,8 +482,16 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         )
       in
       let (unresolved, els_asts) = (List.rev unresolved_rev, List.rev els_asts_rev) in
-      let id = mk_eval_id env.cx loc in
-      let t = Flow_js_utils.mk_tuple_type env.cx ~id ~mk_type_destructor reason unresolved in
+      let t =
+        if inexact then (
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.InexactTupleType));
+          AnyT.at AnnotatedAny loc
+        ) else
+          let id = mk_eval_id env.cx loc in
+          Flow_js_utils.mk_tuple_type env.cx ~id ~mk_type_destructor reason unresolved
+      in
       ((loc, t), Tuple { Tuple.elements = els_asts; inexact; comments })
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in

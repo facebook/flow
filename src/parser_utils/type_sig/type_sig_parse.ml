@@ -1495,9 +1495,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.OptionalIndexedAccess ia ->
       let (_, result) = optional_indexed_access opts scope tbls xs (loc, ia) in
       result
-    | T.Tuple { T.Tuple.elements; _ } ->
+    | T.Tuple { T.Tuple.elements; inexact; _ } ->
       let elems_rev = List.rev_map (tuple_element opts scope tbls xs) elements in
-      Annot (Tuple { loc; elems_rev })
+      Annot (Tuple { loc; elems_rev; inexact })
     | T.Union { T.Union.types = (t0, t1, ts); _ } ->
       let t0 = annot opts scope tbls xs t0 in
       let t1 = annot opts scope tbls xs t1 in

@@ -1,0 +1,18 @@
+Error --------------------------------------------------------------------------------------------------- export.js:1:24
+
+Inexact tuple types are not supported, remove the `...`. [unsupported-syntax]
+
+   1| export type Exported = [number, ...]; // ERROR
+                             ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:1:10
+
+Inexact tuple types are not supported, remove the `...`. [unsupported-syntax]
+
+   1| type T = [number, ...]; // ERROR
+               ^^^^^^^^^^^^^
+
+
+
+Found 2 errors

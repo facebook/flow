@@ -3641,7 +3641,8 @@ let%expect_test "tuple_annot" =
                   name = None; t = (Annot (String [1:17-23]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ]})}
+                ];
+              inexact = false})}
   |}]
 
 let%expect_test "tuple_annot_labeled" =
@@ -3673,7 +3674,8 @@ let%expect_test "tuple_annot_labeled" =
                   t = (Annot (String [1:22-28]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ]})}
+                ];
+              inexact = false})}
   |}]
 
 let%expect_test "tuple_annot_variance" =
@@ -3705,7 +3707,26 @@ let%expect_test "tuple_annot_variance" =
                   t = (Annot (String [1:23-29]));
                   polarity = Polarity.Positive;
                   optional = false}
-                ]})}
+                ];
+              inexact = false})}
+  |}]
+
+let%expect_test "tuple_annot_inexact" =
+  print_sig {|
+    export type T = [...];
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "T"; tparams = Mono;
+         body = (Annot Tuple {loc = [1:16-21]; elems_rev = []; inexact = true})}
   |}]
 
 let%expect_test "cycle" =
@@ -6326,7 +6347,8 @@ let%expect_test "optional_tuple_elements" =
                   t = (Annot (Number [1:20-26]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ]})}
+                ];
+              inexact = false})}
   |}]
 
 let%expect_test "tuple_spread" =
@@ -6357,7 +6379,8 @@ let%expect_test "tuple_spread" =
                   name = None; t = (Annot (String [1:10-16]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ]})}
+                ];
+              inexact = false})}
     1. TypeAlias {id_loc = [2:12-13];
          name = "T"; tparams = Mono;
          body =
@@ -6370,7 +6393,8 @@ let%expect_test "tuple_spread" =
                   name = None; t = (Annot (Number [2:17-23]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ]})}
+                ];
+              inexact = false})}
   |}]
 
 let%expect_test "mapped_types" =

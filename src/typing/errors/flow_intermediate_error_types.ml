@@ -53,6 +53,7 @@ type unsupported_syntax =
   | ObjectPropertyGetSet
   | ObjectPropertyComputedGetSet
   | InvariantSpreadArgument
+  | InexactTupleType
   | ClassPropertyLiteral
   | ClassPropertyComputed
   | RequireDynamicArgument

@@ -16,6 +16,10 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     | ParamList of (Loc.t, Loc.t) Type.Function.Params.t'
     | Type of (Loc.t, Loc.t) Type.t
 
+  type tuple_syntax_element =
+    | TupleElement of (Loc.t, Loc.t) Type.Tuple.element'
+    | InexactTupleMarker
+
   let maybe_variance ?(parse_readonly = false) ?(parse_in_out = false) env =
     let loc = Peek.loc env in
     match Peek.token env with
@@ -656,21 +660,33 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       with_loc
         (fun env ->
           if Eat.maybe env T_ELLIPSIS then
-            let name =
-              match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
-              | (true, T_PLING)
-              | (true, T_COLON) ->
-                let name = identifier_name env in
-                if Peek.token env = T_PLING then (
-                  error env Parse_error.InvalidTupleOptionalSpread;
-                  Eat.token env
-                );
-                Expect.token env T_COLON;
-                Some name
-              | _ -> None
-            in
-            let annot = _type env in
-            Type.Tuple.SpreadElement { Type.Tuple.SpreadElement.name; annot }
+            match Peek.token env with
+            | T_EOF
+            | T_RBRACKET ->
+              InexactTupleMarker
+            | T_COMMA ->
+              error_unexpected
+                ~expected:
+                  "the end of a tuple type (no trailing comma is allowed in inexact tuple type)."
+                env;
+              Eat.token env;
+              InexactTupleMarker
+            | _ ->
+              let name =
+                match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+                | (true, T_PLING)
+                | (true, T_COLON) ->
+                  let name = identifier_name env in
+                  if Peek.token env = T_PLING then (
+                    error env Parse_error.InvalidTupleOptionalSpread;
+                    Eat.token env
+                  );
+                  Expect.token env T_COLON;
+                  Some name
+                | _ -> None
+              in
+              let annot = _type env in
+              TupleElement (Type.Tuple.SpreadElement { Type.Tuple.SpreadElement.name; annot })
           else
             let variance =
               match Peek.token env with
@@ -688,36 +704,41 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               let optional = Eat.maybe env T_PLING in
               Expect.token env T_COLON;
               let annot = _type env in
-              Type.Tuple.LabeledElement
-                { Type.Tuple.LabeledElement.name; annot; variance; optional }
+              TupleElement
+                (Type.Tuple.LabeledElement
+                   { Type.Tuple.LabeledElement.name; annot; variance; optional }
+                )
             | _ ->
               if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-              Type.Tuple.UnlabeledElement (_type env))
+              TupleElement (Type.Tuple.UnlabeledElement (_type env)))
         env
     in
     let rec elements env acc =
       match Peek.token env with
       | T_EOF
       | T_RBRACKET ->
-        List.rev acc
+        (List.rev acc, false)
       | _ ->
-        let acc = element env :: acc in
-        (* Trailing comma support (like [number, string,]) *)
-        if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-        elements env acc
+        (match element env with
+        | (_, InexactTupleMarker) -> (List.rev acc, true)
+        | (loc, TupleElement el) ->
+          let acc = (loc, el) :: acc in
+          (* Trailing comma support (like [number, string,]) *)
+          if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
+          elements env acc)
     in
     fun env ->
       with_loc
         (fun env ->
           let leading = Peek.comments env in
           Expect.token env T_LBRACKET;
-          let els = elements (with_no_anon_function_type false env) [] in
+          let (els, inexact) = elements (with_no_anon_function_type false env) [] in
           Expect.token env T_RBRACKET;
           let trailing = Eat.trailing_comments env in
           Type.Tuple
             {
               Type.Tuple.elements = els;
-              inexact = false;
+              inexact;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env

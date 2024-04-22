@@ -496,6 +496,7 @@ type ('loc, 'a) annot =
   | Tuple of {
       loc: 'loc;
       elems_rev: ('loc, 'a) tuple_element tailrec_list;
+      inexact: bool;
     }
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a

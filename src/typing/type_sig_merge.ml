@@ -556,26 +556,29 @@ and merge_annot env file = function
     (* NB: tail-recursive map in case of very large types *)
     let ts = Base.List.map ~f:(merge env file) ts in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
-  | Tuple { loc; elems_rev } ->
-    let reason = Reason.(mk_annot_reason RTupleType loc) in
-    let unresolved =
-      List.rev_map
-        (function
-          | TupleElement { loc; name; t; polarity; optional } ->
-            let reason = Reason.(mk_reason (RTupleElement { name })) loc in
-            let t = merge env file t in
-            let elem = Type.TupleElement { name; t; polarity; optional; reason } in
-            Type.UnresolvedArg (elem, None)
-          | TupleSpread { loc = _; name = _; t } ->
-            let t = merge env file t in
-            Type.UnresolvedSpreadArg t)
-        elems_rev
-    in
-    let mk_type_destructor _cx use_op reason t destructor id =
-      Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
-    in
-    let id = eval_id_of_aloc file loc in
-    Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor reason unresolved
+  | Tuple { loc; elems_rev; inexact } ->
+    if inexact then
+      Type.AnyT.at Type.AnnotatedAny loc
+    else
+      let reason = Reason.(mk_annot_reason RTupleType loc) in
+      let unresolved =
+        List.rev_map
+          (function
+            | TupleElement { loc; name; t; polarity; optional } ->
+              let reason = Reason.(mk_reason (RTupleElement { name })) loc in
+              let t = merge env file t in
+              let elem = Type.TupleElement { name; t; polarity; optional; reason } in
+              Type.UnresolvedArg (elem, None)
+            | TupleSpread { loc = _; name = _; t } ->
+              let t = merge env file t in
+              Type.UnresolvedSpreadArg t)
+          elems_rev
+      in
+      let mk_type_destructor _cx use_op reason t destructor id =
+        Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
+      in
+      let id = eval_id_of_aloc file loc in
+      Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor reason unresolved
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let elem_t = merge env file t in
