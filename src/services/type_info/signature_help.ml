@@ -78,9 +78,9 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
            don't know which param index corresponds to which tuple element. *)
         let els_result =
           match t with
-          | Ty.Tup els ->
+          | Ty.Tup { elements; inexact = _ } ->
             Base.List.fold
-              els
+              elements
               ~init:(Some (0, []))
               ~f:(fun acc el ->
                 Base.Option.bind acc ~f:(fun (i, els) ->

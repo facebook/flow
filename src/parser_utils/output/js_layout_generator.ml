@@ -4059,24 +4059,26 @@ and flow_type_operator ~opts loc comments operator operand =
 and type_readonly ~opts loc { Ast.Type.ReadOnly.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "readonly"; space; type_ ~opts argument])
 
-and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
+and type_tuple ~opts loc { Ast.Type.Tuple.elements; inexact; comments } =
+  let elements_rev =
+    Base.List.rev_map
+      ~f:(function
+        | (_, Ast.Type.Tuple.UnlabeledElement annot) -> type_ ~opts annot
+        | (loc, Ast.Type.Tuple.LabeledElement e) -> type_tuple_labeled_element ~opts loc e
+        | (loc, Ast.Type.Tuple.SpreadElement e) -> type_tuple_spread_element ~opts loc e)
+      elements
+  in
+  let elements_rev =
+    if inexact then
+      Atom "..." :: elements_rev
+    else
+      elements_rev
+  in
+  let elements = List.rev elements_rev in
   layout_node_with_comments_opt
     loc
     comments
-    (group
-       [
-         new_list
-           ~wrap:(Atom "[", Atom "]")
-           ~sep:(Atom ",")
-           (Base.List.map
-              ~f:(function
-                | (_, Ast.Type.Tuple.UnlabeledElement annot) -> type_ ~opts annot
-                | (loc, Ast.Type.Tuple.LabeledElement e) -> type_tuple_labeled_element ~opts loc e
-                | (loc, Ast.Type.Tuple.SpreadElement e) -> type_tuple_spread_element ~opts loc e)
-              elements
-           );
-       ]
-    )
+    (group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") elements])
 
 and type_tuple_labeled_element
     ~opts loc { Ast.Type.Tuple.LabeledElement.name; annot; variance = variance_; optional } =

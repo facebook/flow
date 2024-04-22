@@ -1379,10 +1379,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
       let open Ast.Type.Tuple in
-      let { elements; comments } = t in
+      let { elements; inexact; comments } = t in
       let elements' = List.map ~f:this#tuple_element elements in
       let comments' = this#syntax_opt comments in
-      { elements = elements'; comments = comments' }
+      { elements = elements'; inexact; comments = comments' }
 
     method array_type (t : ('M, 'T) Ast.Type.Array.t) : ('N, 'U) Ast.Type.Array.t =
       let open Ast.Type.Array in

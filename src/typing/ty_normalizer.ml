@@ -1077,7 +1077,7 @@ module Make (I : INPUT) : S = struct
               Ty.TupleElement { name; t; polarity = type_polarity polarity; optional })
             elements'
         in
-        Ty.Tup elements
+        Ty.Tup { elements; inexact = false }
       | (T.ArrayAT { elem_t; _ }, _) ->
         let%map arr_elt_t = type__ ~env elem_t in
         Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t }
@@ -1731,7 +1731,7 @@ module Make (I : INPUT) : S = struct
               Ty.TupleSpread { name = None; t })
           unresolved
       in
-      return (Ty.Tup (head @ (spread_ty :: tail)))
+      return (Ty.Tup { elements = head @ (spread_ty :: tail); inexact = false })
 
     and check_component ~env ty pmap =
       let%bind map_props =

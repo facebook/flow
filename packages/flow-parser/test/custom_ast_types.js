@@ -71,7 +71,7 @@ function custom_ast_types(fork) {
 
   def('TupleTypeAnnotation')
     .bases('FlowType')
-    .build('elementTypes')
+    .build('elementTypes', 'inexact')
     .field('elementTypes', [
       or(
         def('FlowType'),
@@ -79,6 +79,7 @@ function custom_ast_types(fork) {
         def('TupleTypeSpreadElement'),
       ),
     ])
+    .field('inexact', Boolean)
     .field('types', undefined);
 
   def('TypePredicate')

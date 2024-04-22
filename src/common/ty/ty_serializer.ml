@@ -104,7 +104,7 @@ let type_ options =
       (Loc.none, T.Function f)
     | Obj o -> obj_ o
     | Arr a -> arr a
-    | Tup elements ->
+    | Tup { elements; inexact } ->
       let%map els =
         all
           (Base.List.mapi
@@ -144,7 +144,7 @@ let type_ options =
              elements
           )
       in
-      (Loc.none, T.Tuple { T.Tuple.elements = els; comments = None })
+      (Loc.none, T.Tuple { T.Tuple.elements = els; inexact; comments = None })
     | Union (from_bounds, t0, t1, ts) as t -> union t (from_bounds, t0, t1, ts)
     | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
     | Utility s -> utility s

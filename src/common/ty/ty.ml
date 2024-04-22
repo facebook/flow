@@ -56,7 +56,10 @@ type t =
   | Fun of fun_t
   | Obj of obj_t
   | Arr of arr_t
-  | Tup of tuple_element list
+  | Tup of {
+      elements: tuple_element list;
+      inexact: bool;
+    }
   | Union of bool (* from annotation *) * t * t * t list
   | Inter of t * t * t list
   | InlineInterface of interface_t

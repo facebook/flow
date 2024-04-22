@@ -60,7 +60,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | _ -> name
   in
   (* util to limit the number of calls to a (usually recursive) function *)
-  let counted_map f xs =
+  let counted_map_rev f xs =
     let rec type_list_aux acc xs_ =
       if !size = 0 then
         crop_atom :: acc
@@ -69,8 +69,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         | [] -> acc
         | y :: ys -> type_list_aux (f y :: acc) ys
     in
-    type_list_aux [] xs |> List.rev
+    type_list_aux [] xs
   in
+  let counted_map f xs = counted_map_rev f xs |> List.rev in
   let builtin_value = function
     | FunProto -> Atom "Function.prototype"
     | ObjProto -> Atom "Object.prototype"
@@ -113,7 +114,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
           Atom "["
       in
       fuse [type_ ~depth _object; left_delim; type_ ~depth index; Atom "]"]
-    | Tup elements ->
+    | Tup { elements; inexact } ->
       let tuple_element ~depth = function
         | TupleElement { name; t; polarity; optional } ->
           fuse
@@ -145,11 +146,15 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               type_ ~depth t;
             ]
       in
-      list
-        ~wrap:(Atom "[", Atom "]")
-        ~sep:(Atom ",")
-        ~trailing:false
-        (counted_map (tuple_element ~depth) elements)
+      let elements_rev = counted_map_rev (tuple_element ~depth) elements in
+      let elements_rev =
+        if inexact then
+          Atom "..." :: elements_rev
+        else
+          elements_rev
+      in
+      let elements = List.rev elements_rev in
+      list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") ~trailing:false elements
     | StrLit raw -> fuse (in_quotes ~prefer_single_quotes (Reason.display_string_of_name raw))
     | NumLit raw -> Atom raw
     | BoolLit value ->

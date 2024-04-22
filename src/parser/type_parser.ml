@@ -717,6 +717,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           Type.Tuple
             {
               Type.Tuple.elements = els;
+              inexact = false;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env

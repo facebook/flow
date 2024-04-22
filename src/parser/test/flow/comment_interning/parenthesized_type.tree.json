@@ -522,14 +522,14 @@
             "optional":false
           }
         ],
-        "this":null,
         "returnType":{
           "type":"AnyTypeAnnotation",
           "loc":{"source":null,"start":{"line":27,"column":45},"end":{"line":27,"column":48}},
           "range":[941,944]
         },
         "rest":null,
-        "typeParameters":null
+        "typeParameters":null,
+        "this":null
       }
     },
     {
@@ -840,7 +840,8 @@
             "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":44}},
             "range":[1444,1447]
           }
-        ]
+        ],
+        "inexact":false
       }
     },
     {

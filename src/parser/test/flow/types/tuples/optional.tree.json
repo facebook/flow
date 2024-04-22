@@ -91,7 +91,8 @@
             },
             "optional":true
           }
-        ]
+        ],
+        "inexact":false
       }
     },
     {
@@ -137,7 +138,8 @@
                   "range":[86,92]
                 }
               }
-            ]
+            ],
+            "inexact":false
           },
           {
             "type":"FunctionTypeAnnotation",
@@ -162,16 +164,17 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"BooleanTypeAnnotation",
               "loc":{"source":null,"start":{"line":4,"column":43},"end":{"line":4,"column":50}},
               "range":[108,115]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
-        ]
+        ],
+        "inexact":false
       }
     }
   ],

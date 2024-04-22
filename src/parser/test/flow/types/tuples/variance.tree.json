@@ -38,7 +38,8 @@
               "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":19}},
               "range":[13,19]
             },
-            "variance":null
+            "variance":null,
+            "optional":false
           },
           {
             "type":"TupleTypeLabeledElement",
@@ -62,7 +63,8 @@
               "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
               "range":[21,22],
               "kind":"plus"
-            }
+            },
+            "optional":false
           },
           {
             "type":"TupleTypeLabeledElement",
@@ -86,9 +88,11 @@
               "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
               "range":[33,34],
               "kind":"minus"
-            }
+            },
+            "optional":false
           }
-        ]
+        ],
+        "inexact":false
       }
     }
   ],

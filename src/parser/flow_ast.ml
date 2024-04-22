@@ -518,6 +518,7 @@ and Type : sig
 
     and ('M, 'T) t = {
       elements: ('M, 'T) element list;
+      inexact: bool;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

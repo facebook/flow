@@ -58,4 +58,20 @@ let tests =
            let str = Ty_printer.string_of_t ~exact_by_default:true obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{set foo(string): void}" str
          );
+         ( "empty_inexact_tuple" >:: fun ctxt ->
+           let tup = Ty.Tup { elements = []; inexact = true } in
+           let str = Ty_printer.string_of_t tup in
+           assert_equal ~ctxt ~printer:(fun x -> x) "[...]" str
+         );
+         ( "inexact_tuple" >:: fun ctxt ->
+           let elements =
+             [
+               Ty.TupleElement
+                 { name = None; t = Ty.Num None; polarity = Ty.Neutral; optional = false };
+             ]
+           in
+           let tup = Ty.Tup { elements; inexact = true } in
+           let str = Ty_printer.string_of_t tup in
+           assert_equal ~ctxt ~printer:(fun x -> x) "[number, ...]" str
+         );
        ]

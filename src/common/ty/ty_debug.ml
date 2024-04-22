@@ -334,9 +334,9 @@ struct
       | Fun f -> dump_fun_t ~depth f
       | Obj o -> dump_obj ~depth o
       | Arr a -> dump_arr ~depth a
-      | Tup elements ->
+      | Tup { elements; inexact } ->
         spf
-          "Tup (%s)"
+          "Tup (%s%s)"
           (dump_listi
              (fun i -> function
                | TupleElement { name; t; polarity; optional } ->
@@ -344,6 +344,11 @@ struct
                | TupleSpread { t; name } -> dump_tuple_spread ~depth name t)
              ~sep:","
              elements
+          )
+          ( if inexact then
+            ", ..."
+          else
+            ""
           )
       | Union (_, t1, t2, ts) ->
         spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (Base.List.take (t1 :: t2 :: ts) 10))
@@ -485,7 +490,7 @@ struct
             );
             ("type", json_of_t arr_elt_t);
           ]
-        | Tup elements ->
+        | Tup { elements; inexact } ->
           [
             ( "elements",
               JSON_Array
@@ -510,6 +515,7 @@ struct
                    elements
                 )
             );
+            ("inexact", JSON_Bool inexact);
           ]
         | Union (_, t0, t1, ts) ->
           [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]

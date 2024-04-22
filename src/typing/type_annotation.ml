@@ -471,7 +471,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType None; loc });
         let t = AnyT.at (AnyError None) loc in
         ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro)))
-    | (loc, Tuple { Tuple.elements; comments }) ->
+    | (loc, Tuple { Tuple.elements; inexact; comments }) ->
       let reason = mk_annot_reason RTupleType loc in
       let (unresolved_rev, els_asts_rev) =
         Base.List.fold elements ~init:([], []) ~f:(fun (unresolved, els_asts) element ->
@@ -484,7 +484,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (unresolved, els_asts) = (List.rev unresolved_rev, List.rev els_asts_rev) in
       let id = mk_eval_id env.cx loc in
       let t = Flow_js_utils.mk_tuple_type env.cx ~id ~mk_type_destructor reason unresolved in
-      ((loc, t), Tuple { Tuple.elements = els_asts; comments })
+      ((loc, t), Tuple { Tuple.elements = els_asts; inexact; comments })
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
       let (((_, elem_t), _) as t_ast) = convert env t in

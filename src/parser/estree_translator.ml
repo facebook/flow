@@ -1959,7 +1959,7 @@ with type t = Impl.t = struct
         [("operator", string operator); ("typeAnnotation", _type operand)]
     and read_only_type (loc, { Type.ReadOnly.argument; comments }) =
       flow_type_operator loc comments "readonly" argument
-    and tuple_type (loc, { Type.Tuple.elements; comments }) =
+    and tuple_type (loc, { Type.Tuple.elements; inexact; comments }) =
       node
         ?comments
         "TupleTypeAnnotation"
@@ -1973,6 +1973,7 @@ with type t = Impl.t = struct
                 | (loc, Type.Tuple.SpreadElement e) -> tuple_spread_element loc e)
               elements
           );
+          ("inexact", bool inexact);
         ]
     and tuple_labeled_element
         ?comments loc { Type.Tuple.LabeledElement.name; annot; variance = variance_; optional } =

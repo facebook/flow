@@ -1772,13 +1772,13 @@ class ['loc] mapper =
 
     method tuple_type (t : ('loc, 'loc) Ast.Type.Tuple.t) =
       let open Ast.Type.Tuple in
-      let { elements; comments } = t in
+      let { elements; inexact; comments } = t in
       let elements' = map_list this#tuple_element elements in
       let comments' = this#syntax_opt comments in
       if elements == elements' && comments == comments' then
         t
       else
-        { elements = elements'; comments = comments' }
+        { elements = elements'; inexact; comments = comments' }
 
     method tuple_element (el : ('loc, 'loc) Ast.Type.Tuple.element) =
       let open Ast.Type.Tuple in

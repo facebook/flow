@@ -383,7 +383,8 @@
             },
             "typeParameters":null
           }
-        ]
+        ],
+        "inexact":false
       }
     },
     {

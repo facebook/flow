@@ -59,7 +59,8 @@
             "variance":null,
             "optional":true
           }
-        ]
+        ],
+        "inexact":false
       }
     }
   ],

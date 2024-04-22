@@ -1510,6 +1510,9 @@ module.exports = {
           },
           'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementTypes': {
             type: 'Unexpected property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.inexact': {
+            type: 'Unexpected property'
           }
         }
       },

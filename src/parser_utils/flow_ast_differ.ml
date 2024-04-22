@@ -2720,11 +2720,17 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.t) :
       node change list option =
     let open Ast.Type.Tuple in
-    let { elements = elements1; comments = comments1 } = t1 in
-    let { elements = elements2; comments = comments2 } = t2 in
+    let { elements = elements1; inexact = inexact1; comments = comments1 } = t1 in
+    let { elements = elements2; inexact = inexact2; comments = comments2 } = t2 in
+    let inexact_diff =
+      if inexact1 = inexact2 then
+        Some []
+      else
+        None
+    in
     let elements_diff = diff_and_recurse_no_trivial tuple_element elements1 elements2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [elements_diff; comments_diff]
+    join_diff_list [elements_diff; inexact_diff; comments_diff]
   and tuple_element
       (e1 : (Loc.t, Loc.t) Ast.Type.Tuple.element) (e2 : (Loc.t, Loc.t) Ast.Type.Tuple.element) :
       node change list option =
