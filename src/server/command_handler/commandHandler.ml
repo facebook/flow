@@ -271,18 +271,18 @@ let get_status ~options env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
   let status_response =
     (* collate errors by origin *)
-    let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
+    let (errors, warnings, suppressed_errors) =
+      if Options.include_suppressions options then
+        ErrorCollator.get env
+      else
+        let (errors, warnings) = ErrorCollator.get_without_suppressed env in
+        (errors, warnings, [])
+    in
     let warnings =
       if Options.should_include_warnings options then
         warnings
       else
         Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
-    in
-    let suppressed_errors =
-      if Options.include_suppressions options then
-        suppressed_errors
-      else
-        []
     in
     (* TODO: check status.directory *)
     status_log errors;
@@ -935,7 +935,7 @@ let collect_rage ~options ~reader ~env ~files =
   let data = "DEPENDENCIES:\n" ^ dependencies in
   let items = ("env.dependencies", data) :: items in
   (* env: errors *)
-  let (errors, warnings, _) = ErrorCollator.get env in
+  let (errors, warnings) = ErrorCollator.get_without_suppressed env in
   let json =
     Flow_errors_utils.Json_output.json_of_errors_with_context
       ~strip_root:None
@@ -2085,7 +2085,7 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload :
   { WorkloadStream.workload_should_be_cancelled; workload_handler }
 
 let did_open env client (_files : (string * string) Nel.t) : ServerEnv.env Lwt.t =
-  let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
+  let (errors, warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
     ~errors_reason:LspProt.Env_change
@@ -2094,7 +2094,7 @@ let did_open env client (_files : (string * string) Nel.t) : ServerEnv.env Lwt.t
   Lwt.return env
 
 let did_close env client : ServerEnv.env Lwt.t =
-  let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
+  let (errors, warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
     ~errors_reason:LspProt.Env_change
@@ -2138,7 +2138,7 @@ let mk_lsp_error_response ~id ~reason ?stack metadata =
   (LspProt.LspFromServer (Some message), metadata)
 
 let handle_persistent_subscribe ~metadata ~client ~profiling:_ ~env =
-  let (current_errors, current_warnings, _) = ErrorCollator.get_with_separate_warnings env in
+  let (current_errors, current_warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 

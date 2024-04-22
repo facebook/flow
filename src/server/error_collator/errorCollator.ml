@@ -196,9 +196,6 @@ let get_with_separate_warnings env =
     |> FilenameMap.fold (fun _ -> ConcreteLocPrintableErrorSet.union) collated_local_errors
     |> FilenameMap.fold (fun _ -> ConcreteLocPrintableErrorSet.union) collated_merge_errors
   in
-  let collated_suppressed_errors =
-    FilenameMap.fold (fun _ -> List.rev_append) collated_suppressed_errors []
-  in
   (collated_errorset, collated_warning_map, collated_suppressed_errors)
 
 let type_error_stat collated_errors =
@@ -361,6 +358,17 @@ let update_error_state_timestamps collated_errors =
     }
   )
 
+let get_without_suppressed env =
+  let open Flow_errors_utils in
+  let (errors, warning_map, _suppressed_errors) = get_with_separate_warnings env in
+  let warnings =
+    FilenameMap.fold
+      (fun _key -> ConcreteLocPrintableErrorSet.union)
+      warning_map
+      ConcreteLocPrintableErrorSet.empty
+  in
+  (errors, warnings)
+
 (* combine error maps into a single error set and a single warning set *)
 let get env =
   let open Flow_errors_utils in
@@ -371,4 +379,11 @@ let get env =
       warning_map
       ConcreteLocPrintableErrorSet.empty
   in
+  let suppressed_errors = FilenameMap.fold (fun _ -> List.rev_append) suppressed_errors [] in
   (errors, warnings, suppressed_errors)
+
+let get_with_separate_warnings env =
+  let (collated_errorset, collated_warning_map, _collated_suppressed_errors) =
+    get_with_separate_warnings env
+  in
+  (collated_errorset, collated_warning_map)

@@ -35,7 +35,6 @@ val get_with_separate_warnings :
   ServerEnv.env ->
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   * Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
-  * (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list
 
 type error_resolution_stat = {
   time_to_resolve_all_type_errors: float option;
@@ -48,6 +47,11 @@ type error_resolution_stat = {
  * and return a collection of times to resolve different kinds of errors
  * under different initial conditions *)
 val update_error_state_timestamps : Collated_errors.t -> Collated_errors.t * error_resolution_stat
+
+val get_without_suppressed :
+  ServerEnv.env ->
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * Flow_errors_utils.ConcreteLocPrintableErrorSet.t
 
 val get :
   ServerEnv.env ->

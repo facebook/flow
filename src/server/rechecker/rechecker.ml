@@ -110,10 +110,7 @@ let send_end_recheck ~options env =
   let lazy_stats = get_lazy_stats ~options env in
   Persistent_connection.send_end_recheck ~lazy_stats env.connections;
 
-  let calc_errors_and_warnings () =
-    let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
-    (errors, warnings)
-  in
+  let calc_errors_and_warnings () = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.update_clients
     ~clients:env.connections
     ~errors_reason:LspProt.End_of_recheck
