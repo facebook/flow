@@ -116,6 +116,8 @@ val facebook_fbt : config -> string option
 
 val facebook_module_interop : config -> bool
 
+val faster_error_collation : config -> bool
+
 val file_watcher : config -> file_watcher option
 
 val file_watcher_mergebase_with : config -> string option
