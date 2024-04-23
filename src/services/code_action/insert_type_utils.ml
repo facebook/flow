@@ -1309,7 +1309,7 @@ class type_normalization_hardcoded_fixes_mapper
                     fun_rest_param = None;
                     fun_return = ReturnType (Bound (_, r));
                     fun_static = _;
-                    fun_hook = _;
+                    fun_effect = _;
                   },
                 t :: _
               )

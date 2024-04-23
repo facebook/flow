@@ -288,7 +288,12 @@ module Make (I : INPUT) : S = struct
   let non_opt_param = Ty.{ prm_optional = false }
 
   let mk_fun
-      ?(params = []) ?(hook = false) ?rest ?tparams ?(static = Ty.(TypeOf (FunProto, None))) ret =
+      ?(params = [])
+      ?(effect = Ty.Arbitrary)
+      ?rest
+      ?tparams
+      ?(static = Ty.(TypeOf (FunProto, None)))
+      ret =
     Ty.(
       Fun
         {
@@ -297,7 +302,7 @@ module Make (I : INPUT) : S = struct
           fun_return = ret;
           fun_type_params = tparams;
           fun_static = static;
-          fun_hook = hook;
+          fun_effect = effect;
         }
     )
 
@@ -897,13 +902,16 @@ module Make (I : INPUT) : S = struct
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
-      let { T.params; rest_param; return_t; predicate; hook; _ } = f in
-      let fun_hook =
-        match hook with
+      let { T.params; rest_param; return_t; predicate; effect; _ } = f in
+      let fun_effect =
+        match effect with
         | T.HookAnnot
         | T.HookDecl _ ->
-          true
-        | _ -> false
+          Ty.Hook
+        | T.ArbitraryEffect -> Ty.Arbitrary
+        | T.IdempotentEffect -> Ty.Idempotent
+        | T.ParametricEffect n -> Ty.Parametric n
+        | T.AnyEffect -> Ty.Arbitrary (* TODO do we need an any-ful ty rep? *)
       in
       let%bind fun_params = mapM (fun_param ~env) params in
       let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
@@ -917,7 +925,7 @@ module Make (I : INPUT) : S = struct
           let%map t = type__ ~env return_t in
           Ty.ReturnType t
       in
-      return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_hook }
+      return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_effect }
 
     and method_ty ~env t =
       let rec go = function

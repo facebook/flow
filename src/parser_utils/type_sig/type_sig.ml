@@ -109,11 +109,13 @@ type ('loc, 'a) fun_rest_param =
     }
 [@@deriving iter, map, show { with_path = false }]
 
-type 'loc react_hook =
+type 'loc react_effect =
   | HookDecl of 'loc
   | HookAnnot
-  | NonHook
-  | AnyHook
+  | IdempotentEffect
+  | ParametricEffect of int
+  | ArbitraryEffect
+  | AnyEffect
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) fun_sig =
@@ -124,7 +126,7 @@ type ('loc, 'a) fun_sig =
       this_param: 'a option;
       return: 'a;
       predicate: ('loc, 'a) predicate_or_type_guard option;
-      hook: 'loc react_hook;
+      effect: 'loc react_effect;
     }
 [@@deriving iter, map, show { with_path = false }]
 

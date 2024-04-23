@@ -855,7 +855,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       async = async1;
       generator = generator1;
       predicate = predicate1;
-      hook = hook1;
+      effect = effect1;
       return = return1;
       tparams = tparams1;
       sig_loc = _;
@@ -869,7 +869,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       body = body2;
       async = async2;
       generator = generator2;
-      hook = hook2;
+      effect = effect2;
       predicate = predicate2;
       return = return2;
       tparams = tparams2;
@@ -878,7 +878,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     } =
       func2
     in
-    if async1 != async2 || generator1 != generator2 || predicate1 != predicate2 || hook1 != hook2
+    if
+      async1 != async2 || generator1 != generator2 || predicate1 != predicate2 || effect1 != effect2
     then
       None
     else
@@ -2832,7 +2833,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       return = return1;
       tparams = tparams1;
       comments = func_comments1;
-      hook = hook1;
+      effect = effect1;
     } =
       ft1
     in
@@ -2842,11 +2843,11 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       return = return2;
       tparams = tparams2;
       comments = func_comments2;
-      hook = hook2;
+      effect = effect2;
     } =
       ft2
     in
-    if hook1 != hook2 then
+    if effect1 != effect2 then
       None
     else
       let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in

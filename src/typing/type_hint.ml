@@ -301,7 +301,7 @@ and type_of_hint_decomposition cx op reason t =
         return_t;
         predicate;
         def_reason = reason;
-        hook = AnyHook;
+        effect = AnyEffect;
       }
     in
     DefT (reason, FunT (statics, func))
@@ -324,7 +324,8 @@ and type_of_hint_decomposition cx op reason t =
     let mod_ctor_return instance_type = function
       | DefT
           ( reason,
-            FunT (static, { this_t; params; rest_param; return_t = _; predicate; def_reason; hook })
+            FunT
+              (static, { this_t; params; rest_param; return_t = _; predicate; def_reason; effect })
           ) ->
         DefT
           ( reason,
@@ -337,7 +338,7 @@ and type_of_hint_decomposition cx op reason t =
                   return_t = instance_type;
                   predicate;
                   def_reason;
-                  hook;
+                  effect;
                 }
               )
           )

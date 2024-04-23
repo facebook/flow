@@ -235,7 +235,14 @@ let type_ options =
     let%bind return = fun_return_t f.fun_return in
     let%bind params = fun_params f.fun_params f.fun_rest_param in
     let%map tparams = opt type_params f.fun_type_params in
-    { T.Function.params; return; tparams; hook = f.fun_hook; comments = None }
+    let effect =
+      match f.fun_effect with
+      | Ty.Arbitrary -> Ast.Function.Arbitrary
+      | Ty.Hook -> Ast.Function.Hook
+      | Ty.Parametric n -> Ast.Function.Parametric n
+      | Ty.Idempotent -> Ast.Function.Idempotent
+    in
+    { T.Function.params; return; tparams; effect; comments = None }
   and fun_params params rest_param =
     let%bind params = mapM fun_param params in
     let%map rest = opt fun_rest_param rest_param in
@@ -459,7 +466,7 @@ let type_ options =
         fun_return = ReturnType t;
         fun_type_params = None;
         fun_static = Ty.Top;
-        fun_hook = false;
+        fun_effect = Ty.Arbitrary;
       }
   and setter t =
     function_
@@ -469,7 +476,7 @@ let type_ options =
         fun_return = ReturnType Void;
         fun_type_params = None;
         fun_static = Ty.Top;
-        fun_hook = false;
+        fun_effect = Ty.Arbitrary;
       }
   and interface_extends e =
     let (x, _, ts) = e in

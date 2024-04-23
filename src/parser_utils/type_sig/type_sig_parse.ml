@@ -727,7 +727,7 @@ module Scope = struct
   (* Function declarations preceded by declared functions are taken to have the
    * type of the declared functions. This is a weird special case aimed to
    * support overloaded signatures. *)
-  let bind_function scope tbls id_loc fn_loc name ~async ~generator ~hook:_ def k =
+  let bind_function scope tbls id_loc fn_loc name ~async ~generator ~effect:_ def k =
     bind ~type_only:false scope name (fun binding_opt ->
         match binding_opt with
         | None ->
@@ -1599,13 +1599,26 @@ and return_annot opts scope tbls xs = function
     let guard = type_guard_or_predicate_of_type_guard opts scope tbls xs g in
     (Annot (Boolean loc), guard)
 
+and convert_effect opts effect fun_loc_opt name_opt =
+  match (effect, fun_loc_opt) with
+  | (Ast.Function.Hook, Some loc) when opts.component_syntax_enabled_in_config -> HookDecl loc
+  | (Ast.Function.Hook, None) when opts.component_syntax_enabled_in_config -> HookAnnot
+  | (Ast.Function.Hook, _) -> ArbitraryEffect
+  | (Ast.Function.Idempotent, _) -> IdempotentEffect
+  | (Ast.Function.Arbitrary, _)
+    when opts.hook_compatibility
+         && Base.Option.value_map name_opt ~default:false ~f:Flow_ast_utils.hook_name ->
+    AnyEffect
+  | (Ast.Function.Arbitrary, _) -> ArbitraryEffect
+  | (Ast.Function.Parametric n, _) -> ParametricEffect n
+
 and function_type opts scope tbls xs f =
   let module F = T.Function in
   let {
     F.tparams = tps;
     params = (_, { F.Params.params = ps; rest = rp; this_; comments = _ });
     return = r;
-    hook;
+    effect;
     comments = _;
   } =
     f
@@ -1615,13 +1628,8 @@ and function_type opts scope tbls xs f =
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
   let (return, predicate) = return_annot opts scope tbls xs r in
-  let hook =
-    if opts.component_syntax_enabled_in_config && hook then
-      HookAnnot
-    else
-      NonHook
-  in
-  FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
+  let effect = convert_effect opts effect None None in
+  FunSig { tparams; params; rest_param; this_param; return; predicate; effect }
 
 and function_component_type_param opts scope tbls xs t optional =
   let t = annot opts scope tbls xs t in
@@ -2973,7 +2981,17 @@ let rec expression opts scope tbls (loc, expr) =
         let def =
           lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty loc f))
         in
-        Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook:false def ignore2;
+        Scope.bind_function
+          scope
+          tbls
+          id_loc
+          sig_loc
+          name
+          ~async
+          ~generator
+          ~effect:ArbitraryEffect
+          def
+          ignore2;
         val_ref ~type_only:false scope id_loc name
       | None ->
         let def = function_def opts scope tbls SSet.empty loc f in
@@ -3522,7 +3540,7 @@ and function_def_helper =
       predicate = p;
       async;
       generator;
-      hook;
+      effect;
       sig_loc = _;
       comments = _;
     } =
@@ -3551,15 +3569,14 @@ and function_def_helper =
         let%map (loc, p) = predicate opts scope tbls ps body p in
         Predicate (loc, p)
     in
-    let hook =
-      match id with
-      | _ when hook -> HookDecl fun_loc
-      | Some (_, { Ast.Identifier.name; _ })
-        when opts.hook_compatibility && Flow_ast_utils.hook_name name ->
-        AnyHook
-      | _ -> NonHook
+    let effect =
+      convert_effect
+        opts
+        effect
+        (Some fun_loc)
+        (Base.Option.map ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) id)
     in
-    FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
+    FunSig { tparams; params; rest_param; this_param; return; predicate; effect }
 
 and function_def = function_def_helper ~constructor:false
 
@@ -4312,7 +4329,7 @@ let rec const_var_init_decl opts scope tbls id_loc name k expr =
           fn_name
           ~async
           ~generator
-          ~hook:false
+          ~effect:ArbitraryEffect
           def
           ignore2;
         Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope k
@@ -4412,14 +4429,14 @@ let class_decl opts scope tbls decl =
   Scope.bind_class scope tbls id_loc name def
 
 let function_decl opts scope tbls decl =
-  let { Ast.Function.id; async; generator; hook; sig_loc; _ } = decl in
+  let { Ast.Function.id; async; generator; effect; sig_loc; _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = Base.Option.value_exn id in
   let sig_loc = push_loc tbls sig_loc in
   let id_loc = push_loc tbls id_loc in
   let def =
     lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty id_loc decl))
   in
-  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook def
+  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~effect def
 
 let component_decl opts scope tbls decl =
   let {
@@ -4481,7 +4498,7 @@ let declare_function_decl opts scope tbls decl =
                  T.Function.tparams = tps;
                  params = (_, { T.Function.Params.params = ps; rest = rp; this_; comments = _ });
                  return = r;
-                 hook;
+                 effect;
                  comments = _;
                } ->
              let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
@@ -4511,19 +4528,8 @@ let declare_function_decl opts scope tbls decl =
                  (* inferred predicate not allowed in declared function *)
                  None
              in
-             let hook =
-               if opts.component_syntax_enabled_in_config && hook then
-                 HookAnnot
-               else if
-                 opts.component_syntax_enabled_in_config
-                 && opts.hook_compatibility
-                 && Flow_ast_utils.hook_name name
-               then
-                 AnyHook
-               else
-                 NonHook
-             in
-             FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
+             let effect = convert_effect opts effect None (Some name) in
+             FunSig { tparams; params; rest_param; this_param; return; predicate; effect }
            | _ -> failwith "unexpected declare function annot"
        )
       )

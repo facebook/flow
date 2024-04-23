@@ -1087,15 +1087,18 @@ struct
             cx
             trace
             (DefT (r, ArrT (ROArrayAT (t, Some (dro_loc, dro_type)))), OpenT tout)
-        | (DefT (r, FunT (s, ({ hook = NonHook; _ } as funtype))), HooklikeT tout) ->
+        | (DefT (r, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))), HooklikeT tout) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, FunT (s, { funtype with hook = AnyHook })), OpenT tout)
+            (DefT (r, FunT (s, { funtype with effect = AnyEffect })), OpenT tout)
         | ( DefT
               ( rp,
-                PolyT ({ t_out = DefT (r, FunT (s, ({ hook = NonHook; _ } as funtype))); _ } as poly)
+                PolyT
+                  ( { t_out = DefT (r, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))); _ }
+                  as poly
+                  )
               ),
             HooklikeT tout
           ) ->
@@ -1104,25 +1107,33 @@ struct
             cx
             trace
             ( DefT
-                (rp, PolyT { poly with t_out = DefT (r, FunT (s, { funtype with hook = AnyHook })) }),
+                ( rp,
+                  PolyT
+                    { poly with t_out = DefT (r, FunT (s, { funtype with effect = AnyEffect })) }
+                ),
               OpenT tout
             )
         | (DefT (r, ObjT ({ call_t = Some id; _ } as obj)), HooklikeT tout) ->
           let t =
             match Context.find_call cx id with
-            | DefT (rf, FunT (s, ({ hook = NonHook; _ } as funtype))) ->
-              let call = DefT (rf, FunT (s, { funtype with hook = AnyHook })) in
+            | DefT (rf, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))) ->
+              let call = DefT (rf, FunT (s, { funtype with effect = AnyEffect })) in
               let id = Context.make_call_prop cx call in
               DefT (r, ObjT { obj with call_t = Some id })
             | DefT
                 ( rp,
                   PolyT
-                    ({ t_out = DefT (rf, FunT (s, ({ hook = NonHook; _ } as funtype))); _ } as poly)
+                    ( {
+                        t_out = DefT (rf, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype)));
+                        _;
+                      } as poly
+                    )
                 ) ->
               let call =
                 DefT
                   ( rp,
-                    PolyT { poly with t_out = DefT (rf, FunT (s, { funtype with hook = AnyHook })) }
+                    PolyT
+                      { poly with t_out = DefT (rf, FunT (s, { funtype with effect = AnyEffect })) }
                   )
               in
               let id = Context.make_call_prop cx call in
@@ -3167,7 +3178,7 @@ struct
                       return_t;
                       rest_param = None;
                       predicate = None;
-                      hook = NonHook | AnyHook;
+                      effect = ArbitraryEffect | AnyEffect;
                       _;
                     }
                   )
@@ -6666,7 +6677,7 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t = (this, _); params; rest_param; return_t; predicate; def_reason = _; hook = _ }
+      { this_t = (this, _); params; rest_param; return_t; predicate; def_reason = _; effect = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
@@ -10244,7 +10255,7 @@ struct
         | Some trace -> trace
         | None -> failwith "All multiflows show have a trace"
       in
-      let { params; rest_param; return_t; def_reason; predicate; hook; _ } = ft in
+      let { params; rest_param; return_t; def_reason; predicate; effect; _ } = ft in
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let (params, rest_param) =
         multiflow_partial
@@ -10278,7 +10289,7 @@ struct
                   ~rest_param
                   ~def_reason
                   ~params_names
-                  ~hook
+                  ~effect
               )
           )
       in

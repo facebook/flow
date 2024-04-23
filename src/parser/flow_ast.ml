@@ -210,7 +210,7 @@ and Type : sig
       params: ('M, 'T) Params.t;
       return: ('M, 'T) return_annotation;
       comments: ('M, unit) Syntax.t option;
-      hook: bool;
+      effect: Function.effect;
     }
 
     and ('M, 'T) return_annotation =
@@ -2178,13 +2178,20 @@ and Function : sig
     [@@deriving show]
   end
 
+  type effect =
+    | Hook
+    | Arbitrary
+    | Idempotent
+    | Parametric of int
+  [@@deriving show]
+
   type ('M, 'T) t = {
     id: ('M, 'T) Identifier.t option;
     params: ('M, 'T) Params.t;
     body: ('M, 'T) body;
     async: bool;
     generator: bool;
-    hook: bool;
+    effect: effect;
     predicate: ('M, 'T) Type.Predicate.t option;
     return: ('M, 'T) ReturnAnnot.t;
     tparams: ('M, 'T) Type.TypeParams.t option;

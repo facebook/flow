@@ -346,7 +346,7 @@ let resolve_pred_func cx (ex, callee, targs, arguments) =
 
 let resolve_annotated_function
     cx ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
-  let { Ast.Function.sig_loc; hook; _ } = function_ in
+  let { Ast.Function.sig_loc; effect; _ } = function_ in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this = Flow_js_utils.default_this_type cx ~needs_this_param:bind_this function_ in
@@ -371,7 +371,7 @@ let resolve_annotated_function
       func_sig
   in
   let t =
-    if (not hook) && hook_like then
+    if effect <> Ast.Function.Hook && hook_like then
       make_hooklike cx t
     else
       t
@@ -886,7 +886,7 @@ let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason functi
   Node_cache.set_function cache id_loc fn;
   let fun_type =
     if
-      (not function_.Ast.Function.hook)
+      function_.Ast.Function.effect <> Ast.Function.Hook
       && Base.Option.is_some (Flow_ast_utils.hook_function function_)
     then
       make_hooklike cx fun_type

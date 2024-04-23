@@ -1571,14 +1571,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       multiflow_subtype cx trace ~use_op ureason args ft1;
 
       begin
-        match (ft1.hook, ft2.hook) with
-        | (AnyHook, _)
-        | (_, AnyHook)
-        | (NonHook, NonHook)
+        match (ft1.effect, ft2.effect) with
+        | (AnyEffect, _)
+        | (_, AnyEffect)
+        | (ArbitraryEffect, ArbitraryEffect)
         | ((HookDecl _ | HookAnnot), HookAnnot) ->
           ()
         | (HookDecl a, HookDecl b) when ALoc.equal_id a b -> ()
-        | ((HookDecl _ | HookAnnot), NonHook) ->
+        | ((HookDecl _ | HookAnnot), ArbitraryEffect) ->
           add_output
             cx
             ~trace
@@ -1588,10 +1588,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  lower = lreason;
                  upper = ureason;
                  lower_is_hook = true;
-                 hook_is_annot = ft1.hook = HookAnnot;
+                 hook_is_annot = ft1.effect = HookAnnot;
                }
             )
-        | (NonHook, (HookDecl _ | HookAnnot)) ->
+        | (ArbitraryEffect, (HookDecl _ | HookAnnot)) ->
           add_output
             cx
             ~trace
@@ -1601,7 +1601,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  lower = lreason;
                  upper = ureason;
                  lower_is_hook = false;
-                 hook_is_annot = ft2.hook = HookAnnot;
+                 hook_is_annot = ft2.effect = HookAnnot;
                }
             )
         | ((HookDecl _ | HookAnnot), HookDecl _) ->
@@ -1609,6 +1609,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             ~trace
             (Error_message.EHookUniqueIncompatible { use_op; lower = lreason; upper = ureason })
+        | _ -> (* todo *) ()
       end;
 
       (* Return type subtyping *)

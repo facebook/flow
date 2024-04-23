@@ -1186,7 +1186,7 @@ module Expression
             params;
             body;
             generator;
-            hook = false (* TODO function expression hooks *);
+            effect = Function.Arbitrary;
             async;
             predicate;
             return;
@@ -1786,7 +1786,7 @@ module Expression
               async;
               generator = false;
               (* arrow functions cannot be generators *)
-              hook = false (* TODO arrow function hooks *);
+              effect = Function.Arbitrary;
               predicate;
               return;
               tparams;

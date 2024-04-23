@@ -374,7 +374,7 @@ let%expect_test "export_function_literal" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [1:27-33]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [1:36-42]));
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -400,7 +400,7 @@ let%expect_test "export_function_literal_check1" =
                  params = [FunParam {name = (Some "x"); t = (Err [1:24-25])}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [1:28-34]));
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -429,7 +429,7 @@ let%expect_test "export_function_literal_check2" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [1:27-33]))}];
                  rest_param = None; this_param = None;
                  return = (Err [1:34]);
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -467,7 +467,7 @@ let%expect_test "export_function_reference" =
            params = [FunParam {name = (Some "x"); t = (Annot (Number [1:16-22]))}];
            rest_param = None; this_param = None;
            return = (Annot (Number [1:25-31]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -495,7 +495,7 @@ let%expect_test "export_function_reference_check1" =
          FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:13-14])}];
            rest_param = None; this_param = None;
            return = (Annot (Number [1:17-23]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -527,7 +527,7 @@ let%expect_test "export_function_reference_check2" =
            params = [FunParam {name = (Some "x"); t = (Annot (Number [1:16-22]))}];
            rest_param = None; this_param = None;
            return = (Err [1:23]); predicate = None;
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -553,7 +553,7 @@ let%expect_test "function_param_optional" =
                  [FunParam {name = (Some "p"); t = (Annot (Optional (Annot (String [1:28-34]))))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [1:37-41]));
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -579,7 +579,7 @@ let%expect_test "function_param_default" =
                  [FunParam {name = (Some "p"); t = (Annot (Optional (Annot (String [1:27-33]))))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [1:44-48]));
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -604,7 +604,7 @@ let%expect_test "function_param_default_check" =
                  params = [FunParam {name = (Some "p"); t = (Annot (Optional (Err [1:24-25])))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [1:34]));
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -666,7 +666,7 @@ let%expect_test "function_param_typeof_reference" =
                    ];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [2:83]));
-                 predicate = None; hook = NonHook};
+                 predicate = None; effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -890,7 +890,7 @@ let%expect_test "export_class_reference" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:16-22]));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
   |}]
@@ -930,7 +930,7 @@ let%expect_test "export_class_reference_check1" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:16-22]));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) }}}
@@ -971,7 +971,7 @@ let%expect_test "export_class_reference_check2" =
                  params = [FunParam {name = (Some "x"); t = (Err [3:4-5])}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:8-14]));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
@@ -1014,7 +1014,7 @@ let%expect_test "export_class_reference_check3" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; this_param = None;
                  return = (Err [3:14]);
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
@@ -1067,7 +1067,7 @@ let%expect_test "type_alias_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [6:12-14]; index = 2}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([5:2-3],
@@ -1121,7 +1121,7 @@ let%expect_test "class_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1177,7 +1177,7 @@ let%expect_test "class_dependencies_check" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1231,7 +1231,7 @@ let%expect_test "export_new_typecast" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1287,7 +1287,7 @@ let%expect_test "export_new_typecast_check" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1332,7 +1332,7 @@ let%expect_test "recursive_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3],
@@ -1377,7 +1377,7 @@ let%expect_test "recursive_dependencies_check" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) }}}
 
     Errors:
@@ -1560,7 +1560,7 @@ let%expect_test "void_function" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:14]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -1588,7 +1588,7 @@ let%expect_test "void_generator" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Err [1:15]); predicate = None;
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -1680,7 +1680,7 @@ let%expect_test "import_type_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified RemoteRef {ref_loc = [4:12-14]; index = 2}));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1744,7 +1744,7 @@ let%expect_test "qualified_references" =
                       id_loc = [4:17-18];
                       name = "T";
                       qualification = (Unqualified RemoteRef {ref_loc = [4:14-16]; index = 1})});
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props = {}}}
 
     Remote refs:
@@ -2042,7 +2042,7 @@ let%expect_test "report_all_errors" =
                              this_param = None;
                              return = (Err [6:16]);
                              predicate = None;
-                             hook = NonHook};
+                             effect = ArbitraryEffect};
                            statics = {}}),
                       Polarity.Neutral)) }}));
       info =
@@ -2070,7 +2070,7 @@ let%expect_test "report_all_errors" =
                        this_param = None;
                        return = (Err [2:17]);
                        predicate = None;
-                       hook = NonHook};
+                       effect = ArbitraryEffect};
                      statics = {}}),
                 Polarity.Neutral)) }}}
 
@@ -2141,7 +2141,7 @@ let%expect_test "munged_methods_not_ignored" =
                FunSig {tparams = Mono;
                  params = []; rest_param = None;
                  this_param = None; return = (Err [2:11]);
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props = {}}}
 
     Errors:
@@ -2213,7 +2213,7 @@ let%expect_test "munged_fields_not_ignored" =
                        this_param = None;
                        return = (Err [2:14]);
                        predicate = None;
-                       hook = NonHook};
+                       effect = ArbitraryEffect};
                      statics = {}}),
                 Polarity.Neutral)) }}}
 
@@ -2487,7 +2487,7 @@ let%expect_test "named_function_expression" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:31]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -2566,7 +2566,7 @@ let%expect_test "bound_coverage" =
                  [FunParam {name = None; t = (Annot Bound {ref_loc = [2:26-27]; name = "X"})}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [2:32-36]));
-                 predicate = None; hook = NonHook}
+                 predicate = None; effect = ArbitraryEffect}
                )))}
   |}]
 
@@ -2775,7 +2775,7 @@ let%expect_test "function_return" =
            [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [2:36-37]; name = "X"})}];
            rest_param = None; this_param = None;
            return = (Err [2:38]); predicate = None;
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -2824,12 +2824,12 @@ let%expect_test "function_return_2" =
                       this_param = None;
                       return = (Annot (Void [2:37-41]));
                       predicate = None;
-                      hook = NonHook}
+                      effect = ArbitraryEffect}
                     )))}
              ];
            rest_param = None; this_param = None;
            return = (Err [2:42]); predicate = None;
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -2863,7 +2863,7 @@ let%expect_test "function_statics" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:16-20]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = { "x" -> ([3:4-5], (Ref LocalRef {ref_loc = [3:8-9]; index = 1})) }}
     1. Variable {id_loc = [2:6-7]; name = "x"; def = (Value (NumberLit ([2:10-12], 42., "42")))}
   |}]
@@ -2891,7 +2891,7 @@ let%expect_test "function_statics_conditional" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:23-27]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -2919,7 +2919,7 @@ let%expect_test "function_predicates_1" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:31-38]));
            predicate = (Some (Predicate ([3:2-21], None)));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "function_predicates_2" =
@@ -2945,7 +2945,7 @@ let%expect_test "function_predicates_2" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [1:32-39]));
            predicate = (Some (Predicate ([1:40-59], (Some (NullP "x")))));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          tail = []}
     1. FunBinding {id_loc = [2:16-19];
          name = "foo"; async = false;
@@ -2965,7 +2965,7 @@ let%expect_test "function_predicates_2" =
                                ],
                              (("x", 0), []))))
                     )));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "function_predicates_3" =
@@ -2989,7 +2989,7 @@ let%expect_test "function_predicates_3" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:16-21]))}];
            rest_param = None; this_param = None;
            return = (Err [1:22]); predicate = (Some (Predicate ([1:34-52], (Some (NullP "x")))));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
     1. DeclareFun {id_loc = [2:24-27];
          name = "foo"; fn_loc = [2:27-46];
@@ -3008,7 +3008,7 @@ let%expect_test "function_predicates_3" =
                                ],
                              (("x", 0), []))))
                     )));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          tail = []}
 
     Errors:
@@ -3040,7 +3040,7 @@ let%expect_test "function_predicates_4" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [3:33-40]));
            predicate = (Some (Predicate ([4:2-17], None)));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "function_predicates_5" =
@@ -3067,7 +3067,7 @@ let%expect_test "function_predicates_5" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:33-40]));
            predicate = (Some (Predicate ([3:2-19], None)));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "function_predicates_6_unsupported_spread" =
@@ -3093,7 +3093,7 @@ let%expect_test "function_predicates_6_unsupported_spread" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [1:31-38]));
            predicate = (Some (Predicate ([2:2-19], None)));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "function_predicates_7_latent_with_targs" =
@@ -3132,7 +3132,7 @@ let%expect_test "function_predicates_7_latent_with_targs" =
              FunParam {name = (Some "y"); t = (Annot Bound {ref_loc = [2:44-45]; name = "B"})}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:48-55]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          tail = []}
     2. FunBinding {id_loc = [3:16-19];
          name = "foo"; async = false;
@@ -3154,7 +3154,7 @@ let%expect_test "function_predicates_7_latent_with_targs" =
                                (Arg (Ref LocalRef {ref_loc = [4:28-29]; index = 0}))],
                              (("x", 0), []))))
                     )));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "async_function_1" =
@@ -3178,7 +3178,7 @@ let%expect_test "async_function_1" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (AsyncVoidReturn [1:20]);
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -3203,7 +3203,7 @@ let%expect_test "async_function_2" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Err [1:20]); predicate = None;
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -3227,7 +3227,7 @@ let%expect_test "async_function_3" =
                    this_param = None;
                    return = (Err [1:25]);
                    predicate = None;
-                   hook = NonHook};
+                   effect = ArbitraryEffect};
                  statics = {}}));
       info =
       CJSModuleInfo {type_export_keys = [||];
@@ -3397,7 +3397,7 @@ let%expect_test "interface_method" =
                     this_param = None;
                     return = (Annot (Void [1:26-30]));
                     predicate = None;
-                    hook = NonHook}),
+                    effect = ArbitraryEffect}),
                  [])) };
            calls = []; dict = None}}
   |}]
@@ -3455,7 +3455,7 @@ let%expect_test "object_annot_method" =
                     this_param = None;
                     return = (Annot (Void [1:23-27]));
                     predicate = None;
-                    hook = NonHook}} };
+                    effect = ArbitraryEffect}} };
               proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "object_annot_call_poly" =
@@ -3506,7 +3506,7 @@ let%expect_test "object_annot_call_poly" =
                             (Unqualified
                                BuiltinRef {ref_loc = [1:26-27]; type_ref = true; name = "X"}));
                          predicate = None;
-                         hook = NonHook}
+                         effect = ArbitraryEffect}
                        ))),
                  [])}})} |}]
 
@@ -3541,7 +3541,7 @@ let%expect_test "object_annot_multiple_call" =
                          this_param = None;
                          return = (Annot (String [1:34-40]));
                          predicate = None;
-                         hook = NonHook}
+                         effect = ArbitraryEffect}
                        ))),
                  [(Annot
                      (FunAnnot ([1:18-28],
@@ -3551,7 +3551,7 @@ let%expect_test "object_annot_multiple_call" =
                           this_param = None;
                           return = (Annot (Number [1:22-28]));
                           predicate = None;
-                          hook = NonHook}
+                          effect = ArbitraryEffect}
                         )))
                    ])}})}
   |}]
@@ -4013,7 +4013,7 @@ let%expect_test "class_this" =
                FunSig {tparams = Mono;
                  params = []; rest_param = None;
                  this_param = None; return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props = {}}} |}]
 
 let%expect_test "declare_class_this" =
@@ -4046,7 +4046,7 @@ let%expect_test "declare_class_this" =
                     this_param = None;
                     return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
                     predicate = None;
-                    hook = NonHook}),
+                    effect = ArbitraryEffect}),
                  [])) };
            static_calls = []; calls = [];
            dict = None; static_dict = None}} |}]
@@ -4210,7 +4210,7 @@ let%expect_test "cjs_export_fun_expr_props" =
                    this_param = None;
                    return = (Annot (Void [1:27]));
                    predicate = None;
-                   hook = NonHook};
+                   effect = ArbitraryEffect};
                  statics =
                  { "bar" -> ([3:8-11], (Value (NumberLit ([3:14-15], 1., "1"))));
                    "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) }}));
@@ -4241,7 +4241,7 @@ let%expect_test "cjs_export_fun_binding_props" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:31]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics =
          { "bar" -> ([3:8-11], (Value (NumberLit ([3:14-15], 1., "1"))));
            "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) }} |}]
@@ -4266,7 +4266,7 @@ let%expect_test "es_export_named_fun_props" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:21]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) }} |}]
 
 let%expect_test "es_export_default_fun_props" =
@@ -4290,7 +4290,7 @@ let%expect_test "es_export_default_fun_props" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:29]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) }} |}]
 
 let%expect_test "fun_binding_assign" =
@@ -4315,7 +4315,7 @@ let%expect_test "fun_binding_assign" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:14]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }} |}]
 
 let%expect_test "fun_const_assign" =
@@ -4342,7 +4342,7 @@ let%expect_test "fun_const_assign" =
               FunSig {tparams = Mono;
                 params = []; rest_param = None;
                 this_param = None; return = (Annot (Void [1:22]));
-                predicate = None; hook = NonHook};
+                predicate = None; effect = ArbitraryEffect};
               statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }})} |}]
 
 let%expect_test "ref_const_assign" =
@@ -4367,7 +4367,7 @@ let%expect_test "ref_const_assign" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:24]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }}
     1. Variable {id_loc = [1:6-9]; name = "foo";
          def = (Ref LocalRef {ref_loc = [1:21-22]; index = 0})} |}]
@@ -4512,7 +4512,7 @@ let%expect_test "predicate_exists" =
                  rest_param = None; this_param = None;
                  return = (Annot (Mixed [1:37-42]));
                  predicate = (Some (Predicate ([2:2-11], (Some (ExistsP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4545,7 +4545,7 @@ let%expect_test "predicate_instanceof" =
                           (Some (InstanceofP ("x", (
                                    Ref LocalRef {ref_loc = [3:22-23]; index = 0}))))
                           )));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4581,7 +4581,7 @@ let%expect_test "predicate_typeof" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-30], (Some (StrP ("x", [2:9-29]))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4609,7 +4609,7 @@ let%expect_test "predicate_typeof_template_literal" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-30], (Some (StrP ("x", [2:9-29]))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4638,7 +4638,7 @@ let%expect_test "predicate_literal_string" =
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
                  (Some (Predicate ([2:2-21], (Some (SingletonStrP ("x", [2:15-20], true, "foo"))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4668,7 +4668,7 @@ let%expect_test "predicate_literal_number" =
                  predicate =
                  (Some (Predicate ([2:2-18],
                           (Some (SingletonNumP ("x", [2:15-17], true, 42., "42"))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4697,7 +4697,7 @@ let%expect_test "predicate_literal_boolean" =
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
                  (Some (Predicate ([2:2-20], (Some (SingletonBoolP ("x", [2:15-19], true))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4725,7 +4725,7 @@ let%expect_test "predicate_literal_null" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-20], (Some (NullP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4753,7 +4753,7 @@ let%expect_test "predicate_maybe" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-19], (Some (MaybeP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4782,7 +4782,7 @@ let%expect_test "predicate_template_literal" =
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
                  (Some (Predicate ([2:2-21], (Some (SingletonStrP ("x", [2:15-20], true, "foo"))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4812,7 +4812,7 @@ let%expect_test "predicate_negative_number_literal" =
                  predicate =
                  (Some (Predicate ([2:2-19],
                           (Some (SingletonNumP ("x", [2:15-18], true, -42., "-42"))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4840,7 +4840,7 @@ let%expect_test "predicate_undefined" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-25], (Some (VoidP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4870,7 +4870,7 @@ let%expect_test "predicate_undefined_shadow" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-25], (Some (VoidP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4898,7 +4898,7 @@ let%expect_test "predicate_void" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-22], (Some (VoidP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4932,7 +4932,7 @@ let%expect_test "predicate_sentinel_string" =
                  predicate =
                  (Some (Predicate ([3:2-26], (Some (
                           SentinelStrP ("o", "type", [3:20-25], "foo"))))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -4975,7 +4975,7 @@ let%expect_test "predicate_sentinel_expr" =
                           (Some (SentinelExprP ("o", "type",
                                    (Ref LocalRef {ref_loc = [4:20-23]; index = 0}))))
                           )));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -5012,7 +5012,7 @@ let%expect_test "predicate_Array_isArray" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate = (Some (Predicate ([2:2-26], (Some (ArrP "x")))));
-                 hook = NonHook};
+                 effect = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -5049,7 +5049,7 @@ let%expect_test "predicate_latent" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [1:22-29]));
            predicate = (Some (Predicate ([2:2-31], (Some (StrP ("a", [2:9-30]))))));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
     1. FunBinding {id_loc = [4:9-10];
          name = "g"; async = false; generator = false;
@@ -5062,7 +5062,7 @@ let%expect_test "predicate_latent" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [4:32-39]));
            predicate = (Some (Predicate ([5:2-31], (Some (NumP ("b", [5:9-30]))))));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}}
     2. FunBinding {id_loc = [7:16-17];
          name = "h"; async = false; generator = false;
@@ -5098,7 +5098,7 @@ let%expect_test "predicate_latent" =
                                 (("b", 1), [("a", 0)])))
                              )))
                     )));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "predicate_latent_non_param_identifiers" =
@@ -5128,7 +5128,7 @@ let%expect_test "predicate_latent_non_param_identifiers" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:42-49]));
            predicate = (Some (Predicate ([2:50-80], (Some (NumP ("x", [2:58-79]))))));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          tail = []}
     2. FunBinding {id_loc = [3:16-19];
          name = "bar"; async = false;
@@ -5148,7 +5148,7 @@ let%expect_test "predicate_latent_non_param_identifiers" =
                                (Arg (Ref LocalRef {ref_loc = [4:16-17]; index = 0}))],
                              (("x", 0), []))))
                     )));
-           hook = NonHook};
+           effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "long_string_lit" =
@@ -5193,7 +5193,7 @@ let%expect_test "export_default_function_binding" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:29-33]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "export_default_class_binding" =
@@ -5235,7 +5235,7 @@ let%expect_test "declared_export_default_function_binding" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:37-41]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          tail = []} |}]
 
 let%expect_test "declared_export_default_class_binding" =
@@ -5709,7 +5709,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [7:24-28]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          tail = []}
     4. DeclareClassBinding {id_loc = [8:16-17];
          name = "Y";
@@ -5933,13 +5933,13 @@ let%expect_test "builtin_declare_namespace" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (String [5:24-30]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          tail =
          [([6:19-20], [6:20-30],
            FunSig {tparams = Mono; params = [];
              rest_param = None; this_param = None;
              return = (Annot (Number [6:24-30]));
-             predicate = None; hook = NonHook})
+             predicate = None; effect = ArbitraryEffect})
            ]}
     4. TypeAlias {id_loc = [7:15-18];
          name = "Baz"; tparams = Mono;
@@ -6012,7 +6012,7 @@ let%expect_test "this_param_1" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = (Some (Annot (Mixed [1:27-32])));
            return = (Annot (Void [1:36-40]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "this_param_2" =
@@ -6044,7 +6044,7 @@ let%expect_test "this_param_2" =
                  params = []; rest_param = None;
                  this_param = (Some (Annot (Mixed [2:13-18])));
                  return = (Annot (Void [2:22-26]));
-                 predicate = None; hook = NonHook}} };
+                 predicate = None; effect = ArbitraryEffect}} };
            own_props = {}}} |}]
 
 let%expect_test "this_param_3" =
@@ -6065,7 +6065,7 @@ let%expect_test "this_param_3" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = (Some (Annot (Mixed [1:35-40])));
            return = (Annot (Void [1:44-48]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          tail = []} |}]
 
 let%expect_test "this_param_4" =
@@ -6098,7 +6098,7 @@ let%expect_test "this_param_4" =
                     this_param = (Some (Annot (Mixed [2:13-18])));
                     return = (Annot (Void [2:22-26]));
                     predicate = None;
-                    hook = NonHook}),
+                    effect = ArbitraryEffect}),
                  [])) };
            static_calls = []; calls = [];
            dict = None; static_dict = None}} |}]
@@ -6125,7 +6125,7 @@ let%expect_test "this_param_5" =
                  params = []; rest_param = None;
                  this_param = (Some (Annot (Mixed [1:26-31])));
                  return = (Annot (Void [1:36-40]));
-                 predicate = None; hook = NonHook}
+                 predicate = None; effect = ArbitraryEffect}
                )))} |}]
 
 let%expect_test "this_param_6" =
@@ -6159,7 +6159,7 @@ let%expect_test "this_param_6" =
                            this_param = (Some (Annot (Mixed [1:30-35])));
                            return = (Annot (Void [1:40-44]));
                            predicate = None;
-                           hook = NonHook}
+                           effect = ArbitraryEffect}
                          ))),
                    Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})} |}]
@@ -6309,14 +6309,14 @@ let%expect_test "fun_shadow_declare_fun" =
            params = [FunParam {name = (Some "x"); t = (Annot (String [1:22-28]))}];
            rest_param = None; this_param = None;
            return = (Annot (Number [1:31-37]));
-           predicate = None; hook = NonHook};
+           predicate = None; effect = ArbitraryEffect};
          tail =
          [([2:17-18], [2:18-37],
            FunSig {tparams = Mono;
              params = [FunParam {name = (Some "x"); t = (Annot (Number [2:22-28]))}];
              rest_param = None; this_param = None;
              return = (Annot (String [2:31-37]));
-             predicate = None; hook = NonHook})
+             predicate = None; effect = ArbitraryEffect})
            ]} |}]
 
 let%expect_test "optional_tuple_elements" =

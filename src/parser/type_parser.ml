@@ -237,7 +237,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           )
         )
       in
-      function_with_params ~hook:false env start_loc tparams params
+      function_with_params ~effect:Function.Arbitrary env start_loc tparams params
     | _ -> param
 
   and prefix env =
@@ -1047,23 +1047,24 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
   and function_or_group env =
     let start_loc = Peek.loc env in
     match with_loc param_list_or_type env with
-    | (loc, ParamList params) -> function_with_params ~hook:false env start_loc None (loc, params)
+    | (loc, ParamList params) ->
+      function_with_params ~effect:Function.Arbitrary env start_loc None (loc, params)
     | (_, Type _type) -> _type
 
   and _function env =
     let start_loc = Peek.loc env in
     let tparams = type_params_remove_trailing env (type_params env) in
     let params = function_param_list env in
-    function_with_params ~hook:false env start_loc tparams params
+    function_with_params ~effect:Function.Arbitrary env start_loc tparams params
 
   and function_with_params
-      ~hook env start_loc tparams (params : (Loc.t, Loc.t) Ast.Type.Function.Params.t) =
+      ~effect env start_loc tparams (params : (Loc.t, Loc.t) Ast.Type.Function.Params.t) =
     with_loc
       ~start_loc
       (fun env ->
         Expect.token env T_ARROW;
         let return = function_return_type env in
-        Type.(Function { Function.params; return; tparams; comments = None; hook }))
+        Type.(Function { Function.params; return; tparams; comments = None; effect }))
       env
 
   and hook env =
@@ -1071,7 +1072,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     Eat.token env;
     let tparams = type_params_remove_trailing env (type_params env) in
     let params = function_param_list env in
-    function_with_params ~hook:true env start_loc tparams params
+    function_with_params ~effect:Function.Hook env start_loc tparams params
 
   and function_return_type env =
     if is_start_of_type_guard env then
@@ -1113,7 +1114,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           let params = function_param_list env in
           Expect.token env T_COLON;
           let return = function_return_type env in
-          { Type.Function.params; return; tparams; comments = None; hook = false })
+          { Type.Function.params; return; tparams; comments = None; effect = Function.Arbitrary })
         env
     in
     let method_property env start_loc static key ~leading =

@@ -404,7 +404,7 @@ class virtual ['a] t =
     method fun_type
         cx
         map_cx
-        ( { this_t = (this, subtyping); params; rest_param; return_t; predicate; def_reason; hook }
+        ( { this_t = (this, subtyping); params; rest_param; return_t; predicate; def_reason; effect }
         as t
         ) =
       let this' = self#type_ cx map_cx this in
@@ -444,7 +444,7 @@ class virtual ['a] t =
         let params = params' in
         let rest_param = rest_param' in
         let predicate = predicate' in
-        { this_t; params; rest_param; return_t; predicate; def_reason; hook }
+        { this_t; params; rest_param; return_t; predicate; def_reason; effect }
 
     method inst_type cx map_cx i =
       let {

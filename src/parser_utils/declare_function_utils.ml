@@ -50,7 +50,7 @@ let declare_function_to_function_declaration
               Flow_ast.Type.Function.return;
               Flow_ast.Type.Function.tparams;
               comments = func_comments;
-              hook;
+              effect;
             }
         )
       ) ->
@@ -131,7 +131,7 @@ let declare_function_to_function_declaration
               body;
               async = false;
               generator = false;
-              hook;
+              effect;
               predicate =
                 Some
                   ( loc,
@@ -236,7 +236,7 @@ let declare_function_to_function_declaration
                         );
                       return = Flow_ast.Type.Function.TypeAnnotation return;
                       tparams;
-                      hook;
+                      effect;
                       comments = func_comments;
                     }
                 )

@@ -263,7 +263,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   and type_function
       ~depth
       ~sep
-      { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _; fun_hook } =
+      { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _; fun_effect } =
     let params = counted_map (type_function_param ~depth) fun_params in
     let params =
       match fun_rest_param with
@@ -272,7 +272,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       | None -> params
     in
     fuse
-      (( if fun_hook then
+      (( if fun_effect = Ty.Hook then
          [Atom "hook"; pretty_space]
        else
          []

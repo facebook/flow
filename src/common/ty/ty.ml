@@ -138,13 +138,19 @@ and gen_kind =
   | EnumKind
   | ComponentKind
 
+and fun_effect =
+  | Hook
+  | Idempotent
+  | Parametric of int
+  | Arbitrary
+
 and fun_t = {
   fun_params: (string option * t * fun_param) list;
   fun_rest_param: (string option * t) option;
   fun_return: return_t;
   fun_type_params: type_param list option;
   fun_static: t;
-  fun_hook: bool;
+  fun_effect: fun_effect;
 }
 
 and return_t =

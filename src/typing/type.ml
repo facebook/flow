@@ -1194,14 +1194,16 @@ module rec TypeTerm : sig
     return_t: t;
     predicate: fun_predicate option;
     def_reason: Reason.t;
-    hook: react_hook;
+    effect: react_effect_type;
   }
 
-  and react_hook =
+  and react_effect_type =
     | HookDecl of ALoc.id
     | HookAnnot
-    | NonHook
-    | AnyHook
+    | IdempotentEffect
+    | ParametricEffect of int
+    | ArbitraryEffect
+    | AnyEffect
 
   and fun_predicate =
     | PredBased of (reason * (predicate Key_map.t * predicate Key_map.t) Lazy.t)
@@ -4430,7 +4432,7 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 let mk_methodtype
     this_t
     ?(subtyping = This_Function)
-    ?(hook = NonHook)
+    ?(effect = ArbitraryEffect)
     tins
     ~rest_param
     ~def_reason
@@ -4447,7 +4449,7 @@ let mk_methodtype
     return_t = tout;
     predicate;
     def_reason;
-    hook;
+    effect;
   }
 
 let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) tout =

@@ -1341,7 +1341,7 @@ class ['loc] mapper =
         return;
         tparams;
         comments = func_comments;
-        hook;
+        effect;
       } =
         ft
       in
@@ -1371,7 +1371,7 @@ class ['loc] mapper =
           return = return';
           tparams = tparams';
           comments = func_comments';
-          hook;
+          effect;
         }
 
     method label_identifier (ident : ('loc, 'loc) Ast.Identifier.t) = this#identifier ident
@@ -1942,7 +1942,7 @@ class ['loc] mapper =
         body;
         async;
         generator;
-        hook;
+        effect;
         predicate;
         return;
         tparams;
@@ -1976,7 +1976,7 @@ class ['loc] mapper =
           body = body';
           async;
           generator;
-          hook;
+          effect;
           predicate = predicate';
           tparams = tparams';
           sig_loc;

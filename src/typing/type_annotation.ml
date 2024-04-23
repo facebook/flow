@@ -1454,7 +1454,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end
-    | (loc, Function { Function.params; return; tparams; comments = func_comments; hook }) ->
+    | (loc, Function { Function.params; return; tparams; comments = func_comments; effect }) ->
       let (params_loc, { Function.Params.params = ps; rest; this_; comments = params_comments }) =
         params
       in
@@ -1529,8 +1529,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
       in
-      let (hook_flag, return_t) =
-        if hook then
+      let (effect_flag, return_t) =
+        match effect with
+        | Ast.Function.Hook ->
           ( HookAnnot,
             if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
               Flow_js.mk_possibly_evaluated_destructor
@@ -1543,8 +1544,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             else
               return_t
           )
-        else
-          (NonHook, return_t)
+        | Ast.Function.Idempotent -> (IdempotentEffect, return_t)
+        | Ast.Function.Arbitrary -> (ArbitraryEffect, return_t)
+        | Ast.Function.Parametric n -> (ParametricEffect n, return_t)
       in
       let ft =
         DefT
@@ -1558,7 +1560,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   return_t;
                   predicate;
                   def_reason = reason;
-                  hook = hook_flag;
+                  effect = effect_flag;
                 }
               )
           )
@@ -1577,7 +1579,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             return = return_ast;
             tparams = tparams_ast;
             comments = func_comments;
-            hook;
+            effect;
           }
       )
     | ( obj_loc,
@@ -2528,7 +2530,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       (fparams, Base.Option.value_exn params_ast)
     in
     fun ~meth_kind env loc func ->
-      let { Ast.Type.Function.params; hook; tparams = func_tparams; return = func_return; _ } =
+      let { Ast.Type.Function.params; effect; tparams = func_tparams; return = func_return; _ } =
         func
       in
       let (tparams, env, tparams_ast) = mk_type_param_declarations env func_tparams in
@@ -2547,7 +2549,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | Some pred -> Func_class_sig_types.Func.Predicate pred
       in
       let reason = mk_annot_reason RFunctionType loc in
-      let hook_flag = NonHook (* Methods can't be hooks *) in
+      let effect_flag = ArbitraryEffect (* Methods can't be hooks *) in
       ( {
           Func_type_sig.Types.reason;
           kind;
@@ -2557,13 +2559,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           return_t = Annotated return_t;
           ret_annot_loc = loc_of_t return_t;
           statics = None;
-          hook = hook_flag;
+          effect = effect_flag;
         },
         {
           Ast.Type.Function.tparams = tparams_ast;
           params = params_ast;
           return = return_ast;
-          hook;
+          effect;
           comments = None;
         }
       )

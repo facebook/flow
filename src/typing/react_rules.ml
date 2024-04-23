@@ -116,9 +116,10 @@ let hook_callee cx t =
     let recur = recur_id seen in
     let open Type in
     match t with
-    | DefT (r, FunT (_, { hook = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
-    | DefT (_, FunT (_, { hook = AnyHook; _ })) -> AnyCallee
-    | DefT (r, FunT (_, { hook = NonHook; _ })) -> NotHookCallee (set_of_reason r)
+    | DefT (r, FunT (_, { effect = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
+    | DefT (_, FunT (_, { effect = AnyEffect; _ })) -> AnyCallee
+    | DefT (r, FunT (_, { effect = ArbitraryEffect | IdempotentEffect | ParametricEffect _; _ })) ->
+      NotHookCallee (set_of_reason r)
     | OpaqueT (_, { underlying_t; super_t; _ }) -> begin
       match (underlying_t, super_t) with
       | (Some t, _)
@@ -438,7 +439,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
         body;
         async;
         generator;
-        hook;
+        effect;
         predicate;
         return;
         tparams;
@@ -456,6 +457,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
         && List.length params_list <= 2 (* Props and ref *)
         && Base.Option.is_none rest
       in
+      let hook = effect = Ast.Function.Hook in
       if (Context.react_rules_always cx && is_probably_function_component) || hook then
         let ident' = Base.Option.map ~f:this#function_identifier id in
         this#type_params_opt tparams (fun tparams' ->
@@ -474,7 +476,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
               body = body';
               async;
               generator;
-              hook;
+              effect;
               predicate = predicate';
               tparams = tparams';
               sig_loc = sig_loc';

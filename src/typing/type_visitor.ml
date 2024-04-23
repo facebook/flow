@@ -347,7 +347,7 @@ class ['a] t =
         return_t;
         predicate;
         def_reason = _;
-        hook = _;
+        effect = _;
       } =
         ft
       in

@@ -183,7 +183,7 @@ struct
     | _ -> ""
 
   and dump_fun_t
-      ~depth { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_hook } =
+      ~depth { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_effect } =
     spf
       "Fun(%s, %s, %s, %s, out: %s, hook: %b)"
       (dump_type_params ~depth fun_type_params)
@@ -191,7 +191,7 @@ struct
       (dump_rest_params ~depth fun_rest_param)
       (dump_t ~depth fun_static)
       (dump_return_t ~depth fun_return)
-      fun_hook
+      (fun_effect = Ty.Hook)
 
   and dump_return_t ~depth t =
     match t with
@@ -569,7 +569,7 @@ struct
           ("generic_kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
         ]
     and json_of_fun_t
-        { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_hook } =
+        { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_effect } =
       let open Hh_json in
       [
         ("typeParams", json_of_type_params fun_type_params);
@@ -597,7 +597,7 @@ struct
         );
         ("returnType", json_of_return_t fun_return);
         ("staticType", json_of_t fun_static);
-        ("functionHook", JSON_Bool fun_hook);
+        ("functionHook", JSON_Bool (fun_effect = Ty.Hook));
       ]
     and json_of_return_t = function
       | ReturnType t -> Hh_json.(JSON_Object [("type_", json_of_t t)])
