@@ -672,7 +672,7 @@ module Make
   let string_literal_value cx ~as_const loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
-      let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
+      let hint = lazy_hint (mk_reason RString loc) in
       let error () = EmptyT.at loc in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
     else if as_const then
