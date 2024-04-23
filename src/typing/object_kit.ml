@@ -489,7 +489,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let proto = ObjProtoT reason in
           Slice_utils.mk_object_type
             ~def_reason:reason
-            ~exact_reason:(Some reason)
+            ~exact_reason:None
             ~invalidate_aliases:false
             ~interface:None
             ~reachable_targs
