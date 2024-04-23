@@ -68,6 +68,20 @@ References:
        ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- strings.js:11:2
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   strings.js:11:2
+   11| <Str />; // Error: string ~> keys of JSXIntrinsics
+        ^^^
+
+References:
+   strings.js:7:10
+    7| var Str: string = 'str';
+                ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- strings.js:13:28
 
 Cannot call `React.createElement` because property `id` is missing in props [1] but exists in object type [2].
@@ -122,6 +136,20 @@ References:
        ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- strings.js:15:21
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   strings.js:15:21
+   15| React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+                           ^^^
+
+References:
+   strings.js:7:10
+    7| var Str: string = 'str';
+                ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- strings.js:18:10
 
 Cannot create `Div` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
@@ -137,4 +165,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors

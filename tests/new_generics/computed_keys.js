@@ -13,7 +13,7 @@ function f<X: string, Y: 'lit', Z: 'prop'>(
   b[x] = 42; // nope
   b[y] = 42; // nope
   b[z] = 42;
-  b[x];
+  b[x]; // nope
   b[y]; // nope
   b[z];
 }

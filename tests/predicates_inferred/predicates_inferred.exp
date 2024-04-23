@@ -47,6 +47,20 @@ References:
                        ^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:13:17
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   sanity-ordering.js:13:17
+     13|     head = head[key] || create && (head[key] = {}); // error: no indexed type
+                         ^^^
+
+References:
+   <BUILTINS>/core.js:1331:63
+   1331|     split(separator?: string | RegExp, limit?: number): Array<string>;
+                                                                       ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- sanity-ordering.js:13:41
 
 Cannot assign object literal to `head[key]` because an index signature declaring the expected key / value type is
@@ -153,4 +167,4 @@ Invalid body for predicate function. Expected a simple return statement as body.
 
 
 
-Found 11 errors
+Found 12 errors

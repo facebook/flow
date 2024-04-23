@@ -1059,16 +1059,7 @@ module rec ConsGen : S = struct
       ) ->
       Unsoundness.why Constructor reason_op
     | (DefT (reason_obj, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
-      GetPropTKit.read_obj_prop
-        cx
-        dummy_trace
-        ~use_op
-        ~from_annot:true
-        o
-        propref
-        reason_obj
-        reason_op
-        None
+      GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op None
     | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
     | ( DefT (reason, ClassT instance),
         Annot_GetPropT (_, _, Named { name = OrdinaryName "prototype"; _ })

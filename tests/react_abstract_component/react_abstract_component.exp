@@ -725,6 +725,20 @@ References:
                                                            ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- get_set_elem.js:5:3
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   get_set_elem.js:5:3
+   5| x[y]; // error
+        ^
+
+References:
+   get_set_elem.js:4:16
+   4| declare var y: string;
+                     ^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- get_set_elem.js:6:3
 
 Cannot assign `y` to `x[y]` because an index signature declaring the expected key / value type is missing in
@@ -914,7 +928,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 52 errors
+Found 53 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

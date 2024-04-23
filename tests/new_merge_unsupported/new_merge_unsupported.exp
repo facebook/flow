@@ -229,13 +229,21 @@ Cannot use computed property on `$ObjMap` [1] in an export position. Please prov
 computed property [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
    ops_on_eval_objmap.js:8:19
-   8| export const x3 = t[('': string)];
+   8| export const x3 = t[('': string)]; // error: unsafe string key access
                         ^^^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_eval_objmap.js:1:10
    1| type T = $ObjMap<{ f: number }, () => string>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- ops_on_eval_objmap.js:8:26
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   8| export const x3 = t[('': string)]; // error: unsafe string key access
+                               ^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:11:19
@@ -371,6 +379,14 @@ References:
    ops_on_eval_objmapi.js:1:10
    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:8:26
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   8| export const x3 = t[('': string)];
+                               ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:11:19
@@ -521,6 +537,20 @@ References:
    ops_on_intersection.js:4:10
     4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
+
+Cannot get `t['']` because Cannot access object with computed property using string [1]. [incompatible-use]
+
+   ops_on_intersection.js:17:19
+   17| export const x3 = t[('': string)];
+                         ^^^^^^^^^^^^^^^
+
+References:
+   ops_on_intersection.js:17:26
+   17| export const x3 = t[('': string)];
+                                ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
@@ -747,6 +777,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:26
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   16| export const x3 = t[('': string)];
+                                ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:19:19
 
 Cannot use spread on config of React component [1] in an export position. Please provide an (alternative) annotation for
@@ -969,4 +1007,4 @@ References:
 
 
 
-Found 65 errors
+Found 69 errors

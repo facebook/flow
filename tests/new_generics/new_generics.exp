@@ -400,6 +400,20 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- computed_keys.js:16:5
+
+Cannot access object with computed property using `X` [1]. [invalid-computed-prop]
+
+   computed_keys.js:16:5
+   16|   b[x]; // nope
+           ^
+
+References:
+   computed_keys.js:3:6
+    3|   x: X,
+            ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- computed_keys.js:17:5
 
 Cannot get `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
@@ -1515,7 +1529,7 @@ References:
 
 
 
-Found 89 errors
+Found 90 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

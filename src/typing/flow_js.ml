@@ -4448,7 +4448,7 @@ struct
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason, OpenT tout)
         | ( DefT (reason_obj, ObjT o),
-            GetPropT { use_op; reason = reason_op; id; from_annot; propref; tout; hint = _ }
+            GetPropT { use_op; reason = reason_op; id; from_annot = _; propref; tout; hint = _ }
           ) ->
           let lookup_info =
             Base.Option.map id ~f:(fun id ->
@@ -4460,17 +4460,7 @@ struct
                 (id, lookup_default_tout)
             )
           in
-          GetPropTKit.read_obj_prop
-            cx
-            trace
-            ~use_op
-            ~from_annot
-            o
-            propref
-            reason_obj
-            reason_op
-            lookup_info
-            tout
+          GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info tout
         | ( AnyT (_, src),
             GetPropT { use_op = _; reason; id; from_annot = _; propref = _; tout; hint = _ }
           ) ->
@@ -4495,7 +4485,6 @@ struct
                   cx
                   trace
                   ~use_op
-                  ~from_annot:false
                   o
                   propref
                   reason_obj
