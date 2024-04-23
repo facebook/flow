@@ -76,19 +76,19 @@ let type_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
     t
 
-let annot_of_qualification =
+let loc_of_qualification =
   let open Flow_ast.Type.Generic.Identifier in
   function
-  | Unqualified (annot, _)
-  | Qualified (_, { id = (annot, _); _ }) ->
-    annot
+  | Unqualified (loc, _)
+  | Qualified (_, { id = (loc, _); _ }) ->
+    loc
 
-let annot_of_typeof =
+let loc_of_typeof =
   let open Flow_ast.Type.Typeof.Target in
   function
-  | Unqualified (annot, _)
-  | Qualified (annot, _) ->
-    annot
+  | Unqualified (loc, _)
+  | Qualified (loc, _) ->
+    loc
 
 let compute_member_loc ~expr_loc ~obj_loc =
   let expr_loc = ALoc.to_loc_exn expr_loc in
@@ -135,28 +135,27 @@ let extract_word cursor_loc text =
 
 exception Found of process_location_result
 
-class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t) =
+class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t) =
   object (this)
-    inherit [ALoc.t, 'T, ALoc.t, 'T, string] Typed_ast_finder.type_parameter_mapper_generic as super
+    inherit
+      [ALoc.t, ALoc.t, ALoc.t, ALoc.t, string] Typed_ast_finder.type_parameter_mapper_generic as super
 
-    method virtual loc_of_annot : 'T -> ALoc.t
+    method virtual private type_from_enclosing_node : ALoc.t -> Type.t
 
-    method virtual private type_from_enclosing_node : 'T -> Type.t
-
-    method virtual private type_of_expression : (ALoc.t, 'T) Ast.Expression.t -> Type.t
+    method virtual private type_of_expression : (ALoc.t, ALoc.t) Ast.Expression.t -> Type.t
 
     method virtual private infer_expression
-        : (ALoc.t, 'T) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
+        : (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
 
     method virtual private infer_statement
-        : (ALoc.t, 'T) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+        : (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
     method virtual private check_closest_enclosing_statement : unit
 
     method virtual private type_of_component_name_of_jsx_element
-        : 'T -> (ALoc.t, 'T) Flow_ast.JSX.element -> Type.t
+        : ALoc.t -> (ALoc.t, ALoc.t) Flow_ast.JSX.element -> Type.t
 
-    method virtual private type_of_class_id : ALoc.t -> (ALoc.t, 'T) Ast.Class.t -> Type.t
+    method virtual private type_of_class_id : ALoc.t -> (ALoc.t, ALoc.t) Ast.Class.t -> Type.t
 
     method on_loc_annot x = x
 
@@ -174,8 +173,6 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     val mutable allow_react_element_shorthand = false
 
     method private covers_target loc = covers_target cursor loc
-
-    method private annot_covers_target annot = covers_target cursor (this#loc_of_annot annot)
 
     method private get_enclosing_class = Base.List.hd enclosing_classes
 
@@ -223,19 +220,17 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       ) else
         super#comment c
 
-    method! t_identifier ((annot, { Flow_ast.Identifier.name; _ }) as ident) =
-      let loc = this#loc_of_annot annot in
+    method! t_identifier ((loc, { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then begin
-        let t = this#type_from_enclosing_node annot in
+        let t = this#type_from_enclosing_node loc in
         this#find loc name (this#default_ac_id t)
       end else
         super#t_identifier ident
 
-    method! jsx_element_name_identifier ((annot, { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if this#annot_covers_target annot then begin
-        let ac_loc = this#loc_of_annot annot in
-        let type_ = this#type_from_enclosing_node annot in
-        this#find ac_loc name (this#default_ac_id type_)
+    method! jsx_element_name_identifier ((loc, { Flow_ast.JSX.Identifier.name; _ }) as ident) =
+      if this#covers_target loc then begin
+        let type_ = this#type_from_enclosing_node loc in
+        this#find loc name (this#default_ac_id type_)
       end;
       ident
 
@@ -247,26 +242,25 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
           {
             key =
               Flow_ast.Expression.Object.Property.Identifier
-                (key_annot, { Flow_ast.Identifier.name; _ });
+                (key_loc, { Flow_ast.Identifier.name; _ });
             _;
           }
         )
-        when this#annot_covers_target key_annot ->
-        this#find (this#loc_of_annot key_annot) name Ac_type_binding
+        when this#covers_target key_loc ->
+        this#find key_loc name Ac_type_binding
       | _ -> super#object_property_type opt
 
-    method private member_with_annot annot expr =
+    method private member_with_annot expr_loc expr =
       let open Flow_ast.Expression.Member in
-      let expr_loc = this#loc_of_annot annot in
-      let { _object = (obj_annot, _) as _object; property; comments = _ } = expr in
-      let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc:(this#loc_of_annot obj_annot)) in
+      let { _object = (obj_loc, _) as _object; property; comments = _ } = expr in
+      let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc) in
       let is_super = Flow_ast_utils.is_super_member_access expr in
       begin
         match property with
-        | PropertyIdentifier (prop_annot, { Flow_ast.Identifier.name; _ })
-          when this#annot_covers_target prop_annot ->
+        | PropertyIdentifier (prop_loc, { Flow_ast.Identifier.name; _ })
+          when this#covers_target prop_loc ->
           this#find
-            (this#loc_of_annot prop_annot)
+            prop_loc
             name
             (Ac_member
                {
@@ -279,15 +273,15 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
                }
             )
         | PropertyExpression
-            ( prop_annot,
+            ( prop_loc,
               Flow_ast.Expression.(
                 ( StringLiteral { Flow_ast.StringLiteral.raw = token; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
             )
-          when this#annot_covers_target prop_annot ->
-          let type_ = this#type_from_enclosing_node prop_annot in
+          when this#covers_target prop_loc ->
+          let type_ = this#type_from_enclosing_node prop_loc in
           this#find
-            (this#loc_of_annot prop_annot)
+            prop_loc
             token
             (Ac_member
                {
@@ -301,27 +295,22 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
             )
         | _ -> ()
       end;
-      super#member annot expr
+      super#member expr_loc expr
 
-    method private optional_member_with_loc expr_annot expr =
+    method private optional_member_with_loc expr_loc expr =
       let open Flow_ast.Expression.OptionalMember in
       let open Flow_ast.Expression.Member in
-      let {
-        member = { _object = (obj_annot, _) as obj; property; comments };
-        optional;
-        filtered_out;
-      } =
+      let { member = { _object = (obj_loc, _) as obj; property; comments }; optional; filtered_out }
+          =
         expr
       in
-      let expr_loc = this#loc_of_annot expr_annot in
-      let obj_loc = this#loc_of_annot obj_annot in
       let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc) in
       begin
         match property with
-        | PropertyIdentifier (prop_annot, { Flow_ast.Identifier.name; _ })
-          when this#annot_covers_target prop_annot ->
+        | PropertyIdentifier (prop_loc, { Flow_ast.Identifier.name; _ })
+          when this#covers_target prop_loc ->
           this#find
-            (this#loc_of_annot prop_annot)
+            prop_loc
             name
             (Ac_member
                {
@@ -334,15 +323,15 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
                }
             )
         | PropertyExpression
-            ( prop_annot,
+            ( prop_loc,
               Flow_ast.Expression.(
                 ( StringLiteral { Flow_ast.StringLiteral.raw = token; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
             )
-          when this#annot_covers_target prop_annot ->
-          let type_ = this#type_from_enclosing_node prop_annot in
+          when this#covers_target prop_loc ->
+          let type_ = this#type_from_enclosing_node prop_loc in
           this#find
-            (this#loc_of_annot prop_annot)
+            prop_loc
             token
             (Ac_member
                {
@@ -364,7 +353,7 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       let open Flow_ast.Pattern in
       begin
         match pat with
-        | (obj_annot, Object { Object.properties; _ }) ->
+        | (obj_loc, Object { Object.properties; _ }) ->
           List.iter
             (function
               | Object.(
@@ -372,14 +361,14 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
                     ( _,
                       {
                         Property.key =
-                          Property.Identifier (prop_annot, Flow_ast.Identifier.{ name; _ });
+                          Property.Identifier (prop_loc, Flow_ast.Identifier.{ name; _ });
                         _;
                       }
                     ))
-                when this#annot_covers_target prop_annot ->
-                let obj_type = this#type_from_enclosing_node obj_annot in
+                when this#covers_target prop_loc ->
+                let obj_type = this#type_from_enclosing_node obj_loc in
                 this#find
-                  (this#loc_of_annot prop_annot)
+                  prop_loc
                   name
                   (Ac_member
                      {
@@ -397,38 +386,38 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       end;
       super#pattern ?kind pat
 
-    method! pattern_identifier ?kind ((annot, Flow_ast.Identifier.{ name; _ }) as ident) =
+    method! pattern_identifier ?kind ((loc, Flow_ast.Identifier.{ name; _ }) as ident) =
       match kind with
       | None -> super#pattern_identifier ?kind ident
       | Some _ ->
         (* binding identifiers *)
-        if this#annot_covers_target annot then
+        if this#covers_target loc then
           (* don't offer suggestions for bindings, because this is where names are created,
              so existing names aren't useful. *)
-          this#find (this#loc_of_annot annot) name Ac_binding
+          this#find loc name Ac_binding
         else
           ident
 
-    method! jsx_element expr_annot expr =
+    method! jsx_element expr_loc expr =
       let open Flow_ast.JSX in
       let { opening_element; closing_element; children; comments } = expr in
-      ignore @@ this#visit_jsx_opening_element expr_annot expr opening_element;
+      ignore @@ this#visit_jsx_opening_element expr_loc expr opening_element;
       Base.Option.iter closing_element ~f:(fun closing_element ->
-          ignore @@ this#visit_jsx_closing_element expr_annot expr closing_element
+          ignore @@ this#visit_jsx_closing_element expr_loc expr closing_element
       );
       ignore @@ this#jsx_children children;
       ignore @@ this#syntax_opt comments;
       expr
 
-    method private visit_jsx_opening_element expr_annot expr elt =
+    method private visit_jsx_opening_element expr_loc expr elt =
       let open Flow_ast.JSX in
       let (_, Opening.{ name = component_name; targs = _; attributes; self_closing = _ }) = elt in
-      let component_name_t = lazy (this#type_of_component_name_of_jsx_element expr_annot expr) in
+      let component_name_t = lazy (this#type_of_component_name_of_jsx_element expr_loc expr) in
       (match component_name with
-      | Identifier (annot, { Identifier.name; comments = _ }) ->
-        if this#annot_covers_target annot then
+      | Identifier (loc, { Identifier.name; comments = _ }) ->
+        if this#covers_target loc then
           let type_ = Lazy.force component_name_t in
-          this#find (this#loc_of_annot annot) name (Ac_jsx_element { type_ })
+          this#find loc name (Ac_jsx_element { type_ })
       | NamespacedName _
       | MemberExpression _ ->
         (* TODO: these are rare so we haven't implemented them yet *)
@@ -441,18 +430,16 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
                 ( _,
                   {
                     Attribute.name =
-                      Attribute.Identifier
-                        (annot, { Identifier.name = attribute_name; comments = _ });
+                      Attribute.Identifier (loc, { Identifier.name = attribute_name; comments = _ });
                     value;
                   }
                 ) ->
               let found' =
                 match found with
                 | Some _ -> found
-                | None when this#annot_covers_target annot ->
+                | None when this#covers_target loc ->
                   let has_value = Base.Option.is_some value in
-                  Some
-                    (attribute_name, this#loc_of_annot annot, Lazy.force component_name_t, has_value)
+                  Some (attribute_name, loc, Lazy.force component_name_t, has_value)
                 | None -> None
               in
               (SSet.add attribute_name used_attr_names, found')
@@ -469,15 +456,15 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
         found;
       super#jsx_opening_element elt
 
-    method private visit_jsx_closing_element expr_annot expr elem =
+    method private visit_jsx_closing_element expr_loc expr elem =
       let open Flow_ast.JSX in
       let open Flow_ast.JSX.Closing in
       let (_, { name }) = elem in
       match name with
-      | Identifier (annot, { Identifier.name; comments = _ }) ->
-        if this#annot_covers_target annot then begin
-          let type_ = this#type_of_component_name_of_jsx_element expr_annot expr in
-          this#find (this#loc_of_annot annot) name (Ac_jsx_element { type_ })
+      | Identifier (loc, { Identifier.name; comments = _ }) ->
+        if this#covers_target loc then begin
+          let type_ = this#type_of_component_name_of_jsx_element expr_loc expr in
+          this#find loc name (Ac_jsx_element { type_ })
         end;
         elem
       | NamespacedName _
@@ -488,16 +475,15 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     method! jsx_attribute_value value =
       let open Flow_ast.JSX.Attribute in
       match value with
-      | StringLiteral (annot, { Flow_ast.StringLiteral.raw; _ }) when this#annot_covers_target annot
-        ->
-        let lit_type = this#type_from_enclosing_node annot in
-        this#find (this#loc_of_annot annot) raw (Ac_literal { lit_type = Some lit_type })
+      | StringLiteral (loc, { Flow_ast.StringLiteral.raw; _ }) when this#covers_target loc ->
+        let lit_type = this#type_from_enclosing_node loc in
+        this#find loc raw (Ac_literal { lit_type = Some lit_type })
       | _ -> super#jsx_attribute_value value
 
     method! jsx_child child =
       match child with
-      | (annot, Flow_ast.JSX.(Text Text.{ raw; _ })) when this#annot_covers_target annot ->
-        this#find (this#loc_of_annot annot) raw Ac_jsx_text
+      | (loc, Flow_ast.JSX.(Text Text.{ raw; _ })) when this#covers_target loc ->
+        this#find loc raw Ac_jsx_text
       | _ -> super#jsx_child child
 
     method! pattern_object_property_key ?kind key =
@@ -511,11 +497,11 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     method! class_key key =
       let open Flow_ast.Expression.Object.Property in
       match key with
-      | Identifier (annot, { Flow_ast.Identifier.name; _ })
-      | StringLiteral (annot, Flow_ast.StringLiteral.{ raw = name; _ })
-        when this#annot_covers_target annot ->
+      | Identifier (loc, { Flow_ast.Identifier.name; _ })
+      | StringLiteral (loc, Flow_ast.StringLiteral.{ raw = name; _ })
+        when this#covers_target loc ->
         this#find
-          (this#loc_of_annot annot)
+          loc
           name
           (Ac_class_key
              { enclosing_class_t = Base.Option.map ~f:Lazy.force this#get_enclosing_class }
@@ -532,10 +518,9 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in
       match key with
-      | StringLiteral (annot, Flow_ast.StringLiteral.{ raw; _ }) when this#annot_covers_target annot
-        ->
-        let lit_type = this#type_from_enclosing_node annot in
-        this#find (this#loc_of_annot annot) raw (Ac_literal { lit_type = Some lit_type })
+      | StringLiteral (loc, Flow_ast.StringLiteral.{ raw; _ }) when this#covers_target loc ->
+        let lit_type = this#type_from_enclosing_node loc in
+        this#find loc raw (Ac_literal { lit_type = Some lit_type })
       | _ -> super#object_key key
 
     method! enum_member_identifier ((loc, Flow_ast.Identifier.{ name; _ }) as ident) =
@@ -603,15 +588,12 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       let open Flow_ast.Type.Typeof.Target in
       begin
         match id with
-        | Unqualified (annot, { Flow_ast.Identifier.name; _ }) when this#annot_covers_target annot
-          ->
-          let t = this#type_from_enclosing_node annot in
-          this#find (this#loc_of_annot annot) name (this#default_ac_id t)
-        | Qualified (expr_annot, { qualification; id = (annot, Flow_ast.Identifier.{ name; _ }) })
-          when this#annot_covers_target annot ->
-          let obj_type = this#type_from_enclosing_node (annot_of_typeof qualification) in
-          let loc = this#loc_of_annot annot in
-          let expr_loc = this#loc_of_annot expr_annot in
+        | Unqualified (loc, { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
+          let t = this#type_from_enclosing_node loc in
+          this#find loc name (this#default_ac_id t)
+        | Qualified (expr_loc, { qualification; id = (loc, Flow_ast.Identifier.{ name; _ }) })
+          when this#covers_target loc ->
+          let obj_type = this#type_from_enclosing_node (loc_of_typeof qualification) in
           this#find
             loc
             name
@@ -633,41 +615,35 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       let open Flow_ast.Type.Generic.Identifier in
       begin
         match id with
-        | Unqualified (annot, { Flow_ast.Identifier.name; _ }) when this#annot_covers_target annot
-          ->
-          this#find (this#loc_of_annot annot) name (Ac_type { allow_react_element_shorthand })
-        | Qualified (_, { qualification; id = (annot, Flow_ast.Identifier.{ name; _ }) })
-          when this#annot_covers_target annot ->
+        | Unqualified (loc, { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
+          this#find loc name (Ac_type { allow_react_element_shorthand })
+        | Qualified (_, { qualification; id = (loc, Flow_ast.Identifier.{ name; _ }) })
+          when this#covers_target loc ->
           let qualification_type =
-            this#type_from_enclosing_node (annot_of_qualification qualification)
+            this#type_from_enclosing_node (loc_of_qualification qualification)
           in
-          this#find (this#loc_of_annot annot) name (Ac_qualified_type qualification_type)
+          this#find loc name (Ac_qualified_type qualification_type)
         | _ -> ()
       end;
       id
 
-    method! statement (annot, stmt) =
+    method! statement (loc, stmt) =
       let open Flow_ast.Statement in
       match stmt with
       | ClassDeclaration ({ Flow_ast.Class.id = Some _; _ } as cls) ->
-        let t = lazy (this#type_of_class_id annot cls) in
-        this#with_enclosing_class_t t (lazy (super#statement (annot, stmt)))
-      | _ -> super#statement (annot, stmt)
+        let t = lazy (this#type_of_class_id loc cls) in
+        this#with_enclosing_class_t t (lazy (super#statement (loc, stmt)))
+      | _ -> super#statement (loc, stmt)
 
     method! expression expr =
       let open Flow_ast.Expression in
       match expr with
-      | (annot, StringLiteral Flow_ast.StringLiteral.{ raw; _ }) when this#annot_covers_target annot
-        ->
-        this#find
-          (this#loc_of_annot annot)
-          raw
-          (Ac_literal { lit_type = Some (this#type_of_expression expr) })
-      | (annot, Member member) ->
-        (this#on_type_annot annot, Member (this#member_with_annot annot member))
-      | (annot, OptionalMember opt_member) ->
-        (this#on_type_annot annot, OptionalMember (this#optional_member_with_loc annot opt_member))
-      | (annot, Object obj) -> (this#on_type_annot annot, Object (this#object_with_annot annot obj))
+      | (loc, StringLiteral Flow_ast.StringLiteral.{ raw; _ }) when this#covers_target loc ->
+        this#find loc raw (Ac_literal { lit_type = Some (this#type_of_expression expr) })
+      | (loc, Member member) -> (this#on_type_annot loc, Member (this#member_with_annot loc member))
+      | (loc, OptionalMember opt_member) ->
+        (this#on_type_annot loc, OptionalMember (this#optional_member_with_loc loc opt_member))
+      | (loc, Object obj) -> (this#on_type_annot loc, Object (this#object_with_annot loc obj))
       | (_, Class _) ->
         let class_t = lazy (this#type_of_expression expr) in
         this#with_enclosing_class_t class_t (lazy (super#expression expr))
@@ -689,12 +665,12 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
             (used_keys, (ALoc.to_loc_exn spread_loc, spread_type) :: spreads)
       )
 
-    method private object_with_annot annot obj =
+    method private object_with_annot loc obj =
       let open Flow_ast.Expression.Object in
       let { properties; comments } = obj in
       let ac_key =
         lazy
-          (match this#infer_expression (annot, Flow_ast.Expression.Object obj) with
+          (match this#infer_expression (loc, Flow_ast.Expression.Object obj) with
           | ((_, obj_type), Flow_ast.Expression.Object { properties; _ }) ->
             let (used_keys, spreads) = this#object_spread properties in
             Ac_key { used_keys; spreads; obj_type }
@@ -720,12 +696,12 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       | Init
           {
             key =
-              ( Identifier (annot, Flow_ast.Identifier.{ name = token; _ })
-              | StringLiteral (annot, Flow_ast.StringLiteral.{ raw = token; _ }) );
+              ( Identifier (loc, Flow_ast.Identifier.{ name = token; _ })
+              | StringLiteral (loc, Flow_ast.StringLiteral.{ raw = token; _ }) );
             _;
           }
-        when this#annot_covers_target annot ->
-        this#find (this#loc_of_annot annot) token (Lazy.force ac_key)
+        when this#covers_target loc ->
+        this#find loc token (Lazy.force ac_key)
       | _ -> ());
       this#object_property prop
 
@@ -740,24 +716,24 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     method! import_declaration decl_loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default = _; comments = _ } = decl in
-      let (source_annot, Flow_ast.StringLiteral.{ raw = from; _ }) = source in
-      if this#annot_covers_target source_annot then
-        this#find (this#loc_of_annot source_annot) from Ac_module
+      let (source_loc, Flow_ast.StringLiteral.{ raw = from; _ }) = source in
+      if this#covers_target source_loc then
+        this#find source_loc from Ac_module
       else if this#covers_target decl_loc then
         match specifiers with
         | Some (ImportNamedSpecifiers ns) ->
           let (found, used_keys) =
             Base.List.fold ns ~init:(None, SSet.empty) ~f:(fun (found, used_keys) specifier ->
-                let { remote = (annot, Flow_ast.Identifier.{ name; _ }); kind; _ } = specifier in
+                let { remote = (loc, Flow_ast.Identifier.{ name; _ }); kind; _ } = specifier in
                 let found =
-                  if this#annot_covers_target annot then
+                  if this#covers_target loc then
                     let is_type =
                       match Base.Option.value kind ~default:import_kind with
                       | ImportType -> true
                       | ImportTypeof -> false
                       | ImportValue -> false
                     in
-                    Some (this#loc_of_annot annot, name, is_type)
+                    Some (loc, name, is_type)
                   else
                     found
                 in
@@ -782,12 +758,12 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       else
         decl
 
-    method private indexed_access_type_with_annot annot ia =
+    method private indexed_access_type_with_annot expr_loc ia =
       let open Flow_ast in
       let { Type.IndexedAccess._object; index; _ } = ia in
-      let (obj_annot, _) = _object in
+      let (obj_loc, _) = _object in
       (match index with
-      | ( index_annot,
+      | ( index_loc,
           ( Type.StringLiteral { StringLiteral.raw = token; _ }
           | Type.Generic
               {
@@ -796,22 +772,17 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
                 _;
               } )
         )
-        when this#annot_covers_target index_annot ->
-        let index_type = this#type_from_enclosing_node index_annot in
+        when this#covers_target index_loc ->
+        let index_type = this#type_from_enclosing_node index_loc in
         this#find
-          (this#loc_of_annot index_annot)
+          index_loc
           token
           (Ac_member
              {
-               obj_type = this#type_from_enclosing_node obj_annot;
+               obj_type = this#type_from_enclosing_node obj_loc;
                in_optional_chain = false;
                bracket_syntax = Some (this#default_bracket_syntax index_type);
-               member_loc =
-                 Some
-                   (compute_member_loc
-                      ~expr_loc:(this#loc_of_annot annot)
-                      ~obj_loc:(this#loc_of_annot obj_annot)
-                   );
+               member_loc = Some (compute_member_loc ~expr_loc ~obj_loc);
                is_type_annotation = true;
                is_super = false;
              }
@@ -819,7 +790,7 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       | _ -> ());
       super#indexed_access_type ia
 
-    method private optional_indexed_access_type_with_annot annot ia =
+    method private optional_indexed_access_type_with_annot expr_loc ia =
       let open Flow_ast in
       let {
         Type.OptionalIndexedAccess.indexed_access = { Type.IndexedAccess._object; index; comments };
@@ -828,9 +799,9 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
       } =
         ia
       in
-      let (obj_annot, _) = _object in
+      let (obj_loc, _) = _object in
       (match index with
-      | ( index_annot,
+      | ( index_loc,
           ( Type.StringLiteral { StringLiteral.raw = token; _ }
           | Type.Generic
               {
@@ -839,22 +810,17 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
                 _;
               } )
         )
-        when this#annot_covers_target index_annot ->
-        let index_type = this#type_from_enclosing_node index_annot in
+        when this#covers_target index_loc ->
+        let index_type = this#type_from_enclosing_node index_loc in
         this#find
-          (this#loc_of_annot index_annot)
+          index_loc
           token
           (Ac_member
              {
-               obj_type = this#type_from_enclosing_node obj_annot;
+               obj_type = this#type_from_enclosing_node obj_loc;
                in_optional_chain = true;
                bracket_syntax = Some (this#default_bracket_syntax index_type);
-               member_loc =
-                 Some
-                   (compute_member_loc
-                      ~expr_loc:(this#loc_of_annot annot)
-                      ~obj_loc:(this#loc_of_annot obj_annot)
-                   );
+               member_loc = Some (compute_member_loc ~expr_loc ~obj_loc);
                is_type_annotation = true;
                is_super = false;
              }
@@ -871,14 +837,13 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
     method! type_ t =
       let open Flow_ast.Type in
       match t with
-      | (annot, StringLiteral { Flow_ast.StringLiteral.raw; _ }) when this#annot_covers_target annot
-        ->
-        this#find (this#loc_of_annot annot) raw (Ac_literal { lit_type = None })
-      | (annot, IndexedAccess ia) ->
-        (this#on_type_annot annot, IndexedAccess (this#indexed_access_type_with_annot annot ia))
-      | (annot, OptionalIndexedAccess ia) ->
-        ( this#on_type_annot annot,
-          OptionalIndexedAccess (this#optional_indexed_access_type_with_annot annot ia)
+      | (loc, StringLiteral { Flow_ast.StringLiteral.raw; _ }) when this#covers_target loc ->
+        this#find loc raw (Ac_literal { lit_type = None })
+      | (loc, IndexedAccess ia) ->
+        (this#on_type_annot loc, IndexedAccess (this#indexed_access_type_with_annot loc ia))
+      | (loc, OptionalIndexedAccess ia) ->
+        ( this#on_type_annot loc,
+          OptionalIndexedAccess (this#optional_indexed_access_type_with_annot loc ia)
         )
       | _ -> super#type_ t
 
@@ -902,11 +867,11 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
 
     (* Don't autocomplete type identifier bindings *)
     method! binding_type_identifier id =
-      let (annot, Flow_ast.Identifier.{ name; _ }) = id in
-      if this#annot_covers_target annot then
+      let (loc, Flow_ast.Identifier.{ name; _ }) = id in
+      if this#covers_target loc then
         (* don't offer suggestions for bindings, because this is where names are created,
            so existing names aren't useful. *)
-        this#find (this#loc_of_annot annot) name Ac_type_binding
+        this#find loc name Ac_type_binding
       else
         id
 
@@ -927,9 +892,7 @@ exception Internal_exn of string
 
 class on_demand_process_request_searcher cx ~(from_trigger_character : bool) ~(cursor : Loc.t) =
   object (this)
-    inherit [ALoc.t] process_request_searcher ~from_trigger_character ~cursor
-
-    method private loc_of_annot loc = loc
+    inherit process_request_searcher ~from_trigger_character ~cursor
 
     method on_type_annot x = x
 

@@ -76,34 +76,3 @@ val process_location :
 val autocomplete_set_hooks : cursor:Loc.t -> unit
 
 val autocomplete_unset_hooks : unit -> unit
-
-(* We don't really need to export this type, but it is a convenient way to enforce
- * that this class is indeed polymorphic over 'T (instead of being pinned to
- * `ALoc.t * Type.t`). *)
-class virtual ['T] process_request_searcher :
-  from_trigger_character:bool
-  -> cursor:Loc.t
-  -> object
-       inherit [ALoc.t, 'T, ALoc.t, 'T, string] Typed_ast_finder.type_parameter_mapper_generic
-
-       val mutable enclosing_node_stack : (ALoc.t, 'T) Typed_ast_finder.enclosing_node list
-
-       method virtual private type_from_enclosing_node : 'T -> Type.t
-
-       method virtual private type_of_expression : (ALoc.t, 'T) Flow_ast.Expression.t -> Type.t
-
-       method virtual private infer_expression :
-         (ALoc.t, 'T) Flow_ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
-
-       method virtual private infer_statement :
-         (ALoc.t, 'T) Flow_ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t
-
-       method virtual private check_closest_enclosing_statement : unit
-
-       method virtual private type_of_component_name_of_jsx_element :
-         'T -> (ALoc.t, 'T) Flow_ast.JSX.element -> Type.t
-
-       method virtual private type_of_class_id : ALoc.t -> (ALoc.t, 'T) Flow_ast.Class.t -> Type.t
-
-       method virtual loc_of_annot : 'T -> ALoc.t
-     end
