@@ -5452,12 +5452,7 @@ module Make
                            (def_loc, mk_reason (RIdentifier (OrdinaryName name)) loc)
                        )
                  );
-              let strt =
-                (* TODO: why are these different? *)
-                match jsx_mode with
-                | Options.Jsx_react -> SingletonStrT (OrdinaryName name)
-                | Options.Jsx_pragma _ -> StrT (Literal (None, OrdinaryName name))
-              in
+              let strt = SingletonStrT (OrdinaryName name) in
               DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, strt)
             end
           in
