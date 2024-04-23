@@ -160,45 +160,6 @@ let make ~worker_mode ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~
   done;
   !made_workers
 
-(** Sends a request to call `f x` on `worker` *)
-let send_blocking worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
-  let outfd = Lwt_unix.unix_file_descr outfd_lwt in
-  let request = Request (fun { send } -> send (f x)) in
-  try%lwt
-    (* Wait in an lwt-friendly manner for the worker to be writable (should be instant) *)
-    let%lwt () = Lwt_unix.wait_write outfd_lwt in
-
-    (* Write in a lwt-unfriendly, blocking manner to the worker.
-
-       I, glevi, found a perf regression when I used Marshal_tools_lwt to send the job
-       to the worker. Here's my hypothesis:
-
-       1. On a machine with many CPUs (like 56) we create 56 threads to send a job to each worker.
-       2. Lwt attempts to write the jobs to the workers in parallel.
-       3. Each worker spends more time between getting the first byte and last byte
-       4. Something something this leads to more context switches for the worker
-       5. The worker spends more time on a job
-
-       This is reinforced by the observation that the regression only happens as the number of
-       workers grows.
-
-       By switching from Marshal_tools_lwt.to_fd_with_preamble to Marshal_tools.to_fd_with_preamble,
-       the issue seems to have disappeared. *)
-    let _ = Marshal_tools.to_fd_with_preamble ~flags:[Stdlib.Marshal.Closures] outfd request in
-    Lwt.return_unit
-  with
-  | exn ->
-    let exn = Exception.wrap exn in
-    Hh_logger.error ~exn "Failed to send request to worker #%d" (worker_id worker);
-
-    (* Failed to send the job to the worker. Is it because the worker is dead or is it
-     * something else? *)
-    (match%lwt Lwt_unix.waitpid [Unix.WNOHANG] worker_pid with
-    | (0, _) -> raise (Worker_failed_to_send_job (Other_send_job_failure exn))
-    | (_, status) -> raise (Worker_failed_to_send_job (Worker_already_exited (Some status)))
-    | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
-      raise (Worker_failed_to_send_job (Worker_already_exited None)))
-
 (** Sends a request to call `f x` on `worker`
  *
  * If we start sending a job, we must complete that work. Workers will treat a partial job as a
@@ -260,68 +221,6 @@ let send_non_blocking worker worker_pid infd outfd (f : 'a -> 'b) (x : 'a) : uni
     | (_, status) -> raise (Worker_failed_to_send_job (Worker_already_exited (Some status)))
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
       raise (Worker_failed_to_send_job (Worker_already_exited None)))
-
-let read_blocking (type result) worker_pid infd_lwt : (result * Measure.record_data) option Lwt.t =
-  let infd = Lwt_unix.unix_file_descr infd_lwt in
-  try%lwt
-    (* Wait in an lwt-friendly manner for the worker to finish the job *)
-    let%lwt () = Lwt_unix.wait_read infd_lwt in
-
-    (* Read in a lwt-unfriendly, blocking manner from the worker.
-
-       Unlike writing (see `send`), reading from the worker didn't seem to trigger a perf issue
-       in our testing, but there's really nothing more urgent than reading a response from a
-       finished worker, so reading in a blocking manner is fine. *)
-    (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
-    let data : result option = Marshal_tools.from_fd_with_preamble infd in
-    match data with
-    | None -> Lwt.return_none
-    | Some data ->
-      let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
-      Lwt.return (Some (data, stats))
-  with
-  | Lwt.Canceled as exn ->
-    (* Worker is handling a job but we're cancelling *)
-    let exn = Exception.wrap exn in
-
-    (* Each worker might call this but that's ok *)
-    WorkerCancel.stop_workers ();
-
-    (* Wait for the worker to finish cancelling *)
-    let%lwt () = Lwt_unix.wait_read infd_lwt in
-    (* Read the junk from the pipe. If the worker was almost finished, it will
-       send real data, so handle both cases. *)
-    begin
-      match Marshal_tools.from_fd_with_preamble infd with
-      | None -> ()
-      | Some _ -> ignore (Marshal_tools.from_fd_with_preamble infd)
-    end;
-    Exception.reraise exn
-  | exn ->
-    let exn = Exception.wrap exn in
-    (match%lwt Lwt_unix.waitpid [Unix.WNOHANG] worker_pid with
-    | (0, _)
-    | (_, Unix.WEXITED 0) ->
-      (* The worker is still running or exited normally. It's odd that we failed to read
-       * the response, so just raise that exception *)
-      Exception.reraise exn
-    | (_, Unix.WEXITED i) ->
-      (match Exit.error_type_opt i with
-      | Some Exit.Out_of_shared_memory -> raise SharedMem.Out_of_shared_memory
-      | Some Exit.Hash_table_full -> raise SharedMem.Hash_table_full
-      | Some Exit.Heap_full -> raise SharedMem.Heap_full
-      | _ ->
-        let () = Stdlib.Printf.eprintf "Subprocess(%d): fail %d\n%!" worker_pid i in
-        raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WEXITED i)))))
-    | (_, Unix.WSTOPPED i) ->
-      let () = Stdlib.Printf.eprintf "Subprocess(%d): stopped %d\n%!" worker_pid i in
-      raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSTOPPED i))))
-    | (_, Unix.WSIGNALED i) ->
-      let () = Stdlib.Printf.eprintf "Subprocess(%d): signaled %d\n%!" worker_pid i in
-      raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSIGNALED i))))
-    | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
-      let () = Stdlib.Printf.eprintf "Subprocess(%d): gone\n%!" worker_pid in
-      raise (Worker_failed (worker_pid, Worker_quit None)))
 
 (** Reads a response from the worker
  *
@@ -412,24 +311,14 @@ let read_non_blocking (type result) worker_pid infd : (result * Measure.record_d
 
     This is basically an lwt thread that writes a job to the worker, waits for the response, and
     then returns the result. *)
-let call ~blocking w (f : 'a -> 'b) (x : 'a) : 'b option Lwt.t =
+let call w (f : 'a -> 'b) (x : 'a) : 'b option Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
   let { Daemon.pid = worker_pid; channels = (inc, outc) } = w.handle in
   let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel inc) in
   let outfd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel outc) in
-  (let%lwt () =
-     if blocking then
-       send_blocking w worker_pid outfd f x
-     else
-       send_non_blocking w worker_pid infd outfd f x
-   in
-   let%lwt result =
-     if blocking then
-       read_blocking worker_pid infd
-     else
-       read_non_blocking worker_pid infd
-   in
+  (let%lwt () = send_non_blocking w worker_pid infd outfd f x in
+   let%lwt result = read_non_blocking worker_pid infd in
    match result with
    | None -> Lwt.return_none
    | Some (data, stats) ->

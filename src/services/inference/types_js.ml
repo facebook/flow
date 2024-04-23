@@ -146,11 +146,7 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
     Module_js.add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers
   in
   with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
-      MultiWorkerLwt.iter
-        workers
-        ~blocking:(Options.blocking_worker_communication options)
-        ~job
-        ~next:(MultiWorkerLwt.next workers parsed)
+      MultiWorkerLwt.iter workers ~job ~next:(MultiWorkerLwt.next workers parsed)
   )
 
 let error_set_of_internal_error file (loc, internal_error) =
@@ -565,15 +561,7 @@ end = struct
           in
           mk_job ~mk_check ~options ()
         in
-        let%lwt ret =
-          MultiWorkerLwt.call
-            workers
-            ~blocking:(Options.blocking_worker_communication options)
-            ~job
-            ~neutral:[]
-            ~merge
-            ~next
-        in
+        let%lwt ret = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
         let ( ( merge_errors,
                 warnings,
@@ -1216,10 +1204,7 @@ end = struct
      *)
     let%lwt dirty_direct_dependents =
       with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-          Dep_service.calc_unchanged_dependents
-            ~blocking_worker_communication:(Options.blocking_worker_communication options)
-            workers
-            changed_modules
+          Dep_service.calc_unchanged_dependents workers changed_modules
       )
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";
@@ -1240,7 +1225,6 @@ end = struct
           let%lwt partial_dependency_graph =
             Dep_service.calc_partial_dependency_graph
               ~reader
-              ~blocking_worker_communication:(Options.blocking_worker_communication options)
               workers
               files_to_update_dependency_info
               ~parsed
@@ -1264,7 +1248,6 @@ end = struct
       with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
           Export_service.update
             ~workers
-            ~blocking_worker_communication:(Options.blocking_worker_communication options)
             ~reader
             ~update:new_or_changed
             ~remove:deleted
@@ -1909,7 +1892,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         let%lwt (parsed, dirty_modules_parsed, invalid_parsed_hashes) =
           MultiWorkerLwt.fold
             workers
-            ~blocking:(Options.blocking_worker_communication options)
             ~job:restore_parsed
             ~merge
             ~neutral
@@ -1918,7 +1900,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         let%lwt (unparsed, dirty_modules_unparsed, invalid_unparsed_hashes) =
           MultiWorkerLwt.fold
             workers
-            ~blocking:(Options.blocking_worker_communication options)
             ~job:restore_unparsed
             ~merge
             ~neutral
@@ -1943,7 +1924,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         let%lwt dirty_modules_deleted =
           MultiWorkerLwt.fold
             workers
-            ~blocking:(Options.blocking_worker_communication options)
             ~job:delete_unused
             ~merge:Modulename.Set.union
             ~neutral:Modulename.Set.empty
@@ -2058,12 +2038,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   Hh_logger.info "Indexing files";
   let%lwt exports =
     with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init
-          ~blocking_worker_communication:(Options.blocking_worker_communication options)
-          ~workers
-          ~reader
-          ~libs:lib_exports
-          parsed
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed
     )
   in
 
@@ -2227,23 +2202,14 @@ let init_from_scratch ~profiling ~workers options =
   in
   let%lwt dependency_info =
     with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-        Dep_service.calc_dependency_info
-          ~blocking_worker_communication:(Options.blocking_worker_communication options)
-          ~reader
-          workers
-          ~parsed:parsed_set
+        Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set
     )
   in
 
   Hh_logger.info "Indexing files";
   let%lwt exports =
     with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init
-          ~blocking_worker_communication:(Options.blocking_worker_communication options)
-          ~workers
-          ~reader
-          ~libs:lib_exports
-          parsed_set
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
     )
   in
   Hh_logger.info "Done";

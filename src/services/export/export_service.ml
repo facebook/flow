@@ -203,7 +203,7 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
     filename; it would be expensive to walk the entire export index to check each exported
     name to see if a changed file used to export it. Instead, we re-index the previous
     version of the file to know what to remove. *)
-let index ~workers ~blocking_worker_communication ~reader parsed :
+let index ~workers ~reader parsed :
     (Export_index.t * Export_index.t * Export_index.t * Export_index.t) Lwt.t =
   let total_count = Utils_js.FilenameSet.cardinal parsed in
   let parsed = Utils_js.FilenameSet.elements parsed in
@@ -226,7 +226,6 @@ let index ~workers ~blocking_worker_communication ~reader parsed :
   let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, _count) =
     MultiWorkerLwt.call
       workers
-      ~blocking:blocking_worker_communication
       ~job:(job ~reader)
       ~neutral:([], [], [], [], 0)
       ~merge:
@@ -277,9 +276,9 @@ let index ~workers ~blocking_worker_communication ~reader parsed :
 
 (** Initializes an [Export_search.t] with the exports of all of the [parsed] files
     as well as the builtin libdefs. *)
-let init ~workers ~blocking_worker_communication ~reader ~libs parsed =
+let init ~workers ~reader ~libs parsed =
   let%lwt (exports_to_add, _exports_to_remove, imports_to_add, _imports_to_remove) =
-    index ~workers ~blocking_worker_communication ~reader parsed
+    index ~workers ~reader parsed
   in
   let exports_to_add = add_exports_of_builtins libs exports_to_add in
   let final_export_index = Export_index.merge_export_import imports_to_add exports_to_add in
@@ -290,11 +289,10 @@ let init ~workers ~blocking_worker_communication ~reader ~libs parsed =
 
 (** [update ~changed previous] updates the exports for all of the [changed] files
     in the [previous] [Export_search.t]. *)
-let update ~workers ~blocking_worker_communication ~reader ~update ~remove previous :
-    Export_search.t Lwt.t =
+let update ~workers ~reader ~update ~remove previous : Export_search.t Lwt.t =
   let dirty_files = Utils_js.FilenameSet.union update remove in
   let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
-    index ~workers ~blocking_worker_communication ~reader dirty_files
+    index ~workers ~reader dirty_files
   in
   let result =
     previous

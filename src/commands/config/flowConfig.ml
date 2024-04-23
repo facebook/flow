@@ -52,7 +52,6 @@ module Opts = struct
     autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
-    blocking_worker_communication: bool;
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
@@ -184,7 +183,6 @@ module Opts = struct
       autoimports_ranked_by_usage_boost_exact_match_min_length = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
-      blocking_worker_communication = false;
       channel_mode = None;
       casting_syntax = None;
       component_syntax = false;
@@ -912,9 +910,6 @@ module Opts = struct
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
       ("as_const", const_assertion_parser);
-      ( "experimental.blocking_worker_communication",
-        boolean (fun opts v -> Ok { opts with blocking_worker_communication = v })
-      );
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
@@ -1579,8 +1574,6 @@ let autoimports_ranked_by_usage_boost_exact_match_min_length c =
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
-
-let blocking_worker_communication c = c.options.Opts.blocking_worker_communication
 
 let casting_syntax c = c.options.Opts.casting_syntax
 

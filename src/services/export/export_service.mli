@@ -7,7 +7,6 @@
 
 val init :
   workers:MultiWorkerLwt.worker list option ->
-  blocking_worker_communication:bool ->
   reader:Mutator_state_reader.t ->
   libs:Exports.t ->
   Utils_js.FilenameSet.t ->
@@ -15,7 +14,6 @@ val init :
 
 val update :
   workers:MultiWorkerLwt.worker list option ->
-  blocking_worker_communication:bool ->
   reader:Mutator_state_reader.t ->
   update:Utils_js.FilenameSet.t ->
   remove:Utils_js.FilenameSet.t ->

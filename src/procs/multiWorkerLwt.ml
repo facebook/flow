@@ -36,13 +36,8 @@ let single_threaded_call_with_worker_id job merge neutral next =
   !acc
 
 let multi_threaded_call
-    (type a b c)
-    ~blocking
-    workers
-    (job : a -> b)
-    (merge : b -> c -> c)
-    (neutral : c)
-    (next : a Hh_bucket.next) =
+    (type a b c) workers (job : a -> b) (merge : b -> c -> c) (neutral : c) (next : a Hh_bucket.next)
+    =
   let acc = ref neutral in
   let merge_with_acc =
     (* Why do we need a lock? Well, we don't really know what is inside the merge function, and if
@@ -69,7 +64,7 @@ let multi_threaded_call
       let%lwt () = Lwt_condition.wait wait_signal in
       get_job ()
   in
-  let rec run_worker ~blocking worker =
+  let rec run_worker worker =
     let idle_start_wall_time = Unix.gettimeofday () in
     let%lwt bucket = get_job () in
     match bucket with
@@ -77,17 +72,17 @@ let multi_threaded_call
     | Some bucket ->
       Measure.sample "worker_idle" (Unix.gettimeofday () -. idle_start_wall_time);
       let%lwt () =
-        match%lwt WorkerController.call ~blocking worker (fun xl -> job xl) bucket with
+        match%lwt WorkerController.call worker (fun xl -> job xl) bucket with
         | None -> Lwt.return_unit
         | Some result -> merge_with_acc result
       in
       (* Wait means "ask again after a worker has finished and has merged its result". So now that
          * we've merged our response, let's wake any other workers which are waiting for work *)
       Lwt_condition.broadcast wait_signal ();
-      run_worker ~blocking worker
+      run_worker worker
   in
   let%lwt () =
-    let worker_threads = List.map (run_worker ~blocking) workers in
+    let worker_threads = List.map run_worker workers in
     try%lwt
       let%lwt idle_start_times = LwtUtils.all worker_threads in
       let idle_end_wall_time = Unix.gettimeofday () in
@@ -129,28 +124,28 @@ exception MultiWorkersBusy
  * we do when another comes in. *)
 let is_busy = ref false
 
-let call workers ~blocking ~job ~merge ~neutral ~next =
+let call workers ~job ~merge ~neutral ~next =
   if !is_busy then
     raise MultiWorkersBusy
   else (
     is_busy := true;
     (match workers with
     | None -> Lwt.return (single_threaded_call_with_worker_id job merge neutral next)
-    | Some workers -> multi_threaded_call ~blocking workers job merge neutral next)
+    | Some workers -> multi_threaded_call workers job merge neutral next)
       [%lwt.finally
         is_busy := false;
         Lwt.return_unit]
   )
 
-let fold workers ~blocking ~job ~merge ~neutral ~next =
+let fold workers ~job ~merge ~neutral ~next =
   let job = List.fold_left job neutral in
-  call workers ~blocking ~job ~merge ~neutral ~next
+  call workers ~job ~merge ~neutral ~next
 
 let iter =
   let merge () () = () in
-  fun workers ~blocking ~job ~next ->
+  fun workers ~job ~next ->
     let job = List.iter job in
-    call workers ~blocking ~job ~neutral:() ~merge ~next
+    call workers ~job ~neutral:() ~merge ~next
 
 type worker = WorkerController.worker
 
