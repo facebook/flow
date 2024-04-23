@@ -135,27 +135,35 @@ let extract_word cursor_loc text =
 
 exception Found of process_location_result
 
-class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t) =
+exception Internal_exn of string
+
+module Statement = Fix_statement.Statement_
+
+module Inference = struct
+  let type_of_component_name_of_jsx_element cx loc expr =
+    let open Ast.JSX in
+    match Statement.expression cx (loc, Ast.Expression.JSXElement expr) with
+    | (_, Ast.Expression.JSXElement { opening_element = (_, Opening.{ name; _ }); _ }) ->
+      type_of_jsx_name name
+    | _ -> raise (Internal_exn "typed AST structure mismatch")
+
+  let type_of_expression cx expr =
+    let ((_, t), _) = Statement.expression cx expr in
+    t
+
+  let type_of_class_id cx loc cls =
+    let open Ast.Statement in
+    match Statement.statement cx (loc, ClassDeclaration cls) with
+    | (_, ClassDeclaration { Flow_ast.Class.id = Some ((_, t), _); _ }) -> t
+    | _ -> raise (Internal_exn "typed AST structure mismatch")
+end
+
+class process_request_searcher cx ~from_trigger_character ~cursor =
   object (this)
     inherit
       [ALoc.t, ALoc.t, ALoc.t, ALoc.t, string] Typed_ast_finder.type_parameter_mapper_generic as super
 
-    method virtual private type_from_enclosing_node : ALoc.t -> Type.t
-
-    method virtual private type_of_expression : (ALoc.t, ALoc.t) Ast.Expression.t -> Type.t
-
-    method virtual private infer_expression
-        : (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
-
-    method virtual private infer_statement
-        : (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
-
-    method virtual private check_closest_enclosing_statement : unit
-
-    method virtual private type_of_component_name_of_jsx_element
-        : ALoc.t -> (ALoc.t, ALoc.t) Flow_ast.JSX.element -> Type.t
-
-    method virtual private type_of_class_id : ALoc.t -> (ALoc.t, ALoc.t) Ast.Class.t -> Type.t
+    method on_type_annot x = x
 
     method on_loc_annot x = x
 
@@ -175,6 +183,49 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
     method private covers_target loc = covers_target cursor loc
 
     method private get_enclosing_class = Base.List.hd enclosing_classes
+
+    method private check_closest_enclosing_statement =
+      let last_stmt = ref None in
+      Base.List.iter
+        ~f:(function
+          | Typed_ast_finder.EnclosingStatement stmt -> last_stmt := Some stmt
+          | _ -> ())
+        enclosing_node_stack;
+      Base.Option.iter !last_stmt ~f:(fun ((loc, _) as s) ->
+          (* Check the closest statement *)
+          let s' = Statement.statement cx s in
+          let ast =
+            ( loc,
+              {
+                Ast.Program.statements = [s];
+                interpreter = None;
+                comments = None;
+                all_comments = [];
+              }
+            )
+          in
+          let tast =
+            ( loc,
+              {
+                Ast.Program.statements = [s'];
+                interpreter = None;
+                comments = None;
+                all_comments = [];
+              }
+            )
+          in
+          let metadata = Context.metadata cx in
+          (* We need to also run post-inference checks since some errors are
+           * raised there. *)
+          Merge_js.post_merge_checks cx ast tast metadata
+      )
+
+    method private type_from_enclosing_node loc =
+      let node = this#enclosing_node in
+      let typed_node = Typed_ast_finder.infer_node cx node in
+      match Typed_ast_finder.find_type_annot_in_node loc typed_node with
+      | None -> raise (Internal_exn "enclosing loc missing")
+      | Some t -> t
 
     method private default_ac_id type_ =
       Ac_id
@@ -264,7 +315,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
             name
             (Ac_member
                {
-                 obj_type = this#type_of_expression _object;
+                 obj_type = Inference.type_of_expression cx _object;
                  in_optional_chain = false;
                  bracket_syntax = None;
                  member_loc;
@@ -285,7 +336,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
             token
             (Ac_member
                {
-                 obj_type = this#type_of_expression _object;
+                 obj_type = Inference.type_of_expression cx _object;
                  in_optional_chain = false;
                  bracket_syntax = Some (this#default_bracket_syntax type_);
                  member_loc;
@@ -314,7 +365,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
             name
             (Ac_member
                {
-                 obj_type = this#type_of_expression obj;
+                 obj_type = Inference.type_of_expression cx obj;
                  in_optional_chain = true;
                  bracket_syntax = None;
                  member_loc;
@@ -335,7 +386,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
             token
             (Ac_member
                {
-                 obj_type = this#type_of_expression obj;
+                 obj_type = Inference.type_of_expression cx obj;
                  in_optional_chain = true;
                  bracket_syntax = Some (this#default_bracket_syntax type_);
                  member_loc;
@@ -412,7 +463,9 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
     method private visit_jsx_opening_element expr_loc expr elt =
       let open Flow_ast.JSX in
       let (_, Opening.{ name = component_name; targs = _; attributes; self_closing = _ }) = elt in
-      let component_name_t = lazy (this#type_of_component_name_of_jsx_element expr_loc expr) in
+      let component_name_t =
+        lazy (Inference.type_of_component_name_of_jsx_element cx expr_loc expr)
+      in
       (match component_name with
       | Identifier (loc, { Identifier.name; comments = _ }) ->
         if this#covers_target loc then
@@ -463,7 +516,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
       match name with
       | Identifier (loc, { Identifier.name; comments = _ }) ->
         if this#covers_target loc then begin
-          let type_ = this#type_of_component_name_of_jsx_element expr_loc expr in
+          let type_ = Inference.type_of_component_name_of_jsx_element cx expr_loc expr in
           this#find loc name (Ac_jsx_element { type_ })
         end;
         elem
@@ -631,7 +684,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
       let open Flow_ast.Statement in
       match stmt with
       | ClassDeclaration ({ Flow_ast.Class.id = Some _; _ } as cls) ->
-        let t = lazy (this#type_of_class_id loc cls) in
+        let t = lazy (Inference.type_of_class_id cx loc cls) in
         this#with_enclosing_class_t t (lazy (super#statement (loc, stmt)))
       | _ -> super#statement (loc, stmt)
 
@@ -639,13 +692,13 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
       let open Flow_ast.Expression in
       match expr with
       | (loc, StringLiteral Flow_ast.StringLiteral.{ raw; _ }) when this#covers_target loc ->
-        this#find loc raw (Ac_literal { lit_type = Some (this#type_of_expression expr) })
+        this#find loc raw (Ac_literal { lit_type = Some (Inference.type_of_expression cx expr) })
       | (loc, Member member) -> (this#on_type_annot loc, Member (this#member_with_annot loc member))
       | (loc, OptionalMember opt_member) ->
         (this#on_type_annot loc, OptionalMember (this#optional_member_with_loc loc opt_member))
       | (loc, Object obj) -> (this#on_type_annot loc, Object (this#object_with_annot loc obj))
       | (_, Class _) ->
-        let class_t = lazy (this#type_of_expression expr) in
+        let class_t = lazy (Inference.type_of_expression cx expr) in
         this#with_enclosing_class_t class_t (lazy (super#expression expr))
       | _ -> super#expression expr
 
@@ -670,7 +723,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
       let { properties; comments } = obj in
       let ac_key =
         lazy
-          (match this#infer_expression (loc, Flow_ast.Expression.Object obj) with
+          (match Statement.expression cx (loc, Flow_ast.Expression.Object obj) with
           | ((_, obj_type), Flow_ast.Expression.Object { properties; _ }) ->
             let (used_keys, spreads) = this#object_spread properties in
             Ac_key { used_keys; spreads; obj_type }
@@ -744,7 +797,7 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
           | None -> decl
           | Some (loc, token, is_type) ->
             let module_type =
-              match this#infer_statement (decl_loc, Ast.Statement.ImportDeclaration decl) with
+              match Statement.statement cx (decl_loc, Ast.Statement.ImportDeclaration decl) with
               | (_, Ast.Statement.ImportDeclaration { source = ((_, module_type), _); _ }) ->
                 module_type
               | (loc, _) ->
@@ -886,81 +939,6 @@ class virtual process_request_searcher ~(from_trigger_character : bool) ~(cursor
         id
   end
 
-module Statement = Fix_statement.Statement_
-
-exception Internal_exn of string
-
-class on_demand_process_request_searcher cx ~(from_trigger_character : bool) ~(cursor : Loc.t) =
-  object (this)
-    inherit process_request_searcher ~from_trigger_character ~cursor
-
-    method on_type_annot x = x
-
-    method private type_from_enclosing_node loc =
-      let node = this#enclosing_node in
-      let typed_node = Typed_ast_finder.infer_node cx node in
-      match Typed_ast_finder.find_type_annot_in_node loc typed_node with
-      | None -> raise (Internal_exn "enclosing loc missing")
-      | Some t -> t
-
-    method private type_of_component_name_of_jsx_element loc expr =
-      let open Ast.JSX in
-      match this#infer_expression (loc, Ast.Expression.JSXElement expr) with
-      | (_, Ast.Expression.JSXElement { opening_element = (_, Opening.{ name; _ }); _ }) ->
-        type_of_jsx_name name
-      | _ -> raise (Internal_exn "typed AST structure mismatch")
-
-    method private type_of_expression expr =
-      let ((_, t), _) = this#infer_expression expr in
-      t
-
-    method private infer_expression expr = Statement.expression cx expr
-
-    method private infer_statement stmt = Statement.statement cx stmt
-
-    method private check_closest_enclosing_statement =
-      let last_stmt = ref None in
-      Base.List.iter
-        ~f:(function
-          | Typed_ast_finder.EnclosingStatement stmt -> last_stmt := Some stmt
-          | _ -> ())
-        enclosing_node_stack;
-      Base.Option.iter !last_stmt ~f:(fun ((loc, _) as s) ->
-          (* Check the closest statement *)
-          let s' = Statement.statement cx s in
-          let ast =
-            ( loc,
-              {
-                Ast.Program.statements = [s];
-                interpreter = None;
-                comments = None;
-                all_comments = [];
-              }
-            )
-          in
-          let tast =
-            ( loc,
-              {
-                Ast.Program.statements = [s'];
-                interpreter = None;
-                comments = None;
-                all_comments = [];
-              }
-            )
-          in
-          let metadata = Context.metadata cx in
-          (* We need to also run post-inference checks since some errors are
-           * raised there. *)
-          Merge_js.post_merge_checks cx ast tast metadata
-      )
-
-    method private type_of_class_id loc cls =
-      let open Ast.Statement in
-      match this#infer_statement (loc, ClassDeclaration cls) with
-      | (_, ClassDeclaration { Flow_ast.Class.id = Some ((_, t), _); _ }) -> t
-      | _ -> raise (Internal_exn "typed AST structure mismatch")
-  end
-
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let autocomplete_literal ~cursor _cx ac_loc = covers_target cursor ac_loc
@@ -970,12 +948,8 @@ let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor a
 let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let process_location cx ~trigger_character ~cursor aloc_ast =
-  let searcher =
-    new on_demand_process_request_searcher
-      cx
-      ~from_trigger_character:(trigger_character <> None)
-      ~cursor
-  in
+  let from_trigger_character = trigger_character <> None in
+  let searcher = new process_request_searcher cx ~from_trigger_character ~cursor in
   match searcher#program aloc_ast with
   | exception Found f -> Ok (Some f)
   | exception Internal_exn err -> Error err
