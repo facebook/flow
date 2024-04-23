@@ -1112,7 +1112,7 @@ let object_rest
     let call = None in
     mk_object_type
       ~def_reason:r1
-      ~exact_reason:(Some r1)
+      ~exact_reason:None
       ~invalidate_aliases:true
       ~interface:None
         (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
