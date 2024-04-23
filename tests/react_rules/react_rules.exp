@@ -205,6 +205,60 @@ Cannot read `current` from `ref4` [1] because `ref` values may not be read durin
            ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- nested.js:5:5
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read within hooks.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   5|     ref.current = 42; // error
+          ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- nested.js:17:13
+
+Cannot pass `ref` [1] as an argument because `ref` values may not be passed to functions because they could read the ref
+value (`current`) property) during render. (https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   17|     takeRef(ref); // error
+                   ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- nested.js:19:9
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   19|         ref.current = 42; // error, triggeted by boom()
+               ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- nested.js:29:21
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   29|     useMemo(() => { ref.current = 42; }, []); // error
+                           ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- nested.js:32:9
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   32|         ref.current = 42; // error, triggeted by nestedBoomOuter()
+               ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- nested.js:45:41
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   45|     const cb_boom = useCallback(() => { ref.current = 42; }, []); // error
+                                               ^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- pass_to_hook.js:4:5
 
 Cannot read `current` from `ref` [1] because `ref` values may not be read within hooks.
@@ -224,4 +278,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 23 errors
+Found 29 errors

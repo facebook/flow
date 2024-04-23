@@ -28,38 +28,20 @@ let check_ref_use cx rrid in_hook var_reason kind t =
       let props = Context.find_props cx props_tmap in
       if NameUtils.Map.cardinal props = 1 then
         (* Catch only cases that look like { current: T } *)
-        Flow_js_utils.add_output
-          cx
-          (Error_message.EReactRefInRender { usage = var_reason; kind; in_hook })
+        [Error_message.EReactRefInRender { usage = var_reason; kind; in_hook }]
+      else
+        []
     | OpaqueT (_, { opaque_id; _ })
       when Base.Option.value_map ~default:false ~f:(( = ) opaque_id) rrid ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EReactRefInRender { usage = var_reason; kind; in_hook })
+      [Error_message.EReactRefInRender { usage = var_reason; kind; in_hook }]
     | OpaqueT (_, { underlying_t; super_t; _ }) ->
-      Base.Option.iter ~f:recur underlying_t;
-      Base.Option.iter ~f:recur super_t
-    | OpenT (_, id) when ISet.mem id seen -> ()
+      Base.Option.value_map ~default:[] ~f:recur underlying_t
+      @ Base.Option.value_map ~default:[] ~f:recur super_t
+    | OpenT (_, id) when ISet.mem id seen -> []
     | OpenT (_, id) ->
-      Flow_js_utils.possible_types cx id |> Base.List.iter ~f:(recur_id (ISet.add id seen))
-    | UnionT (_, rep) ->
-      let (_ : UnionRep.t) =
-        UnionRep.ident_map
-          (fun t ->
-            recur t;
-            t)
-          rep
-      in
-      ()
-    | IntersectionT (_, rep) ->
-      let (_ : InterRep.t) =
-        InterRep.ident_map
-          (fun t ->
-            recur t;
-            t)
-          rep
-      in
-      ()
+      Flow_js_utils.possible_types cx id |> Base.List.concat_map ~f:(recur_id (ISet.add id seen))
+    | UnionT (_, rep) -> UnionRep.members rep |> Base.List.concat_map ~f:recur
+    | IntersectionT (_, rep) -> InterRep.members rep |> Base.List.concat_map ~f:recur
     | MaybeT (_, t)
     | OptionalT { type_ = t; _ }
     | ExactT (_, t)
@@ -69,9 +51,13 @@ let check_ref_use cx rrid in_hook var_reason kind t =
     | DefT (_, PolyT { t_out = t; _ })
     | DefT (_, TypeT (_, t)) ->
       recur t
-    | _ -> ()
+    | _ -> []
   in
   recur_id ISet.empty t
+
+type hook_call_kind =
+  | UseMemo
+  | Other
 
 type permissiveness =
   | Permissive
@@ -417,7 +403,372 @@ end = struct
     }
 end
 
-let rec whole_ast_visitor ~under_component cx rrid =
+let effect_visitor cx is_hook rrid tast =
+  let { Loc_env.var_info = { Env_api.env_values; providers; _ } as var_info; name_defs; _ } =
+    Context.environment cx
+  in
+  let type_map = Typed_ast_utils.typed_ast_to_map tast in
+  let strip_use_callback e =
+    match e with
+    | ( _,
+        Ast.Expression.Call
+          {
+            Ast.Expression.Call.callee =
+              ( _,
+                ( Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
+                | Ast.Expression.Member
+                    {
+                      Ast.Expression.Member.property =
+                        Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
+                      _;
+                    } )
+              );
+            arguments =
+              (_, { Ast.Expression.ArgList.arguments = Ast.Expression.Expression first_arg :: _; _ });
+            _;
+          }
+      )
+      when name = "useCallback" ->
+      first_arg
+    | _ -> e
+  in
+  let rec downstream_effects seen loc =
+    if ALocSet.mem loc seen then
+      []
+    else
+      let visit_func { Ast.Function.body; effect; _ } =
+        if effect = Ast.Function.Hook then
+          []
+        else
+          let visitor = visitor (ALocSet.add loc seen) in
+          visitor#function_entry body
+      in
+      let visit_class { Ast.Class.body; _ } =
+        let visitor = visitor (ALocSet.add loc seen) in
+        visitor#class_entry body
+      in
+      match ALocMap.find_opt loc env_values with
+      | Some { Env_api.write_locs; _ } ->
+        Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type:false providers) write_locs
+        |> Base.List.map ~f:(fun x -> Env_api.EnvMap.find x name_defs)
+        |> Base.List.fold ~init:[] ~f:(fun acc (def, _, _, _) ->
+               let open Name_def in
+               match def with
+               | ExpressionDef { expr; _ }
+               | MemberAssign { rhs = expr; _ }
+               | OpAssign { rhs = expr; _ } -> begin
+                 match strip_use_callback expr with
+                 | (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ->
+                   acc @ visit_func func
+                 | (_, Ast.Expression.Class cls) -> acc @ visit_class cls
+                 | _ -> acc
+               end
+               | Function { function_ = func; _ } -> acc @ visit_func func
+               | Component _ -> acc
+               | Class { class_ = cls; _ } -> acc @ visit_class cls
+               | Binding bind ->
+                 let rec handle_binding bind =
+                   match bind with
+                   | Select { parent = (_, bind); _ }
+                   | Hooklike bind ->
+                     acc @ handle_binding bind
+                   | Root (Annotation { concrete = Some root; _ }) -> handle_binding (Root root)
+                   | Root (Value { expr; _ })
+                   | Root (Contextual { default_expression = Some expr; _ }) -> begin
+                     match strip_use_callback expr with
+                     | (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ->
+                       acc @ visit_func func
+                     | (_, Ast.Expression.Class cls) -> acc @ visit_class cls
+                     | _ -> acc
+                   end
+                   | Root (FunctionValue { function_ = func; _ }) -> acc @ visit_func func
+                   | _ -> acc
+                 in
+                 handle_binding bind
+               | _ -> acc
+           )
+      | None -> []
+  and visitor ?(toplevel = false) seen =
+    let is_initializing loc =
+      match Env_api.write_locs_of_read_loc env_values loc with
+      | exception Not_found -> false
+      | [] -> false
+      | _ :: _ as write_locs ->
+        let open Env_api in
+        let open Refi in
+        let is_nullish t =
+          let rec recur_id seen t =
+            let recur = recur_id seen in
+            let open Type in
+            match t with
+            | OpenT (_, id) when ISet.mem id seen -> false
+            | OpenT (_, id) ->
+              let possible = Flow_js_utils.possible_types cx id in
+              Base.List.for_all possible ~f:(recur_id (ISet.add id seen))
+              && List.length possible > 0
+            | UnionT (_, rep) -> UnionRep.members rep |> Base.List.for_all ~f:recur
+            | DefT (_, (NullT | VoidT)) -> true
+            | _ -> false
+          in
+          recur_id ISet.empty t
+        in
+        let rec refines_safe refi =
+          match refi with
+          | AndR (l, r) -> refines_safe l || refines_safe r
+          | OrR (l, r) -> refines_safe l && refines_safe r
+          | NotR r -> not (not_refines_safe r)
+          | SentinelR ("current", loc) ->
+            is_nullish
+              (Type_env.find_write
+                 cx
+                 Env_api.ExpressionLoc
+                 (mk_reason (RMember { object_ = "ref"; property = "current" }) loc)
+              )
+          | PropNullishR { propname = "current"; _ } -> true
+          | _ -> false
+        and not_refines_safe refi =
+          match refi with
+          | AndR (l, r) -> not_refines_safe l && not_refines_safe r
+          | OrR (l, r) -> not_refines_safe l || not_refines_safe r
+          | NotR r -> not (refines_safe r)
+          | PropExistsR { propname = "current"; _ } -> false
+          | _ -> true
+        in
+
+        Base.List.for_all write_locs ~f:(fun write ->
+            let refis = Env_api.refinements_of_write_loc var_info write in
+            Base.List.exists ~f:refines_safe refis
+        )
+    in
+
+    object (this)
+      inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      val mutable effects = []
+
+      val mutable in_target = false
+
+      method function_entry body =
+        let (_ : _ Ast.Function.body) = super#function_body_any body in
+        effects
+
+      method component_entry body =
+        let (_ : _ * _) = super#component_body body in
+        effects
+
+      method class_entry body =
+        let (_ : _ Ast.Class.Body.t) = super#class_body body in
+        effects
+
+      method on_loc_annot l = l
+
+      method on_type_annot l = l
+
+      method in_target : 'a. bool -> ('a -> 'a) -> 'a -> 'a =
+        fun t f x ->
+          let cur_in_target = in_target in
+          in_target <- t;
+          let res = f x in
+          in_target <- cur_in_target;
+          res
+
+      method! member _ = failwith "Call visit_member"
+
+      method! optional_member _ = failwith "Call visit_optional_member"
+
+      method base_expression ((loc, expr) as e) =
+        if in_target then begin
+          match expr with
+          | Ast.Expression.Identifier (loc, _) -> effects <- effects @ downstream_effects seen loc
+          | Ast.Expression.ArrowFunction { Ast.Function.body; _ }
+          | Ast.Expression.Function { Ast.Function.body; _ } ->
+            if not @@ ALocSet.mem loc seen then
+              effects <- effects @ (visitor (ALocSet.add loc seen))#function_entry body
+          | _ -> ()
+        end;
+        super#expression e
+
+      method! expression ((_, expr') as expr) =
+        match expr' with
+        | Ast.Expression.Member mem ->
+          this#visit_member mem;
+          expr
+        | Ast.Expression.OptionalMember mem ->
+          this#visit_optional_member mem;
+          expr
+        | _ -> this#base_expression expr
+
+      method! pattern_expression ((_, expr') as expr) =
+        match expr' with
+        | Ast.Expression.Member mem ->
+          this#visit_member ~permissive:Pattern mem;
+          expr
+        | Ast.Expression.OptionalMember mem ->
+          this#visit_optional_member ~permissive:Pattern mem;
+          expr
+        | _ -> this#base_expression expr
+
+      method! predicate_expression = this#permissive_expression
+
+      method permissive_expression ((_, expr') as expr) =
+        match expr' with
+        | Ast.Expression.Member mem ->
+          this#visit_member ~permissive:Permissive mem;
+          expr
+        | Ast.Expression.OptionalMember mem ->
+          this#visit_optional_member ~permissive:Permissive mem;
+          expr
+        | Ast.Expression.Unary
+            { Ast.Expression.Unary.operator = Ast.Expression.Unary.Not; argument; comments = _ } ->
+          let (_ : _ Ast.Expression.t) = this#permissive_expression argument in
+          expr
+        | Ast.Expression.Binary
+            {
+              Ast.Expression.Binary.operator =
+                Ast.Expression.Binary.(Equal | StrictEqual | NotEqual | StrictNotEqual);
+              left;
+              right;
+              comments = _;
+            } ->
+          let (_ : _ Ast.Expression.t) = this#permissive_expression left in
+          let (_ : _ Ast.Expression.t) = this#permissive_expression right in
+          expr
+        | Ast.Expression.Logical { Ast.Expression.Logical.operator = _; left; right; comments = _ }
+          ->
+          let (_ : _ Ast.Expression.t) = this#permissive_expression left in
+          let (_ : _ Ast.Expression.t) = this#permissive_expression right in
+          expr
+        | _ -> this#expression expr
+
+      method target_expression ((loc, exp) as expr) err_kind =
+        let reason =
+          match exp with
+          | Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ }) ->
+            mk_reason (RIdentifier (OrdinaryName name)) loc
+          | _ -> mk_reason (RCustom "expression") loc
+        in
+        if Context.react_rule_enabled cx Options.ValidateRefAccessDuringRender then begin
+          let ty = ALocMap.find loc type_map in
+          effects <- effects @ check_ref_use cx rrid is_hook reason err_kind ty
+        end;
+        let res = this#expression expr in
+        res
+
+      method! arg_list = this#visit_arg_list ~hook_call:None
+
+      method visit_arg_list ~hook_call (annot, args) =
+        let open Ast.Expression.ArgList in
+        let { arguments; _ } = args in
+        Base.List.iteri
+          ~f:
+            (fun i -> function
+              | Ast.Expression.Expression exp -> begin
+                match hook_call with
+                | Some UseMemo when i = 0 ->
+                  ignore (this#in_target true this#expression exp : _ Ast.Expression.t)
+                | Some _ -> ignore (this#in_target false this#expression exp : _ Ast.Expression.t)
+                | None ->
+                  ignore
+                    ( this#in_target
+                        false
+                        (fun x -> this#target_expression x Error_message.Argument)
+                        exp
+                      : _ Ast.Expression.t
+                      )
+              end
+              | Ast.Expression.Spread (_, { Ast.Expression.SpreadElement.argument; _ })
+                when hook_call <> None ->
+                ignore
+                  ( this#in_target
+                      false
+                      (fun x -> this#target_expression x Error_message.Argument)
+                      argument
+                    : _ Ast.Expression.t
+                    )
+              | Ast.Expression.Spread spread ->
+                ignore (this#in_target false this#spread_element spread))
+          arguments;
+        (annot, args)
+
+      method visit_optional_member ?permissive { Ast.Expression.OptionalMember.member; _ } =
+        this#visit_member ?permissive member
+
+      method visit_member ?(permissive = Strict) expr =
+        let { Ast.Expression.Member._object = (loc, _) as _object; property; comments = _ } =
+          expr
+        in
+        let (_ : (_, _) Ast.Expression.Member.property) = this#member_property property in
+        let (_ : (_, _) Ast.Expression.t) =
+          match property with
+          | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = "current"; _ })
+            when permissive = Strict || (permissive = Pattern && not (is_initializing loc)) ->
+            this#target_expression _object Error_message.Access
+          | _ -> this#expression _object
+        in
+        if in_target then effects <- effects @ downstream_effects seen loc;
+        ()
+
+      method! call _ expr =
+        let { Ast.Expression.Call.callee = (callee_loc, callee_exp) as callee; targs; arguments; _ }
+            =
+          expr
+        in
+        let callee_ty =
+          lazy
+            (match callee_exp with
+            | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
+              when Context.hook_compatibility cx && name <> "require" ->
+              (* If we're in compatibility mode, we want to bail on intersections. But
+                 the typed AST records the type of the overload we've selected, so we
+                 never see the intersection to realize we need to bail! Instead in this
+                 case we read from the environment. *)
+              Type_env.var_ref cx (Reason.OrdinaryName name) callee_loc
+            | _ -> ALocMap.find callee_loc type_map)
+        in
+        let hook_call =
+          let callee_is_nonhook =
+            (not toplevel)
+            ||
+            match hook_callee cx (Lazy.force callee_ty) with
+            | HookCallee _ -> false
+            | MaybeHookCallee _ -> true
+            | NotHookCallee _ -> true
+            | AnyCallee -> false
+          in
+          match callee_exp with
+          | Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })
+          | Ast.Expression.Member
+              {
+                Ast.Expression.Member.property =
+                  Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
+                _;
+              } ->
+            if name = "useMemo" then
+              Some UseMemo
+            else if callee_is_nonhook then
+              None
+            else
+              Some Other
+          | _ when callee_is_nonhook -> None
+          | _ -> Some Other
+        in
+        let (_ : _ Ast.Expression.t) = this#in_target true this#expression callee in
+        let (_ : _ option) = Base.Option.map ~f:this#call_type_args targs in
+        let (_ : _ Ast.Expression.ArgList.t) = this#visit_arg_list ~hook_call arguments in
+        expr
+
+      method! function_body_any x = x
+
+      method! class_body x = x
+
+      method! component_body x = x
+    end
+  in
+  visitor ~toplevel:true ALocSet.empty
+
+let emit_effect_errors cx = Base.List.iter ~f:(Flow_js_utils.add_output cx)
+
+let rec whole_ast_visitor tast ~under_component cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -430,7 +781,13 @@ let rec whole_ast_visitor ~under_component cx rrid =
 
     method on_type_annot l = l
 
-    method! component_declaration = (component_ast_visitor cx false rrid)#component_declaration
+    method! component_declaration ({ Ast.Statement.ComponentDeclaration.body; _ } as cmp) =
+      let effects =
+        (effect_visitor cx false rrid tast)#component_entry
+          (Typed_ast_utils.untyped_ast_mapper#component_body body)
+      in
+      emit_effect_errors cx effects;
+      (component_ast_visitor tast cx rrid)#component_declaration cmp
 
     method! function_ fn =
       let {
@@ -458,14 +815,19 @@ let rec whole_ast_visitor ~under_component cx rrid =
         && Base.Option.is_none rest
       in
       let hook = effect = Ast.Function.Hook in
-      if (Context.react_rules_always cx && is_probably_function_component) || hook then
+      if (Context.react_rules_always cx && is_probably_function_component) || hook then (
+        let effects =
+          (effect_visitor cx hook rrid tast)#function_entry
+            (Typed_ast_utils.untyped_ast_mapper#function_body_any body)
+        in
+        emit_effect_errors cx effects;
         let ident' = Base.Option.map ~f:this#function_identifier id in
         this#type_params_opt tparams (fun tparams' ->
-            let params' = (component_ast_visitor cx hook rrid)#function_params params in
+            let params' = (component_ast_visitor tast cx rrid)#function_params params in
             let return' = this#function_return_annotation return in
-            let body' = (component_ast_visitor cx hook rrid)#function_component_body body in
+            let body' = (component_ast_visitor tast cx rrid)#function_component_body body in
             let predicate' =
-              Base.Option.map ~f:(component_ast_visitor cx hook rrid)#predicate predicate
+              Base.Option.map ~f:(component_ast_visitor tast cx rrid)#predicate predicate
             in
             let sig_loc' = this#on_loc_annot sig_loc in
             let comments' = this#syntax_opt comments in
@@ -483,7 +845,7 @@ let rec whole_ast_visitor ~under_component cx rrid =
               comments = comments';
             }
         )
-      else begin
+      ) else begin
         let cur_in_function_component = in_function_component in
         let next_in_function_component =
           (declaring_function_component
@@ -613,167 +975,16 @@ let rec whole_ast_visitor ~under_component cx rrid =
       decl
   end
 
-and component_ast_visitor cx is_hook rrid =
-  let { Loc_env.var_info = { Env_api.env_values; _ } as var_info; _ } = Context.environment cx in
-  let is_initializing loc =
-    match Env_api.write_locs_of_read_loc env_values loc with
-    | exception Not_found -> false
-    | [] -> false
-    | _ :: _ as write_locs ->
-      let open Env_api in
-      let open Refi in
-      let is_nullish t =
-        let rec recur_id seen t =
-          let recur = recur_id seen in
-          let open Type in
-          match t with
-          | OpenT (_, id) when ISet.mem id seen -> false
-          | OpenT (_, id) ->
-            let possible = Flow_js_utils.possible_types cx id in
-            Base.List.for_all possible ~f:(recur_id (ISet.add id seen)) && List.length possible > 0
-          | UnionT (_, rep) -> UnionRep.members rep |> Base.List.for_all ~f:recur
-          | DefT (_, (NullT | VoidT)) -> true
-          | _ -> false
-        in
-        recur_id ISet.empty t
-      in
-      let rec refines_safe refi =
-        match refi with
-        | AndR (l, r) -> refines_safe l || refines_safe r
-        | OrR (l, r) -> refines_safe l && refines_safe r
-        | NotR r -> not (not_refines_safe r)
-        | SentinelR ("current", loc) ->
-          is_nullish
-            (Type_env.find_write
-               cx
-               Env_api.ExpressionLoc
-               (mk_reason (RMember { object_ = "ref"; property = "current" }) loc)
-            )
-        | PropNullishR { propname = "current"; _ } -> true
-        | _ -> false
-      and not_refines_safe refi =
-        match refi with
-        | AndR (l, r) -> not_refines_safe l && not_refines_safe r
-        | OrR (l, r) -> not_refines_safe l || not_refines_safe r
-        | NotR r -> not (refines_safe r)
-        | PropExistsR { propname = "current"; _ } -> false
-        | _ -> true
-      in
-
-      Base.List.for_all write_locs ~f:(fun write ->
-          let refis = Env_api.refinements_of_write_loc var_info write in
-          Base.List.exists ~f:refines_safe refis
-      )
-  in
-
+and component_ast_visitor tast cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     val mutable conditional_state = ConditionalState.init
 
-    val mutable calling_nonhook = false
-
     method on_loc_annot l = l
 
     method on_type_annot l = l
-
-    method! member _ = failwith "Call visit_member"
-
-    method! optional_member _ = failwith "Call visit_optional_member"
-
-    method! expression ((_, expr') as expr) =
-      match expr' with
-      | Ast.Expression.Member mem ->
-        this#visit_member mem;
-        expr
-      | Ast.Expression.OptionalMember mem ->
-        this#visit_optional_member mem;
-        expr
-      | _ -> super#expression expr
-
-    method! pattern_expression ((_, expr') as expr) =
-      match expr' with
-      | Ast.Expression.Member mem ->
-        this#visit_member ~permissive:Pattern mem;
-        expr
-      | Ast.Expression.OptionalMember mem ->
-        this#visit_optional_member ~permissive:Pattern mem;
-        expr
-      | _ -> super#expression expr
-
-    method! predicate_expression = this#permissive_expression
-
-    method permissive_expression ((_, expr') as expr) =
-      match expr' with
-      | Ast.Expression.Member mem ->
-        this#visit_member ~permissive:Permissive mem;
-        expr
-      | Ast.Expression.OptionalMember mem ->
-        this#visit_optional_member ~permissive:Permissive mem;
-        expr
-      | Ast.Expression.Unary
-          { Ast.Expression.Unary.operator = Ast.Expression.Unary.Not; argument; comments = _ } ->
-        let (_ : _ Ast.Expression.t) = this#permissive_expression argument in
-        expr
-      | Ast.Expression.Binary
-          {
-            Ast.Expression.Binary.operator =
-              Ast.Expression.Binary.(Equal | StrictEqual | NotEqual | StrictNotEqual);
-            left;
-            right;
-            comments = _;
-          } ->
-        let (_ : _ Ast.Expression.t) = this#permissive_expression left in
-        let (_ : _ Ast.Expression.t) = this#permissive_expression right in
-        expr
-      | Ast.Expression.Logical { Ast.Expression.Logical.operator = _; left; right; comments = _ } ->
-        let (_ : _ Ast.Expression.t) = this#permissive_expression left in
-        let (_ : _ Ast.Expression.t) = this#permissive_expression right in
-        expr
-      | _ -> this#expression expr
-
-    method target_expression (((loc, ty), exp) as expr) err_kind =
-      let reason =
-        match exp with
-        | Ast.Expression.Identifier ((loc, _), { Ast.Identifier.name; _ }) ->
-          mk_reason (RIdentifier (OrdinaryName name)) loc
-        | _ -> mk_reason (RCustom "expression") loc
-      in
-      if Context.react_rule_enabled cx Options.ValidateRefAccessDuringRender then
-        check_ref_use cx rrid is_hook reason err_kind ty;
-      this#expression expr
-
-    method! arg_list (annot, args) =
-      let open Ast.Expression.ArgList in
-      let { arguments; _ } = args in
-      let (_ : _ list) =
-        Base.List.map
-          ~f:(function
-            | Ast.Expression.Expression exp when calling_nonhook ->
-              Ast.Expression.Expression (this#target_expression exp Error_message.Argument)
-            | Ast.Expression.Expression exp -> Ast.Expression.Expression (this#expression exp)
-            | Ast.Expression.Spread spread -> Ast.Expression.Spread (this#spread_element spread))
-          arguments
-      in
-      (annot, args)
-
-    method visit_optional_member ?permissive { Ast.Expression.OptionalMember.member; _ } =
-      this#visit_member ?permissive member
-
-    method visit_member ?(permissive = Strict) expr =
-      let { Ast.Expression.Member._object = ((loc, _), _) as _object; property; comments = _ } =
-        expr
-      in
-      let (_ : (_, _) Ast.Expression.Member.property) = this#member_property property in
-      let (_ : (_, _) Ast.Expression.t) =
-        match property with
-        | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = "current"; _ })
-          when permissive = Strict || (permissive = Pattern && not (is_initializing loc)) ->
-          this#target_expression _object Error_message.Access
-        | _ -> this#expression _object
-      in
-      ()
 
     method! call ((call_loc, _) as annot) expr =
       let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), callee_exp); _ } = expr in
@@ -789,33 +1000,26 @@ and component_ast_visitor cx is_hook rrid =
         | _ -> callee_ty
       in
       let hook_error = hook_error cx ~call_loc ~callee_loc in
-      let check_args_for_refs =
+      begin
         match hook_callee cx callee_ty with
-        | HookCallee _ ->
-          begin
-            if Flow_ast_utils.hook_call expr then begin
-              if ConditionalState.conditional conditional_state && not (bare_use expr) then
-                hook_error Error_message.ConditionalHook
-            end else
-              hook_error Error_message.HookHasIllegalName
-          end;
-          false
+        | HookCallee _ -> begin
+          if Flow_ast_utils.hook_call expr then begin
+            if ConditionalState.conditional conditional_state && not (bare_use expr) then
+              hook_error Error_message.ConditionalHook
+          end else
+            hook_error Error_message.HookHasIllegalName
+        end
         | MaybeHookCallee { hooks; non_hooks } ->
           hook_error
             Error_message.(
               MaybeHook
                 { hooks = ALocFuzzySet.elements hooks; non_hooks = ALocFuzzySet.elements non_hooks }
-            );
-          false
+            )
         | NotHookCallee _ ->
-          if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName;
-          true
-        | AnyCallee -> false
-      in
-      let cur_calling = calling_nonhook in
-      calling_nonhook <- check_args_for_refs;
+          if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName
+        | AnyCallee -> ()
+      end;
       let res = super#call annot expr in
-      calling_nonhook <- cur_calling;
       conditional_state <- ConditionalState.throwable conditional_state;
       res
 
@@ -957,9 +1161,10 @@ and component_ast_visitor cx is_hook rrid =
 
     method function_component_body = super#function_body_any
 
-    method! function_body_any = (whole_ast_visitor ~under_component:true cx rrid)#function_body_any
+    method! function_body_any =
+      (whole_ast_visitor tast ~under_component:true cx rrid)#function_body_any
 
-    method! class_body = (whole_ast_visitor ~under_component:true cx rrid)#class_body
+    method! class_body = (whole_ast_visitor tast ~under_component:true cx rrid)#class_body
   end
 
 let check_react_rules cx ast =
@@ -979,5 +1184,5 @@ let check_react_rules cx ast =
       Some opaque_id
     | _ -> None
   in
-  let _ = (whole_ast_visitor ~under_component:false cx rrid)#program ast in
+  let _ = (whole_ast_visitor ast ~under_component:false cx rrid)#program ast in
   ()
