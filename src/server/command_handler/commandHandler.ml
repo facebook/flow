@@ -406,38 +406,6 @@ let json_of_autocomplete_result initial_json_props = function
     let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
     (response, Some (Hh_json.JSON_Object json_props_to_log))
 
-let type_check_for_autocomplete ~options ~profiling master_cx filename parse_artifacts =
-  let (Parse_artifacts { docblock; ast; requires; file_sig; _ }) = parse_artifacts in
-  match Options.autocomplete_mode options with
-  | Options.Ac_typed_ast ->
-    let (cx, typed_ast) =
-      Type_contents.check_contents
-        ~options
-        ~profiling
-        ~reader:(State_reader.create ())
-        master_cx
-        filename
-        docblock
-        ast
-        requires
-        file_sig
-    in
-    (cx, Typed_ast_utils.Typed_ast typed_ast)
-  | Options.Ac_on_demand_typing ->
-    let (cx, aloc_ast) =
-      Type_contents.compute_env_of_contents
-        ~options
-        ~profiling
-        ~reader:(State_reader.create ())
-        master_cx
-        filename
-        docblock
-        ast
-        requires
-        file_sig
-    in
-    (cx, Typed_ast_utils.ALoc_ast aloc_ast)
-
 let type_parse_artifacts_for_ac_with_cache
     ~options ~profiling ~type_parse_artifacts_cache ~cached master_cx file contents artifacts =
   let type_parse_artifacts =
@@ -445,10 +413,20 @@ let type_parse_artifacts_for_ac_with_cache
       (match Lazy.force artifacts with
       | (None, errs) -> Error errs
       | (Some parse_artifacts, _errs) ->
-        let (cx, available_ast) =
-          type_check_for_autocomplete ~options ~profiling master_cx file parse_artifacts
+        let (Parse_artifacts { docblock; ast; requires; file_sig; _ }) = parse_artifacts in
+        let (cx, aloc_ast) =
+          Type_contents.compute_env_of_contents
+            ~options
+            ~profiling
+            ~reader:(State_reader.create ())
+            master_cx
+            file
+            docblock
+            ast
+            requires
+            file_sig
         in
-        Ok (contents, parse_artifacts, cx, available_ast))
+        Ok (contents, parse_artifacts, cx, aloc_ast))
   in
   let cond = function
     | Error _ -> false (* we can't tell there's a match *)
@@ -522,14 +500,14 @@ let autocomplete_on_parsed
   let ac_typing_artifacts =
     match file_artifacts_result with
     | Error _ -> None
-    | Ok (_contents, parse_artifacts, cx, available_ast) ->
+    | Ok (_contents, parse_artifacts, cx, aloc_ast) ->
       let (Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ }) = parse_artifacts in
-      Some (info, file_sig, ast, parse_errors, cx, available_ast)
+      Some (info, file_sig, ast, parse_errors, cx, aloc_ast)
   in
   let ac_result =
     match ac_typing_artifacts with
     | None -> None
-    | Some (info, file_sig, ast, parse_errors, cx, available_ast) ->
+    | Some (info, file_sig, ast, parse_errors, cx, aloc_ast) ->
       let open AutocompleteService_js in
       let (token_opt, ac_loc, ac_type_string, results_res) =
         Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
@@ -544,7 +522,7 @@ let autocomplete_on_parsed
                 ~cx
                 ~file_sig
                 ~ast
-                ~available_ast
+                ~aloc_ast
                 ~canonical:canon_token
             in
             let ac_options =

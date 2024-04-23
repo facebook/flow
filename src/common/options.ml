@@ -35,10 +35,6 @@ type react_rules =
   | DeepReadOnlyHookReturns
   | RulesOfHooks
 
-type autocomplete_mode =
-  | Ac_typed_ast
-  | Ac_on_demand_typing
-
 type autocomplete_canonical =
   | Ac_canonical
   | Ac_classic
@@ -77,7 +73,6 @@ type t = {
   opt_as_const: bool;
   opt_any_propagation: bool;
   opt_autocomplete_canonical: autocomplete_canonical;
-  opt_autocomplete_mode: autocomplete_mode;
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
@@ -175,8 +170,6 @@ let as_const opts = opts.opt_as_const
 let any_propagation opts = opts.opt_any_propagation
 
 let autocomplete_canonical opts = opts.opt_autocomplete_canonical
-
-let autocomplete_mode opts = opts.opt_autocomplete_mode
 
 let autoimports opts = opts.opt_autoimports
 

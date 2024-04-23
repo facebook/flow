@@ -231,7 +231,7 @@ let merge_custom_lint_config js_config_object severities =
         acc
   )
 
-let infer_and_merge ~root filename js_config_object docblock ast file_sig =
+let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
   let master_cx = get_master_cx root in
   let ccx = Context.make_ccx () in
@@ -270,8 +270,22 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
     let strict_mode = StrictModeSettings.empty in
     Merge_js.get_lint_severities metadata strict_mode severities
   in
+  (cx, metadata, comments, ast, lint_severities)
+
+let infer_and_merge ~root filename js_config_object docblock ast file_sig =
+  let (cx, metadata, comments, ast, lint_severities) =
+    init_infer_and_merge ~root filename js_config_object docblock ast file_sig
+  in
   let typed_ast = Type_inference_js.infer_ast cx filename metadata comments ast ~lint_severities in
   (cx, typed_ast)
+
+let ac_infer ~root filename js_config_object docblock ast file_sig =
+  let (cx, _, _, aloc_ast, _) =
+    init_infer_and_merge ~root filename js_config_object docblock ast file_sig
+  in
+  assert (Context.is_checked cx);
+  Type_inference_js.initialize_env cx aloc_ast;
+  (cx, aloc_ast)
 
 let check_content ~filename ~content ~js_config_object =
   let stdin_file = Some (File_path.make_unsafe filename, content) in
@@ -381,7 +395,7 @@ let autocomplete filename content line col js_config_object :
             content
         )
       in
-      let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+      let (cx, aloc_ast) = ac_infer ~root filename js_config_object docblock ast file_sig in
       let loc = mk_loc filename line col in
       let open AutocompleteService_js in
       let artifacts =
@@ -406,7 +420,7 @@ let autocomplete filename content line col js_config_object :
           ~cx
           ~file_sig
           ~ast
-          ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
+          ~aloc_ast
           ~canonical:canon_token
       in
       let (_, _, _, result) =

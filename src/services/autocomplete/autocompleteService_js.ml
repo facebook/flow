@@ -350,7 +350,7 @@ type typing = {
   cx: Context.t;
   file_sig: File_sig.t;
   ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-  available_ast: Typed_ast_utils.available_ast;
+  aloc_ast: (ALoc.t, ALoc.t) Flow_ast.Program.t;
   norm_genv: Ty_normalizer_env.genv;
   canonical: Autocomplete_sigil.Canonical.token option;
 }
@@ -365,14 +365,10 @@ let mk_typing_artifacts
     ~cx
     ~file_sig
     ~ast
-    ~available_ast
+    ~aloc_ast
     ~canonical =
   let norm_genv =
-    Ty_normalizer_flow.mk_genv
-      ~options:ty_normalizer_options
-      ~cx
-      ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
-      ~file_sig
+    Ty_normalizer_flow.mk_genv ~options:ty_normalizer_options ~cx ~typed_ast_opt:None ~file_sig
   in
   {
     layout_options;
@@ -384,7 +380,7 @@ let mk_typing_artifacts
     cx;
     file_sig;
     ast;
-    available_ast;
+    aloc_ast;
     norm_genv;
     canonical;
   }
@@ -413,7 +409,7 @@ let jsdoc_of_member typing info =
   | [def_loc] -> jsdoc_of_def_loc typing def_loc
   | _ -> None
 
-let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~available_ast loc =
+let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~aloc_ast loc =
   let open GetDef_js.Get_def_result in
   match
     GetDef_js.get_def
@@ -421,7 +417,7 @@ let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~avail
       ~cx
       ~file_sig
       ~ast
-      ~available_ast
+      ~available_ast:(Typed_ast_utils.ALoc_ast aloc_ast)
       ~purpose:Get_def_types.Purpose.GoToDefinition
       loc
   with
@@ -446,9 +442,9 @@ let documentation_and_tags_of_member typing info =
     )
 
 let documentation_and_tags_of_loc
-    ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~available_ast loc =
+    ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~aloc_ast loc =
   lazy
-    (jsdoc_of_loc ~get_ast_from_shared_mem ~cx ~loc_of_aloc ~file_sig ~ast ~available_ast loc
+    (jsdoc_of_loc ~get_ast_from_shared_mem ~cx ~loc_of_aloc ~file_sig ~ast ~aloc_ast loc
     |> Base.Option.value_map ~default:(None, None) ~f:documentation_and_tags_of_jsdoc
     )
 
@@ -465,15 +461,8 @@ let members_of_type
     ?(include_interface_members = false)
     ?(exclude_keys = SSet.empty)
     t =
-  let { cx; available_ast; file_sig; _ } = typing in
-  let ty_members =
-    Ty_members.extract
-      ~force_instance
-      ~cx
-      ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
-      ~file_sig
-      t
-  in
+  let { cx; file_sig; _ } = typing in
+  let ty_members = Ty_members.extract ~force_instance ~cx ~typed_ast_opt:None ~file_sig t in
   let include_valid_member (s, (Ty_members.{ inherited; source; _ } as info)) =
     if
       (exclude_proto_members && inherited)
@@ -511,7 +500,7 @@ let members_of_type
       )
 
 let local_value_identifiers ~typing ~genv ~ac_loc =
-  let { loc_of_aloc; get_ast_from_shared_mem; cx; ast; available_ast; file_sig; _ } = typing in
+  let { loc_of_aloc; get_ast_from_shared_mem; cx; ast; aloc_ast; file_sig; _ } = typing in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
   in
@@ -562,7 +551,7 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
              ~loc_of_aloc
              ~file_sig
              ~ast
-             ~available_ast
+             ~aloc_ast
              loc
          in
          ((name, documentation_and_tags), type_)
@@ -1093,60 +1082,6 @@ let exports_of_module_ty
 
 (* TODO(vijayramamurthy) think about how to break this file down into smaller modules *)
 (* NOTE: excludes classes, because we'll get those from local_value_identifiers *)
-class local_type_identifiers_typed_ast_searcher =
-  object (this)
-    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
-    method on_loc_annot x = x
-
-    method on_type_annot x = x
-
-    val mutable rev_ids = []
-
-    method rev_ids = rev_ids
-
-    method add_id id = rev_ids <- id :: rev_ids
-
-    method! type_alias _loc (Flow_ast.Statement.TypeAlias.{ id; _ } as x) =
-      this#add_id id;
-      x
-
-    method! opaque_type _loc (Flow_ast.Statement.OpaqueType.{ id; _ } as x) =
-      this#add_id id;
-      x
-
-    method! interface _loc (Flow_ast.Statement.Interface.{ id; _ } as x) =
-      this#add_id id;
-      x
-
-    method! import_declaration _ x =
-      let open Flow_ast.Statement.ImportDeclaration in
-      let { import_kind; specifiers; default; _ } = x in
-      let binds_type = function
-        | ImportType
-        | ImportTypeof ->
-          true
-        | ImportValue -> false
-      in
-      let declaration_binds_type = binds_type import_kind in
-      if declaration_binds_type then
-        Base.Option.iter default ~f:(fun { identifier; _ } -> this#add_id identifier);
-      Base.Option.iter specifiers ~f:(function
-          | ImportNamedSpecifiers specifiers ->
-            List.iter
-              (fun { kind; local; remote; remote_name_def_loc = _ } ->
-                let specifier_binds_type =
-                  match kind with
-                  | None -> declaration_binds_type
-                  | Some k -> binds_type k
-                in
-                if specifier_binds_type then this#add_id (Base.Option.value local ~default:remote))
-              specifiers
-          | ImportNamespaceSpecifier _ -> ( (* namespaces can't be types *) )
-          );
-      x
-  end
-
 class local_type_identifiers_ast_searcher cx =
   object (this)
     inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper
@@ -1300,19 +1235,10 @@ let make_type_param ~edit_locs name =
   }
 
 let local_type_identifiers artifacts =
-  let { available_ast; cx; norm_genv; _ } = artifacts in
-  let rev_ids =
-    match available_ast with
-    | Typed_ast_utils.Typed_ast typed_ast ->
-      let search = new local_type_identifiers_typed_ast_searcher in
-      Stdlib.ignore (search#program typed_ast);
-      search#rev_ids
-    | Typed_ast_utils.ALoc_ast aloc_ast ->
-      let search = new local_type_identifiers_ast_searcher cx in
-      Stdlib.ignore (search#program aloc_ast);
-      search#rev_ids
-  in
-  rev_ids
+  let { aloc_ast; cx; norm_genv; _ } = artifacts in
+  let search = new local_type_identifiers_ast_searcher cx in
+  Stdlib.ignore (search#program aloc_ast);
+  search#rev_ids
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer_flow.from_types norm_genv
 
@@ -1331,7 +1257,7 @@ let autocomplete_unqualified_type
     cx;
     file_sig;
     ast;
-    available_ast;
+    aloc_ast;
     norm_genv = genv;
     _;
   } =
@@ -1356,7 +1282,7 @@ let autocomplete_unqualified_type
                ~cx
                ~file_sig
                ~ast
-               ~available_ast
+               ~aloc_ast
                (loc_of_aloc aloc)
            in
            match ty_result with
@@ -2155,7 +2081,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
-  let { layout_options; loc_of_aloc; cx; available_ast; norm_genv = genv; canonical = canon; _ } =
+  let { layout_options; loc_of_aloc; cx; aloc_ast; norm_genv = genv; canonical = canon; _ } =
     typing
   in
   let open Autocomplete_js in
@@ -2164,7 +2090,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
   let canon_cursor =
     Base.Option.value_map ~default:cursor ~f:Autocomplete_sigil.Canonical.cursor canon
   in
-  match process_location cx ~trigger_character ~cursor:canon_cursor ~available_ast with
+  match process_location cx ~trigger_character ~cursor:canon_cursor aloc_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in

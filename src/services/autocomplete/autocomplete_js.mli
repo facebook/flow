@@ -70,7 +70,7 @@ val process_location :
   Context.t ->
   trigger_character:string option ->
   cursor:Loc.t ->
-  available_ast:Typed_ast_utils.available_ast ->
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (process_location_result option, string) result
 
 val autocomplete_set_hooks : cursor:Loc.t -> unit

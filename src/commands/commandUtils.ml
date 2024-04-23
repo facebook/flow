@@ -1494,10 +1494,6 @@ let make_options
         ~default:(FlowConfig.long_lived_workers flowconfig);
     opt_autocomplete_canonical =
       Base.Option.value (FlowConfig.autocomplete_canonical flowconfig) ~default:Options.Ac_classic;
-    opt_autocomplete_mode =
-      Base.Option.value
-        (FlowConfig.autocomplete_mode flowconfig)
-        ~default:Options.Ac_on_demand_typing;
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
   }

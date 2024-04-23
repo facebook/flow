@@ -30,7 +30,7 @@ val mk_typing_artifacts :
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  available_ast:Typed_ast_utils.available_ast ->
+  aloc_ast:(ALoc.t, ALoc.t) Flow_ast.Program.t ->
   canonical:Autocomplete_sigil.Canonical.token option ->
   typing
 

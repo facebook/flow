@@ -921,38 +921,6 @@ class virtual ['T] process_request_searcher ~(from_trigger_character : bool) ~(c
         id
   end
 
-class typed_ast_process_request_searcher ~(from_trigger_character : bool) ~(cursor : Loc.t) =
-  object
-    inherit [ALoc.t * Type.t] process_request_searcher ~from_trigger_character ~cursor
-
-    method private loc_of_annot (loc, _) = loc
-
-    method on_type_annot (x, y) = (x, y)
-
-    method private type_from_enclosing_node (_, t) = t
-
-    method private type_of_component_name_of_jsx_element _ expr =
-      let open Ast.JSX in
-      let { opening_element = (_, Opening.{ name; _ }); _ } = expr in
-      type_of_jsx_name name
-
-    method private type_of_expression ((_, t), _) = t
-
-    method private infer_expression e = e
-
-    method private infer_statement s = s
-
-    method private type_of_class_id loc cls =
-      match cls with
-      | { Flow_ast.Class.id = Some ((_, t), _); _ } -> t
-      | _ ->
-        (* impossible thanks to calling context of type_of_class_id *)
-        Type.(AnyT.at Untyped loc)
-
-    (* This is a no-op since we have already checked the entire AST. *)
-    method private check_closest_enclosing_statement = ()
-  end
-
 module Statement = Fix_statement.Statement_
 
 exception Internal_exn of string
@@ -1038,28 +1006,17 @@ let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor a
 
 let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
-let process_location cx ~trigger_character ~cursor ~available_ast =
-  match available_ast with
-  | Typed_ast_utils.ALoc_ast aloc_ast ->
-    let searcher =
-      new on_demand_process_request_searcher
-        cx
-        ~from_trigger_character:(trigger_character <> None)
-        ~cursor
-    in
-    (match searcher#program aloc_ast with
-    | exception Found f -> Ok (Some f)
-    | exception Internal_exn err -> Error err
-    | _ -> Ok None)
-  | Typed_ast_utils.Typed_ast typed_ast ->
-    let searcher =
-      new typed_ast_process_request_searcher
-        ~from_trigger_character:(trigger_character <> None)
-        ~cursor
-    in
-    (match searcher#program typed_ast with
-    | exception Found f -> Ok (Some f)
-    | _ -> Ok None)
+let process_location cx ~trigger_character ~cursor aloc_ast =
+  let searcher =
+    new on_demand_process_request_searcher
+      cx
+      ~from_trigger_character:(trigger_character <> None)
+      ~cursor
+  in
+  match searcher#program aloc_ast with
+  | exception Found f -> Ok (Some f)
+  | exception Internal_exn err -> Error err
+  | _ -> Ok None
 
 let autocomplete_set_hooks ~cursor =
   Type_inference_hooks_js.set_id_hook (autocomplete_id ~cursor);
