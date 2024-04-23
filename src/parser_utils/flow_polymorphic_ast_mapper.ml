@@ -1554,11 +1554,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#function_ expr
 
     (** previously, we conflated [function_expression] and [class_method]. callers should be
-        updated to override those individually. *)
+        updated to override those individually.
+
+        DEPRECATED: use either function_expression or class_method *)
     method function_expression_or_method (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t
         =
       this#function_ expr
-    [@@alert deprecated "Use either function_expression or class_method"]
 
     method function_return_annotation (return : ('M, 'T) Ast.Function.ReturnAnnot.t)
         : ('N, 'U) Ast.Function.ReturnAnnot.t =
