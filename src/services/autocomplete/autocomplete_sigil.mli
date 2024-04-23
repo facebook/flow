@@ -12,13 +12,13 @@ module Canonical : sig
 
   val cursor : token -> Loc.t
 
-  val to_relative_ac_results : canon:token -> Loc.t -> string -> ALoc.t * string
+  val to_relative_token : canon:token option -> string -> string
 end
 
 val add_canonical :
   File_key.t option -> string -> int -> int -> string * string * Canonical.token option
 
-val remove_from_loc : Loc.t -> Loc.t
+val remove_from_loc : canon:Canonical.token option -> Loc.t -> Loc.t
 
 val remove_opt : string -> (string * string) option
 

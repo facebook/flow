@@ -31,6 +31,7 @@ val mk_typing_artifacts :
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   available_ast:Typed_ast_utils.available_ast ->
+  canonical:Autocomplete_sigil.Canonical.token option ->
   typing
 
 type 'r autocomplete_service_result_generic =
@@ -49,5 +50,4 @@ val autocomplete_get_results :
   ac_options ->
   string option ->
   Loc.t ->
-  Autocomplete_sigil.Canonical.token option ->
-  string option * ALoc.t option * string * autocomplete_service_result
+  string option * Loc.t option * string * autocomplete_service_result

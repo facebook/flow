@@ -545,6 +545,7 @@ let autocomplete_on_parsed
                 ~file_sig
                 ~ast
                 ~available_ast
+                ~canonical:canon_token
             in
             let ac_options =
               {
@@ -555,7 +556,7 @@ let autocomplete_on_parsed
                 show_ranking_info;
               }
             in
-            autocomplete_get_results typing ac_options trigger_character cursor_loc canon_token
+            autocomplete_get_results typing ac_options trigger_character cursor_loc
         )
       in
       Some (info, parse_errors, token_opt, ac_loc, ac_type_string, results_res)
@@ -2417,12 +2418,7 @@ let handle_persistent_autocomplete_lsp
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok (token, completions, ac_loc, ac_type) ->
-    let token_loc =
-      match ac_loc with
-      | None -> None
-      | Some ac_loc -> Some (Parsing_heaps.Reader.loc_of_aloc ~reader ac_loc)
-    in
+  | Ok (token, completions, token_loc, ac_type) ->
     let file_key =
       match token_loc with
       | None -> None

@@ -352,6 +352,7 @@ type typing = {
   ast: (Loc.t, Loc.t) Flow_ast.Program.t;
   available_ast: Typed_ast_utils.available_ast;
   norm_genv: Ty_normalizer_env.genv;
+  canonical: Autocomplete_sigil.Canonical.token option;
 }
 
 let mk_typing_artifacts
@@ -364,7 +365,8 @@ let mk_typing_artifacts
     ~cx
     ~file_sig
     ~ast
-    ~available_ast =
+    ~available_ast
+    ~canonical =
   let norm_genv =
     Ty_normalizer_flow.mk_genv
       ~options:ty_normalizer_options
@@ -384,6 +386,7 @@ let mk_typing_artifacts
     ast;
     available_ast;
     norm_genv;
+    canonical;
   }
 
 type 'r ac_result = {
@@ -860,7 +863,7 @@ let append_completion_items_of_autoimports
 
 let autocomplete_id
     ~typing
-    ~ac_loc:ac_aloc
+    ~ac_loc
     ~include_keywords
     ~include_super
     ~include_this
@@ -869,8 +872,7 @@ let autocomplete_id
     ~token
     ~type_ =
   let open AcCompletion in
-  let { loc_of_aloc; cx; layout_options; norm_genv = genv; _ } = typing in
-  let ac_loc = loc_of_aloc ac_aloc |> Autocomplete_sigil.remove_from_loc in
+  let { cx; layout_options; norm_genv = genv; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = layout_options.Js_layout_generator.single_quotes in
@@ -951,7 +953,7 @@ let autocomplete_id
   let items_rev =
     if include_keywords then
       let keywords =
-        Keywords.keywords_at_loc typing.ast (loc_of_aloc ac_aloc)
+        Keywords.keywords_at_loc typing.ast ac_loc
         |> Base.List.map ~f:(AcCompletion.of_keyword ~edit_locs)
       in
       Base.List.rev_append keywords items_rev
@@ -1335,7 +1337,6 @@ let autocomplete_unqualified_type
   } =
     typing
   in
-  let ac_loc = loc_of_aloc ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
     []
@@ -1538,13 +1539,13 @@ let autocomplete_member
     ~token
     this
     in_optional_chain
-    ac_aloc
+    ac_loc
     ~tparams_rev
     ~bracket_syntax
     ~member_loc
     ~is_type_annotation
     ~force_instance =
-  let { layout_options; cx; _ } = typing in
+  let { layout_options; cx; canonical = canon; _ } = typing in
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let exact_by_default = Context.exact_by_default cx in
   match members_of_type ~typing ~exclude_proto_members:false ~force_instance this with
@@ -1566,7 +1567,7 @@ let autocomplete_member
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              let edit_loc_of_member_loc member_loc =
                if Loc.(member_loc.start.line = member_loc._end.line) then
-                 Autocomplete_sigil.remove_from_loc member_loc
+                 Autocomplete_sigil.remove_from_loc ~canon member_loc
                else
                  Loc.{ member_loc with _end = member_loc.start }
              in
@@ -1628,7 +1629,7 @@ let autocomplete_member
                  | (_, false) ->
                    Printf.sprintf "?.[%s]" (Lazy.force name_as_indexer)
                in
-               let edit_loc = Autocomplete_sigil.remove_from_loc member_loc in
+               let edit_loc = Autocomplete_sigil.remove_from_loc ~canon member_loc in
                autocomplete_create_result
                  ~insert_text:opt_chain_name
                  ~rank
@@ -1655,13 +1656,13 @@ let autocomplete_member
             ~ac_options
             ~allow_react_element_shorthand_completion:false
             ~tparams_rev
-            ~ac_loc:ac_aloc
+            ~ac_loc
             ~edit_locs
             ~token
         else
           autocomplete_id
             ~typing
-            ~ac_loc:ac_aloc
+            ~ac_loc
             ~include_keywords:false
             ~include_super
             ~include_this
@@ -1725,7 +1726,7 @@ let should_autoimport_react ~cx ~imports ~file_sig =
 let autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs =
   let intrinsics_t =
     let open Reason in
-    let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) ac_loc in
+    let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) (ALoc.of_loc ac_loc) in
     Flow_js.get_builtin_type typing.cx reason "$JSXIntrinsics"
   in
   let (items, errors_to_log) =
@@ -1755,7 +1756,7 @@ let autocomplete_jsx_intrinsic ~typing ~ac_loc ~edit_locs =
   { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type_ =
-  let { layout_options; module_system_info; cx; loc_of_aloc; file_sig; ast; _ } = typing in
+  let { layout_options; module_system_info; cx; file_sig; ast; _ } = typing in
   let results_id =
     autocomplete_id
       ~typing
@@ -1795,7 +1796,7 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
   if should_autoimport_react ~cx ~imports:ac_options.imports ~file_sig then
     let open AcCompletion in
     let import_edit =
-      let src_dir = src_dir_of_loc (loc_of_aloc ac_loc) in
+      let src_dir = src_dir_of_loc ac_loc in
       let kind = Export_index.Namespace in
       let name = "React" in
       let source = Export_index.Builtin "react" in
@@ -1834,8 +1835,8 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
   let { cx; _ } = typing in
   let open Flow_js in
   let reason =
-    let (aloc, name) = attribute in
-    Reason.mk_reason (Reason.RCustom name) aloc
+    let (loc, name) = attribute in
+    Reason.mk_reason (Reason.RCustom name) (ALoc.of_loc loc)
   in
   let props_object =
     Tvar.mk_where cx reason (fun tvar ->
@@ -2083,7 +2084,7 @@ let autocomplete_fixme ~loc_of_aloc ~cx ~edit_locs ~token ~text ~loc =
     )
     |> filter_by_token_and_sort token
 
-let autocomplete_jsdoc ~token ~ast ~loc =
+let autocomplete_jsdoc ~token ~ast ~loc ~canon =
   let loc = ALoc.to_loc_exn loc in
   let (before, _after) = Autocomplete_sigil.remove token in
   if before <> "*" then
@@ -2095,7 +2096,7 @@ let autocomplete_jsdoc ~token ~ast ~loc =
            let name = "/** */" in
            let edit_locs =
              (* replace the whole comment *)
-             let loc = Autocomplete_sigil.remove_from_loc loc in
+             let loc = Autocomplete_sigil.remove_from_loc ~canon loc in
              (loc, loc)
            in
            let insert_text = Printf.sprintf "/*%s */" stub in
@@ -2118,13 +2119,14 @@ let autocomplete_jsdoc ~token ~ast ~loc =
        )
     |> filter_by_token_and_sort token
 
-let autocomplete_comment ~loc_of_aloc ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc =
+let autocomplete_comment ~typing ~edit_locs ~trigger_character ~token ~text ~loc =
+  let { loc_of_aloc; cx; ast; canonical = canon; _ } = typing in
   let items =
     match trigger_character with
     | Some "*"
     | None ->
       let items_fixme = autocomplete_fixme ~loc_of_aloc ~cx ~edit_locs ~token ~text ~loc in
-      let items_jsdoc = autocomplete_jsdoc ~token ~ast ~loc in
+      let items_jsdoc = autocomplete_jsdoc ~token ~ast ~loc ~canon in
       items_fixme @ items_jsdoc
     | _ -> []
   in
@@ -2152,13 +2154,15 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_element _ -> "Ac_jsx_element"
   | Ac_jsx_attribute _ -> "Acjsx"
 
-let autocomplete_get_results typing ac_options trigger_character cursor canon_token =
-  let { layout_options; loc_of_aloc; cx; ast; available_ast; norm_genv = genv; _ } = typing in
+let autocomplete_get_results typing ac_options trigger_character cursor =
+  let { layout_options; loc_of_aloc; cx; available_ast; norm_genv = genv; canonical = canon; _ } =
+    typing
+  in
   let open Autocomplete_js in
   (* Since the AST that is provided to `process_location` is in canonical terms,
    * we also need to adjust the cursor. *)
   let canon_cursor =
-    Base.Option.value_map ~default:cursor ~f:Autocomplete_sigil.Canonical.cursor canon_token
+    Base.Option.value_map ~default:cursor ~f:Autocomplete_sigil.Canonical.cursor canon
   in
   match process_location cx ~trigger_character ~cursor:canon_cursor ~available_ast with
   | Error err -> (None, None, "None", AcFatalError err)
@@ -2174,19 +2178,16 @@ let autocomplete_get_results typing ac_options trigger_character cursor canon_to
      * canonical terms. We need to revert the canonicalization that happened
      * earlier on. This typically means converting a canonical token ("AUTO332")
      * to "fooAUTO332Baz", where "foo" and "Baz" are the prefix and suffix of the
-     * token around the cursor. `ac_loc` is adjusted accordingly. *)
-    let (ac_loc, token) =
-      match canon_token with
-      | None -> (ac_loc, token)
-      | Some canon ->
-        Autocomplete_sigil.Canonical.to_relative_ac_results ~canon (loc_of_aloc ac_loc) token
-    in
-    (* say you're completing `foo|Baz`. the token is "fooBaz" and ac_loc points at
-       "fooAUTO332Baz". if the suggestion is "fooBar", the user can choose to insert
-       into the token, yielding "fooBarBaz", or they can choose to replace the token,
-       yielding "fooBar". *)
+     * token around the cursor. *)
+    let token = Autocomplete_sigil.Canonical.to_relative_token ~canon token in
+    (* Before we proceed, we de-canonicalize ac_loc, so that it includes a loc span
+     * that can be shown to the user. *)
+    let ac_loc = loc_of_aloc ac_loc |> Autocomplete_sigil.remove_from_loc ~canon in
+    (* Say you're completing `foo|Baz`. The token is "fooBaz". if the suggestion
+     * is "fooBar", the user can choose to insert into the token, yielding "fooBarBaz",
+     * or they can choose to replace the token, yielding "fooBar". *)
     let edit_locs =
-      let replace_loc = loc_of_aloc ac_loc |> Autocomplete_sigil.remove_from_loc in
+      let replace_loc = ac_loc in
       (* invariant: the cursor must be inside ac_loc *)
       let insert_loc = Loc.btwn replace_loc cursor in
       (insert_loc, replace_loc)
@@ -2197,7 +2198,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor canon_to
       | Ac_type_binding -> AcEmpty "TypeBinding"
       | Ac_ignored -> AcEmpty "Ignored"
       | Ac_comment { text; loc } ->
-        autocomplete_comment ~loc_of_aloc ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc
+        autocomplete_comment ~typing ~edit_locs ~trigger_character ~token ~text ~loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         (* TODO: include keywords *)

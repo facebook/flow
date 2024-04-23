@@ -407,6 +407,7 @@ let autocomplete filename content line col js_config_object :
           ~file_sig
           ~ast
           ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
+          ~canonical:canon_token
       in
       let (_, _, _, result) =
         autocomplete_get_results
@@ -420,7 +421,6 @@ let autocomplete filename content line col js_config_object :
           }
           None
           loc
-          canon_token
       in
       (match result with
       | AcEmpty _ -> Ok { ServerProt.Response.Completion.items = []; is_incomplete = false }

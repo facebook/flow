@@ -2773,6 +2773,62 @@ Flags: --lsp
     ]
   }
 }
+{
+  "label":"takesMap1",
+  "labelDetails":{"detail":": (map: Map<number, string>) => void"},
+  "kind":3,
+  "detail":"(map: Map<number, string>) => void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"takesMap1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"takesMap1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"takesMap2",
+  "labelDetails":{"detail":": (map: Map<number, string>) => void"},
+  "kind":3,
+  "detail":"(map: Map<number, string>) => void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"takesMap2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"takesMap2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
 
 iterator.js:8:5
 Flags: --lsp
@@ -2855,6 +2911,181 @@ Flags: --lsp
         "session_requests":null,
         "typed_length":null,
         "completion":"Symbol.asyncIterator",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"takesMap1",
+  "labelDetails":{"detail":": (map: Map<number, string>) => void"},
+  "kind":3,
+  "detail":"(map: Map<number, string>) => void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"takesMap1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"takesMap1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"takesMap2",
+  "labelDetails":{"detail":": (map: Map<number, string>) => void"},
+  "kind":3,
+  "detail":"(map: Map<number, string>) => void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"takesMap2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"takesMap2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+iterator.js:12:11
+Flags: --lsp
+{
+  "label":"size",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":11,"character":8},"end":{"line":11,"character":10}},
+    "newText":"size"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"size",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"[Symbol.iterator]",
+  "labelDetails":{"detail":": () => Iterator<[number, string]>"},
+  "kind":3,
+  "detail":"() => Iterator<[number, string]>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":11,"character":7},"end":{"line":11,"character":10}},
+    "newText":"[Symbol.iterator]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "dot-member switched to bracket-syntax member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"[Symbol.iterator]",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+iterator.js:17:11
+Flags: --lsp
+{
+  "label":"size",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"size",
+    "insert":{"start":{"line":16,"character":8},"end":{"line":16,"character":10}},
+    "replace":{"start":{"line":16,"character":8},"end":{"line":16,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"size",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"[Symbol.iterator]",
+  "labelDetails":{"detail":": () => Iterator<[number, string]>"},
+  "kind":3,
+  "detail":"() => Iterator<[number, string]>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":7},"end":{"line":16,"character":12}},
+    "newText":"[Symbol.iterator]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "dot-member switched to bracket-syntax member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"[Symbol.iterator]",
         "ac_type":"Acmem"
       }
     ]

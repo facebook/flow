@@ -50,27 +50,10 @@ module Canonical = struct
   let mk ~span ~prefix ~suffix =
     { cursor = Loc.start_loc span; prefix_and_suffix = Some (prefix, suffix) }
 
-  let to_relative_ac_results ~canon:{ prefix_and_suffix; _ } ac_loc token =
-    let open Loc in
-    let { start; _end; _ } = ac_loc in
-    let loc =
-      if start.line = _end.line then
-        let column =
-          match prefix_and_suffix with
-          | Some (prefix, suffix) ->
-            start.column + String.length prefix + String.length suffix + String.length sigil
-          | None -> _end.column
-        in
-        ALoc.of_loc { ac_loc with _end = { _end with column } }
-      else
-        ALoc.of_loc ac_loc
-    in
-    let token =
-      match prefix_and_suffix with
-      | Some (prefix, suffix) -> prefix ^ token ^ suffix
-      | None -> token
-    in
-    (loc, token)
+  let to_relative_token ~canon token =
+    match canon with
+    | Some { prefix_and_suffix = Some (prefix, suffix); _ } -> prefix ^ token ^ suffix
+    | _ -> token
 end
 
 (*
@@ -163,10 +146,16 @@ let add_canonical source contents loc_line column =
  * that spans multiple lines.
  * So when `ac_loc` ends on a different line than it starts, we just replace
  * the end position with the start position. *)
-let remove_from_loc loc =
+let remove_from_loc ~canon loc =
   let open Loc in
   if loc.start.line = loc._end.line then
-    { loc with _end = { loc._end with column = loc._end.column - sigil_len } }
+    let pad_len =
+      match canon with
+      | Some { Canonical.prefix_and_suffix = Some (prefix, suffix); _ } ->
+        String.length prefix + String.length suffix
+      | _ -> 0
+    in
+    { loc with _end = { loc._end with column = loc._end.column - sigil_len + pad_len } }
   else
     { loc with _end = loc.start }
 
