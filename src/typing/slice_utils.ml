@@ -749,7 +749,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
     Ok
       (mk_object_type
          ~def_reason:reason
-         ~exact_reason:(Some reason)
+         ~exact_reason:None
          ~invalidate_aliases:true
          ~interface:None
          ~reachable_targs
