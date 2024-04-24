@@ -1,3 +1,8 @@
+### 0.235.1
+
+Misc:
+* By default, `flow ast` will now parse component syntax rather than reject it. You can pass `--no-component-syntax` to get the old behavior (D56501290 samzhou19815)
+
 ### 0.235.0
 
 Likely to cause new Flow errors:
