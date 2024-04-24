@@ -1,3 +1,9 @@
+### 0.235.0
+
+Likely to cause new Flow errors:
+* Flow's react-rule enforcement now detects reads from `ref.current` within nested functions of hooks and components that are called during rendering.
+* `obj[key]` where `obj` is not a dictionary object and `key` is a string used to not error and just silently return `any`. We now error on this pattern.
+
 ### 0.234.0
 
 Likely to cause new Flow errors:
