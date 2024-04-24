@@ -230,6 +230,13 @@ module Friendly = struct
 
   let no_desc_ref = no_desc_ref_map Fun.id
 
+  let hardcoded_string_desc_ref desc loc =
+    let desc = message_inlines_of_string desc in
+    if loc = Loc.none then
+      Inline desc
+    else
+      Reference (desc, loc)
+
   (* Concatenates a list of messages with a conjunction according to the "rules"
    * of the English language. *)
   let conjunction_concat ?(conjunction = "and") = function

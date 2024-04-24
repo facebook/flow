@@ -65,6 +65,8 @@ module Friendly : sig
 
   val no_desc_ref : Loc.t -> Loc.t message_feature
 
+  val hardcoded_string_desc_ref : string -> Loc.t -> Loc.t message_feature
+
   val ref_map : ('a -> Loc.t) -> 'a Reason.virtual_reason -> Loc.t message_feature
 
   val no_desc_ref_map : ('a -> 'b) -> 'a -> 'b message_feature

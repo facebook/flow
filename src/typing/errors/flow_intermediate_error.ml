@@ -1055,6 +1055,9 @@ let to_printable_error :
   let code = Friendly.code in
   let ref = Friendly.ref_map loc_of_aloc in
   let no_desc_ref = Flow_errors_utils.Friendly.no_desc_ref_map loc_of_aloc in
+  let hardcoded_string_desc_ref desc loc =
+    Flow_errors_utils.Friendly.hardcoded_string_desc_ref desc (loc_of_aloc loc)
+  in
   let desc = Friendly.desc_of_reason_desc in
   let msg_export prefix export_name =
     if export_name = "default" then
@@ -1130,22 +1133,18 @@ let to_printable_error :
       let assignments =
         match providers with
         | [] -> (* should not happen *) [text (spf "one of its initial %ss" noun)]
-        | [r] when Loc.equal (loc_of_aloc r) (loc_of_aloc declaration) ->
+        | [l] when Loc.equal (loc_of_aloc l) (loc_of_aloc declaration) ->
           [
             text "its ";
-            ref
-              (mk_reason
-                 (RCustom
-                    ( if array then
-                      "initial element"
-                    else
-                      "initializer"
-                    )
-                 )
-                 declaration
-              );
+            hardcoded_string_desc_ref
+              ( if array then
+                "initial element"
+              else
+                "initializer"
+              )
+              declaration;
           ]
-        | [r] -> [text "its "; ref (mk_reason (RCustom ("initial " ^ noun)) r)]
+        | [l] -> [text "its "; hardcoded_string_desc_ref ("initial " ^ noun) l]
         | providers ->
           text (spf "one of its initial %ss" noun)
           :: (Base.List.map ~f:(Friendly.no_desc_ref_map loc_of_aloc) providers
@@ -1177,13 +1176,13 @@ let to_printable_error :
     | ExplanationReactComponentPropsDeepReadOnly props_loc ->
       [
         text "React ";
-        ref (mk_reason (RCustom "component properties") props_loc);
+        hardcoded_string_desc_ref "component properties" props_loc;
         text " and their nested props and elements cannot be written to";
       ]
     | ExplanationReactHookArgsDeepReadOnly props_loc ->
       [
         text "React ";
-        ref (mk_reason (RCustom "hook arguments") props_loc);
+        hardcoded_string_desc_ref "hook arguments" props_loc;
         text " and their nested elements cannot be written to";
       ]
     | ExplanationReactHookIncompatibleWithEachOther ->
@@ -1199,7 +1198,7 @@ let to_printable_error :
     | ExplanationReactHookReturnDeepReadOnly hook_loc ->
       [
         text "The return value of a ";
-        ref (mk_reason (RCustom "React hook") hook_loc);
+        hardcoded_string_desc_ref "React hook" hook_loc;
         text " cannot be written to";
       ]
   in
@@ -1274,7 +1273,7 @@ let to_printable_error :
     | RootCannotDeclarePredicate { predicate_loc; fn } ->
       [
         text "Cannot declare a ";
-        ref (mk_reason (RCustom "type predicate") predicate_loc);
+        hardcoded_string_desc_ref "type predicate" predicate_loc;
         text " for ";
         ref fn;
       ]
@@ -1479,16 +1478,16 @@ let to_printable_error :
       let hook_blame =
         match hooks with
         | [] -> [text "React hook"]
-        | x :: _ -> [ref (mk_reason (RCustom "React hook") x)]
+        | x :: _ -> [hardcoded_string_desc_ref "React hook" x]
       in
       let non_hook_blame =
         match non_hooks with
         | [] -> [text "regular function definition"]
-        | x :: _ -> [text "regular "; ref (mk_reason (RCustom "function definition") x)]
+        | x :: _ -> [text "regular "; hardcoded_string_desc_ref "function definition" x]
       in
       [
         text "Cannot call function because ";
-        ref (mk_reason (RCustom "callee") callee_loc);
+        hardcoded_string_desc_ref "callee" callee_loc;
         (* Kinda crummy, hopefully doesn't come up often *)
         text " may be a ";
       ]
@@ -1502,7 +1501,7 @@ let to_printable_error :
     | MessageCannotCallNonReactHookWithIllegalName callee_loc ->
       [
         text "Cannot call function because ";
-        ref (mk_reason (RCustom "callee") callee_loc);
+        hardcoded_string_desc_ref "callee" callee_loc;
         text " has a name that indicates it is a React hook (starting with ";
         code "use";
         text ") but it is defined as a non-hook function.";
@@ -1556,19 +1555,19 @@ let to_printable_error :
     | MessageCannotCallReactHookConditionally callee_loc ->
       [
         text "Cannot call ";
-        ref (mk_reason (RCustom "hook") callee_loc);
+        hardcoded_string_desc_ref "hook" callee_loc;
         text " because React hooks cannot be called in conditional contexts.";
       ]
     | MessageCannotCallReactHookInNonComponentOrHook callee_loc ->
       [
         text "Cannot call ";
-        ref (mk_reason (RCustom "hook") callee_loc);
+        hardcoded_string_desc_ref "hook" callee_loc;
         text " because React hooks can only be called within components or hooks.";
       ]
     | MessageCannotCallReactHookWithIllegalName callee_loc ->
       [
         text "Cannot call hook because ";
-        ref (mk_reason (RCustom "callee") callee_loc);
+        hardcoded_string_desc_ref "callee" callee_loc;
         text "'s name does not conform to React hook rules. Hook names must begin with ";
         code "use";
         text " followed by a capitalized letter.";
@@ -2316,7 +2315,7 @@ let to_printable_error :
                      text " - ";
                      ref reason;
                      text " depends on ";
-                     ref (mk_reason (RCustom "other definition") hd);
+                     hardcoded_string_desc_ref "other definition" hd;
                    ]
                   @ tl_dep
                   @ suffix
@@ -2362,7 +2361,7 @@ let to_printable_error :
             else
               ([], tl)
           in
-          ( ref (mk_reason (RCustom "itself") hd),
+          ( hardcoded_string_desc_ref "itself" hd,
             (Base.List.map ~f:(fun loc -> [text ", "; no_desc_ref loc]) tl |> List.flatten) @ suffix
           )
         | [] -> (text "itself", [])
@@ -2372,17 +2371,17 @@ let to_printable_error :
         | [] -> [text "this definition"]
         | [Env_api.Loc loc]
         | [Env_api.Object { loc; props = [] }] ->
-          [ref (mk_reason (RCustom "this definition") loc)]
+          [hardcoded_string_desc_ref "this definition" loc]
         | [Env_api.Object { loc; props }] when List.length props > 5 ->
-          [ref (mk_reason (RCustom "this definition") loc)]
+          [hardcoded_string_desc_ref "this definition" loc]
         | [Env_api.Object { loc; props = [prop] }] ->
           [
-            ref (mk_reason (RCustom "this definition") loc);
+            hardcoded_string_desc_ref "this definition" loc;
             text "or to";
-            ref (mk_reason (RCustom "its property") prop);
+            hardcoded_string_desc_ref "its property" prop;
           ]
         | [Env_api.Object { loc; props }] ->
-          [ref (mk_reason (RCustom "this definition") loc); text " or to its properties"]
+          [hardcoded_string_desc_ref "this definition" loc; text " or to its properties"]
           @ Base.List.map ~f:no_desc_ref props
         | ls ->
           let (locs, properties) =
@@ -2588,7 +2587,7 @@ let to_printable_error :
       [
         text "Invalid enum member initializer. Initializers need to be unique, but this one ";
         text "has already been used for a ";
-        ref (mk_reason (RCustom "previous member") prev_use_loc);
+        hardcoded_string_desc_ref "previous member" prev_use_loc;
         text " of ";
         ref enum_reason;
         text ".";
@@ -2601,7 +2600,7 @@ let to_printable_error :
              && File_key.check_suffix conflict_file ".js" ->
         [
           text "This file is being illegally shadowed by the ";
-          ref (mk_reason (RCustom "js.flow file") provider);
+          hardcoded_string_desc_ref "js.flow file" provider;
           text ". This file can only be shadowed by a js.flow file ";
           text "in the same directory with the same base name.";
         ]
@@ -2611,7 +2610,7 @@ let to_printable_error :
           code module_name;
           text ". Change ";
           text "either this module provider or the ";
-          ref (mk_reason (RCustom "current module provider") provider);
+          hardcoded_string_desc_ref "current module provider" provider;
           text ".";
         ])
     | MessageEnumsNotEnabled ->
@@ -2994,16 +2993,16 @@ let to_printable_error :
     | MessageInvalidRefPropertyInSpread { ref_loc; spread_loc } ->
       [
         text "Components do not support ";
-        ref (mk_reason (RCustom "ref properties") ref_loc);
+        hardcoded_string_desc_ref "ref properties" ref_loc;
         text " within ";
-        ref (mk_reason (RCustom "spreads") spread_loc);
+        hardcoded_string_desc_ref "spreads" spread_loc;
       ]
     | MessageInvalidSelfReferencingTypeAnnotation { name; loc } ->
       [
         text "Invalid type annotation for ";
         code name;
         text ". It contains a ";
-        ref (mk_reason (RCustom "reference") loc);
+        hardcoded_string_desc_ref "reference" loc;
         text " to the binding being declared.";
       ]
     | MessageInvalidTrivialRecursiveDefinition description ->
@@ -3307,9 +3306,9 @@ let to_printable_error :
         text "The name of intrinsic element ";
         ref use;
         text " overlaps with a ";
-        ref (mk_reason (RCustom "local definition") def);
+        hardcoded_string_desc_ref "local definition" def;
         text " which has a ";
-        ref (mk_reason (RCustom "type") type_);
+        hardcoded_string_desc_ref "type" type_;
         text " that ";
         ( if mixed then
           text "may"
@@ -3326,9 +3325,9 @@ let to_printable_error :
         text "Component property ";
         ref first;
         text " is ";
-        ref (mk_reason (RCustom "re-declared") second_loc);
+        hardcoded_string_desc_ref "re-declared" second_loc;
         text " within a ";
-        ref (mk_reason (RCustom "spread") spread_loc);
+        hardcoded_string_desc_ref "spread" spread_loc;
         text ". Property names may only be have one definition within a component";
       ]
     | MessageShouldAnnotateVariableOnlyInitializedInGenericContext
@@ -3387,7 +3386,7 @@ let to_printable_error :
       in
       [
         text "Sketchy null check on ";
-        ref (mk_reason (RCustom type_str) falsy_loc);
+        hardcoded_string_desc_ref type_str falsy_loc;
         text " ";
         text "which is potentially ";
         text value_str;
@@ -3398,16 +3397,18 @@ let to_printable_error :
       ]
     | MesssageSpeculationAmbiguous
         { prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
-      let prev_case_r =
-        mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
+      let prev_case_ref =
+        hardcoded_string_desc_ref ("case " ^ string_of_int (prev_i + 1)) (loc_of_reason prev_case)
       in
-      let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
+      let case_ref =
+        hardcoded_string_desc_ref ("case " ^ string_of_int (i + 1)) (loc_of_reason case)
+      in
       [
         text "Could not decide which case to select, since ";
-        ref prev_case_r;
+        prev_case_ref;
         text " ";
         text "may work but if it doesn't ";
-        ref case_r;
+        case_ref;
         text " looks promising ";
         text "too. To fix add a type annotation ";
       ]
@@ -3416,7 +3417,7 @@ let to_printable_error :
           (Base.List.map
              ~f:(fun case_r ->
                let text = "to " ^ string_of_desc (desc_of_reason case_r) in
-               [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
+               [hardcoded_string_desc_ref text (loc_of_reason case_r)])
              case_rs
           )
       @ [text "."]
@@ -3437,7 +3438,7 @@ let to_printable_error :
         text "Cannot reference ";
         code "this";
         text " from within ";
-        ref (mk_reason (RCustom "component declaration") component_loc);
+        hardcoded_string_desc_ref "component declaration" component_loc;
       ]
     | MessageThisInExportedFunction ->
       [text "Cannot use "; code "this"; text " in an exported function."]
