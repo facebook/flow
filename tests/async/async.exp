@@ -10,8 +10,8 @@ References:
    async.js:9:30
       9| async function f1(): Promise<boolean> {
                                       ^^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -31,8 +31,8 @@ References:
    async.js:28:48
      28| async function f4(p: Promise<number>): Promise<boolean> {
                                                         ^^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -99,8 +99,8 @@ undefined in type argument `R` [2]. [incompatible-return]
                      ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [2]
 
 
@@ -142,8 +142,8 @@ References:
    async_return_void.js:1:32
       1| async function foo1(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -160,8 +160,8 @@ References:
    async_return_void.js:5:32
       5| async function foo2(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -181,8 +181,8 @@ References:
    async_return_void.js:9:32
       9| async function foo3(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -223,8 +223,8 @@ References:
    generator.js:22:31
      22|     yield* await Promise.all(["a"]); // error string ~> number
                                        ^^^ [2]
-   <BUILTINS>/core.js:1784:27
-   1784| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1776:27
+   1776| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [3]
 
 
@@ -243,8 +243,8 @@ References:
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1784:27
-   1784| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1776:27
+   1776| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [3]
 
 
@@ -258,8 +258,8 @@ Cannot yield `1` because number [1], a primitive, cannot be used as a subtype of
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:1797:7
-   1797|     : $Iterable<Yield, Return, Next>;
+   <BUILTINS>/core.js:1789:7
+   1789|     : $Iterable<Yield, Return, Next>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

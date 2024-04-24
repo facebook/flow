@@ -107,8 +107,8 @@ References:
    array_lib.js:55:4
      55|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1374:13
-   1374|     length: number;
+   <BUILTINS>/core.js:1366:13
+   1366|     length: number;
                      ^^^^^^ [2]
 
 
@@ -124,8 +124,8 @@ References:
    array_lib.js:56:4
      56|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1374:13
-   1374|     length: number;
+   <BUILTINS>/core.js:1366:13
+   1366|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,8 +139,8 @@ Cannot cast `Array.from(...)` to array type because string [1] is incompatible w
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1147:37
-   1147|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1139:37
+   1139|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:68:31
      68|   Array.from('abcd') as Array<empty>; // ERROR
@@ -364,8 +364,8 @@ Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:862:32
-   862|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:858:32
+   858|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:20:24
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -382,8 +382,8 @@ Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:862:32
-   862|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:858:32
+   858|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:25:24
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this

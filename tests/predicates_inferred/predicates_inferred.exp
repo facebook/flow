@@ -56,8 +56,8 @@ Cannot access object with computed property using string [1]. [invalid-computed-
                          ^^^
 
 References:
-   <BUILTINS>/core.js:1331:63
-   1331|     split(separator?: string | RegExp, limit?: number): Array<string>;
+   <BUILTINS>/core.js:1323:63
+   1323|     split(separator?: string | RegExp, limit?: number): Array<string>;
                                                                        ^^^^^^ [1]
 
 

@@ -109,8 +109,8 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2012:5
-   2012|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:2004:5
+   2004|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -138,8 +138,8 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2019:5
-   2019|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+   <BUILTINS>/core.js:2011:5
+   2011|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -168,8 +168,8 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2041:12
-   2041|   +status: 'rejected',
+   <BUILTINS>/core.js:2033:12
+   2033|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
    allSettled.js:34:22
      34|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -200,8 +200,8 @@ expected type. [underconstrained-implicit-instantiation]
                                     ^^^^^
 
 References:
-   <BUILTINS>/core.js:2046:25
-   2046| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:2038:25
+   2038| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
    allSettled.js:44:5
      44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
@@ -217,8 +217,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2034:15
-   2034|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2026:15
+   2026|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -231,8 +231,8 @@ Cannot call `Promise.any` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2034:5
-   2034|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2026:5
+   2026|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -245,8 +245,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2034:15
-   2034|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2026:15
+   2026|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -261,8 +261,8 @@ an interface. [incompatible-type]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2034:51
-   2034|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2026:51
+   2026|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                                                            ^^^^^^^^^^^^^^ [2]
 
 
@@ -647,8 +647,8 @@ References:
    resolve_void.js:1:29
       1| (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -665,8 +665,8 @@ References:
    resolve_void.js:3:38
       3| (Promise.resolve(undefined): Promise<number>); // error
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1937:24
-   1937| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1929:24
+   1929| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

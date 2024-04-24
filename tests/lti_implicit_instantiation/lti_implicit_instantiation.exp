@@ -8,8 +8,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                   ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2046:25
-   2046| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:2038:25
+   2038| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
 
 
@@ -301,8 +301,8 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
             ^^^^^
 
 References:
-   <BUILTINS>/core.js:950:21
-   950| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:946:21
+   946| declare class Array<T> extends $ReadOnlyArray<T> {
                             ^ [1]
    underconstrained_class_constructor.js:18:1
     18| new Array(1); // Error
@@ -820,8 +820,8 @@ Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-miss
              ^^^
 
 References:
-   <BUILTINS>/core.js:950:15
-   950| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:946:15
+   946| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
 
 
@@ -868,8 +868,8 @@ Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-miss
              ^^^
 
 References:
-   <BUILTINS>/core.js:950:15
-   950| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:946:15
+   946| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
 
 
