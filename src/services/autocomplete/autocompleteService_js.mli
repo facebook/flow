@@ -42,9 +42,6 @@ type 'r autocomplete_service_result_generic =
 type autocomplete_service_result =
   ServerProt.Response.Completion.t autocomplete_service_result_generic
 
-val equal_autocomplete_service_result :
-  autocomplete_service_result -> autocomplete_service_result -> bool
-
 val autocomplete_get_results :
   typing ->
   ac_options ->

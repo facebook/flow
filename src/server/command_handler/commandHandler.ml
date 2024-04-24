@@ -584,23 +584,10 @@ let autocomplete
         ~imports_ranked_usage_boost_exact_match_min_length
         ~show_ranking_info
     in
-    let autocomplete_canonical () = autocomplete ~canonical:true in
-    let autocomplete_classic () = autocomplete ~canonical:false in
     let (initial_json_props, ac_result) =
       match Options.autocomplete_canonical options with
-      | Options.Ac_classic -> autocomplete_classic ()
-      | Options.Ac_canonical -> autocomplete_canonical ()
-      | Options.Ac_both ->
-        let (_, result_1) = autocomplete_canonical () in
-        let (json_2, result_2) = autocomplete_classic () in
-        let equal =
-          match (result_1, result_2) with
-          | (None, None) -> true
-          | (Some (_, _, _, _, _, r1), Some (_, _, _, _, _, r2)) ->
-            AutocompleteService_js.equal_autocomplete_service_result r1 r2
-          | (_, _) -> false
-        in
-        (("canonical_compliance", Hh_json.JSON_Bool equal) :: json_2, result_2)
+      | Options.Ac_classic -> autocomplete ~canonical:false
+      | Options.Ac_canonical -> autocomplete ~canonical:true
     in
     json_of_autocomplete_result initial_json_props ac_result
 

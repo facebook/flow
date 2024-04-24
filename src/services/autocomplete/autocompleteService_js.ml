@@ -389,17 +389,14 @@ type 'r ac_result = {
   result: 'r;
   errors_to_log: string list;
 }
-[@@deriving eq]
 
 type 'r autocomplete_service_result_generic =
   | AcResult of 'r ac_result
   | AcEmpty of string
   | AcFatalError of string
-[@@deriving eq]
 
 type autocomplete_service_result =
   ServerProt.Response.Completion.t autocomplete_service_result_generic
-[@@deriving eq]
 
 let jsdoc_of_def_loc { loc_of_aloc; get_ast_from_shared_mem; ast; _ } def_loc =
   loc_of_aloc def_loc |> Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem

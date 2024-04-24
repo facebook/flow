@@ -38,7 +38,6 @@ type react_rules =
 type autocomplete_canonical =
   | Ac_canonical
   | Ac_classic
-  | Ac_both (* for comparison purposes *)
 
 type format = {
   opt_bracket_spacing: bool;

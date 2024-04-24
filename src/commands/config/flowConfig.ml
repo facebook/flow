@@ -393,11 +393,7 @@ module Opts = struct
 
   let autocomplete_canonical_parser =
     enum
-      [
-        ("canonical", Options.Ac_canonical);
-        ("classic", Options.Ac_classic);
-        ("both", Options.Ac_both);
-      ]
+      [("canonical", Options.Ac_canonical); ("classic", Options.Ac_classic)]
       (fun opts v -> Ok { opts with autocomplete_canonical = Some v })
 
   let casting_syntax_parser =
