@@ -418,7 +418,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-call]
  - Either number [1] is incompatible with `State` [2] in the first parameter.
- - Or inexact `StateUpdater3` [3] is incompatible with exact `$ReadOnly` [4].
+ - Or inexact `StateUpdater3` [3] is incompatible with exact `State` [2].
 
    state6.js:39:25
    39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
@@ -431,9 +431,6 @@ References:
    state6.js:11:59
    11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ [2]
-   <BUILTINS>/react.js:39:20
-   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:3

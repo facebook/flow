@@ -1174,8 +1174,8 @@ let object_read_only =
     in
     mk_object_type
       ~def_reason
-      ~exact_reason:(Some reason)
-      ~invalidate_aliases:false
+      ~exact_reason:None
+      ~invalidate_aliases:true
       ~interface
       ~reachable_targs
       ~kind:Subst_name.ReadOnly

@@ -1333,7 +1333,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `A` because: [incompatible-cast]
  - Either string [1] is incompatible with number [2] in property `foo`.
- - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+ - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:97:8
    97|       (x: A); // error B & {+tag_: 'A',...} ~> A
@@ -1358,7 +1358,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `B` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in property `foo`.
- - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+ - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:98:8
    98|       (x: B); // error A & {+tag_: 'A',...} ~> B
@@ -1383,7 +1383,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `A` because: [incompatible-cast]
  - Either string [1] is incompatible with number [2] in property `foo`.
- - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+ - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:110:8
    110|       (x: A); // error B & {+tag: 'C', ...} ~> A
@@ -1408,7 +1408,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `B` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in property `foo`.
- - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+ - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:111:8
    111|       (x: B); // error A & {+tag: 'C', ...} ~> B
