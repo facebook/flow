@@ -1307,22 +1307,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           )
         | "React$CreateElement" -> mk_custom_fun cx loc t_ast targs ident ReactCreateElement
         | "React$CloneElement" -> mk_custom_fun cx loc t_ast targs ident ReactCloneElement
-        | "React$ElementFactory" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let t =
-                match convert_type_params () with
-                | ([t], _) -> t
-                | _ -> assert false
-              in
-              let targ =
-                match targs with
-                | Some (_, { Ast.Type.TypeArgs.arguments = [t]; comments = _ }) -> t
-                | Some _
-                | None ->
-                  assert false
-              in
-              mk_custom_fun cx loc targ None ident (ReactElementFactory t)
-          )
         | "React$ElementProps" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in

@@ -33,7 +33,12 @@ class ['a] t =
       | ObjProtoT _
       | NullProtoT _ ->
         acc
-      | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
+      | CustomFunT
+          ( _,
+            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactCreateElement
+            | ReactCloneElement | DebugPrint | DebugThrow | DebugSleep )
+          ) ->
+        acc
       | EvalT (t, defer_use_t, id) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#defer_use_type cx acc defer_use_t in
@@ -278,19 +283,6 @@ class ['a] t =
         | Homomorphic
         | Unspecialized ->
           acc)
-
-    method private custom_fun_kind cx acc =
-      function
-      | ReactElementFactory t -> self#type_ cx pole_TODO acc t
-      | ObjectAssign
-      | ObjectGetPrototypeOf
-      | ObjectSetPrototypeOf
-      | ReactCreateElement
-      | ReactCloneElement
-      | DebugPrint
-      | DebugThrow
-      | DebugSleep ->
-        acc
 
     method private tout cx pole acc (r, id) = self#tvar cx pole acc r id
 

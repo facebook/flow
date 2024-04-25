@@ -949,10 +949,6 @@ and merge_annot env file = function
   | ReactCloneElement loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.ReactCloneElement)
-  | ReactElementFactory (loc, t) ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    let t = merge env file t in
-    Type.CustomFunT (reason, Type.ReactElementFactory t)
   | ReactElementProps (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

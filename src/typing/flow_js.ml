@@ -3360,8 +3360,7 @@ struct
         | ( CustomFunT
               ( _,
                 ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint
-                | DebugThrow | DebugSleep | ReactCreateElement | ReactCloneElement
-                | ReactElementFactory _ )
+                | DebugThrow | DebugSleep | ReactCreateElement | ReactCloneElement )
               ),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
@@ -3450,8 +3449,7 @@ struct
           let t = extract_non_spread cx ~trace arg1 in
           rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
-        | ( CustomFunT
-              (lreason, ((ReactCreateElement | ReactCloneElement | ReactElementFactory _) as kind)),
+        | ( CustomFunT (lreason, ((ReactCreateElement | ReactCloneElement) as kind)),
             CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
           ) ->
           let {
@@ -6982,7 +6980,6 @@ struct
     | WriteComputedObjPropCheckT _ ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
-    | UseT (_, CustomFunT (_, ReactElementFactory _))
     | UseT (_, CustomFunT (_, ObjectAssign))
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
@@ -7078,7 +7075,6 @@ struct
     | NamespaceT _ ->
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
-    | CustomFunT (_, ReactElementFactory _)
     | CustomFunT (_, ObjectAssign)
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)

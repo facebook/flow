@@ -132,45 +132,6 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       | _ ->
         (* If we don't have the arguments we need, add an arity error. *)
         add_output cx ~trace (Error_message.EReactElementFunArity (reason_op, "cloneElement", 1)))
-    | ReactElementFactory component ->
-      (match args with
-      (* React.createFactory(component)() *)
-      | [] ->
-        let config =
-          let r = replace_desc_reason RReactProps reason_op in
-          Obj_type.mk_with_proto cx r ~obj_kind:Exact ~frozen:true (ObjProtoT r)
-        in
-        rec_flow
-          cx
-          trace
-          ( component,
-            ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0
-                  { clone = false; targs; config; children = ([], None); tout; return_hint }
-              )
-          )
-      (* React.createFactory(component)(config, ...children) *)
-      | config :: children ->
-        rec_flow
-          cx
-          trace
-          ( component,
-            ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0
-                  {
-                    clone = false;
-                    targs;
-                    config;
-                    children = (children, spread_arg);
-                    tout;
-                    return_hint;
-                  }
-              )
-          ))
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf

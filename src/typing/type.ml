@@ -1755,7 +1755,6 @@ module rec TypeTerm : sig
     (* 3rd party libs *)
     | ReactCreateElement
     | ReactCloneElement
-    | ReactElementFactory of t
     (* Internal tools *)
     | DebugPrint
     | DebugThrow

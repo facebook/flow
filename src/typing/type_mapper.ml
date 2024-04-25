@@ -175,12 +175,12 @@ class virtual ['a] t =
           InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
       | InternalT (EnforceUnionOptimized _) -> t
-      | CustomFunT (r, kind) ->
-        let kind' = self#custom_fun_kind cx map_cx kind in
-        if kind' == kind then
-          t
-        else
-          CustomFunT (r, kind')
+      | CustomFunT
+          ( _r,
+            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactCreateElement
+            | ReactCloneElement | DebugPrint | DebugThrow | DebugSleep )
+          ) ->
+        t
       | AnyT _ -> t
       | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in
@@ -756,24 +756,6 @@ class virtual ['a] t =
           else
             Type t'
       )
-
-    method private custom_fun_kind cx map_cx kind =
-      match kind with
-      | ReactElementFactory t ->
-        let t' = self#type_ cx map_cx t in
-        if t' == t then
-          kind
-        else
-          ReactElementFactory t'
-      | ObjectAssign
-      | ObjectGetPrototypeOf
-      | ObjectSetPrototypeOf
-      | ReactCreateElement
-      | ReactCloneElement
-      | DebugPrint
-      | DebugThrow
-      | DebugSleep ->
-        kind
 
     method private func_predicate cx map_cx predicate =
       match predicate with

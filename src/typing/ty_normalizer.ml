@@ -1474,8 +1474,7 @@ module Make (I : INPUT) : S = struct
          *    <T>(fn: SFC<T>, config: T, children?: any) => React$Element<T>
          *)
         | ReactCreateElement
-        | ReactCloneElement
-        | ReactElementFactory _ ->
+        | ReactCloneElement ->
           return
             Ty.(
               let param_t = mk_tparam "T" in
@@ -1559,7 +1558,7 @@ module Make (I : INPUT) : S = struct
         Ty.Infer (symbol, bound)
       | None -> subst_name ~env loc t bound name
 
-    and custom_fun_short ~env =
+    and custom_fun_short =
       Type.(
         function
         | ObjectAssign -> return (builtin_t (Reason.OrdinaryName "Object$Assign"))
@@ -1567,9 +1566,6 @@ module Make (I : INPUT) : S = struct
         | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
         | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
         | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
-        | ReactElementFactory t ->
-          let%map t = type__ ~env t in
-          generic_builtin_t (Reason.OrdinaryName "React$ElementFactory") [t]
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
         | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))
@@ -1579,7 +1575,7 @@ module Make (I : INPUT) : S = struct
       if Env.expand_internal_types env then
         custom_fun_expanded t
       else
-        custom_fun_short ~env t
+        custom_fun_short t
 
     and internal_t t =
       Type.(
