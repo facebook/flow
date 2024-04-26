@@ -2329,7 +2329,7 @@ struct
             (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
              * carry an id around to break the infinite recursion that constant
              * constant folding can trigger *)
-            | ResolveSpreadsToTupleType (id, elem_t, tout)
+            | ResolveSpreadsToTupleType { id; elem_t; tout }
             | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
               (* You might come across code like
                *
@@ -7813,7 +7813,7 @@ struct
                 )
               )
             | SpreadTupleType { reason_tuple; reason_spread = _; resolved; unresolved } ->
-              let elem_tout = Tvar.mk cx reason_tuple in
+              let elem_t = Tvar.mk cx reason_tuple in
               ResolveSpreadT
                 ( use_op,
                   reason_tuple,
@@ -7821,7 +7821,7 @@ struct
                     rrt_resolved = resolved;
                     rrt_unresolved = unresolved;
                     rrt_resolve_to =
-                      ResolveSpreadsToTupleType (Reason.mk_id (), elem_tout, OpenT tout);
+                      ResolveSpreadsToTupleType { id = Reason.mk_id (); elem_t; tout = OpenT tout };
                   }
                 )
             | ReactCheckComponentRef -> ExtractReactRefT (reason, OpenT tout)
@@ -10378,7 +10378,7 @@ struct
     in
     fun cx ?trace ~use_op ~reason_op resolved resolve_to ->
       match resolve_to with
-      | ResolveSpreadsToTupleType (_, elem_t, tout) ->
+      | ResolveSpreadsToTupleType { id = _; elem_t; tout } ->
         finish_array
           cx
           ~use_op

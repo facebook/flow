@@ -1812,7 +1812,11 @@ module rec TypeTerm : sig
     | ResolvedAnySpreadArg of reason * any_source
 
   and spread_resolve =
-    | ResolveSpreadsToTupleType of int * t * t (* elem type, array type *)
+    | ResolveSpreadsToTupleType of {
+        id: int;
+        elem_t: t;
+        tout: t;
+      }
     (* Once we've finished resolving spreads, try to construct an array with known element types *)
     | ResolveSpreadsToArrayLiteral of int * t * t (* elem type, array type *)
     (* Once we've finished resolving spreads, try to construct a non-tuple array *)
@@ -4284,7 +4288,7 @@ let string_of_use_ctor = function
       begin
         match rrt_resolve_to with
         | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
-        | ResolveSpreadsToTupleType (id, _, _) -> spf "ResolveSpreadsToTupleType (%d)" id
+        | ResolveSpreadsToTupleType { id; _ } -> spf "ResolveSpreadsToTupleType (%d)" id
         | ResolveSpreadsToArrayLiteral (id, _, _) -> spf "ResolveSpreadsToArrayLiteral (%d)" id
         | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
         | ResolveSpreadsToMultiflowSubtypeFull _ -> "ResolveSpreadsToMultiflowSubtypeFull"

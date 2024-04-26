@@ -901,7 +901,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p t ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
     | ResolveSpreadT (use_op, _, { rrt_resolve_to; _ }) ->
       (match rrt_resolve_to with
-      | ResolveSpreadsToTupleType (_, elem_t, tout)
+      | ResolveSpreadsToTupleType { id = _; elem_t; tout }
       | ResolveSpreadsToArrayLiteral (_, elem_t, tout)
       | ResolveSpreadsToArray (elem_t, tout) ->
         p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid elem_t) (kid tout)) t
