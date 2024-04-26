@@ -316,15 +316,11 @@ type 'loc root_message =
 type 'loc message =
   | MessagePlainTextReservedForInternalErrorOnly of string
   | MessageAlreadyExhaustivelyCheckOneEnumMember of {
-      description: 'loc virtual_reason_desc;
       member_name: string;
-      prev_check_reason: 'loc virtual_reason;
+      prev_check_loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
-  | MessageAlreadyExhaustivelyCheckAllEnumMembers of {
-      description: 'loc virtual_reason_desc;
-      enum_reason: 'loc virtual_reason;
-    }
+  | MessageAlreadyExhaustivelyCheckAllEnumMembers of { enum_reason: 'loc virtual_reason }
   | MessageAmbiguousNumericKeyWithVariance
   | MessageAmbiguousObjectType
   | MessageAnyValueUsedAsType of 'loc virtual_reason_desc
@@ -669,7 +665,7 @@ type 'loc message =
       description: 'loc virtual_reason_desc;
       enum_reason: 'loc virtual_reason;
       left_to_check: string list;
-      default_case: 'loc virtual_reason option;
+      default_case_loc: 'loc option;
     }
   | MessageIncorrectType of IncorrectType.t
   | MessageInvalidArgument of {
@@ -679,7 +675,6 @@ type 'loc message =
   | MessageInvalidCatchParameterAnnotation
   | MessageInvalidComponentRestParam
   | MessageInvalidEnumMemberCheck of {
-      description: 'loc virtual_reason_desc;
       enum_reason: 'loc virtual_reason;
       example_member: string option;
     }

@@ -5623,7 +5623,7 @@ struct
                 reason = check_reason;
                 check =
                   EnumExhaustiveCheckPossiblyValid
-                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case };
+                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case_loc };
                 incomplete_out;
                 discriminant_after_check;
               }
@@ -5636,7 +5636,7 @@ struct
             ~enum:enum_info
             ~possible_checks
             ~checks
-            ~default_case
+            ~default_case_loc
             ~incomplete_out
             ~discriminant_after_check
         | (DefT (enum_reason, EnumValueT (AbstractEnum _)), EnumExhaustiveCheckT { reason; _ }) ->
@@ -5652,7 +5652,7 @@ struct
                       tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
                       possible_checks;
                       checks;
-                      default_case;
+                      default_case_loc;
                     };
                 incomplete_out;
                 discriminant_after_check;
@@ -5678,7 +5678,7 @@ struct
             ~enum:discriminant_enum
             ~possible_checks
             ~checks
-            ~default_case
+            ~default_case_loc
             ~incomplete_out
             ~discriminant_after_check
         | ( DefT (enum_reason, EnumValueT enum_info),
@@ -5696,8 +5696,8 @@ struct
             | AbstractEnum _ -> None
           in
           List.iter
-            (fun reason ->
-              add_output cx (Error_message.EEnumInvalidCheck { reason; enum_reason; example_member }))
+            (fun loc ->
+              add_output cx (Error_message.EEnumInvalidCheck { loc; enum_reason; example_member }))
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* If the discriminant is empty, the check is successful. *)
@@ -8116,25 +8116,30 @@ struct
       ~enum
       ~possible_checks
       ~checks
-      ~default_case
+      ~default_case_loc
       ~incomplete_out
       ~discriminant_after_check =
     match possible_checks with
     (* No possible checks left to resolve, analyze the exhaustive check. *)
     | [] ->
       let { members; has_unknown_members; _ } = enum in
-      let check_member (members_remaining, seen) (EnumCheck { reason; member_name }) =
+      let check_member (members_remaining, seen) (EnumCheck { case_test_loc; member_name }) =
         if not @@ SMap.mem member_name members_remaining then
           add_output
             cx
             ~trace
             (Error_message.EEnumMemberAlreadyChecked
-               { reason; prev_check_reason = SMap.find member_name seen; enum_reason; member_name }
+               {
+                 case_test_loc;
+                 prev_check_loc = SMap.find member_name seen;
+                 enum_reason;
+                 member_name;
+               }
             );
-        (SMap.remove member_name members_remaining, SMap.add member_name reason seen)
+        (SMap.remove member_name members_remaining, SMap.add member_name case_test_loc seen)
       in
       let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
-      (match (SMap.is_empty left_over, default_case, has_unknown_members) with
+      (match (SMap.is_empty left_over, default_case_loc, has_unknown_members) with
       | (false, _, _) ->
         add_output
           cx
@@ -8144,7 +8149,7 @@ struct
                reason = check_reason;
                enum_reason;
                left_to_check = SMap.keys left_over;
-               default_case;
+               default_case_loc;
              }
           );
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
@@ -8156,11 +8161,11 @@ struct
           (Error_message.EEnumUnknownNotChecked { reason = check_reason; enum_reason });
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       | (true, Some _, true) -> ()
-      | (true, Some default_case_reason, false) ->
+      | (true, Some default_case_loc, false) ->
         add_output
           cx
           ~trace
-          (Error_message.EEnumAllMembersAlreadyChecked { reason = default_case_reason; enum_reason })
+          (Error_message.EEnumAllMembersAlreadyChecked { loc = default_case_loc; enum_reason })
       | _ -> ())
     (* There are still possible checks to resolve, continue to resolve them. *)
     | (obj_t, check) :: rest_possible_checks ->
@@ -8176,7 +8181,7 @@ struct
                       { discriminant_enum = enum; discriminant_reason = enum_reason; check };
                   possible_checks = rest_possible_checks;
                   checks;
-                  default_case;
+                  default_case_loc;
                 };
             incomplete_out;
             discriminant_after_check;

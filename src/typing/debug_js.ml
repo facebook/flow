@@ -1834,31 +1834,28 @@ let dump_error_message =
       spf "EEnumInvalidObjectFunction (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumNotIterable { reason; for_in } ->
       spf "EEnumNotIterable (%s) (%s)" (dump_reason cx reason) (spf "for_in = %B" for_in)
-    | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+    | EEnumMemberAlreadyChecked { case_test_loc; prev_check_loc; enum_reason; member_name } ->
       spf
         "EEnumMemberAlreadyChecked (%s) (%s) (%s) (%s)"
-        (dump_reason cx reason)
-        (dump_reason cx prev_check_reason)
+        (string_of_aloc case_test_loc)
+        (string_of_aloc prev_check_loc)
         (dump_reason cx enum_reason)
         member_name
-    | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
-      spf
-        "EEnumAllMembersAlreadyChecked (%s) (%s)"
-        (dump_reason cx reason)
-        (dump_reason cx enum_reason)
-    | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
+    | EEnumAllMembersAlreadyChecked { loc; enum_reason } ->
+      spf "EEnumAllMembersAlreadyChecked (%s) (%s)" (string_of_aloc loc) (dump_reason cx enum_reason)
+    | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
       spf
         "EEnumNotAllChecked (%s) (%s) (%s) (%s)"
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
         (String.concat ", " left_to_check)
-        (Base.Option.value_map ~default:"<None>" ~f:(dump_reason cx) default_case)
+        (Base.Option.value_map ~default:"<None>" ~f:string_of_aloc default_case_loc)
     | EEnumUnknownNotChecked { reason; enum_reason } ->
       spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumInvalidCheck { reason; enum_reason; example_member } ->
+    | EEnumInvalidCheck { loc; enum_reason; example_member } ->
       spf
         "EEnumInvalidCheck (%s) (%s) (%s)"
-        (dump_reason cx reason)
+        (string_of_aloc loc)
         (dump_reason cx enum_reason)
         (Base.Option.value ~default:"<None>" example_member)
     | EEnumMemberUsedAsType { reason; enum_reason } ->

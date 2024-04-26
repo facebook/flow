@@ -8027,35 +8027,34 @@ module Make
             when is_valid_enum_member_name name ->
             (match acc with
             | EnumExhaustiveCheckInvalid _ -> acc
-            | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case } ->
-              let reason = mk_reason (RCustom "case") case_test_loc in
-              let possible_check = (obj_t, EnumCheck { reason; member_name = name }) in
-              EnumExhaustiveCheckPossiblyValid
-                { tool; possible_checks = possible_check :: possible_checks; checks; default_case })
-          | (default_case_loc, { Case.test = None; _ }) ->
-            (match acc with
-            | EnumExhaustiveCheckInvalid _ -> acc
-            | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case = _ }
+            | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case_loc }
               ->
+              let possible_check = (obj_t, EnumCheck { case_test_loc; member_name = name }) in
               EnumExhaustiveCheckPossiblyValid
                 {
                   tool;
-                  possible_checks;
+                  possible_checks = possible_check :: possible_checks;
                   checks;
-                  default_case = Some (mk_reason (RCustom "default case") default_case_loc);
+                  default_case_loc;
                 })
+          | (default_case_loc, { Case.test = None; _ }) ->
+            (match acc with
+            | EnumExhaustiveCheckInvalid _ -> acc
+            | EnumExhaustiveCheckPossiblyValid
+                { tool; possible_checks; checks; default_case_loc = _ } ->
+              EnumExhaustiveCheckPossiblyValid
+                { tool; possible_checks; checks; default_case_loc = Some default_case_loc })
           | (_, { Case.test = Some ((case_test_loc, _), _); _ }) ->
-            let case_reason = Reason.mk_reason (Reason.RCustom "case") case_test_loc in
             (match acc with
             | EnumExhaustiveCheckInvalid invalid_checks ->
-              EnumExhaustiveCheckInvalid (case_reason :: invalid_checks)
-            | EnumExhaustiveCheckPossiblyValid _ -> EnumExhaustiveCheckInvalid [case_reason]))
+              EnumExhaustiveCheckInvalid (case_test_loc :: invalid_checks)
+            | EnumExhaustiveCheckPossiblyValid _ -> EnumExhaustiveCheckInvalid [case_test_loc]))
         (EnumExhaustiveCheckPossiblyValid
            {
              tool = EnumResolveDiscriminant;
              possible_checks = [];
              checks = [];
-             default_case = None;
+             default_case_loc = None;
            }
         )
         cases_ast

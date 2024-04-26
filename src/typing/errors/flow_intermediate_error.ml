@@ -1312,26 +1312,23 @@ let to_printable_error :
   in
   let msg_to_friendly_msgs = function
     | MessagePlainTextReservedForInternalErrorOnly s -> [text s]
-    | MessageAlreadyExhaustivelyCheckOneEnumMember
-        { description; prev_check_reason; enum_reason; member_name } ->
+    | MessageAlreadyExhaustivelyCheckOneEnumMember { prev_check_loc; enum_reason; member_name } ->
       [
         text "Invalid exhaustive check: ";
-        desc description;
-        text " checks for enum member ";
+        text "case checks for enum member ";
         code member_name;
         text " of ";
         ref enum_reason;
         text ", but member ";
         code member_name;
         text " was already checked at ";
-        ref prev_check_reason;
+        hardcoded_string_desc_ref "case" prev_check_loc;
         text ".";
       ]
-    | MessageAlreadyExhaustivelyCheckAllEnumMembers { description; enum_reason } ->
+    | MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason } ->
       [
         text "Invalid exhaustive check: ";
-        desc description;
-        text " checks for additional enum members of ";
+        text "default case checks for additional enum members of ";
         ref enum_reason;
         text ", but all of its members have already been checked.";
       ]
@@ -2818,8 +2815,8 @@ let to_printable_error :
       [text object_kind; ref lower; text " is incompatible with exact "; ref upper]
     | MessageIncompatibleWithIndexed { lower; upper } ->
       [ref lower; text " is incompatible with indexed "; ref upper]
-    | MessageIncompleteExhausiveCheckEnum { description; enum_reason; left_to_check; default_case }
-      ->
+    | MessageIncompleteExhausiveCheckEnum
+        { description; enum_reason; left_to_check; default_case_loc } ->
       let left_to_check_features =
         match left_to_check with
         | [member_to_check] ->
@@ -2841,11 +2838,11 @@ let to_printable_error :
           @ [text " of enum "; ref enum_reason; text " have"]
       in
       let default_features =
-        match default_case with
+        match default_case_loc with
         | Some default_reason ->
           [
             text " The ";
-            ref default_reason;
+            hardcoded_string_desc_ref "default case" default_reason;
             text " does not check for the missing members as the ";
             code (Lints.string_of_kind Lints.RequireExplicitEnumSwitchCases);
             text " lint has been enabled.";
@@ -2900,7 +2897,7 @@ let to_printable_error :
         code "typeof";
         text " return value.";
       ]
-    | MessageInvalidEnumMemberCheck { description; enum_reason; example_member } ->
+    | MessageInvalidEnumMemberCheck { enum_reason; example_member } ->
       let suggestion =
         match enum_name_of_reason enum_reason with
         | Some enum_name ->
@@ -2914,9 +2911,8 @@ let to_printable_error :
         | None -> []
       in
       [
-        text "Invalid enum member check at ";
-        desc description;
-        text ". Check must be dot-access of a member of ";
+        text "Invalid enum member check at case. ";
+        text "Check must be dot-access of a member of ";
         ref enum_reason;
         text ".";
       ]

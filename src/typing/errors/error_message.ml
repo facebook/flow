@@ -425,27 +425,27 @@ and 'loc t' =
       for_in: bool;
     }
   | EEnumMemberAlreadyChecked of {
-      reason: 'loc virtual_reason;
-      prev_check_reason: 'loc virtual_reason;
+      case_test_loc: 'loc;
+      prev_check_loc: 'loc;
       enum_reason: 'loc virtual_reason;
       member_name: string;
     }
   | EEnumAllMembersAlreadyChecked of {
-      reason: 'loc virtual_reason;
+      loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
   | EEnumNotAllChecked of {
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
       left_to_check: string list;
-      default_case: 'loc virtual_reason option;
+      default_case_loc: 'loc option;
     }
   | EEnumUnknownNotChecked of {
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
   | EEnumInvalidCheck of {
-      reason: 'loc virtual_reason;
+      loc: 'loc;
       enum_reason: 'loc virtual_reason;
       example_member: string option;
     }
@@ -1125,30 +1125,28 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumInvalidObjectFunction { reason; enum_reason } ->
     EEnumInvalidObjectFunction { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumNotIterable { reason; for_in } -> EEnumNotIterable { reason = map_reason reason; for_in }
-  | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+  | EEnumMemberAlreadyChecked { case_test_loc; prev_check_loc; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
       {
-        reason = map_reason reason;
-        prev_check_reason = map_reason prev_check_reason;
+        case_test_loc = f case_test_loc;
+        prev_check_loc = f prev_check_loc;
         enum_reason = map_reason enum_reason;
         member_name;
       }
-  | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
-    EEnumAllMembersAlreadyChecked
-      { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
+  | EEnumAllMembersAlreadyChecked { loc; enum_reason } ->
+    EEnumAllMembersAlreadyChecked { loc = f loc; enum_reason = map_reason enum_reason }
+  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
     EEnumNotAllChecked
       {
         reason = map_reason reason;
         enum_reason = map_reason enum_reason;
         left_to_check;
-        default_case = Option.map map_reason default_case;
+        default_case_loc = Option.map f default_case_loc;
       }
   | EEnumUnknownNotChecked { reason; enum_reason } ->
     EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumInvalidCheck { reason; enum_reason; example_member } ->
-    EEnumInvalidCheck
-      { reason = map_reason reason; enum_reason = map_reason enum_reason; example_member }
+  | EEnumInvalidCheck { loc; enum_reason; example_member } ->
+    EEnumInvalidCheck { loc = f loc; enum_reason = map_reason enum_reason; example_member }
   | EEnumMemberUsedAsType { reason; enum_reason } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumIncompatible
@@ -1613,12 +1611,13 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDebugPrint (reason, _)
   | EComputedPropertyWithUnion reason ->
     Some (loc_of_reason reason)
-  | EEnumMemberAlreadyChecked { reason; _ }
-  | EEnumAllMembersAlreadyChecked { reason; _ }
+  | EEnumAllMembersAlreadyChecked { loc; _ }
+  | EEnumMemberAlreadyChecked { case_test_loc = loc; _ }
+  | EEnumInvalidCheck { loc; _ } ->
+    Some loc
   | EEnumNotAllChecked { reason; _ }
   | EEnumUnknownNotChecked { reason; _ }
   | EEnumInvalidAbstractUse { reason; _ }
-  | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
   | EEnumInvalidObjectUtilType { reason; _ }
@@ -1833,7 +1832,7 @@ let kind_of_msg =
     | EUnnecessaryInvariant _ -> LintError Lints.UnnecessaryInvariant
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
-    | EEnumNotAllChecked { default_case = Some _; _ } ->
+    | EEnumNotAllChecked { default_case_loc = Some _; _ } ->
       LintError Lints.RequireExplicitEnumSwitchCases
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
@@ -2514,31 +2513,23 @@ let friendly_message_of_msg = function
   | EEnumInvalidObjectFunction { reason; enum_reason } ->
     Normal (MessageCannotCallObjectFunctionOnEnum { reason; enum_reason })
   | EEnumNotIterable { reason; for_in } -> Normal (MessageCannotIterateEnum { reason; for_in })
-  | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
+  | EEnumMemberAlreadyChecked { case_test_loc = _; prev_check_loc; enum_reason; member_name } ->
     Normal
-      (MessageAlreadyExhaustivelyCheckOneEnumMember
-         { description = desc_of_reason reason; prev_check_reason; enum_reason; member_name }
-      )
-  | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
-    Normal
-      (MessageAlreadyExhaustivelyCheckAllEnumMembers
-         { description = desc_of_reason reason; enum_reason }
-      )
-  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
+      (MessageAlreadyExhaustivelyCheckOneEnumMember { prev_check_loc; enum_reason; member_name })
+  | EEnumAllMembersAlreadyChecked { loc = _; enum_reason } ->
+    Normal (MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason })
+  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
     Normal
       (MessageIncompleteExhausiveCheckEnum
-         { description = desc_of_reason reason; enum_reason; left_to_check; default_case }
+         { description = desc_of_reason reason; enum_reason; left_to_check; default_case_loc }
       )
   | EEnumUnknownNotChecked { reason; enum_reason } ->
     Normal
       (MessageCannotExhaustivelyCheckEnumWithUnknowns
          { description = desc_of_reason reason; enum_reason }
       )
-  | EEnumInvalidCheck { reason; enum_reason; example_member } ->
-    Normal
-      (MessageInvalidEnumMemberCheck
-         { description = desc_of_reason reason; enum_reason; example_member }
-      )
+  | EEnumInvalidCheck { loc = _; enum_reason; example_member } ->
+    Normal (MessageInvalidEnumMemberCheck { enum_reason; example_member })
   | EEnumMemberUsedAsType { reason; enum_reason } ->
     Normal
       (MessageCannotUseEnumMemberUsedAsType { description = desc_of_reason reason; enum_reason })
@@ -2737,7 +2728,7 @@ let defered_in_speculation = function
   | EUnnecessaryDeclareTypeOnlyExport _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
-  | EEnumNotAllChecked { default_case = Some _; _ }
+  | EEnumNotAllChecked { default_case_loc = Some _; _ }
   | EUninitializedInstanceProperty _
   | ETrivialRecursiveDefinition _
   | EAnyValueUsedAsType _
@@ -2872,8 +2863,8 @@ let error_code_of_message err : error_code option =
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType
   | EEnumModification _ -> Some CannotWriteEnum
-  | EEnumNotAllChecked { default_case = None; _ } -> Some InvalidExhaustiveCheck
-  | EEnumNotAllChecked { default_case = Some _; _ } -> Some RequireExplicitEnumSwitchCases
+  | EEnumNotAllChecked { default_case_loc = None; _ } -> Some InvalidExhaustiveCheck
+  | EEnumNotAllChecked { default_case_loc = Some _; _ } -> Some RequireExplicitEnumSwitchCases
   | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType

@@ -980,7 +980,7 @@ module rec TypeTerm : sig
 
   and enum_check_t =
     | EnumCheck of {
-        reason: reason;
+        case_test_loc: ALoc.t;
         member_name: string;
       }
 
@@ -1002,9 +1002,9 @@ module rec TypeTerm : sig
          * enum type as the discriminant. *)
         possible_checks: (t * enum_check_t) list;
         checks: enum_check_t list;
-        default_case: reason option;
+        default_case_loc: ALoc.t option;
       }
-    | EnumExhaustiveCheckInvalid of reason list
+    | EnumExhaustiveCheckInvalid of ALoc.t list
 
   and cond_context =
     | SwitchTest of {
