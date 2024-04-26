@@ -3828,6 +3828,7 @@ let to_printable_error :
         match kind with
         | Flow_ast.Type.TypeGuard.Default -> "This kind of type guard is"
         | Flow_ast.Type.TypeGuard.Asserts -> "Type guard assertions are"
+        | Flow_ast.Type.TypeGuard.Implies -> "One-sided type guards are"
       in
       [text (kind_str ^ " not yet supported.")]
     | MessageUnsupportedSyntax (UnsupportedInternalSlot { name; static = false }) ->

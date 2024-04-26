@@ -1643,6 +1643,7 @@ with type t = Impl.t = struct
         match kind with
         | Default -> null
         | Asserts -> string "asserts"
+        | Implies -> string "implies"
       in
       node
         ?comments:(format_internal_comments comments)

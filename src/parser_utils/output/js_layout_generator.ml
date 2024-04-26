@@ -3571,6 +3571,7 @@ and type_guard ~opts ~needs_parens guard =
     match kind with
     | Default -> []
     | Asserts -> [Atom "asserts"]
+    | Implies -> [Atom "implies"]
   in
   let id_part = identifier x in
   let type_part =

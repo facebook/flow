@@ -670,6 +670,7 @@ and Type : sig
     and kind =
       | Default
       | Asserts
+      | Implies
 
     and ('M, 'T) t' = {
       kind: kind;
