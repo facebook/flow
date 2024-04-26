@@ -1279,12 +1279,12 @@ let dump_error_message =
       spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
     | ENoNamedExport (reason, module_name, export_name, _) ->
       spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
-    | EMissingTypeArgs { reason_op; reason_tapp; reason_arity; min_arity; max_arity } ->
+    | EMissingTypeArgs { reason_op; reason_tapp; arity_loc; min_arity; max_arity } ->
       spf
         "EMissingTypeArgs { reason_op=%s; reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
         (dump_reason cx reason_op)
         (dump_reason cx reason_tapp)
-        (dump_reason cx reason_arity)
+        (string_of_aloc arity_loc)
         min_arity
         max_arity
     | EAnyValueUsedAsType { reason_use } ->
@@ -1488,17 +1488,17 @@ let dump_error_message =
         is_new
         (dump_reason cx reason_arity)
         expected_arity
-    | ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity } ->
+    | ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity } ->
       spf
         "ETooManyTypeArgs (%s, %s, %d)"
         (dump_reason cx reason_tapp)
-        (dump_reason cx reason_arity)
+        (string_of_aloc arity_loc)
         maximum_arity
-    | ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity } ->
+    | ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity } ->
       spf
         "ETooFewTypeArgs (%s, %s, %d)"
         (dump_reason cx reason_tapp)
-        (dump_reason cx reason_arity)
+        (string_of_aloc arity_loc)
         minimum_arity
     | EInvalidTypeArgs (reason_tapp, reason_arity) ->
       spf "EInvalidTypeArgs (%s, %s)" (dump_reason cx reason_tapp) (dump_reason cx reason_arity)

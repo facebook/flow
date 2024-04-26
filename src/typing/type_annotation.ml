@@ -1247,7 +1247,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               cx
               loc
               (Error_message.ETooManyTypeArgs
-                 { reason_tapp = reason; reason_arity = reason; maximum_arity = 3 }
+                 { reason_tapp = reason; arity_loc = loc; maximum_arity = 3 }
               )
               t_ast
           | _ ->

@@ -10811,12 +10811,9 @@ struct
   and type_app_variance_check cx trace use_op reason_op reason_tapp targs tparams_loc tparams =
     let minimum_arity = poly_minimum_arity tparams in
     let maximum_arity = Nel.length tparams in
-    let reason_arity = mk_reason (RCustom "See type parameters of definition here") tparams_loc in
+    let arity_loc = tparams_loc in
     if List.length targs > maximum_arity then
-      add_output
-        cx
-        ~trace
-        (Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity })
+      add_output cx ~trace (Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity })
     else
       let (unused_targs, _, _) =
         Nel.fold_left
@@ -10841,7 +10838,7 @@ struct
               add_output
                 cx
                 ~trace
-                (Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity });
+                (Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity });
               ([], map1, map2)
             | (Some default, []) ->
               let t1 = subst cx ~use_op map1 default in

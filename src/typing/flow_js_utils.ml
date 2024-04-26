@@ -668,9 +668,6 @@ let mk_tparams cx params =
   in
   (map, List.rev rev_lst)
 
-let mk_poly_arity_reason tparams_loc =
-  mk_reason (RCustom "See type parameters of definition here") tparams_loc
-
 let poly_minimum_arity =
   let f n typeparam =
     if typeparam.default = None then
@@ -1052,14 +1049,11 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       ts =
     let minimum_arity = poly_minimum_arity xs in
     let maximum_arity = Nel.length xs in
-    let reason_arity = mk_poly_arity_reason tparams_loc in
+    let arity_loc = tparams_loc in
     if List.length ts > maximum_arity then (
-      add_output
-        cx
-        ~trace
-        (Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity });
+      add_output cx ~trace (Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity });
       Base.Option.iter errs_ref ~f:(fun errs_ref ->
-          errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref
+          errs_ref := Context.ETooManyTypeArgs (arity_loc, maximum_arity) :: !errs_ref
       )
     );
     let (map, _, all_ts_rev) =
@@ -1075,9 +1069,9 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
               add_output
                 cx
                 ~trace
-                (Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity });
+                (Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity });
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
-                  errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref
+                  errs_ref := Context.ETooFewTypeArgs (arity_loc, minimum_arity) :: !errs_ref
               );
               (AnyT (reason_op, AnyError None), [], all_ts)
             | (_, t :: ts) -> (t, ts, (t, typeparam.name) :: all_ts)
@@ -1137,14 +1131,14 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       | Some (errs, t) ->
         errs
         |> List.iter (function
-               | Context.ETooManyTypeArgs (reason_arity, maximum_arity) ->
+               | Context.ETooManyTypeArgs (arity_loc, maximum_arity) ->
                  let msg =
-                   Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity }
+                   Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity }
                  in
                  add_output cx ~trace msg
-               | Context.ETooFewTypeArgs (reason_arity, minimum_arity) ->
+               | Context.ETooFewTypeArgs (arity_loc, minimum_arity) ->
                  let msg =
-                   Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity }
+                   Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity }
                  in
                  add_output cx ~trace msg
                );
@@ -1241,7 +1235,7 @@ module ValueToTypeReferenceTransform = struct
            {
              reason_op;
              reason_tapp;
-             reason_arity = mk_poly_arity_reason tparams_loc;
+             arity_loc = tparams_loc;
              min_arity = poly_minimum_arity ids;
              max_arity = Nel.length ids;
            }

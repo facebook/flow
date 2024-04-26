@@ -47,7 +47,7 @@ and 'loc t' =
   | EMissingTypeArgs of {
       reason_op: 'loc virtual_reason;
       reason_tapp: 'loc virtual_reason;
-      reason_arity: 'loc virtual_reason;
+      arity_loc: 'loc;
       min_arity: int;
       max_arity: int;
     }
@@ -190,12 +190,12 @@ and 'loc t' =
   | ETypeParamMinArity of 'loc * int
   | ETooManyTypeArgs of {
       reason_tapp: 'loc virtual_reason;
-      reason_arity: 'loc virtual_reason;
+      arity_loc: 'loc;
       maximum_arity: int;
     }
   | ETooFewTypeArgs of {
       reason_tapp: 'loc virtual_reason;
-      reason_arity: 'loc virtual_reason;
+      arity_loc: 'loc;
       minimum_arity: int;
     }
   | EInvalidInfer of 'loc
@@ -908,12 +908,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENoDefaultExport (r, s1, s2) -> ENoDefaultExport (map_reason r, s1, s2)
   | EOnlyDefaultExport (r, s1, s2) -> EOnlyDefaultExport (map_reason r, s1, s2)
   | ENoNamedExport (r, s1, s2, s3) -> ENoNamedExport (map_reason r, s1, s2, s3)
-  | EMissingTypeArgs { reason_op; reason_tapp; reason_arity; min_arity; max_arity } ->
+  | EMissingTypeArgs { reason_op; reason_tapp; arity_loc; min_arity; max_arity } ->
     EMissingTypeArgs
       {
         reason_op = map_reason reason_op;
         reason_tapp = map_reason reason_tapp;
-        reason_arity = map_reason reason_arity;
+        arity_loc = f arity_loc;
         min_arity;
         max_arity;
       }
@@ -940,20 +940,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ECallTypeArity
       { call_loc = f call_loc; is_new; expected_arity; reason_arity = map_reason reason_arity }
   | ETypeParamMinArity (loc, i) -> ETypeParamMinArity (f loc, i)
-  | ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity } ->
+  | ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity } ->
     ETooManyTypeArgs
-      {
-        reason_tapp = map_reason reason_tapp;
-        reason_arity = map_reason reason_arity;
-        maximum_arity;
-      }
-  | ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity } ->
-    ETooFewTypeArgs
-      {
-        reason_tapp = map_reason reason_tapp;
-        reason_arity = map_reason reason_arity;
-        minimum_arity;
-      }
+      { reason_tapp = map_reason reason_tapp; arity_loc = f arity_loc; maximum_arity }
+  | ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity } ->
+    ETooFewTypeArgs { reason_tapp = map_reason reason_tapp; arity_loc = f arity_loc; minimum_arity }
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
   | EInvalidInfer l -> EInvalidInfer (f l)
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
@@ -1421,8 +1412,7 @@ let util_use_op_of_msg nope util = function
   | ENoDefaultExport (_, _, _)
   | EOnlyDefaultExport (_, _, _)
   | ENoNamedExport (_, _, _, _)
-  | EMissingTypeArgs
-      { reason_op = _; reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
+  | EMissingTypeArgs { reason_op = _; reason_tapp = _; arity_loc = _; min_arity = _; max_arity = _ }
   | EAnyValueUsedAsType _
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
@@ -2050,14 +2040,14 @@ let friendly_message_of_msg = function
     Normal (MessageOnlyDefaultExport { module_name; export_name })
   | ENoNamedExport (_, module_name, export_name, suggestion) ->
     Normal (MessageNoNamedExport { module_name; export_name; suggestion })
-  | EMissingTypeArgs { reason_op = _; reason_tapp; reason_arity; min_arity; max_arity } ->
-    let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
+  | EMissingTypeArgs { reason_op = _; reason_tapp; arity_loc; min_arity; max_arity } ->
+    let reason_arity = mk_reason (desc_of_reason reason_tapp) arity_loc in
     Normal (MessageCannotUseTypeWithoutAnyTypeArgs { reason_arity; min_arity; max_arity })
-  | ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity } ->
-    let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
+  | ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity } ->
+    let reason_arity = mk_reason (desc_of_reason reason_tapp) arity_loc in
     Normal (MessageCannotUseTypeWithTooManyTypeArgs { reason_arity; n = maximum_arity })
-  | ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity } ->
-    let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
+  | ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity } ->
+    let reason_arity = mk_reason (desc_of_reason reason_tapp) arity_loc in
     Normal (MessageCannotUseTypeWithTooFewTypeArgs { reason_arity; n = minimum_arity })
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
     Normal (MessageCannotUseTypeWithInvalidTypeArgs { reason_main; reason_tapp })

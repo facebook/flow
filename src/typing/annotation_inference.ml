@@ -559,7 +559,7 @@ module rec ConsGen : S = struct
            {
              reason_op = reason;
              reason_tapp;
-             reason_arity = Flow_js_utils.mk_poly_arity_reason tparams_loc;
+             arity_loc = tparams_loc;
              min_arity = Flow_js_utils.poly_minimum_arity ids;
              max_arity = Nel.length ids;
            }

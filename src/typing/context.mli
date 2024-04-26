@@ -126,8 +126,8 @@ type voidable_check = {
 }
 
 type subst_cache_err =
-  | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
-  | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
+  | ETooFewTypeArgs of ALoc.t * int
+  | ETooManyTypeArgs of ALoc.t * int
 
 val make_ccx : unit -> component_t
 

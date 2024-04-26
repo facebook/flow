@@ -84,8 +84,8 @@ type voidable_check = {
 }
 
 type subst_cache_err =
-  | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
-  | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
+  | ETooFewTypeArgs of ALoc.t * int
+  | ETooManyTypeArgs of ALoc.t * int
 
 module TypeAppExpansion = struct
   (* Array types function like type applications but are not implemented as such. Unless
