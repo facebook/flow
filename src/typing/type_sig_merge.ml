@@ -1780,8 +1780,9 @@ and merge_fun
       match predicate with
       | None -> None
       | Some (Predicate (loc, p)) -> Some (Type.PredBased (merge_predicate env file (loc, p)))
-      | Some (TypeGuard (x, t)) ->
-        Some (Type.TypeGuardBased { param_name = x; type_guard = merge env file t })
+      | Some (TypeGuard { loc; param_name; type_guard = t; one_sided }) ->
+        let reason = Reason.mk_reason Reason.RTypeGuard loc in
+        Some (Type.TypeGuardBased { reason; one_sided; param_name; type_guard = merge env file t })
     in
     let this_status =
       if is_method then

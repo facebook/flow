@@ -7531,7 +7531,7 @@ module Make
     in
     (* This check to be performed after the function has been checked to ensure all
      * entries have been prepared for type checking. *)
-    let check_type_guard_consistency cx param_loc tg_param tg_reason type_guard =
+    let check_type_guard_consistency cx _one_sided param_loc tg_param tg_reason type_guard =
       let env = Context.environment cx in
       let { Loc_env.var_info; _ } = env in
       let { Env_api.type_guard_consistency_maps; _ } = var_info in
@@ -7597,21 +7597,21 @@ module Make
         | (loc, Rest) -> err_with_desc (RRestParameter (Some name)) expr_reason loc
         | (loc, Select _) -> err_with_desc (RPatternParameter name) expr_reason loc
       in
-      let type_guard_based_checks tg_param type_guard binding_opt =
+      let type_guard_based_checks one_sided tg_param type_guard binding_opt =
         let (name_loc, name) = tg_param in
         let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
         let open Pattern_helper in
         match binding_opt with
         | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
         | Some (param_loc, Root) ->
-          check_type_guard_consistency cx param_loc tg_param tg_reason type_guard
+          check_type_guard_consistency cx one_sided param_loc tg_param tg_reason type_guard
         | Some binding -> error_on_non_root_binding name tg_reason binding
       in
       match pred with
-      | TypeGuardBased { param_name; type_guard } ->
+      | TypeGuardBased { reason = _; one_sided; param_name; type_guard } ->
         let bindings = Pattern_helper.bindings_of_params params in
         let matching_binding = SMap.find_opt (snd param_name) bindings in
-        type_guard_based_checks param_name type_guard matching_binding
+        type_guard_based_checks one_sided param_name type_guard matching_binding
       | PredBased (expr_reason, (lazy (p_map, _))) ->
         let required_bindings =
           Base.List.filter_map (Key_map.keys p_map) ~f:(function
@@ -7732,17 +7732,11 @@ module Make
             let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
             (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
           | ( Ast.Function.ReturnAnnot.TypeGuard
-                ( loc,
-                  ( gloc,
-                    {
-                      Ast.Type.TypeGuard.guard = (id_name, Some t);
-                      kind = Ast.Type.TypeGuard.Default as kind;
-                      comments;
-                    }
-                  )
-                ),
+                (loc, (gloc, { Ast.Type.TypeGuard.guard = (id_name, Some t); kind; comments })),
               _
-            ) ->
+            )
+            when kind = Ast.Type.TypeGuard.Default
+                 || (kind = Ast.Type.TypeGuard.Implies && Context.one_sided_type_guards cx) ->
             let (bool_t, guard', predicate) =
               Anno.convert_type_guard
                 cx

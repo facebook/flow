@@ -233,6 +233,10 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reasons: 'loc virtual_reason * 'loc virtual_reason;
     }
+  | ETypeGuardImpliesMismatch of {
+      use_op: 'loc virtual_use_op;
+      reasons: 'loc virtual_reason * 'loc virtual_reason;
+    }
   | ETypeGuardParamUnbound of 'loc virtual_reason
   | ETypeGuardFunctionInvalidWrites of {
       reason: 'loc virtual_reason;
@@ -965,6 +969,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { pred_reason = map_reason pred_reason; binding_reason = map_reason binding_reason }
   | ETypeGuardIndexMismatch { use_op; reasons = (r1, r2) } ->
     ETypeGuardIndexMismatch { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
+  | ETypeGuardImpliesMismatch { use_op; reasons = (r1, r2) } ->
+    ETypeGuardImpliesMismatch
+      { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
   | ETypeGuardParamUnbound reason -> ETypeGuardParamUnbound (map_reason reason)
   | ETypeGuardFunctionInvalidWrites { reason; type_guard_reason; write_locs } ->
     ETypeGuardFunctionInvalidWrites
@@ -1440,6 +1447,7 @@ let util_use_op_of_msg nope util = function
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
   | ETypeGuardIndexMismatch _
+  | ETypeGuardImpliesMismatch _
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
@@ -1803,7 +1811,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPrimitiveAsInterface _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
-  | ETypeGuardIndexMismatch _ ->
+  | ETypeGuardIndexMismatch _
+  | ETypeGuardImpliesMismatch _ ->
     None
 
 let kind_of_msg =
@@ -2271,6 +2280,14 @@ let friendly_message_of_msg = function
       {
         loc = loc_of_reason lower;
         message = MessageTypeGuardIndexMismatch { lower; upper };
+        use_op;
+        explanation = None;
+      }
+  | ETypeGuardImpliesMismatch { use_op; reasons = (lower, upper) } ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        message = MessageTypeGuardImpliesMismatch { lower; upper };
         use_op;
         explanation = None;
       }
@@ -2873,6 +2890,7 @@ let error_code_of_message err : error_code option =
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
   | ETypeGuardIndexMismatch _
+  | ETypeGuardImpliesMismatch _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionInvalidWrites _
   | ETypeGuardFunctionParamHavoced _

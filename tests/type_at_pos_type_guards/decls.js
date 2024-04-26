@@ -9,3 +9,6 @@ function zeros(vals: $ReadOnlyArray<0 | 1>): $ReadOnlyArray<0> {
   return vals.filter((x): x is 0 => x === 0);
 //            ^
 }
+
+declare function implies(x: mixed): implies x is number;
+//               ^

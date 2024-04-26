@@ -46,6 +46,18 @@ function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>
   return f; // error
 }
 
+function type_guard_subtyping_one_sided_ok_1(f: (x: mixed) => implies x is A): (x: mixed) => implies x is A {
+  return f; // okay
+}
+
+function type_guard_subtyping_one_sided_ok_2(f: (x: mixed) => x is A): (x: mixed) => implies x is A {
+  return f; // okay
+}
+
+function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
+  return f; // error
+}
+
 // Unification
 
 function type_guard_unif_ok_1(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is A> {
@@ -62,4 +74,12 @@ function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixe
 
 function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
   return f; // error A ~> C
+}
+
+function type_guard_unif_one_sided_ok(f: Array<(x: mixed) => implies x is A>): Array<(x: mixed) => implies x is A> {
+  return f; // okay
+}
+
+function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+  return f; // error
 }

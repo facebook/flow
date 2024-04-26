@@ -353,7 +353,8 @@ class ['a] t =
     method private fun_predicate cx pole acc predicate =
       match predicate with
       | PredBased p -> self#predicate_maps cx acc p
-      | TypeGuardBased { param_name = _; type_guard = t } -> self#type_ cx pole acc t
+      | TypeGuardBased { reason = _; one_sided = _; param_name = _; type_guard = t } ->
+        self#type_ cx pole acc t
 
     method private predicate_maps cx acc (_, (lazy (pmap, nmap))) =
       let acc = Key_map.fold (fun _ p acc -> self#predicate cx acc p) pmap acc in

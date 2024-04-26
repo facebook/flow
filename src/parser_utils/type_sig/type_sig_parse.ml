@@ -1577,19 +1577,21 @@ and tuple_element opts scope tbls xs (loc, el) =
     TupleSpread { loc; name; t }
 
 and type_guard_opt opts scope tbls xs guard =
-  let (_, { T.TypeGuard.kind = _; guard = (x, t_opt); _ }) = guard in
+  let (gloc, { T.TypeGuard.kind; guard = (x, t_opt); _ }) = guard in
   match t_opt with
   | Some t ->
+    let gloc = push_loc tbls gloc in
     let (loc, { Ast.Identifier.name; _ }) = x in
     let loc = push_loc tbls loc in
-    Some ((loc, name), annot opts scope tbls xs t)
+    Some (gloc, (loc, name), annot opts scope tbls xs t, kind = T.TypeGuard.Implies)
   | None ->
     (* TODO(pvekris) support assert type guards in type_sig_parse *)
     None
 
 and type_guard_or_predicate_of_type_guard opts scope tbls xs guard =
   match type_guard_opt opts scope tbls xs guard with
-  | Some p -> Some (TypeGuard p)
+  | Some (loc, param_name, type_guard, one_sided) ->
+    Some (TypeGuard { loc; param_name; type_guard; one_sided })
   | None -> None
 
 and return_annot opts scope tbls xs = function
@@ -3555,9 +3557,9 @@ and function_def_helper =
     let predicate =
       let open Option.Let_syntax in
       match type_guard_opt with
-      | Some (loc, p) ->
+      | Some (loc, param_name, type_guard, one_sided) ->
         (* Type-guard and %checks cannot coexist (parse error) *)
-        Some (TypeGuard (loc, p))
+        Some (TypeGuard { loc; param_name; type_guard; one_sided })
       | None ->
         let%map (loc, p) = predicate opts scope tbls ps body p in
         Predicate (loc, p)

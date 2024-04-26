@@ -2620,15 +2620,20 @@ struct
               | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
               | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
-          | (Some (Some name, _), TypeGuardBased { param_name = (_, param_name); type_guard }) ->
+          | ( Some (Some name, _),
+              TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
+            ) ->
             let t =
               if param_name <> name then
                 (* This is not the refined parameter. *)
                 tin
               else if sense then
                 intersect cx tin type_guard
-              else
+              else if not one_sided then
                 type_guard_diff cx tin type_guard
+              else
+                (* Do not refine else branch on one-sided type-guard *)
+                tin
             in
             rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
         end

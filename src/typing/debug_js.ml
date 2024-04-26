@@ -192,8 +192,15 @@ let rec dump_t_ (depth, tvars) cx t =
              (kid return_t)
              (match predicate with
              | Some (PredBased _) -> " %checks"
-             | Some (TypeGuardBased { param_name = (_, name); type_guard }) ->
-               spf " %s is %s" name (kid type_guard)
+             | Some (TypeGuardBased { reason = _; one_sided; param_name = (_, name); type_guard })
+               ->
+               let implies =
+                 if one_sided then
+                   "implies "
+                 else
+                   ""
+               in
+               spf " %s%s is %s" implies name (kid type_guard)
              | None -> "")
           )
         t
@@ -1546,6 +1553,8 @@ let dump_error_message =
       spf "EPredicateInvalidParameter (%s)" (dump_reason cx r)
     | ETypeGuardIndexMismatch { use_op; _ } ->
       spf "ETypeGuardIndexMismatch (%s)" (string_of_use_op use_op)
+    | ETypeGuardImpliesMismatch { use_op; _ } ->
+      spf "ETypeGuardImpliesMismatch (%s)" (string_of_use_op use_op)
     | ETypeGuardParamUnbound _ -> "ETypeGuardParamUnbound"
     | ETypeGuardFunctionInvalidWrites _ -> "ETypeGuardFunctionInvalidWrites"
     | ETypeGuardFunctionParamHavoced _ -> "ETypeGuardFunctionParamHavoced"

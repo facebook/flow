@@ -20,8 +20,15 @@ let string_of_ty = Ty_printer.string_of_t_single_line ~with_comments:false
 
 let string_of_return_t ~exact_by_default = function
   | Ty.ReturnType t -> Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t
-  | Ty.TypeGuard (x, t) ->
-    x ^ " is " ^ Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t
+  | Ty.TypeGuard (impl, x, t) ->
+    let impl =
+      if impl then
+        "implies "
+      else
+        ""
+    in
+    let t = Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t in
+    Utils_js.spf "%s%s is %s" impl x t
 
 let documentation_of_param_infos name : Jsdoc.Param.t -> string =
   let open Jsdoc.Param in

@@ -2439,7 +2439,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     let (((_, type_guard), _) as t') = convert env t in
     let bool_t = BoolT.at gloc in
     let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); kind; comments }) in
-    let predicate = Some (TypeGuardBased { param_name = (name_loc, name); type_guard }) in
+    let one_sided = kind = Ast.Type.TypeGuard.Implies in
+    let reason = Reason.mk_reason RTypeGuard gloc in
+    let predicate =
+      Some (TypeGuardBased { reason; one_sided; param_name = (name_loc, name); type_guard })
+    in
     check_guard_type env.cx fparams (name, type_guard);
     (bool_t, guard', predicate)
 
@@ -2453,7 +2457,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         ( gloc,
           {
             T.TypeGuard.guard = (((name_loc, { Ast.Identifier.name; _ }) as x), Some t);
-            kind = T.TypeGuard.Default as kind;
+            kind;
             comments;
           }
         ) ->

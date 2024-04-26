@@ -225,3 +225,27 @@ function union_with_any() {
     (x: empty); // error string ~> empty
   }
 }
+
+function one_sided(
+  value: number | string,
+  fn: (x: mixed) => implies x is number,
+) {
+  if (fn(value)) {
+    (value: number); // okay
+    (value: string); // error number ~> string
+  } else {
+    (value: string); // error number ~> string
+    (value: number); // error string ~> number
+  }
+
+  declare class ReadOnlyArray_<+T> {
+    filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+    filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
+    filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
+  }
+
+  declare var arr: ReadOnlyArray_<mixed>;
+  arr.filter(fn) as Array<number>; // okay
+  arr.filter(fn) as Array<string>; // error number ~> string
+
+}

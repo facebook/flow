@@ -17,6 +17,11 @@ Returns the elements of an array that meet the condition specified in a callback
 ) => Array<0>
 decls.js:9:15,9:20
 
+decls.js:13:18
+Flags:
+(x: mixed) => implies x is number
+decls.js:13:18,13:24
+
 test.js:27:11
 Flags:
 {

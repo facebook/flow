@@ -148,19 +148,24 @@ module Make (Flow : INPUT) : OUTPUT = struct
     )
 
   let func_type_guard_compat cx trace use_op grd1 grd2 =
-    let (params1, (loc1, x1), t1) = grd1 in
-    let (params2, (loc2, x2), t2) = grd2 in
-    let idx1 = index_of_param params1 x1 in
-    let idx2 = index_of_param params2 x2 in
-    let use_op = Frame (TypePredicateCompatibility, use_op) in
-    let lower = Reason.mk_reason (RTypeGuardParam x1) loc1 in
-    let upper = Reason.mk_reason (RTypeGuardParam x2) loc2 in
-    if idx1 <> idx2 then
+    let (reason1, params1, impl1, (loc1, x1), t1) = grd1 in
+    let (reason2, params2, impl2, (loc2, x2), t2) = grd2 in
+    if impl1 && not impl2 then
       add_output
         cx
         ~trace
-        (Error_message.ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) });
-
+        (Error_message.ETypeGuardImpliesMismatch { use_op; reasons = (reason1, reason2) });
+    let idx1 = index_of_param params1 x1 in
+    let idx2 = index_of_param params2 x2 in
+    let use_op = Frame (TypePredicateCompatibility, use_op) in
+    ( if idx1 <> idx2 then
+      let lower = Reason.mk_reason (RTypeGuardParam x1) loc1 in
+      let upper = Reason.mk_reason (RTypeGuardParam x2) loc2 in
+      add_output
+        cx
+        ~trace
+        (Error_message.ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) })
+    );
     rec_flow_t cx trace ~use_op (t1, t2)
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
@@ -1632,10 +1637,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
             (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
         | (Some (PredBased p1), Some (PredBased p2)) ->
           func_predicate_compat cx trace use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
-        | ( Some (TypeGuardBased { param_name = x1; type_guard = t1 }),
-            Some (TypeGuardBased { param_name = x2; type_guard = t2 })
+        | ( Some
+              (TypeGuardBased { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1 }),
+            Some
+              (TypeGuardBased { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2 })
           ) ->
-          func_type_guard_compat cx trace use_op (ft1.params, x1, t1) (ft2.params, x2, t2)
+          func_type_guard_compat
+            cx
+            trace
+            use_op
+            (r1, ft1.params, impl1, x1, t1)
+            (r2, ft2.params, impl2, x2, t2)
         | (Some _, None)
         | (None, None) ->
           ()

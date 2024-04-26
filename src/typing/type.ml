@@ -1208,8 +1208,10 @@ module rec TypeTerm : sig
   and fun_predicate =
     | PredBased of (reason * (predicate Key_map.t * predicate Key_map.t) Lazy.t)
     | TypeGuardBased of {
+        reason: reason;
         param_name: ALoc.t * string;
         type_guard: t;
+        one_sided: bool;
       }
 
   (* FunTs carry around two `this` types, one to be used during subtyping and

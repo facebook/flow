@@ -202,6 +202,7 @@ type 'loc virtual_reason_desc =
   | RUninitialized
   | RPossiblyUninitialized
   | RUnannotatedNext
+  | RTypeGuard
   | RTypeGuardParam of string
   | RComponent of name
   | RComponentType

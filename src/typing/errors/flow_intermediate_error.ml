@@ -3653,6 +3653,8 @@ let to_printable_error :
       ]
     | MessageTypeGuardIndexMismatch { lower; upper } ->
       [ref lower; text " does not appear in the same position as "; ref upper]
+    | MessageTypeGuardImpliesMismatch { lower; upper } ->
+      [text "one-sided "; ref lower; text " is incompatible with default "; ref upper]
     | MessageUnexpectedTemporaryBaseType ->
       [text "The type argument of a temporary base type must be a compatible literal type"]
     | MessageUnexpectedUseOfThisType -> [text "Unexpected use of "; code "this"; text " type."]

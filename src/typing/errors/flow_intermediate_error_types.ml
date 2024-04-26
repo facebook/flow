@@ -873,6 +873,10 @@ type 'loc message =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
+  | MessageTypeGuardImpliesMismatch of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
   | MessageUnclearType
   | MessageUnderconstrainedImplicitInstantiaton of {
       reason_call: 'loc virtual_reason;

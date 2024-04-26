@@ -155,7 +155,7 @@ and fun_t = {
 
 and return_t =
   | ReturnType of t
-  | TypeGuard of string * t
+  | TypeGuard of bool (* implies *) * string * t
 
 and obj_kind =
   | ExactObj

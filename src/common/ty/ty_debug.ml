@@ -196,7 +196,14 @@ struct
   and dump_return_t ~depth t =
     match t with
     | ReturnType t -> dump_t ~depth t
-    | TypeGuard (x, t) -> spf "%s is %s" x (dump_t ~depth t)
+    | TypeGuard (impl, x, t) ->
+      let impl =
+        if impl then
+          "implies "
+        else
+          ""
+      in
+      spf "%s%s is %s" impl x (dump_t ~depth t)
 
   and dump_tuple_element ~depth i name t polarity optional =
     if Base.Option.is_none name && polarity = Neutral && not optional then
@@ -601,11 +608,18 @@ struct
       ]
     and json_of_return_t = function
       | ReturnType t -> Hh_json.(JSON_Object [("type_", json_of_t t)])
-      | TypeGuard (x, t) ->
+      | TypeGuard (impl, x, t) ->
         Hh_json.(
           JSON_Object
             [
-              ("type_guard", JSON_Object [("type_parameter", JSON_String x); ("type_", json_of_t t)]);
+              ( "type_guard",
+                JSON_Object
+                  [
+                    ("implies", JSON_Bool impl);
+                    ("type_parameter", JSON_String x);
+                    ("type_", json_of_t t);
+                  ]
+              );
             ]
         )
     and json_of_obj_t o =

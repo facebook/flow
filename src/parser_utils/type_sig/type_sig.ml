@@ -76,7 +76,12 @@ type ('key, 'loc, 'a) predicate =
 
 type ('loc, 'a) predicate_or_type_guard =
   | Predicate of 'loc * (string, 'loc, 'a) predicate option
-  | TypeGuard of (('loc * string) * 'a)
+  | TypeGuard of {
+      loc: 'loc;
+      param_name: 'loc * string;
+      type_guard: 'a;
+      one_sided: bool;
+    }
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) tparam =

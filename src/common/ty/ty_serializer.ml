@@ -266,16 +266,16 @@ let type_ options =
     | ReturnType t ->
       let%map t = type_ t in
       Ast.Type.Function.TypeAnnotation t
-    | TypeGuard (x, t) ->
+    | TypeGuard (impl, x, t) ->
+      let kind =
+        if impl then
+          T.TypeGuard.Implies
+        else
+          T.TypeGuard.Default
+      in
       let%map t = type_ t in
       T.Function.TypeGuard
-        ( Loc.none,
-          {
-            T.TypeGuard.kind = T.TypeGuard.Default;
-            guard = (id_from_string x, Some t);
-            comments = None;
-          }
-        )
+        (Loc.none, { T.TypeGuard.kind; guard = (id_from_string x, Some t); comments = None })
   and obj_ o =
     let%bind properties = mapM obj_prop o.obj_props in
     let%map (exact, inexact, properties) =

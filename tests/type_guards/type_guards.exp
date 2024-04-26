@@ -15,20 +15,54 @@ References:
             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_imports.js:14:4
+Error -------------------------------------------------------------------------------------------- class_imports.js:13:4
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   class_imports.js:14:4
-   14|   (x: string); // error number ~> string
+   class_imports.js:13:4
+   13|   (x: string); // error number ~> string
           ^
 
 References:
-   class_exports.js:8:21
-    8|   m(x: mixed): x is number;
+   class_exports.js:5:30
+    5|   os(x: mixed): implies x is number {
+                                    ^^^^^^ [1]
+   class_imports.js:13:7
+   13|   (x: string); // error number ~> string
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_imports.js:19:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   class_imports.js:19:4
+   19|   (x: string); // error number ~> string
+          ^
+
+References:
+   class_exports.js:11:21
+   11|   m(x: mixed): x is number;
                            ^^^^^^ [1]
-   class_imports.js:14:7
-   14|   (x: string); // error number ~> string
+   class_imports.js:19:7
+   19|   (x: string); // error number ~> string
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_imports.js:24:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   class_imports.js:24:4
+   24|   (x: string); // error number ~> string
+          ^
+
+References:
+   class_exports.js:12:30
+   12|   os(x: mixed): implies x is number;
+                                    ^^^^^^ [1]
+   class_imports.js:24:7
+   24|   (x: string); // error number ~> string
              ^^^^^^ [2]
 
 
@@ -1760,6 +1794,82 @@ References:
                 ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:235:6
+
+Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinement.js:235:6
+   235|     (value: string); // error number ~> string
+             ^^^^^
+
+References:
+   refinement.js:230:10
+   230|   value: number | string,
+                 ^^^^^^ [1]
+   refinement.js:235:13
+   235|     (value: string); // error number ~> string
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:237:6
+
+Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinement.js:237:6
+   237|     (value: string); // error number ~> string
+             ^^^^^
+
+References:
+   refinement.js:230:10
+   230|   value: number | string,
+                 ^^^^^^ [1]
+   refinement.js:237:13
+   237|     (value: string); // error number ~> string
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:238:6
+
+Cannot cast `value` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   refinement.js:238:6
+   238|     (value: number); // error string ~> number
+             ^^^^^
+
+References:
+   refinement.js:230:19
+   230|   value: number | string,
+                          ^^^^^^ [1]
+   refinement.js:238:13
+   238|     (value: number); // error string ~> number
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:249:7
+
+Cannot call `arr.filter` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2] in the type predicate.
+ - Or property `name` is missing in statics of function type [3] but exists in statics of `Boolean` [4].
+
+   refinement.js:249:7
+   249|   arr.filter(fn) as Array<string>; // error number ~> string
+              ^^^^^^
+
+References:
+   refinement.js:231:34
+   231|   fn: (x: mixed) => implies x is number,
+                                         ^^^^^^ [1]
+   refinement.js:249:27
+   249|   arr.filter(fn) as Array<string>; // error number ~> string
+                                  ^^^^^^ [2]
+   refinement.js:231:7
+   231|   fn: (x: mixed) => implies x is number,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:376:15
+   376| declare class Boolean {
+                      ^^^^^^^ [4]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -1918,60 +2028,97 @@ References:
                                                                                                                 ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:56:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:58:10
+
+Cannot return `f` because one-sided type guard [1] is incompatible with default type guard [2]. [function-predicate]
+
+   subtyping.js:58:10
+   58|   return f; // error
+                ^
+
+References:
+   subtyping.js:57:64
+   57| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
+                                                                      ^^^^^^^^^^^^^^ [1]
+   subtyping.js:57:95
+   57| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
+                                                                                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:68:10
 
 Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element. Arrays are
 invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-return]
 
-   subtyping.js:56:10
-   56|   return f; // error C ~ A
+   subtyping.js:68:10
+   68|   return f; // error C ~ A
                 ^
 
 References:
-   subtyping.js:55:92
-   55| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+   subtyping.js:67:92
+   67| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
                                                                                                   ^ [1]
-   subtyping.js:55:62
-   55| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+   subtyping.js:67:62
+   67| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
                                                                     ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:60:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:72:10
 
 Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate of array element.
 [incompatible-return]
 
-   subtyping.js:60:10
-   60|   return f; // errors A ~> B, B ~> A
+   subtyping.js:72:10
+   72|   return f; // errors A ~> B, B ~> A
                 ^
 
 References:
-   subtyping.js:59:62
-   59| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+   subtyping.js:71:62
+   71| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
                                                                     ^ [1]
-   subtyping.js:59:92
-   59| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+   subtyping.js:71:92
+   71| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
                                                                                                   ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:64:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:76:10
 
 Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element.
 [incompatible-return]
 
-   subtyping.js:64:10
-   64|   return f; // error A ~> C
+   subtyping.js:76:10
+   76|   return f; // error A ~> C
                 ^
 
 References:
-   subtyping.js:63:62
-   63| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+   subtyping.js:75:62
+   75| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
                                                                     ^ [1]
-   subtyping.js:63:92
-   63| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+   subtyping.js:75:92
+   75| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
                                                                                                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:84:10
+
+Cannot return `f` because one-sided type guard [1] is incompatible with default type guard [2] in array element. Arrays
+are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[function-predicate]
+
+   subtyping.js:84:10
+   84|   return f; // error
+                ^
+
+References:
+   subtyping.js:83:95
+   83| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+                                                                                                     ^^^^^^^^^^^^^^ [1]
+   subtyping.js:83:65
+   83| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+                                                                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
@@ -2099,7 +2246,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 124 errors
+Found 132 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -309,7 +309,14 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   and return_t ~depth t =
     match t with
     | ReturnType t -> type_ ~depth t
-    | TypeGuard (x, t) -> fuse_with_space [Atom x; Atom "is"; type_ ~depth t]
+    | TypeGuard (impl, x, t) ->
+      let impl =
+        if impl then
+          [Atom "implies"]
+        else
+          []
+      in
+      fuse_with_space (impl @ [Atom x; Atom "is"; type_ ~depth t])
   and type_object_property =
     let to_key x =
       if property_key_quotes_needed x then
