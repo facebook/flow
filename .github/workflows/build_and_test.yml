@@ -118,7 +118,7 @@ jobs:
           dist/flow-linux64.zip
           dist/libflowparser-linux64.zip
   build_macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
@@ -344,7 +344,7 @@ jobs:
     - name: Run tool tests
       run: ./tool test -p 4 --bin bin/linux/flow | cat
   tool_test_macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     needs:
     - build_macos
     steps:
@@ -414,7 +414,7 @@ jobs:
       with:
         path: test-results/ounit/
   ounit_test_macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
