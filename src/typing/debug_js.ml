@@ -1461,12 +1461,12 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (string_of_use_op use_op)
-    | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
+    | EUnionSpeculationFailed { use_op; reason; op_reasons; branches = _ } ->
       spf
-        "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
+        "EUnionSpeculationFailed { use_op = %s; reason = %s; op_reasons = [%s]; branches = _ }"
         (string_of_use_op use_op)
         (dump_reason cx reason)
-        (dump_reason cx reason_op)
+        (Nel.to_list op_reasons |> List.map (dump_reason cx) |> String.concat ",")
     | ESpeculationAmbiguous { reason; _ } ->
       spf "ESpeculationAmbiguous { reason = %s; _ }" (dump_reason cx reason)
     | EIncompatibleWithExact ((reason1, reason2), use_op, _) ->

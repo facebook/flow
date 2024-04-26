@@ -10,7 +10,6 @@ open Instantiation_utils
 open Reason
 open Type
 open TypeUtil
-open Utils_js
 module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 
 module type INPUT = sig
@@ -55,29 +54,6 @@ end
 
 module Make (Flow : INPUT) : OUTPUT = struct
   open Flow
-
-  let mk_union_reason r us =
-    List.fold_left
-      (fun reason t ->
-        let rdesc = string_of_desc (desc_of_reason ~unwrap:false reason) in
-        let tdesc = string_of_desc (desc_of_reason ~unwrap:false (reason_of_t t)) in
-        let udesc =
-          if not (String.starts_with ~prefix:"union:" rdesc) then
-            spf "union: %s" tdesc
-          else if String.ends_with ~suffix:"..." rdesc then
-            rdesc
-          else if String.ends_with ~suffix:(tdesc ^ "(s)") rdesc then
-            rdesc
-          else if String.length rdesc >= 256 then
-            spf "%s | ..." rdesc
-          else if String.ends_with ~suffix:tdesc rdesc then
-            spf "%s(s)" rdesc
-          else
-            spf "%s | %s" rdesc tdesc
-        in
-        replace_desc_reason (RCustom udesc) reason)
-      r
-      us
 
   let mk_intersection_reason r _ls = replace_desc_reason RIntersection r
 
@@ -647,11 +623,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           match spec with
           | UnionCases (use_op, l, _rep, us) ->
             let reason = reason_of_t l in
-            let reason_op = mk_union_reason r us in
             add_output
               cx
               ~trace
-              (Error_message.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
+              (Error_message.EUnionSpeculationFailed
+                 { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
+              )
           | SingletonCase _ -> raise SpeculationSingletonError
           | IntersectionCases (ls, upper) ->
             let err =

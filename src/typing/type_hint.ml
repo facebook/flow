@@ -82,7 +82,7 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
       cx
       Error_message.(
         EUnionSpeculationFailed
-          { use_op = unknown_use; reason; reason_op = call_reason; branches = [] }
+          { use_op = unknown_use; reason; op_reasons = (call_reason, []); branches = [] }
       );
     AnyT.error reason
   | Speculation_hint_set (_, t) -> t

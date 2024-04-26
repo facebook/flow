@@ -165,7 +165,7 @@ and 'loc t' =
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
       reason: 'loc virtual_reason;
-      reason_op: 'loc virtual_reason;
+      op_reasons: 'loc virtual_reason Nel.t;
       branches: ('loc virtual_reason * 'loc t') list;
     }
   | ESpeculationAmbiguous of {
@@ -872,12 +872,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ETupleInvalidTypeSpread
       { reason_spread = map_reason reason_spread; reason_arg = map_reason reason_arg }
   | EROArrayWrite ((r1, r2), op) -> EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
-  | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
+  | EUnionSpeculationFailed { use_op; reason; op_reasons; branches } ->
     EUnionSpeculationFailed
       {
         use_op = map_use_op use_op;
         reason = map_reason reason;
-        reason_op = map_reason reason_op;
+        op_reasons = Nel.map map_reason op_reasons;
         branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleWithExact ((r1, r2), op, kind) ->
@@ -1367,8 +1367,8 @@ let util_use_op_of_msg nope util = function
           { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
     )
   | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
-  | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
-    util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; reason_op; branches })
+  | EUnionSpeculationFailed { use_op; reason; op_reasons; branches } ->
+    util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; op_reasons; branches })
   | EIncompatibleWithExact (rs, op, kind) ->
     util op (fun op -> EIncompatibleWithExact (rs, op, kind))
   | EFunctionIncompatibleWithIndexer (rs, op) ->
@@ -2218,7 +2218,7 @@ let friendly_message_of_msg = function
         use_op;
         explanation = None;
       }
-  | EUnionSpeculationFailed { use_op; reason; reason_op = _; branches } ->
+  | EUnionSpeculationFailed { use_op; reason; op_reasons = _; branches } ->
     Speculation { loc = loc_of_reason reason; use_op; branches }
   | ESpeculationAmbiguous { reason = _; prev_case; case; cases } ->
     Normal (MesssageSpeculationAmbiguous { prev_case; case; cases })
