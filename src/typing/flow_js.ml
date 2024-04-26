@@ -120,9 +120,9 @@ let strict_equatable_error cond_context (l, r) =
   let comparison_error =
     lazy
       (match cond_context with
-      | Some (SwitchTest { case_test_reason; switch_discriminant_reason }) ->
+      | Some (SwitchTest { case_test_loc; switch_discriminant_loc }) ->
         let use_op =
-          Op (RefinementCheck { test = case_test_reason; discriminant = switch_discriminant_reason })
+          Op (SwitchRefinementCheck { test = case_test_loc; discriminant = switch_discriminant_loc })
         in
         Error_message.EIncompatibleWithUseOp
           { reason_lower = reason_of_t l; reason_upper = reason_of_t r; use_op }
@@ -8976,6 +8976,7 @@ struct
                 true
               | Cast _
               | RefinementCheck _
+              | SwitchRefinementCheck _
               | ClassExtendsCheck _
               | ClassMethodDefinition _
               | ClassImplementsCheck _

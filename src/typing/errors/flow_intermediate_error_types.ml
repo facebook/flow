@@ -255,6 +255,7 @@ type 'loc root_message =
       test: 'loc virtual_reason_desc;
       discriminant: 'loc virtual_reason;
     }
+  | RootCannotCheckAgainstSwitchDiscriminant of 'loc
   | RootCannotCoerce of {
       from: 'loc virtual_reason_desc;
       target: 'loc virtual_reason_desc;

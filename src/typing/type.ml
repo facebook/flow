@@ -432,6 +432,10 @@ module rec TypeTerm : sig
         test: 'loc virtual_reason;
         discriminant: 'loc virtual_reason;
       }
+    | SwitchRefinementCheck of {
+        test: 'loc;
+        discriminant: 'loc;
+      }
     | MatchingProp of {
         op: 'loc virtual_reason;
         obj: 'loc virtual_reason;
@@ -1008,8 +1012,8 @@ module rec TypeTerm : sig
 
   and cond_context =
     | SwitchTest of {
-        case_test_reason: reason;
-        switch_discriminant_reason: reason;
+        case_test_loc: ALoc.t;
+        switch_discriminant_loc: ALoc.t;
       }
     | OtherTest
 
@@ -4142,6 +4146,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | SetProperty _ -> "SetProperty"
   | UpdateProperty _ -> "UpdateProperty"
   | RefinementCheck _ -> "RefinementCheck"
+  | SwitchRefinementCheck _ -> "SwitchRefinementCheck"
   | MatchingProp _ -> "MatchingProp"
   | EvalMappedType _ -> "EvalMappedType"
   | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"

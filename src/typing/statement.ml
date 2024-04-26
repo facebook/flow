@@ -1130,14 +1130,13 @@ module Make
                          }
                      )
                    in
-                   let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
-                   let switch_discriminant_reason =
-                     mk_reason (RCustom "switch discriminant") (fst discriminant)
-                   in
                    let (_, fake_ast) =
                      condition
                        cx
-                       ~cond:(SwitchTest { case_test_reason; switch_discriminant_reason })
+                       ~cond:
+                         (SwitchTest
+                            { case_test_loc = fst expr; switch_discriminant_loc = fst discriminant }
+                         )
                        fake
                    in
                    let expr_ast =

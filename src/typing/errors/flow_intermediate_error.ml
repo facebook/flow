@@ -576,6 +576,14 @@ let rec make_intermediate_error :
       | Op (DeleteProperty { prop; lhs }) -> root loc frames lhs (RootCannotDelete (desc prop))
       | Op (RefinementCheck { test; discriminant }) ->
         root loc frames test (RootCannotCheckAgainst { test = desc test; discriminant })
+      | Op (SwitchRefinementCheck { test; discriminant }) ->
+        let root_loc = loc_of_aloc test in
+        root_with_loc_and_specific_loc
+          loc
+          frames
+          root_loc
+          root_loc
+          (RootCannotCheckAgainstSwitchDiscriminant discriminant)
       | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
         root loc frames op (RootCannotCompareWithProperty { sentinel = sentinel_reason; obj; key })
       | Op (EvalMappedType { mapped_type }) ->
@@ -1263,6 +1271,11 @@ let to_printable_error :
     | RootCannotCast { lower; upper } -> [text "Cannot cast "; desc lower; text " to "; desc upper]
     | RootCannotCheckAgainst { test; discriminant } ->
       [text "Invalid check of "; desc test; text " against "; ref discriminant]
+    | RootCannotCheckAgainstSwitchDiscriminant discriminant_loc ->
+      [
+        text "Invalid check of case test against ";
+        hardcoded_string_desc_ref "switch discriminant" discriminant_loc;
+      ]
     | RootCannotCoerce { from; target } ->
       [text "Cannot coerce "; desc from; text " to "; desc target]
     | RootCannotConformToCommonInterface -> [text "Cannot conform to common interface module"]

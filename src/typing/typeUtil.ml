@@ -455,6 +455,8 @@ let rec mod_loc_of_virtual_use_op f =
       UpdateProperty { lhs = mod_reason lhs; prop = mod_reason prop }
     | RefinementCheck { test; discriminant } ->
       RefinementCheck { test = mod_reason test; discriminant = mod_reason discriminant }
+    | SwitchRefinementCheck { test; discriminant } ->
+      SwitchRefinementCheck { test = f test; discriminant = f discriminant }
     | MatchingProp { op; obj; key; sentinel_reason } ->
       MatchingProp
         {
