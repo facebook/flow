@@ -1804,7 +1804,7 @@ let map_object
   let flags = { flags with obj_kind } in
   mk_object_type
     ~def_reason:reason
-    ~exact_reason:(Some reason)
+    ~exact_reason:None
     ~invalidate_aliases:true
     ~interface
     ~reachable_targs

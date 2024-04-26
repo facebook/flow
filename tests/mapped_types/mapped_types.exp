@@ -185,7 +185,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with empty [2] in property `bar`.
- - Or property `bar` is missing in object type [3] but exists in `Homomorphic` [4].
+ - Or property `bar` is missing in object type [3] but exists in mapped type [4].
 
    distributivity.js:8:4
    8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
@@ -210,7 +210,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with empty [2] in property `foo`.
- - Or property `foo` is missing in object type [3] but exists in `Homomorphic` [4].
+ - Or property `foo` is missing in object type [3] but exists in mapped type [4].
 
    distributivity.js:8:4
    8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
@@ -233,7 +233,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:15:4
 
-Cannot cast `o` to object type because property `foo` is missing in object type [1] but exists in `SemiHomomorphic` [2].
+Cannot cast `o` to object type because property `foo` is missing in object type [1] but exists in mapped type [2].
 [prop-missing]
 
    distributivity.js:15:4
@@ -1009,7 +1009,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `semi` to union type because: [incompatible-cast]
  - Either string [1] is incompatible with number [2] in property `foo`.
- - Or property `foo` is read-only in `SemiHomomorphic` [3] but writable in object type [4].
+ - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
    import.js:85:4
    85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
@@ -1033,7 +1033,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:85:4
 
 Cannot cast `semi` to union type because: [incompatible-cast]
- - Either property `foo` is read-only in `SemiHomomorphic` [1] but writable in object type [2].
+ - Either property `foo` is read-only in object type [1] but writable in object type [2].
  - Or number [3] is incompatible with string [4] in property `foo`.
 
    import.js:85:4
@@ -1058,8 +1058,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:89:4
 
 Cannot cast `homomorphic` to union type because: [incompatible-cast]
- - Either property `bar` is read-only in `ParameterizedReadonly` [1] but writable in object type [2].
- - Or property `bar` is missing in object type [3] but exists in `ParameterizedReadonly` [1].
+ - Either property `bar` is read-only in object type [1] but writable in object type [2].
+ - Or property `bar` is missing in object type [3] but exists in object type [1].
 
    import.js:89:4
    89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
@@ -1080,8 +1080,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:89:4
 
 Cannot cast `homomorphic` to union type because: [incompatible-cast]
- - Either property `foo` is read-only in `ParameterizedReadonly` [1] but writable in object type [2].
- - Or property `foo` is missing in object type [3] but exists in `ParameterizedReadonly` [1].
+ - Either property `foo` is read-only in object type [1] but writable in object type [2].
+ - Or property `foo` is missing in object type [3] but exists in object type [1].
 
    import.js:89:4
    89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
