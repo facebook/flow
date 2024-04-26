@@ -154,7 +154,12 @@ module Callee_finder = struct
 
   class finder ~loc_of_aloc ~(cx : Context.t) (cursor : Loc.t) =
     object (this)
-      inherit Typed_ast_finder.type_parameter_mapper as super
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Typed_ast_finder.enclosing_node_mapper as super
+
+      method on_loc_annot x = x
+
+      method on_type_annot x = x
 
       method covers_target loc = Reason.in_range cursor (loc_of_aloc loc)
 
@@ -182,9 +187,7 @@ module Callee_finder = struct
             let active_parameter = find_argument ~loc_of_aloc cursor arguments 0 in
             let loc = loc_of_aloc callee_loc in
             let type_ = get_callee_type () in
-            this#annot_with_tparams (fun ~tparams_rev:_ ->
-                raise (Found (Some { type_; active_parameter; loc }))
-            )
+            raise (Found (Some { type_; active_parameter; loc }))
           else
             recurse ()
 

@@ -48,19 +48,19 @@ module DocumentationFullspanMap = struct
 end
 
 class member_searcher add_member =
-  object (this)
-    inherit Typed_ast_finder.type_parameter_mapper as super
+  object (_this)
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Typed_ast_finder.enclosing_node_mapper as super
 
-    method! on_loc_annot x = x
+    method on_loc_annot x = x
 
-    method! on_type_annot x = x
+    method on_type_annot x = x
 
     method! member annot member =
       let open Ast.Expression.Member in
       let { _object = ((_, type_), _); property; _ } = member in
       (match property with
-      | PropertyIdentifier ((aloc, _), Ast.Identifier.{ name; _ }) ->
-        this#annot_with_tparams (fun ~tparams_rev:_ -> add_member ~type_ ~aloc ~name)
+      | PropertyIdentifier ((aloc, _), Ast.Identifier.{ name; _ }) -> add_member ~type_ ~aloc ~name
       | _ -> ());
       super#member annot member
   end
@@ -83,7 +83,9 @@ class type_reference_searcher add_reference =
       super#generic_identifier_type git
   end
 
+module Type_ = Type
 open GleanSchema
+module Type = Type_
 
 let remove_dot_flow_suffix = function
   | Module.File file ->
@@ -552,26 +554,31 @@ let local_declaration_references ~root ~write_root ~scope_info =
   Scope_builder.Api.DefMap.fold add_uses_of_def uses_of_all_defs []
 
 class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_info ~add_type_info =
-  object (this)
-    inherit Typed_ast_finder.type_parameter_mapper as super
+  object (_this)
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Typed_ast_finder.enclosing_node_mapper as super
+
+    method on_loc_annot x = x
+
+    method on_type_annot x = x
 
     method! t_identifier (((aloc, type_), Ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       if
         Scope_builder.Api.is_local_use scope_info loc && Scope_builder.Api.use_is_def scope_info loc
       then
-        this#annot_with_tparams add_var_info name loc type_;
+        add_var_info name loc type_;
       ident
 
     method! object_key_identifier (((aloc, type_), Ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      this#annot_with_tparams add_member_info name loc type_;
+      add_member_info name loc type_;
       ident
 
     method! type_alias _loc alias =
       let Ast.Statement.TypeAlias.{ id = ((aloc, type_), Ast.Identifier.{ name; _ }); _ } = alias in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      this#annot_with_tparams add_type_info name loc type_;
+      add_type_info name loc type_;
       alias
 
     method! opaque_type _loc otype =
@@ -579,32 +586,32 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
         otype
       in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      this#annot_with_tparams add_type_info name loc type_;
+      add_type_info name loc type_;
       otype
 
     method! interface _loc iface =
       let Ast.Statement.Interface.{ id = ((aloc, type_), Ast.Identifier.{ name; _ }); _ } = iface in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      this#annot_with_tparams add_type_info name loc type_;
+      add_type_info name loc type_;
       iface
 
     method! class_identifier (((aloc, type_), Ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      this#annot_with_tparams add_type_info name loc type_;
+      add_type_info name loc type_;
       super#class_identifier ident
 
     method! enum_declaration enum =
       let open Ast.Statement.EnumDeclaration in
       let { id = ((aloc, type_), Ast.Identifier.{ name; _ }); body = (_, body); _ } = enum in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      this#annot_with_tparams add_type_info name loc type_;
+      add_type_info name loc type_;
       let defaulted_member (aloc, { DefaultedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) =
         let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-        this#annot_with_tparams add_member_info name loc type_
+        add_member_info name loc type_
       in
       let initialized_member (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) =
         let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-        this#annot_with_tparams add_member_info name loc type_
+        add_member_info name loc type_
       in
       (match body with
       | BooleanBody BooleanBody.{ members; _ } -> Base.List.iter members ~f:initialized_member
@@ -626,7 +633,7 @@ let module_documentations ~root ~write_root ~ast ~file : Hh_json.json list =
 
 let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
   let infos = ref [] in
-  let add_info kind ~tparams_rev:_ name loc type_ = infos := ((kind, name, loc), type_) :: !infos in
+  let add_info kind name loc (type_ : Type.t) = infos := ((kind, name, loc), type_) :: !infos in
   let add_var_info = add_info `Declaration in
   let add_member_info = add_info `MemberDeclaration in
   let add_type_info = add_info `TypeDeclaration in
