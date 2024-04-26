@@ -99,6 +99,7 @@ let load_lib_files files =
       casting_syntax = Options.CastingSyntax.Both;
       for_builtins = true;
       locs_to_dirtify = [];
+      one_sided_type_guards = false;
     }
   in
   Merge_js.merge_lib_files ~sig_opts asts |> snd
@@ -155,6 +156,7 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
     ts_syntax = true;
+    one_sided_type_guards = false;
     use_mixed_in_catch_variables = false;
   }
 

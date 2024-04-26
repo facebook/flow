@@ -107,6 +107,7 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
+  one_sided_type_guards: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -188,6 +189,8 @@ val evaluated : t -> Type.t Type.Eval.Map.t
 val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
+
+val one_sided_type_guards : t -> bool
 
 val file : t -> File_key.t
 

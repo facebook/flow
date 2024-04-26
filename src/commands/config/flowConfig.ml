@@ -134,6 +134,7 @@ module Opts = struct
     suppress_types: SSet.t;
     traces: int;
     ts_syntax: bool;
+    one_sided_type_guards: bool;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -265,6 +266,7 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       traces = 0;
       ts_syntax = false;
+      one_sided_type_guards = false;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -917,6 +919,7 @@ module Opts = struct
         hook_compatibility_excludes_parser
       );
       ("experimental.react_rule", react_rules_parser);
+      ("one_sided_type_guards", boolean (fun opts v -> Ok { opts with one_sided_type_guards = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
@@ -1733,6 +1736,8 @@ let suppress_types c = c.options.Opts.suppress_types
 let traces c = c.options.Opts.traces
 
 let ts_syntax c = c.options.Opts.ts_syntax
+
+let one_sided_type_guards c = c.options.Opts.one_sided_type_guards
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 
