@@ -1734,7 +1734,7 @@ and merge_predicate env file (loc, p) =
         (Key_map.empty, Key_map.empty)
         keys
   in
-  let reason = Reason.(mk_reason (RPredicateOf (RCustom "return")) loc) in
+  let reason = Reason.(mk_reason (RPredicateOf RReturn) loc) in
   let maps =
     match p with
     | None -> lazy (Key_map.empty, Key_map.empty)
