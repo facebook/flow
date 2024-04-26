@@ -587,7 +587,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
        with
       | Some Env_api.NonAssigningWrite ->
         let tparam = Tast_utils.error_mapper#type_param tparam in
-        let t = AnyT.error (mk_reason (RCustom "invalid infer type") loc) in
+        let t = AnyT.error (mk_reason RAnyImplicit loc) in
         ((loc, t), Infer { Infer.tparam; comments })
       | _ ->
         let (tparam, t) = ALocMap.find tparam_loc env.infer_tparams_map in

@@ -919,7 +919,7 @@ let init_env cx toplevel_scope_kind =
         if is_provider cx loc then
           (* If an illegal write is considered as a provider, we still need to give it a
              slot to prevent crashing in code that queries provider types. *)
-          let reason = mk_reason (RCustom "non-assigning provider") loc in
+          let reason = mk_reason RAnyImplicit loc in
           let state = ref (lazy (AnyT.error reason)) in
           let t =
             Tvar.mk_fully_resolved_lazy

@@ -668,7 +668,7 @@ and evaluate_hint_ops cx reason t kind ops =
 and evaluate_hint cx reason hint =
   match hint with
   | Hint_Placeholder ->
-    HintAvailable (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none), ExpectedTypeHint)
+    HintAvailable (AnyT.annot (mk_reason RAnyImplicit ALoc.none), ExpectedTypeHint)
   | Hint_t (t, kind) -> fully_resolve_final_result cx t kind
   | Hint_Decomp (ops, t, kind) ->
     ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t kind

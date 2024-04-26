@@ -209,34 +209,34 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
-let get_module_t mref loc = function
+let get_module_t loc = function
   | Ok t -> t
   | Error _ ->
-    let reason = Reason.(mk_reason (RCustom mref) loc) in
+    let reason = Reason.(mk_reason RAnyImplicit loc) in
     Type.(AnyT.error_of_kind UnresolvedName reason)
 
 let require file loc index ~legacy_interop =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t mref loc resolved_require in
+  let module_t = get_module_t loc resolved_require in
   let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
   ConsGen.cjs_require file.cx module_t reason false legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t mref id_loc resolved_require in
+  let module_t = get_module_t id_loc resolved_require in
   if remote = "default" then
     ConsGen.import_default file.cx reason kind local mref false module_t
   else
     ConsGen.import_named file.cx reason kind remote mref false module_t
 
 let import_ns file reason id_loc index =
-  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t mref id_loc resolved_require in
+  let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let module_t = get_module_t id_loc resolved_require in
   ConsGen.import_ns file.cx reason false module_t
 
 let import_typeof_ns file reason id_loc index =
-  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t mref id_loc resolved_require in
+  let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let module_t = get_module_t id_loc resolved_require in
   let ns_t = ConsGen.import_ns file.cx reason false module_t in
   ConsGen.import_typeof file.cx reason "*" ns_t
 
@@ -398,8 +398,8 @@ let mk_commonjs_module_t cx module_reason module_is_strict module_available_plat
 
 let merge_exports =
   let merge_star file (loc, index) =
-    let (mref, (lazy resolved_module)) = Module_refs.get file.dependencies index in
-    (loc, get_module_t mref loc resolved_module)
+    let (_, (lazy resolved_module)) = Module_refs.get file.dependencies index in
+    (loc, get_module_t loc resolved_module)
   in
   let mk_es_module_t file module_reason module_is_strict module_available_platforms =
     let open Type in

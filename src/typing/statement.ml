@@ -3040,7 +3040,7 @@ module Make
               module_t
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
-          let reason = mk_reason (RCustom "graphql tag") loc in
+          let reason = mk_reason RAnyImplicit loc in
           AnyT.error reason
       in
       let tag_ast = expression cx tag in
