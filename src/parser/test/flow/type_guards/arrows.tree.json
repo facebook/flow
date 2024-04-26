@@ -78,7 +78,7 @@
                   "value":true,
                   "raw":"true"
                 },
-                "asserts":false
+                "kind":null
               }
             },
             "typeParameters":null
@@ -182,7 +182,6 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"BooleanLiteralTypeAnnotation",
                     "loc":{"source":null,"start":{"line":2,"column":39},"end":{"line":2,"column":43}},
@@ -191,9 +190,10 @@
                     "raw":"true"
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
-                "asserts":false
+                "kind":null
               }
             },
             "typeParameters":null
@@ -297,7 +297,6 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"TypePredicate",
                     "loc":{"source":null,"start":{"line":3,"column":39},"end":{"line":3,"column":48}},
@@ -317,12 +316,13 @@
                       "value":true,
                       "raw":"true"
                     },
-                    "asserts":false
+                    "kind":null
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
-                "asserts":false
+                "kind":null
               }
             },
             "typeParameters":null
@@ -426,7 +426,6 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"TypePredicate",
                     "loc":{"source":null,"start":{"line":4,"column":39},"end":{"line":4,"column":66}},
@@ -466,7 +465,6 @@
                           "optional":false
                         }
                       ],
-                      "this":null,
                       "returnType":{
                         "type":"TypePredicate",
                         "loc":{"source":null,"start":{"line":4,"column":57},"end":{"line":4,"column":66}},
@@ -486,17 +484,19 @@
                           "value":true,
                           "raw":"true"
                         },
-                        "asserts":false
+                        "kind":null
                       },
                       "rest":null,
-                      "typeParameters":null
+                      "typeParameters":null,
+                      "this":null
                     },
-                    "asserts":false
+                    "kind":null
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
-                "asserts":false
+                "kind":null
               }
             },
             "typeParameters":null
@@ -586,7 +586,7 @@
                   "optional":false
                 },
                 "typeAnnotation":null,
-                "asserts":true
+                "kind":"asserts"
               }
             },
             "typeParameters":null
@@ -682,7 +682,7 @@
                   "value":true,
                   "raw":"true"
                 },
-                "asserts":true
+                "kind":"asserts"
               }
             },
             "typeParameters":null

@@ -41,7 +41,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":41}},
@@ -59,10 +58,11 @@
                 "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":41}},
                 "range":[35,41]
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false

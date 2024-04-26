@@ -1637,16 +1637,18 @@ with type t = Impl.t = struct
     and return_annotation = function
       | Ast.Type.Function.TypeAnnotation t -> _type t
       | Ast.Type.Function.TypeGuard g -> type_guard g
-    and type_guard (loc, { Ast.Type.TypeGuard.asserts; guard = (x, t); comments }) =
+    and type_guard (loc, { Ast.Type.TypeGuard.kind; guard = (x, t); comments }) =
+      let kind =
+        let open Ast.Type.TypeGuard in
+        match kind with
+        | Default -> null
+        | Asserts -> string "asserts"
+      in
       node
         ?comments:(format_internal_comments comments)
         "TypePredicate"
         loc
-        [
-          ("parameterName", identifier x);
-          ("typeAnnotation", option _type t);
-          ("asserts", bool asserts);
-        ]
+        [("parameterName", identifier x); ("typeAnnotation", option _type t); ("kind", kind)]
     and function_type
         ( loc,
           {

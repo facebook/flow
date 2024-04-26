@@ -1084,7 +1084,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     with_loc
       (fun env ->
         let leading = Peek.comments env in
-        let asserts = Eat.maybe env T_ASSERTS in
+        let kind =
+          if Eat.maybe env T_ASSERTS then
+            Ast.Type.TypeGuard.Asserts
+          else
+            Ast.Type.TypeGuard.Default
+        in
         (* Parse the identifier part as normal code, since this can be any name that
          * a parameter can be. *)
         Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -1101,7 +1106,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         in
         let guard = (param, t) in
         let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~internal () in
-        { Ast.Type.TypeGuard.asserts; guard; comments })
+        { Ast.Type.TypeGuard.kind; guard; comments })
       env
 
   and type_guard_annotation env ~start_loc = with_loc ~start_loc type_guard env

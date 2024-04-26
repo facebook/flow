@@ -41,7 +41,6 @@
             "optional":false
           }
         ],
-        "this":null,
         "returnType":{
           "type":"TypePredicate",
           "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":35}},
@@ -59,10 +58,11 @@
             "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":35}},
             "range":[29,35]
           },
-          "asserts":false
+          "kind":null
         },
         "rest":null,
-        "typeParameters":null
+        "typeParameters":null,
+        "this":null
       }
     },
     {
@@ -103,7 +103,6 @@
             "optional":false
           }
         ],
-        "this":null,
         "returnType":{
           "type":"FunctionTypeAnnotation",
           "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":2,"column":55}},
@@ -122,7 +121,6 @@
               "optional":false
             }
           ],
-          "this":null,
           "returnType":{
             "type":"TypePredicate",
             "loc":{"source":null,"start":{"line":2,"column":34},"end":{"line":2,"column":55}},
@@ -153,22 +151,24 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"NumberTypeAnnotation",
                 "loc":{"source":null,"start":{"line":2,"column":49},"end":{"line":2,"column":55}},
                 "range":[86,92]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
-            "asserts":false
+            "kind":null
           },
           "rest":null,
-          "typeParameters":null
+          "typeParameters":null,
+          "this":null
         },
         "rest":null,
-        "typeParameters":null
+        "typeParameters":null,
+        "this":null
       }
     },
     {
@@ -228,7 +228,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":6,"column":16},"end":{"line":6,"column":27}},
@@ -246,10 +245,11 @@
                   "loc":{"source":null,"start":{"line":6,"column":21},"end":{"line":6,"column":27}},
                   "range":[191,197]
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -295,7 +295,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":7,"column":16},"end":{"line":7,"column":37}},
@@ -326,19 +325,20 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"NumberTypeAnnotation",
                     "loc":{"source":null,"start":{"line":7,"column":31},"end":{"line":7,"column":37}},
                     "range":[230,236]
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -384,7 +384,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"FunctionTypeAnnotation",
                 "loc":{"source":null,"start":{"line":8,"column":16},"end":{"line":8,"column":47}},
@@ -403,7 +402,6 @@
                     "optional":false
                   }
                 ],
-                "this":null,
                 "returnType":{
                   "type":"TypePredicate",
                   "loc":{"source":null,"start":{"line":8,"column":26},"end":{"line":8,"column":47}},
@@ -434,22 +432,24 @@
                         "optional":false
                       }
                     ],
-                    "this":null,
                     "returnType":{
                       "type":"NumberTypeAnnotation",
                       "loc":{"source":null,"start":{"line":8,"column":41},"end":{"line":8,"column":47}},
                       "range":[279,285]
                     },
                     "rest":null,
-                    "typeParameters":null
+                    "typeParameters":null,
+                    "this":null
                   },
-                  "asserts":false
+                  "kind":null
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -495,7 +495,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":9,"column":20},"end":{"line":9,"column":31}},
@@ -513,10 +512,11 @@
                   "loc":{"source":null,"start":{"line":9,"column":25},"end":{"line":9,"column":31}},
                   "range":[312,318]
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":false,
             "optional":false,
@@ -562,7 +562,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":10,"column":20},"end":{"line":10,"column":41}},
@@ -593,19 +592,20 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"NumberTypeAnnotation",
                     "loc":{"source":null,"start":{"line":10,"column":35},"end":{"line":10,"column":41}},
                     "range":[355,361]
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":false,
             "optional":false,
@@ -651,7 +651,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"FunctionTypeAnnotation",
                 "loc":{"source":null,"start":{"line":11,"column":20},"end":{"line":11,"column":51}},
@@ -670,7 +669,6 @@
                     "optional":false
                   }
                 ],
-                "this":null,
                 "returnType":{
                   "type":"TypePredicate",
                   "loc":{"source":null,"start":{"line":11,"column":30},"end":{"line":11,"column":51}},
@@ -701,22 +699,24 @@
                         "optional":false
                       }
                     ],
-                    "this":null,
                     "returnType":{
                       "type":"NumberTypeAnnotation",
                       "loc":{"source":null,"start":{"line":11,"column":45},"end":{"line":11,"column":51}},
                       "range":[408,414]
                     },
                     "rest":null,
-                    "typeParameters":null
+                    "typeParameters":null,
+                    "this":null
                   },
-                  "asserts":false
+                  "kind":null
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":false,
             "optional":false,
@@ -757,7 +757,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":4,"column":14},"end":{"line":4,"column":25}},
@@ -775,10 +774,11 @@
                   "loc":{"source":null,"start":{"line":4,"column":19},"end":{"line":4,"column":25}},
                   "range":[125,131]
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "static":false
           },
@@ -811,7 +811,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":5,"column":14},"end":{"line":5,"column":35}},
@@ -842,19 +841,20 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"NumberTypeAnnotation",
                     "loc":{"source":null,"start":{"line":5,"column":29},"end":{"line":5,"column":35}},
                     "range":[162,168]
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "static":false
           }

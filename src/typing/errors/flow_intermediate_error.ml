@@ -3823,8 +3823,13 @@ let to_printable_error :
     | MessageUnsupportedSyntax RequireDynamicArgument ->
       [text "The parameter passed to "; code "require"; text " must be a string literal."]
     | MessageUnsupportedSyntax SpreadArgument -> [text "A spread argument is unsupported here."]
-    | MessageUnsupportedSyntax UserDefinedTypeGuards ->
-      [text "User defined type guards are not yet supported."]
+    | MessageUnsupportedSyntax (UserDefinedTypeGuards { kind }) ->
+      let kind_str =
+        match kind with
+        | Flow_ast.Type.TypeGuard.Default -> "This kind of type guard is"
+        | Flow_ast.Type.TypeGuard.Asserts -> "Type guard assertions are"
+      in
+      [text (kind_str ^ " not yet supported.")]
     | MessageUnsupportedSyntax (UnsupportedInternalSlot { name; static = false }) ->
       [text "Unsupported internal slot "; code name; text "."]
     | MessageUnsupportedSyntax (UnsupportedInternalSlot { name; static = true }) ->

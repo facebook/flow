@@ -2434,11 +2434,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
            Context.add_post_inference_subtyping_check cx guard_t use_op param_t
        )
 
-  and convert_type_guard env fparams gloc id_name t comments =
+  and convert_type_guard env fparams gloc kind id_name t comments =
     let (name_loc, { Ast.Identifier.name; _ }) = id_name in
     let (((_, type_guard), _) as t') = convert env t in
     let bool_t = BoolT.at gloc in
-    let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); asserts = false; comments }) in
+    let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); kind; comments }) in
     let predicate = Some (TypeGuardBased { param_name = (name_loc, name); type_guard }) in
     check_guard_type env.cx fparams (name, type_guard);
     (bool_t, guard', predicate)
@@ -2453,7 +2453,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         ( gloc,
           {
             T.TypeGuard.guard = (((name_loc, { Ast.Identifier.name; _ }) as x), Some t);
-            asserts = false;
+            kind = T.TypeGuard.Default as kind;
             comments;
           }
         ) ->
@@ -2468,13 +2468,16 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       ) else (
         check_guard_is_not_rest_param env.cx params (name, name_loc);
         check_guard_appears_in_param_list env.cx params (name, name_loc);
-        let (bool_t, guard', predicate) = convert_type_guard env fparams gloc x t comments in
+        let (bool_t, guard', predicate) = convert_type_guard env fparams gloc kind x t comments in
         (bool_t, TypeGuard guard', predicate)
       )
     | TypeGuard (loc, guard) ->
+      let { Ast.Type.TypeGuard.kind; _ } = guard in
       Flow_js_utils.add_output
         env.cx
-        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.UserDefinedTypeGuards));
+        (Error_message.EUnsupportedSyntax
+           (loc, Flow_intermediate_error_types.UserDefinedTypeGuards { kind })
+        );
       let guard' = Tast_utils.error_mapper#type_guard (loc, guard) in
       (AnyT.at (AnyError None) loc, TypeGuard guard', None)
 

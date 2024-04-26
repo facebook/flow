@@ -3566,12 +3566,11 @@ and type_predicate ~opts (loc, { Ast.Type.Predicate.kind; comments }) =
 
 and type_guard ~opts ~needs_parens guard =
   let open Ast.Type.TypeGuard in
-  let (_, { asserts; guard = (x, t); comments = _ }) = guard in
-  let asserts_part =
-    if asserts then
-      [Atom "asserts"]
-    else
-      []
+  let (_, { kind; guard = (x, t); comments = _ }) = guard in
+  let kind_part =
+    match kind with
+    | Default -> []
+    | Asserts -> [Atom "asserts"]
   in
   let id_part = identifier x in
   let type_part =
@@ -3580,7 +3579,7 @@ and type_guard ~opts ~needs_parens guard =
     | Some t when needs_parens -> [Atom "is"; wrap_in_parens (type_ ~opts t)]
     | Some t -> [Atom "is"; type_ ~opts t]
   in
-  join space (asserts_part @ [id_part] @ type_part)
+  join space (kind_part @ [id_part] @ type_part)
 
 and type_guard_annotation ~opts ~needs_parens (loc, guard) =
   source_location_with_comments

@@ -7733,7 +7733,13 @@ module Make
             (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
           | ( Ast.Function.ReturnAnnot.TypeGuard
                 ( loc,
-                  (gloc, { Ast.Type.TypeGuard.guard = (id_name, Some t); asserts = false; comments })
+                  ( gloc,
+                    {
+                      Ast.Type.TypeGuard.guard = (id_name, Some t);
+                      kind = Ast.Type.TypeGuard.Default as kind;
+                      comments;
+                    }
+                  )
                 ),
               _
             ) ->
@@ -7743,17 +7749,19 @@ module Make
                 tparams_map
                 (Func_stmt_params.value fparams)
                 gloc
+                kind
                 id_name
                 t
                 comments
             in
             (Annotated bool_t, Ast.Function.ReturnAnnot.TypeGuard (loc, guard'), predicate)
           | (Ast.Function.ReturnAnnot.TypeGuard annot, _) ->
+            let (_, (_, { Ast.Type.TypeGuard.kind; _ })) = annot in
             let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
             Flow_js_utils.add_output
               cx
               (Error_message.EUnsupportedSyntax
-                 (loc, Flow_intermediate_error_types.UserDefinedTypeGuards)
+                 (loc, Flow_intermediate_error_types.UserDefinedTypeGuards { kind })
               );
             ( Annotated (AnyT.at (AnyError None) loc),
               Ast.Function.ReturnAnnot.TypeGuard t_ast',

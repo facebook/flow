@@ -58,7 +58,6 @@
                       "optional":false
                     }
                   ],
-                  "this":null,
                   "returnType":{
                     "type":"TypePredicate",
                     "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":46}},
@@ -85,15 +84,15 @@
                       },
                       "typeParameters":null
                     },
-                    "asserts":false
+                    "kind":null
                   },
                   "rest":null,
-                  "typeParameters":null
+                  "typeParameters":null,
+                  "this":null
                 },
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"GenericTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":50}},
@@ -124,7 +123,8 @@
                   "default":null
                 }
               ]
-            }
+            },
+            "this":null
           }
         },
         "optional":false

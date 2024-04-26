@@ -3297,9 +3297,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       ((loc1, grd1) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t)
       ((loc2, grd2) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t) : node change list =
     let open Ast.Type.TypeGuard in
-    let { asserts = asserts1; guard = (x1, t1); comments = comments1 } = grd1 in
-    let { asserts = asserts2; guard = (x2, t2); comments = comments2 } = grd2 in
-    if asserts1 != asserts2 || t1 != t2 then
+    let { kind = kind1; guard = (x1, t1); comments = comments1 } = grd1 in
+    let { kind = kind2; guard = (x2, t2); comments = comments2 } = grd2 in
+    if kind1 != kind2 || t1 != t2 then
       [replace loc1 (TypeGuard (loc1, grd1)) (TypeGuard (loc2, grd2))]
     else
       let id = diff_if_changed identifier x1 x2 in

@@ -78,6 +78,7 @@ module type S = sig
     Type.t Subst_name.Map.t ->
     Type.fun_param list ->
     ALoc.t ->
+    Flow_ast.Type.TypeGuard.kind ->
     (ALoc.t, ALoc.t) Flow_ast.Identifier.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.t ->
     (ALoc.t, ALoc.t Flow_ast.Comment.t list) Flow_ast.Syntax.t option ->

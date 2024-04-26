@@ -99,7 +99,7 @@ module Types = struct
 
   let return_type_guard_annotation ?(loc = Loc.none) ?comments x t =
     Ast.Type.Function.TypeGuard
-      (loc, { Ast.Type.TypeGuard.asserts = false; guard = (x, Some t); comments })
+      (loc, { Ast.Type.TypeGuard.kind = Ast.Type.TypeGuard.Default; guard = (x, Some t); comments })
 
   let type_params ?comments ?(loc = Loc.none) params =
     (loc, { Ast.Type.TypeParams.params; comments })

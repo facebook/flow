@@ -100,7 +100,7 @@
                     "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":27}},
                     "range":[31,37]
                   },
-                  "asserts":false
+                  "kind":null
                 }
               },
               "typeParameters":null
@@ -181,7 +181,7 @@
                     },
                     "typeParameters":null
                   },
-                  "asserts":false
+                  "kind":null
                 }
               },
               "typeParameters":null
@@ -255,7 +255,6 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":7,"column":16},"end":{"line":7,"column":27}},
@@ -273,10 +272,11 @@
                   "loc":{"source":null,"start":{"line":7,"column":21},"end":{"line":7,"column":27}},
                   "range":[132,138]
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -302,7 +302,6 @@
               "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":17}},
               "range":[142,157],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"TypePredicate",
                 "loc":{"source":null,"start":{"line":8,"column":8},"end":{"line":8,"column":17}},
@@ -329,10 +328,11 @@
                   },
                   "typeParameters":null
                 },
-                "asserts":false
+                "kind":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,

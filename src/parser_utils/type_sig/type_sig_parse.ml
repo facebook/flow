@@ -1577,7 +1577,7 @@ and tuple_element opts scope tbls xs (loc, el) =
     TupleSpread { loc; name; t }
 
 and type_guard_opt opts scope tbls xs guard =
-  let (_, { T.TypeGuard.asserts = _; guard = (x, t_opt); _ }) = guard in
+  let (_, { T.TypeGuard.kind = _; guard = (x, t_opt); _ }) = guard in
   match t_opt with
   | Some t ->
     let (loc, { Ast.Identifier.name; _ }) = x in

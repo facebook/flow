@@ -72,7 +72,7 @@ type unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
   | IllegalName
-  | UserDefinedTypeGuards
+  | UserDefinedTypeGuards of { kind: Flow_ast.Type.TypeGuard.kind }
   | UnsupportedInternalSlot of {
       name: string;
       static: bool;

@@ -1534,12 +1534,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method type_guard (guard : ('M, 'T) Ast.Type.TypeGuard.t) : ('N, 'U) Ast.Type.TypeGuard.t =
       let open Ast.Type.TypeGuard in
-      let (annot, { asserts; guard = (x, t); comments }) = guard in
+      let (annot, { kind; guard = (x, t); comments }) = guard in
       let annot' = this#on_loc_annot annot in
       let x' = this#identifier x in
       let t' = Option.map ~f:this#type_ t in
       let comments' = this#syntax_with_internal_opt comments in
-      (annot', { asserts; guard = (x', t'); comments = comments' })
+      (annot', { kind; guard = (x', t'); comments = comments' })
 
     method type_guard_annotation ((annot, type_guard) : ('M, 'T) Ast.Type.type_guard_annotation)
         : ('N, 'U) Ast.Type.type_guard_annotation =

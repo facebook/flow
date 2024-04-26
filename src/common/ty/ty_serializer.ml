@@ -270,7 +270,11 @@ let type_ options =
       let%map t = type_ t in
       T.Function.TypeGuard
         ( Loc.none,
-          { T.TypeGuard.asserts = false; guard = (id_from_string x, Some t); comments = None }
+          {
+            T.TypeGuard.kind = T.TypeGuard.Default;
+            guard = (id_from_string x, Some t);
+            comments = None;
+          }
         )
   and obj_ o =
     let%bind properties = mapM obj_prop o.obj_props in

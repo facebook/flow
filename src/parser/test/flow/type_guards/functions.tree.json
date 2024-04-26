@@ -53,10 +53,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":32}},
@@ -78,10 +74,14 @@
             "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":32}},
             "range":[26,32]
           },
-          "asserts":false
+          "kind":null
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -133,10 +133,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":42}},
@@ -171,19 +167,23 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"NumberTypeAnnotation",
               "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":42}},
               "range":[86,92]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           },
-          "asserts":false
+          "kind":null
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -235,10 +235,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":44}},
@@ -273,19 +269,23 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"NumberTypeAnnotation",
               "loc":{"source":null,"start":{"line":3,"column":38},"end":{"line":3,"column":44}},
               "range":[148,154]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           },
-          "asserts":false
+          "kind":null
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -337,10 +337,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":4,"column":19},"end":{"line":4,"column":47}},
@@ -382,19 +378,23 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"NumberTypeAnnotation",
               "loc":{"source":null,"start":{"line":4,"column":41},"end":{"line":4,"column":47}},
               "range":[213,219]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           },
-          "asserts":false
+          "kind":null
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -446,10 +446,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":5,"column":19},"end":{"line":5,"column":47}},
@@ -484,7 +480,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":5,"column":36},"end":{"line":5,"column":47}},
@@ -502,15 +497,20 @@
                 "loc":{"source":null,"start":{"line":5,"column":41},"end":{"line":5,"column":47}},
                 "range":[278,284]
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           },
-          "asserts":false
+          "kind":null
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -562,10 +562,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":6,"column":19},"end":{"line":6,"column":30}},
@@ -583,10 +579,14 @@
             "optional":false
           },
           "typeAnnotation":null,
-          "asserts":true
+          "kind":"asserts"
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -638,10 +638,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":7,"column":19},"end":{"line":7,"column":40}},
@@ -663,10 +659,14 @@
             "loc":{"source":null,"start":{"line":7,"column":34},"end":{"line":7,"column":40}},
             "range":[381,387]
           },
-          "asserts":true
+          "kind":"asserts"
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     }
   ],
   "comments":[]

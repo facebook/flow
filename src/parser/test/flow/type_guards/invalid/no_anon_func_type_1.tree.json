@@ -88,7 +88,7 @@
                   "value":true,
                   "raw":"true"
                 },
-                "asserts":false
+                "kind":null
               }
             },
             "typeParameters":null

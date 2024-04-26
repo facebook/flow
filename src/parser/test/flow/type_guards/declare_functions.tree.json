@@ -41,7 +41,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":40}},
@@ -59,10 +58,11 @@
                 "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":40}},
                 "range":[34,40]
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
@@ -107,7 +107,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":50}},
@@ -138,19 +137,20 @@
                     "optional":false
                   }
                 ],
-                "this":null,
                 "returnType":{
                   "type":"NumberTypeAnnotation",
                   "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":50}},
                   "range":[86,92]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
@@ -195,7 +195,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":3,"column":29},"end":{"line":3,"column":52}},
@@ -226,19 +225,20 @@
                     "optional":false
                   }
                 ],
-                "this":null,
                 "returnType":{
                   "type":"NumberTypeAnnotation",
                   "loc":{"source":null,"start":{"line":3,"column":46},"end":{"line":3,"column":52}},
                   "range":[140,146]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
@@ -283,7 +283,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":4,"column":29},"end":{"line":4,"column":55}},
@@ -321,19 +320,20 @@
                     "optional":false
                   }
                 ],
-                "this":null,
                 "returnType":{
                   "type":"NumberTypeAnnotation",
                   "loc":{"source":null,"start":{"line":4,"column":49},"end":{"line":4,"column":55}},
                   "range":[197,203]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
@@ -378,7 +378,6 @@
                 "optional":false
               }
             ],
-            "this":null,
             "returnType":{
               "type":"TypePredicate",
               "loc":{"source":null,"start":{"line":5,"column":29},"end":{"line":5,"column":55}},
@@ -409,7 +408,6 @@
                     "optional":false
                   }
                 ],
-                "this":null,
                 "returnType":{
                   "type":"TypePredicate",
                   "loc":{"source":null,"start":{"line":5,"column":44},"end":{"line":5,"column":55}},
@@ -427,15 +425,17 @@
                     "loc":{"source":null,"start":{"line":5,"column":49},"end":{"line":5,"column":55}},
                     "range":[254,260]
                   },
-                  "asserts":false
+                  "kind":null
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
-              "asserts":false
+              "kind":null
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false

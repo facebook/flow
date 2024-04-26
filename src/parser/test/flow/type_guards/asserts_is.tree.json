@@ -40,10 +40,6 @@
         "range":[31,33],
         "body":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":30}},
@@ -61,10 +57,14 @@
             "optional":false
           },
           "typeAnnotation":null,
-          "asserts":true
+          "kind":"asserts"
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     }
   ],
   "comments":[]

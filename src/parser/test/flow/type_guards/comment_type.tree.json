@@ -53,10 +53,6 @@
           }
         ]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":34}},
@@ -78,10 +74,14 @@
             "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
             "range":[28,34]
           },
-          "asserts":false
+          "kind":null
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     }
   ],
   "comments":[]
