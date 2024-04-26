@@ -961,15 +961,14 @@ module Make
       | Some p ->
         (match p with
         | (loc, Identifier { Identifier.name = (name_loc, id); annot; optional }) ->
-          let r = mk_reason (RCustom "catch") loc in
           let (t, ast_annot) =
             match annot with
             | Ast.Type.Missing mloc ->
               let t =
                 if Context.use_mixed_in_catch_variables cx then
-                  MixedT.why r
+                  MixedT.at loc
                 else
-                  AnyT.why CatchAny r
+                  AnyT.why CatchAny (mk_reason RAnyImplicit loc)
               in
               (t, Ast.Type.Missing (mloc, t))
             | Ast.Type.Available ((_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _))) as annot) ->
@@ -979,7 +978,9 @@ module Make
               (t, Ast.Type.Available ast_annot)
             | Ast.Type.Available (_, (loc, _)) ->
               Flow.add_output cx (Error_message.EInvalidCatchParameterAnnotation loc);
-              (AnyT.why CatchAny r, Tast_utils.error_mapper#type_annotation_hint annot)
+              ( AnyT.why CatchAny (mk_reason RAnyImplicit loc),
+                Tast_utils.error_mapper#type_annotation_hint annot
+              )
           in
           let body = statement_list cx b.Block.body in
           {

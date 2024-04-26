@@ -811,12 +811,11 @@ let rec resolve_binding cx reason loc b =
       );
     (t, mk_use_op t)
   | Root CatchUnannotated ->
-    let reason = mk_reason (RCustom "unannotated catch parameter") loc in
     let t =
       if Context.use_mixed_in_catch_variables cx then
-        MixedT.why reason
+        MixedT.at loc
       else
-        AnyT (reason, AnyError (Some MissingAnnotation))
+        AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
     in
     (t, mk_use_op t)
   | Root (For (kind, exp)) ->
