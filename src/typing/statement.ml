@@ -2505,7 +2505,7 @@ module Make
 
   and empty_array cx loc =
     let reason = mk_reason REmptyArrayLit loc in
-    let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+    let element_reason = mk_reason REmptyArrayElement loc in
     let (has_hint, lazy_hint) = Type_env.get_hint cx loc in
     (* empty array, analogous to object with implicit properties *)
     let elemt =
@@ -2704,7 +2704,7 @@ module Make
       (match elements with
       | [] when Context.typing_mode cx <> Context.CheckingMode ->
         let reason = mk_reason REmptyArrayLit loc in
-        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+        let element_reason = mk_reason REmptyArrayElement loc in
         let elem_t = Context.mk_placeholder cx element_reason in
         ( ( loc,
             DefT

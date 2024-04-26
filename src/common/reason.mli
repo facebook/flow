@@ -366,8 +366,6 @@ val mk_initial_arguments_reason :
 
 val mk_pattern_reason : (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> reason
 
-val unknown_elem_empty_array_desc : reason_desc
-
 val invalidate_rtype_alias : 'loc virtual_reason_desc -> 'loc virtual_reason_desc
 
 val code_desc_of_expression : wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string

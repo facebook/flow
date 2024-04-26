@@ -709,7 +709,7 @@ let rec resolve_binding cx reason loc b =
     (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let (elem_t, tuple_view, reason) =
-      let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+      let element_reason = mk_reason REmptyArrayElement loc in
       if ALocSet.cardinal array_providers > 0 then (
         let ts =
           ALocSet.elements array_providers

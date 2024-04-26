@@ -1350,9 +1350,6 @@ let mk_initial_arguments_reason =
 
 let mk_pattern_reason ((loc, _) as patt) = mk_reason (RCode (code_desc_of_pattern patt)) loc
 
-(* TODO: replace RCustom descriptions with proper descriptions *)
-let unknown_elem_empty_array_desc = RCustom "unknown element type of empty array"
-
 (* Classifies a reason description. These classifications can be used to
  * implement various asthetic behaviors in error messages when we would like to
  * distinguish between different error "classes".
