@@ -27,10 +27,6 @@ val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
 
 val mod_reason_of_defer_use_t : (reason -> reason) -> Type.defer_use_t -> Type.defer_use_t
 
-val mod_reason_of_use_t : (reason -> reason) -> Type.use_t -> Type.use_t
-
-val mod_reason_of_opt_use_t : (reason -> reason) -> Type.opt_use_t -> Type.opt_use_t
-
 val use_op_of_use_t : Type.use_t -> Type.use_op option
 
 val mod_use_op_of_use_t : (Type.use_op -> Type.use_op) -> Type.use_t -> Type.use_t
