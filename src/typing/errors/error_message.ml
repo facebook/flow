@@ -188,8 +188,16 @@ and 'loc t' =
       expected_arity: int;
     }
   | ETypeParamMinArity of 'loc * int
-  | ETooManyTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
-  | ETooFewTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
+  | ETooManyTypeArgs of {
+      reason_tapp: 'loc virtual_reason;
+      reason_arity: 'loc virtual_reason;
+      maximum_arity: int;
+    }
+  | ETooFewTypeArgs of {
+      reason_tapp: 'loc virtual_reason;
+      reason_arity: 'loc virtual_reason;
+      minimum_arity: int;
+    }
   | EInvalidInfer of 'loc
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
@@ -932,8 +940,20 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ECallTypeArity
       { call_loc = f call_loc; is_new; expected_arity; reason_arity = map_reason reason_arity }
   | ETypeParamMinArity (loc, i) -> ETypeParamMinArity (f loc, i)
-  | ETooManyTypeArgs (r1, r2, i) -> ETooManyTypeArgs (map_reason r1, map_reason r2, i)
-  | ETooFewTypeArgs (r1, r2, i) -> ETooFewTypeArgs (map_reason r1, map_reason r2, i)
+  | ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity } ->
+    ETooManyTypeArgs
+      {
+        reason_tapp = map_reason reason_tapp;
+        reason_arity = map_reason reason_arity;
+        maximum_arity;
+      }
+  | ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity } ->
+    ETooFewTypeArgs
+      {
+        reason_tapp = map_reason reason_tapp;
+        reason_arity = map_reason reason_arity;
+        minimum_arity;
+      }
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
   | EInvalidInfer l -> EInvalidInfer (f l)
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
@@ -1416,8 +1436,8 @@ let util_use_op_of_msg nope util = function
   | ETypeParamArity (_, _)
   | ECallTypeArity _
   | ETypeParamMinArity (_, _)
-  | ETooManyTypeArgs (_, _, _)
-  | ETooFewTypeArgs (_, _, _)
+  | ETooFewTypeArgs _
+  | ETooManyTypeArgs _
   | EInvalidTypeArgs (_, _)
   | EInvalidInfer _
   | EInvalidExtends _
@@ -1563,8 +1583,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
   | EInvalidTypeArgs (_, primary)
-  | ETooFewTypeArgs (primary, _, _)
-  | ETooManyTypeArgs (primary, _, _) ->
+  | ETooFewTypeArgs { reason_tapp = primary; _ }
+  | ETooManyTypeArgs { reason_tapp = primary; _ } ->
     Some (loc_of_reason primary)
   | ESketchyNumberLint (_, reason)
   | EInvalidExtends reason
@@ -2033,12 +2053,12 @@ let friendly_message_of_msg = function
   | EMissingTypeArgs { reason_op = _; reason_tapp; reason_arity; min_arity; max_arity } ->
     let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
     Normal (MessageCannotUseTypeWithoutAnyTypeArgs { reason_arity; min_arity; max_arity })
-  | ETooManyTypeArgs (reason_tapp, reason_arity, n) ->
+  | ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity } ->
     let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-    Normal (MessageCannotUseTypeWithTooManyTypeArgs { reason_arity; n })
-  | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
+    Normal (MessageCannotUseTypeWithTooManyTypeArgs { reason_arity; n = maximum_arity })
+  | ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity } ->
     let reason_arity = replace_desc_reason (desc_of_reason reason_tapp) reason_arity in
-    Normal (MessageCannotUseTypeWithTooFewTypeArgs { reason_arity; n })
+    Normal (MessageCannotUseTypeWithTooFewTypeArgs { reason_arity; n = minimum_arity })
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
     Normal (MessageCannotUseTypeWithInvalidTypeArgs { reason_main; reason_tapp })
   | EInvalidInfer _ -> Normal MessageInvalidInferType
@@ -2937,8 +2957,8 @@ let error_code_of_message err : error_code option =
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
   | EExportRenamedDefault _ -> Some ExportRenamedDefault
-  | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
-  | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
+  | ETooFewTypeArgs _ -> Some MissingTypeArg
+  | ETooManyTypeArgs _ -> Some ExtraTypeArg
   | ETupleArityMismatch _ -> Some InvalidTupleArity
   | ETupleRequiredAfterOptional _ -> Some TupleRequiredAfterOptional
   | ETupleInvalidTypeSpread _ -> Some TupleInvalidTypeSpread

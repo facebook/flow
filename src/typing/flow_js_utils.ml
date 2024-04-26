@@ -1057,7 +1057,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       add_output
         cx
         ~trace
-        (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+        (Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity });
       Base.Option.iter errs_ref ~f:(fun errs_ref ->
           errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref
       )
@@ -1075,7 +1075,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
               add_output
                 cx
                 ~trace
-                (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
+                (Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity });
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
                   errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref
               );
@@ -1139,12 +1139,12 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
         |> List.iter (function
                | Context.ETooManyTypeArgs (reason_arity, maximum_arity) ->
                  let msg =
-                   Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity)
+                   Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity }
                  in
                  add_output cx ~trace msg
-               | Context.ETooFewTypeArgs (reason_arity, maximum_arity) ->
+               | Context.ETooFewTypeArgs (reason_arity, minimum_arity) ->
                  let msg =
-                   Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, maximum_arity)
+                   Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity }
                  in
                  add_output cx ~trace msg
                );

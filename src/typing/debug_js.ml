@@ -1488,13 +1488,13 @@ let dump_error_message =
         is_new
         (dump_reason cx reason_arity)
         expected_arity
-    | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
+    | ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity } ->
       spf
         "ETooManyTypeArgs (%s, %s, %d)"
         (dump_reason cx reason_tapp)
         (dump_reason cx reason_arity)
         maximum_arity
-    | ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity) ->
+    | ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity } ->
       spf
         "ETooFewTypeArgs (%s, %s, %d)"
         (dump_reason cx reason_tapp)

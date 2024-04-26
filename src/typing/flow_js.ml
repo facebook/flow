@@ -10816,7 +10816,7 @@ struct
       add_output
         cx
         ~trace
-        (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity))
+        (Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity })
     else
       let (unused_targs, _, _) =
         Nel.fold_left
@@ -10841,7 +10841,7 @@ struct
               add_output
                 cx
                 ~trace
-                (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
+                (Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity });
               ([], map1, map2)
             | (Some default, []) ->
               let t1 = subst cx ~use_op map1 default in

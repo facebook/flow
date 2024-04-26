@@ -791,7 +791,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         if List.length explicit_targs > maximum_arity then
           Flow_js_utils.add_output
             cx
-            (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+            (Error_message.ETooManyTypeArgs { reason_tapp; reason_arity; maximum_arity });
         let rec loop (targs, inferred_targ_and_bound_list) tparams_rev_acc explicit_targs_rev_acc =
           match (tparams_rev_acc, explicit_targs_rev_acc) with
           | ([], _) -> (List.rev targs, List.rev inferred_targ_and_bound_list)
@@ -802,7 +802,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             if Base.Option.is_none tparam.default then
               Flow_js_utils.add_output
                 cx
-                (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
+                (Error_message.ETooFewTypeArgs { reason_tapp; reason_arity; minimum_arity });
             loop
               ( ExplicitArg targ :: targs,
                 (tparam.name, targ, tparam.bound, true) :: inferred_targ_and_bound_list
