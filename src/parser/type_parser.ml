@@ -652,6 +652,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       let trailing = Eat.trailing_comments env in
       Some (Type.Undefined (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_ASSERTS -> generic_of_primitive env "asserts"
+    | T_IMPLIES -> generic_of_primitive env "implies"
     | T_IS -> generic_of_primitive env "is"
     | _ -> None
 
@@ -1081,12 +1082,20 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       Type.Function.TypeAnnotation (_type env)
 
   and type_guard env =
+    let parse_is_type_guard env =
+      let internal = Peek.comments env in
+      Expect.token env T_IS;
+      let internal = internal @ Peek.comments env in
+      (Some (_type env), internal)
+    in
     with_loc
       (fun env ->
         let leading = Peek.comments env in
         let kind =
           if Eat.maybe env T_ASSERTS then
             Ast.Type.TypeGuard.Asserts
+          else if Eat.maybe env T_IMPLIES then
+            Ast.Type.TypeGuard.Implies
           else
             Ast.Type.TypeGuard.Default
         in
@@ -1096,13 +1105,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         let param = identifier_name env in
         Eat.pop_lex_mode env;
         let (t, internal) =
-          match Peek.token env with
-          | T_IS ->
-            let internal = Peek.comments env in
-            Expect.token env T_IS;
-            let internal = internal @ Peek.comments env in
-            (Some (_type env), internal)
-          | _ -> (None, [])
+          if kind = Ast.Type.TypeGuard.Implies then
+            parse_is_type_guard env
+          else
+            match Peek.token env with
+            | T_IS -> parse_is_type_guard env
+            | _ -> (None, [])
         in
         let guard = (param, t) in
         let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~internal () in

@@ -1,3 +1,4 @@
 [options]
 all=true
 no_flowlib=false
+one_sided_type_guards=true

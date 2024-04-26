@@ -10,3 +10,4 @@ type O1 = {
   f2: (x: mixed) => x is number => number;
   f2: (x: mixed) => number => x is number => number;
 };
+type T3 = (x: mixed) => implies x is number;

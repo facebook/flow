@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":12,"column":2}},
-  "range":[0,418],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":44}},
+  "range":[0,463],
   "body":[
     {
       "type":"TypeAlias",
@@ -860,6 +860,68 @@
           }
         ],
         "internalSlots":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":44}},
+      "range":[419,463],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":13,"column":5},"end":{"line":13,"column":7}},
+        "range":[424,426],
+        "name":"T3",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"FunctionTypeAnnotation",
+        "loc":{"source":null,"start":{"line":13,"column":10},"end":{"line":13,"column":43}},
+        "range":[429,462],
+        "params":[
+          {
+            "type":"FunctionTypeParam",
+            "loc":{"source":null,"start":{"line":13,"column":11},"end":{"line":13,"column":19}},
+            "range":[430,438],
+            "name":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":13,"column":11},"end":{"line":13,"column":12}},
+              "range":[430,431],
+              "name":"x",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeAnnotation":{
+              "type":"MixedTypeAnnotation",
+              "loc":{"source":null,"start":{"line":13,"column":14},"end":{"line":13,"column":19}},
+              "range":[433,438]
+            },
+            "optional":false
+          }
+        ],
+        "returnType":{
+          "type":"TypePredicate",
+          "loc":{"source":null,"start":{"line":13,"column":24},"end":{"line":13,"column":43}},
+          "range":[443,462],
+          "parameterName":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":13,"column":32},"end":{"line":13,"column":33}},
+            "range":[451,452],
+            "name":"x",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeAnnotation":{
+            "type":"NumberTypeAnnotation",
+            "loc":{"source":null,"start":{"line":13,"column":37},"end":{"line":13,"column":43}},
+            "range":[456,462]
+          },
+          "kind":"implies"
+        },
+        "rest":null,
+        "typeParameters":null,
+        "this":null
       }
     }
   ],

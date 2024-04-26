@@ -1797,6 +1797,7 @@ let type_token env lexbuf =
     | "infer" -> Token (env, T_INFER)
     | "is" -> Token (env, T_IS)
     | "asserts" -> Token (env, T_ASSERTS)
+    | "implies" -> Token (env, T_IMPLIES)
     | "static" -> Token (env, T_STATIC)
     | "string" -> Token (env, T_STRING_TYPE)
     | "symbol" -> Token (env, T_SYMBOL_TYPE)

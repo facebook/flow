@@ -84,10 +84,10 @@ function custom_ast_types(fork) {
 
   def('TypePredicate')
     .bases('TypeAnnotation', 'FlowType')
-    .build('parameterName', 'typeAnnotation', 'asserts')
+    .build('parameterName', 'typeAnnotation', 'kind')
     .field('parameterName', def('Identifier'))
     .field('typeAnnotation', or(def('FlowType'), null), defaults['null'])
-    .field('asserts', Boolean, defaults['false']);
+    .field('kind', or(null, 'asserts', 'implies'), defaults['null']);
 
   def('TypeofTypeAnnotation')
     .bases('FlowType')

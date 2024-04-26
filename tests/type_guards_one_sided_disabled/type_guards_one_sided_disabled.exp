@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------------- file.js:1:21
+
+One-sided type guards are not yet supported. [unsupported-syntax]
+
+   1| function l(x: any): implies x is number { throw "unsupported" }; // error unsupported
+                          ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

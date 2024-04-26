@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":54}},
-  "range":[0,401],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":8,"column":57}},
+  "range":[0,459],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -660,6 +660,86 @@
             "range":[381,387]
           },
           "kind":"asserts"
+        }
+      },
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
+    },
+    {
+      "type":"FunctionDeclaration",
+      "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":57}},
+      "range":[402,459],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":8,"column":9},"end":{"line":8,"column":11}},
+        "range":[411,413],
+        "name":"f8",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[
+        {
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":8,"column":12},"end":{"line":8,"column":18}},
+          "range":[414,420],
+          "name":"x",
+          "typeAnnotation":{
+            "type":"TypeAnnotation",
+            "loc":{"source":null,"start":{"line":8,"column":13},"end":{"line":8,"column":18}},
+            "range":[415,420],
+            "typeAnnotation":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":8,"column":15},"end":{"line":8,"column":18}},
+              "range":[417,420]
+            }
+          },
+          "optional":false
+        }
+      ],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":8,"column":41},"end":{"line":8,"column":57}},
+        "range":[443,459],
+        "body":[
+          {
+            "type":"ReturnStatement",
+            "loc":{"source":null,"start":{"line":8,"column":43},"end":{"line":8,"column":55}},
+            "range":[445,457],
+            "argument":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":8,"column":50},"end":{"line":8,"column":54}},
+              "range":[452,456],
+              "value":true,
+              "raw":"true"
+            }
+          }
+        ]
+      },
+      "returnType":{
+        "type":"TypeAnnotation",
+        "loc":{"source":null,"start":{"line":8,"column":19},"end":{"line":8,"column":40}},
+        "range":[421,442],
+        "typeAnnotation":{
+          "type":"TypePredicate",
+          "loc":{"source":null,"start":{"line":8,"column":21},"end":{"line":8,"column":40}},
+          "range":[423,442],
+          "parameterName":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":8,"column":29},"end":{"line":8,"column":30}},
+            "range":[431,432],
+            "name":"x",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeAnnotation":{
+            "type":"NumberTypeAnnotation",
+            "loc":{"source":null,"start":{"line":8,"column":34},"end":{"line":8,"column":40}},
+            "range":[436,442]
+          },
+          "kind":"implies"
         }
       },
       "typeParameters":null,

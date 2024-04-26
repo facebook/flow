@@ -177,6 +177,7 @@ type t =
   | T_INFER
   | T_IS
   | T_ASSERTS
+  | T_IMPLIES
   | T_RENDERS_QUESTION
   | T_RENDERS_STAR
 
@@ -329,6 +330,7 @@ let token_to_string = function
   | T_INFER -> "T_INFER"
   | T_IS -> "T_IS"
   | T_ASSERTS -> "T_ASSERTS"
+  | T_IMPLIES -> "T_IMPLIES"
   | T_RENDERS_QUESTION -> "T_RENDERS_QUESTION"
   | T_RENDERS_STAR -> "T_RENDERS_QUESTION"
   (* Extra tokens *)
@@ -487,6 +489,7 @@ let value_of_token = function
   | T_INFER -> "infer"
   | T_IS -> "is"
   | T_ASSERTS -> "asserts"
+  | T_IMPLIES -> "implies"
   | T_RENDERS_QUESTION -> "renders?"
   | T_RENDERS_STAR -> "renders*"
   (* Extra tokens *)

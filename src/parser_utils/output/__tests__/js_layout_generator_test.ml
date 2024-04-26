@@ -2980,6 +2980,7 @@ let tests =
          ( "type_guards" >:: fun ctxt ->
            assert_expression_string ~ctxt ~pretty:true "(x: any): x is true => true";
            assert_expression_string ~ctxt ~pretty:true "(x: any): x is ((x: true) => true) => true";
+           assert_expression_string ~ctxt ~pretty:true "(x: any): implies x is true => true";
            assert_expression_string
              ~ctxt
              ~pretty:true
