@@ -587,6 +587,23 @@ let nominal_id_have_same_logical_module
        )
   | _ -> false
 
+let is_falsy = function
+  | DefT
+      ( _,
+        ( NullT | VoidT
+        | SingletonBoolT false
+        | BoolT (Some false)
+        | EnumValueT
+            ( ConcreteEnum { representation_t = DefT (_, BoolT (Some false)); _ }
+            | AbstractEnum { representation_t = DefT (_, BoolT (Some false)) } )
+        | SingletonStrT (OrdinaryName "")
+        | StrT (Literal (_, OrdinaryName ""))
+        | SingletonNumT (0., _)
+        | NumT (Literal (_, (0., _))) )
+      ) ->
+    true
+  | _ -> false
+
 let quick_subtype t1 t2 =
   match (t1, t2) with
   | (DefT (_, NumT _), DefT (_, NumT _))

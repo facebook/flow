@@ -51,6 +51,8 @@ val nominal_id_have_same_logical_module :
 
 val quick_subtype : Type.t -> Type.t -> bool
 
+val is_falsy : Type.t -> bool
+
 val reason_of_propref : Type.propref -> reason
 
 val mk_named_prop : reason:reason -> ?from_indexed_access:bool -> name -> Type.propref

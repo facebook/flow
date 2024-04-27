@@ -76,94 +76,72 @@ let map_poly ~f t =
   end
   | _ -> t
 
-let rec exists cx = function
-  (* falsy things get removed *)
-  | DefT
-      ( r,
-        ( NullT | VoidT
-        | SingletonBoolT false
-        | BoolT (Some false)
-        | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, BoolT (Some false)); _ }
-            | AbstractEnum { representation_t = DefT (_, BoolT (Some false)) } )
-        | SingletonStrT (OrdinaryName "")
-        | StrT (Literal (_, OrdinaryName ""))
-        | SingletonNumT (0., _)
-        | NumT (Literal (_, (0., _))) )
-      ) ->
-    DefT (r, EmptyT)
-  (* unknown things become truthy *)
-  | OpaqueT (r, opq) -> filter_opaque (exists cx) r opq
-  | UnionT (r, rep) -> recurse_into_union cx exists (r, UnionRep.members rep)
-  | MaybeT (_, t) -> t
-  | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists cx t
-  | DefT (r, BoolT None) -> DefT (r, BoolT (Some true))
-  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy)
-  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
-  | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
-  (* an intersection passes through iff all of its members pass through *)
-  | IntersectionT (r, rep) -> recurse_into_intersection (exists cx) (r, InterRep.members rep)
-  (* truthy things pass through *)
-  | t -> t
+let rec exists cx t =
+  if TypeUtil.is_falsy t then
+    DefT (reason_of_t t, EmptyT)
+  else
+    match t with
+    (* unknown things become truthy *)
+    | OpaqueT (r, opq) -> filter_opaque (exists cx) r opq
+    | UnionT (r, rep) -> recurse_into_union cx exists (r, UnionRep.members rep)
+    | MaybeT (_, t) -> t
+    | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists cx t
+    | DefT (r, BoolT None) -> DefT (r, BoolT (Some true))
+    | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy)
+    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
+    | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
+    (* an intersection passes through iff all of its members pass through *)
+    | IntersectionT (r, rep) -> recurse_into_intersection (exists cx) (r, InterRep.members rep)
+    (* truthy things pass through *)
+    | t -> t
 
 let rec not_exists cx t =
-  match t with
-  | DefT (_, PolyT _) -> map_poly ~f:(not_exists cx) t
-  (* falsy things pass through *)
-  | DefT
-      ( _,
-        ( NullT | VoidT
-        | SingletonBoolT false
-        | BoolT (Some false)
-        | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, BoolT (Some false)); _ }
-            | AbstractEnum { representation_t = DefT (_, BoolT (Some false)) } )
-        | SingletonStrT (OrdinaryName "")
-        | StrT (Literal (_, OrdinaryName ""))
-        | SingletonNumT (0., _)
-        | NumT (Literal (_, (0., _))) )
-      ) ->
+  if TypeUtil.is_falsy t then
+    (* falsy things pass through *)
     t
-  | OpaqueT (r, opq) -> filter_opaque (not_exists cx) r opq
-  | AnyT (r, _) -> DefT (r, EmptyT)
-  | UnionT (r, rep) -> recurse_into_union cx not_exists (r, UnionRep.members rep)
-  (* truthy things get removed *)
-  | DefT
-      ( r,
-        ( SingletonBoolT _
-        | BoolT (Some _)
-        | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, BoolT (Some _)); _ }
-            | AbstractEnum { representation_t = DefT (_, BoolT (Some _)) } )
-        | SingletonStrT _ | NumericStrKeyT _
-        | StrT (Literal _ | Truthy)
-        | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, StrT Truthy); _ }
-            | AbstractEnum { representation_t = DefT (_, StrT Truthy) } )
-        | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
-        | SingletonNumT _
-        | NumT (Literal _ | Truthy)
-        | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, NumT Truthy); _ }
-            | AbstractEnum { representation_t = DefT (_, NumT Truthy) } )
-        | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, BigIntT Truthy); _ }
-            | AbstractEnum { representation_t = DefT (_, BigIntT Truthy) } )
-        | MixedT Mixed_truthy )
-      ) ->
-    DefT (r, EmptyT)
-  | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
-  | ThisInstanceT (reason, _, _, _) -> DefT (reason, EmptyT)
-  (* unknown boolies become falsy *)
-  | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [not_exists cx t])
-  | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
-  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, OrdinaryName "")))
-  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
-  | ExactT (_, t) -> not_exists cx t
-  (* an intersection passes through iff all of its members pass through *)
-  | IntersectionT (r, rep) -> recurse_into_intersection (not_exists cx) (r, InterRep.members rep)
-  (* things that don't track truthiness pass through *)
-  | t -> t
+  else
+    match t with
+    | DefT (_, PolyT _) -> map_poly ~f:(not_exists cx) t
+    | OpaqueT (r, opq) -> filter_opaque (not_exists cx) r opq
+    | AnyT (r, _) -> DefT (r, EmptyT)
+    | UnionT (r, rep) -> recurse_into_union cx not_exists (r, UnionRep.members rep)
+    (* truthy things get removed *)
+    | DefT
+        ( r,
+          ( SingletonBoolT _
+          | BoolT (Some _)
+          | EnumValueT
+              ( ConcreteEnum { representation_t = DefT (_, BoolT (Some _)); _ }
+              | AbstractEnum { representation_t = DefT (_, BoolT (Some _)) } )
+          | SingletonStrT _ | NumericStrKeyT _
+          | StrT (Literal _ | Truthy)
+          | EnumValueT
+              ( ConcreteEnum { representation_t = DefT (_, StrT Truthy); _ }
+              | AbstractEnum { representation_t = DefT (_, StrT Truthy) } )
+          | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
+          | SingletonNumT _
+          | NumT (Literal _ | Truthy)
+          | EnumValueT
+              ( ConcreteEnum { representation_t = DefT (_, NumT Truthy); _ }
+              | AbstractEnum { representation_t = DefT (_, NumT Truthy) } )
+          | EnumValueT
+              ( ConcreteEnum { representation_t = DefT (_, BigIntT Truthy); _ }
+              | AbstractEnum { representation_t = DefT (_, BigIntT Truthy) } )
+          | MixedT Mixed_truthy )
+        ) ->
+      DefT (r, EmptyT)
+    | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
+    | ThisInstanceT (reason, _, _, _) -> DefT (reason, EmptyT)
+    (* unknown boolies become falsy *)
+    | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [not_exists cx t])
+    | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
+    | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, OrdinaryName "")))
+    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
+    | ExactT (_, t) -> not_exists cx t
+    (* an intersection passes through iff all of its members pass through *)
+    | IntersectionT (r, rep) -> recurse_into_intersection (not_exists cx) (r, InterRep.members rep)
+    (* things that don't track truthiness pass through *)
+    | t -> t
 
 let rec maybe cx = function
   | OpaqueT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
