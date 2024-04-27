@@ -774,7 +774,6 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
                       Base.List.map
                         ~f:(fun { Env_api.Provider_api.reason; _ } -> loc_of_reason reason)
                         provider_locs;
-                    array = false;
                   },
                 use_op
               )

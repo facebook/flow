@@ -709,42 +709,18 @@ let rec resolve_binding cx reason loc b =
     (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let (elem_t, tuple_view, reason) =
-      let element_reason = mk_reason REmptyArrayElement loc in
-      if ALocSet.cardinal array_providers > 0 then (
+      if ALocSet.cardinal array_providers > 0 then
         let ts =
           ALocSet.elements array_providers
           |> Base.List.map ~f:(Type_env.checked_find_loc_env_write cx Env_api.ArrayProviderLoc)
         in
-        let constrain_t =
-          Tvar.mk_where cx element_reason (fun tvar ->
+        let elem_t =
+          Tvar.mk_where cx (mk_reason REmptyArrayElement loc) (fun tvar ->
               Base.List.iter ~f:(fun t -> Flow_js.flow cx (t, UseT (unknown_use, tvar))) ts
           )
         in
-        let elem_t =
-          Tvar.mk_where cx element_reason (fun tvar ->
-              Flow_js.flow cx (constrain_t, UseT (unknown_use, tvar))
-          )
-        in
-        let use_op =
-          let name =
-            match desc_of_reason reason with
-            | RIdentifier (OrdinaryName x) -> x
-            | _ -> "an empty array"
-          in
-          Frame
-            ( ConstrainedAssignment
-                {
-                  name;
-                  declaration = loc_of_reason reason;
-                  providers = ALocSet.elements array_providers;
-                  array = true;
-                },
-              unknown_use
-            )
-        in
-        Context.add_post_inference_subtyping_check cx elem_t use_op constrain_t;
         (elem_t, None, reason)
-      ) else
+      else
         let elem_t = EmptyT.make (mk_reason REmptyArrayElement loc) in
         Flow_js_utils.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
         (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)

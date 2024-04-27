@@ -183,7 +183,6 @@ type 'loc explanation =
       name: string;
       declaration: 'loc;
       providers: 'loc list;
-      array: bool;
     }
   | ExplanationConcreteEnumCasting of {
       representation_type: string;

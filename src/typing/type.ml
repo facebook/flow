@@ -456,7 +456,6 @@ module rec TypeTerm : sig
         name: string;
         declaration: 'loc;
         providers: 'loc list;
-        array: bool;
       }
     | ReactDeepReadOnly of ('loc * dro_type)
     | ArrayElementCompatibility of {

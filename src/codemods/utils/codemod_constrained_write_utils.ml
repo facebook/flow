@@ -15,7 +15,7 @@ let declaration_locs_of_constrained_write_error cx ~arrays_only error =
   let rec find_constrained_writes op =
     let open Type in
     match op with
-    | Frame (ConstrainedAssignment { declaration; array; _ }, op) when (not arrays_only) || array ->
+    | Frame (ConstrainedAssignment { declaration; _ }, op) when not arrays_only ->
       LocSet.add (ALoc.to_loc_with_tables tables declaration) (find_constrained_writes op)
     | Op (Speculation op)
     | Frame (_, op) ->

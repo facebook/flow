@@ -603,12 +603,8 @@ let rec make_intermediate_error :
         explanation loc frames use_op (ExplanationReactHookArgsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (hook_loc, HookReturn), use_op) ->
         explanation loc frames use_op (ExplanationReactHookReturnDeepReadOnly hook_loc)
-      | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
-        explanation
-          loc
-          frames
-          use_op
-          (ExplanationConstrainedAssign { name; declaration; providers; array })
+      | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
+        explanation loc frames use_op (ExplanationConstrainedAssign { name; declaration; providers })
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
         explanation loc frames use_op ExplanationArrayInvariantTyping
       | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
@@ -1131,30 +1127,15 @@ let to_printable_error :
       ]
     | ExplanationTypeGuardCompatibility ->
       [text "A user defined type guard needs to be compatible with its parameter's type"]
-    | ExplanationConstrainedAssign { name; declaration; providers; array } ->
-      let noun =
-        if array then
-          "element"
-        else
-          "assignment"
-      in
+    | ExplanationConstrainedAssign { name; declaration; providers } ->
       let assignments =
         match providers with
-        | [] -> (* should not happen *) [text (spf "one of its initial %ss" noun)]
+        | [] -> (* should not happen *) [text "one of its initial assignments"]
         | [l] when Loc.equal (loc_of_aloc l) (loc_of_aloc declaration) ->
-          [
-            text "its ";
-            hardcoded_string_desc_ref
-              ( if array then
-                "initial element"
-              else
-                "initializer"
-              )
-              declaration;
-          ]
-        | [l] -> [text "its "; hardcoded_string_desc_ref ("initial " ^ noun) l]
+          [text "its "; hardcoded_string_desc_ref "initializer" declaration]
+        | [l] -> [text "its "; hardcoded_string_desc_ref "initial assignment" l]
         | providers ->
-          text (spf "one of its initial %ss" noun)
+          text "one of its initial assignments"
           :: (Base.List.map ~f:(Friendly.no_desc_ref_map loc_of_aloc) providers
              |> Base.List.intersperse ~sep:(text ",")
              )
