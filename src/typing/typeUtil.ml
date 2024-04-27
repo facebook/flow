@@ -646,10 +646,9 @@ let quick_subtype t1 t2 =
   | (DefT (_, SymbolT), DefT (_, SymbolT))
   | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _)))
   | (DefT (_, EmptyT), DefT (_, _))
-  | (DefT (_, _), DefT (_, MixedT _))
-  | (DefT (_, EmptyT), _)
-  | (_, DefT (_, MixedT _)) ->
+  | (DefT (_, EmptyT), _) ->
     true
+  | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
   | (DefT (_, StrT actual), DefT (_, SingletonStrT expected)) -> literal_eq expected actual
   | (DefT (_, NumT actual), DefT (_, SingletonNumT expected)) -> number_literal_eq expected actual
   | (DefT (_, BoolT actual), DefT (_, SingletonBoolT expected)) ->
