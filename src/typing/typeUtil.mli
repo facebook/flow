@@ -13,10 +13,6 @@ val reason_of_defer_use_t : Type.defer_use_t -> reason
 
 val reason_of_use_t : Type.use_t -> reason
 
-val reason_of_t_add_id : Type.t -> reason
-
-val reason_of_use_t_add_id : Type.use_t -> reason
-
 val desc_of_t : Type.t -> reason_desc
 
 val loc_of_t : Type.t -> ALoc.t

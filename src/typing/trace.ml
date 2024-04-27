@@ -143,11 +143,11 @@ let reasons_of_trace ?(level = 0) trace =
     ( if is_pipelined_tvar ~steps ~i lower then
       []
     else
-      [pretty_r (reason_of_t_add_id lower) (spf "%s " (string_of_ctor lower)) ""]
+      [pretty_r (reason_of_t lower) (spf "%s " (string_of_ctor lower)) ""]
     )
     @ [
         pretty_r
-          (reason_of_use_t_add_id upper)
+          (reason_of_use_t upper)
           (spf "~> %s " (string_of_use_ctor upper))
           ( if parent = [] then
             ""

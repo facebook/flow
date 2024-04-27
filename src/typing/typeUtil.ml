@@ -156,17 +156,6 @@ and reason_of_use_t = function
   | ExitRendersT { renders_reason; _ } -> renders_reason
   | EvalTypeDestructorT { reason; _ } -> reason
 
-(* helper: we want the tvar id as well *)
-(* NOTE: uncalled for now, because ids are nondetermistic
-   due to parallelism, which messes up test diffs. Should
-   add a config, but for now must uncomment impl to use *)
-let reason_of_t_add_id = reason_of_t
-
-(* function
-   | OpenT (r, id) -> prefix_reason (spf "%d: " id) r
-   | t -> reason_of_t t *)
-let reason_of_use_t_add_id = reason_of_use_t
-
 let desc_of_t = reason_of_t %> desc_of_reason
 
 let loc_of_t = reason_of_t %> loc_of_reason
