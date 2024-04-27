@@ -116,53 +116,21 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let acc_fun filename file_errs (errors, suppressed, unused) =
     let file_options = Some (Options.file_options options) in
-    if Options.faster_error_collation options then
-      let (file_errs, file_suppressed, unused) =
-        Error_suppressions.filter_suppressed_errors
-          ~root
-          ~file_options
-          ~loc_of_aloc
-          (* Use all_suppressions here to account for misplaced errors. *)
-          all_suppressions
-          file_errs
-          ~unused
-      in
-      let errors = FilenameMap.add filename file_errs errors in
-      let suppressed =
-        let open Collated_errors in
-        match suppressed with
-        | EmptyCollatedSuppressedErrors ->
-          NewCollatedSuppressedErrors (FilenameMap.singleton filename file_suppressed)
-        | NewCollatedSuppressedErrors map ->
-          NewCollatedSuppressedErrors (FilenameMap.add filename file_suppressed map)
-        | OldCollatedSuppressedErrors _ ->
-          failwith "Encountered OldCollatedSuppressedErrors under faster_error_collation=true"
-      in
-      (errors, suppressed, unused)
-    else
-      let (file_errs, file_suppressed, unused) =
-        Error_suppressions.filter_suppressed_errors_old
-          ~root
-          ~file_options
-          ~loc_of_aloc
-          (* Use all_suppressions here to account for misplaced errors. *)
-          all_suppressions
-          file_errs
-          ~unused
-      in
-      let errors = FilenameMap.add filename file_errs errors in
-      let suppressed =
-        let open Collated_errors in
-        match suppressed with
-        | EmptyCollatedSuppressedErrors ->
-          OldCollatedSuppressedErrors (FilenameMap.singleton filename file_suppressed)
-        | OldCollatedSuppressedErrors map ->
-          OldCollatedSuppressedErrors (FilenameMap.add filename file_suppressed map)
-        | NewCollatedSuppressedErrors _ ->
-          failwith "Encountered NewCollatedSuppressedErrors under faster_error_collation=false"
-      in
-      (errors, suppressed, unused)
+    let (file_errs, file_suppressed, unused) =
+      Error_suppressions.filter_suppressed_errors
+        ~root
+        ~file_options
+        ~loc_of_aloc
+        (* Use all_suppressions here to account for misplaced errors. *)
+        all_suppressions
+        file_errs
+        ~unused
+    in
+    let errors = FilenameMap.add filename file_errs errors in
+    let suppressed = FilenameMap.add filename file_suppressed suppressed in
+    (errors, suppressed, unused)
   in
+
   MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
   let {
     collated_duplicate_providers_errors;
@@ -402,27 +370,6 @@ let get_without_suppressed env =
   in
   (errors, warnings)
 
-(* combine error maps into a single error set and a single warning set *)
-let get_old env =
-  let open Flow_errors_utils in
-  let (errors, warning_map, suppressed_errors) = get_with_separate_warnings env in
-  let warnings =
-    FilenameMap.fold
-      (fun _key -> ConcreteLocPrintableErrorSet.union)
-      warning_map
-      ConcreteLocPrintableErrorSet.empty
-  in
-  let suppressed_errors =
-    let open Collated_errors in
-    match suppressed_errors with
-    | EmptyCollatedSuppressedErrors -> FilenameMap.empty
-    | OldCollatedSuppressedErrors map -> map
-    | NewCollatedSuppressedErrors _ ->
-      failwith "Encountered NewCollatedSuppressedErrors under faster_error_collation=false"
-  in
-  let suppressed_errors = FilenameMap.fold (fun _ -> List.rev_append) suppressed_errors [] in
-  (errors, warnings, suppressed_errors)
-
 let get env =
   let open Flow_errors_utils in
   let (errors, warning_map, suppressed_errors) = get_with_separate_warnings env in
@@ -431,14 +378,6 @@ let get env =
       (fun _key -> ConcreteLocPrintableErrorSet.union)
       warning_map
       ConcreteLocPrintableErrorSet.empty
-  in
-  let suppressed_errors =
-    let open Collated_errors in
-    match suppressed_errors with
-    | EmptyCollatedSuppressedErrors -> FilenameMap.empty
-    | NewCollatedSuppressedErrors map -> map
-    | OldCollatedSuppressedErrors _ ->
-      failwith "Encountered OldCollatedSuppressedErrors under faster_error_collation=true"
   in
   let suppressed_errors = FilenameMap.fold (fun _ -> List.rev_append) suppressed_errors [] in
   (errors, warnings, suppressed_errors)

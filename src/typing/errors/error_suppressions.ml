@@ -254,42 +254,6 @@ let in_declarations ~file_options loc =
   | None -> false
   | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
 
-let check_old
-    ~root
-    ~file_options
-    (err : Loc.t Flow_errors_utils.printable_error)
-    (suppressions : t)
-    (unused : t) =
-  let loc = Flow_errors_utils.loc_of_printable_error err in
-  let code_opt =
-    Flow_errors_utils.code_of_printable_error err
-    |> Base.Option.map ~f:(fun code ->
-           CodeMap.singleton
-             (Error_codes.string_of_code code, loc)
-             (Error_codes.require_specific code)
-       )
-  in
-  (* Ignore lint errors from node modules, and all errors from declarations directories. *)
-  let ignore =
-    match Flow_errors_utils.kind_of_printable_error err with
-    | Flow_errors_utils.LintError _ ->
-      in_node_modules ~root ~file_options (Flow_errors_utils.loc_of_printable_error err)
-    | _ -> in_declarations ~file_options (Flow_errors_utils.loc_of_printable_error err)
-  in
-  match (ignore, code_opt) with
-  | (true, _) -> None
-  | (_, None) -> Some (Err, LocSet.empty, unused)
-  | (_, Some specific_codes) ->
-    let (result, used, unused) = check_loc suppressions specific_codes (Err, unused) loc in
-    let result =
-      match Flow_errors_utils.kind_of_printable_error err with
-      | Flow_errors_utils.RecursionLimitError ->
-        (* TODO: any related suppressions should not be considered used *)
-        Err
-      | _ -> result
-    in
-    Some (result, used, unused)
-
 let check
     ~root
     ~file_options
@@ -334,26 +298,6 @@ let universally_suppressed_codes map =
     (fun _k v acc -> CodeLocSet.union acc (FileSuppressions.universally_suppressed_codes v))
     map
     CodeLocSet.empty
-
-(* An old implementation of filter_suppressed_errors that make errors printable.
- * This is temporarily forked so that we can test the perf differences. *)
-let filter_suppressed_errors_old ~root ~file_options ~loc_of_aloc suppressions errors ~unused =
-  (* Filter out suppressed errors. also track which suppressions are used. *)
-  Flow_error.ErrorSet.fold
-    (fun error ((errors, suppressed, unused) as acc) ->
-      let error =
-        error
-        |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
-        |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:(Some root)
-      in
-      match check_old ~root ~file_options error suppressions unused with
-      | None -> acc
-      | Some (severity, used, unused) ->
-        (match severity with
-        | Off -> (errors, (error, used) :: suppressed, unused)
-        | _ -> (Flow_errors_utils.ConcreteLocPrintableErrorSet.add error errors, suppressed, unused)))
-    errors
-    (Flow_errors_utils.ConcreteLocPrintableErrorSet.empty, [], unused)
 
 let filter_suppressed_errors ~root ~file_options ~loc_of_aloc suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)

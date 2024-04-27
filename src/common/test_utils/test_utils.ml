@@ -34,7 +34,6 @@ let make_options_flags
     ?wait_for_recheck
     ?(include_suppressions = false)
     ?estimate_recheck_time
-    ?faster_error_collation
     ?long_lived_workers
     ?(distributed = false)
     () =
@@ -58,7 +57,6 @@ let make_options_flags
     wait_for_recheck;
     include_suppressions;
     estimate_recheck_time;
-    faster_error_collation;
     long_lived_workers;
     distributed;
   }

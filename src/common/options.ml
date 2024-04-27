@@ -95,7 +95,6 @@ type t = {
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_facebook_module_interop: bool;
-  opt_faster_error_collation: bool;
   opt_file_options: Files.options;
   opt_flowconfig_hash: string;
   opt_flowconfig_name: string;
@@ -238,8 +237,6 @@ let facebook_fbs opts = opts.opt_facebook_fbs
 let facebook_fbt opts = opts.opt_facebook_fbt
 
 let facebook_module_interop opts = opts.opt_facebook_module_interop
-
-let faster_error_collation opts = opts.opt_faster_error_collation
 
 let file_options opts = opts.opt_file_options
 

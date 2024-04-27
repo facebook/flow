@@ -67,7 +67,6 @@ module Opts = struct
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
-    faster_error_collation: bool;
     file_watcher: file_watcher option;
     file_watcher_mergebase_with: string option;
     file_watcher_mergebase_with_git: string option;
@@ -198,7 +197,6 @@ module Opts = struct
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
-      faster_error_collation = true;
       file_watcher = None;
       file_watcher_mergebase_with = None;
       file_watcher_mergebase_with_git = None;
@@ -944,7 +942,6 @@ module Opts = struct
       ("experimenta.precise_dependents", precise_dependents_parser);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
-      ("faster_error_collation", boolean (fun opts v -> Ok { opts with faster_error_collation = v }));
       ("file_watcher", file_watcher_parser);
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
       ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
@@ -1595,8 +1592,6 @@ let facebook_fbs c = c.options.Opts.facebook_fbs
 let facebook_fbt c = c.options.Opts.facebook_fbt
 
 let facebook_module_interop c = c.options.Opts.facebook_module_interop
-
-let faster_error_collation c = c.options.Opts.faster_error_collation
 
 let file_watcher c = c.options.Opts.file_watcher
 

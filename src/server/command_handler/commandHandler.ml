@@ -271,53 +271,32 @@ let get_status ~options ~reader env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
   let status_response =
     (* collate errors by origin *)
-    if Options.faster_error_collation options then (
-      let (errors, warnings, suppressed_errors) =
-        if Options.include_suppressions options then
-          ErrorCollator.get env
-        else
-          let (errors, warnings) = ErrorCollator.get_without_suppressed env in
-          (errors, warnings, [])
-      in
-      let warnings =
-        if Options.should_include_warnings options then
-          warnings
-        else
-          Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
-      in
-      (* TODO: check status.directory *)
-      status_log errors;
-      FlowEventLogger.status_response
-        ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
-      let to_printable =
-        Flow_intermediate_error.to_printable_error
-          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-          ~strip_root:
-            (Base.Option.some_if (Options.should_strip_root options) (Options.root options))
-      in
-      let suppressed_errors =
-        Base.List.map suppressed_errors ~f:(fun (e, loc_set) -> (to_printable e, loc_set))
-      in
-      convert_errors ~errors ~warnings ~suppressed_errors
-    ) else
-      let (errors, warnings, suppressed_errors) =
-        if Options.include_suppressions options then
-          ErrorCollator.get_old env
-        else
-          let (errors, warnings) = ErrorCollator.get_without_suppressed env in
-          (errors, warnings, [])
-      in
-      let warnings =
-        if Options.should_include_warnings options then
-          warnings
-        else
-          Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
-      in
-      (* TODO: check status.directory *)
-      status_log errors;
-      FlowEventLogger.status_response
-        ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
-      convert_errors ~errors ~warnings ~suppressed_errors
+    let (errors, warnings, suppressed_errors) =
+      if Options.include_suppressions options then
+        ErrorCollator.get env
+      else
+        let (errors, warnings) = ErrorCollator.get_without_suppressed env in
+        (errors, warnings, [])
+    in
+    let warnings =
+      if Options.should_include_warnings options then
+        warnings
+      else
+        Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+    in
+    (* TODO: check status.directory *)
+    status_log errors;
+    FlowEventLogger.status_response
+      ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
+    let to_printable =
+      Flow_intermediate_error.to_printable_error
+        ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+        ~strip_root:(Base.Option.some_if (Options.should_strip_root options) (Options.root options))
+    in
+    let suppressed_errors =
+      Base.List.map suppressed_errors ~f:(fun (e, loc_set) -> (to_printable e, loc_set))
+    in
+    convert_errors ~errors ~warnings ~suppressed_errors
   in
   (status_response, lazy_stats)
 

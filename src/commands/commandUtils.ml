@@ -892,7 +892,6 @@ module Options_flags = struct
     wait_for_recheck: bool option;
     include_suppressions: bool;
     estimate_recheck_time: bool option;
-    faster_error_collation: bool option;
     long_lived_workers: bool option;
     distributed: bool;
   }
@@ -959,7 +958,6 @@ let options_flags =
       merge_timeout
       include_suppressions
       estimate_recheck_time
-      faster_error_collation
       long_lived_workers
       distributed =
     (match merge_timeout with
@@ -988,7 +986,6 @@ let options_flags =
         merge_timeout;
         include_suppressions;
         estimate_recheck_time;
-        faster_error_collation;
         long_lived_workers;
         distributed;
       }
@@ -1038,7 +1035,6 @@ let options_flags =
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
-      |> flag "--faster-error-collation" (optional bool) ~doc:"" ~env:"FLOW_FASTER_ERROR_COLLATION"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
       |> flag "--distributed" truthy ~doc:""
     )
@@ -1400,10 +1396,6 @@ let make_options
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;
-    opt_faster_error_collation =
-      Option.value
-        options_flags.faster_error_collation
-        ~default:(FlowConfig.faster_error_collation flowconfig);
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_warnings =
       options_flags.include_warnings
