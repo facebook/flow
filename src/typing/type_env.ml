@@ -678,7 +678,9 @@ let sig_var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
 let read_class_self_type cx loc =
   match checked_find_loc_env_write_opt cx Env_api.ClassSelfLoc loc with
   | Some t -> t
-  | None -> Tvar.mk cx (mk_reason (RCustom "unreachable") loc)
+  | None ->
+    (* When checked_find_loc_env_write_opt returns None, we are reading an unreachable entry *)
+    EmptyT.why (mk_reason REmpty loc)
 
 let is_global_var cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
