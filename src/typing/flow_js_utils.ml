@@ -161,10 +161,7 @@ let ground_subtype = function
   | (DefT (_, NullT), UseT (_, DefT (_, NullT)))
   | (DefT (_, VoidT), UseT (_, DefT (_, VoidT))) ->
     true
-  | (DefT (_, NullT), UseT (_, DefT (_, MixedT (Mixed_non_maybe | Mixed_non_null))))
-  | (DefT (_, VoidT), UseT (_, DefT (_, MixedT (Mixed_non_maybe | Mixed_non_void)))) ->
-    false
-  | (_, UseT (_, DefT (_, MixedT _))) -> true
+  | (l, UseT (_, DefT (_, MixedT mixed_flavor))) -> TypeUtil.is_mixed_subtype l mixed_flavor
   (* we handle the any propagation check later *)
   | (AnyT _, _) -> false
   | (_, UseT (_, AnyT _)) -> false

@@ -53,6 +53,10 @@ val quick_subtype : Type.t -> Type.t -> bool
 
 val is_falsy : Type.t -> bool
 
+val is_concrete : Type.t -> bool
+
+val is_mixed_subtype : Type.t -> Type.mixed_flavor -> bool
+
 val reason_of_propref : Type.propref -> reason
 
 val mk_named_prop : reason:reason -> ?from_indexed_access:bool -> name -> Type.propref

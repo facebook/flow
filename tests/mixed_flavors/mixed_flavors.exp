@@ -26,5 +26,47 @@ References:
                                              ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:6:9
 
-Found 2 errors
+Cannot cast `42` to `$NonMaybeType` because null or undefined [1] is incompatible with mixed [2]. [incompatible-cast]
+
+   test.js:6:9
+   6|   42 as ?number as $NonMaybeType<mixed>; // error null | undefined ~> MixedT (NonMaybe)
+              ^^^^^^^ [1]
+
+References:
+   test.js:6:34
+   6|   42 as ?number as $NonMaybeType<mixed>; // error null | undefined ~> MixedT (NonMaybe)
+                                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:19
+
+Cannot cast `1` to `typeof fn` because number [1] is incompatible with unknown function [2]. [incompatible-cast]
+
+   test.js:11:19
+   11|       const one = 1 as typeof fn; // error number ~> MixedT (Mixed_function)
+                         ^ [1]
+
+References:
+   test.js:11:24
+   11|       const one = 1 as typeof fn; // error number ~> MixedT (Mixed_function)
+                              ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:22
+
+Cannot cast `false` to `typeof x` because boolean [1] is incompatible with mixed [2]. [incompatible-cast]
+
+   test.js:18:22
+   18|       const false_ = false as typeof x; // error false ~> MixedT (Mixed_truthy)
+                            ^^^^^ [1]
+
+References:
+   test.js:18:31
+   18|       const false_ = false as typeof x; // error false ~> MixedT (Mixed_truthy)
+                                     ^^^^^^^^ [2]
+
+
+
+Found 5 errors

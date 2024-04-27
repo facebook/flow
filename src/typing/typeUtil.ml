@@ -604,6 +604,33 @@ let is_falsy = function
     true
   | _ -> false
 
+(* We use this predicate below to defensively prevent some shortcuts taken when
+ * we might not have enough information about the type in the LHS. *)
+let is_concrete = function
+  | OpenT _
+  | EvalT _
+  | TypeAppT _
+  | KeysT _
+  | IntersectionT _
+  | UnionT _
+  | OpaqueT _ ->
+    false
+  | _ -> true
+
+let is_mixed_subtype l mixed_flavor =
+  match (l, mixed_flavor) with
+  | (DefT (_, MixedT flavor), _) when flavor = mixed_flavor -> true
+  | (MaybeT _, (Mixed_non_maybe | Mixed_non_void | Mixed_non_null))
+  | (DefT (_, NullT), (Mixed_non_maybe | Mixed_non_null))
+  | (DefT (_, VoidT), (Mixed_non_maybe | Mixed_non_void)) ->
+    false
+  | (l, (Mixed_non_maybe | Mixed_non_null | Mixed_non_void)) -> is_concrete l
+  | (DefT (_, FunT _), Mixed_function) -> true
+  | (DefT (_, PolyT { t_out = DefT (_, FunT _); _ }), Mixed_function) -> true
+  | (_, Mixed_function) -> false
+  | (l, Mixed_truthy) -> is_concrete l && not (is_falsy l)
+  | (_, Mixed_everything) -> true
+
 let quick_subtype t1 t2 =
   match (t1, t2) with
   | (DefT (_, NumT _), DefT (_, NumT _))
