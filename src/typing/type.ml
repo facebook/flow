@@ -2682,8 +2682,8 @@ end = struct
         ts
     in
     let almost_unique_values =
-      let rec almost_unique_values
-          ~reason_of_t ~reasonless_eq (hybrid_idx : TypeTerm.t Nel.t UnionEnumMap.t) = function
+      let rec almost_unique_values ~reasonless_eq (hybrid_idx : TypeTerm.t Nel.t UnionEnumMap.t) =
+        function
         | [] -> hybrid_idx
         | (enum, t) :: values -> begin
           let hybrid_idx =
@@ -2700,15 +2700,15 @@ end = struct
                 | Some l -> Nel.cons t l)
               hybrid_idx
           in
-          almost_unique_values ~reason_of_t ~reasonless_eq hybrid_idx values
+          almost_unique_values ~reasonless_eq hybrid_idx values
         end
       in
       almost_unique_values UnionEnumMap.empty
     in
-    let almost_unique ~reason_of_t ~reasonless_eq idx =
+    let almost_unique ~reasonless_eq idx =
       NameUtils.Map.fold
         (fun key values acc ->
-          let hybrid_idx = almost_unique_values ~reason_of_t ~reasonless_eq values in
+          let hybrid_idx = almost_unique_values ~reasonless_eq values in
           NameUtils.Map.add key hybrid_idx acc)
         idx
         NameUtils.Map.empty
@@ -2728,7 +2728,7 @@ end = struct
         init
         candidates
     in
-    fun ~reason_of_t ~reasonless_eq ~find_resolved ~find_props -> function
+    fun ~reasonless_eq ~find_resolved ~find_props -> function
       | [] -> Ok Empty
       | [t] -> Ok (Singleton t)
       | ts ->
@@ -2742,7 +2742,7 @@ end = struct
               Error NoCommonKeys
             else
               (* Ensure that enums map to unique types *)
-              let hybrid_map = almost_unique ~reason_of_t ~reasonless_eq idx in
+              let hybrid_map = almost_unique ~reasonless_eq idx in
               if partial then
                 Ok (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys hybrid_map)
               else
@@ -2755,7 +2755,7 @@ end = struct
     | None ->
       let opt = enum_optimize ts in
       (match opt with
-      | Error _ -> disjoint_union_optimize ~reason_of_t ~reasonless_eq ~find_resolved ~find_props ts
+      | Error _ -> disjoint_union_optimize ~reasonless_eq ~find_resolved ~find_props ts
       | _ -> opt)
     | Some t -> Error (ContainsUnresolved (reason_of_t t))
 
