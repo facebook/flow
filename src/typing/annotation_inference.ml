@@ -179,19 +179,17 @@ module rec ConsGen : S = struct
    * The only kind of errors that are reported here are "unsupported" cases. These
    * are mostly cases that rely on subtyping, which is not implemented here; most
    * commonly evaluating call-like EvalTs and speculation. *)
-  let error_unsupported_reason ?suggestion cx t reason_op =
+  let error_unsupported_reason ?suggestion cx reason reason_op =
     let loc = Reason.loc_of_reason reason_op in
-    let msg =
-      Error_message.EAnnotationInference (loc, reason_op, TypeUtil.reason_of_t t, suggestion)
-    in
+    let msg = Error_message.EAnnotationInference (loc, reason_op, reason, suggestion) in
     (match !dst_cx_ref with
     | None -> assert false
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
     AnyT.error reason_op
 
-  let error_unsupported ?suggestion cx t op =
+  let error_unsupported ?suggestion cx reason op =
     let reason_op = AConstraint.display_reason_of_op op in
-    error_unsupported_reason ?suggestion cx t reason_op
+    error_unsupported_reason ?suggestion cx reason reason_op
 
   let error_recursive cx reason =
     let loc = Reason.loc_of_reason reason in
@@ -504,13 +502,14 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (_, reason, EnumType), _), _) ->
       let t = elab_t cx t (Annot_GetEnumT reason) in
       elab_t cx t op
-    | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMap _)), _), _) ->
-      error_unsupported ~suggestion:"$ObjMapConst" cx t op
-    | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMapi _)), _), _) ->
-      error_unsupported ~suggestion:"$KeyMirror" cx t op
-    | (EvalT _, _) -> error_unsupported cx t op
+    | (EvalT (_, TypeDestructorT (_, reason, TypeMap (ObjectMap _)), _), _) ->
+      error_unsupported ~suggestion:"$ObjMapConst" cx reason op
+    | (EvalT (_, TypeDestructorT (_, reason, TypeMap (ObjectMapi _)), _), _) ->
+      error_unsupported ~suggestion:"$KeyMirror" cx reason op
+    | (EvalT (_, TypeDestructorT (_, reason, _), _), _) -> error_unsupported cx reason op
     | (OpenT (reason, id), _) -> elab_open cx ~seen reason id op
-    | (InternalT _, _) -> error_unsupported cx t op
+    | (InternalT (ExtendsT (reason, _, _) | EnforceUnionOptimized reason), _) ->
+      error_unsupported cx reason op
     | (AnnotT (r, t, _), _) ->
       let t = reposition cx (loc_of_reason r) t in
       elab_t cx ~seen t op
@@ -518,7 +517,8 @@ module rec ConsGen : S = struct
     (* UseT TypeT (runtime types derive static types through annotation) *)
     (*********************************************************************)
     (* First handle catch-all cases of subtyping_kit.ml *)
-    | ((MaybeT _ | OptionalT _), Annot_UseT_TypeT _) -> error_unsupported cx t op
+    | ((MaybeT (reason, _) | OptionalT { reason; _ }), Annot_UseT_TypeT _) ->
+      error_unsupported cx reason op
     | (ThisTypeAppT (reason_tapp, c, this, ts), Annot_UseT_TypeT _) ->
       let reason_op = Type.AConstraint.reason_of_op op in
       let tc = specialize_class cx c reason_op reason_tapp ts in
@@ -667,11 +667,11 @@ module rec ConsGen : S = struct
     (************************************)
     (* Wildcards (idx, maybe, optional) *)
     (************************************)
-    | (MaybeT _, _)
-    | (OptionalT _, _) ->
+    | (MaybeT (reason, _), _)
+    | (OptionalT { reason; _ }, _) ->
       (* These are rare in practice. Will consider adding support if we hit this
        * error case. *)
-      error_unsupported cx t op
+      error_unsupported cx reason op
     (*********************)
     (* Type applications *)
     (*********************)
@@ -757,10 +757,10 @@ module rec ConsGen : S = struct
       union_of_ts reason ts
     | (IntersectionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
       object_kit_concrete cx use_op op reason resolve_tool tool t
-    | (IntersectionT _, _) ->
+    | (IntersectionT (reason, _), _) ->
       (* Handling intersections as inputs would require use of speculation. Instead,
        * we ask the user to provide a simpler type. *)
-      error_unsupported cx t op
+      error_unsupported cx reason op
     (*************)
     (* Unary not *)
     (*************)
@@ -946,7 +946,8 @@ module rec ConsGen : S = struct
           reason_op
           react_dro
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref objt)
-    | (DefT (_, InstanceT _), Annot_LookupT (_, _, Computed _, _)) -> error_unsupported cx t op
+    | (DefT (reason, InstanceT _), Annot_LookupT (_, _, Computed _, _)) ->
+      error_unsupported cx reason op
     | (DefT (_, ObjT o), Annot_LookupT (reason_op, use_op, propref, objt)) ->
       let react_dro =
         match objt with
@@ -987,10 +988,10 @@ module rec ConsGen : S = struct
         ~reason_op
         ~reason_obj
         xs
-    | (DefT (_, InstanceT _), Annot_ObjRestT _) ->
+    | (DefT (reason, InstanceT _), Annot_ObjRestT _) ->
       (* This implementation relies on unsealed objects and set-prop logic that is
        * hard to implement in annotation inference. *)
-      error_unsupported cx t op
+      error_unsupported cx reason op
     | (AnyT (_, src), Annot_ObjRestT (reason, _)) -> AnyT.why src reason
     | (ObjProtoT _, Annot_ObjRestT (reason, _)) ->
       Obj_type.mk_with_proto cx reason ~obj_kind:Exact t
@@ -1053,7 +1054,8 @@ module rec ConsGen : S = struct
         inst
         propref
         reason_op
-    | (DefT (_, InstanceT _), Annot_GetPropT (_, _, Computed _)) -> error_unsupported cx t op
+    | (DefT (reason, InstanceT _), Annot_GetPropT (_, _, Computed _)) ->
+      error_unsupported cx reason op
     | ( DefT (_, ObjT _),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "constructor"; _ })
       ) ->
@@ -1337,7 +1339,7 @@ module rec ConsGen : S = struct
 
   and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
 
-  and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx t reason_op
+  and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx (reason_of_t t) reason_op
 
   and object_kit_concrete =
     let add_output cx msg : unit = Flow_js_utils.add_output cx msg in
