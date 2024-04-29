@@ -10,17 +10,10 @@ on:
     tags:
       - v*
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_ID }}
-  CLOUDFRONT_ID_NEW_WEBSITE: ${{ secrets.CLOUDFRONT_ID_NEW_WEBSITE }}
-  DOC_BOT_TOKEN: ${{ secrets.DOC_BOT_TOKEN }}
   FLOW_BIN_PRIVATE_KEY_BASE64: ${{ secrets.FLOW_BIN_PRIVATE_KEY_BASE64 }}
   FLOW_BOT_EMAIL: ${{ secrets.FLOW_BOT_EMAIL }}
   FLOW_BOT_TOKEN: ${{ secrets.FLOW_BOT_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  S3_BUCKET: ${{ secrets.S3_BUCKET }}
-  S3_BUCKET_NEW_WEBSITE: ${{ secrets.S3_BUCKET_NEW_WEBSITE }}
 jobs:
   build_js:
     runs-on: ubuntu-latest
