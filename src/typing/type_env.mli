@@ -106,7 +106,7 @@ val get_var_declared_type :
   ALoc.t ->
   Type.t
 
-val constraining_type : default:Type.t -> Context.t -> ALoc.t -> Type.t
+val constraining_type : default:Type.t -> Context.t -> string -> ALoc.t -> Type.t
 
 val read_declared_type : Context.t -> Reason.t -> ALoc.t -> Type.t
 

@@ -2407,7 +2407,7 @@ module Make
             init_var cx ~use_op init_t id_loc
           | None -> ()
         end;
-        let ast_t = Type_env.constraining_type ~default:annot_t cx id_loc in
+        let ast_t = Type_env.constraining_type ~default:annot_t cx name id_loc in
         ( (ploc, ast_t),
           Ast.Pattern.Identifier
             {
@@ -2458,6 +2458,7 @@ module Make
                 Type_env.constraining_type
                   ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
                   cx
+                  name
                   name_loc
               )
             in

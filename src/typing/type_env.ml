@@ -703,7 +703,7 @@ let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = fal
     let env = Context.environment cx in
     provider_type_for_def_loc cx env ~intersect:is_declared_function loc
 
-let constraining_type ~default cx loc =
+let constraining_type ~default cx name loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
   match EnvMap.find_opt_ordinary loc var_info.Env_api.env_entries with
   | Some Env_api.NonAssigningWrite -> default
@@ -718,7 +718,8 @@ let constraining_type ~default cx loc =
     | Some [] ->
       default
     | Some [t] -> t
-    | Some (t1 :: t2 :: ts) -> UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts))
+    | Some (t1 :: t2 :: ts) ->
+      UnionT (mk_reason (RIdentifier (OrdinaryName name)) loc, UnionRep.make t1 t2 ts))
 
 (*************)
 (*  Writing  *)
