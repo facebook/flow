@@ -1071,7 +1071,14 @@ module Make (I : INPUT) : S = struct
           None
       in
       match (elt_t, desc) with
-      | (T.ArrayAT { elem_t = _; tuple_view = Some (elements', _); react_dro = _ }, RRestArrayLit _)
+      | ( T.ArrayAT
+            {
+              elem_t = _;
+              tuple_view = Some (T.TupleView { elements = elements'; arity = _ });
+              react_dro = _;
+            },
+          RRestArrayLit _
+        )
       | (T.TupleAT { elements = elements'; _ }, _) ->
         let%map elements =
           mapM

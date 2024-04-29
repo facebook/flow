@@ -1837,13 +1837,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let ts1 =
         Base.Option.value_map
           ~default:[]
-          ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+          ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
           tv1
       in
       let ts2 =
         Base.Option.value_map
           ~default:[]
-          ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+          ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
           tv2
       in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
@@ -1948,7 +1948,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       -> begin
       match tuple_view with
       | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
-      | Some (elements, arity) ->
+      | Some (TupleView { elements; arity }) ->
         rec_flow_t
           cx
           trace

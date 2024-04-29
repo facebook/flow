@@ -855,13 +855,12 @@ class virtual ['a] t =
         let elem_t' = self#type_ cx map_cx elem_t in
         let tuple_view' =
           OptionUtils.ident_map
-            (fun tuple_view ->
-              let (elements, arity) = tuple_view in
+            (fun (TupleView { elements; arity } as tuple_view) ->
               let elements' = ListUtils.ident_map (self#tuple_element cx map_cx) elements in
               if elements' == elements then
                 tuple_view
               else
-                (elements', arity))
+                TupleView { elements = elements'; arity })
             tuple_view
         in
         if elem_t' == elem_t && tuple_view' == tuple_view then

@@ -497,7 +497,8 @@ let rec resolve_binding cx reason loc b =
         | Ast.Expression.Object obj -> mk_obj loc obj
         | Ast.Expression.Array { Ast.Expression.Array.elements = []; _ } ->
           let (_, elem_t) = Statement.empty_array cx loc in
-          DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None }))
+          DefT
+            (reason, ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None }))
         | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
           (* TODO merge code with statement.ml implementation *)
           let array_elements cx undef_loc =
@@ -723,7 +724,7 @@ let rec resolve_binding cx reason loc b =
       else
         let elem_t = EmptyT.make (mk_reason REmptyArrayElement loc) in
         Flow_js_utils.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-        (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)
+        (elem_t, Some empty_tuple_view, replace_desc_reason REmptyArrayLit reason)
     in
     let t = DefT (reason, ArrT (ArrayAT { elem_t; tuple_view; react_dro = None })) in
     let cache = Context.node_cache cx in

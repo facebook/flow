@@ -4256,7 +4256,7 @@ struct
                     );
                 rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
               elements
-          | ArrayAT { tuple_view = Some (elements, _arity); _ } ->
+          | ArrayAT { tuple_view = Some (TupleView { elements; arity = _ }); _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
             let ts = tuple_ts_of_elements elements in
             List.iter
@@ -4655,10 +4655,15 @@ struct
             | ArrayAT { tuple_view = None; _ }
             | ROArrayAT _ ->
               arrtype
-            | ArrayAT { elem_t; tuple_view = Some (elements, (num_req, num_total)); react_dro } ->
+            | ArrayAT
+                {
+                  elem_t;
+                  tuple_view = Some (TupleView { elements; arity = (num_req, num_total) });
+                  react_dro;
+                } ->
               let elements = Base.List.drop elements i in
               let arity = (max (num_req - i) 0, max (num_total - i) 0) in
-              ArrayAT { elem_t; tuple_view = Some (elements, arity); react_dro }
+              ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity }); react_dro }
             | TupleAT { elem_t; elements; arity = (num_req, num_total); react_dro } ->
               TupleAT
                 {
@@ -4706,14 +4711,14 @@ struct
                   react_dro;
                   tuple_view =
                     Base.Option.map
-                      ~f:(fun (elements, arity) ->
+                      ~f:(fun (TupleView { elements; arity }) ->
                         let elements =
                           Base.List.map
                             ~f:(fun (TupleElement { name; t; polarity; optional; reason }) ->
                               TupleElement { name; t = f t; polarity; optional; reason })
                             elements
                         in
-                        (elements, arity))
+                        TupleView { elements; arity })
                       tuple_view;
                 }
             | TupleAT { elem_t; elements; arity; react_dro } ->
@@ -9406,13 +9411,13 @@ struct
           let ts1 =
             Base.Option.value_map
               ~default:[]
-              ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+              ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
               tv1
           in
           let ts2 =
             Base.Option.value_map
               ~default:[]
-              ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+              ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
               tv2
           in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
@@ -9985,12 +9990,12 @@ struct
               let (args_rev, seen_opt) =
                 match arrtype with
                 | ArrayAT { tuple_view = None; _ }
-                | ArrayAT { tuple_view = Some ([], _); _ } ->
+                | ArrayAT { tuple_view = Some (TupleView { elements = []; _ }); _ } ->
                   (* The latter case corresponds to the empty array literal. If
                    * we folded over the empty tuple_types list, then this would
                    * cause an empty result. *)
                   (arg :: args_rev, seen_opt)
-                | ArrayAT { tuple_view = Some (elements, _); _ }
+                | ArrayAT { tuple_view = Some (TupleView { elements; _ }); _ }
                 | TupleAT { elements; _ } ->
                   Base.List.fold_left
                     ~f:(fun (args_rev, seen_opt) (TupleElement ({ optional; t; _ } as elem)) ->
@@ -10149,7 +10154,14 @@ struct
               if valid then
                 DefT
                   ( reason_op,
-                    ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity); react_dro = None })
+                    ArrT
+                      (ArrayAT
+                         {
+                           elem_t;
+                           tuple_view = Some (TupleView { elements; arity });
+                           react_dro = None;
+                         }
+                      )
                   )
               else
                 DefT (reason_op, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
@@ -10200,7 +10212,9 @@ struct
             (match resolved with
             | ResolvedArg (TupleElement { t; _ }, generic) :: rest ->
               flatten cx r ((t, generic) :: args) spread rest
-            | ResolvedSpreadArg (_, ArrayAT { tuple_view = Some (elements, _); _ }, generic) :: rest
+            | ResolvedSpreadArg
+                (_, ArrayAT { tuple_view = Some (TupleView { elements; _ }); _ }, generic)
+              :: rest
             | ResolvedSpreadArg (_, TupleAT { elements; _ }, generic) :: rest ->
               let args =
                 List.rev_append

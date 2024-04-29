@@ -137,7 +137,11 @@ and collect_of_type ?log_unresolved cx acc = function
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
     collect_of_type ?log_unresolved cx acc elem_t
-  | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }))
+  | DefT
+      ( _,
+        ArrT
+          (ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ })
+      )
   | DefT (_, ArrT (TupleAT { elem_t; elements; arity = _; react_dro = _ })) ->
     collect_of_types ?log_unresolved cx acc (elem_t :: TypeUtil.tuple_ts_of_elements elements)
   | DefT (_, ArrT (ROArrayAT (elemt, _))) -> collect_of_type ?log_unresolved cx acc elemt
@@ -298,7 +302,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
           (match arr with
           | ArrayAT { elem_t; tuple_view = None; react_dro = _ } ->
             collect_of_type ?log_unresolved cx acc elem_t
-          | ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }
+          | ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ }
           | TupleAT { elem_t; elements; arity = _; react_dro = _ } ->
             collect_of_types
               ?log_unresolved

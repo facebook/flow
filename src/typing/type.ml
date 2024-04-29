@@ -1330,12 +1330,18 @@ module rec TypeTerm : sig
     | Props
     | DROAnnot
 
+  and tuple_view =
+    | TupleView of {
+        elements: tuple_element list;
+        arity: int * int;
+      }
+
   and arrtype =
     | ArrayAT of {
         react_dro: (ALoc.t * dro_type) option;
             (* Should elements of this array be treated as propagating read-only, and if so, what location is responsible *)
         elem_t: t;
-        tuple_view: (tuple_element list * (int * int)) option;
+        tuple_view: tuple_view option;
       }
     (* TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
      * that they don't need to recompute their general type when you do
@@ -4629,3 +4635,5 @@ end
 type annotated_or_inferred =
   | Annotated of TypeTerm.t
   | Inferred of TypeTerm.t
+
+let empty_tuple_view = TupleView { elements = []; arity = (0, 0) }

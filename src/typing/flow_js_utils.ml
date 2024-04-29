@@ -2332,7 +2332,9 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   let (elem_t, elements, is_index_restricted, is_tuple, react_dro) =
     match arrtype with
     | ArrayAT { elem_t; tuple_view; react_dro } ->
-      let elements = Base.Option.map ~f:(fun (elements, _arity) -> elements) tuple_view in
+      let elements =
+        Base.Option.map ~f:(fun (TupleView { elements; arity = _ }) -> elements) tuple_view
+      in
       (elem_t, elements, false, false, react_dro)
     | TupleAT { elem_t; elements; arity = _; react_dro } ->
       (elem_t, Some elements, true, true, react_dro)

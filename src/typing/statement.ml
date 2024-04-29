@@ -2709,7 +2709,9 @@ module Make
         let elem_t = Context.mk_placeholder cx element_reason in
         ( ( loc,
             DefT
-              (reason, ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None }))
+              ( reason,
+                ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None })
+              )
           ),
           Array { Array.elements = []; comments }
         )
@@ -2717,7 +2719,9 @@ module Make
         let (reason, elem_t) = empty_array cx loc in
         ( ( loc,
             DefT
-              (reason, ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None }))
+              ( reason,
+                ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None })
+              )
           ),
           Array { Array.elements = []; comments }
         )

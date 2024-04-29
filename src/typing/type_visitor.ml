@@ -388,7 +388,7 @@ class ['a] t =
     method private arr_type cx pole acc =
       function
       | ArrayAT { elem_t; tuple_view = None; react_dro = _ } -> self#type_ cx P.Neutral acc elem_t
-      | ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }
+      | ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ }
       | TupleAT { elem_t; elements; arity = _; react_dro = _ } ->
         let acc = self#type_ cx P.Neutral acc elem_t in
         let acc = self#list (self#tuple_element cx pole) acc elements in

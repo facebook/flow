@@ -248,7 +248,13 @@ let rec dump_t_ (depth, tvars) cx t =
       p t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
     | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
       p ~extra:(spf "Array %s" (kid elem_t)) t
-    | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity); react_dro = _ })) ->
+    | DefT
+        ( _,
+          ArrT
+            (ArrayAT
+              { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ }
+              )
+        ) ->
       p
         ~extra:
           (spf

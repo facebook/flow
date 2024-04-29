@@ -411,7 +411,7 @@ and type_of_hint_decomposition cx op reason t =
                 ~upper_unresolved:false
                 ( DefT
                     ( reason,
-                      ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
+                      ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None })
                     ),
                   t
                 )
