@@ -1393,11 +1393,17 @@ let dump_error_message =
     | ENonStrictEqualityComparison (reason1, reason2) ->
       spf "ENonStrictEqualityComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | ETupleArityMismatch
-        ((reason1, reason2), (num_req1, num_total1), (num_req2, num_total2), use_op) ->
+        {
+          use_op;
+          lower_reason;
+          lower_arity = (num_req1, num_total1);
+          upper_reason;
+          upper_arity = (num_req2, num_total2);
+        } ->
       spf
         "ETupleArityMismatch (%s, %s, %d-%d, %d-%d, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+        (dump_reason cx lower_reason)
+        (dump_reason cx upper_reason)
         num_req1
         num_total1
         num_req2

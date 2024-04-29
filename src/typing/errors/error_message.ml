@@ -113,8 +113,13 @@ and 'loc t' =
     }
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
-  | ETupleArityMismatch of
-      ('loc virtual_reason * 'loc virtual_reason) * (int * int) * (int * int) * 'loc virtual_use_op
+  | ETupleArityMismatch of {
+      use_op: 'loc virtual_use_op;
+      lower_reason: 'loc virtual_reason;
+      lower_arity: int * int;
+      upper_reason: 'loc virtual_reason;
+      upper_arity: int * int;
+    }
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | ETupleOutOfBounds of {
       use_op: 'loc virtual_use_op;
@@ -829,8 +834,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; name } ->
     EPlatformSpecificImplementationModuleLookupFailed { loc = f loc; name }
-  | ETupleArityMismatch ((r1, r2), l, i, op) ->
-    ETupleArityMismatch ((map_reason r1, map_reason r2), l, i, map_use_op op)
+  | ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity } ->
+    ETupleArityMismatch
+      {
+        use_op = map_use_op use_op;
+        lower_reason = map_reason lower_reason;
+        lower_arity;
+        upper_reason = map_reason upper_reason;
+        upper_arity;
+      }
   | ENonLitArrayToTuple ((r1, r2), op) ->
     ENonLitArrayToTuple ((map_reason r1, map_reason r2), map_use_op op)
   | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
@@ -1346,7 +1358,10 @@ let util_use_op_of_msg nope util = function
   | EPropPolarityMismatch (rs, p, ps, op) ->
     util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
   | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
-  | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
+  | ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity } ->
+    util use_op (fun use_op ->
+        ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity }
+    )
   | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
   | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
     util use_op (fun use_op -> ETupleOutOfBounds { use_op; reason; reason_op; length; index })
@@ -2136,11 +2151,12 @@ let friendly_message_of_msg = function
   | EComparison (lower, upper) -> Normal (MessageCannotCompare { lower; upper })
   | ENonStrictEqualityComparison (lower, upper) ->
     Normal (MessageCannotCompareNonStrict { lower; upper })
-  | ETupleArityMismatch ((lower, upper), lower_arity, upper_arity, use_op) ->
+  | ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity } ->
     UseOp
       {
-        loc = loc_of_reason lower;
-        message = MessageIncompatibleTupleArity { lower; lower_arity; upper; upper_arity };
+        loc = loc_of_reason lower_reason;
+        message =
+          MessageIncompatibleTupleArity { lower_reason; lower_arity; upper_reason; upper_arity };
         use_op;
         explanation = None;
       }

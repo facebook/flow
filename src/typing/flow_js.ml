@@ -9423,20 +9423,24 @@ struct
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
         | ( DefT
               ( r1,
-                ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1; react_dro = _ })
+                ArrT
+                  (TupleAT { elem_t = _; elements = elements1; arity = lower_arity; react_dro = _ })
               ),
             DefT
               ( r2,
-                ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2; react_dro = _ })
+                ArrT
+                  (TupleAT { elem_t = _; elements = elements2; arity = upper_arity; react_dro = _ })
               )
           ) ->
-          let (num_req1, num_total1) = arity1 in
-          let (num_req2, num_total2) = arity2 in
+          let (num_req1, num_total1) = lower_arity in
+          let (num_req2, num_total2) = upper_arity in
           if num_req1 <> num_req2 || num_total1 <> num_total2 then
             add_output
               cx
               ~trace
-              (Error_message.ETupleArityMismatch ((r1, r2), arity1, arity2, use_op));
+              (Error_message.ETupleArityMismatch
+                 { use_op; lower_reason = r1; lower_arity; upper_reason = r2; upper_arity }
+              );
           let n = ref 0 in
           iter2opt
             (fun t1 t2 ->

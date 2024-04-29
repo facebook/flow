@@ -606,9 +606,9 @@ type 'loc message =
       upper_arity: int;
     }
   | MessageIncompatibleTupleArity of {
-      lower: 'loc virtual_reason;
+      lower_reason: 'loc virtual_reason;
       lower_arity: int * int;
-      upper: 'loc virtual_reason;
+      upper_reason: 'loc virtual_reason;
       upper_arity: int * int;
     }
   | MessageIncompatibleImplicitReturn of {

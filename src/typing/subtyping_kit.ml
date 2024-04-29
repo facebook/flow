@@ -1848,8 +1848,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
-    | ( DefT (r1, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1; react_dro = _ })),
-        DefT (r2, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2; react_dro = _ }))
+    | ( DefT
+          ( r1,
+            ArrT (TupleAT { elem_t = _; elements = elements1; arity = lower_arity; react_dro = _ })
+          ),
+        DefT
+          ( r2,
+            ArrT (TupleAT { elem_t = _; elements = elements2; arity = upper_arity; react_dro = _ })
+          )
       ) ->
       let fresh =
         match desc_of_reason r1 with
@@ -1860,12 +1866,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
           true
         | _ -> false
       in
-      let (num_req1, num_total1) = arity1 in
-      let (num_req2, num_total2) = arity2 in
+      let (num_req1, num_total1) = lower_arity in
+      let (num_req2, num_total2) = upper_arity in
       (* Arity range LHS is within arity range RHS *)
       let arities_are_valid = num_req1 >= num_req2 && num_total1 <= num_total2 in
       if not arities_are_valid then
-        add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), arity1, arity2, use_op))
+        add_output
+          cx
+          ~trace
+          (Error_message.ETupleArityMismatch
+             { use_op; lower_reason = r1; lower_arity; upper_reason = r2; upper_arity }
+          )
       else
         let n = ref 0 in
         let tuple_element_compat t1 t2 p1 p2 optional1 optional2 =

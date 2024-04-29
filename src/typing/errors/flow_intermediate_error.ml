@@ -2701,7 +2701,7 @@ let to_printable_error :
         text " of ";
         ref upper;
       ]
-    | MessageIncompatibleTupleArity { lower; lower_arity; upper; upper_arity } ->
+    | MessageIncompatibleTupleArity { lower_reason; lower_arity; upper_reason; upper_arity } ->
       let str_of_arity (num_req, num_total) =
         if num_req = num_total then
           if num_total = 1 then
@@ -2712,11 +2712,11 @@ let to_printable_error :
           spf "%d-%d elements" num_req num_total
       in
       [
-        ref lower;
+        ref lower_reason;
         text " has ";
         text (str_of_arity lower_arity);
         text " but ";
-        ref upper;
+        ref upper_reason;
         text " has ";
         text (str_of_arity upper_arity);
       ]
