@@ -202,7 +202,7 @@ let resolve_hint cx loc hint =
     | StringLiteralType name ->
       DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
     | BuiltinType name ->
-      let reason = mk_reason (RCustom name) loc in
+      let reason = mk_reason (RType (OrdinaryName name)) loc in
       Flow_js.get_builtin_type cx reason name
     | AnyErrorHint reason -> AnyT.error reason
     | ComposedArrayPatternHint (loc, elements) ->
