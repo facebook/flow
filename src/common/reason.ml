@@ -85,6 +85,7 @@ type 'loc virtual_reason_desc =
   | REmptyArrayLit
   | RArrayType
   | RArrayElement
+  | RArrayNthElement of int
   | RInferredUnionElemArray of { instantiable: bool }
   | RROArrayType
   | RTupleType
@@ -276,12 +277,12 @@ let rec map_desc_locs f = function
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RArrayElement | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _
-    | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType
-    | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
-    | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
-    | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _
-    | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
+    | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType | RTupleElement _
+    | RTupleLength _ | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType | RFunctionBody
+    | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
+    | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
+    | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard
+    | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -580,6 +581,7 @@ let rec string_of_desc = function
   | REmptyArrayLit -> "empty array literal"
   | RArrayType -> "array type"
   | RArrayElement -> "array element"
+  | RArrayNthElement i -> spf "element %d" i
   | RROArrayType -> "read-only array type"
   | RTupleType -> "tuple type"
   | RTupleElement { name } ->
@@ -1405,6 +1407,7 @@ let classification_of_reason_desc desc =
   | RAnyExplicit
   | RAnyImplicit
   | RArrayElement
+  | RArrayNthElement _
   | RInferredUnionElemArray _
   | RIndexedAccess _
   | RConditionalType

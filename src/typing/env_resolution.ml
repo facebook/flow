@@ -144,7 +144,7 @@ let rec synthesizable_expression cx ?cond exp =
 let mk_selector_reason_has_default cx loc = function
   | Name_def.Elem { index = n; has_default } ->
     let key = DefT (mk_reason RNumber loc, NumT (Literal (None, (float n, string_of_int n)))) in
-    (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc, has_default)
+    (Type.Elem key, mk_reason (RArrayNthElement n) loc, has_default)
   | Name_def.Prop { prop; prop_loc; has_default } ->
     ( Type.Prop (prop, has_default),
       mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc,

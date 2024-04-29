@@ -303,7 +303,7 @@ let merge_pattern file = function
     ConsGen.obj_rest file.cx reason xs t
   | Pack.IndexP { loc; i; def } ->
     let t = Lazy.force (Patterns.get file.patterns def) in
-    let reason = Reason.(mk_reason (RCustom (Utils_js.spf "element %d" i)) loc) in
+    let reason = Reason.(mk_reason (RArrayNthElement i) loc) in
     let i =
       let reason = Reason.(mk_reason RNumber loc) in
       Type.(DefT (reason, NumT (Literal (None, (float i, string_of_int i)))))
