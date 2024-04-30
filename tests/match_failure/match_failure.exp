@@ -66,8 +66,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:6:25
 
-Invalid check of number literal `2` against `Binary` [1] because number literal `2` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of number literal `2` against `Binary` [1] because number literal `2` [2] is incompatible with
+`Binary` [1]. [incompatible-type]
 
    enum.js:6:25
    6|   } else if (binary === 2) { // oops
@@ -81,7 +81,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generics.js:3:19
 
-Cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with literal union [3].
+Cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with union type [3].
 [incompatible-type]
 
    generics.js:3:19

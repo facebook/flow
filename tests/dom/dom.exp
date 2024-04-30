@@ -28,8 +28,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:10:45
 
-Cannot call `ClipboardEvent` with `'invalid'` bound to `type` because string [1] is incompatible with literal union [2].
-[incompatible-call]
+Cannot call `ClipboardEvent` with `'invalid'` bound to `type` because string [1] is incompatible with
+`ClipboardEventTypes` [2]. [incompatible-call]
 
    ClipboardEvent.js:10:45
     10|     const invalidEvent = new ClipboardEvent('invalid'); // invalid
@@ -95,7 +95,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2] in property `behavior`.
+ - Either string [1] is incompatible with union type [2] in property `behavior`.
  - Or object literal [3] is incompatible with boolean [4].
 
    Element.js:14:28
@@ -117,7 +117,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2] in property `block`.
+ - Either string [1] is incompatible with union type [2] in property `block`.
  - Or object literal [3] is incompatible with boolean [4].
 
    Element.js:15:28
@@ -206,7 +206,7 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:22:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2] in property `behavior`.
+ - Either string [1] is incompatible with union type [2] in property `behavior`.
  - Or object literal [3] is incompatible with boolean [4].
 
    HTMLElement.js:22:28
@@ -228,7 +228,7 @@ References:
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:23:28
 
 Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2] in property `block`.
+ - Either string [1] is incompatible with union type [2] in property `block`.
  - Or object literal [3] is incompatible with boolean [4].
 
    HTMLElement.js:23:28
@@ -536,7 +536,7 @@ References:
 Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:8
 
 Cannot call `el.setRangeText` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2].
+ - Either string [1] is incompatible with `SelectionMode` [2].
  - Or number [3] is incompatible with undefined [4].
 
    HTMLInputElement.js:10:8
@@ -1011,7 +1011,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- traversal.js:188:14
 
 Cannot call `document.createNodeIterator` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2] in the return value of property `acceptNode`.
+ - Either string [1] is incompatible with union type [2] in the return value of property `acceptNode`.
  - Or number [3] is incompatible with number literal `133` [4].
 
    traversal.js:188:14
@@ -1387,7 +1387,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- traversal.js:195:14
 
 Cannot call `document.createTreeWalker` because: [incompatible-call]
- - Either string [1] is incompatible with literal union [2] in the return value of property `acceptNode`.
+ - Either string [1] is incompatible with union type [2] in the return value of property `acceptNode`.
  - Or number [3] is incompatible with number literal `133` [4].
 
    traversal.js:195:14

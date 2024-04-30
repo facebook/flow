@@ -472,7 +472,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:69:2
 
-Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:69:2
    69| ('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -486,7 +486,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:70:2
 
-Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:70:2
    70| ('Magic': SuiteEnum); // Error: 'Magic' is not a value.
@@ -500,7 +500,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:71:15
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:71:15
    71| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
@@ -514,7 +514,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:77:12
 
-Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with literal union [2].
+Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with `$Values` [2].
 [incompatible-call]
 
    object_types.js:77:12
@@ -529,7 +529,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:78:12
 
-Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with literal union [2].
+Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with `$Values` [2].
 [incompatible-call]
 
    object_types.js:78:12
@@ -544,7 +544,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:79:25
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with literal union [2].
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with `$Values` [2].
 [incompatible-call]
 
    object_types.js:79:25
@@ -559,8 +559,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:93:2
 
-Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with literal union [2].
-[incompatible-cast]
+Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:93:2
    93| ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -574,8 +573,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:94:2
 
-Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with literal union [2].
-[incompatible-cast]
+Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:94:2
    94| ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
@@ -589,8 +587,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:95:15
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible with literal union [2].
-[incompatible-cast]
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:95:15
    95| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
@@ -604,7 +601,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:105:2
 
-Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:105:2
    105| (1: NumbersEnum); // error, NumbersEnum = -1 | 2
@@ -646,7 +643,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:124:2
 
-Cannot cast `'s'` to `$Values` because string [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `'s'` to `$Values` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:124:2
    124| ('s': $Values<IfaceWithDictAndProps>); // ERROR
@@ -660,7 +657,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:125:2
 
-Cannot cast function to `$Values` because function [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast function to `$Values` because function [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:125:2
    125| (() => {}: $Values<IfaceWithDictAndProps>); // ERROR

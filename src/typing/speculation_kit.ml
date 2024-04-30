@@ -838,12 +838,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             ~trace
             (Error_message.EIncompatibleWithUseOp
-               {
-                 reason_lower = TypeUtil.reason_of_t l;
-                 reason_upper =
-                   UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep;
-                 use_op;
-               }
+               { reason_lower = TypeUtil.reason_of_t l; reason_upper = reason_op; use_op }
             );
           true
         | DefT (_, ObjT _)
@@ -856,11 +851,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   and shortcut_enum cx trace reason_op use_op l rep =
     let quick_subtype = TypeUtil.quick_subtype in
-    quick_mem_result cx trace reason_op use_op l rep @@ UnionRep.quick_mem_enum ~quick_subtype l rep
+    quick_mem_result cx trace reason_op use_op l @@ UnionRep.quick_mem_enum ~quick_subtype l rep
 
   and shortcut_disjoint_union cx trace reason_op use_op l rep =
     let quick_subtype = TypeUtil.quick_subtype in
-    quick_mem_result cx trace reason_op use_op l rep
+    quick_mem_result cx trace reason_op use_op l
     @@ UnionRep.quick_mem_disjoint_union
          ~quick_subtype
          l
@@ -868,15 +863,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
          ~find_resolved:(Context.find_resolved cx)
          ~find_props:(Context.find_props cx)
 
-  and quick_mem_result cx trace reason_op use_op l rep = function
+  and quick_mem_result cx trace reason_op use_op l = function
     | UnionRep.Yes ->
       (* membership check succeeded *)
       true
     (* Our work here is done, so no need to continue. *)
     | UnionRep.No ->
       (* membership check failed *)
-      let r = UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep in
-      rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
+      rec_flow cx trace (l, UseT (use_op, DefT (reason_op, EmptyT)));
       true
     (* Our work here is done, so no need to continue. *)
     | UnionRep.Conditional t ->

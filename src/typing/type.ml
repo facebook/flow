@@ -2381,9 +2381,6 @@ and UnionRep : sig
   (** build a rep from list of members *)
   val make : ?source_aloc:ALoc.id -> TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
-  (** replace reason with specialized desc, if any *)
-  val specialized_reason : reason_of_t:(TypeTerm.t -> reason) -> reason -> t -> reason
-
   (** members in declaration order *)
   val members : t -> TypeTerm.t list
 
@@ -2583,13 +2580,6 @@ end = struct
       make ?source_aloc t0_ t1_ ts_
     else
       rep
-
-  let specialized_reason ~reason_of_t r { specialization; _ } =
-    match !specialization with
-    | Some Empty -> replace_desc_reason REmpty r
-    | Some (Singleton t) -> reason_of_t t
-    | Some (EnumUnion _) -> replace_desc_reason RUnionEnum r
-    | _ -> r
 
   (********** Optimizations **********)
 

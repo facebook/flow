@@ -59,7 +59,7 @@ Multiple indexers are not supported. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:40:3
 
-Cannot get `x['xxx']` because string `xxx` [1] is incompatible with literal union [2]. [incompatible-type]
+Cannot get `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:40:3
    40|   x['xxx']; // ERROR
@@ -81,7 +81,7 @@ Cannot assign `1` to `x['a']` because property `a` is not writable. [cannot-writ
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:46:3
 
-Cannot get `x['xxx']` because string `xxx` [1] is incompatible with literal union [2]. [incompatible-type]
+Cannot get `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:46:3
    46|   x['xxx']; // ERROR
@@ -103,7 +103,7 @@ Cannot get `x['a']` because an index signature declaring the expected key / valu
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:52:3
 
-Cannot assign `1` to `x['xxx']` because string `xxx` [1] is incompatible with literal union [2]. [incompatible-type]
+Cannot assign `1` to `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:52:3
    52|   x['xxx'] = 1; // ERROR
@@ -324,7 +324,7 @@ Cannot assign `1` to `x['a']` because property `a` is not writable. [cannot-writ
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:179:5
 
-Cannot get `x[true]` because boolean [1] is incompatible with literal union [2]. [incompatible-type]
+Cannot get `x[true]` because boolean [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:179:5
    179|   x[true]; // ERROR

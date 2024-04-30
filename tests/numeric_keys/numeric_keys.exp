@@ -256,8 +256,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:3
 
-Cannot cast `Object.keys(...)` to array type because number [1] is incompatible with literal union [2] in array element.
-Arrays are invariantly typed. See
+Cannot cast `Object.keys(...)` to array type because number [1] is incompatible with element of `Object.keys` [2] in
+array element. Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-cast]
 

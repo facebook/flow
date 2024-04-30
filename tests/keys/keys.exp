@@ -100,7 +100,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:19:2
 
-Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with union type [2]. [incompatible-cast]
 
    interface.js:19:2
    19| ('xxx': $Keys<WithDict>); // ERROR
@@ -128,7 +128,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:26:2
 
-Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with union type [2]. [incompatible-cast]
 
    interface.js:26:2
    26| ('xxx': $Keys<WithBoth>); // ERROR

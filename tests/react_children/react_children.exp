@@ -1484,7 +1484,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:48:14
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with literal union [2] in property `children`.
+Cannot create `TextLiteral` element because JSX text [1] is incompatible with union type [2] in property `children`.
 [incompatible-type]
 
    text.js:48:14
@@ -1499,7 +1499,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:49:15
 
-Cannot create `TextLiteral` element because string [1] is incompatible with literal union [2] in property `children`.
+Cannot create `TextLiteral` element because string [1] is incompatible with union type [2] in property `children`.
 [incompatible-type]
 
    text.js:49:15
@@ -1514,7 +1514,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:50:14
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with literal union [2] in property `children`.
+Cannot create `TextLiteral` element because JSX text [1] is incompatible with union type [2] in property `children`.
 [incompatible-type]
 
    text.js:50:14
@@ -1529,7 +1529,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:51:14
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with literal union [2] in property `children`.
+Cannot create `TextLiteral` element because JSX text [1] is incompatible with union type [2] in property `children`.
 [incompatible-type]
 
    text.js:51:14
@@ -1544,7 +1544,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:52:14
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with literal union [2] in property
+Cannot create `TextLiteral` element because children array [1] is incompatible with union type [2] in property
 `children`. [incompatible-type]
 
    text.js:52:14
@@ -1559,7 +1559,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:53:14
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with literal union [2] in property
+Cannot create `TextLiteral` element because children array [1] is incompatible with union type [2] in property
 `children`. [incompatible-type]
 
    text.js:53:14

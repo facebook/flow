@@ -36,8 +36,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:8
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
+`Enum` [1]. [incompatible-type]
 
    test.js:14:8
    14|   case 'qux': // error
@@ -51,8 +51,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:8
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
+`Enum` [1]. [incompatible-type]
 
    test.js:22:8
    22|   case 'qux': // error

@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------- predicate_with_non_bool_annot.js:8:37
 
-Cannot return `(x === 'a') || (x === 'c') ? x : null` because string literal `c` [1] is incompatible with literal
-union [2]. [incompatible-return]
+Cannot return `(x === 'a') || (x === 'c') ? x : null` because string literal `c` [1] is incompatible with `T` [2].
+[incompatible-return]
 
    predicate_with_non_bool_annot.js:8:37
    8|   return (x === 'a' || x === 'c') ? x : null; // error: 'c' incompatible with T

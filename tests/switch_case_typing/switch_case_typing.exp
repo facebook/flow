@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:8:8
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
+`Enum` [1]. [incompatible-type]
 
    test.js:8:8
    8|   case 'qux': // error
@@ -15,8 +15,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:8
 
-Invalid check of number literal `3` against `Enum` [1] because number literal `3` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of number literal `3` against `Enum` [1] because number literal `3` [2] is incompatible with `Enum` [1].
+[incompatible-type]
 
    test.js:17:8
    17|   case 3: // error
@@ -30,8 +30,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:8
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
+`Enum` [1]. [incompatible-type]
 
    test.js:26:8
    26|   case 'qux': // error
@@ -45,8 +45,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:33:16
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
+`Enum` [1]. [incompatible-type]
 
    test.js:33:16
    33| else if (x === 'qux') {} // error
@@ -60,8 +60,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:37:16
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
+`Enum` [1]. [incompatible-type]
 
    test.js:37:16
    37| else if (x === 'qux') {} // error
@@ -75,8 +75,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:8
 
-Invalid check of number literal `4` against `eNum` [1] because number literal `4` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of number literal `4` against `eNum` [1] because number literal `4` [2] is incompatible with `eNum` [1].
+[incompatible-type]
 
    test.js:45:8
    45|   case 4: // error
@@ -90,8 +90,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:8
 
-Invalid check of number literal `4` against `eNum` [1] because number literal `4` [2] is incompatible with literal
-union [1]. [incompatible-type]
+Invalid check of number literal `4` against `eNum` [1] because number literal `4` [2] is incompatible with `eNum` [1].
+[incompatible-type]
 
    test.js:54:8
    54|   case 4: // error

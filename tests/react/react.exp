@@ -84,7 +84,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:16:24
 
-Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first parameter of
+Cannot create `Consumer` element because union type [1] is incompatible with string [2] in the first parameter of
 property `children`. [incompatible-type]
 
    createContext.js:16:24
@@ -99,7 +99,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:22:22
 
-Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first parameter of
+Cannot create `Consumer` element because union type [1] is incompatible with string [2] in the first parameter of
 property `children`. [incompatible-type]
 
    createContext.js:22:22

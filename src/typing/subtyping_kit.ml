@@ -986,12 +986,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  cx
                  ~trace
                  (Error_message.EIncompatibleWithUseOp
-                    {
-                      reason_lower = reason_l;
-                      reason_upper =
-                        UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_u rep;
-                      use_op;
-                    }
+                    { reason_lower = reason_l; reason_upper = reason_u; use_op }
                  );
              true
            | _ -> false ->

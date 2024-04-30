@@ -141,7 +141,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- distributive.js:26:4
 
-Cannot cast `2` to `one_or_three` because number [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `2` to `one_or_three` because number [1] is incompatible with union type [2]. [incompatible-cast]
 
    distributive.js:26:4
    26|   (2: one_or_three); // error: 2 ~> 1|3
@@ -155,7 +155,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- distributive.js:28:4
 
-Cannot cast `4` to `one_or_three` because number [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `4` to `one_or_three` because number [1] is incompatible with union type [2]. [incompatible-cast]
 
    distributive.js:28:4
    28|   (4: one_or_three); // error: 4 ~> 1|3

@@ -344,7 +344,7 @@ Unsupported key in object literal. Only identifier, string literal, and number l
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
-Cannot return `x` because number literal `1` [1] is incompatible with literal union [2]. [incompatible-return]
+Cannot return `x` because number literal `1` [1] is incompatible with `bigints` [2]. [incompatible-return]
 
    unions.js:5:10
    5|   return x; // fast path error
@@ -361,7 +361,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
-Cannot return `x` because number literal `2` [1] is incompatible with literal union [2]. [incompatible-return]
+Cannot return `x` because number literal `2` [1] is incompatible with `bigints` [2]. [incompatible-return]
 
    unions.js:5:10
    5|   return x; // fast path error
@@ -378,7 +378,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
-Cannot return `x` because bigint literal `1n` [1] is incompatible with literal union [2]. [incompatible-return]
+Cannot return `x` because bigint literal `1n` [1] is incompatible with `nums` [2]. [incompatible-return]
 
    unions.js:9:10
    9|   return x; // fast path error
@@ -395,7 +395,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
-Cannot return `x` because bigint literal `2n` [1] is incompatible with literal union [2]. [incompatible-return]
+Cannot return `x` because bigint literal `2n` [1] is incompatible with `nums` [2]. [incompatible-return]
 
    unions.js:9:10
    9|   return x; // fast path error

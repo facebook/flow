@@ -318,7 +318,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `CacheType` [2] in property
 `cache`. This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
@@ -337,8 +337,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`credentials`. This property is invariantly typed. See
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `CredentialsType` [2] in
+property `credentials`. This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
@@ -451,7 +451,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `ModeType` [2] in property
 `mode`. This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
@@ -470,7 +470,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `RedirectType` [2] in property
 `redirect`. This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
@@ -508,8 +508,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`referrerPolicy`. This property is invariantly typed. See
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `ReferrerPolicyType` [2] in
+property `referrerPolicy`. This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
@@ -548,7 +548,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `h.text().then` because: [incompatible-call]
  - Either `Buffer` [1] is incompatible with string [2] in the first parameter.
- - Or function [3] is incompatible with literal union [4].
+ - Or function [3] is incompatible with union type [4].
 
    request.js:24:10
      24| h.text().then((t: Buffer) => t); // incorrect
@@ -573,7 +573,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `h.arrayBuffer().then` because: [incompatible-call]
  - Either `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
- - Or function [3] is incompatible with literal union [4].
+ - Or function [3] is incompatible with union type [4].
 
    request.js:26:17
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -742,7 +742,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `h.text().then` because: [incompatible-call]
  - Either `Buffer` [1] is incompatible with string [2] in the first parameter.
- - Or function [3] is incompatible with literal union [4].
+ - Or function [3] is incompatible with union type [4].
 
    response.js:42:10
      42| h.text().then((t: Buffer) => t); // incorrect
@@ -767,7 +767,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `h.arrayBuffer().then` because: [incompatible-call]
  - Either `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
- - Or function [3] is incompatible with literal union [4].
+ - Or function [3] is incompatible with union type [4].
 
    response.js:44:17
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect

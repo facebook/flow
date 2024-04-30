@@ -432,7 +432,7 @@ Cannot get `TDR.current` because property `current` is not readable. [cannot-rea
 Error ----------------------------------------------------------------------------------------- flow_to_general.js:15:11
 
 Invalid check of string literal `C` against optional nullable `T` [1] because string literal `C` [2] is incompatible
-with literal union [3]. [incompatible-type]
+with `T` [3]. [incompatible-type]
 
    flow_to_general.js:15:11
    15| if (p === 'C') {
@@ -3910,7 +3910,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:95:14
 
-Cannot return `s` because number literal `3` [1] is incompatible with literal union [2]. [incompatible-return]
+Cannot return `s` because number literal `3` [1] is incompatible with `Mode` [2]. [incompatible-return]
 
    number.js:95:14
    95|       return s; // error
@@ -4729,7 +4729,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:96:14
 
-Cannot return `s` because string literal `d` [1] is incompatible with literal union [2]. [incompatible-return]
+Cannot return `s` because string literal `d` [1] is incompatible with `Mode` [2]. [incompatible-return]
 
    string.js:96:14
    96|       return s; // error
@@ -4904,7 +4904,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
 
-Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with literal union [2].
+Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with union type [2].
 [incompatible-cast]
 
    tagged_union.js:40:6

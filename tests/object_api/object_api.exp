@@ -355,8 +355,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
-Cannot cast `Object.keys(...)` to array type because string literal `x` [1] is incompatible with literal union [2] in
-array element. [incompatible-cast]
+Cannot cast `Object.keys(...)` to array type because string literal `x` [1] is incompatible with union type [2] in array
+element. [incompatible-cast]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
@@ -373,8 +373,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
-Cannot cast `Object.keys(...)` to array type because string literal `y` [1] is incompatible with literal union [2] in
-array element. [incompatible-cast]
+Cannot cast `Object.keys(...)` to array type because string literal `y` [1] is incompatible with union type [2] in array
+element. [incompatible-cast]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
