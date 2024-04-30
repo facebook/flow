@@ -550,8 +550,6 @@ let include_suppressions cx = cx.metadata.include_suppressions
 
 let severity_cover cx = cx.ccx.severity_cover
 
-let max_trace_depth _ = 0
-
 let property_maps cx = cx.ccx.sig_cx.property_maps
 
 let call_props cx = cx.ccx.sig_cx.call_props
