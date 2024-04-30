@@ -464,7 +464,7 @@ exception SpeculationSingletonError
 
 (* [src_cx] is the context in which the error is created, and [dst_cx] the context
  * in which it is recorded. *)
-let add_output_generic ~src_cx:cx ~dst_cx ?trace:_ msg =
+let add_output_generic ~src_cx:cx ~dst_cx msg =
   if Speculation.speculating cx then
     if Error_message.defered_in_speculation msg then
       ignore @@ Speculation.defer_action cx (Speculation_state.ErrorAction msg)
@@ -488,20 +488,20 @@ let add_output_generic ~src_cx:cx ~dst_cx ?trace:_ msg =
     Context.add_error dst_cx error
   )
 
-let add_output cx ?trace msg = add_output_generic ~src_cx:cx ~dst_cx:cx ?trace msg
+let add_output cx msg = add_output_generic ~src_cx:cx ~dst_cx:cx msg
 
 (* In annotation inference, errors are created in the exporting side (src_cx), and
  * are recorded in the importing one (dst_cx). *)
 let add_annot_inference_error ~src_cx ~dst_cx msg : unit = add_output_generic ~src_cx ~dst_cx msg
 
-let exact_obj_error cx trace obj_kind ~use_op ~exact_reason l =
+let exact_obj_error cx obj_kind ~use_op ~exact_reason l =
   let error_kind =
     match obj_kind with
     | Indexed _ -> Flow_intermediate_error_types.UnexpectedIndexer
     | _ -> Flow_intermediate_error_types.UnexpectedInexact
   in
   let reasons = FlowError.ordered_reasons (reason_of_t l, exact_reason) in
-  add_output cx ~trace (Error_message.EIncompatibleWithExact (reasons, use_op, error_kind))
+  add_output cx (Error_message.EIncompatibleWithExact (reasons, use_op, error_kind))
 
 (** Unions *)
 
@@ -683,7 +683,7 @@ let string_key s reason =
   DefT (key_reason, StrT (Literal (None, s)))
 
 (* common case checking a function as an object *)
-let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
+let quick_error_fun_as_obj cx ~use_op reason statics reason_o props =
   let statics_own_props =
     match statics with
     | DefT (_, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
@@ -715,7 +715,7 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
           Error_message.EPropNotFound
             { prop_name = Some x; reason_prop; reason_obj = reason; use_op; suggestion = None }
         in
-        add_output cx ~trace err)
+        add_output cx err)
       props_not_found;
     not (NameUtils.Map.is_empty props_not_found)
   | None -> false
@@ -1036,7 +1036,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
     let maximum_arity = Nel.length xs in
     let arity_loc = tparams_loc in
     if List.length ts > maximum_arity then (
-      add_output cx ~trace (Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity });
+      add_output cx (Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity });
       Base.Option.iter errs_ref ~f:(fun errs_ref ->
           errs_ref := Context.ETooManyTypeArgs (arity_loc, maximum_arity) :: !errs_ref
       )
@@ -1051,10 +1051,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
               (subst cx ~use_op map default, [], (default, typeparam.name) :: all_ts)
             | ({ default = None; _ }, []) ->
               (* fewer arguments than params but no default *)
-              add_output
-                cx
-                ~trace
-                (Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity });
+              add_output cx (Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity });
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
                   errs_ref := Context.ETooFewTypeArgs (arity_loc, minimum_arity) :: !errs_ref
               );
@@ -1120,12 +1117,12 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
                  let msg =
                    Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity }
                  in
-                 add_output cx ~trace msg
+                 add_output cx msg
                | Context.ETooFewTypeArgs (arity_loc, minimum_arity) ->
                  let msg =
                    Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity }
                  in
-                 add_output cx ~trace msg
+                 add_output cx msg
                );
         t
 
@@ -2004,7 +2001,7 @@ let rec unbind_this_method = function
   | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
   | t -> t
 
-let check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref ~hint p =
+let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hint p =
   match p with
   | Method { key_loc; type_ = t }
     when (not method_accessible)
@@ -2036,7 +2033,6 @@ let check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propr
       let reason_op = reason_of_propref propref in
       add_output
         cx
-        ~trace
         (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
       Method { key_loc; type_ = unbind_this_method t })
   | _ -> p
@@ -2129,7 +2125,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | Computed t -> (reason_of_t t, None)
       in
       let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
-      add_output cx ~trace msg;
+      add_output cx msg;
       F.error_type cx trace ureason
 
   let get_instance_prop cx trace ~use_op ~ignore_dicts inst propref reason_op =
@@ -2177,9 +2173,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       reason_op =
     match get_instance_prop cx trace ~use_op ~ignore_dicts:true inst propref reason_op with
     | Some (p, _target_kind) ->
-      let p =
-        check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref ~hint p
-      in
+      let p = check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hint p in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
       perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op None
     | None ->
@@ -2204,7 +2198,6 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
       add_output
         cx
-        ~trace
         (Error_message.EEnumInvalidMemberAccess
            { member_name = Some member_name; suggestion; reason = member_reason; enum_reason }
         );
@@ -2281,28 +2274,24 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         (match elem_t with
         | OpenT _ ->
           let loc = loc_of_t elem_t in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen));
+          add_output cx Error_message.(EInternal (loc, PropRefComputedOpen));
           F.error_type cx trace reason_op
         | GenericT { bound = DefT (_, StrT (Literal _)); _ }
         | DefT (_, StrT (Literal _)) ->
           let loc = loc_of_t elem_t in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral));
+          add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
         | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
         | GenericT { bound = DefT (_, NumT lit); _ }
         | DefT (_, NumT lit) ->
           let reason_prop = reason_of_t elem_t in
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
-          add_output
-            cx
-            ~trace
-            (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
+          add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
           F.error_type cx trace reason_op
         | _ ->
           let reason_prop = reason_of_t elem_t in
           add_output
             cx
-            ~trace
             (Error_message.EObjectComputedPropertyAccess
                (reason_op, reason_prop, Flow_intermediate_error_types.InvalidObjKey.Other)
             );
@@ -2313,7 +2302,7 @@ end
 (* ElemT utils *)
 (***************)
 
-let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
+let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
   let (elem_t, elements, is_index_restricted, is_tuple, react_dro) =
     match arrtype with
     | ArrayAT { elem_t; tuple_view; react_dro } ->
@@ -2345,13 +2334,11 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                 if write_action && (not @@ Polarity.compat (polarity, Polarity.Negative)) then
                   add_output
                     cx
-                    ~trace
                     (Error_message.ETupleElementNotWritable { use_op; reason; index; name })
                 else if (not write_action) && (not @@ Polarity.compat (polarity, Polarity.Positive))
                 then
                   add_output
                     cx
-                    ~trace
                     (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
                 let (t, use_op) =
                   if write_action then
@@ -2371,7 +2358,6 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                 if is_tuple then (
                   add_output
                     cx
-                    ~trace
                     (Error_message.ETupleOutOfBounds
                        {
                          use_op;
@@ -2393,7 +2379,6 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
             if is_tuple then (
               add_output
                 cx
-                ~trace
                 (Error_message.ETupleNonIntegerIndex
                    { use_op; reason = index_reason; index = index_string }
                 );
@@ -2409,7 +2394,6 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     | Some dro when write_action ->
       add_output
         cx
-        ~trace
         (Error_message.EROArrayWrite ((reason, reason_tup), Frame (ReactDeepReadOnly dro, use_op)))
     | _ -> ()
   end;
@@ -2419,7 +2403,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
       | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
       | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
     in
-    add_output cx ~trace error
+    add_output cx error
   );
   (value, is_tuple, use_op, react_dro)
 
@@ -2557,7 +2541,7 @@ let any_mod_src_keep_placeholder new_src = function
   | Placeholder -> Placeholder
   | _ -> new_src
 
-let flow_unary_arith cx ?trace l reason kind =
+let flow_unary_arith cx l reason kind =
   let open UnaryArithKind in
   match (kind, l) with
   | (Minus, DefT (_, NumT (Literal (_, (value, raw))))) ->
@@ -2569,7 +2553,7 @@ let flow_unary_arith cx ?trace l reason kind =
     DefT (replace_desc_reason RBigInt reason, BigIntT (Literal (None, (value, raw))))
   | (Minus, DefT (_, BigIntT (AnyLiteral | Truthy))) -> l
   | (Plus, DefT (reason_bigint, BigIntT _)) ->
-    add_output cx ?trace (Error_message.EBigIntNumCoerce reason_bigint);
+    add_output cx (Error_message.EBigIntNumCoerce reason_bigint);
     AnyT.error reason
   | (Plus, _) -> NumT.why reason
   | (BitNot, DefT (_, NumT _)) -> NumT.why reason
@@ -2580,10 +2564,10 @@ let flow_unary_arith cx ?trace l reason kind =
     let src = any_mod_src_keep_placeholder Untyped src in
     AnyT.why src reason
   | (_, _) ->
-    add_output cx ?trace (Error_message.EArithmeticOperand (reason_of_t l));
+    add_output cx (Error_message.EArithmeticOperand (reason_of_t l));
     AnyT.error reason
 
-let flow_arith cx ?trace reason l r kind =
+let flow_arith cx reason l r kind =
   let open ArithKind in
   let (_, op) = kind in
   match (op, l, r) with
@@ -2600,7 +2584,7 @@ let flow_arith cx ?trace reason l r kind =
   (* num <> num *)
   | (_, DefT (_, NumT _), DefT (_, NumT _)) -> NumT.why reason
   | (RShift3, DefT (reason, BigIntT _), _) ->
-    add_output cx ?trace (Error_message.EBigIntRShift3 reason);
+    add_output cx (Error_message.EBigIntRShift3 reason);
     AnyT.error reason
   (* bigint <> bigint *)
   | (_, DefT (_, BigIntT _), DefT (_, BigIntT _)) -> BigIntT.why reason
@@ -2614,7 +2598,6 @@ let flow_arith cx ?trace reason l r kind =
   | _ ->
     add_output
       cx
-      ?trace
       (Error_message.EInvalidBinaryArith
          { reason_out = reason; reason_l = reason_of_t l; reason_r = reason_of_t r; kind }
       );
@@ -2656,7 +2639,7 @@ let rec wraps_mapped_type cx = function
 (* Tuples *)
 (**********)
 
-let validate_tuple_elements cx ?trace ~reason_tuple ~error_on_req_after_opt elements =
+let validate_tuple_elements cx ~reason_tuple ~error_on_req_after_opt elements =
   let (valid, num_req, num_opt, _) =
     Base.List.fold elements ~init:(true, 0, 0, None) ~f:(fun acc element ->
         let (valid, num_req, num_opt, prev_element) = acc in
@@ -2670,7 +2653,6 @@ let validate_tuple_elements cx ?trace ~reason_tuple ~error_on_req_after_opt elem
               if error_on_req_after_opt then
                 add_output
                   cx
-                  ?trace
                   (Error_message.ETupleRequiredAfterOptional
                      { reason_tuple; reason_required = reason_element; reason_optional }
                   );
@@ -2683,7 +2665,7 @@ let validate_tuple_elements cx ?trace ~reason_tuple ~error_on_req_after_opt elem
   let arity = (num_req, num_req + num_opt) in
   (valid, arity)
 
-let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
+let mk_tuple_type cx ~id ~mk_type_destructor reason elements =
   let (resolved_rev, unresolved_rev, first_spread) =
     Base.List.fold elements ~init:([], [], None) ~f:(fun (resolved, unresolved, first_spread) el ->
         match (el, first_spread) with
@@ -2709,7 +2691,7 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
   | None ->
     let elements = Base.List.rev_map ~f:fst resolved_rev in
     let (valid, arity) =
-      validate_tuple_elements cx ?trace ~reason_tuple:reason ~error_on_req_after_opt:true elements
+      validate_tuple_elements cx ~reason_tuple:reason ~error_on_req_after_opt:true elements
     in
     if valid then
       let elem_t =

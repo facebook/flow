@@ -28,5 +28,5 @@ end
 module type F = sig
   type cx
 
-  val add_output : cx -> ?trace:Type.trace -> ALoc.t Error_message.t' -> unit
+  val add_output : cx -> ALoc.t Error_message.t' -> unit
 end

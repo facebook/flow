@@ -135,7 +135,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       fun options state cx trace ->
         Slice_utils.object_spread
           ~dict_check:(dict_check trace)
-          ~add_output:(Flow_js_utils.add_output ~trace)
+          ~add_output:Flow_js_utils.add_output
           ~return:(return trace)
           ~recurse:(recurse trace)
           options
@@ -150,7 +150,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let return trace cx use_op t tout = rec_flow_t cx trace ~use_op (t, tout) in
       fun pmap cx trace ->
         Slice_utils.check_component_config
-          ~add_output:(Flow_js_utils.add_output ~trace)
+          ~add_output:Flow_js_utils.add_output
           ~return:(return trace)
           pmap
           cx
@@ -179,7 +179,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let subt_check trace ~use_op cx = rec_flow_t ~use_op cx trace in
       fun options state cx trace ->
         Slice_utils.object_rest
-          ~add_output:(Flow_js_utils.add_output ~trace)
+          ~add_output:Flow_js_utils.add_output
           ~return:(return trace)
           ~recurse:(recurse trace)
           ~subt_check:(subt_check trace)
@@ -572,7 +572,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         object_map prop_type mapped_type_flags selected_keys_opt
     in
     fun trace ->
-      let add_output = Flow_js_utils.add_output ~trace in
+      let add_output = Flow_js_utils.add_output in
       let return cx use_op t ~tout = rec_flow_t cx trace ~use_op (t, tout) in
       let next cx use_op tool reason x ~tout = next tool cx trace use_op reason x tout in
       let recurse cx use_op reason resolve_tool tool t ~tout =

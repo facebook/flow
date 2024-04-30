@@ -23,7 +23,6 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         if not (Polarity.compat (tp.polarity, polarity)) then
           Flow_js_utils.add_output
             cx
-            ?trace
             (Error_message.EPolarityMismatch
                {
                  reason;

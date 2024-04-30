@@ -62,7 +62,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | (None, Some _) when report_polarity ->
         add_output
           cx
-          ?trace
           (Error_message.EPropPolarityMismatch
              ( (lreason, ureason),
                propref_error,
@@ -76,7 +75,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | (None, Some _) when report_polarity ->
         add_output
           cx
-          ?trace
           (Error_message.EPropPolarityMismatch
              ( (lreason, ureason),
                propref_error,
@@ -107,12 +105,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | (_, (None, _) :: _) ->
         Error `NoParamNames
     in
-    fun cx trace use_op (lreason, params1, pred1) (ureason, params2, pred2) ->
+    fun cx use_op (lreason, params1, pred1) (ureason, params2, pred2) ->
       match subst_map (0, SMap.empty) (params1, params2) with
       | Error (`ArityMismatch (n1, n2)) ->
         add_output
           cx
-          ~trace
           (Error_message.EPredicateFuncArityMismatch
              { use_op; reasons = (lreason, ureason); arities = (n1, n2) }
           )
@@ -126,7 +123,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           if not (TypeUtil.pred_map_implies pmap1 pmap2) then
             add_output
               cx
-              ~trace
               (Error_message.EIncompatibleWithUseOp
                  { reason_lower = lreason; reason_upper = ureason; use_op }
               )
@@ -135,7 +131,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         else
           add_output
             cx
-            ~trace
             (Error_message.EIncompatibleWithUseOp
                { reason_lower = lreason; reason_upper = ureason; use_op }
             )
@@ -153,7 +148,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     if impl1 && not impl2 then
       add_output
         cx
-        ~trace
         (Error_message.ETypeGuardImpliesMismatch { use_op; reasons = (reason1, reason2) });
     let idx1 = index_of_param params1 x1 in
     let idx2 = index_of_param params2 x2 in
@@ -161,10 +155,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     ( if idx1 <> idx2 then
       let lower = Reason.mk_reason (RTypeGuardParam x1) loc1 in
       let upper = Reason.mk_reason (RTypeGuardParam x2) loc2 in
-      add_output
-        cx
-        ~trace
-        (Error_message.ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) })
+      add_output cx (Error_message.ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) })
     );
     rec_flow_t cx trace ~use_op (t1, t2)
 
@@ -226,13 +217,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
       if not (Obj_type.is_exact lflags.obj_kind) then
-        exact_obj_error
-          cx
-          trace
-          lflags.obj_kind
-          ~use_op
-          ~exact_reason:ureason
-          (DefT (lreason, ObjT l_obj));
+        exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason (DefT (lreason, ObjT l_obj));
       Context.iter_real_props cx lflds (fun name _ ->
           if not (Context.has_prop cx uflds name) then
             let use_op =
@@ -259,7 +244,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   suggestion = None;
                 }
             in
-            add_output cx ~trace err
+            add_output cx err
       );
       Base.Option.iter lcall ~f:(fun _ ->
           if Base.Option.is_none ucall then
@@ -282,7 +267,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               Error_message.EPropNotFound
                 { prop_name = prop; reason_prop; reason_obj = ureason; use_op; suggestion = None }
             in
-            add_output cx ~trace err
+            add_output cx err
       )
     );
 
@@ -301,7 +286,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           Error_message.EPropNotFound
             { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
         in
-        add_output cx ~trace error_message)
+        add_output cx error_message)
     | None -> ());
 
     (* Properties in u must either exist in l, or match l's indexer. *)
@@ -775,7 +760,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       else
         add_output
           cx
-          ~trace
           (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
     | (DefT (rl, NumericStrKeyT (_, actual)), DefT (ru, SingletonStrT expected)) ->
       if OrdinaryName actual = expected then
@@ -783,7 +767,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       else
         add_output
           cx
-          ~trace
           (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
     | (_, DefT (r, NumericStrKeyT (_, s))) ->
       let u = DefT (r, StrT (Literal (None, OrdinaryName s))) in
@@ -819,7 +802,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
         add_output
           cx
-          ~trace
           (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
     | (DefT (rl, NumT actual), DefT (ru, SingletonNumT expected)) ->
       if TypeUtil.number_literal_eq expected actual then
@@ -829,7 +811,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
         add_output
           cx
-          ~trace
           (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
     | (DefT (rl, BoolT actual), DefT (ru, SingletonBoolT expected)) ->
       if TypeUtil.boolean_literal_eq expected actual then
@@ -839,7 +820,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
         add_output
           cx
-          ~trace
           (Error_message.EExpectedBooleanLit { reason_lower = rl; reason_upper = ru; use_op })
     | (DefT (rl, BigIntT actual), DefT (ru, SingletonBigIntT expected)) ->
       if TypeUtil.bigint_literal_eq expected actual then
@@ -849,7 +829,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
         add_output
           cx
-          ~trace
           (Error_message.EExpectedBigIntLit { reason_lower = rl; reason_upper = ru; use_op })
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
@@ -984,7 +963,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
              if not (UnionEnumSet.mem (UnionEnum.Str x) enums) then
                add_output
                  cx
-                 ~trace
                  (Error_message.EIncompatibleWithUseOp
                     { reason_lower = reason_l; reason_upper = reason_u; use_op }
                  );
@@ -1122,7 +1100,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let t = push_type_alias_reason r t in
         rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
       else (
-        exact_obj_error cx trace flags.obj_kind ~use_op ~exact_reason:r l;
+        exact_obj_error cx flags.obj_kind ~use_op ~exact_reason:r l;
         (* Continue the Flow even after we've errored. Often, there is more that
          * is different then just the fact that the upper bound is exact and the
          * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
@@ -1490,7 +1468,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (l, DefT (_, RendersT _)) ->
       add_output
         cx
-        ~trace
         (Error_message.EIncompatibleWithUseOp
            {
              reason_lower = reason_of_t l;
@@ -1549,7 +1526,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           then
             add_output
               cx
-              ~trace
               (Error_message.EMethodUnbinding
                  { use_op; reason_op = lreason; reason_prop = reason_of_t this_param1 }
               );
@@ -1581,7 +1557,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | ((HookDecl _ | HookAnnot), ArbitraryEffect) ->
           add_output
             cx
-            ~trace
             (Error_message.EHookIncompatible
                {
                  use_op;
@@ -1594,7 +1569,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | (ArbitraryEffect, (HookDecl _ | HookAnnot)) ->
           add_output
             cx
-            ~trace
             (Error_message.EHookIncompatible
                {
                  use_op;
@@ -1607,7 +1581,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | ((HookDecl _ | HookAnnot), HookDecl _) ->
           add_output
             cx
-            ~trace
             (Error_message.EHookUniqueIncompatible { use_op; lower = lreason; upper = ureason })
         | _ -> (* todo *) ()
       end;
@@ -1628,10 +1601,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
              TODO: somehow the original flow needs to be propagated as well *)
           add_output
             cx
-            ~trace
             (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
         | (Some (PredBased p1), Some (PredBased p2)) ->
-          func_predicate_compat cx trace use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
+          func_predicate_compat cx use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
         | ( Some
               (TypeGuardBased { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1 }),
             Some
@@ -1667,7 +1639,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         if not (InvalidCharSetSet.is_empty invalid) then
           add_output
             cx
-            ~trace
             (EInvalidCharSet
                {
                  invalid = (replace_desc_reason (RStringLit name) reason, invalid);
@@ -1706,7 +1677,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let reasons = FlowError.ordered_reasons (lreason, ureason) in
       add_output
         cx
-        ~trace
         (Error_message.EIncompatibleWithExact
            (reasons, use_op, Flow_intermediate_error_types.UnexpectedInexact)
         )
@@ -1721,7 +1691,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ),
         DefT (ureason, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
       ) ->
-      add_output cx ~trace (Error_message.EClassToObject (lreason, ureason, use_op));
+      add_output cx (Error_message.EClassToObject (lreason, ureason, use_op));
       let lflds =
         let own_props = Context.find_props cx lown in
         let proto_props = Context.find_props cx lproto in
@@ -1742,7 +1712,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               Error_message.EPropNotFound
                 { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
             in
-            add_output cx ~trace error_message
+            add_output cx error_message
       );
 
       Context.iter_real_props cx uflds (fun name up ->
@@ -1815,7 +1785,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             Error_message.EPropNotFound
               { reason_prop; reason_obj = reason; prop_name; use_op; suggestion = None }
           in
-          add_output cx ~trace error_message;
+          add_output cx error_message;
           AnyT.error reason_op
       in
       rec_flow_t cx trace ~use_op (fun_t, u)
@@ -1868,7 +1838,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       if not arities_are_valid then
         add_output
           cx
-          ~trace
           (Error_message.ETupleArityMismatch
              { use_op; lower_reason = r1; lower_arity; upper_reason = r2; upper_arity }
           )
@@ -1878,7 +1847,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           if not (fresh || Polarity.compat (p1, p2)) then
             add_output
               cx
-              ~trace
               (Error_message.ETupleElementPolarityMismatch
                  {
                    index = !n;
@@ -1953,7 +1921,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (r1, ArrT (ArrayAT { elem_t = t1; tuple_view; react_dro })), DefT (r2, ArrT (TupleAT _)))
       -> begin
       match tuple_view with
-      | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
+      | None -> add_output cx (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
       | Some (TupleView { elements; arity }) ->
         rec_flow_t
           cx
@@ -2025,12 +1993,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | Exact ->
         add_output
           cx
-          ~trace
           (Error_message.EIncompatibleWithExact
              (reasons, use_op, Flow_intermediate_error_types.UnexpectedInexact)
           )
-      | Indexed _ ->
-        add_output cx ~trace (Error_message.EFunctionIncompatibleWithIndexer (reasons, use_op))
+      | Indexed _ -> add_output cx (Error_message.EFunctionIncompatibleWithIndexer (reasons, use_op))
       | _ -> failwith "Impossible")
     (*
      * TODO: This rule doesn't interact very well with union-type checking. It
@@ -2060,7 +2026,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         not
           (quick_error_fun_as_obj
              cx
-             trace
              ~use_op
              reason
              statics
@@ -2077,7 +2042,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         not
           (quick_error_fun_as_obj
              cx
-             trace
              ~use_op
              reason
              statics
@@ -2101,21 +2065,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       add_output
         cx
-        ~trace
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Boolean })
     | ( DefT (reason, NumT _),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx
-        ~trace
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
     | ( DefT (reason, StrT _),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx
-        ~trace
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `String })
     (**************************)
     (* opaque types supertype *)
@@ -2303,7 +2264,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let casting_syntax = Context.casting_syntax cx in
       add_output
         cx
-        ~trace
         (Error_message.EEnumIncompatible
            {
              reason_lower = enum_reason;
@@ -2354,7 +2314,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (lreason, MixedT Mixed_function), DefT (ureason, FunT _)) ->
       add_output
         cx
-        ~trace
         (Error_message.EIncompatible
            {
              lower = (lreason, None);
@@ -2371,14 +2330,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (InternalT (EnforceUnionOptimized reason), _) ->
       add_output
         cx
-        ~trace
         (Error_message.EUnionOptimizationOnNonUnion
            { loc = loc_of_reason reason; arg = reason_of_t u }
         )
     | (_, _) ->
       add_output
         cx
-        ~trace
         (Error_message.EIncompatibleWithUseOp
            { reason_lower = reason_of_t l; reason_upper = reason_of_t u; use_op }
         )

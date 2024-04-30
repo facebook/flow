@@ -1092,15 +1092,7 @@ module rec ConsGen : S = struct
       reposition cx (loc_of_reason reason_op) value
     | (DefT (_, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, ArrT arrtype))) ->
       let (value, _, _, _) =
-        Flow_js_utils.array_elem_check
-          ~write_action:false
-          cx
-          dummy_trace
-          t
-          use_op
-          reason_op
-          reason_tup
-          arrtype
+        Flow_js_utils.array_elem_check ~write_action:false cx t use_op reason_op reason_tup arrtype
       in
       reposition cx (loc_of_reason reason_op) value
     | (DefT (_, ObjT o), Annot_ObjKeyMirror reason_op) ->

@@ -59,16 +59,16 @@ module Cache = Flow_cache
 *)
 
 module RecursionCheck : sig
-  exception LimitExceeded of Type.trace
+  exception LimitExceeded
 
   val check : Context.t -> Type.trace -> unit
 end = struct
-  exception LimitExceeded of Type.trace
+  exception LimitExceeded
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
   let check cx trace =
-    if Trace.trace_depth trace >= Context.recursion_limit cx then raise (LimitExceeded trace)
+    if Trace.trace_depth trace >= Context.recursion_limit cx then raise LimitExceeded
 end
 
 (* The main problem with constant folding is infinite recursion. Consider a loop
@@ -340,7 +340,7 @@ struct
         let reason_prop = reason_of_propref propref in
         let prop_name = name_of_propref propref in
         let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
-        add_output cx ~trace msg
+        add_output cx msg
     end
     | MatchProp { use_op; drop_generic = drop_generic_; prop_t = tin } -> begin
       match Property.read_t_of_property_type p with
@@ -355,7 +355,7 @@ struct
       | None ->
         let reason_prop = reason_of_propref propref in
         let prop_name = name_of_propref propref in
-        add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
+        add_output cx (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
 
   let mk_react_dro cx use_op dro t =
@@ -661,7 +661,7 @@ struct
         (*************)
         | (_, DebugPrintT reason) ->
           let str = Debug_js.dump_t ~depth:10 cx l in
-          add_output cx ~trace (Error_message.EDebugPrint (reason, str))
+          add_output cx (Error_message.EDebugPrint (reason, str))
         | (DefT (_, NumT (Literal (_, (n, _)))), DebugSleepT _) ->
           let n = ref n in
           while !n > 0.0 do
@@ -870,7 +870,7 @@ struct
           let test = function
             | TypeT _
             | ClassT (DefT (_, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })) ->
-              add_output cx ~trace (Error_message.EImportTypeAsValue (reason, name))
+              add_output cx (Error_message.EImportTypeAsValue (reason, name))
             | _ -> ()
           in
           (* Imported polymorphic types will always have a concrete def_t, so
@@ -1248,10 +1248,7 @@ struct
           begin
             match left with
             | DefT (reason, NumT _) ->
-              add_output
-                cx
-                ~trace
-                (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
+              add_output cx (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
             | _ -> ()
           end;
 
@@ -1633,7 +1630,7 @@ struct
                   suggestion;
                 }
             in
-            add_output cx ~trace err)
+            add_output cx err)
         | ( DefT (reason_o, InstanceT { inst; _ }),
             HasOwnPropT
               ( use_op,
@@ -1660,7 +1657,7 @@ struct
             (match inst.inst_dict with
             | Some { key = dict_key; _ } ->
               rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, dict_key)
-            | None -> add_output cx ~trace err))
+            | None -> add_output cx err))
         | (DefT (reason_o, InstanceT _), HasOwnPropT (use_op, reason_op, _)) ->
           let err =
             Error_message.EPropNotFound
@@ -1672,7 +1669,7 @@ struct
                 suggestion = None;
               }
           in
-          add_output cx ~trace err
+          add_output cx err
         (* AnyT has every prop *)
         | (AnyT _, HasOwnPropT _) -> ()
         | (DefT (_, ObjT { flags; props_tmap; _ }), GetKeysT (reason_op, keys)) ->
@@ -2252,7 +2249,6 @@ struct
                 (* Only tuples can be spread into tuple types. *)
                 add_output
                   cx
-                  ~trace
                   (Error_message.ETupleInvalidTypeSpread
                      { reason_spread = reason_op; reason_arg = reason }
                   );
@@ -2313,7 +2309,6 @@ struct
                 | `Tuple ->
                   add_output
                     cx
-                    ~trace
                     (Error_message.ETupleInvalidTypeSpread
                        { reason_spread = reason_op; reason_arg = reason }
                     );
@@ -2578,7 +2573,7 @@ struct
           continue cx trace (EmptyT.why reason_op) k
         (* unsupported kind *)
         | (_, MakeExactT (reason_op, k)) ->
-          add_output cx ~trace (Error_message.EUnsupportedExact (reason_op, reason_of_t l));
+          add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t l));
           continue cx trace (AnyT.error reason_op) k
         (*******************************************)
         (* Refinement based on function predicates *)
@@ -2604,7 +2599,7 @@ struct
           | (None, _)
           | (Some (None, _), _) ->
             let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
-            add_output cx ~trace msg;
+            add_output cx msg;
             rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
           | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
             let key = (OrdinaryName name, []) in
@@ -2998,7 +2993,7 @@ struct
         | ( DefT (r, ReactAbstractComponentT _),
             CallT { use_op; reason; call_action = Funcalltype { call_tout; _ }; _ }
           ) ->
-          add_output cx ~trace (Error_message.ECannotCallReactComponent { reason = r });
+          add_output cx (Error_message.ECannotCallReactComponent { reason = r });
           rec_flow_t cx trace ~use_op (AnyT.error reason, OpenT call_tout)
         (* Render Type Promotion *)
         (* A named AbstractComponent is turned into its corresponding render type *)
@@ -3203,7 +3198,7 @@ struct
         | ( DefT (r, FunT _),
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) ->
-          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
+          ReactJs.err_incompatible cx ~use_op:unknown_use r (React.GetProps props);
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
         | ( DefT (r, ObjT { call_t = Some id; _ }),
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
@@ -3214,13 +3209,13 @@ struct
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
           | _ ->
-            ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
+            ReactJs.err_incompatible cx ~use_op:unknown_use r (React.GetProps props);
             rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
         end
         | (AnyT _, ReactPropsToOut (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (l, props)
         | (AnyT _, ReactInToProps (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (props, l)
         | (DefT (r, _), (ReactPropsToOut (reason_op, props) | ReactInToProps (reason_op, props))) ->
-          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
+          ReactJs.err_incompatible cx ~use_op:unknown_use r (React.GetProps props);
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
         | ( _,
             TryRenderTypePromotionT
@@ -3267,7 +3262,6 @@ struct
           ) ->
           add_output
             cx
-            ~trace
             (Error_message.EIncompatibleWithUseOp
                { reason_lower = reason_obj; reason_upper = reason; use_op }
             )
@@ -3306,7 +3300,6 @@ struct
           Base.Option.iter call_targs ~f:(fun _ ->
               add_output
                 cx
-                ~trace
                 Error_message.(
                   ECallTypeArity
                     {
@@ -3359,7 +3352,7 @@ struct
         | (_, ImplicitVoidReturnT { use_op; action = PropagateVoid { return; void_t }; _ }) ->
           rec_flow cx trace (void_t, UseT (use_op, return))
         | (_, ImplicitVoidReturnT { action = NoImplicitReturns r; _ }) ->
-          add_output cx ~trace Error_message.(EComponentMissingReturn r)
+          add_output cx Error_message.(EComponentMissingReturn r)
         (* Special handlers for builtin functions *)
         | ( CustomFunT
               ( _,
@@ -3379,7 +3372,7 @@ struct
                 return_hint = _;
               }
           ) ->
-          let dest_t = extract_non_spread cx ~trace dest_t in
+          let dest_t = extract_non_spread cx dest_t in
           let t = chain_objects cx ~trace reason_op dest_t ts in
           rec_flow_t cx ~use_op trace (t, OpenT call_tout)
         | ( CustomFunT (_, ObjectGetPrototypeOf),
@@ -3392,7 +3385,7 @@ struct
                 return_hint = _;
               }
           ) ->
-          let l = extract_non_spread cx ~trace arg in
+          let l = extract_non_spread cx arg in
           rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
         | ( CustomFunT (_, ObjectSetPrototypeOf),
             CallT
@@ -3405,8 +3398,8 @@ struct
                 return_hint = _;
               }
           ) ->
-          let target = extract_non_spread cx ~trace arg1 in
-          let proto = extract_non_spread cx ~trace arg2 in
+          let target = extract_non_spread cx arg1 in
+          let proto = extract_non_spread cx arg2 in
           rec_flow cx trace (target, SetProtoT (reason_op, proto));
           rec_flow_t cx ~use_op trace (BoolT.why reason_op, OpenT call_tout)
         | (DefT (reason, CharSetT _), _) -> rec_flow cx trace (StrT.why reason, u)
@@ -3430,7 +3423,6 @@ struct
               | SpreadArg t ->
                 add_output
                   cx
-                  ~trace
                   (Error_message.EUnsupportedSyntax
                      (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
                   ))
@@ -3450,7 +3442,7 @@ struct
                 return_hint = _;
               }
           ) ->
-          let t = extract_non_spread cx ~trace arg1 in
+          let t = extract_non_spread cx arg1 in
           rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
         | ( CustomFunT (lreason, ((ReactCreateElement | ReactCloneElement) as kind)),
@@ -3477,7 +3469,6 @@ struct
             Base.Option.iter call_targs ~f:(fun _ ->
                 add_output
                   cx
-                  ~trace
                   Error_message.(
                     ECallTypeArity
                       {
@@ -3544,7 +3535,7 @@ struct
                 Error_message.EPropNotFound
                   { reason_prop; reason_obj = reason; prop_name; use_op; suggestion = None }
               in
-              add_output cx ~trace error_message;
+              add_output cx error_message;
               AnyT.error reason_op
           in
           rec_flow cx trace (reposition cx ~trace (loc_of_reason reason) fun_t, u)
@@ -3568,7 +3559,6 @@ struct
               let () =
                 add_output
                   cx
-                  ~trace
                   (Error_message.EInvalidPrototype (loc_of_reason reason_op, reason_of_t l))
               in
               ObjProtoT.why reason_op
@@ -3668,7 +3658,6 @@ struct
           Base.Option.iter targs ~f:(fun _ ->
               add_output
                 cx
-                ~trace
                 Error_message.(
                   ECallTypeArity
                     {
@@ -3717,7 +3706,7 @@ struct
             ConstructorT
               { use_op; reason = reason_op; tout = t; args = _; targs = _; return_hint = _ }
           ) ->
-          add_output cx ~trace Error_message.(EInvalidConstructor (reason_of_t l));
+          add_output cx Error_message.(EInvalidConstructor (reason_of_t l));
           rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
            parameter is an AnyT. *)
@@ -3806,7 +3795,7 @@ struct
         (********************)
         | (AnyT _, SetProtoT _) -> ()
         | (_, SetProtoT (reason_op, _)) ->
-          add_output cx ~trace (Error_message.EUnsupportedSetProto reason_op)
+          add_output cx (Error_message.EUnsupportedSetProto reason_op)
         (********************************************************)
         (* instances of classes may have their fields looked up *)
         (********************************************************)
@@ -3831,7 +3820,6 @@ struct
             let p =
               check_method_unbinding
                 cx
-                trace
                 ~use_op
                 ~method_accessible
                 ~reason_op
@@ -3917,7 +3905,6 @@ struct
           ->
           add_output
             cx
-            ~trace
             (Error_message.EPrivateLookupFailed ((reason_op, reason_c), OrdinaryName x, use_op))
         | ( DefT (reason_c, InstanceT { inst; _ }),
             SetPrivatePropT
@@ -3943,7 +3930,6 @@ struct
             | None ->
               add_output
                 cx
-                ~trace
                 (Error_message.EPrivateLookupFailed ((reason_op, reason_c), name, use_op))
             | Some p ->
               let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx; mode } in
@@ -4179,7 +4165,6 @@ struct
               | None ->
                 add_output
                   cx
-                  ~trace
                   (Error_message.EPropNotReadable { reason_prop; prop_name = Some name; use_op })
           );
           (match flags.obj_kind with
@@ -4205,7 +4190,6 @@ struct
                  | None ->
                    add_output
                      cx
-                     ~trace
                      (Error_message.EPropNotReadable
                         { reason_prop = lreason; prop_name = Some name; use_op }
                      )
@@ -4249,7 +4233,6 @@ struct
                 if not @@ Polarity.compat (polarity, Polarity.Positive) then
                   add_output
                     cx
-                    ~trace
                     (Error_message.ETupleElementNotReadable
                        { use_op; reason = reason_arr; index = n; name }
                     );
@@ -4428,7 +4411,6 @@ struct
             in
             add_output
               cx
-              ~trace
               (Error_message.EPropNotWritable
                  { reason_prop; prop_name = Some (OrdinaryName "constructor"); use_op }
               )
@@ -4442,7 +4424,7 @@ struct
             | Some dro -> Frame (ReactDeepReadOnly dro, use_op)
             | None -> use_op
           in
-          add_output cx ~trace (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
+          add_output cx (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
         | (DefT (reason_obj, ObjT o), SetPropT (use_op, reason_op, propref, mode, _, tin, prop_t))
           ->
           write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_t
@@ -4588,7 +4570,7 @@ struct
                   Frame (ReactDeepReadOnly dro, use_op)
                 | _ -> use_op
               in
-              add_output cx ~trace (Error_message.EROArrayWrite (reasons, use_op));
+              add_output cx (Error_message.EROArrayWrite (reasons, use_op));
               None
             | ( ReadElem _,
                 (ROArrayAT (_, react_dro) | TupleAT { react_dro; _ } | ArrayAT { react_dro; _ })
@@ -4613,7 +4595,7 @@ struct
             | WriteElem _ -> (true, false)
           in
           let (value, is_tuple, use_op, react_dro) =
-            array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype
+            array_elem_check ~write_action cx l use_op reason reason_tup arrtype
           in
           let value =
             match react_dro with
@@ -4854,7 +4836,7 @@ struct
                 )
             (* func.call(...call_args_tlist) *)
             | (SpreadArg _ as first_arg) :: _ ->
-              let call_this_t = extract_non_spread cx ~trace first_arg in
+              let call_this_t = extract_non_spread cx first_arg in
               let funtype = { funtype with call_this_t } in
               rec_flow
                 cx
@@ -4913,7 +4895,7 @@ struct
                 )
             (* func.apply(this_arg, ts) *)
             | [first_arg; Arg ts] ->
-              let call_this_t = extract_non_spread cx ~trace first_arg in
+              let call_this_t = extract_non_spread cx first_arg in
               let call_args_tlist = [SpreadArg ts] in
               let funtype = { funtype with call_this_t; call_args_tlist } in
               (* Ignoring `this_arg`, we're basically doing func(...ts). Normally
@@ -4932,13 +4914,11 @@ struct
             | [SpreadArg t1; SpreadArg t2] ->
               add_output
                 cx
-                ~trace
                 (Error_message.EUnsupportedSyntax
                    (loc_of_t t1, Flow_intermediate_error_types.SpreadArgument)
                 );
               add_output
                 cx
-                ~trace
                 (Error_message.EUnsupportedSyntax
                    (loc_of_t t2, Flow_intermediate_error_types.SpreadArgument)
                 )
@@ -4946,14 +4926,13 @@ struct
             | [Arg _; SpreadArg t] ->
               add_output
                 cx
-                ~trace
                 (Error_message.EUnsupportedSyntax
                    (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
                 )
             | _ :: _ :: _ :: _ ->
               Error_message.EFunctionCallExtraArg
                 (mk_reason RFunctionUnusedArgument (loc_of_reason lreason), lreason, 2, use_op)
-              |> add_output cx ~trace
+              |> add_output cx
           end
         (************************************************************************)
         (* functions may be bound by passing a receiver and (partial) arguments *)
@@ -4980,7 +4959,6 @@ struct
           Base.Option.iter call_targs ~f:(fun _ ->
               add_output
                 cx
-                ~trace
                 Error_message.(
                   ECallTypeArity
                     {
@@ -4991,7 +4969,7 @@ struct
                     }
                 )
           );
-          let call_this_t = extract_non_spread cx ~trace first_arg in
+          let call_this_t = extract_non_spread cx first_arg in
           let call_targs = None in
           let funtype = { funtype with call_this_t; call_targs; call_args_tlist } in
           rec_flow cx trace (func, BindT (use_op, reason_op, funtype))
@@ -5075,8 +5053,7 @@ struct
             reason_inst
             (own_props, proto_props, inst_call_t, inst_dict);
           rec_flow cx trace (super, ReposLowerT (reason_inst, false, ImplementsT (use_op, t)))
-        | (_, ImplementsT _) ->
-          add_output cx ~trace (Error_message.EUnsupportedImplements (reason_of_t l))
+        | (_, ImplementsT _) -> add_output cx (Error_message.EUnsupportedImplements (reason_of_t l))
         (*********************************************************************)
         (* class A is a base class of class B iff                            *)
         (* properties in B that override properties in A or its base classes *)
@@ -5143,7 +5120,7 @@ struct
         (* unary arithmetic operators *)
         (******************************)
         | (l, UnaryArithT { reason; result_t; kind }) ->
-          let t = flow_unary_arith ~trace cx l reason kind in
+          let t = flow_unary_arith cx l reason kind in
           rec_flow_t cx trace ~use_op:unknown_use (t, result_t)
         (************************)
         (* binary `in` operator *)
@@ -5153,20 +5130,17 @@ struct
            TODO: also, symbols *)
         | (DefT (_, StrT _), AssertBinaryInLHST _) -> ()
         | (DefT (_, NumT _), AssertBinaryInLHST _) -> ()
-        | (_, AssertBinaryInLHST _) ->
-          add_output cx ~trace (Error_message.EBinaryInLHS (reason_of_t l))
+        | (_, AssertBinaryInLHST _) -> add_output cx (Error_message.EBinaryInLHS (reason_of_t l))
         (* the right-hand side of a `(x in y)` expression must be object-like *)
         | (DefT (_, ArrT _), AssertBinaryInRHST _) -> ()
         | (_, AssertBinaryInRHST _) when object_like l -> ()
-        | (_, AssertBinaryInRHST _) ->
-          add_output cx ~trace (Error_message.EBinaryInRHS (reason_of_t l))
+        | (_, AssertBinaryInRHST _) -> add_output cx (Error_message.EBinaryInRHS (reason_of_t l))
         (************************)
         (* Assert non component *)
         (************************)
         | (DefT (reason_type, MixedT _), AssertNonComponentLikeT (def_loc, use_reason)) ->
           add_output
             cx
-            ~trace
             Error_message.(
               EReactIntrinsicOverlap
                 { use = use_reason; def = def_loc; type_ = loc_of_reason reason_type; mixed = true }
@@ -5179,7 +5153,6 @@ struct
           ) ->
           add_output
             cx
-            ~trace
             Error_message.(
               EReactIntrinsicOverlap
                 {
@@ -5201,11 +5174,8 @@ struct
         (* null/undefined are allowed *)
         | (DefT (_, (NullT | VoidT)), AssertForInRHST _) -> ()
         | (DefT (enum_reason, EnumObjectT _), AssertForInRHST _) ->
-          add_output
-            cx
-            ~trace
-            (Error_message.EEnumNotIterable { reason = enum_reason; for_in = true })
-        | (_, AssertForInRHST _) -> add_output cx ~trace (Error_message.EForInRHS (reason_of_t l))
+          add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = true })
+        | (_, AssertForInRHST _) -> add_output cx (Error_message.EForInRHS (reason_of_t l))
         (********************)
         (* `instanceof` RHS *)
         (* right side of an `instanceof` binary expression must be an object *)
@@ -5215,8 +5185,7 @@ struct
           (* arrays are objects too, but not in `object_like` *)
           ()
         | (AnyT _, AssertInstanceofRHST _) -> ()
-        | (_, AssertInstanceofRHST _) ->
-          add_output cx ~trace (Error_message.EInstanceofRHS (reason_of_t l))
+        | (_, AssertInstanceofRHST _) -> add_output cx (Error_message.EInstanceofRHS (reason_of_t l))
         (***********************************)
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
@@ -5226,10 +5195,7 @@ struct
             cx
             (reason_of_t l |> loc_of_reason)
             u;
-          add_output
-            cx
-            ~trace
-            (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false })
+          add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false })
         | (AnyT (_, src), AssertIterableT { use_op; reason; async = _; targs }) ->
           let src = any_mod_src_keep_placeholder (AnyError None) src in
           Base.List.iter targs ~f:(fun t ->
@@ -5431,7 +5397,6 @@ struct
           let reason = reason_of_t key_t in
           add_output
             cx
-            ~trace
             (Error_message.EEnumInvalidMemberAccess
                { member_name = None; suggestion = None; reason; enum_reason }
             );
@@ -5440,7 +5405,6 @@ struct
         | (DefT (enum_reason, EnumObjectT _), SetElemT (_, op_reason, _, _, _, tout)) ->
           add_output
             cx
-            ~trace
             (Error_message.EEnumModification { loc = loc_of_reason op_reason; enum_reason });
           Base.Option.iter tout ~f:(fun tout ->
               rec_flow_t cx trace ~use_op:unknown_use (AnyT.error op_reason, tout)
@@ -5448,11 +5412,10 @@ struct
         | (DefT (enum_reason, EnumObjectT _), GetValuesT (op_reason, tout)) ->
           add_output
             cx
-            ~trace
             (Error_message.EEnumInvalidObjectUtilType { reason = op_reason; enum_reason });
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.error op_reason, tout)
         | (DefT (enum_reason, EnumObjectT _), GetDictValuesT (reason, result)) ->
-          add_output cx ~trace (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
+          add_output cx (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
           rec_flow cx trace (AnyT.error reason, result)
         | ( DefT
               ( _,
@@ -5846,7 +5809,7 @@ struct
             Error_message.EPropNotFound
               { reason_prop; reason_obj = strict_reason; prop_name = Some name; use_op; suggestion }
           in
-          add_output cx ~trace error_message;
+          add_output cx error_message;
           let p =
             OrdinaryField
               { type_ = AnyT.error_of_kind UnresolvedName reason_op; polarity = Polarity.Neutral }
@@ -5868,10 +5831,10 @@ struct
           (match elem_t with
           | OpenT _ ->
             let loc = loc_of_t elem_t in
-            add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
+            add_output cx Error_message.(EInternal (loc, PropRefComputedOpen))
           | DefT (_, StrT (Literal _)) ->
             let loc = loc_of_t elem_t in
-            add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
+            add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
           | AnyT (_, src) ->
             let src = any_mod_src_keep_placeholder Untyped src in
             let p = OrdinaryField { type_ = AnyT.why src reason_op; polarity = Polarity.Neutral } in
@@ -5889,7 +5852,7 @@ struct
                   suggestion = None;
                 }
             in
-            add_output cx ~trace error_message)
+            add_output cx error_message)
         (* LookupT is a non-strict lookup *)
         | ( (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
             LookupT
@@ -6030,7 +5993,6 @@ struct
           let (reason_l, reason_u) = FlowError.ordered_reasons (reason_of_t t, reason_of_t tc) in
           add_output
             cx
-            ~trace
             (Error_message.EIncompatibleWithUseOp
                { reason_lower = reason_l; reason_upper = reason_u; use_op }
             )
@@ -6108,7 +6070,6 @@ struct
           ) ->
           add_output
             cx
-            ~trace
             (Error_message.EIncompatible
                {
                  lower = (lreason, None);
@@ -6153,7 +6114,6 @@ struct
           let use_op = Some (use_op_of_lookup_action lookup_action) in
           add_output
             cx
-            ~trace
             (Error_message.EIncompatibleProp
                {
                  prop = name_of_propref propref;
@@ -6170,16 +6130,13 @@ struct
           | None -> () (* Promise has some unexpected type *)
           | Some promise_class_id ->
             if ALoc.equal_id promise_class_id class_id then
-              add_output
-                cx
-                ~trace
-                (Error_message.EUnusedPromise { loc = loc_of_reason reason; async })
+              add_output cx (Error_message.EUnusedPromise { loc = loc_of_reason reason; async })
             else
               rec_flow cx trace (super, CheckUnusedPromiseT { reason; async }))
         | (_, CheckUnusedPromiseT _) -> ()
         | (DefT (lreason, StrT (Literal _)), WriteComputedObjPropCheckT _) ->
           let loc = loc_of_reason lreason in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
+          add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
         | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason)
@@ -6187,7 +6144,6 @@ struct
           Base.Option.iter err_on_str_key ~f:(fun (use_op, reason_obj) ->
               add_output
                 cx
-                ~trace
                 (Error_message.EPropNotFound
                    {
                      prop_name = None;
@@ -6200,22 +6156,17 @@ struct
           )
         | (DefT (reason, NumT lit), WriteComputedObjPropCheckT { reason_key; _ }) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
-          add_output
-            cx
-            ~trace
-            (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
+          add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
           let reason = reason_of_t l in
           add_output
             cx
-            ~trace
             (Error_message.EObjectComputedPropertyAssign
                (reason, reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
             )
         | _ ->
           add_output
             cx
-            ~trace
             (Error_message.EIncompatible
                {
                  lower = (reason_of_t l, error_message_kind_of_lower l);
@@ -6262,7 +6213,7 @@ struct
         else
           (l, r)
       in
-      let t = Flow_js_utils.flow_arith cx ~trace reason l r kind in
+      let t = Flow_js_utils.flow_arith cx reason l r kind in
       rec_flow_t cx trace ~use_op:unknown_use (t, u)
 
   (**
@@ -6296,7 +6247,7 @@ struct
       | (l, r) when is_date l && is_date r -> ()
       | _ ->
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx ~trace (Error_message.EComparison reasons)
+        add_output cx (Error_message.EComparison reasons)
 
   (**
    * == equality
@@ -6319,7 +6270,7 @@ struct
         ()
       else
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx ~trace (Error_message.ENonStrictEqualityComparison reasons)
+        add_output cx (Error_message.ENonStrictEqualityComparison reasons)
 
   and flow_strict_eq cx trace reason cond_context flip l r =
     if needs_resolution r || is_generic r then
@@ -6332,7 +6283,7 @@ struct
           (l, r)
       in
       match strict_equatable_error cond_context (l, r) with
-      | Some error -> add_output cx ~trace error
+      | Some error -> add_output cx error
       | None -> ()
 
   (* Returns true when __flow should succeed immediately if EmptyT flows into u. *)
@@ -6535,7 +6486,7 @@ struct
           match bound with
           | DefT (_, ObjT { flags; _ }) when not @@ Obj_type.is_exact flags.obj_kind ->
             let l = make_generic bound in
-            exact_obj_error cx trace flags.obj_kind ~exact_reason:r ~use_op l;
+            exact_obj_error cx flags.obj_kind ~exact_reason:r ~use_op l;
             (* Continue the Flow even after we've errored. Often, there is more that
              * is different then just the fact that the upper bound is exact and the
              * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
@@ -7359,7 +7310,7 @@ struct
                Error_message.EPropNotFound
                  { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
              in
-             add_output cx ~trace error_message
+             add_output cx error_message
        )
 
   and check_super cx trace ~use_op lreason ureason t x p =
@@ -8131,7 +8082,6 @@ struct
         if not @@ SMap.mem member_name members_remaining then
           add_output
             cx
-            ~trace
             (Error_message.EEnumMemberAlreadyChecked
                {
                  case_test_loc;
@@ -8147,7 +8097,6 @@ struct
       | (false, _, _) ->
         add_output
           cx
-          ~trace
           (Error_message.EEnumNotAllChecked
              {
                reason = check_reason;
@@ -8159,16 +8108,12 @@ struct
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       (* When we have unknown members, a default is required even when we've checked all known members. *)
       | (true, None, true) ->
-        add_output
-          cx
-          ~trace
-          (Error_message.EEnumUnknownNotChecked { reason = check_reason; enum_reason });
+        add_output cx (Error_message.EEnumUnknownNotChecked { reason = check_reason; enum_reason });
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       | (true, Some _, true) -> ()
       | (true, Some default_case_loc, false) ->
         add_output
           cx
-          ~trace
           (Error_message.EEnumAllMembersAlreadyChecked { loc = default_case_loc; enum_reason })
       | _ -> ())
     (* There are still possible checks to resolve, continue to resolve them. *)
@@ -8251,7 +8196,6 @@ struct
     | [] ->
       add_output
         cx
-        ~trace
         (Error_message.EPrivateLookupFailed ((reason_op, reason_c), OrdinaryName prop_name, use_op))
     | scope :: scopes ->
       if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
@@ -8298,16 +8242,12 @@ struct
                 when not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
                 add_output
                   cx
-                  ~trace
                   (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t })
               | _ -> ()
             );
             perform_lookup_action (Property.type_ p)
           | None ->
-            add_output
-              cx
-              ~trace
-              (Error_message.EPrivateLookupFailed ((reason_op, reason_c), name, use_op))))
+            add_output cx (Error_message.EPrivateLookupFailed ((reason_op, reason_c), name, use_op))))
 
   and elem_action_on_obj cx trace ~use_op l obj reason_op action =
     let propref = propref_for_elem_t l in
@@ -8336,7 +8276,6 @@ struct
         if Obj_type.is_exact o.flags.obj_kind then
           add_output
             cx
-            ~trace
             (Error_message.EPropNotFound
                {
                  prop_name = Some name;
@@ -8418,7 +8357,7 @@ struct
     | _ ->
       let loc = loc_of_reason (fst sink) in
       let pred_str = string_of_predicate pred in
-      add_output cx ~trace Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str))
+      add_output cx Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str))
 
   (**************)
   (* predicates *)
@@ -8636,7 +8575,6 @@ struct
           (* prop cannot be read *)
           add_output
             cx
-            ~trace
             (Error_message.EPropNotReadable
                { reason_prop = reason; prop_name = Some (OrdinaryName key); use_op = unknown_use }
             ))
@@ -8837,7 +8775,6 @@ struct
           let reason_obj = reason_of_t obj in
           add_output
             cx
-            ~trace
             (Error_message.EPropNotReadable
                {
                  reason_prop = reason_obj;
@@ -9436,7 +9373,6 @@ struct
           if num_req1 <> num_req2 || num_total1 <> num_total2 then
             add_output
               cx
-              ~trace
               (Error_message.ETupleArityMismatch
                  { use_op; lower_reason = r1; lower_arity; upper_reason = r2; upper_arity }
               );
@@ -9450,7 +9386,6 @@ struct
                 if not @@ Polarity.equal (p1, p2) then
                   add_output
                     cx
-                    ~trace
                     (Error_message.ETupleElementPolarityMismatch
                        {
                          index = !n;
@@ -9473,13 +9408,13 @@ struct
             && (not (is_literal_object_reason ureason))
             && Obj_type.is_exact uflags.obj_kind
           then
-            exact_obj_error cx trace lflags.obj_kind ~use_op ~exact_reason:ureason t1;
+            exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason t1;
           if
             (not (Obj_type.is_exact uflags.obj_kind))
             && (not (is_literal_object_reason lreason))
             && Obj_type.is_exact lflags.obj_kind
           then
-            exact_obj_error cx trace uflags.obj_kind ~use_op ~exact_reason:lreason t2;
+            exact_obj_error cx uflags.obj_kind ~use_op ~exact_reason:lreason t2;
           (* ensure the keys and values are compatible with each other. *)
           let ldict = Obj_type.get_dict_opt lflags.obj_kind in
           let udict = Obj_type.get_dict_opt uflags.obj_kind in
@@ -9520,7 +9455,7 @@ struct
                     suggestion = None;
                   }
               in
-              add_output cx ~trace err
+              add_output cx err
             | (None, Some _) ->
               let use_op =
                 Frame
@@ -9539,7 +9474,7 @@ struct
                     suggestion = None;
                   }
               in
-              add_output cx ~trace err
+              add_output cx err
             | (None, None) -> ()
           end;
 
@@ -9647,7 +9582,6 @@ struct
       if not (Polarity.equal (polarity1, polarity2)) then
         add_output
           cx
-          ~trace
           (Error_message.EPropPolarityMismatch ((r1, r2), Some x, (polarity1, polarity2), use_op))
 
   (* If some property `x` exists in one object but not another, ensure the
@@ -9690,7 +9624,7 @@ struct
             suggestion = None;
           }
       in
-      add_output cx ~trace err
+      add_output cx err
 
   (* TODO: Unification between concrete types is still implemented as
      bidirectional flows. This means that the destructuring work is duplicated,
@@ -9839,7 +9773,7 @@ struct
                 List.length parlist,
                 use_op
               )
-            |> add_output cx ~trace
+            |> add_output cx
         );
 
         (* Flow the args and params after we add the EFunctionCallExtraArg error.
@@ -10149,7 +10083,6 @@ struct
               let (valid, arity) =
                 validate_tuple_elements
                   cx
-                  ?trace
                   ~reason_tuple:reason_op
                   ~error_on_req_after_opt:false
                   elements
@@ -10172,7 +10105,6 @@ struct
               let (valid, arity) =
                 validate_tuple_elements
                   cx
-                  ?trace
                   ~reason_tuple:reason_op
                   ~error_on_req_after_opt:true
                   elements
@@ -10725,14 +10657,13 @@ struct
   (* There's a lot of code that looks at a call argument list and tries to do
    * something with one or two arguments. Usually this code assumes that the
    * argument is not a spread argument. This utility function helps with that *)
-  and extract_non_spread cx ~trace = function
+  and extract_non_spread cx = function
     | Arg t -> t
     | SpreadArg arr ->
       let reason = reason_of_t arr in
       let loc = loc_of_t arr in
       add_output
         cx
-        ~trace
         (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.SpreadArgument));
       AnyT.error reason
 
@@ -10779,7 +10710,7 @@ struct
   (* Calls internal entry point and traps runaway recursion. *)
   and flow cx (lower, upper) =
     try flow_opt cx (lower, upper) with
-    | RecursionCheck.LimitExceeded trace ->
+    | RecursionCheck.LimitExceeded ->
       (* log and continue *)
       let rl = reason_of_t lower in
       let ru = reason_of_use_t upper in
@@ -10789,7 +10720,7 @@ struct
         else
           FlowError.ordered_reasons (rl, ru)
       in
-      add_output cx ~trace (Error_message.ERecursionLimit reasons)
+      add_output cx (Error_message.ERecursionLimit reasons)
     | ex ->
       (* rethrow *)
       raise ex
@@ -10819,10 +10750,10 @@ struct
   (* Calls internal entry point and traps runaway recursion. *)
   and unify cx ?(use_op = unknown_use) t1 t2 =
     try unify_opt cx ~use_op ~unify_any:true t1 t2 with
-    | RecursionCheck.LimitExceeded trace ->
+    | RecursionCheck.LimitExceeded ->
       (* log and continue *)
       let reasons = FlowError.ordered_reasons (reason_of_t t1, reason_of_t t2) in
-      add_output cx ~trace (Error_message.ERecursionLimit reasons)
+      add_output cx (Error_message.ERecursionLimit reasons)
     | ex ->
       (* rethrow *)
       raise ex
@@ -10841,7 +10772,7 @@ struct
     let maximum_arity = Nel.length tparams in
     let arity_loc = tparams_loc in
     if List.length targs > maximum_arity then
-      add_output cx ~trace (Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity })
+      add_output cx (Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity })
     else
       let (unused_targs, _, _) =
         Nel.fold_left
@@ -10863,10 +10794,7 @@ struct
             match (default, targs) with
             | (None, []) ->
               (* fewer arguments than params but no default *)
-              add_output
-                cx
-                ~trace
-                (Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity });
+              add_output cx (Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity });
               ([], map1, map2)
             | (Some default, []) ->
               let t1 = subst cx ~use_op map1 default in

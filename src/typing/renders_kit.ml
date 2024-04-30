@@ -54,7 +54,6 @@ module Make (Flow : INPUT) = struct
       ) ->
       Flow_js_utils.add_output
         cx
-        ~trace
         (Error_message.EIncompatibleWithUseOp
            {
              reason_lower = reasonl;

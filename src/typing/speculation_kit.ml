@@ -591,7 +591,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             else
               let prev_case_id = prev_case.case_id in
               let cases : Type.t list = choices_of_spec spec in
-              blame_unresolved cx trace prev_case_id case_id cases case_r ts
+              blame_unresolved cx prev_case_id case_id cases case_r ts
         end
         | Some err -> begin
           (* if an error is found, then throw away this alternative... *)
@@ -625,7 +625,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let reason = reason_of_t l in
             add_output
               cx
-              ~trace
               (Error_message.EUnionSpeculationFailed
                  { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
               )
@@ -652,7 +651,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     branches;
                   }
             in
-            add_output cx ~trace err
+            add_output cx err
         end
     in
     loop (NoMatch []) trials
@@ -671,13 +670,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
      encounters potentially side-effectful constraints involving unresolved tvars
      during a trial.
   *)
-  and blame_unresolved cx trace prev_i i cases case_r tvars =
+  and blame_unresolved cx prev_i i cases case_r tvars =
     let rs = tvars |> Base.List.map ~f:(fun (_, r) -> r) |> List.sort compare in
     let prev_case = reason_of_t (List.nth cases prev_i) in
     let case = reason_of_t (List.nth cases i) in
     add_output
       cx
-      ~trace
       (Error_message.ESpeculationAmbiguous
          { reason = case_r; prev_case = (prev_i, prev_case); case = (i, case); cases = rs }
       )
@@ -779,10 +777,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       begin
         match specialization with
         | Error kind ->
-          add_output
-            cx
-            ~trace
-            (Error_message.EUnionOptimization { loc = loc_of_reason reason; kind })
+          add_output cx (Error_message.EUnionOptimization { loc = loc_of_reason reason; kind })
         | Ok
             ( UnionRep.AlmostDisjointUnionWithPossiblyNonUniqueKeys map
             | UnionRep.PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys map ) ->
@@ -798,7 +793,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           if not (NameUtils.Map.is_empty non_unique_keys) then
             add_output
               cx
-              ~trace
               (Error_message.EUnionPartialOptimizationNonUniqueKey
                  { loc = loc_of_reason reason; non_unique_keys }
               )
@@ -836,7 +830,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           when Base.Option.is_some (UnionRep.check_enum rep) ->
           add_output
             cx
-            ~trace
             (Error_message.EIncompatibleWithUseOp
                { reason_lower = TypeUtil.reason_of_t l; reason_upper = reason_op; use_op }
             );
@@ -915,6 +908,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
              | UnionCases (use_op', _, _, _) ->
                rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-           | (_, Speculation_state.ErrorAction msg) -> add_output cx ~trace msg
+           | (_, Speculation_state.ErrorAction msg) -> add_output cx msg
            )
 end

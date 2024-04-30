@@ -72,7 +72,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       (* React.createElement() *)
       | _ ->
         (* If we don't have the arguments we need, add an arity error. *)
-        add_output cx ~trace (Error_message.EReactElementFunArity (reason_op, "createElement", 1)))
+        add_output cx (Error_message.EReactElementFunArity (reason_op, "createElement", 1)))
     | ReactCloneElement ->
       (match args with
       (* React.cloneElement(element) *)
@@ -131,7 +131,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       (* React.cloneElement() *)
       | _ ->
         (* If we don't have the arguments we need, add an arity error. *)
-        add_output cx ~trace (Error_message.EReactElementFunArity (reason_op, "cloneElement", 1)))
+        add_output cx (Error_message.EReactElementFunArity (reason_op, "cloneElement", 1)))
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf

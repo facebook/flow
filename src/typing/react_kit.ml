@@ -29,14 +29,13 @@ module type REACT = sig
     Type.t ->
     unit
 
-  val err_incompatible :
-    Context.t -> Type.trace -> use_op:use_op -> reason -> Type.React.tool -> unit
+  val err_incompatible : Context.t -> use_op:use_op -> reason -> Type.React.tool -> unit
 end
 
 module Kit (Flow : Flow_common.S) : REACT = struct
   include Flow
 
-  let err_incompatible cx trace ~use_op reason tool =
+  let err_incompatible cx ~use_op reason tool =
     let err =
       match tool with
       | GetProps _
@@ -48,7 +47,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Error_message.ENotAReactComponent { reason; use_op }
       | GetConfigType _ -> Error_message.EInvalidReactConfigType { reason; use_op }
     in
-    Flow_js_utils.add_output cx ~trace err
+    Flow_js_utils.add_output cx err
 
   let component_class cx reason props =
     DefT
@@ -238,7 +237,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       rec_flow cx trace (config, ConvertEmptyPropsToMixedT (reason, tout))
     (* ...otherwise, error. *)
     | _ ->
-      err_incompatible cx trace ~use_op (reason_of_t component) u;
+      err_incompatible cx ~use_op (reason_of_t component) u;
       rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout)
 
   (* Creates the type that we expect for a React config by diffing out default
@@ -294,7 +293,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ))
 
   let run cx trace ~use_op reason_op l u =
-    let err_incompatible reason = err_incompatible cx trace ~use_op reason u in
+    let err_incompatible reason = err_incompatible cx ~use_op reason u in
     let get_intrinsic = get_intrinsic cx trace l ~reason_op in
     (* This function creates a constraint *from* tin *to* props so that props is
      * an upper bound on tin. This is important because when the type of a
