@@ -61,14 +61,14 @@ module Cache = Flow_cache
 module RecursionCheck : sig
   exception LimitExceeded
 
-  val check : Context.t -> Type.trace -> unit
+  val check : Context.t -> Type.DepthTrace.t -> unit
 end = struct
   exception LimitExceeded
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
   let check cx trace =
-    if Trace.trace_depth trace >= Context.recursion_limit cx then raise LimitExceeded
+    if DepthTrace.depth trace >= Context.recursion_limit cx then raise LimitExceeded
 end
 
 (* The main problem with constant folding is infinite recursion. Consider a loop
@@ -257,14 +257,14 @@ struct
     Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
     type r = Type.t -> unit
 
-    let reposition = FlowJs.reposition ~trace:Trace.dummy_trace ?desc:None ?annot_loc:None
+    let reposition = FlowJs.reposition ~trace:DepthTrace.dummy_trace ?desc:None ?annot_loc:None
 
-    let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use Trace.dummy_trace (t, tout)
+    let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use DepthTrace.dummy_trace (t, tout)
 
     let export_named cx (reason, value_exports_tmap, type_exports_tmap, export_kind) module_t tout =
       FlowJs.rec_flow
         cx
-        Trace.dummy_trace
+        DepthTrace.dummy_trace
         ( module_t,
           Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
         )
@@ -274,7 +274,7 @@ struct
       Tvar.mk_where cx reason (fun tout ->
           FlowJs.rec_flow
             cx
-            Trace.dummy_trace
+            DepthTrace.dummy_trace
             ( module_t,
               Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
             )
@@ -285,7 +285,7 @@ struct
       Tvar.mk_where cx reason (fun tout ->
           FlowJs.rec_flow
             cx
-            Trace.dummy_trace
+            DepthTrace.dummy_trace
             ( export_t,
               ExportTypeT
                 { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
@@ -296,7 +296,7 @@ struct
       Tvar.mk_where cx reason (fun t ->
           FlowJs.rec_flow
             cx
-            Trace.dummy_trace
+            DepthTrace.dummy_trace
             (proto_t, CJSExtractNamedExportsT (reason, local_module, t))
       )
   end
@@ -7921,7 +7921,7 @@ struct
       match Eval.Map.find_opt id evaluated with
       | Some _ -> ()
       | None ->
-        let trace = Trace.dummy_trace in
+        let trace = DepthTrace.dummy_trace in
         if
           Tvar_resolver.has_unresolved_tvars cx t
           || Tvar_resolver.has_unresolved_tvars_in_destructors cx d
@@ -9036,7 +9036,7 @@ struct
     if not opt then add_upper cx t2 trace bounds1;
     iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) (trace_l, use_op) ->
         let t2 = flow_use_op cx use_op t2 in
-        add_upper cx t2 (Trace.concat_trace [trace_l; trace]) bounds
+        add_upper cx t2 (DepthTrace.concat_trace [trace_l; trace]) bounds
     )
 
   (** Given [edges_from_t t1 (id2, bounds2)], for each [id] in [id2] + [bounds2.uppertvars],
@@ -9048,7 +9048,7 @@ struct
     if not opt then add_lower t1 (trace, new_use_op) bounds2;
     iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) (trace_u, use_op) ->
         let use_op = pick_use_op cx new_use_op use_op in
-        add_lower t1 (Trace.concat_trace [trace; trace_u], use_op) bounds
+        add_lower t1 (DepthTrace.concat_trace [trace; trace_u], use_op) bounds
     )
 
   (** for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us] *)
@@ -9056,7 +9056,7 @@ struct
     us
     |> UseTypeMap.iter (fun (u, _) trace_u ->
            let u = flow_use_op cx new_use_op u in
-           edges_to_t cx (Trace.concat_trace [trace; trace_u]) ~opt (id, bounds) u
+           edges_to_t cx (DepthTrace.concat_trace [trace; trace_u]) ~opt (id, bounds) u
        )
 
   (** for each [id'] in [id] + [bounds.uppertvars], [id'.bounds.lower += ls] *)
@@ -9064,7 +9064,7 @@ struct
     ls
     |> TypeMap.iter (fun l (trace_l, use_op) ->
            let new_use_op = pick_use_op cx use_op new_use_op in
-           edges_from_t cx (Trace.concat_trace [trace_l; trace]) ~new_use_op ~opt l (id, bounds)
+           edges_from_t cx (DepthTrace.concat_trace [trace_l; trace]) ~new_use_op ~opt l (id, bounds)
        )
 
   (** for each [id] in [id1] + [bounds1.lowertvars]:
@@ -9119,7 +9119,7 @@ struct
     if not opt then add_uppertvar id2 trace new_use_op bounds1;
     iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) (trace_l, use_op) ->
         let use_op = pick_use_op cx use_op new_use_op in
-        add_uppertvar id2 (Trace.concat_trace [trace_l; trace]) use_op bounds
+        add_uppertvar id2 (DepthTrace.concat_trace [trace_l; trace]) use_op bounds
     )
 
   (** for each id in id2 + bounds2.uppertvars:
@@ -9133,7 +9133,7 @@ struct
     if not opt then add_lowertvar id1 trace new_use_op bounds2;
     iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) (trace_u, use_op) ->
         let use_op = pick_use_op cx new_use_op use_op in
-        add_lowertvar id1 (Trace.concat_trace [trace; trace_u]) use_op bounds
+        add_lowertvar id1 (DepthTrace.concat_trace [trace; trace_u]) use_op bounds
     )
 
   (** for each id in id1 + bounds1.lowertvars:
@@ -9145,7 +9145,7 @@ struct
     edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) id2;
     iter_with_filter cx bounds2.uppertvars id2 (fun (tvar, _) (trace_u, use_op) ->
         let new_use_op = pick_use_op cx new_use_op use_op in
-        let trace = Trace.concat_trace [trace; trace_u] in
+        let trace = DepthTrace.concat_trace [trace; trace_u] in
         edges_to_tvar cx trace ~new_use_op ~opt (id1, bounds1) tvar
     )
 
@@ -9158,7 +9158,7 @@ struct
     edges_from_tvar cx trace ~new_use_op ~opt id1 (id2, bounds2);
     iter_with_filter cx bounds1.lowertvars id1 (fun (tvar, _) (trace_l, use_op) ->
         let use_op = pick_use_op cx use_op new_use_op in
-        let trace = Trace.concat_trace [trace_l; trace] in
+        let trace = DepthTrace.concat_trace [trace_l; trace] in
         edges_from_tvar cx trace ~new_use_op:use_op ~opt tvar (id2, bounds2)
     )
 
@@ -10026,7 +10026,7 @@ struct
                       ~printer:
                         (print_if_verbose_lazy
                            cx
-                           ~trace:(Base.Option.value trace ~default:Trace.dummy_trace)
+                           ~trace:(Base.Option.value trace ~default:DepthTrace.dummy_trace)
                         )
                       generic_state
                       generic
@@ -10554,8 +10554,8 @@ struct
                   let use_op = unknown_use in
                   let trace =
                     match trace with
-                    | None -> Trace.unit_trace
-                    | Some trace -> Trace.rec_trace trace
+                    | None -> DepthTrace.unit_trace
+                    | Some trace -> DepthTrace.rec_trace trace
                   in
                   let (_, id) = open_tvar tvar in
                   resolve_id cx trace ~use_op ~fully_resolved id t'
@@ -10664,14 +10664,14 @@ struct
      propagates bounds across type variables, where nothing interesting is going
      on other than concatenating subtraces to make longer traces to describe
      transitive data flows *)
-  and join_flow cx ts (t1, t2) = __flow cx (t1, t2) (Trace.concat_trace ts)
+  and join_flow cx ts (t1, t2) = __flow cx (t1, t2) (DepthTrace.concat_trace ts)
 
   (* Call __flow while embedding traces. Typically this is used in code that
      simplifies a constraint to generate subconstraints: the current trace is
      "pushed" when recursing into the subconstraints, so that when we finally hit
      an error and walk back, we can know why the particular constraints that
      caused the immediate error were generated. *)
-  and rec_flow cx trace (t1, t2) = __flow cx (t1, t2) (Trace.rec_trace trace)
+  and rec_flow cx trace (t1, t2) = __flow cx (t1, t2) (DepthTrace.rec_trace trace)
 
   and rec_flow_t cx trace ~use_op (t1, t2) = rec_flow cx trace (t1, UseT (use_op, t2))
 
@@ -10683,8 +10683,8 @@ struct
   and flow_opt cx ?trace (t1, t2) =
     let trace =
       match trace with
-      | None -> Trace.unit_trace
-      | Some trace -> Trace.rec_trace trace
+      | None -> DepthTrace.unit_trace
+      | Some trace -> DepthTrace.rec_trace trace
     in
     __flow cx (t1, t2) trace
 
@@ -10717,13 +10717,13 @@ struct
   (* Wrapper functions around __unify that manage traces. Use these functions for
      all recursive calls in the implementation of __unify. *)
   and rec_unify cx trace ~use_op ?(unify_any = false) t1 t2 =
-    __unify cx ~use_op ~unify_any t1 t2 (Trace.rec_trace trace)
+    __unify cx ~use_op ~unify_any t1 t2 (DepthTrace.rec_trace trace)
 
   and unify_opt cx ?trace ~use_op ?(unify_any = false) t1 t2 =
     let trace =
       match trace with
-      | None -> Trace.unit_trace
-      | Some trace -> Trace.rec_trace trace
+      | None -> DepthTrace.unit_trace
+      | Some trace -> DepthTrace.rec_trace trace
     in
     __unify cx ~use_op ~unify_any t1 t2 trace
 
@@ -10794,7 +10794,7 @@ struct
     match
       SpeculationKit.try_singleton_throw_on_failure
         cx
-        Trace.dummy_trace
+        DepthTrace.dummy_trace
         (TypeUtil.reason_of_t l)
         ~upper_unresolved:false
         l
@@ -10941,7 +10941,7 @@ let mk_default cx reason =
 (* Export some functions without the trace parameter *)
 
 let resolve_id cx id t =
-  resolve_id cx Trace.dummy_trace ~use_op:unknown_use ~fully_resolved:true id t
+  resolve_id cx DepthTrace.dummy_trace ~use_op:unknown_use ~fully_resolved:true id t
 
 let mk_instance cx ?type_t_kind instance_reason ?use_desc c =
   mk_instance ?type_t_kind cx instance_reason ?use_desc c
@@ -10958,7 +10958,7 @@ let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?ca
   mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts
 
 let mk_type_destructor cx use_op reason t d id =
-  mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id
+  mk_type_destructor cx ~trace:DepthTrace.dummy_trace use_op reason t d id
 
 let check_polarity cx tparams polarity t = check_polarity cx tparams polarity t
 

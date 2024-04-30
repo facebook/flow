@@ -11,16 +11,23 @@ open TypeUtil
 open React
 
 module type REACT = sig
-  val run : Context.t -> Type.trace -> use_op:use_op -> reason -> Type.t -> Type.React.tool -> unit
+  val run :
+    Context.t -> Type.DepthTrace.t -> use_op:use_op -> reason -> Type.t -> Type.React.tool -> unit
 
   val component_class : Context.t -> Reason.reason -> Type.t -> Type.t
 
   val subtype_class_component_render :
-    Context.t -> Type.trace -> use_op:Type.use_op -> Type.t -> reason_op:reason -> Type.t -> unit
+    Context.t ->
+    Type.DepthTrace.t ->
+    use_op:Type.use_op ->
+    Type.t ->
+    reason_op:reason ->
+    Type.t ->
+    unit
 
   val get_config :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     Type.t ->
     use_op:use_op ->
     reason_op:reason ->

@@ -26,11 +26,11 @@ module type INPUT = sig
 end
 
 module type OUTPUT = sig
-  val rec_sub_t : Context.t -> Type.use_op -> Type.t -> Type.t -> Type.trace -> unit
+  val rec_sub_t : Context.t -> Type.use_op -> Type.t -> Type.t -> Type.DepthTrace.t -> unit
 
   val rec_flow_p :
     Context.t ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     use_op:use_op ->
     ?report_polarity:bool ->
     reason ->

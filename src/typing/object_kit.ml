@@ -11,7 +11,7 @@ open TypeUtil
 
 module type OBJECT = sig
   val run :
-    Type.trace ->
+    Type.DepthTrace.t ->
     Context.t ->
     Type.use_op ->
     Reason.t ->
@@ -23,7 +23,7 @@ module type OBJECT = sig
 
   val mapped_type_of_keys :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     Type.use_op ->
     Reason.t ->
     keys:Type.t ->

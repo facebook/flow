@@ -8,7 +8,7 @@
 module type CUSTOM_FUN = sig
   val run :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     return_hint:Type.lazy_hint_t ->
     Reason.t ->

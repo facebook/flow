@@ -188,7 +188,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       else
         let out =
           Tvar.mk_no_wrap_where cx r (fun tvar ->
-              let trace = Base.Option.value trace ~default:Trace.dummy_trace in
+              let trace = Base.Option.value trace ~default:DepthTrace.dummy_trace in
               Flow.eval_destructor cx ~trace use_op r t ReadOnlyType tvar
           )
         in

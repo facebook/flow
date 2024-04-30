@@ -11,7 +11,7 @@ module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 let flow_t_unsafe cx reason ~upper_unresolved (l, u) =
   SpeculationKit.try_singleton_throw_on_failure
     cx
-    Trace.dummy_trace
+    DepthTrace.dummy_trace
     ~upper_unresolved
     reason
     l
@@ -19,7 +19,13 @@ let flow_t_unsafe cx reason ~upper_unresolved (l, u) =
 
 let is_flow_successful cx reason ~upper_unresolved t u =
   match
-    SpeculationKit.try_singleton_throw_on_failure cx Trace.dummy_trace reason ~upper_unresolved t u
+    SpeculationKit.try_singleton_throw_on_failure
+      cx
+      DepthTrace.dummy_trace
+      reason
+      ~upper_unresolved
+      t
+      u
   with
   | exception Flow_js_utils.SpeculationSingletonError -> false
   | () -> true

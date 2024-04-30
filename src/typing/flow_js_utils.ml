@@ -586,11 +586,11 @@ let remove_predicate_from_union reason cx predicate =
 
 let iter_union :
       't.
-      f:(Context.t -> Type.trace -> Type.t * Type.use_t -> 't) ->
+      f:(Context.t -> Type.DepthTrace.t -> Type.t * Type.use_t -> 't) ->
       init:'t ->
       join:('t -> 't -> 't) ->
       Context.t ->
-      Type.trace ->
+      Type.DepthTrace.t ->
       Type.UnionRep.t ->
       Type.use_t ->
       't =
@@ -999,7 +999,7 @@ let fix_this_instance cx reason (reason_i, i, is_this, this_name) =
 module type Instantiation_helper_sig = sig
   val cache_instantiate :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     ?cache:bool ->
     Type.typeparam ->
@@ -1008,11 +1008,11 @@ module type Instantiation_helper_sig = sig
     Type.t ->
     Type.t
 
-  val reposition : Context.t -> ?trace:Type.trace -> ALoc.t -> Type.t -> Type.t
+  val reposition : Context.t -> ?trace:Type.DepthTrace.t -> ALoc.t -> Type.t -> Type.t
 
-  val is_subtype : Context.t -> Type.trace -> use_op:use_op -> Type.t * Type.t -> unit
+  val is_subtype : Context.t -> Type.DepthTrace.t -> use_op:use_op -> Type.t * Type.t -> unit
 
-  val unify : Context.t -> Type.trace -> use_op:use_op -> Type.t * Type.t -> unit
+  val unify : Context.t -> Type.DepthTrace.t -> use_op:use_op -> Type.t * Type.t -> unit
 
   val mk_targ : Context.t -> Type.typeparam -> Reason.t -> Reason.t -> Type.t
 end
@@ -2070,30 +2070,31 @@ let type_of_key_name cx name reason =
 module type Get_prop_helper_sig = sig
   type r
 
-  val dict_read_check : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit
+  val dict_read_check :
+    Context.t -> Type.DepthTrace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
   val cg_lookup :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     obj_t:Type.t ->
     method_accessible:bool ->
     Type.t ->
     Reason.reason * Type.lookup_kind * Type.propref * use_op * Type.Properties.Set.t ->
     r
 
-  val reposition : Context.t -> ?trace:Type.trace -> ALoc.t -> Type.t -> Type.t
+  val reposition : Context.t -> ?trace:Type.DepthTrace.t -> ALoc.t -> Type.t -> Type.t
 
   val mk_react_dro : Context.t -> use_op -> ALoc.t * Type.dro_type -> Type.t -> Type.t
 
   val mk_hooklike : Context.t -> use_op -> Type.t -> Type.t
 
-  val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
+  val return : Context.t -> use_op:use_op -> Type.DepthTrace.t -> Type.t -> r
 
-  val error_type : Context.t -> Type.trace -> Reason.t -> r
+  val error_type : Context.t -> Type.DepthTrace.t -> Reason.t -> r
 
   val cg_get_prop :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     Type.t ->
     use_op * reason * Type.ident option * (Reason.t * Reason.name) ->
     r

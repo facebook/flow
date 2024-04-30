@@ -58,7 +58,7 @@ module type S = sig
 
   val solve_conditional_type_targs :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason:Reason.reason ->
     tparams:Type.typeparam list ->
@@ -95,7 +95,7 @@ module type KIT = sig
     Implicit_instantiation_check.t ->
     return_hint:Type.lazy_hint_t ->
     ?cache:bool ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -103,7 +103,7 @@ module type KIT = sig
 
   val run_monomorphize :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -113,7 +113,7 @@ module type KIT = sig
 
   val run_conditional :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason:Reason.reason ->
     tparams:Type.typeparam list ->

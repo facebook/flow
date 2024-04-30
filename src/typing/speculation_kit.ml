@@ -18,14 +18,20 @@ end
 
 module type OUTPUT = sig
   val try_union :
-    Context.t -> Type.trace -> Type.use_op -> Type.t -> Reason.reason -> Type.UnionRep.t -> unit
+    Context.t ->
+    Type.DepthTrace.t ->
+    Type.use_op ->
+    Type.t ->
+    Reason.reason ->
+    Type.UnionRep.t ->
+    unit
 
   val try_intersection :
-    Context.t -> Type.trace -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
+    Context.t -> Type.DepthTrace.t -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
 
   val try_singleton_throw_on_failure :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     Reason.reason ->
     upper_unresolved:bool ->
     Type.t ->
@@ -34,7 +40,7 @@ module type OUTPUT = sig
 
   val prep_try_intersection :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     reason ->
     Type.t list ->
     Type.t list ->
@@ -44,10 +50,10 @@ module type OUTPUT = sig
     unit
 
   val fully_resolve_type :
-    Context.t -> Type.trace -> reason -> Graph_explorer.Tbl.key -> Type.t -> unit
+    Context.t -> Type.DepthTrace.t -> reason -> Graph_explorer.Tbl.key -> Type.t -> unit
 
   val speculative_matches :
-    Context.t -> Type.trace -> ALoc.t Reason.virtual_reason -> int -> Type.spec -> unit
+    Context.t -> Type.DepthTrace.t -> ALoc.t Reason.virtual_reason -> int -> Type.spec -> unit
 
   val intersection_preprocess_kit : reason -> Type.intersection_preprocess_tool -> Type.use_t
 end

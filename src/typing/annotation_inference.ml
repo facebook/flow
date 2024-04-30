@@ -211,7 +211,7 @@ module rec ConsGen : S = struct
     let reason_op = AConstraint.display_reason_of_op op in
     error_internal_reason cx msg reason_op
 
-  let dummy_trace = Trace.dummy_trace
+  let dummy_trace = DepthTrace.dummy_trace
 
   (* Repositioning does not seem to have any perceptible impact in annotation
    * inference. Instead of replicating the convoluted implementation of Flow_js

@@ -1997,10 +1997,11 @@ let dump_error_message =
 
 module Verbose = struct
   let print_if_verbose_lazy
-      cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
+      cx ?(trace = DepthTrace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list Lazy.t)
+      =
     match Context.verbose cx with
     | Some { Verbose.indent = num_spaces; _ } when Context.is_verbose cx ->
-      let indent = max (indent + Trace.trace_depth trace - 1) 0 in
+      let indent = max (indent + DepthTrace.depth trace - 1) 0 in
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
       let add_prefix line = spf "\n%s%s%s" prefix pid line in
@@ -2009,7 +2010,7 @@ module Verbose = struct
     | _ -> ()
 
   let print_if_verbose
-      cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list) =
+      cx ?(trace = DepthTrace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list) =
     if Context.is_verbose cx then print_if_verbose_lazy cx ~trace ~delim ~indent (lazy lines)
 
   let print_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.use_t)) =

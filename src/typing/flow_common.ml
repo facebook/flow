@@ -11,7 +11,7 @@ open Type
 module type BASE = sig
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
-  val flow_opt : Context.t -> ?trace:Type.trace -> Type.t * Type.use_t -> unit
+  val flow_opt : Context.t -> ?trace:Type.DepthTrace.t -> Type.t * Type.use_t -> unit
 
   val flow_p :
     Context.t ->
@@ -26,36 +26,42 @@ module type BASE = sig
 
   val reposition :
     Context.t ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     ALoc.t ->
     ?desc:reason_desc ->
     ?annot_loc:ALoc.t ->
     Type.t ->
     Type.t
 
-  val rec_flow : Context.t -> Type.trace -> Type.t * Type.use_t -> unit
+  val rec_flow : Context.t -> Type.DepthTrace.t -> Type.t * Type.use_t -> unit
 
-  val rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit
+  val rec_flow_t : Context.t -> Type.DepthTrace.t -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
   val rec_unify :
-    Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
-
-  val unify : Context.t -> ?use_op:Type.use_op -> Type.t -> Type.t -> unit
-
-  val unify_opt :
     Context.t ->
-    ?trace:Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     ?unify_any:bool ->
     Type.t ->
     Type.t ->
     unit
 
-  val filter_optional : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.ident
+  val unify : Context.t -> ?use_op:Type.use_op -> Type.t -> Type.t -> unit
+
+  val unify_opt :
+    Context.t ->
+    ?trace:Type.DepthTrace.t ->
+    use_op:Type.use_op ->
+    ?unify_any:bool ->
+    Type.t ->
+    Type.t ->
+    unit
+
+  val filter_optional : Context.t -> ?trace:Type.DepthTrace.t -> reason -> Type.t -> Type.ident
 
   val mk_typeapp_instance_annot :
     Context.t ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -67,7 +73,7 @@ module type BASE = sig
 
   val mk_typeapp_instance :
     Context.t ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -78,7 +84,7 @@ module type BASE = sig
 
   val resolve_id :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     ?fully_resolved:bool ->
     Type.ident ->
@@ -91,7 +97,7 @@ end
 module type CHECK_POLARITY = sig
   val check_polarity :
     Context.t ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     Type.typeparam Subst_name.Map.t ->
     Polarity.t ->
     Type.t ->
@@ -100,13 +106,13 @@ end
 
 module type BUILTINS = sig
   val get_builtin_type :
-    Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> string -> Type.t
+    Context.t -> ?trace:Type.DepthTrace.t -> Reason.reason -> ?use_desc:bool -> string -> Type.t
 
   val get_builtin_typeapp : Context.t -> reason -> ?use_desc:bool -> string -> Type.t list -> Type.t
 
   val perform_read_prop_action :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     ALoc.t Type.virtual_use_op ->
     Type.propref ->
     Type.property_type ->
@@ -125,11 +131,11 @@ module type SUBTYPING = sig
     Context.t -> Reason.reason -> Type.t -> Type.t list
 
   val reposition_reason :
-    Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
+    Context.t -> ?trace:Type.DepthTrace.t -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val eval_destructor :
     Context.t ->
-    trace:Type.trace ->
+    trace:Type.DepthTrace.t ->
     Type.use_op ->
     Reason.reason ->
     Type.t ->
@@ -139,7 +145,7 @@ module type SUBTYPING = sig
 
   val multiflow_subtype :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:ALoc.t Type.virtual_use_op ->
     Reason.reason ->
     Type.call_arg list ->
@@ -148,7 +154,7 @@ module type SUBTYPING = sig
 
   val flow_type_args :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:use_op ->
     reason ->
     reason ->
@@ -158,7 +164,7 @@ module type SUBTYPING = sig
 
   val instantiate_this_class :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
     Type.t ->
@@ -169,7 +175,7 @@ module type SUBTYPING = sig
 
   val instantiate_poly_with_targs :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.t ->
@@ -182,7 +188,7 @@ module type SUBTYPING = sig
 
   val instantiate_poly :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -193,7 +199,7 @@ module type SUBTYPING = sig
 
   val mk_typeapp_of_poly :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
@@ -208,7 +214,7 @@ module type SUBTYPING = sig
   val mk_instance :
     Context.t ->
     ?type_t_kind:Type.type_t_kind ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     reason ->
     ?use_desc:bool ->
     Type.t ->
@@ -218,7 +224,7 @@ end
 module type EVAL = sig
   val eval_selector :
     Context.t ->
-    ?trace:Type.trace ->
+    ?trace:Type.DepthTrace.t ->
     annot:bool ->
     reason ->
     Type.t ->
@@ -229,7 +235,7 @@ module type EVAL = sig
 
   val mk_type_destructor :
     Context.t ->
-    trace:Type.trace ->
+    trace:Type.DepthTrace.t ->
     use_op ->
     reason ->
     Type.t ->
@@ -243,11 +249,17 @@ end
 
 module type REACT = sig
   val react_subtype_class_component_render :
-    Context.t -> Type.trace -> use_op:Type.use_op -> Type.t -> reason_op:reason -> Type.t -> unit
+    Context.t ->
+    Type.DepthTrace.t ->
+    use_op:Type.use_op ->
+    Type.t ->
+    reason_op:reason ->
+    Type.t ->
+    unit
 
   val react_get_config :
     Context.t ->
-    Type.trace ->
+    Type.DepthTrace.t ->
     Type.t ->
     use_op:ALoc.t Type.virtual_use_op ->
     reason_op:Reason.reason ->

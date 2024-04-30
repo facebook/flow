@@ -1856,10 +1856,34 @@ module rec TypeTerm : sig
     | MappedTypeKind
     | RenderTypeKind
   (* T/U in renders T/renders (T | U). Render types do not require type arguments for polymorphic components *)
-
-  type trace = int
 end =
   TypeTerm
+
+and DepthTrace : sig
+  type t
+
+  val depth : t -> int
+
+  val dummy_trace : t
+
+  val unit_trace : t
+
+  val rec_trace : t -> t
+
+  val concat_trace : t list -> t
+end = struct
+  type t = int
+
+  let depth d = d
+
+  let dummy_trace = 0
+
+  let unit_trace = 1
+
+  let rec_trace parent_depth = parent_depth + 1
+
+  let concat_trace ts = List.fold_left (fun acc d -> Base.Int.max acc d) 0 ts
+end
 
 and UnionEnum : sig
   type t =
@@ -3283,10 +3307,10 @@ module Constraint = struct
       The use_op in the lower TypeMap represents the use_op when a lower bound
       was added. *)
   and bounds = {
-    mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
-    mutable upper: TypeTerm.trace UseTypeMap.t;
-    mutable lowertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-    mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
+    mutable lower: (DepthTrace.t * TypeTerm.use_op) TypeMap.t;
+    mutable upper: DepthTrace.t UseTypeMap.t;
+    mutable lowertvars: (DepthTrace.t * TypeTerm.use_op) IMap.t;
+    mutable uppertvars: (DepthTrace.t * TypeTerm.use_op) IMap.t;
   }
 
   include Union_find.Make (struct

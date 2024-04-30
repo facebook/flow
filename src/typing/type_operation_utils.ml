@@ -80,7 +80,7 @@ module Import_export = struct
       let assert_import_is_value cx reason name export_t =
         Flow.FlowJs.flow_opt
           cx
-          ~trace:Trace.dummy_trace
+          ~trace:DepthTrace.dummy_trace
           (export_t, AssertImportIsValueT (reason, name))
       in
       let with_concretized_type cx r f t =
