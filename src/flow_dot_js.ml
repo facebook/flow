@@ -261,7 +261,7 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
         let builtins = Context.builtins cx in
         match Builtins.get_builtin_module_opt builtins mref with
         | Some t -> Ok t
-        | None -> Error (Reason.internal_module_name mref))
+        | None -> Error mref)
       (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

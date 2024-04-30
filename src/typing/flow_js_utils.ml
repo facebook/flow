@@ -2239,9 +2239,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | OrdinaryName _ ->
       let t = enum_proto cx ~reason:access_reason ~enum_object_t ~enum_value_t ~representation_t in
       F.cg_get_prop cx trace t access
-    | InternalName _
-    | InternalModuleName _ ->
-      error_invalid_access ~suggestion:None
+    | InternalName _ -> error_invalid_access ~suggestion:None
 
   let on_array_length cx trace reason arity reason_op =
     (* Use definition as the reason for the length, as this is
@@ -2458,9 +2456,7 @@ let keylist_of_props props reason_op =
       | OrdinaryName _ ->
         let reason = replace_desc_new_reason (RStringLit name) reason_op in
         DefT (reason, SingletonStrT name) :: acc
-      | InternalName _
-      | InternalModuleName _ ->
-        acc)
+      | InternalName _ -> acc)
     props
     []
 

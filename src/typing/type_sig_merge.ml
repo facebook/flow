@@ -2307,7 +2307,7 @@ let merge_builtins
        in
        let map_module_ref s : Context.resolved_require Lazy.t =
          match SMap.find_opt s dependencies_map with
-         | None -> lazy (Error (Reason.InternalModuleName s))
+         | None -> lazy (Error s)
          | Some lazy_t -> Lazy.map (fun t -> Ok t) lazy_t
        in
        ( {

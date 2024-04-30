@@ -489,8 +489,7 @@ let find_props cx =
          | OrdinaryName key ->
            (* Filter out keys that start with "$" *)
            not (String.length key >= 1 && key.[0] = '$')
-         | InternalName _
-         | InternalModuleName _ ->
+         | InternalName _ ->
            (* TODO we probably should filter out internal names too, but for now keeping behavior the same *)
            true
      )

@@ -259,7 +259,7 @@ let fun_t ~params ~return_t =
 
 let mk_cx ~verbose () =
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
-  let resolve_require mref = Error (Reason.internal_module_name mref) in
+  let resolve_require mref = Error mref in
   let ccx = Context.make_ccx () in
   let metadata =
     if verbose then

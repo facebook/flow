@@ -471,8 +471,7 @@ let members_of_type
       let open Reason in
       match s with
       | OrdinaryName "constructor"
-      | InternalName _
-      | InternalModuleName _ ->
+      | InternalName _ ->
         None
       (* TODO consider making the $-prefixed names internal *)
       | OrdinaryName str when (String.length str >= 1 && str.[0] = '$') || SSet.mem str exclude_keys
@@ -997,8 +996,7 @@ let exports_of_module_ty
   let is_kind export_kind = kind = `Either || export_kind = `Either || export_kind = kind in
   let filter_name name =
     match name with
-    | Reason.InternalName _
-    | Reason.InternalModuleName _ ->
+    | Reason.InternalName _ ->
       (* don't show internal names in autocomplete *)
       false
     | Reason.OrdinaryName name ->

@@ -56,8 +56,7 @@ module Import_export = struct
       let module_t =
         match Context.find_require cx mref with
         | Ok t -> t
-        | Error m_name ->
-          Flow_js_utils.lookup_builtin_module_error cx (uninternal_name m_name) reason
+        | Error m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name reason
       in
       ( if perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
       then

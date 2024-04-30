@@ -213,7 +213,7 @@ type typing_mode =
   | SynthesisMode
   | HintEvaluationMode
 
-type resolved_require = (Type.t, Reason.name) result
+type resolved_require = (Type.t, string) result
 
 type t = {
   ccx: component_t;

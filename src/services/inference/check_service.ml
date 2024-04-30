@@ -37,7 +37,7 @@ let unknown_module_t cx _mref m =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_module_opt builtins module_name with
   | Some t -> Ok t
-  | None -> Error (Reason.internal_module_name module_name)
+  | None -> Error module_name
 
 let unchecked_module_t cx file_key mref =
   let desc = Reason.RUntypedModule mref in

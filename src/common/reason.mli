@@ -10,7 +10,6 @@ val mk_id : unit -> int
 type name =
   | OrdinaryName of string
   | InternalName of string
-  | InternalModuleName of string
 [@@deriving eq, ord, show]
 
 type 'loc virtual_reason_desc =
@@ -282,10 +281,6 @@ val is_internal_name : name -> bool
 val internal_name : string -> name
 
 val internal_name_of_name : name -> name
-
-val is_internal_module_name : name -> bool
-
-val internal_module_name : string -> name
 
 val uninternal_name : name -> string
 

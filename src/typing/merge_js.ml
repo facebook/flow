@@ -732,7 +732,7 @@ let mk_builtins metadata master_cx =
         { metadata with Context.checked = false }
         builtin_leader_file_key
         (lazy (ALoc.empty_table builtin_leader_file_key))
-        (fun mref -> Error (Reason.InternalModuleName mref))
+        (fun mref -> Error mref)
         (fun _ -> !builtins_ref)
     in
     let (values, types, modules) =

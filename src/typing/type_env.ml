@@ -692,8 +692,7 @@ let local_scope_entry_exists cx loc = not (is_global_var cx loc)
 
 let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = false) cx name loc =
   match (name, lookup_mode) with
-  | ((OrdinaryName _ | InternalModuleName _), ForType)
-  | (InternalModuleName _, ForValue) ->
+  | (OrdinaryName _, ForType) ->
     (match checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc loc with
     | Some t -> t
     | None ->

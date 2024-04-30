@@ -24,13 +24,11 @@ open String_utils
 type name =
   | OrdinaryName of string
   | InternalName of string
-  | InternalModuleName of string
 [@@deriving eq, ord, show]
 
 let display_string_of_name = function
   | OrdinaryName x -> x
   | InternalName x -> spf ".%s" x
-  | InternalModuleName x -> spf ".$module__%s" x
 
 let mk_id () = HeapIdent.make ""
 
@@ -831,29 +829,17 @@ let internal_name name = InternalName name
 let internal_name_of_name name =
   match name with
   | OrdinaryName str -> internal_name str
-  | InternalName _
-  | InternalModuleName _ ->
+  | InternalName _ ->
     (* Already internal *)
     name
 
 let is_internal_name = function
   | OrdinaryName _ -> false
-  | InternalName _
-  | InternalModuleName _ ->
-    true
-
-let internal_module_name name = InternalModuleName name
-
-let is_internal_module_name = function
-  | OrdinaryName _
-  | InternalName _ ->
-    false
-  | InternalModuleName _ -> true
+  | InternalName _ -> true
 
 let uninternal_name = function
   | OrdinaryName x
-  | InternalName x
-  | InternalModuleName x ->
+  | InternalName x ->
     x
 
 (* Instantiable reasons identify tvars that are created for the purpose of
