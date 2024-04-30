@@ -759,6 +759,19 @@ let emit_cacheable_env_error cx loc err =
   in
   add_output cx err
 
+let lookup_builtin_module_error cx module_name reason =
+  let potential_generator =
+    Context.missing_module_generators cx
+    |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern module_name 0)
+    |> Base.Option.map ~f:snd
+  in
+  add_output
+    cx
+    (Error_message.EBuiltinLookupFailed
+       { reason; potential_generator; name = Reason.InternalModuleName module_name }
+    );
+  AnyT.error_of_kind UnresolvedName reason
+
 let lookup_builtin_error cx x reason =
   let potential_generator =
     Context.missing_module_generators cx
@@ -811,12 +824,9 @@ let lookup_builtin_typeapp cx reason x targs =
 
 let get_builtin_module cx module_name reason =
   let builtins = Context.builtins cx in
-  let result =
-    match Builtins.get_builtin_module_opt builtins module_name with
-    | Some t -> Ok t
-    | None -> lookup_builtin_error cx (InternalModuleName module_name) reason
-  in
-  apply_env_errors cx (loc_of_reason reason) result
+  match Builtins.get_builtin_module_opt builtins module_name with
+  | Some t -> t
+  | None -> lookup_builtin_module_error cx module_name reason
 
 let builtin_promise_class_id cx =
   let promise_t = lookup_builtin_value_opt cx "Promise" in
