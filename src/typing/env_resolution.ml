@@ -370,13 +370,10 @@ let resolve_annotated_function
       default_this
       func_sig
   in
-  let t =
-    if effect <> Ast.Function.Hook && hook_like then
-      make_hooklike cx t
-    else
-      t
-  in
-  (t, unknown_use)
+  if effect <> Ast.Function.Hook && hook_like then
+    make_hooklike cx t
+  else
+    t
 
 let resolve_annotated_component cx scope_kind reason tparams_map component_loc component =
   if not (Context.component_syntax cx) then begin
@@ -385,7 +382,7 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
       (Error_message.EUnsupportedSyntax
          (component_loc, Flow_intermediate_error_types.ComponentSyntax)
       );
-    (AnyT.at (AnyError None) component_loc, unknown_use)
+    AnyT.at (AnyError None) component_loc
   end else begin
     if scope_kind = ComponentBody then begin
       Flow_js_utils.add_output cx Error_message.(ENestedComponent reason)
@@ -397,7 +394,7 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
     in
     let cache = Context.node_cache cx in
     Node_cache.set_component_sig cache sig_loc sig_data;
-    (Statement.Component_declaration_sig.component_type cx component_loc component_sig, unknown_use)
+    Statement.Component_declaration_sig.component_type cx component_loc component_sig
   end
 
 let rec binding_has_annot = function
@@ -408,7 +405,6 @@ let rec binding_has_annot = function
   | _ -> false
 
 let rec resolve_binding cx reason loc b =
-  let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
   | Root
       (Annotation
@@ -434,39 +430,24 @@ let rec resolve_binding cx reason loc b =
         annot
     in
     Base.Option.iter param_loc ~f:(Type_env.bind_function_param cx t);
-    let t =
-      if optional && not has_default_expression then
-        TypeUtil.optional t
-      else
-        t
-    in
-    let use_op =
-      if Base.Option.is_none param_loc then
-        mk_use_op t
-      else
-        unknown_use
-    in
-    (t, use_op)
-  | Root (Value { hints = _; expr }) ->
-    let t = expression cx expr in
-    let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
-    (t, use_op)
+    if optional && not has_default_expression then
+      TypeUtil.optional t
+    else
+      t
+  | Root (Value { hints = _; expr }) -> expression cx expr
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
       let reason = func_reason ~async:false ~generator:false prop_loc in
-      let (t, _) =
-        resolve_annotated_function
-          cx
-          ~bind_this
-          ~hook_like:false
-          ~statics:SMap.empty
-          reason
-          ALocMap.empty
-          fn_loc
-          fn
-      in
-      t
+      resolve_annotated_function
+        cx
+        ~bind_this
+        ~hook_like:false
+        ~statics:SMap.empty
+        reason
+        ALocMap.empty
+        fn_loc
+        fn
     in
 
     let rec mk_obj obj_loc { properties; _ } =
@@ -614,13 +595,10 @@ let rec resolve_binding cx reason loc b =
         ~frozen:false
         ~default_proto:obj_proto
     in
-    let t = mk_obj loc obj in
-    (t, unknown_use)
+    mk_obj loc obj
   | Root (ObjectValue { obj_loc; obj; _ }) ->
     let expr = (obj_loc, Ast.Expression.Object obj) in
-    let t = expression cx expr in
-    let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
-    (t, use_op)
+    expression cx expr
   | Root
       (FunctionValue
         {
@@ -662,7 +640,7 @@ let rec resolve_binding cx reason loc b =
       Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig
     in
     Node_cache.set_function_sig cache sig_loc sig_data;
-    (t, Op (AssignVar { var = Some reason; init = reason_fun }))
+    t
   | Root
       (FunctionValue
         {
@@ -706,8 +684,7 @@ let rec resolve_binding cx reason loc b =
       )
     in
     Node_cache.set_expression cache expr;
-    let use_op = Op (AssignVar { var = Some reason; init = reason_fun }) in
-    (func_type, use_op)
+    func_type
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let (elem_t, tuple_view, reason) =
       if ALocSet.cardinal array_providers > 0 then
@@ -732,8 +709,7 @@ let rec resolve_binding cx reason loc b =
       ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))
     in
     Node_cache.set_expression cache exp;
-    let use_op = Op (AssignVar { var = Some reason; init = mk_reason (RCode "[]") arr_loc }) in
-    (t, use_op)
+    t
   | Root (Contextual { reason; hints; optional; default_expression }) ->
     let param_loc = Reason.loc_of_reason reason in
     let t =
@@ -771,13 +747,10 @@ let rec resolve_binding cx reason loc b =
       | _ -> ()
     in
     Type_env.bind_function_param cx t param_loc;
-    let t =
-      if optional && default_expression = None then
-        TypeUtil.optional t
-      else
-        t
-    in
-    (t, mk_use_op t)
+    if optional && default_expression = None then
+      TypeUtil.optional t
+    else
+      t
   | Root (UnannotatedParameter reason) ->
     let t = AnyT (reason, AnyError (Some MissingAnnotation)) in
     Type_env.bind_function_param cx t (loc_of_reason reason);
@@ -786,29 +759,23 @@ let rec resolve_binding cx reason loc b =
       (Error_message.EMissingLocalAnnotation
          { reason; hint_available = false; from_generic_function = false }
       );
-    (t, mk_use_op t)
+    t
   | Root CatchUnannotated ->
-    let t =
-      if Context.use_mixed_in_catch_variables cx then
-        MixedT.at loc
-      else
-        AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
-    in
-    (t, mk_use_op t)
+    if Context.use_mixed_in_catch_variables cx then
+      MixedT.at loc
+    else
+      AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
     let right_t = expression cx ~cond:OtherTest exp in
-    let t =
-      match kind with
-      | In ->
-        Flow_js.flow cx (right_t, AssertForInRHST reason);
-        StrT.at loc
-      | Of { await } -> Statement.for_of_elemt cx right_t reason await
-    in
-    (t, mk_use_op t)
+    (match kind with
+    | In ->
+      Flow_js.flow cx (right_t, AssertForInRHST reason);
+      StrT.at loc
+    | Of { await } -> Statement.for_of_elemt cx right_t reason await)
   | Hooklike binding ->
-    let (t, use_op) = resolve_binding cx reason loc binding in
-    (make_hooklike cx t, use_op)
+    let t = resolve_binding cx reason loc binding in
+    make_hooklike cx t
   | Select { selector; parent = (parent_loc, binding) } ->
     let refined_type =
       match selector with
@@ -823,36 +790,33 @@ let rec resolve_binding cx reason loc b =
     | Some t ->
       (* When we can get a refined value on a destructured property,
          we must be in an assignment position and the type must have been resolved. *)
-      (t, mk_use_op t)
+      t
     | None ->
       let t = Type_env.checked_find_loc_env_write cx Env_api.PatternLoc parent_loc in
       let has_anno = binding_has_annot binding in
       let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
-      let t =
-        let kind =
-          if has_anno then
-            DestructAnnot
-          else
-            DestructInfer
-        in
-        let t =
-          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
-              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-              )
-          )
-        in
-        if has_default then
-          let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
-          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
-              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-              )
-          )
+      let kind =
+        if has_anno then
+          DestructAnnot
         else
-          t
+          DestructInfer
       in
-      (t, unknown_use))
+      let t =
+        Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+                Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+            )
+        )
+      in
+      if has_default then
+        let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
+        Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+                Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+            )
+        )
+      else
+        t)
 
 let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason function_loc function_ =
   let cache = Context.node_cache cx in
@@ -860,16 +824,13 @@ let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason functi
     Statement.mk_function cx ~needs_this_param ~statics reason function_loc function_
   in
   Node_cache.set_function cache id_loc fn;
-  let fun_type =
-    if
-      function_.Ast.Function.effect <> Ast.Function.Hook
-      && Base.Option.is_some (Flow_ast_utils.hook_function function_)
-    then
-      make_hooklike cx fun_type
-    else
-      fun_type
-  in
-  (fun_type, unknown_use)
+  if
+    function_.Ast.Function.effect <> Ast.Function.Hook
+    && Base.Option.is_some (Flow_ast_utils.hook_function function_)
+  then
+    make_hooklike cx fun_type
+  else
+    fun_type
 
 let resolve_class cx id_loc reason class_loc class_ =
   let cache = Context.node_cache cx in
@@ -878,7 +839,7 @@ let resolve_class cx id_loc reason class_loc class_ =
   in
   Node_cache.set_class_sig cache class_loc sig_info;
   Type_env.bind_class_self_type cx class_t_internal class_loc;
-  (class_t, unknown_use)
+  class_t
 
 let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
   let open Ast.Expression in
@@ -899,18 +860,14 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     (* lhs (op)= rhs *)
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
     let rhs_t = expression cx rhs in
-    let result_t =
-      Statement.arith_assign
-        cx
-        ~reason
-        ~lhs_reason:id_reason
-        ~rhs_reason:(mk_expression_reason rhs)
-        lhs_t
-        rhs_t
-        (ArithKind.arith_kind_of_assignment_operator op)
-    in
-    let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
-    (result_t, use_op)
+    Statement.arith_assign
+      cx
+      ~reason
+      ~lhs_reason:id_reason
+      ~rhs_reason:(mk_expression_reason rhs)
+      lhs_t
+      rhs_t
+      (ArithKind.arith_kind_of_assignment_operator op)
   | Assignment.AndAssign
   | Assignment.OrAssign
   | Assignment.NullishAssign ->
@@ -923,132 +880,119 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
       | Some Abnormal.Throw -> EmptyT.at exp_loc
       | None -> rhs_t
     in
-    let result_t =
-      let ub t =
-        match op with
-        | Assignment.NullishAssign -> NullishCoalesceT (reason, rhs_t, t)
-        | Assignment.AndAssign -> AndT (reason, rhs_t, t)
-        | Assignment.OrAssign -> OrT (reason, rhs_t, t)
-        | _ -> assert_false "Bad conditional guard"
-      in
-      Tvar.mk_no_wrap_where cx reason (fun t -> Flow_js.flow cx (lhs_t, ub t))
+    let ub t =
+      match op with
+      | Assignment.NullishAssign -> NullishCoalesceT (reason, rhs_t, t)
+      | Assignment.AndAssign -> AndT (reason, rhs_t, t)
+      | Assignment.OrAssign -> OrT (reason, rhs_t, t)
+      | _ -> assert_false "Bad conditional guard"
     in
-    let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
-    (result_t, use_op)
+    Tvar.mk_no_wrap_where cx reason (fun t -> Flow_js.flow cx (lhs_t, ub t))
 
 let resolve_update cx ~id_loc ~exp_loc id_reason =
   let reason = mk_reason (RCustom "update") exp_loc in
   let id_t = Type_env.ref_entry_exn ~lookup_mode:Type_env.LookupMode.ForValue cx id_loc id_reason in
-  let result_t =
-    Tvar.mk_where cx reason (fun result_t ->
-        Flow_js.flow cx (id_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
-    )
-  in
-  let use_op = Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t }) in
-  (result_t, use_op)
+  Tvar.mk_where cx reason (fun result_t ->
+      Flow_js.flow cx (id_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
+  )
 
 let resolve_type_alias cx loc alias =
   let cache = Context.node_cache cx in
   let (t, ast) = Statement.type_alias cx loc alias in
   Node_cache.set_alias cache loc (t, ast);
-  (t, unknown_use)
+  t
 
 let resolve_opaque_type cx loc opaque =
   let cache = Context.node_cache cx in
   let (t, ast) = Statement.opaque_type cx loc opaque in
   Node_cache.set_opaque cache loc (t, ast);
-  (t, unknown_use)
+  t
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import =
   let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
-  let t =
-    match import with
-    | Name_def.Named { kind; remote; local } ->
-      let import_kind = Base.Option.value ~default:import_kind kind in
-      let (_, t) =
-        Import_export.import_named_specifier_type
-          cx
-          import_reason
-          import_kind
-          ~module_name
-          ~source_module_t
-          ~remote_name:remote
-          ~local_name:local
-      in
-      if Flow_ast_utils.hook_name local then
-        make_hooklike cx t
-      else
-        t
-    | Namespace name ->
-      let t =
-        Import_export.import_namespace_specifier_type
-          cx
-          import_reason
-          import_kind
-          ~module_name
-          ~source_module_t
-          ~local_loc:id_loc
-      in
-      if Flow_ast_utils.hook_name name then
-        make_hooklike cx t
-      else
-        t
-    | Default local_name ->
-      let (_, t) =
-        Import_export.import_default_specifier_type
-          cx
-          import_reason
-          import_kind
-          ~module_name
-          ~source_module_t
-          ~local_name
-      in
-      if Flow_ast_utils.hook_name local_name then
-        make_hooklike cx t
-      else
-        t
-  in
-  (t, unknown_use)
+  match import with
+  | Name_def.Named { kind; remote; local } ->
+    let import_kind = Base.Option.value ~default:import_kind kind in
+    let (_, t) =
+      Import_export.import_named_specifier_type
+        cx
+        import_reason
+        import_kind
+        ~module_name
+        ~source_module_t
+        ~remote_name:remote
+        ~local_name:local
+    in
+    if Flow_ast_utils.hook_name local then
+      make_hooklike cx t
+    else
+      t
+  | Namespace name ->
+    let t =
+      Import_export.import_namespace_specifier_type
+        cx
+        import_reason
+        import_kind
+        ~module_name
+        ~source_module_t
+        ~local_loc:id_loc
+    in
+    if Flow_ast_utils.hook_name name then
+      make_hooklike cx t
+    else
+      t
+  | Default local_name ->
+    let (_, t) =
+      Import_export.import_default_specifier_type
+        cx
+        import_reason
+        import_kind
+        ~module_name
+        ~source_module_t
+        ~local_name
+    in
+    if Flow_ast_utils.hook_name local_name then
+      make_hooklike cx t
+    else
+      t
 
 let resolve_interface cx loc inter =
   let cache = Context.node_cache cx in
   let (t, ast) = Statement.interface cx loc inter in
   Node_cache.set_interface cache loc (t, ast);
-  (t, unknown_use)
+  t
 
 let resolve_declare_class cx loc class_ =
   let cache = Context.node_cache cx in
   let (t, ast) = Statement.declare_class cx loc class_ in
   Node_cache.set_declared_class cache loc (t, ast);
-  (t, unknown_use)
+  t
 
 let resolve_declare_component cx loc component =
   let cache = Context.node_cache cx in
   let (t, ast) = Statement.declare_component cx loc component in
   Node_cache.set_declared_component cache loc (t, ast);
-  (t, unknown_use)
+  t
 
 let resolve_declare_namespace cx loc ns =
   let cache = Context.node_cache cx in
   let ((t, _) as ast) = Statement.declare_namespace cx loc ns in
   Node_cache.set_declared_namespace cache loc ast;
-  (t, unknown_use)
+  t
 
 let resolve_enum cx id_loc enum_reason enum_loc name enum =
   if Context.enable_enums cx then
     let enum_info = ConcreteEnum (Statement.mk_enum cx ~enum_reason id_loc name enum) in
-    let t = mk_enum_object_type enum_reason enum_info in
-    (t, unknown_use)
+    mk_enum_object_type enum_reason enum_info
   else (
     Flow_js_utils.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
-    (AnyT.error enum_reason, unknown_use)
+    AnyT.error enum_reason
   )
 
 let resolve_type_param cx id_loc =
   let { Loc_env.tparams; _ } = Context.environment cx in
   let (_, _, t) = ALocMap.find id_loc tparams in
-  let t = DefT (TypeUtil.reason_of_t t, TypeT (TypeParamKind, t)) in
-  (t, unknown_use)
+  DefT (TypeUtil.reason_of_t t, TypeT (TypeParamKind, t))
 
 let resolve_chain_expression cx ~cond exp =
   let cache = Context.node_cache cx in
@@ -1059,7 +1003,7 @@ let resolve_chain_expression cx ~cond exp =
   in
   let (t, _, exp) = Statement.optional_chain ~cond cx exp in
   Node_cache.set_expression cache exp;
-  (t, unknown_use)
+  t
 
 let resolve_write_expression cx ~cond exp =
   let cond =
@@ -1067,13 +1011,12 @@ let resolve_write_expression cx ~cond exp =
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
   in
-  let t = synthesizable_expression cx ?cond exp in
-  (t, unknown_use)
+  synthesizable_expression cx ?cond exp
 
 let resolve_generator_next cx reason gen =
   let open TypeUtil in
   match gen with
-  | None -> (VoidT.make (replace_desc_reason RUnannotatedNext reason), unknown_use)
+  | None -> VoidT.make (replace_desc_reason RUnannotatedNext reason)
   | Some { tparams_map; return_annot; async } ->
     let return_t =
       let cache = Context.node_cache cx in
@@ -1088,29 +1031,26 @@ let resolve_generator_next cx reason gen =
       else
         "Generator"
     in
-    let next_t =
-      Tvar.mk_where cx reason (fun next ->
-          let t =
-            Flow_js.get_builtin_typeapp
-              cx
-              reason
-              gen_name
-              [
-                Tvar.mk cx (replace_desc_reason (RCustom "unused yield") reason);
-                Tvar.mk cx (replace_desc_reason (RCustom "unused return") reason);
-                next;
-              ]
-          in
-          let t = Flow_js.reposition cx (reason_of_t return_t |> loc_of_reason) t in
-          Flow_js.flow_t cx (t, return_t)
-      )
-    in
-    (next_t, unknown_use)
+    Tvar.mk_where cx reason (fun next ->
+        let t =
+          Flow_js.get_builtin_typeapp
+            cx
+            reason
+            gen_name
+            [
+              Tvar.mk cx (replace_desc_reason (RCustom "unused yield") reason);
+              Tvar.mk cx (replace_desc_reason (RCustom "unused return") reason);
+              next;
+            ]
+        in
+        let t = Flow_js.reposition cx (reason_of_t return_t |> loc_of_reason) t in
+        Flow_js.flow_t cx (t, return_t)
+    )
 
 let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason) =
   let env = Context.environment cx in
   Context.set_environment cx { env with Loc_env.scope_kind = def_scope_kind; class_stack };
-  let (t, use_op) =
+  let t =
     match def with
     | Binding b -> resolve_binding cx def_reason id_loc b
     | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
@@ -1161,7 +1101,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         function_
     | Class { class_; class_loc; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
-    | MemberAssign { member_loc = _; member = _; rhs } -> (expression cx rhs, unknown_use)
+    | MemberAssign { member_loc = _; member = _; rhs } -> expression cx rhs
     | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc def_reason lhs op rhs
     | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
     | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
@@ -1175,14 +1115,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredNamespace (loc, ns) -> resolve_declare_namespace cx loc ns
-    | MissingThisAnnot -> (AnyT.at (AnyError None) id_loc, unknown_use)
-  in
-  let update_reason =
-    match def with
-    | ExpressionDef _
-    | Binding (Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ })) ->
-      true
-    | _ -> false
+    | MissingThisAnnot -> AnyT.at (AnyError None) id_loc
   in
   Debug_js.Verbose.print_if_verbose_lazy
     cx
@@ -1194,7 +1127,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           (Debug_js.dump_t cx t);
       ]
       );
-  Type_env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc
+  Type_env.resolve_env_entry cx t def_kind id_loc
 
 let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
@@ -1398,14 +1331,7 @@ let resolve_component cx graph component =
   Context.constraint_cache cx := FlowSet.empty;
   let resolve_illegal entries =
     EnvSet.iter
-      (fun (kind, loc) ->
-        Type_env.resolve_env_entry
-          ~use_op:unknown_use
-          ~update_reason:false
-          cx
-          (AnyT.at (AnyError None) loc)
-          kind
-          loc)
+      (fun (kind, loc) -> Type_env.resolve_env_entry cx (AnyT.at (AnyError None) loc) kind loc)
       entries
   in
   let resolve_element = function

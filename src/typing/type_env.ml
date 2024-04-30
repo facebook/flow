@@ -801,14 +801,14 @@ let make_env_entries_under_resolution cx entries =
 
 (* Resolve `t` with the entry in the loc_env's map. This allows it to be looked up for Write
  * entries reported by the name_resolver as well as providers for the provider analysis *)
-let resolve_env_entry ~use_op:_ ~update_reason cx t kind loc =
+let resolve_env_entry cx t kind loc =
   Debug_js.Verbose.print_if_verbose
     cx
     [spf "writing to %s %s" (Env_api.show_def_loc_type kind) (Reason.string_of_aloc loc)];
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-  (match
-     (EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries, Loc_env.find_write env kind loc)
-   with
+  match
+    (EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries, Loc_env.find_write env kind loc)
+  with
   | (Some Env_api.NonAssigningWrite, _) -> ()
   | (_, None) -> Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc))
   | (_, Some (Loc_env.TypeEntry { t = _; state })) ->
@@ -820,9 +820,7 @@ let resolve_env_entry ~use_op:_ ~update_reason cx t kind loc =
          * resolved all entries in a component. *)
         (match t with
         | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, EmptyT)) cx r id
-        | t -> t));
-  if update_reason then
-    Context.set_environment cx (Loc_env.update_reason env kind loc (TypeUtil.reason_of_t t))
+        | t -> t)
 
 let subtype_entry cx ~use_op t loc =
   let env = Context.environment cx in
@@ -847,27 +845,21 @@ let init_entry cx ~use_op t loc =
 let set_var cx ~use_op name t loc =
   subtype_against_providers cx ~use_op ~potential_global_name:name t loc
 
-let bind_function_param cx t loc =
-  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.FunctionParamLoc loc
+let bind_function_param cx t loc = resolve_env_entry cx t Env_api.FunctionParamLoc loc
 
 let bind_function_this cx t loc =
   if Context.typing_mode cx = Context.CheckingMode then
-    resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.FunctionThisLoc loc
+    resolve_env_entry cx t Env_api.FunctionThisLoc loc
 
-let bind_class_instance_this cx t loc =
-  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassInstanceThisLoc loc
+let bind_class_instance_this cx t loc = resolve_env_entry cx t Env_api.ClassInstanceThisLoc loc
 
-let bind_class_static_this cx t loc =
-  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassStaticThisLoc loc
+let bind_class_static_this cx t loc = resolve_env_entry cx t Env_api.ClassStaticThisLoc loc
 
-let bind_class_instance_super cx t loc =
-  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassInstanceSuperLoc loc
+let bind_class_instance_super cx t loc = resolve_env_entry cx t Env_api.ClassInstanceSuperLoc loc
 
-let bind_class_static_super cx t loc =
-  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassStaticSuperLoc loc
+let bind_class_static_super cx t loc = resolve_env_entry cx t Env_api.ClassStaticSuperLoc loc
 
-let bind_class_self_type cx t loc =
-  resolve_env_entry cx ~use_op:unknown_use ~update_reason:false t Env_api.ClassSelfLoc loc
+let bind_class_self_type cx t loc = resolve_env_entry cx t Env_api.ClassSelfLoc loc
 
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 
