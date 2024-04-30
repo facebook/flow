@@ -781,17 +781,15 @@ let infos_to_messages infos = Base.List.(infos >>= info_to_messages)
 
 let mk_error
     ?(kind = InferError)
-    ?(trace_infos : 'loc info list option)
     ?(root : ('loc * 'loc Friendly.message) option)
     ?(frames : 'loc Friendly.message list option)
     ?(explanations : 'loc Friendly.message list option)
     (loc : 'loc)
     (error_code : Error_codes.error_code option)
     (message : 'loc Friendly.message) : 'loc printable_error =
-  Friendly.(
-    let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
+  Friendly.
     ( kind,
-      trace,
+      [],
       {
         loc;
         root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
@@ -799,24 +797,15 @@ let mk_error
         message = Normal { message; frames; explanations };
       }
     )
-  )
 
 let mk_speculation_error
-    ?(kind = InferError)
-    ?trace_infos
-    ~loc
-    ~root
-    ~frames
-    ~explanations
-    ~error_code
-    speculation_errors =
+    ?(kind = InferError) ~loc ~root ~frames ~explanations ~error_code speculation_errors =
   Friendly.(
-    let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let branches =
       Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
     in
     ( kind,
-      trace,
+      [],
       {
         loc;
         root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });

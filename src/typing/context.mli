@@ -91,7 +91,6 @@ type metadata = {
   file_options: Files.options;
   ignore_non_literal_requires: bool;
   max_literal_length: int;
-  max_trace_depth: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   namespaces: bool;

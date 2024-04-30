@@ -29,7 +29,6 @@ let make_options_flags
     ?(quiet = false)
     ?(strip_root = false)
     ?temp_dir
-    ?traces
     ?verbose
     ?wait_for_recheck
     ?(include_suppressions = false)
@@ -51,7 +50,6 @@ let make_options_flags
     quiet;
     strip_root;
     temp_dir;
-    traces;
     verbose;
     slow_to_check_logging = Slow_to_check_logging.default;
     wait_for_recheck;

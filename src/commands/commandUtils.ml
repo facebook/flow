@@ -887,7 +887,6 @@ module Options_flags = struct
     slow_to_check_logging: Slow_to_check_logging.t;
     strip_root: bool;
     temp_dir: string option;
-    traces: int option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
@@ -943,7 +942,6 @@ let options_flags =
       profile
       all
       wait_for_recheck
-      traces
       no_flowlib
       munge_underscore_members
       max_workers
@@ -971,7 +969,6 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
-        traces;
         no_flowlib;
         munge_underscore_members;
         max_workers;
@@ -1002,7 +999,6 @@ let options_flags =
            (optional bool)
            ~doc:
              "If true, always wait for rechecks to finish before serving commands (default: false)"
-      |> flag "--traces" (optional int) ~doc:"Outline an error path up to a specified level"
       |> flag "--no-flowlib" truthy ~doc:"Do not include embedded declarations"
       |> flag
            "--munge-underscore-members"
@@ -1350,7 +1346,6 @@ let make_options
     opt_casting_syntax =
       Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Both;
     opt_wait_for_recheck;
-    opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
     opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;

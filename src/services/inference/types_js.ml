@@ -151,7 +151,7 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
 
 let error_set_of_internal_error file (loc, internal_error) =
   Error_message.EInternal (loc, internal_error)
-  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
+  |> Flow_error.error_of_msg ~source_file:file
   |> Flow_error.ErrorSet.singleton
 
 let calc_deps ~options ~profiling ~components to_merge =

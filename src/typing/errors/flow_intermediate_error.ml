@@ -256,7 +256,7 @@ let post_process_errors original_errors =
     let is_not_duplicate new_msg =
       let e' =
         let open Flow_error in
-        error_of_msg ~trace_reasons:(trace_reasons error) ~source_file:(source_file error) new_msg
+        error_of_msg ~source_file:(source_file error) new_msg
       in
       not @@ Flow_error.ErrorSet.mem e' original_errors
     in
@@ -332,17 +332,9 @@ let post_process_errors original_errors =
 open Flow_intermediate_error_types
 
 let mk_error
-    ?(kind = Flow_errors_utils.InferError)
-    ?trace_reasons
-    ?root
-    ?frames
-    ?explanations
-    loc
-    error_code
-    message =
+    ?(kind = Flow_errors_utils.InferError) ?root ?frames ?explanations loc error_code message =
   {
     kind;
-    trace_reasons;
     loc;
     root;
     error_code;
@@ -352,7 +344,6 @@ let mk_error
 
 let mk_speculation_error
     ?(kind = Flow_errors_utils.InferError)
-    ?trace_reasons
     ~loc
     ~root
     ~frames
@@ -361,7 +352,6 @@ let mk_speculation_error
     speculation_errors =
   {
     kind;
-    trace_reasons;
     loc;
     root;
     error_code;
@@ -379,7 +369,6 @@ let rec make_intermediate_error :
   let loc = Flow_error.loc_of_error error in
   let msg = Flow_error.msg_of_error error in
   let source_file = Flow_error.source_file error in
-  let trace_reasons = Flow_error.trace_reasons error in
   let kind = kind_of_msg msg in
   (* In friendly error messages, we always want to point to a value as the
    * primary location. Or an annotation on a value. Normally, values are found
@@ -787,7 +776,7 @@ let rec make_intermediate_error :
     let explanations =
       Base.Option.value_map ~f:(fun x -> x :: explanations) ~default:explanations explanation
     in
-    mk_error ~trace_reasons ?root ~frames ~explanations loc code message
+    mk_error ?root ~frames ~explanations loc code message
   in
   let mk_use_op_error_reason reason use_op ?explanation message =
     mk_use_op_error (loc_of_reason reason) use_op ?explanation message
@@ -795,7 +784,7 @@ let rec make_intermediate_error :
   let mk_no_frame_or_explanation_error reason message =
     let loc = loc_of_aloc (loc_of_reason reason) in
     let code = Flow_error.code_of_error error in
-    mk_error ~trace_reasons ~frames:[] ~explanations:[] loc code message
+    mk_error ~frames:[] ~explanations:[] loc code message
   in
 
   (* Make a friendly error based on failed speculation. *)
@@ -814,20 +803,13 @@ let rec make_intermediate_error :
           ~f:(fun (_, msg) ->
             let score = score_of_msg msg in
             let error =
-              Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
+              Flow_error.error_of_msg ~source_file msg
               |> make_intermediate_error ~loc_of_aloc ~speculation:true
             in
             (score, error))
           branches
       in
-      mk_speculation_error
-        ~trace_reasons
-        ~loc
-        ~root
-        ~frames
-        ~explanations
-        ~error_code
-        speculation_errors
+      mk_speculation_error ~loc ~root ~frames ~explanations ~error_code speculation_errors
   in
   (* An error between two incompatible types. A "lower" type and an "upper"
    * type. The use_op describes the path which we followed to find
@@ -1000,7 +982,7 @@ let rec make_intermediate_error :
   let intermediate_error =
     match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal message) ->
-      mk_error ~trace_reasons ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
+      mk_error ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
     | (None, UseOp { loc; message; use_op; explanation }) ->
       mk_use_op_error loc use_op ?explanation message
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
@@ -3892,47 +3874,17 @@ let to_printable_error :
         text " to disambiguate.";
       ]
   in
-  let mk_info reason extras =
-    let desc = string_of_desc (desc_of_reason reason) in
-    (* For descriptions that are an identifier wrapped in primes, e.g. `A`, then
-     * we want to unwrap the primes and just show A. This looks better in infos.
-     * However, when an identifier wrapped with primes is inside some other text
-     * then we want to keep the primes since they help with readability. *)
-    let desc =
-      if
-        String.length desc > 2
-        && desc.[0] = '`'
-        && desc.[String.length desc - 1] = '`'
-        && not (String.contains desc ' ')
-      then
-        String.sub desc 1 (String.length desc - 2)
-      else
-        desc
-    in
-    (loc_of_aloc (loc_of_reason reason), desc :: extras)
-  in
-  let info_of_reason r = mk_info r [] in
-  let rec convert_error_message
-      { kind; trace_reasons; loc; error_code; root; message; misplaced_source_file = _ } =
-    let trace_infos = Base.Option.map ~f:(Base.List.map ~f:info_of_reason) trace_reasons in
+  let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
+      =
     let root = Base.Option.map root ~f:(fun (loc, msg) -> (loc, root_msg_to_friendly_msgs msg)) in
     match message with
     | SingletonMessage { message; frames; explanations } ->
       let frames = Option.map (List.map frame_to_friendly_msgs) frames in
       let explanations = Option.map (List.map explanation_to_friendly_msgs) explanations in
-      mk_error
-        ~kind
-        ?trace_infos
-        ?root
-        ?frames
-        ?explanations
-        loc
-        error_code
-        (msg_to_friendly_msgs message)
+      mk_error ~kind ?root ?frames ?explanations loc error_code (msg_to_friendly_msgs message)
     | SpeculationMessage { frames; explanations; branches } ->
       mk_speculation_error
         ~kind
-        ?trace_infos
         ~loc
         ~root
         ~frames:(List.map frame_to_friendly_msgs frames)

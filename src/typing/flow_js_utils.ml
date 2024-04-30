@@ -464,19 +464,7 @@ exception SpeculationSingletonError
 
 (* [src_cx] is the context in which the error is created, and [dst_cx] the context
  * in which it is recorded. *)
-let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
-  let trace_reasons =
-    match trace with
-    | None -> []
-    | Some trace ->
-      (* format a trace into list of (reason, desc) pairs used
-         downstream for obscure reasons, and then to messages *)
-      let max_trace_depth = Context.max_trace_depth cx in
-      if max_trace_depth = 0 then
-        []
-      else
-        Trace.reasons_of_trace ~level:max_trace_depth trace
-  in
+let add_output_generic ~src_cx:cx ~dst_cx ?trace:_ msg =
   if Speculation.speculating cx then
     if Error_message.defered_in_speculation msg then
       ignore @@ Speculation.defer_action cx (Speculation_state.ErrorAction msg)
@@ -489,7 +477,7 @@ let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
     if Context.is_verbose cx then
       prerr_endlinef "\nadd_output: %s" (Debug_js.dump_error_message cx msg);
 
-    let error = FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg in
+    let error = FlowError.error_of_msg ~source_file:(Context.file cx) msg in
     (* catch no-loc errors early, before they get into error map *)
     if
       Flow_error.loc_of_error error
@@ -1204,7 +1192,7 @@ module ValueToTypeReferenceTransform = struct
     in
     TypeUtil.typeapp ~from_value:false ~use_desc:true elem_reason t [l]
 
-  let run_on_concrete_type cx ~trace ~use_op reason_op kind = function
+  let run_on_concrete_type cx ~use_op reason_op kind = function
     | DefT
         ( _,
           PolyT
@@ -1227,7 +1215,6 @@ module ValueToTypeReferenceTransform = struct
     | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }) ->
       add_output
         cx
-        ~trace
         (Error_message.EMissingTypeArgs
            {
              reason_op;
@@ -1250,22 +1237,22 @@ module ValueToTypeReferenceTransform = struct
       (* an enum object value annotation becomes the enum type *)
       enum_value_t
     | DefT (enum_reason, EnumValueT _) ->
-      add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason = reason_op; enum_reason });
+      add_output cx Error_message.(EEnumMemberUsedAsType { reason = reason_op; enum_reason });
       AnyT.error reason_op
     | DefT (reason_component, ReactAbstractComponentT _) as l ->
       run_on_abstract_component cx reason_component reason_op l
     | DefT (r, EmptyT)
     | AnyT (r, AnyError (Some MissingAnnotation)) ->
-      add_output cx ~trace Error_message.(EValueUsedAsType { reason_use = reason_op });
+      add_output cx Error_message.(EValueUsedAsType { reason_use = reason_op });
       AnyT.error r
     | AnyT (_, AnyError _) as l ->
       (* Short-circut as we already error on the unresolved name. *)
       l
     | AnyT (r, _) ->
-      add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use = reason_op });
+      add_output cx Error_message.(EAnyValueUsedAsType { reason_use = reason_op });
       AnyT.error r
     | t ->
-      add_output cx ~trace Error_message.(EValueUsedAsType { reason_use = reason_op });
+      add_output cx Error_message.(EValueUsedAsType { reason_use = reason_op });
       AnyT.error (TypeUtil.reason_of_t t)
 end
 

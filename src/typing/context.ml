@@ -54,7 +54,6 @@ type metadata = {
   file_options: Files.options;
   ignore_non_literal_requires: bool;
   max_literal_length: int;
-  max_trace_depth: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   namespaces: bool;
@@ -273,7 +272,6 @@ let metadata_of_options options =
     file_options = Options.file_options options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
     max_literal_length = Options.max_literal_length options;
-    max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
     namespaces = Options.namespaces options;
@@ -552,7 +550,7 @@ let include_suppressions cx = cx.metadata.include_suppressions
 
 let severity_cover cx = cx.ccx.severity_cover
 
-let max_trace_depth cx = cx.metadata.max_trace_depth
+let max_trace_depth _ = 0
 
 let property_maps cx = cx.ccx.sig_cx.property_maps
 
@@ -1013,7 +1011,7 @@ let find_root_id cx id = Type.Constraint.find_root_id cx.ccx.sig_cx.graph id
 
 let on_cyclic_tvar_error cx reason =
   let msg = Error_message.(ETrivialRecursiveDefinition (Reason.loc_of_reason reason, reason)) in
-  let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:cx.file msg in
+  let error = Flow_error.error_of_msg ~source_file:cx.file msg in
   if is_verbose cx then
     Utils_js.prerr_endlinef
       "\nCyclic type: %s"

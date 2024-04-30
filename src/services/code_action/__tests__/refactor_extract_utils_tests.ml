@@ -53,7 +53,6 @@ let stub_metadata ~root ~checked =
     file_options;
     ignore_non_literal_requires = false;
     max_literal_length = 100;
-    max_trace_depth = 0;
     max_workers = 0;
     missing_module_generators = [];
     namespaces = false;

@@ -15,15 +15,9 @@ val code_of_error : 'loc t -> Error_codes.error_code option
 
 val source_file : 'loc t -> File_key.t
 
-val trace_reasons : 'loc t -> 'loc Reason.virtual_reason list
-
 val kind_of_error : 'loc t -> Flow_errors_utils.error_kind
 
-val error_of_msg :
-  trace_reasons:'loc Reason.virtual_reason list ->
-  source_file:File_key.t ->
-  'loc Error_message.t' ->
-  'loc t
+val error_of_msg : source_file:File_key.t -> 'loc Error_message.t' -> 'loc t
 
 val ordered_reasons : Reason.t * Reason.t -> Reason.t * Reason.t
 

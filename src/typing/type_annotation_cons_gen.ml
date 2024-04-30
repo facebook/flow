@@ -81,7 +81,6 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
       |> Flow.singleton_concrete_type_for_inspection cx instance_reason
       |> Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type
            cx
-           ~trace:Trace.dummy_trace
            ~use_op:unknown_use
            instance_reason
            type_t_kind

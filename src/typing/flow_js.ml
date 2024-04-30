@@ -1544,7 +1544,6 @@ struct
           let t =
             Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type
               cx
-              ~trace
               ~use_op
               reason_op
               type_t_kind

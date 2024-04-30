@@ -172,8 +172,7 @@ let check_union_opt cx = Context.iter_union_opt cx ~f:(enforce_optimize cx)
 
 let detect_import_export_errors cx program metadata =
   Strict_es6_import_export.detect_errors cx program metadata;
-  Module_exports_checker.check_program program
-  |> Base.List.iter ~f:(Flow_js_utils.add_output cx ?trace:None)
+  Module_exports_checker.check_program program |> Base.List.iter ~f:(Flow_js_utils.add_output cx)
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided

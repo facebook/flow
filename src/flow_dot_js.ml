@@ -13,7 +13,7 @@ let loc_of_aloc = ALoc.to_loc_exn
 
 let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
-  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+  |> Flow_error.error_of_msg ~source_file
   |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
   |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:None
 
@@ -140,7 +140,6 @@ let stub_metadata ~root ~checked =
     file_options = Files.default_options;
     ignore_non_literal_requires = false;
     max_literal_length = 100;
-    max_trace_depth = 0;
     max_workers = 0;
     missing_module_generators = [];
     namespaces = true;

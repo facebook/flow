@@ -153,7 +153,6 @@ type t = {
   opt_strip_root: bool;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
-  opt_traces: int;
   opt_ts_syntax: bool;
   opt_one_sided_type_guards: bool;
   opt_use_mixed_in_catch_variables: bool;
@@ -287,8 +286,6 @@ let max_header_tokens opts = opts.opt_max_header_tokens
 let max_literal_length opts = opts.opt_max_literal_length
 
 let max_seconds_for_check_per_worker opts = opts.opt_max_seconds_for_check_per_worker
-
-let max_trace_depth opts = opts.opt_traces
 
 let max_workers opts = opts.opt_max_workers
 

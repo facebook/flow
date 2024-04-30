@@ -13,7 +13,6 @@ type 'loc t = {
   loc: 'loc option;
   msg: 'loc Error_message.t';
   source_file: File_key.t;
-  trace_reasons: 'loc Reason.virtual_reason list;
 }
 
 let loc_of_error { loc; _ } = loc
@@ -24,15 +23,8 @@ let code_of_error err = msg_of_error err |> Error_message.error_code_of_message
 
 let source_file { source_file; _ } = source_file
 
-let trace_reasons { trace_reasons; _ } = trace_reasons
-
-let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
-  {
-    loc = Base.Option.map ~f loc;
-    msg = map_loc_of_error_message f msg;
-    source_file;
-    trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
-  }
+let map_loc_of_error f { loc; msg; source_file } =
+  { loc = Base.Option.map ~f loc; msg = map_loc_of_error_message f msg; source_file }
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
@@ -53,5 +45,5 @@ let ordered_reasons ((rl, ru) as reasons) =
   else
     reasons
 
-let error_of_msg ~trace_reasons ~source_file (msg : 'loc Error_message.t') : 'loc t =
-  { loc = loc_of_msg msg; msg; source_file; trace_reasons }
+let error_of_msg ~source_file (msg : 'loc Error_message.t') : 'loc t =
+  { loc = loc_of_msg msg; msg; source_file }

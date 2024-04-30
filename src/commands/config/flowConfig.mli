@@ -246,8 +246,6 @@ val strict_mode : config -> StrictModeSettings.t
 
 val suppress_types : config -> SSet.t
 
-val traces : config -> int
-
 val ts_syntax : config -> bool
 
 val one_sided_type_guards : config -> bool

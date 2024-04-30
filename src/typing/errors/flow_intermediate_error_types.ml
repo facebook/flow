@@ -907,7 +907,6 @@ type 'loc message =
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;
-  trace_reasons: 'loc virtual_reason list option;
   loc: Loc.t;
   error_code: Error_codes.error_code option;
   root: (Loc.t * 'loc root_message) option;

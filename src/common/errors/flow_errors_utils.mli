@@ -86,7 +86,6 @@ type 'loc printable_error
 
 val mk_error :
   ?kind:error_kind ->
-  ?trace_infos:Loc.t info list ->
   ?root:Loc.t * Loc.t Friendly.message ->
   ?frames:Loc.t Friendly.message list ->
   ?explanations:Loc.t Friendly.message list ->
@@ -97,7 +96,6 @@ val mk_error :
 
 val mk_speculation_error :
   ?kind:error_kind ->
-  ?trace_infos:Loc.t info list ->
   loc:Loc.t ->
   root:(Loc.t * Loc.t Friendly.message) option ->
   frames:Loc.t Friendly.message list ->

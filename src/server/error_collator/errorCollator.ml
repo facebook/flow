@@ -31,7 +31,7 @@ let add_suppression_warnings root checked unused warnings =
         if not (CheckedSet.mem_dependency source_file checked) then
           let err =
             let msg = Error_message.EUnusedSuppression loc in
-            Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
+            Flow_error.error_of_msg ~source_file msg
             |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
             |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
           in
@@ -55,7 +55,7 @@ let add_suppression_warnings root checked unused warnings =
       in
       let err =
         Error_message.ECodelessSuppression (loc, code)
-        |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+        |> Flow_error.error_of_msg ~source_file
         |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
         |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
       in
@@ -74,7 +74,7 @@ let collate_duplicate_providers ~update root =
     let conflict = Loc.{ source = Some duplicate; start = pos; _end = pos } in
     let err =
       Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
-      |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:duplicate
+      |> Flow_error.error_of_msg ~source_file:duplicate
       |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
       |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
     in

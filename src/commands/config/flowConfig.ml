@@ -131,7 +131,6 @@ module Opts = struct
     strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
-    traces: int;
     ts_syntax: bool;
     one_sided_type_guards: bool;
     use_mixed_in_catch_variables: bool option;
@@ -262,7 +261,6 @@ module Opts = struct
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
-      traces = 0;
       ts_syntax = false;
       one_sided_type_guards = false;
       use_mixed_in_catch_variables = None;
@@ -1003,7 +1001,6 @@ module Opts = struct
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("suppress_type", suppress_types_parser);
-      ("traces", uint (fun opts v -> Ok { opts with traces = v }));
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
@@ -1727,8 +1724,6 @@ let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_expor
 let strict_mode c = c.strict_mode
 
 let suppress_types c = c.options.Opts.suppress_types
-
-let traces c = c.options.Opts.traces
 
 let ts_syntax c = c.options.Opts.ts_syntax
 
