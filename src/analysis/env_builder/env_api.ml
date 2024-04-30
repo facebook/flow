@@ -242,10 +242,9 @@ module type S = sig
         def_loc: ALoc.t;
         name: string;
       }
-    | BuiltinLookupFailed of {
+    | BuiltinNameLookupFailed of {
         reason_desc: Reason.reason_desc;
-        potential_generator: string option;
-        name: Reason.name;
+        name: string;
       }
 
   val map_result :
@@ -306,10 +305,9 @@ module Make
         def_loc: ALoc.t;
         name: string;
       }
-    | BuiltinLookupFailed of {
+    | BuiltinNameLookupFailed of {
         reason_desc: Reason.reason_desc;
-        potential_generator: string option;
-        name: Reason.name;
+        name: string;
       }
 
   type literal_check =

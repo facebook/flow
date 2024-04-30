@@ -1371,11 +1371,13 @@ let dump_error_message =
         name
         (Polarity.string expected_polarity)
         (Polarity.string actual_polarity)
-    | EBuiltinLookupFailed { reason; name; potential_generator } ->
+    | EBuiltinNameLookupFailed { reason; name } ->
+      spf "EBuiltinNameLookupFailed { reason = %s; name = %S }" (dump_reason cx reason) name
+    | EBuiltinModuleLookupFailed { reason; name; potential_generator } ->
       spf
-        "EBuiltinLookupFailed { reason = %s; name = %S; potential_generator = %s }"
+        "EBuiltinModuleLookupFailed { reason = %s; name = %S; potential_generator = %s }"
         (dump_reason cx reason)
-        (Reason.display_string_of_name name)
+        name
         (match potential_generator with
         | Some generator -> spf "Some(%s)" generator
         | None -> "None")

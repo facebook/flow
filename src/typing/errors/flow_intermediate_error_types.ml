@@ -439,8 +439,9 @@ type 'loc message =
       pred_reason: 'loc virtual_reason;
       binding_reason: 'loc virtual_reason;
     }
-  | MessageCannotResolveBuiltin of {
-      name: name;
+  | MessageCannotResolveBuiltinName of string
+  | MessageCannotResolveBuiltinModule of {
+      name: string;
       potential_generator: string option;
     }
   | MessageCannotSpreadDueToPotentialOverwrite of {

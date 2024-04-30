@@ -101,9 +101,13 @@ and 'loc t' =
       expected_polarity: Polarity.t;
       actual_polarity: Polarity.t;
     }
-  | EBuiltinLookupFailed of {
+  | EBuiltinNameLookupFailed of {
       reason: 'loc virtual_reason;
-      name: Reason.name;
+      name: string;
+    }
+  | EBuiltinModuleLookupFailed of {
+      reason: 'loc virtual_reason;
+      name: string;
       potential_generator: string option;
     }
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
@@ -828,8 +832,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPropNotWritable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
-  | EBuiltinLookupFailed { reason; name; potential_generator } ->
-    EBuiltinLookupFailed { reason = map_reason reason; name; potential_generator }
+  | EBuiltinNameLookupFailed { reason; name } ->
+    EBuiltinNameLookupFailed { reason = map_reason reason; name }
+  | EBuiltinModuleLookupFailed { reason; name; potential_generator } ->
+    EBuiltinModuleLookupFailed { reason = map_reason reason; name; potential_generator }
   | EPrivateLookupFailed ((r1, r2), x, op) ->
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; name } ->
@@ -1436,7 +1442,8 @@ let util_use_op_of_msg nope util = function
   | EAnyValueUsedAsType _
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
-  | EBuiltinLookupFailed _
+  | EBuiltinNameLookupFailed _
+  | EBuiltinModuleLookupFailed _
   | EPlatformSpecificImplementationModuleLookupFailed _
   | EComparison (_, _)
   | ENonStrictEqualityComparison _
@@ -1776,7 +1783,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumModification { loc; _ } -> Some loc
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (loc_of_reason reason)
-  | EBuiltinLookupFailed { reason; _ } -> Some (loc_of_reason reason)
+  | EBuiltinNameLookupFailed { reason; _ } -> Some (loc_of_reason reason)
+  | EBuiltinModuleLookupFailed { reason; _ } -> Some (loc_of_reason reason)
   | ECannotCallReactComponent { reason } -> Some (loc_of_reason reason)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; _ } -> Some loc
   | EDuplicateClassMember { loc; _ } -> Some loc
@@ -2135,8 +2143,9 @@ let friendly_message_of_msg = function
     let reason_targ = mk_reason (RIdentifier (OrdinaryName name)) (def_loc_of_reason reason) in
     Normal
       (MessageCannotUseTypeDueToPolarityMismatch { reason_targ; expected_polarity; actual_polarity })
-  | EBuiltinLookupFailed { reason = _; name; potential_generator } ->
-    Normal (MessageCannotResolveBuiltin { name; potential_generator })
+  | EBuiltinNameLookupFailed { reason = _; name } -> Normal (MessageCannotResolveBuiltinName name)
+  | EBuiltinModuleLookupFailed { reason = _; name; potential_generator } ->
+    Normal (MessageCannotResolveBuiltinModule { name; potential_generator })
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
       {
@@ -2834,12 +2843,8 @@ let error_code_of_message err : error_code option =
     | EImportReassigned -> Some ReassignImport
     | EEnumReassigned -> Some ReassignEnum
   end
-  | EBuiltinLookupFailed { name; _ } -> begin
-    if is_internal_module_name name then
-      Some CannotResolveModule
-    else
-      Some CannotResolveName
-  end
+  | EBuiltinNameLookupFailed _ -> Some CannotResolveName
+  | EBuiltinModuleLookupFailed _ -> Some CannotResolveModule
   | EPlatformSpecificImplementationModuleLookupFailed _ -> Some CannotResolveModule
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete

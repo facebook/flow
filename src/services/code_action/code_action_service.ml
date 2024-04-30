@@ -766,17 +766,14 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       | _ -> []
     else
       []
-  | Error_message.EBuiltinLookupFailed { name; reason; _ } ->
+  | Error_message.EBuiltinNameLookupFailed { name; reason; _ } ->
     let error_loc = Reason.loc_of_reason reason in
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
           title = "Prefix with `this.`";
           diagnostic_title = "prefix_with_this";
-          transform =
-            Autofix_class_member_access.fix
-              ~loc_of_aloc
-              ~member_name:(Reason.display_string_of_name name);
+          transform = Autofix_class_member_access.fix ~loc_of_aloc ~member_name:name;
           target_loc = error_loc;
         };
       ]
@@ -847,8 +844,8 @@ let code_actions_of_errors
         in
         let (suggest_imports_actions, has_missing_import) =
           match error_message with
-          | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
-            when Options.autoimports options ->
+          | Error_message.EBuiltinNameLookupFailed { reason; name } when Options.autoimports options
+            ->
             let error_loc = Reason.loc_of_reason reason in
             let actions =
               if include_quick_fixes && Loc.intersects error_loc loc then
@@ -860,7 +857,7 @@ let code_actions_of_errors
                   ~diagnostics
                   ~imports_ranked_usage
                   ~exports (* TODO consider filtering out internal names *)
-                  ~name:(Reason.display_string_of_name name)
+                  ~name
                   uri
                   loc
               else
@@ -1155,9 +1152,8 @@ let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri
         match
           Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
         with
-        | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
-          when Options.autoimports options ->
-          let name = Reason.display_string_of_name name in
+        | Error_message.EBuiltinNameLookupFailed { reason; name } when Options.autoimports options
+          ->
           let error_loc = Reason.loc_of_reason reason in
           (match preferred_import ~ast ~exports name error_loc with
           | Some (source, export_kind) ->

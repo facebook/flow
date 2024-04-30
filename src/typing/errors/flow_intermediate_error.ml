@@ -1855,22 +1855,17 @@ let to_printable_error :
       [text "Cannot declare "; Friendly.ref x; text " because var redeclaration is not supported."]
     | MessageCannotReferencePredicateParameter { pred_reason; binding_reason } ->
       [text "A "; ref pred_reason; text " cannot reference "; ref binding_reason; text "."]
-    | MessageCannotResolveBuiltin { name; potential_generator } ->
-      if is_internal_module_name name then
-        let potential_generator_features =
-          match potential_generator with
-          | Some generator ->
-            [
-              text " Try running the command ";
-              code generator;
-              text " to generate the missing module.";
-            ]
-          | None -> []
-        in
-        [text "Cannot resolve module "; code (uninternal_name name); text "."]
-        @ potential_generator_features
-      else
-        [text "Cannot resolve name "; code (display_string_of_name name); text "."]
+    | MessageCannotResolveBuiltinName name -> [text "Cannot resolve name "; code name; text "."]
+    | MessageCannotResolveBuiltinModule { name; potential_generator } ->
+      let potential_generator_features =
+        match potential_generator with
+        | Some generator ->
+          [
+            text " Try running the command "; code generator; text " to generate the missing module.";
+          ]
+        | None -> []
+      in
+      [text "Cannot resolve module "; code name; text "."] @ potential_generator_features
     | MessageCannotSpreadDueToPotentialOverwrite { spread_reason; object_reason; key_reason } ->
       [
         text "Flow cannot determine a type for ";

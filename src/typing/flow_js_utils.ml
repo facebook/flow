@@ -754,8 +754,8 @@ let emit_cacheable_env_error cx loc err =
     match err with
     | Env_api.ReferencedBeforeDeclaration { name; def_loc } ->
       EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
-    | Env_api.BuiltinLookupFailed { reason_desc; potential_generator; name } ->
-      EBuiltinLookupFailed { reason = mk_reason reason_desc loc; potential_generator; name }
+    | Env_api.BuiltinNameLookupFailed { reason_desc; name } ->
+      EBuiltinNameLookupFailed { reason = mk_reason reason_desc loc; name }
   in
   add_output cx err
 
@@ -767,36 +767,26 @@ let lookup_builtin_module_error cx module_name reason =
   in
   add_output
     cx
-    (Error_message.EBuiltinLookupFailed
-       { reason; potential_generator; name = Reason.InternalModuleName module_name }
-    );
+    (Error_message.EBuiltinModuleLookupFailed { reason; potential_generator; name = module_name });
   AnyT.error_of_kind UnresolvedName reason
 
-let lookup_builtin_error cx x reason =
-  let potential_generator =
-    Context.missing_module_generators cx
-    |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
-    |> Base.Option.map ~f:snd
-  in
+let lookup_builtin_name_error name reason =
   Error
     ( AnyT.error_of_kind UnresolvedName reason,
-      Nel.one
-        (Env_api.BuiltinLookupFailed
-           { reason_desc = desc_of_reason reason; name = x; potential_generator }
-        )
+      Nel.one (Env_api.BuiltinNameLookupFailed { reason_desc = desc_of_reason reason; name })
     )
 
 let lookup_builtin_value_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_value_opt builtins x with
   | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
-  | None -> lookup_builtin_error cx (OrdinaryName x) reason
+  | None -> lookup_builtin_name_error x reason
 
 let lookup_builtin_type_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_type_opt builtins x with
   | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
-  | None -> lookup_builtin_error cx (OrdinaryName x) reason
+  | None -> lookup_builtin_name_error x reason
 
 let apply_env_errors cx loc = function
   | Ok t -> t
