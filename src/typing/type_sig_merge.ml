@@ -773,8 +773,8 @@ and merge_annot env file = function
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
+    let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
-    let module_t = Flow_js_utils.get_builtin_module file.cx ref reason in
     ConsGen.cjs_require file.cx module_t reason false false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }

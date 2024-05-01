@@ -746,7 +746,7 @@ let emit_cacheable_env_error cx loc err =
   in
   add_output cx err
 
-let lookup_builtin_module_error cx module_name reason =
+let lookup_builtin_module_error cx module_name loc =
   let potential_generator =
     Context.missing_module_generators cx
     |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern module_name 0)
@@ -754,25 +754,26 @@ let lookup_builtin_module_error cx module_name reason =
   in
   add_output
     cx
-    (Error_message.EBuiltinModuleLookupFailed
-       { loc = loc_of_reason reason; potential_generator; name = module_name }
-    );
-  AnyT.error_of_kind UnresolvedName reason
+    (Error_message.EBuiltinModuleLookupFailed { loc; potential_generator; name = module_name });
+  AnyT.error_of_kind UnresolvedName (mk_reason RAnyImplicit loc)
 
-let lookup_builtin_name_error name reason =
-  Error (AnyT.error_of_kind UnresolvedName reason, Nel.one (Env_api.BuiltinNameLookupFailed name))
+let lookup_builtin_name_error name loc =
+  Error
+    ( AnyT.error_of_kind UnresolvedName (mk_reason RAnyImplicit loc),
+      Nel.one (Env_api.BuiltinNameLookupFailed name)
+    )
 
 let lookup_builtin_value_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_value_opt builtins x with
   | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
-  | None -> lookup_builtin_name_error x reason
+  | None -> lookup_builtin_name_error x (loc_of_reason reason)
 
 let lookup_builtin_type_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_type_opt builtins x with
   | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
-  | None -> lookup_builtin_name_error x reason
+  | None -> lookup_builtin_name_error x (loc_of_reason reason)
 
 let apply_env_errors cx loc = function
   | Ok t -> t

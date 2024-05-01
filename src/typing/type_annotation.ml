@@ -1019,13 +1019,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     }
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
-                let reason = mk_annot_reason (RCommonJSExports value) loc in
-                let remote_module_t = Flow_js_utils.get_builtin_module cx value reason in
+                let remote_module_t = Flow_js_utils.get_builtin_module cx value loc in
                 let str_t = mk_singleton_string str_loc value in
                 reconstruct_ast
                   (Type_operation_utils.Import_export.cjs_require_type
                      cx
-                     reason
+                     (mk_annot_reason (RCommonJSExports value) loc)
                      ~legacy_interop:false
                      remote_module_t
                   )

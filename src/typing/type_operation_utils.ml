@@ -49,17 +49,17 @@ module Import_export = struct
         Flow_js_utils.add_output cx message
 
   let get_module_t cx ?(perform_platform_validation = false) (loc, mref) =
-    let reason = Reason.(mk_reason (RCustom mref) loc) in
     if Context.in_declare_module cx then
-      Flow_js_utils.get_builtin_module cx mref reason
+      Flow_js_utils.get_builtin_module cx mref loc
     else
       let module_t =
         match Context.find_require cx mref with
         | Ok t -> t
-        | Error m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name reason
+        | Error m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name loc
       in
       ( if perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
       then
+        let reason = Reason.(mk_reason (RCustom mref) loc) in
         match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
         | [ModuleT m] -> check_platform_availability cx reason m.module_available_platforms
         | _ -> ()
