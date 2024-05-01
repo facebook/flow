@@ -1026,7 +1026,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       ~use_op
       ~reason_op
       ~reason_tapp
-      ?(cache = false)
+      ?cache:_
       ?errs_ref
       ?(unify_bounds = false)
       (tparams_loc, xs, t)
@@ -1057,7 +1057,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
               (AnyT (reason_op, AnyError None), [], all_ts)
             | (_, t :: ts) -> (t, ts, (t, typeparam.name) :: all_ts)
           in
-          let t_ = cache_instantiate cx trace ~use_op ~cache typeparam reason_op reason_tapp t in
+          let t_ = cache_instantiate cx trace ~use_op typeparam reason_op reason_tapp t in
           let frame = Frame (TypeParamBound { name = typeparam.name }, use_op) in
           if not (Context.in_implicit_instantiation cx) then
             if unify_bounds then
