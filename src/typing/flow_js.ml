@@ -1882,6 +1882,28 @@ struct
         | (UnionT (_, rep), PredicateT (((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP) as p), t))
           when UnionRep.is_optimized_finally rep ->
           predicate cx trace t l p
+        (* Shortcut for indexed accesses with the same type as the dict key. *)
+        | ( UnionT _,
+            ElemT
+              ( use_op,
+                reason,
+                (DefT (_, ObjT { flags = { react_dro; _ } as flags; _ }) as _obj),
+                ReadElem { id = _; from_annot = _; access_iterables = _; tout }
+              )
+          )
+          when let dict = Obj_type.get_dict_opt flags.obj_kind in
+               match dict with
+               | Some { key; dict_polarity; _ } ->
+                 Concrete_type_eq.eq cx l key && Polarity.compat (dict_polarity, Polarity.Positive)
+               | None -> false ->
+          let { value; _ } = Base.Option.value_exn (Obj_type.get_dict_opt flags.obj_kind) in
+          let value = reposition_reason cx ~trace reason value in
+          let value =
+            match react_dro with
+            | Some dro -> mk_react_dro cx (Frame (ReactDeepReadOnly dro, use_op)) dro value
+            | None -> value
+          in
+          rec_flow_t cx trace ~use_op:unknown_use (value, OpenT tout)
         | ( UnionT (_, rep),
             ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; access_iterables; tout })
           ) ->

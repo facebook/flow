@@ -42,3 +42,17 @@ component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<str
 
 component A(x: {bar: number}) { return <A x={x} />; }; // ok
 
+export type Union = 'A' | 'B';
+
+component UnionToElemTShortcut(
+    key: Union,
+    data: {
+      [key: Union]: {
+        prop?: number,
+      },
+    },
+  ) {
+    const obj = data[key];
+    obj.prop = 0; // error
+    return null;
+}

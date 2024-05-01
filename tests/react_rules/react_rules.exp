@@ -124,6 +124,26 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ dro.js:56:9
+
+Cannot assign `0` to `obj.prop` because property `prop` is not writable. React component properties [1] and their nested
+props and elements cannot be written to. [react-rule-unsafe-mutation]
+
+   dro.js:56:9
+   56|     obj.prop = 0; // error
+               ^^^^
+
+References:
+   dro.js:49:5
+           v------
+   49|     data: {
+   50|       [key: Union]: {
+   51|         prop?: number,
+   52|       },
+   53|     },
+           ^ [1]
+
+
 Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17
 
 Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
@@ -278,4 +298,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 29 errors
+Found 30 errors
