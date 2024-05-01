@@ -995,41 +995,6 @@ let x =
   await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
-function makeLoc(contents, startLine, startCol, endLine, endCol) {
-  return {
-    start: {
-      line: startLine,
-      column: startCol,
-      offset: posToOffset(contents, startLine, startCol),
-    },
-    end: {
-      line: endLine,
-      column: endCol,
-      offset: posToOffset(contents, endLine, endCol),
-    },
-  };
-}
-
-function posToOffset(contents, line, col) {
-  let offset = 0;
-  // Using 1-indexed line and column for this
-  let currentLine = 1;
-  let currentCol = 1;
-  const buf = Buffer.from(contents, 'utf8');
-  while (offset < buf.length && !(currentLine === line && currentCol === col)) {
-    const char = buf.toString('utf8', offset, offset + 1);
-    if (char === '\n') {
-      currentLine++;
-      currentCol = 1;
-    } else {
-      currentCol++;
-    }
-    offset++;
-  }
-
-  return offset;
-}
-
 async function expectCommentsAreRemoved(
   input,
   expectedOutput,
