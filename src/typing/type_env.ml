@@ -744,12 +744,7 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
     if is_provider cx loc then
       Base.Option.iter potential_global_name ~f:(fun name ->
           if Base.Option.is_none (Flow_js_utils.lookup_builtin_value_opt cx name) then
-            Flow_js_utils.add_output
-              cx
-              Error_message.(
-                EBuiltinNameLookupFailed
-                  { reason = mk_reason (RIdentifier (OrdinaryName name)) loc; name }
-              )
+            Flow_js_utils.add_output cx Error_message.(EBuiltinNameLookupFailed { loc; name })
       )
   | _ ->
     if not (is_provider cx loc) then

@@ -766,8 +766,7 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       | _ -> []
     else
       []
-  | Error_message.EBuiltinNameLookupFailed { name; reason; _ } ->
-    let error_loc = Reason.loc_of_reason reason in
+  | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name } ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -844,9 +843,8 @@ let code_actions_of_errors
         in
         let (suggest_imports_actions, has_missing_import) =
           match error_message with
-          | Error_message.EBuiltinNameLookupFailed { reason; name } when Options.autoimports options
-            ->
-            let error_loc = Reason.loc_of_reason reason in
+          | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
+            when Options.autoimports options ->
             let actions =
               if include_quick_fixes && Loc.intersects error_loc loc then
                 let { ServerEnv.exports; _ } = env in
@@ -1152,9 +1150,8 @@ let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri
         match
           Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
         with
-        | Error_message.EBuiltinNameLookupFailed { reason; name } when Options.autoimports options
-          ->
-          let error_loc = Reason.loc_of_reason reason in
+        | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
+          when Options.autoimports options ->
           (match preferred_import ~ast ~exports name error_loc with
           | Some (source, export_kind) ->
             let bindings =

@@ -742,8 +742,7 @@ let emit_cacheable_env_error cx loc err =
     match err with
     | Env_api.ReferencedBeforeDeclaration { name; def_loc } ->
       EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
-    | Env_api.BuiltinNameLookupFailed { reason_desc; name } ->
-      EBuiltinNameLookupFailed { reason = mk_reason reason_desc loc; name }
+    | Env_api.BuiltinNameLookupFailed name -> EBuiltinNameLookupFailed { loc; name }
   in
   add_output cx err
 
@@ -755,14 +754,13 @@ let lookup_builtin_module_error cx module_name reason =
   in
   add_output
     cx
-    (Error_message.EBuiltinModuleLookupFailed { reason; potential_generator; name = module_name });
+    (Error_message.EBuiltinModuleLookupFailed
+       { loc = loc_of_reason reason; potential_generator; name = module_name }
+    );
   AnyT.error_of_kind UnresolvedName reason
 
 let lookup_builtin_name_error name reason =
-  Error
-    ( AnyT.error_of_kind UnresolvedName reason,
-      Nel.one (Env_api.BuiltinNameLookupFailed { reason_desc = desc_of_reason reason; name })
-    )
+  Error (AnyT.error_of_kind UnresolvedName reason, Nel.one (Env_api.BuiltinNameLookupFailed name))
 
 let lookup_builtin_value_result cx x reason =
   let builtins = Context.builtins cx in

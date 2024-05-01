@@ -242,10 +242,7 @@ module type S = sig
         def_loc: ALoc.t;
         name: string;
       }
-    | BuiltinNameLookupFailed of {
-        reason_desc: Reason.reason_desc;
-        name: string;
-      }
+    | BuiltinNameLookupFailed of string
 
   val map_result :
     f:('a -> 'b) ->
@@ -305,10 +302,7 @@ module Make
         def_loc: ALoc.t;
         name: string;
       }
-    | BuiltinNameLookupFailed of {
-        reason_desc: Reason.reason_desc;
-        name: string;
-      }
+    | BuiltinNameLookupFailed of string
 
   type literal_check =
     | SingletonNum of ALoc.t * bool * float * string
