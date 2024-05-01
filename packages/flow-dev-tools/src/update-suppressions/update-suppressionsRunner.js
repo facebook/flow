@@ -201,14 +201,14 @@ function replaceSites(text: string, sites: $ReadOnlyArray<string>): string {
  * comment if it's unused everywhere.
  */
 function updateErrorSuppression(
-  contents: Buffer,
+  contents: string,
   startOffset: number,
   endOffset: number,
   commentAST: Object | void,
   ast: Object,
   knownRoots: Set<RootName>,
   unusedRoots: Set<RootName>,
-): Buffer {
+): string {
   let commentStartOffset;
   let commentEndOffset;
   if (commentAST) {
@@ -218,7 +218,7 @@ function updateErrorSuppression(
     commentEndOffset = endOffset;
   }
   let innerOffset = commentStartOffset + 2; // `/*` and `//` are both 2 chars
-  let text = contents.slice(innerOffset, endOffset).toString('utf8');
+  let text = contents.slice(innerOffset, endOffset);
 
   // do not remove the comment if it's a eslint suppression
   // TODO update the logging provided in the end of the command
@@ -250,11 +250,7 @@ function updateErrorSuppression(
       text = replaceSites(text, [...roots]);
     }
 
-    return Buffer.concat([
-      contents.slice(0, innerOffset),
-      Buffer.from(text),
-      contents.slice(endOffset),
-    ]);
+    return contents.slice(0, innerOffset) + text + contents.slice(endOffset);
   }
 }
 
@@ -264,36 +260,33 @@ async function updateSuppressions(
   numBins: number,
   errors: Map<number, ErrorsForLine>,
   comment: string,
-  flowBinPath: string,
 ): Promise<void> {
   const contentsString = await readFile(filename, 'utf8');
   const contents = await updateSuppressionsInText(
-    Buffer.from(contentsString, 'utf8'),
+    contentsString,
     allRoots,
     numBins,
     errors,
     comment,
-    flowBinPath,
   );
-  await writeFile(filename, contents.toString('utf8'));
+  await writeFile(filename, contents);
 }
 
 // Exported for testing
 async function updateSuppressionsInText(
-  contents: Buffer,
+  contents: string,
   allRoots: Set<RootName>,
   numBins: number,
   errorsByLine: Map<number, ErrorsForLine>,
   comment: string,
-  flowBinPath: string,
-): Promise<Buffer> {
+): Promise<string> {
   const errors = Array.from(errorsByLine);
   // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
   // removal of comments earlier in the file would outdate the locations for comments later in the
   // file.
   errors.sort(([line1, _errs1], [line2, _errs2]) => line2 - line1);
 
-  const ast = await getAst(contents.toString('utf8'), flowBinPath);
+  const ast = await getAst(contents);
 
   for (const [
     _line,
@@ -432,7 +425,6 @@ async function runner(args: Args): Promise<void> {
           args.diffBin ? 2 : 1,
           errors,
           args.comment,
-          args.bin,
         );
       }),
     );

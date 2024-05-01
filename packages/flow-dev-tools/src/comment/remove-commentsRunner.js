@@ -33,29 +33,26 @@ async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
 async function removeUnusedErrorSuppressions(
   filename: string,
   errors: Array<FlowLoc>,
-  flowBinPath: string,
 ): Promise<void> {
   const contentsString = await readFile(filename, 'utf8');
   const contents = await removeUnusedErrorSuppressionsFromText(
-    Buffer.from(contentsString, 'utf8'),
+    contentsString,
     errors,
-    flowBinPath,
   );
-  await writeFile(filename, contents.toString('utf8'));
+  await writeFile(filename, contents);
 }
 
 // Exported for testing
 async function removeUnusedErrorSuppressionsFromText(
-  contents: Buffer,
+  contents: string,
   errors: Array<FlowLoc>,
-  flowBinPath: string,
-): Promise<Buffer> {
+): Promise<string> {
   // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
   // removal of comments earlier in the file would outdate the locations for comments later in the
   // file.
   errors.sort((loc1, loc2) => loc2.start.offset - loc1.start.offset);
 
-  const ast = await getAst(contents.toString('utf8'), flowBinPath);
+  const ast = await getAst(contents);
 
   for (const error of errors) {
     const origStart = error.start.offset;
@@ -110,7 +107,7 @@ async function runner(args: Args): Promise<void> {
     });
   await Promise.all(
     errors.map(([filename, errors]) =>
-      removeUnusedErrorSuppressions(filename, errors, args.bin),
+      removeUnusedErrorSuppressions(filename, errors),
     ),
   );
   console.log(

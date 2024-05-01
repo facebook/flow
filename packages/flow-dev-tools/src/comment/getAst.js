@@ -8,18 +8,12 @@
  * @format
  */
 
+const HermesParser = require('hermes-parser');
 const {format} = require('util');
 const {exec} = require('../utils/async');
 
-async function getAst(
-  code: string,
-  flowBinPath: string,
-): Promise<Object> /* AST */ {
-  const stdout = await exec(format('%s ast', flowBinPath), {
-    maxBuffer: 16 * 1024 * 1024,
-    stdin: code,
-  });
-  return JSON.parse(stdout);
+function getAst(code: string): Object /* AST */ {
+  return HermesParser.parse(code, {babel: false});
 }
 
 module.exports = {
