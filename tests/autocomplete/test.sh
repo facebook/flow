@@ -101,5 +101,6 @@ query_at_pos autocomplete "fixme.js" 18 12 --pretty
 query_at_pos autocomplete "fixme.js" 21 10 --lsp
 queries_in_file autocomplete "super_member.js" --pretty
 queries_in_file autocomplete "switch.js" --pretty
+queries_in_file autocomplete "keywords_after_export_default.js" --pretty
 queries_in_file autocomplete "keywords_c.js" --pretty
 queries_in_file autocomplete "keywords_f.js" --pretty

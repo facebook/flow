@@ -938,7 +938,10 @@ let autocomplete_id
   let items_rev =
     if include_keywords then
       let keywords =
-        Keywords.keywords_at_loc typing.ast ac_loc
+        Keywords.keywords_at_loc
+          ~component_syntax_enabled:(Context.component_syntax typing.cx)
+          typing.ast
+          ac_loc
         |> Base.List.map ~f:(AcCompletion.of_keyword ~edit_locs)
       in
       Base.List.rev_append keywords items_rev

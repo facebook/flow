@@ -195,6 +195,7 @@ Flags: --pretty
     {"name":"case","type":""},
     {"name":"catch","type":""},
     {"name":"class","type":""},
+    {"name":"component","type":""},
     {"name":"const","type":""},
     {"name":"continue","type":""},
     {"name":"debugger","type":""},
@@ -209,6 +210,7 @@ Flags: --pretty
     {"name":"finally","type":""},
     {"name":"for","type":""},
     {"name":"function","type":""},
+    {"name":"hook","type":""},
     {"name":"if","type":""},
     {"name":"implements","type":""},
     {"name":"import","type":""},
@@ -256,6 +258,7 @@ Flags: --pretty
     {"name":"case","type":""},
     {"name":"catch","type":""},
     {"name":"class","type":""},
+    {"name":"component","type":""},
     {"name":"const","type":""},
     {"name":"continue","type":""},
     {"name":"debugger","type":""},
@@ -270,6 +273,7 @@ Flags: --pretty
     {"name":"finally","type":""},
     {"name":"for","type":""},
     {"name":"function","type":""},
+    {"name":"hook","type":""},
     {"name":"if","type":""},
     {"name":"implements","type":""},
     {"name":"import","type":""},
@@ -905,6 +909,7 @@ Flags: --pretty
     {"name":"case","type":""},
     {"name":"catch","type":""},
     {"name":"class","type":""},
+    {"name":"component","type":""},
     {"name":"const","type":""},
     {"name":"continue","type":""},
     {"name":"debugger","type":""},
@@ -920,6 +925,7 @@ Flags: --pretty
     {"name":"foo","type":"() => void"},
     {"name":"for","type":""},
     {"name":"function","type":""},
+    {"name":"hook","type":""},
     {"name":"if","type":""},
     {"name":"implements","type":""},
     {"name":"import","type":""},
@@ -5516,6 +5522,7 @@ Flags: --pretty
     {"name":"case","type":""},
     {"name":"catch","type":""},
     {"name":"class","type":""},
+    {"name":"component","type":""},
     {"name":"const","type":""},
     {"name":"continue","type":""},
     {"name":"debugger","type":""},
@@ -5531,6 +5538,7 @@ Flags: --pretty
     {"name":"foo","type":"string"},
     {"name":"for","type":""},
     {"name":"function","type":""},
+    {"name":"hook","type":""},
     {"name":"if","type":""},
     {"name":"implements","type":""},
     {"name":"import","type":""},
@@ -6427,6 +6435,10 @@ Flags: --pretty
   ]
 }
 
+keywords_after_export_default.js:3:17
+Flags: --pretty
+{"result":[{"name":"class","type":""},{"name":"component","type":""}]}
+
 keywords_c.js:3:4
 Flags: --pretty
 {
@@ -6435,7 +6447,8 @@ Flags: --pretty
     {"name":"class","type":""},
     {"name":"case","type":""},
     {"name":"catch","type":""},
-    {"name":"continue","type":""}
+    {"name":"continue","type":""},
+    {"name":"component","type":""}
   ]
 }
 

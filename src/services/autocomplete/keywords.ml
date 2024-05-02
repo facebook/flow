@@ -7,6 +7,7 @@
 
 type context_node =
   | Statement
+  | ExportDefault
   | Expression
   | ExpressionStatement
   | BindingIdentifier
@@ -32,7 +33,7 @@ let expression_keywords =
     [const, class, ...], instead of [case, catch, class, const, continue].
     you can also trigger Quick Suggest without typing anything (cmd+space),
     but that's sorted purely alphabetically. *)
-let statement_keywords =
+let statement_keywords ~component_syntax_enabled =
   [
     "await";
     "async";
@@ -73,6 +74,29 @@ let statement_keywords =
     "while";
     "yield";
   ]
+  @
+  if component_syntax_enabled then
+    ["component"; "hook"]
+  else
+    []
+
+(** keywords that can appear after export default *)
+let export_default_keywords ~component_syntax_enabled =
+  [
+    (* export default async function ... *)
+    "async";
+    (* The following keywords should be keep in sync with logic of Statement_parser.export_declaration *)
+    "class";
+    "function";
+    "enum";
+    (* export default new MyClass() ... *)
+    "new";
+  ]
+  @
+  if component_syntax_enabled then
+    ["component"; "hook"]
+  else
+    []
 
 exception Found of context_node list
 
@@ -93,6 +117,9 @@ class mapper target =
     method! expression expr = this#with_context Expression (fun () -> super#expression expr)
 
     method! statement stmt = this#with_context Statement (fun () -> super#statement stmt)
+
+    method! export_default_declaration loc stmt =
+      this#with_context ExportDefault (fun () -> super#export_default_declaration loc stmt)
 
     method! expression_statement loc stmt =
       this#with_context ExpressionStatement (fun () -> super#expression_statement loc stmt)
@@ -118,18 +145,21 @@ class mapper target =
       super#identifier (loc, id)
   end
 
-let keywords_of_context context =
+let keywords_of_context ~component_syntax_enabled context =
   match context with
   | Expression :: ExpressionStatement :: _
   | Statement :: _ ->
-    statement_keywords
+    statement_keywords ~component_syntax_enabled
+  | ExportDefault :: _
+  | Expression :: ExportDefault :: _ ->
+    export_default_keywords ~component_syntax_enabled
   | Expression :: Member :: _
   | Expression :: SwitchCase :: _ ->
     []
   | Expression :: _ -> expression_keywords
   | _ -> []
 
-let keywords_at_loc ast loc =
+let keywords_at_loc ~component_syntax_enabled ast loc =
   (* We're looking for an identifier, considering the first character is equivalent. *)
   let target = Loc.first_char loc in
   let mapper = new mapper target in
@@ -137,4 +167,4 @@ let keywords_at_loc ast loc =
     ignore (mapper#program ast);
     []
   with
-  | Found context -> keywords_of_context context
+  | Found context -> keywords_of_context ~component_syntax_enabled context

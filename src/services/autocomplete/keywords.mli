@@ -5,4 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val keywords_at_loc : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> string list
+val keywords_at_loc :
+  component_syntax_enabled:bool -> (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> string list

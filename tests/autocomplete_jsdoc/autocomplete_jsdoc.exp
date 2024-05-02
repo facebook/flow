@@ -242,6 +242,32 @@ Flags: --lsp
   }
 }
 {
+  "label":"component",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"component"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"component",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
   "label":"const",
   "kind":14,
   "sortText":"00000000000000000000",
@@ -258,7 +284,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":9,
+        "index":10,
         "session_requests":null,
         "typed_length":null,
         "completion":"const",
@@ -284,7 +310,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":10,
+        "index":11,
         "session_requests":null,
         "typed_length":null,
         "completion":"continue",
@@ -310,7 +336,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":11,
+        "index":12,
         "session_requests":null,
         "typed_length":null,
         "completion":"debugger",
@@ -336,7 +362,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":12,
+        "index":13,
         "session_requests":null,
         "typed_length":null,
         "completion":"declare",
@@ -362,7 +388,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":13,
+        "index":14,
         "session_requests":null,
         "typed_length":null,
         "completion":"default",
@@ -390,7 +416,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":14,
+        "index":15,
         "session_requests":null,
         "typed_length":null,
         "completion":"DefaultedStringEnum",
@@ -416,7 +442,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":15,
+        "index":16,
         "session_requests":null,
         "typed_length":null,
         "completion":"delete",
@@ -442,7 +468,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":16,
+        "index":17,
         "session_requests":null,
         "typed_length":null,
         "completion":"do",
@@ -468,7 +494,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":17,
+        "index":18,
         "session_requests":null,
         "typed_length":null,
         "completion":"else",
@@ -494,7 +520,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":18,
+        "index":19,
         "session_requests":null,
         "typed_length":null,
         "completion":"enum",
@@ -520,7 +546,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":19,
+        "index":20,
         "session_requests":null,
         "typed_length":null,
         "completion":"export",
@@ -546,7 +572,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":20,
+        "index":21,
         "session_requests":null,
         "typed_length":null,
         "completion":"extends",
@@ -572,7 +598,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":21,
+        "index":22,
         "session_requests":null,
         "typed_length":null,
         "completion":"finally",
@@ -601,7 +627,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":22,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"foo",
@@ -627,7 +653,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":23,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"for",
@@ -653,10 +679,36 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":24,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"function",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"hook",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"hook"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hook",
         "ac_type":"Acid"
       }
     ]
@@ -679,7 +731,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":25,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"if",
@@ -705,7 +757,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":26,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"implements",
@@ -731,7 +783,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":27,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"import",
@@ -759,7 +811,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":28,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"InitializedStringEnum",
@@ -785,7 +837,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":29,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"interface",
@@ -811,7 +863,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":30,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"let",
@@ -837,7 +889,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":31,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"new",
@@ -865,7 +917,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":32,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"NumberEnum",
@@ -891,7 +943,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":33,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"opaque",
@@ -923,7 +975,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":34,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"qux",
@@ -949,7 +1001,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":35,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"return",
@@ -975,7 +1027,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":36,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"static",
@@ -1001,7 +1053,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":37,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"switch",
@@ -1029,7 +1081,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":38,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"SymbolEnum",
@@ -1055,7 +1107,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":39,
+        "index":41,
         "session_requests":null,
         "typed_length":null,
         "completion":"throw",
@@ -1081,7 +1133,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":40,
+        "index":42,
         "session_requests":null,
         "typed_length":null,
         "completion":"try",
@@ -1107,7 +1159,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":41,
+        "index":43,
         "session_requests":null,
         "typed_length":null,
         "completion":"type",
@@ -1133,7 +1185,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":42,
+        "index":44,
         "session_requests":null,
         "typed_length":null,
         "completion":"typeof",
@@ -1159,7 +1211,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":43,
+        "index":45,
         "session_requests":null,
         "typed_length":null,
         "completion":"var",
@@ -1185,7 +1237,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":44,
+        "index":46,
         "session_requests":null,
         "typed_length":null,
         "completion":"void",
@@ -1211,7 +1263,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":45,
+        "index":47,
         "session_requests":null,
         "typed_length":null,
         "completion":"while",
@@ -1241,7 +1293,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":46,
+        "index":48,
         "session_requests":null,
         "typed_length":null,
         "completion":"x",
@@ -1267,7 +1319,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":47,
+        "index":49,
         "session_requests":null,
         "typed_length":null,
         "completion":"yield",
