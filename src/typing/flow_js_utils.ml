@@ -1017,8 +1017,6 @@ module type Instantiation_helper_sig = sig
 end
 
 module Instantiation_kit (H : Instantiation_helper_sig) = struct
-  let cache_instantiate = H.cache_instantiate
-
   (* Instantiate a polymorphic definition given type arguments. *)
   let instantiate_poly_with_targs
       cx
@@ -1026,7 +1024,6 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       ~use_op
       ~reason_op
       ~reason_tapp
-      ?cache:_
       ?errs_ref
       ?(unify_bounds = false)
       (tparams_loc, xs, t)
@@ -1057,14 +1054,13 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
               (AnyT (reason_op, AnyError None), [], all_ts)
             | (_, t :: ts) -> (t, ts, (t, typeparam.name) :: all_ts)
           in
-          let t_ = cache_instantiate cx trace ~use_op typeparam reason_op reason_tapp t in
           let frame = Frame (TypeParamBound { name = typeparam.name }, use_op) in
           if not (Context.in_implicit_instantiation cx) then
             if unify_bounds then
-              H.unify cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound)
+              H.unify cx trace ~use_op:frame (t, subst cx ~use_op map typeparam.bound)
             else
-              H.is_subtype cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
-          (Subst_name.Map.add typeparam.name t_ map, ts, all_ts))
+              H.is_subtype cx trace ~use_op:frame (t, subst cx ~use_op map typeparam.bound);
+          (Subst_name.Map.add typeparam.name t map, ts, all_ts))
         (Subst_name.Map.empty, ts, [])
         xs
     in
@@ -1079,15 +1075,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
   let mk_typeapp_of_poly
       cx trace ~use_op ~reason_op ~reason_tapp ?(cache = false) id tparams_loc xs t ts =
     if cache then
-      instantiate_poly_with_targs
-        cx
-        trace
-        ~use_op
-        ~reason_op
-        ~reason_tapp
-        ~cache
-        (tparams_loc, xs, t)
-        ts
+      instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) ts
       |> fst
     else
       let key = (id, ts) in
@@ -1127,14 +1115,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
 
   (* Instantiate a polymorphic definition by creating fresh type arguments. *)
   let instantiate_poly
-      cx
-      trace
-      ~use_op
-      ~reason_op
-      ~reason_tapp
-      ?(cache = false)
-      ?(unify_bounds = false)
-      (tparams_loc, xs, t) =
+      cx trace ~use_op ~reason_op ~reason_tapp ?(unify_bounds = false) (tparams_loc, xs, t) =
     let ts = xs |> Nel.map (fun typeparam -> H.mk_targ cx typeparam reason_op reason_tapp) in
     instantiate_poly_with_targs
       cx
@@ -1142,7 +1123,6 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       ~use_op
       ~reason_op
       ~reason_tapp
-      ~cache
       ~unify_bounds
       (tparams_loc, xs, t)
       (Nel.to_list ts)

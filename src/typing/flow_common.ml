@@ -179,7 +179,6 @@ module type SUBTYPING = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.t ->
-    ?cache:bool ->
     ?errs_ref:Context.subst_cache_err list ref ->
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
@@ -192,7 +191,6 @@ module type SUBTYPING = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    ?cache:bool ->
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
     Type.t * (Type.t * Subst_name.t) list

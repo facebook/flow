@@ -7997,7 +7997,6 @@ struct
         ~use_op
         ~reason_op
         ~reason_tapp
-        ~cache:false
         (tparams_loc, xs, t)
         (List.rev ts)
     in
