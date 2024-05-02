@@ -1,4 +1,4 @@
-declare function promiseAllByKey<O>(o: O): Promise<$ObjMap<O,typeof $await>>;
+declare function promiseAllByKey<O>(o: O): Promise<$ObjMap<O,<T>(p: Promise<T> | T) => T>>;
 declare function keyMirror<O>(o: O): $ObjMapi<O, <K>(k:K) => K>;
 
 var o = keyMirror({
@@ -20,7 +20,7 @@ promiseAllByKey({
 var foo: $ObjMap<
   {|a: number|},
   <T>(t:T) => T
-> = {} // error, {| a: number |} ~> {} 
+> = {} // error, {| a: number |} ~> {}
 
 var bar: $ObjMap<
   {a: number},

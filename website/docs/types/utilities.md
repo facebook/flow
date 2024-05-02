@@ -714,7 +714,7 @@ which is like `Promise.all` but takes an object as input.
 Here's a possible declaration of this function, which is very similar to our first example:
 
 ```js flow-check
-declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O, typeof $await>>;
+declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O, <T>(p: Promise<T> | T) => T>>>;
 
 const promises = {a: Promise.resolve(42)};
 props(promises).then(o => {

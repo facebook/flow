@@ -41,7 +41,7 @@ async function test1(): Promise<[$SettledPromiseResult<Foo>, $SettledPromiseResu
   } else if (second.status === 'rejected')  {
     console.log(second.reason);
   } else {
-    return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+    return (second.status: empty); // ok
   }
 
   return settled;

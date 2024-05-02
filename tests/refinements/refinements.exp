@@ -3030,30 +3030,12 @@ References:
                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- issue-7104.js:20:14
-
-`T` [1] is underconstrained by async return [2]. Either add explicit type arguments or cast the expression to your
-expected type. [underconstrained-implicit-instantiation]
-
-   issue-7104.js:20:14
-     20|       return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
-                      ^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:2038:25
-   2038| declare function $await<T>(p: Promise<T> | T): T;
-                                 ^ [1]
-   issue-7104.js:20:7
-     20|       return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------- issue-7104.js:20:15
 
 Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
 
    issue-7104.js:20:15
-   20|       return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+   20|       return (box: empty).value; // error, but no underconstrained error
                      ^^^
 
 References:
@@ -3061,7 +3043,7 @@ References:
     3|   let box: Box = { type: "GOOD", value: t };
                   ^^^ [1]
    issue-7104.js:20:20
-   20|       return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+   20|       return (box: empty).value; // error, but no underconstrained error
                           ^^^^^ [2]
 
 
@@ -6397,7 +6379,7 @@ References:
 
 
 
-Found 421 errors
+Found 420 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

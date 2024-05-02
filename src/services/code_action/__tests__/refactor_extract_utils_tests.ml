@@ -95,7 +95,6 @@ let dummy_context () =
          (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "Promise" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "promise" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "$await" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "$IterableOrAsyncIterableInternal"
          (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))

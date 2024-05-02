@@ -830,7 +830,7 @@ Cannot assign object literal to `foo` because property `a` is missing in object 
 type [2]. [prop-missing]
 
    objmap.js:23:5
-   23| > = {} // error, {| a: number |} ~> {} 
+   23| > = {} // error, {| a: number |} ~> {}
            ^^ [1]
 
 References:
@@ -839,7 +839,7 @@ References:
    20| var foo: $ObjMap<
    21|   {|a: number|},
    22|   <T>(t:T) => T
-   23| > = {} // error, {| a: number |} ~> {} 
+   23| > = {} // error, {| a: number |} ~> {}
        ^ [2]
 
 

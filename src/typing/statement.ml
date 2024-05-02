@@ -4590,30 +4590,9 @@ module Make
       let argument = delete cx loc argument in
       (BoolT.at loc, { operator = Ast.Expression.Unary.Delete; argument; comments })
     | { operator = Await; argument; comments } ->
-      (* TODO: await should look up Promise in the environment instead of going
-         directly to the core definition. Otherwise, the following won't work
-         with a polyfilled Promise! **)
-      (* see declaration of $await in core.js:
-         if argument is a Promise<T>, then (await argument) returns T.
-         otherwise it just returns the argument type.
-         TODO update this comment when recursive unwrapping of
-         Promise is done.
-      *)
       let reason = mk_reason (RCustom "await") loc in
-      let await = Flow_js_utils.lookup_builtin_value cx "$await" reason in
       let (((_, arg), _) as argument_ast) = expression cx argument in
-      let use_op =
-        Op
-          (FunCall
-             {
-               op = reason;
-               fn = reason_of_t await;
-               args = [mk_expression_reason argument];
-               local = true;
-             }
-          )
-      in
-      ( func_call cx loc reason ~use_op await None [Arg arg] None,
+      ( Type_operation_utils.Promise.await cx reason arg,
         { operator = Await; argument = argument_ast; comments }
       )
 

@@ -49,3 +49,7 @@ module Import_export : sig
 
   val cjs_require_type : Context.t -> reason -> legacy_interop:bool -> Type.t -> Type.t
 end
+
+module Promise : sig
+  val await : Context.t -> reason -> Type.t -> Type.t
+end

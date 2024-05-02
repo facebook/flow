@@ -1,18 +1,3 @@
-Error --------------------------------------------------------------------------------------------- async_return.js:8:10
-
-Cannot call await because `T` [1] is underconstrained by await [2]. Either add explicit type arguments or cast the
-expression to your expected type. [underconstrained-implicit-instantiation]
-
-   async_return.js:8:10
-      8|   return await [][0];
-                  ^^^^^^^^^^^ [2]
-
-References:
-   <BUILTINS>/core.js:2038:25
-   2038| declare function $await<T>(p: Promise<T> | T): T;
-                                 ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------ contextual_ctor.js:5:13
 
 Cannot call `C` because `T` [1] is underconstrained by new `C` [2]. Either add explicit type arguments or cast the
@@ -1126,4 +1111,4 @@ References:
 
 
 
-Found 72 errors
+Found 71 errors

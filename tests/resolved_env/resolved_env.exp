@@ -26,28 +26,13 @@ References:
                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- async.js:4:13
-
-Cannot call await because `T` [1] is underconstrained by await [2]. Either add explicit type arguments or cast the
-expression to your expected type. [underconstrained-implicit-instantiation]
-
-   async.js:4:13
-      4|     var x = await (yield* 42); // TODO: We have a spurious underconstrained error here. To fix this, we will need any propagation for instance type and default resolve after subtyping failure.
-                     ^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   <BUILTINS>/core.js:2038:25
-   2038| declare function $await<T>(p: Promise<T> | T): T;
-                                 ^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------------- async.js:4:27
 
 Cannot yield `42` because number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in
 `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    async.js:4:27
-      4|     var x = await (yield* 42); // TODO: We have a spurious underconstrained error here. To fix this, we will need any propagation for instance type and default resolve after subtyping failure.
+      4|     var x = await (yield* 42); // error: number is not iterable
                                    ^^ [1]
 
 References:
@@ -1193,4 +1178,4 @@ undefined. [incompatible-return]
 
 
 
-Found 82 errors
+Found 81 errors

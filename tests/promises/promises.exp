@@ -110,8 +110,8 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
 
 References:
    <BUILTINS>/core.js:2004:5
-   2004|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   2004|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => T>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- all.js:25:27
@@ -188,24 +188,6 @@ References:
    allSettled.js:24:31
    24|   const bar = Promise.resolve(new Bar());
                                      ^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- allSettled.js:44:28
-
-`T` [1] is underconstrained by async return [2]. Either add explicit type arguments or cast the expression to your
-expected type. [underconstrained-implicit-instantiation]
-
-   allSettled.js:44:28
-     44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
-                                    ^^^^^
-
-References:
-   <BUILTINS>/core.js:2038:25
-   2038| declare function $await<T>(p: Promise<T> | T): T;
-                                 ^ [1]
-   allSettled.js:44:5
-     44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:1
@@ -671,4 +653,4 @@ References:
 
 
 
-Found 41 errors
+Found 40 errors

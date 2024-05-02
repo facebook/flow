@@ -17,7 +17,7 @@ async function coerce(t: string): Promise<number> {
     sentinel.flag = true;
     await p;
     if (box.type !== "GOOD") {
-      return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+      return (box: empty).value; // error, but no underconstrained error
     }
   }
   throw new Error("Unreachable.");

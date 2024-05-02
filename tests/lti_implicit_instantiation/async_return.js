@@ -5,5 +5,5 @@ async function f() {
 }
 
 async function g() {
-  return await [][0];
+  return await [][0]; // ok
 }

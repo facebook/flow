@@ -113,31 +113,7 @@ class func_scope_visitor
               cx
               (mk_reason (desc_of_t t) loc)
               "Promise"
-              [
-                Tvar.mk_where cx async_return_reason (fun tvar ->
-                    let funt = Flow_js_utils.lookup_builtin_value cx "$await" async_return_reason in
-                    let callt =
-                      mk_functioncalltype
-                        ~call_kind:RegularCallKind
-                        async_return_reason
-                        None
-                        [Arg t]
-                        (open_tvar tvar)
-                    in
-                    let reason = repos_reason (loc_of_reason (reason_of_t t)) async_return_reason in
-                    Flow.flow
-                      cx
-                      ( funt,
-                        CallT
-                          {
-                            use_op = unknown_use;
-                            reason;
-                            call_action = Funcalltype callt;
-                            return_hint = Type.hint_unavailable;
-                          }
-                      )
-                );
-              ]
+              [Type_operation_utils.Promise.await cx async_return_reason t]
           in
           Flow.reposition cx loc t'
         | Generator _ ->

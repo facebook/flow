@@ -176,3 +176,29 @@ module Import_export = struct
       Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
       AnyT (lreason, any_source)
 end
+
+module ImplicitInstantiation =
+  Implicit_instantiation.Kit
+    (Flow.FlowJs)
+    (struct
+      let mk_targ = Instantiation_utils.ImplicitTypeArgument.mk_targ
+
+      let is_subtype = Flow.FlowJs.rec_flow_t
+
+      let unify cx trace ~use_op (t1, t2) =
+        Flow.FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
+
+      let reposition = Flow.FlowJs.reposition ?desc:None ?annot_loc:None
+    end)
+
+module Promise = struct
+  let await cx reason t =
+    (* await distributes over union: await (Promise<T> | void) = T | void *)
+    match
+      Flow.possible_concrete_types_for_inspection cx reason t
+      |> List.map (ImplicitInstantiation.run_await cx ~use_op:unknown_use ~reason)
+    with
+    | [] -> EmptyT.why reason
+    | [t] -> t
+    | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+end
