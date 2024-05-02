@@ -7,9 +7,11 @@
 
 open Type
 
-let mk_seal ~frozen =
+let mk_seal ~frozen ~as_const =
   if frozen then
     Object.Spread.Frozen
+  else if as_const then
+    Object.Spread.As_Const
   else
     Object.Spread.Sealed
 

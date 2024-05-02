@@ -39,6 +39,7 @@ type 'loc virtual_reason_desc =
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
+  | RConstObjectLit
   | RObjectType
   | RMappedType
   | RObjectClassName
@@ -352,6 +353,8 @@ val opt_annot_reason : ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_re
 
 (* create a new reason with annot_loc = loc: same as mk_reason followed by annot_reason *)
 val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
+
+val mk_obj_lit_reason : as_const:bool -> frozen:bool -> 'loc -> 'loc virtual_reason
 
 module ReasonMap : WrappedMap.S with type key = reason
 

@@ -22,3 +22,7 @@ val equal : t * t -> bool
 val string : t -> string
 
 val sigil : t -> string
+
+val object_literal_polarity : bool (* const *) -> t
+
+val apply_const : bool -> t -> t

@@ -538,7 +538,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           Object.(
             Object.Spread.(
               let tool = Resolve Next in
-              let options = Value { make_seal = Obj_type.mk_seal ~frozen:false } in
+              let options = Value { make_seal = Obj_type.mk_seal ~as_const:false ~frozen:false } in
               let state =
                 {
                   todo_rev = [Type t_rest];

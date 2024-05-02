@@ -4294,7 +4294,9 @@ struct
           (* Combine super and own props. *)
           let use_op = Op (ObjectSpread { op = reason_op }) in
           let spread_tool = Object.Resolve Object.Next in
-          let spread_target = Object.Spread.Value { make_seal = Obj_type.mk_seal ~frozen:false } in
+          let spread_target =
+            Object.Spread.Value { make_seal = Obj_type.mk_seal ~as_const:false ~frozen:false }
+          in
           let spread_state =
             {
               Object.Spread.todo_rev = [Object.Spread.Type o];

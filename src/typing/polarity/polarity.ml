@@ -51,3 +51,15 @@ let sigil = function
   | Positive -> "+"
   | Negative -> "-"
   | Neutral -> ""
+
+let object_literal_polarity const =
+  if const then
+    Positive
+  else
+    Neutral
+
+let apply_const const p =
+  if const then
+    Positive
+  else
+    p

@@ -250,6 +250,7 @@ let resolve_hint cx loc hint =
         cx
         acc
         reason
+        ~as_const:false
         ~frozen:false
         ~default_proto:(ObjProtoT reason)
   in
@@ -592,6 +593,7 @@ let rec resolve_binding cx reason loc b =
         cx
         acc
         reason
+        ~as_const:false
         ~frozen:false
         ~default_proto:obj_proto
     in

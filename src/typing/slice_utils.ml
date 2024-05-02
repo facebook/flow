@@ -523,6 +523,30 @@ let spread_mk_object
     | Some l -> EvalT (t, TypeDestructorT (unknown_use, reason, ReactDRO l), Eval.generate_id ())
     | None -> t
   in
+  let (flags, as_const) =
+    let (exact, sealed) =
+      match target with
+      (* Type spread result is exact if annotated to be exact *)
+      | Annot { make_exact } -> (make_exact, Sealed)
+      (* Value spread result is exact if all inputs are exact *)
+      | Value { make_seal } -> (Obj_type.is_exact flags.obj_kind, make_seal)
+    in
+    let as_const = sealed = Object.Spread.As_Const in
+    let dict =
+      Obj_type.get_dict_opt flags.obj_kind
+      |> Base.Option.map ~f:(fun d ->
+             { d with dict_polarity = Polarity.apply_const as_const d.dict_polarity }
+         )
+    in
+    let obj_kind =
+      match (exact, sealed, dict) with
+      | (_, _, Some d) -> Indexed d
+      | (true, _, _) -> Exact
+      | _ -> Inexact
+    in
+    let frozen = sealed = Object.Spread.Frozen in
+    ({ obj_kind; frozen; react_dro = None }, as_const)
+  in
   let props =
     NameUtils.Map.map
       (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
@@ -534,29 +558,11 @@ let spread_mk_object
               preferred_def_locs = None;
               key_loc;
               type_ = mk_dro prop_t;
-              polarity = Polarity.Neutral;
+              polarity = Polarity.object_literal_polarity as_const;
             })
       props
   in
   let id = Context.generate_property_map cx props in
-  let flags =
-    let (exact, sealed) =
-      match target with
-      (* Type spread result is exact if annotated to be exact *)
-      | Annot { make_exact } -> (make_exact, Sealed)
-      (* Value spread result is exact if all inputs are exact *)
-      | Value { make_seal } -> (Obj_type.is_exact flags.obj_kind, make_seal)
-    in
-    let dict = Obj_type.get_dict_opt flags.obj_kind in
-    let obj_kind =
-      match (exact, sealed, dict) with
-      | (_, _, Some d) -> Indexed d
-      | (true, _, _) -> Exact
-      | _ -> Inexact
-    in
-    let frozen = sealed = Object.Spread.Frozen in
-    { obj_kind; frozen; react_dro = None }
-  in
   let proto = ObjProtoT reason in
   let call = None in
   mk_object_type

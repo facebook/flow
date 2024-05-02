@@ -74,6 +74,7 @@ type 'loc virtual_reason_desc =
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
+  | RConstObjectLit
   | RObjectType
   | RMappedType
   | RObjectClassName
@@ -273,9 +274,9 @@ type reason_desc = ALoc.t virtual_reason_desc
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
-    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
-    | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType | RTupleElement _
+    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
+    | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit
+    | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType | RTupleElement _
     | RTupleLength _ | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType | RFunctionBody
     | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
     | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
@@ -521,6 +522,17 @@ let def_loc_of_reason r =
 
 let annot_loc_of_reason r = r.annot_loc_opt
 
+let mk_obj_lit_reason ~as_const ~frozen loc =
+  let desc =
+    if frozen then
+      RFrozen RObjectLit
+    else if as_const then
+      RConstObjectLit
+    else
+      RObjectLit
+  in
+  mk_reason desc loc
+
 let function_desc_prefix = function
   | RAsync -> "async "
   | RGenerator -> "generator "
@@ -570,6 +582,7 @@ let rec string_of_desc = function
   | RMatchingProp (k, v) -> spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
+  | RConstObjectLit -> "const object literal"
   | RObjectType -> "object type"
   | RMappedType -> "mapped type"
   | RObjectClassName -> "Object"
@@ -1401,6 +1414,7 @@ let classification_of_reason_desc desc =
   | RMatchingProp _
   | RObject
   | RObjectLit
+  | RConstObjectLit
   | RObjectType
   | RMappedType
   | RObjectClassName

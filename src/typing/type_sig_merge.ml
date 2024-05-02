@@ -77,16 +77,6 @@ let remote_ref_reason = function
   | Pack.ImportTypeofNs { id_loc; name; _ } ->
     Type.DescFormat.type_reason (Reason.OrdinaryName name) id_loc
 
-let obj_lit_reason ~frozen loc =
-  let open Reason in
-  let desc =
-    if frozen then
-      RFrozen RObjectLit
-    else
-      RObjectLit
-  in
-  mk_reason desc loc
-
 let eval_id_of_aloc file loc =
   Type.Eval.id_of_aloc_id ~type_sig:true (Context.make_aloc_id file.cx loc)
 
@@ -477,12 +467,12 @@ type merge_env = {
 let mk_merge_env ?(infer_tps = SMap.empty) ?(in_no_infer = false) ?(in_renders_arg = false) tps =
   { tps; infer_tps; in_no_infer; in_renders_arg }
 
-let rec merge ?(hooklike = false) env file = function
+let rec merge ?(hooklike = false) ?(as_const = false) env file = function
   | Pack.Annot t ->
     let t = merge_annot env file t in
     make_hooklike file hooklike t
   | Pack.Value t ->
-    let t = merge_value env file t in
+    let t = merge_value ~as_const env file t in
     make_hooklike file hooklike t
   | Pack.Ref ref ->
     merge_ref file (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t) ref
@@ -1045,7 +1035,7 @@ and merge_annot env file = function
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let target = Type.Object.Spread.Annot { make_exact = exact } in
     let merge_slice dict props =
-      let dict = Option.map ~f:(merge_dict env file) dict in
+      let dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
       let prop_map = SMap.map (merge_obj_annot_prop env file) props |> NameUtils.namemap_of_smap in
       {
         Type.Object.Spread.reason;
@@ -1200,9 +1190,9 @@ and merge_value ?(as_const = false) env file = function
   | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
     merge_declare_module_implicitly_exported_object env file (loc, module_name, props)
   | ObjLit { loc; frozen; proto; props } ->
-    merge_object_lit ~for_export:false env file (loc, frozen, proto, props)
+    merge_object_lit ~for_export:false ~as_const env file (loc, frozen, proto, props)
   | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
-    merge_obj_spread_lit ~for_export:false env file (loc, frozen, proto, elems_rev)
+    merge_obj_spread_lit ~for_export:false ~as_const env file (loc, frozen, proto, elems_rev)
   | ArrayLit (loc, t, ts) ->
     let reason = Reason.(mk_reason RArrayLit loc) in
     let t = merge env file t in
@@ -1223,12 +1213,13 @@ and merge_declare_module_implicitly_exported_object env file (loc, module_name, 
   let reason = Reason.(mk_reason (RModule (OrdinaryName module_name)) loc) in
   let proto = Type.ObjProtoT reason in
   let props =
-    SMap.mapi (merge_obj_value_prop ~for_export:true env file) props |> NameUtils.namemap_of_smap
+    SMap.mapi (merge_obj_value_prop ~for_export:true ~as_const:false env file) props
+    |> NameUtils.namemap_of_smap
   in
   Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen:false
 
-and merge_object_lit ~for_export env file (loc, frozen, proto, props) =
-  let reason = obj_lit_reason ~frozen loc in
+and merge_object_lit ~for_export ~as_const env file (loc, frozen, proto, props) =
+  let reason = Reason.mk_obj_lit_reason ~as_const ~frozen loc in
   let proto =
     match proto with
     | None -> Type.ObjProtoT reason
@@ -1238,17 +1229,19 @@ and merge_object_lit ~for_export env file (loc, frozen, proto, props) =
       TypeUtil.typeof_annotation reason proto None
   in
   let props =
-    SMap.mapi (merge_obj_value_prop ~for_export env file) props |> NameUtils.namemap_of_smap
+    SMap.mapi (merge_obj_value_prop ~for_export ~as_const env file) props
+    |> NameUtils.namemap_of_smap
   in
   Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
 
-and merge_obj_spread_lit ~for_export env file (loc, frozen, proto, elems_rev) =
-  let reason = obj_lit_reason ~frozen loc in
+and merge_obj_spread_lit ~for_export ~as_const env file (loc, frozen, proto, elems_rev) =
+  let reason = Reason.mk_obj_lit_reason ~as_const ~frozen loc in
   (* TODO: fix spread to use provided __proto__ prop *)
   ignore proto;
   let merge_slice props =
     let prop_map =
-      SMap.mapi (merge_obj_value_prop ~for_export env file) props |> NameUtils.namemap_of_smap
+      SMap.mapi (merge_obj_value_prop ~for_export ~as_const env file) props
+      |> NameUtils.namemap_of_smap
     in
     {
       Type.Object.Spread.reason;
@@ -1259,7 +1252,7 @@ and merge_obj_spread_lit ~for_export env file (loc, frozen, proto, elems_rev) =
     }
   in
   let merge_elem = function
-    | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge env file t)
+    | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge env file ~as_const t)
     | ObjValueSpreadSlice props -> Type.Object.Spread.Slice (merge_slice props)
   in
   let (t, todo_rev, head_slice) =
@@ -1274,6 +1267,8 @@ and merge_obj_spread_lit ~for_export env file (loc, frozen, proto, elems_rev) =
     let make_seal =
       if frozen then
         Frozen
+      else if as_const then
+        As_Const
       else
         Sealed
     in
@@ -1308,8 +1303,9 @@ and merge_accessor env file = function
     let set_type = merge env file st in
     Type.GetSet { get_key_loc = Some gloc; get_type; set_key_loc = Some sloc; set_type }
 
-and merge_obj_value_prop ~for_export env file key = function
+and merge_obj_value_prop ~for_export ~as_const env file key = function
   | ObjValueField (id_loc, Pack.Ref ref, polarity) when for_export ->
+    let polarity = Polarity.apply_const as_const polarity in
     merge_ref
       file
       (fun type_ ~ref_loc ~def_loc value_name ->
@@ -1323,7 +1319,8 @@ and merge_obj_value_prop ~for_export env file key = function
           Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity })
       ref
   | ObjValueField (id_loc, t, polarity) ->
-    let type_ = merge env file t in
+    let type_ = merge env ~as_const file t in
+    let polarity = Polarity.apply_const as_const polarity in
     Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor env file x
   | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
@@ -1381,9 +1378,10 @@ and merge_interface_prop env file = function
     let acc = Nel.one (merge_method fn_loc def) in
     loop acc id_loc ms
 
-and merge_dict env file (ObjDict { name; polarity; key; value }) =
+and merge_dict env file ?(as_const = false) (ObjDict { name; polarity; key; value }) =
   let key = merge env file key in
   let value = merge env file value in
+  let polarity = Polarity.apply_const as_const polarity in
   { Type.dict_name = name; dict_polarity = polarity; key; value }
 
 and merge_tparams_targs env file reason t = function
@@ -1478,7 +1476,7 @@ and merge_interface ~inline env file reason class_name id def =
       let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
       Some (Context.make_call_prop file.cx t)
   in
-  let inst_dict = Option.map ~f:(merge_dict env file) dict in
+  let inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
   fun targs ->
     let open Type in
     let inst =
@@ -2009,7 +2007,7 @@ let merge_declare_class file reason class_name id def =
         let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
         Some (Context.make_call_prop file.cx t)
     in
-    let inst_dict = Option.map ~f:(merge_dict env file) dict in
+    let inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
     let inst =
       {
         Type.class_id = id;
@@ -2152,10 +2150,16 @@ let merge_cjs_export_t file = function
   (* We run a special code path for objects in cjs exports,
    * in order to retain the original definition location of exported names *)
   | Pack.Value (ObjLit { loc; frozen; proto; props }) ->
-    merge_object_lit ~for_export:true (mk_merge_env SMap.empty) file (loc, frozen, proto, props)
+    merge_object_lit
+      ~for_export:true
+      ~as_const:false
+      (mk_merge_env SMap.empty)
+      file
+      (loc, frozen, proto, props)
   | Pack.Value (ObjSpreadLit { loc; frozen; proto; elems_rev }) ->
     merge_obj_spread_lit
       ~for_export:true
+      ~as_const:false
       (mk_merge_env SMap.empty)
       file
       (loc, frozen, proto, elems_rev)

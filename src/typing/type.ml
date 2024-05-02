@@ -3009,6 +3009,7 @@ and Object : sig
     type sealtype =
       | Sealed
       | Frozen
+      | As_Const
 
     type target =
       (* When spreading values, the result is exact if all of the input types are

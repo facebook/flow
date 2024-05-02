@@ -1,0 +1,70 @@
+file.js:5:14
+Flags:
+{+f: 1, m(): void}
+file.js:5:14,5:17
+
+file.js:7:14
+Flags:
+{+f: 1, m(): void}
+file.js:7:14,7:17
+
+file.js:9:14
+Flags:
+{+f: {p: number}}
+file.js:9:14,9:17
+
+file.js:11:14
+Flags:
+{+f: {+g: 1}}
+file.js:11:14,11:17
+
+file.js:13:14
+Flags:
+{+p: number}
+file.js:13:14,13:17
+
+file.js:15:14
+Flags:
+{+[string]: string}
+file.js:15:14,15:17
+
+file.js:17:14
+Flags:
+{m(): void}
+file.js:17:14,17:17
+
+import.js:2:5
+Flags:
+{+f: 1, m(): void}
+import.js:2:5,2:8
+
+import.js:4:5
+Flags:
+{+f: 1, m(): void}
+import.js:4:5,4:8
+
+import.js:6:5
+Flags:
+{+f: {p: number}}
+import.js:6:5,6:8
+
+import.js:8:5
+Flags:
+{+f: {+g: 1}}
+import.js:8:5,8:8
+
+import.js:10:5
+Flags:
+{+p: number}
+import.js:10:5,10:8
+
+import.js:12:5
+Flags:
+{+[string]: string}
+import.js:12:5,12:8
+
+import.js:14:5
+Flags:
+{m(): void}
+import.js:14:5,14:8
+

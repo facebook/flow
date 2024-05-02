@@ -112,7 +112,7 @@ module Make
 
     let proto { proto; _ } = proto
 
-    let mk_object_from_spread_acc cx acc reason ~frozen ~default_proto =
+    let mk_object_from_spread_acc cx acc reason ~as_const ~frozen ~default_proto =
       match elements_rev acc with
       | (Slice { slice_pmap }, []) ->
         let proto = Base.Option.value ~default:default_proto (proto acc) in
@@ -180,8 +180,7 @@ module Make
             (t, ts, Some head_slice)
           | _ -> failwith "Invariant Violation: spread list has two slices in a row"
         in
-        let seal = Obj_type.mk_seal ~frozen in
-        let target = Object.Spread.Value { make_seal = seal } in
+        let target = Object.Spread.Value { make_seal = Obj_type.mk_seal ~frozen ~as_const } in
         let tool = Object.Resolve Object.Next in
         let state =
           {
@@ -2048,7 +2047,12 @@ module Make
             let key = translate_identifer_or_literal_key t key in
             let acc =
               ObjectExpressionAcc.add_prop
-                (Properties.add_field (OrdinaryName name) Polarity.Neutral ~key_loc:(Some loc) t)
+                (Properties.add_field
+                   (OrdinaryName name)
+                   (Polarity.object_literal_polarity as_const)
+                   ~key_loc:(Some loc)
+                   t
+                )
                 acc
             in
             (acc, key, value)
@@ -2193,7 +2197,8 @@ module Make
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj value =
+  and create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const value
+      =
     let single_key key =
       match Flow_js_utils.propref_for_elem_t key with
       | Computed elem_t ->
@@ -2211,7 +2216,7 @@ module Make
               preferred_def_locs = None;
               key_loc = Some key_loc;
               type_ = value;
-              polarity = Polarity.Neutral;
+              polarity = Polarity.object_literal_polarity as_const;
             }
         in
         let props = NameUtils.Map.singleton name prop in
@@ -2236,13 +2241,13 @@ module Make
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
-      create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj value
+      create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const value
     in
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (acc, rev_prop_asts) -> function
           | SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) ->
-            let (((_, spread), _) as argument) = expression cx argument in
+            let (((_, spread), _) as argument) = expression cx ~as_const argument in
             ( ObjectExpressionAcc.add_spread spread acc,
               SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) :: rev_prop_asts
             )
@@ -2310,7 +2315,7 @@ module Make
                   }
               ) ->
             let reason = mk_reason RPrototype (fst v) in
-            let (((_, vt), _) as v) = expression cx v in
+            let (((_, vt), _) as v) = expression cx ~as_const v in
             let t =
               Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
                   Flow.flow cx (vt, ObjTestProtoT (reason, t))
@@ -2335,7 +2340,13 @@ module Make
         props
     in
     let t =
-      ObjectExpressionAcc.mk_object_from_spread_acc cx acc reason ~frozen ~default_proto:obj_proto
+      ObjectExpressionAcc.mk_object_from_spread_acc
+        cx
+        acc
+        reason
+        ~as_const
+        ~frozen
+        ~default_proto:obj_proto
     in
     (t, List.rev rev_prop_asts)
 
@@ -2698,7 +2709,7 @@ module Make
     | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->
       error_on_this_uses_in_object_methods cx properties;
-      let reason = mk_reason RObjectLit loc in
+      let reason = Reason.mk_obj_lit_reason ~as_const ~frozen:false loc in
       let (t, properties) = object_ ~frozen:false ~as_const cx reason properties in
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
@@ -5728,6 +5739,7 @@ module Make
         cx
         acc
         reason_props
+        ~as_const:false
         ~frozen:false
         ~default_proto:proto
     in
