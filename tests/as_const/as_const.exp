@@ -1,3 +1,189 @@
+Error ------------------------------------------------------------------------------------------ import-primitive.js:6:3
+
+Cannot cast `n` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
+[incompatible-cast]
+
+   import-primitive.js:6:3
+   6|   n as 2; // error 1 ~> 2
+        ^
+
+References:
+   primitive.js:1:18
+   1| export const n = 1 as const;
+                       ^ [1]
+   import-primitive.js:6:8
+   6|   n as 2; // error 1 ~> 2
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ import-primitive.js:9:3
+
+Cannot cast `2` to `typeof n` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+
+   import-primitive.js:9:3
+   9|   2 as typeof n; // error 2 ~> 1
+        ^ [1]
+
+References:
+   import-primitive.js:9:8
+   9|   2 as typeof n; // error 2 ~> 1
+             ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:10:8
+
+Cannot cast `2` to `typeof n` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+
+   import-primitive.js:10:8
+   10|   2 as number as typeof n; // error number ~> 1
+              ^^^^^^ [1]
+
+References:
+   import-primitive.js:10:18
+   10|   2 as number as typeof n; // error number ~> 1
+                        ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:16:3
+
+Cannot cast `s` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
+[incompatible-cast]
+
+   import-primitive.js:16:3
+   16|   s as "b"; // error a ~> b
+         ^
+
+References:
+   primitive.js:2:18
+    2| export const s = "a" as const;
+                        ^^^ [1]
+   import-primitive.js:16:8
+   16|   s as "b"; // error a ~> b
+              ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:19:3
+
+Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
+
+   import-primitive.js:19:3
+   19|   "b" as typeof s; // error b ~> a
+         ^^^ [1]
+
+References:
+   import-primitive.js:19:10
+   19|   "b" as typeof s; // error b ~> a
+                ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import-primitive.js:20:10
+
+Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
+
+   import-primitive.js:20:10
+   20|   "b" as string as typeof s; // error string ~> a
+                ^^^^^^ [1]
+
+References:
+   import-primitive.js:20:20
+   20|   "b" as string as typeof s; // error string ~> a
+                          ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:26:3
+
+Cannot cast `b` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
+`false` [2]. [incompatible-cast]
+
+   import-primitive.js:26:3
+   26|   b as false; // error true ~> false
+         ^
+
+References:
+   primitive.js:3:18
+    3| export const b = true as const;
+                        ^^^^ [1]
+   import-primitive.js:26:8
+   26|   b as false; // error true ~> false
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:29:3
+
+Cannot cast `false` to `typeof b` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   import-primitive.js:29:3
+   29|   false as typeof b; // error false ~> true
+         ^^^^^ [1]
+
+References:
+   import-primitive.js:29:12
+   29|   false as typeof b; // error false ~> true
+                  ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import-primitive.js:30:12
+
+Cannot cast `false` to `typeof b` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   import-primitive.js:30:12
+   30|   false as boolean as typeof b; // error bool ~> true
+                  ^^^^^^^ [1]
+
+References:
+   import-primitive.js:30:23
+   30|   false as boolean as typeof b; // error bool ~> true
+                             ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:36:3
+
+Cannot cast `bi` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal `2n` [2].
+[incompatible-cast]
+
+   import-primitive.js:36:3
+   36|   bi as 2n; // error 1n ~> 2n
+         ^^
+
+References:
+   primitive.js:4:19
+    4| export const bi = 1n as const;
+                         ^^ [1]
+   import-primitive.js:36:9
+   36|   bi as 2n; // error 1n ~> 2n
+               ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:39:3
+
+Cannot cast `2n` to `typeof bi` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
+
+   import-primitive.js:39:3
+   39|   2n as typeof bi; // error 2n ~> 1n
+         ^^ [1]
+
+References:
+   import-primitive.js:39:9
+   39|   2n as typeof bi; // error 2n ~> 1n
+               ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import-primitive.js:40:9
+
+Cannot cast `2n` to `typeof bi` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
+
+   import-primitive.js:40:9
+   40|   2n as bigint as typeof bi; // error bigint ~> 1n
+               ^^^^^^ [1]
+
+References:
+   import-primitive.js:40:19
+   40|   2n as bigint as typeof bi; // error bigint ~> 1n
+                         ^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:14:1
 
 The `as const` assertion can only be used on string, numeric, boolean, object, or array literals. [unsupported-syntax]
@@ -70,310 +256,191 @@ The `as const` assertion can only be used on string, numeric, boolean, object, o
        ^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:12:3
+Error ------------------------------------------------------------------------------------------------- primitive.js:9:3
 
-Cannot cast `1` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
+Cannot cast `n` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
+   primitive.js:9:3
+   9|   n as 2; // error 1 ~> 2
+        ^
+
+References:
+   primitive.js:1:18
+   1| export const n = 1 as const;
+                       ^ [1]
+   primitive.js:9:8
+   9|   n as 2; // error 1 ~> 2
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ primitive.js:12:3
+
+Cannot cast `2` to `typeof n` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+
    primitive.js:12:3
-   12|   1 as const as 2; // error 1 ~> 2
+   12|   2 as typeof n; // error 2 ~> 1
          ^ [1]
 
 References:
-   primitive.js:12:17
-   12|   1 as const as 2; // error 1 ~> 2
-                       ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:17:3
-
-Cannot cast `2` to `LocalOne` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
-
-   primitive.js:17:3
-   17|   2 as LocalOne; // error 2 ~> 1
-         ^ [1]
-
-References:
-   primitive.js:17:8
-   17|   2 as LocalOne; // error 2 ~> 1
+   primitive.js:12:8
+   12|   2 as typeof n; // error 2 ~> 1
               ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:18:8
+Error ------------------------------------------------------------------------------------------------ primitive.js:13:8
 
-Cannot cast `2` to `LocalOne` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+Cannot cast `2` to `typeof n` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
 
-   primitive.js:18:8
-   18|   2 as number as LocalOne; // error number ~> 1
+   primitive.js:13:8
+   13|   2 as number as typeof n; // error number ~> 1
               ^^^^^^ [1]
 
 References:
-   primitive.js:18:18
-   18|   2 as number as LocalOne; // error number ~> 1
+   primitive.js:13:18
+   13|   2 as number as typeof n; // error number ~> 1
                         ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:27:3
+Error ------------------------------------------------------------------------------------------------ primitive.js:19:3
 
-Cannot cast `2` to `ImportedOne` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
-
-   primitive.js:27:3
-   27|   2 as ImportedOne; // error 2 ~> 1
-         ^ [1]
-
-References:
-   primitive.js:27:8
-   27|   2 as ImportedOne; // error 2 ~> 1
-              ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:28:8
-
-Cannot cast `2` to `ImportedOne` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
-
-   primitive.js:28:8
-   28|   2 as number as ImportedOne; // error number ~> 1
-              ^^^^^^ [1]
-
-References:
-   primitive.js:28:18
-   28|   2 as number as ImportedOne; // error number ~> 1
-                        ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:35:3
-
-Cannot cast `"a"` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
+Cannot cast `s` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
 [incompatible-cast]
 
-   primitive.js:35:3
-   35|   "a" as const as "b"; // error a ~> b
+   primitive.js:19:3
+   19|   s as "b"; // error a ~> b
+         ^
+
+References:
+   primitive.js:2:18
+    2| export const s = "a" as const;
+                        ^^^ [1]
+   primitive.js:19:8
+   19|   s as "b"; // error a ~> b
+              ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ primitive.js:22:3
+
+Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
+
+   primitive.js:22:3
+   22|   "b" as typeof s; // error b ~> a
          ^^^ [1]
 
 References:
-   primitive.js:35:19
-   35|   "a" as const as "b"; // error a ~> b
-                         ^^^ [2]
+   primitive.js:22:10
+   22|   "b" as typeof s; // error b ~> a
+                ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:40:3
+Error ----------------------------------------------------------------------------------------------- primitive.js:23:10
 
-Cannot cast `"b"` to `LocalA` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
+Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
 
-   primitive.js:40:3
-   40|   "b" as LocalA; // error b ~> a
-         ^^^ [1]
-
-References:
-   primitive.js:40:10
-   40|   "b" as LocalA; // error b ~> a
-                ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- primitive.js:41:10
-
-Cannot cast `"b"` to `LocalA` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
-
-   primitive.js:41:10
-   41|   "b" as string as LocalA; // error string ~> a
+   primitive.js:23:10
+   23|   "b" as string as typeof s; // error string ~> a
                 ^^^^^^ [1]
 
 References:
-   primitive.js:41:20
-   41|   "b" as string as LocalA; // error string ~> a
-                          ^^^^^^ [2]
+   primitive.js:23:20
+   23|   "b" as string as typeof s; // error string ~> a
+                          ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:50:3
+Error ------------------------------------------------------------------------------------------------ primitive.js:29:3
 
-Cannot cast `"b"` to `ImportedA` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
-
-   primitive.js:50:3
-   50|   "b" as ImportedA; // error b ~> a
-         ^^^ [1]
-
-References:
-   primitive.js:50:10
-   50|   "b" as ImportedA; // error b ~> a
-                ^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- primitive.js:51:10
-
-Cannot cast `"b"` to `ImportedA` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
-
-   primitive.js:51:10
-   51|   "b" as string as ImportedA; // error string ~> a
-                ^^^^^^ [1]
-
-References:
-   primitive.js:51:20
-   51|   "b" as string as ImportedA; // error string ~> a
-                          ^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:58:3
-
-Cannot cast `true` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
+Cannot cast `b` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
 `false` [2]. [incompatible-cast]
 
-   primitive.js:58:3
-   58|   true as const as false; // error true ~> false
-         ^^^^ [1]
+   primitive.js:29:3
+   29|   b as false; // error true ~> false
+         ^
 
 References:
-   primitive.js:58:20
-   58|   true as const as false; // error true ~> false
-                          ^^^^^ [2]
+   primitive.js:3:18
+    3| export const b = true as const;
+                        ^^^^ [1]
+   primitive.js:29:8
+   29|   b as false; // error true ~> false
+              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:63:3
+Error ------------------------------------------------------------------------------------------------ primitive.js:32:3
 
-Cannot cast `false` to `LocalTrue` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `false` to `typeof b` because boolean [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
-   primitive.js:63:3
-   63|   false as LocalTrue; // error false ~> true
+   primitive.js:32:3
+   32|   false as typeof b; // error false ~> true
          ^^^^^ [1]
 
 References:
-   primitive.js:63:12
-   63|   false as LocalTrue; // error false ~> true
-                  ^^^^^^^^^ [2]
+   primitive.js:32:12
+   32|   false as typeof b; // error false ~> true
+                  ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- primitive.js:64:12
+Error ----------------------------------------------------------------------------------------------- primitive.js:33:12
 
-Cannot cast `false` to `LocalTrue` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `false` to `typeof b` because boolean [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
-   primitive.js:64:12
-   64|   false as boolean as LocalTrue; // error bool ~> true
+   primitive.js:33:12
+   33|   false as boolean as typeof b; // error bool ~> true
                   ^^^^^^^ [1]
 
 References:
-   primitive.js:64:23
-   64|   false as boolean as LocalTrue; // error bool ~> true
-                             ^^^^^^^^^ [2]
+   primitive.js:33:23
+   33|   false as boolean as typeof b; // error bool ~> true
+                             ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:73:3
+Error ------------------------------------------------------------------------------------------------ primitive.js:39:3
 
-Cannot cast `false` to `ImportedTrue` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `bi` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal `2n` [2].
 [incompatible-cast]
 
-   primitive.js:73:3
-   73|   false as ImportedTrue; // error false ~> true
-         ^^^^^ [1]
+   primitive.js:39:3
+   39|   bi as 2n; // error 1n ~> 2n
+         ^^
 
 References:
-   primitive.js:73:12
-   73|   false as ImportedTrue; // error false ~> true
-                  ^^^^^^^^^^^^ [2]
+   primitive.js:4:19
+    4| export const bi = 1n as const;
+                         ^^ [1]
+   primitive.js:39:9
+   39|   bi as 2n; // error 1n ~> 2n
+               ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- primitive.js:74:12
+Error ------------------------------------------------------------------------------------------------ primitive.js:42:3
 
-Cannot cast `false` to `ImportedTrue` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+Cannot cast `2n` to `typeof bi` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
 
-   primitive.js:74:12
-   74|   false as boolean as ImportedTrue; // error bool ~> true
-                  ^^^^^^^ [1]
-
-References:
-   primitive.js:74:23
-   74|   false as boolean as ImportedTrue; // error bool ~> true
-                             ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:79:3
-
-Cannot cast `1n` to number literal `1` because bigint literal `1n` [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   primitive.js:79:3
-   79|   1n as const as 1;
+   primitive.js:42:3
+   42|   2n as typeof bi; // error 2n ~> 1n
          ^^ [1]
 
 References:
-   primitive.js:79:18
-   79|   1n as const as 1;
-                        ^ [2]
+   primitive.js:42:9
+   42|   2n as typeof bi; // error 2n ~> 1n
+               ^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ primitive.js:81:3
+Error ------------------------------------------------------------------------------------------------ primitive.js:43:9
 
-Cannot cast `1n` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal `2n` [2].
-[incompatible-cast]
+Cannot cast `2n` to `typeof bi` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
 
-   primitive.js:81:3
-   81|   1n as const as 2n; // error 1n ~> 2n
-         ^^ [1]
-
-References:
-   primitive.js:81:18
-   81|   1n as const as 2n; // error 1n ~> 2n
-                        ^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:86:3
-
-Cannot cast `2n` to `LocalBigInt` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
-
-   primitive.js:86:3
-   86|   2n as LocalBigInt; // error 2n ~> 1n
-         ^^ [1]
-
-References:
-   primitive.js:86:9
-   86|   2n as LocalBigInt; // error 2n ~> 1n
-               ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:87:9
-
-Cannot cast `2n` to `LocalBigInt` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
-
-   primitive.js:87:9
-   87|   2n as bigint as LocalBigInt; // error bigint ~> 1n
+   primitive.js:43:9
+   43|   2n as bigint as typeof bi; // error bigint ~> 1n
                ^^^^^^ [1]
 
 References:
-   primitive.js:87:19
-   87|   2n as bigint as LocalBigInt; // error bigint ~> 1n
-                         ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:96:3
-
-Cannot cast `2n` to `ImportedBigInt` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
-
-   primitive.js:96:3
-   96|   2n as ImportedBigInt; // error 2n ~> 1n
-         ^^ [1]
-
-References:
-   primitive.js:96:9
-   96|   2n as ImportedBigInt; // error 2n ~> 1n
-               ^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ primitive.js:97:9
-
-Cannot cast `2n` to `ImportedBigInt` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
-
-   primitive.js:97:9
-   97|   2n as bigint as ImportedBigInt; // error bigint ~> 1n
-               ^^^^^^ [1]
-
-References:
-   primitive.js:97:19
-   97|   2n as bigint as ImportedBigInt; // error bigint ~> 1n
-                         ^^^^^^^^^^^^^^ [2]
+   primitive.js:43:19
+   43|   2n as bigint as typeof bi; // error bigint ~> 1n
+                         ^^^^^^^^^ [2]
 
 
 
-Found 30 errors
+Found 33 errors

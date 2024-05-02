@@ -1,7 +1,4 @@
-export const n = 1 as const;
-export const s = "a" as const;
-export const b = true as const;
-export const bi = 1n as const;
+import { n, s, b, bi } from "./primitive";
 
 function test_numeric() {
   n as 1;
