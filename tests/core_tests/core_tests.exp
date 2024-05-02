@@ -75,8 +75,8 @@ References:
    map.js:21:22
      21|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [1]
-   <BUILTINS>/core.js:1815:38
-   1815|     constructor(iterable?: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:1813:38
+   1813|     constructor(iterable?: ?Iterable<[K, V]>): void;
                                               ^^^^^^ [2]
    <BUILTINS>/core.js:1743:22
    1743| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
@@ -96,8 +96,8 @@ References:
    map.js:21:29
      21|     let x = new Map(['foo', 123]); // error
                                      ^^^ [1]
-   <BUILTINS>/core.js:1815:38
-   1815|     constructor(iterable?: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:1813:38
+   1813|     constructor(iterable?: ?Iterable<[K, V]>): void;
                                               ^^^^^^ [2]
    <BUILTINS>/core.js:1743:22
    1743| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
@@ -155,8 +155,8 @@ Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with b
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1823:22
-   1823|     get(key: K): V | void;
+   <BUILTINS>/core.js:1821:22
+   1821|     get(key: K): V | void;
                               ^^^^ [1]
    map.js:27:20
      27|     (x.get('foo'): boolean); // error, string | void
@@ -236,11 +236,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1846:26
-   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1844:26
+   1844| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1846:41
-   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1844:41
+   1844| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -256,11 +256,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1846:26
-   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1844:26
+   1844| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1846:41
-   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1844:41
+   1844| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -276,11 +276,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1846:26
-   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1844:26
+   1844| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1846:41
-   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1844:41
+   1844| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -296,11 +296,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:1916:26
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:26
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1916:41
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:41
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -316,11 +316,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1916:26
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:26
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1916:41
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:41
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -336,11 +336,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:1916:26
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:26
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1916:41
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:41
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -359,11 +359,11 @@ References:
    weakset.js:27:31
      27| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:1916:26
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:26
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1916:41
-   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1914:41
+   1914| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
