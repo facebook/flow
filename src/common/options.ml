@@ -110,6 +110,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_inexact_tuple_types_syntax: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_log_file: File_path.t;
@@ -264,6 +265,8 @@ let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 let haste_paths_includes opts = opts.opt_haste_paths_includes
 
 let include_suppressions opts = opts.opt_include_suppressions
+
+let inexact_tuple_types_syntax opts = opts.opt_inexact_tuple_types_syntax
 
 let is_debug_mode opts = opts.opt_debug
 

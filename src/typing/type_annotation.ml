@@ -483,7 +483,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       in
       let (unresolved, els_asts) = (List.rev unresolved_rev, List.rev els_asts_rev) in
       let t =
-        if inexact then (
+        if inexact && not (Context.enable_inexact_tuple_types_syntax env.cx) then (
           Flow_js_utils.add_output
             env.cx
             (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.InexactTupleType));

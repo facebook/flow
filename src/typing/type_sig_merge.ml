@@ -557,7 +557,7 @@ and merge_annot env file = function
     let ts = Base.List.map ~f:(merge env file) ts in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
   | Tuple { loc; elems_rev; inexact } ->
-    if inexact then
+    if inexact && not (Context.enable_inexact_tuple_types_syntax file.cx) then
       Type.AnyT.at Type.AnnotatedAny loc
     else
       let reason = Reason.(mk_annot_reason RTupleType loc) in

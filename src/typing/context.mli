@@ -83,6 +83,7 @@ type metadata = {
   enable_as_const: bool;
   enable_const_params: bool;
   enable_enums: bool;
+  enable_inexact_tuple_types_syntax: bool;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -172,6 +173,8 @@ val enable_as_const : t -> bool
 val enable_const_params : t -> bool
 
 val enable_enums : t -> bool
+
+val enable_inexact_tuple_types_syntax : t -> bool
 
 val enable_relay_integration : t -> bool
 

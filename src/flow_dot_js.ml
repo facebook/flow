@@ -132,6 +132,7 @@ let stub_metadata ~root ~checked =
     enable_as_const = false;
     enable_const_params = false;
     enable_enums = true;
+    enable_inexact_tuple_types_syntax = true;
     enable_relay_integration = false;
     exact_by_default = true;
     facebook_fbs = None;
