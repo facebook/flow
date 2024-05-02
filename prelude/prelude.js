@@ -44,7 +44,6 @@ interface TaggedTemplateLiteralArray extends $ReadOnlyArray<string> {
 // Promise
 
 declare class Promise<+R> {}
-declare function $await<T>(p: Promise<T> | T): T;
 
 // Iterable/Iterator/Generator
 

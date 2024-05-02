@@ -164,8 +164,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
             ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/prelude.js:54:11
-   54| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/prelude.js:53:11
+   53| interface $Iterable<+Yield,+Return,-Next> {
                  ^^^^^^^^^ [2]
 
 
