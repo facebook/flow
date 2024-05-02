@@ -568,6 +568,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.TaggedTemplate _ -> false
     | Ast.Expression.Identifier id -> not (identifier_has_autocomplete ~autocomplete_hooks id)
     | Ast.Expression.StringLiteral _ -> not (literal_has_autocomplete ~autocomplete_hooks loc)
+    | Ast.Expression.AsConstExpression { Ast.Expression.AsConstExpression.expression; _ } ->
+      synthesizable expression
     | Ast.Expression.NumberLiteral _
     | Ast.Expression.BooleanLiteral _
     | Ast.Expression.NullLiteral _
@@ -587,7 +589,6 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.TemplateLiteral _
     | Ast.Expression.This _
     | Ast.Expression.TypeCast _
-    | Ast.Expression.AsConstExpression _
     | Ast.Expression.AsExpression _
     | Ast.Expression.TSSatisfies _
     | Ast.Expression.Update _
@@ -2768,6 +2769,8 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       | Ast.Expression.New expr -> this#visit_new_expression ~hints loc expr
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hints expr
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hints expr
+      | Ast.Expression.AsConstExpression { Ast.Expression.AsConstExpression.expression; _ } ->
+        this#visit_expression ~hints ~cond expression
       | Ast.Expression.Class _
       | Ast.Expression.Identifier _
       | Ast.Expression.Import _
@@ -2788,7 +2791,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       | Ast.Expression.This _
       | Ast.Expression.TypeCast _
       | Ast.Expression.AsExpression _
-      | Ast.Expression.AsConstExpression _
       | Ast.Expression.TSSatisfies _
       | Ast.Expression.Update _
       | Ast.Expression.Yield _ ->

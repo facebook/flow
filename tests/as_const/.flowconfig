@@ -1,3 +1,4 @@
 [options]
 all=true
 as_const=true
+experimental.ts_syntax=true
