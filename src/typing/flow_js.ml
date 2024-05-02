@@ -225,22 +225,6 @@ struct
   open SubtypingKit
 
   module InstantiationHelper = struct
-    (* Given a type parameter, a supplied type argument for specializing it, and a
-       reason for specialization, either return the type argument or, when directed,
-       look up the instantiation cache for an existing type argument for the same
-       purpose and unify it with the supplied type argument. *)
-    let cache_instantiate cx trace ~use_op ?(cache = false) typeparam reason_op reason_tapp t =
-      if cache then (
-        match desc_of_reason reason_tapp with
-        (* This reason description cannot be trusted for caching purposes. *)
-        | RTypeAppImplicit _ -> t
-        | _ ->
-          let t_ = ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp in
-          FlowJs.rec_unify cx trace ~use_op ~unify_any:true t t_;
-          t_
-      ) else
-        t
-
     let mk_targ = ImplicitTypeArgument.mk_targ
 
     let is_subtype = FlowJs.rec_flow_t

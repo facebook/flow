@@ -996,17 +996,6 @@ let fix_this_instance cx reason (reason_i, i, is_this, this_name) =
     Lazy.force i'
 
 module type Instantiation_helper_sig = sig
-  val cache_instantiate :
-    Context.t ->
-    Type.DepthTrace.t ->
-    use_op:Type.use_op ->
-    ?cache:bool ->
-    Type.typeparam ->
-    Reason.t ->
-    Reason.t ->
-    Type.t ->
-    Type.t
-
   val reposition : Context.t -> ?trace:Type.DepthTrace.t -> ALoc.t -> Type.t -> Type.t
 
   val is_subtype : Context.t -> Type.DepthTrace.t -> use_op:use_op -> Type.t * Type.t -> unit

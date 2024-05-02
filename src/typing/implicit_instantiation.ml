@@ -1439,6 +1439,23 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Instantiation_helper
 
+  (* Given a type parameter, a supplied type argument for specializing it, and a
+     reason for specialization, either return the type argument or, when directed,
+     unify the supplied type argument with a fresh type argument tvar. *)
+  let cache_instantiate cx trace ~use_op ?(cache = false) typeparam reason_op reason_tapp t =
+    if cache then (
+      match desc_of_reason reason_tapp with
+      (* This reason description cannot be trusted for caching purposes. *)
+      | RTypeAppImplicit _ -> t
+      | _ ->
+        let t_ =
+          Instantiation_utils.ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp
+        in
+        FlowJs.rec_unify cx trace ~use_op ~unify_any:true t t_;
+        t_
+    ) else
+      t
+
   let instantiate_poly_with_subst_map
       cx ~cache trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
     let inferred_targ_map =

@@ -222,8 +222,6 @@ module rec ConsGen : S = struct
   (* Instantiation *)
   (*****************)
   module Instantiation_helper = struct
-    let cache_instantiate _cx _trace ~use_op:_ ?cache:_ _typeparam _reason_op _reason_tapp t = t
-
     (* We will not be solving implicit instantiation problems here. The only case
      * where we will need to use this function is when a PolyT needs to be used
      * as a monomorphic type. In this case, the only sensible thing to do is to
