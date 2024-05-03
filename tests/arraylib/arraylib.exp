@@ -107,8 +107,8 @@ References:
    array_lib.js:55:4
      55|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1366:13
-   1366|     length: number;
+   <BUILTINS>/core.js:1365:13
+   1365|     length: number;
                      ^^^^^^ [2]
 
 
@@ -124,8 +124,8 @@ References:
    array_lib.js:56:4
      56|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1366:13
-   1366|     length: number;
+   <BUILTINS>/core.js:1365:13
+   1365|     length: number;
                      ^^^^^^ [2]
 
 

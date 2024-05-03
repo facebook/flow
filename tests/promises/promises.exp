@@ -109,8 +109,8 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2002:5
-   2002|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => T>>;
+   <BUILTINS>/core.js:2001:5
+   2001|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => T>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -138,8 +138,8 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2009:5
-   2009|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+   <BUILTINS>/core.js:2008:5
+   2008|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -168,8 +168,8 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2031:12
-   2031|   +status: 'rejected',
+   <BUILTINS>/core.js:2030:12
+   2030|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
    allSettled.js:34:22
      34|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -199,8 +199,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2024:15
-   2024|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2023:15
+   2023|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -213,8 +213,8 @@ Cannot call `Promise.any` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2024:5
-   2024|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2023:5
+   2023|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -227,8 +227,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2024:15
-   2024|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2023:15
+   2023|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -243,8 +243,8 @@ an interface. [incompatible-type]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2024:51
-   2024|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2023:51
+   2023|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                                                            ^^^^^^^^^^^^^^ [2]
 
 
@@ -629,8 +629,8 @@ References:
    resolve_void.js:1:29
       1| (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1927:24
-   1927| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1926:24
+   1926| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -647,8 +647,8 @@ References:
    resolve_void.js:3:38
       3| (Promise.resolve(undefined): Promise<number>); // error
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1927:24
-   1927| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1926:24
+   1926| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
