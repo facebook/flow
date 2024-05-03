@@ -111,6 +111,9 @@ class StringWrapper extends Wrapper         {
 // Export type
                   
 
+// Export type *
+                                 
+
 // Regular export
 export { Wrapper };
 

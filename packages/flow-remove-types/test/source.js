@@ -111,6 +111,9 @@ type T = string;
 // Export type
 export type { T };
 
+// Export type *
+export type * from 'some-module';
+
 // Regular export
 export { Wrapper };
 
