@@ -1398,7 +1398,6 @@ module type KIT = sig
     Context.t ->
     Implicit_instantiation_check.t ->
     return_hint:Type.lazy_hint_t ->
-    ?cache:bool ->
     Type.DepthTrace.t ->
     use_op:use_op ->
     reason_op:reason ->
@@ -1442,7 +1441,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   open Instantiation_helper
 
   let instantiate_poly_with_subst_map
-      cx ~cache:_ trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
+      cx trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
     let inferred_targ_map =
       Subst_name.Map.map
         (fun { tparam; inferred } ->
@@ -1481,8 +1480,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
        );
     reposition cx ~trace (loc_of_reason reason_tapp) (Type_subst.subst cx ~use_op subst_map poly_t)
 
-  let run_call
-      cx check ~return_hint:(_, lazy_hint) ?(cache = false) trace ~use_op ~reason_op ~reason_tapp =
+  let run_call cx check ~return_hint:(_, lazy_hint) trace ~use_op ~reason_op ~reason_tapp =
     let (check, in_nested_instantiation) =
       match check.Check.operation with
       | ( use_op,
@@ -1543,7 +1541,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
           let (_, _, t) = check.Implicit_instantiation_check.poly_t in
           instantiate_poly_with_subst_map
             cx
-            ~cache
             trace
             t
             (Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check)
@@ -1643,15 +1640,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         Subst_name.Map.empty
         tparams
     in
-    instantiate_poly_with_subst_map
-      cx
-      trace
-      ~cache:false
-      t
-      subst_map
-      ~use_op
-      ~reason_op
-      ~reason_tapp
+    instantiate_poly_with_subst_map cx trace t subst_map ~use_op ~reason_op ~reason_tapp
 
   let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
     if

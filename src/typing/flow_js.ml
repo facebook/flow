@@ -2645,7 +2645,7 @@ struct
           let check = lazy (IICheck.of_call l (tparams_loc, ids, t) unknown_use reason calltype) in
           let lparts = (reason_tapp, tparams_loc, ids, t) in
           let uparts = (use_op, reason, calltype.call_targs, Type.hint_unavailable) in
-          let t_ = instantiate_poly_call_or_new cx trace ~cache:true lparts uparts check in
+          let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
           rec_flow
             cx
             trace
@@ -2848,7 +2848,7 @@ struct
           let check = lazy (IICheck.of_call l (tparams_loc, ids, t) use_op reason_op calltype) in
           let lparts = (reason_tapp, tparams_loc, ids, t) in
           let uparts = (use_op, reason_op, calltype.call_targs, return_hint) in
-          let t_ = instantiate_poly_call_or_new cx trace ~cache:true lparts uparts check in
+          let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
           let u =
             CallT
               {
@@ -7987,7 +7987,7 @@ struct
     in
     t
 
-  and instantiate_poly_call_or_new cx trace ?cache lparts uparts check =
+  and instantiate_poly_call_or_new cx trace lparts uparts check =
     let (reason_tapp, tparams_loc, ids, t) = lparts in
     let (use_op, reason_op, targs, return_hint) = uparts in
     match all_explicit_targs targs with
@@ -7995,15 +7995,7 @@ struct
       instantiate_with_targs cx trace (tparams_loc, ids, t) targs ~use_op ~reason_op ~reason_tapp
     | None ->
       let check = Lazy.force check in
-      ImplicitInstantiationKit.run_call
-        cx
-        check
-        ?cache
-        trace
-        ~use_op
-        ~reason_op
-        ~reason_tapp
-        ~return_hint
+      ImplicitInstantiationKit.run_call cx check trace ~use_op ~reason_op ~reason_tapp ~return_hint
 
   (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
   (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
