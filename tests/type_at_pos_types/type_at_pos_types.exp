@@ -1643,7 +1643,7 @@ Flags: --pretty
 {
   "types":{
     "unevaluated":{"type":"type R = $ReadOnly<Tup>"},
-    "evaluated":{"type":"type R = [+a: number, +_1: string, +_2: boolean]"}
+    "evaluated":{"type":"type R = $ReadOnly<[a: number, string, boolean]>"}
   },
   "reasons":[],
   "loc":{
@@ -1685,7 +1685,7 @@ Flags: --pretty
 {
   "types":{
     "unevaluated":{"type":"type Q = Partial<R>"},
-    "evaluated":{"type":"type Q = [+a?: number, +_1?: string, +_2?: boolean]"}
+    "evaluated":{"type":"type Q = $ReadOnly<[a?: number, _1?: string, _2?: boolean]>"}
   },
   "reasons":[],
   "loc":{
@@ -1699,6 +1699,27 @@ Flags: --pretty
   "endline":16,
   "start":6,
   "end":6
+}
+
+tuple.js:20:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type ROM = $ReadOnly<M>"},
+    "evaluated":{"type":"type ROM = $ReadOnly<[1, 2, 3]>"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":6,"offset":239},
+    "end":{"line":20,"column":8,"offset":242}
+  },
+  "path":"tuple.js",
+  "line":20,
+  "endline":20,
+  "start":6,
+  "end":8
 }
 
 unions.js:9:3 = {

@@ -15,3 +15,7 @@ type P = Partial<Tup>;
 
 type Q = Partial<R>;
 //   ^
+
+type M = [1, 2, 3];
+type ROM = $ReadOnly<M>;
+//   ^

@@ -1079,6 +1079,13 @@ module Make (I : INPUT) : S = struct
           RRestArrayLit _
         )
       | (T.TupleAT { elements = elements'; _ }, _) ->
+        (* Heuristic to use $ReadOnly<> instead of repeating the polarity symbol
+         * and a made up label in each element. *)
+        let readonly =
+          Base.List.for_all
+            ~f:(fun (T.TupleElement { polarity; _ }) -> polarity = Polarity.Positive)
+            elements'
+        in
         let%map elements =
           mapM
             (fun (T.TupleElement { name; t; polarity; optional; reason = _ }) ->
@@ -1088,10 +1095,20 @@ module Make (I : INPUT) : S = struct
                 | _ -> t
               in
               let%map t = type__ ~env t in
-              Ty.TupleElement { name; t; polarity = type_polarity polarity; optional })
+              let polarity =
+                if readonly then
+                  Ty.Neutral
+                else
+                  type_polarity polarity
+              in
+              Ty.TupleElement { name; t; polarity; optional })
             elements'
         in
-        Ty.Tup { elements; inexact = false }
+        let t = Ty.Tup { elements; inexact = false } in
+        if readonly then
+          Ty.Utility (Ty.ReadOnly t)
+        else
+          t
       | (T.ArrayAT { elem_t; _ }, _) ->
         let%map arr_elt_t = type__ ~env elem_t in
         Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t }
