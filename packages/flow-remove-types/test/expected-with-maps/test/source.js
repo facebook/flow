@@ -8,7 +8,6 @@ import {
 
 // Regular import with types only
 
-
 // Import types
 
 // Typed function
