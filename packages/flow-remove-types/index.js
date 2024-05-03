@@ -238,7 +238,8 @@ var removeFlowVisitor = {
   ImportDeclaration: function (context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
-    } 
+    }
+    // Remove import if all specifiers are type imports
     if (node.importKind === 'value') {
       var typesOnly = node.specifiers.every(function (specifier) {
         return specifier.importKind === 'type' || specifier.importKind === 'typeof'
