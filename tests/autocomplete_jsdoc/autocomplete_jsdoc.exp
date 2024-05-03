@@ -3989,33 +3989,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$CharSet",
-  "kind":3,
-  "detail":"$CharSet",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$CharSet"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":24,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$CharSet",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
   "label":"$Diff",
   "kind":3,
   "detail":"$Diff",
@@ -4033,7 +4006,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":25,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Diff",
@@ -4060,7 +4033,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ElementType",
@@ -4087,7 +4060,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact",
@@ -4114,7 +4087,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports",
@@ -4141,7 +4114,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":29,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror",
@@ -4168,7 +4141,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys",
@@ -4195,7 +4168,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType",
@@ -4222,7 +4195,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ObjMap",
@@ -4249,7 +4222,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ObjMapi",
@@ -4276,7 +4249,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"$PropertyType",
@@ -4303,7 +4276,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly",
@@ -4330,7 +4303,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":36,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Rest",
@@ -4357,7 +4330,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":37,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"$TupleMap",
@@ -4384,7 +4357,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":38,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -4411,7 +4384,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":39,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -4438,7 +4411,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":40,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -4465,7 +4438,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":41,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",

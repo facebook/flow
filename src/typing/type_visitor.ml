@@ -132,7 +132,6 @@ class ['a] t =
         acc
       | ObjT objtype -> self#obj_type cx pole acc objtype
       | ArrT arrtype -> self#arr_type cx pole acc arrtype
-      | CharSetT _ -> acc
       | ClassT t -> self#type_ cx pole acc t
       | InstanceT t -> self#instance_type cx pole acc t
       | NumericStrKeyT _

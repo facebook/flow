@@ -212,12 +212,6 @@ and 'loc t' =
   | EInvalidExtends of 'loc virtual_reason
   | EPropertyTypeAnnot of 'loc
   | EExportsAnnot of 'loc
-  | ECharSetAnnot of 'loc
-  | EInvalidCharSet of {
-      invalid: 'loc virtual_reason * InvalidCharSetSet.t;
-      valid: 'loc virtual_reason;
-      use_op: 'loc virtual_use_op;
-    }
   | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObject of {
       loc: 'loc;
@@ -901,9 +895,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op, kind)
   | EFunctionIncompatibleWithIndexer ((r1, r2), op) ->
     EFunctionIncompatibleWithIndexer ((map_reason r1, map_reason r2), map_use_op op)
-  | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
-    EInvalidCharSet
-      { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
   | EInvalidConstructor r -> EInvalidConstructor (map_reason r)
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     EInvalidObjectKit
@@ -971,7 +962,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
   | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
-  | ECharSetAnnot loc -> ECharSetAnnot (f loc)
   | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
     EUnsupportedKeyInObject { loc = f loc; obj_kind; key_error_kind }
   | EAmbiguousNumericKeyWithVariance loc -> EAmbiguousNumericKeyWithVariance (f loc)
@@ -1391,8 +1381,6 @@ let util_use_op_of_msg nope util = function
     util op (fun op -> EIncompatibleWithExact (rs, op, kind))
   | EFunctionIncompatibleWithIndexer (rs, op) ->
     util op (fun op -> EFunctionIncompatibleWithIndexer (rs, op))
-  | EInvalidCharSet { invalid; valid; use_op } ->
-    util use_op (fun use_op -> EInvalidCharSet { invalid; valid; use_op })
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     util use_op (fun use_op -> EInvalidObjectKit { reason; reason_op; use_op })
   | EIncompatibleWithUseOp ({ use_op; _ } as contents) ->
@@ -1459,7 +1447,6 @@ let util_use_op_of_msg nope util = function
   | EInvalidExtends _
   | EPropertyTypeAnnot _
   | EExportsAnnot _
-  | ECharSetAnnot _
   | EUnsupportedKeyInObject _
   | EAmbiguousNumericKeyWithVariance _
   | EPredicateFuncArityMismatch _
@@ -1733,7 +1720,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAmbiguousNumericKeyWithVariance loc
   | EHookRuleViolation { call_loc = loc; _ }
   | EHookNaming loc
-  | ECharSetAnnot loc
   | EExportsAnnot loc
   | EPropertyTypeAnnot loc
   | EUnexpectedThisType loc
@@ -1800,7 +1786,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
-  | EInvalidCharSet _
   | EIncompatibleWithExact _
   | EFunctionIncompatibleWithIndexer _
   | EUnionSpeculationFailed _
@@ -2265,17 +2250,6 @@ let friendly_message_of_msg = function
   | EUnexpectedThisType _ -> Normal MessageUnexpectedUseOfThisType
   | EPropertyTypeAnnot _ -> Normal MessageCannotUseDollarPropertyType
   | EExportsAnnot _ -> Normal MessageCannotUseDollarExports
-  | ECharSetAnnot _ -> Normal MessageCannotUseDollarCharset
-  | EInvalidCharSet { invalid = (invalid_reason, invalid_chars); valid = valid_reason; use_op } ->
-    let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
-    UseOp
-      {
-        loc = loc_of_reason invalid_reason;
-        message =
-          MessageIncompatibleWithDollarCharSet { invalid_reason; invalid_chars; valid_reason };
-        use_op;
-        explanation = None;
-      }
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
     Normal (MessageUnsupportedKeyInObject { key_error_kind; obj_kind })
   | EAmbiguousNumericKeyWithVariance _ -> Normal MessageAmbiguousNumericKeyWithVariance
@@ -2849,7 +2823,6 @@ let error_code_of_message err : error_code option =
   | ECannotDelete _ -> Some CannotDelete
   | ECannotSpreadIndexerOnRight _ -> Some CannotSpreadIndexer
   | ECannotSpreadInterface _ -> Some CannotSpreadInterface
-  | ECharSetAnnot _ -> Some InvalidCharsetTypeArg
   | ECodelessSuppression _ -> None
   | ENonStrictEqualityComparison _
   | EComparison _ ->
@@ -2929,7 +2902,6 @@ let error_code_of_message err : error_code option =
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)
   | EInternal (_, _) -> None
-  | EInvalidCharSet _ -> Some InvalidCharsetTypeArg
   | EInvalidConstructor _ -> Some InvalidConstructor
   | EInvalidLHSInAssignment _ -> Some InvalidLhs
   | EInvalidObjectKit _ -> Some NotAnObject

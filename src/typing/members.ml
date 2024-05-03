@@ -575,7 +575,6 @@ let rec extract_type cx this_t =
   | DefT (reason, BigIntT _) ->
     get_builtin_type cx reason "BigInt" |> extract_type cx
   | DefT (reason, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
-  | DefT (reason, CharSetT _) -> get_builtin_type cx reason "String" |> extract_type cx
   | DefT (_, ReactAbstractComponentT _) as t -> Success t
   | DefT (_, RendersT _) as t -> Success t
   | OpaqueT (_, { underlying_t = Some t; _ })

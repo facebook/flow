@@ -210,14 +210,6 @@ let to_list = Internal.to_list
 
 let of_list = Internal.of_list
 
-module CharSet = struct
-  include Flow_set.Make (Char)
-
-  let of_string str = of_list (Internal.to_list str)
-
-  let to_string set = Internal.of_list (elements set)
-end
-
 (** Levenshtein distance algorithm.
 
    Based on the public domain implementation at

@@ -860,7 +860,6 @@ module Make (I : INPUT) : S = struct
       | DefT (reason, EnumValueT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.Generic (symbol, Ty.EnumKind, None)
-      | DefT (_, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
       (* MappedTypeKind TypeTs do not appear at the top-level-- they are created as the prop_type
        * in a MappedType destructor *)
       | DefT (_, TypeT (MappedTypeKind, t)) -> type__ ~env t

@@ -2468,15 +2468,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ObjMapConst { loc; obj; t })
     | _ -> Err (loc, CheckError)
   end
-  | "$CharSet" -> begin
-    match targs with
-    | Some (_, { arguments = [(_, T.StringLiteral { Ast.StringLiteral.value; _ })]; _ }) ->
-      Annot (CharSet (loc, value))
-    | Some (_, { arguments = [(loc, _)]; _ }) ->
-      let loc = push_loc tbls loc in
-      Err (loc, CheckError)
-    | _ -> Err (loc, CheckError)
-  end
   | "React$AbstractComponent" -> begin
     match targs with
     | Some (_, { arguments = config :: targs; _ }) ->

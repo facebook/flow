@@ -157,9 +157,6 @@ let type_ options =
       else
         (Loc.none, T.IndexedAccess indexed_access)
     | InlineInterface i -> inline_interface i
-    | CharSet s ->
-      let id = id_from_string "CharSet" in
-      return (mk_generic_type id (Some (mk_targs [(Loc.none, T.StringLiteral (str_lit s))])))
     | Conditional { check_type; extends_type; true_type; false_type } ->
       let%bind check_type = type_ check_type in
       let%bind extends_type = type_ extends_type in

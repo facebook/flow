@@ -128,7 +128,6 @@ let lsp_completion_of_type =
   | TypeOf _
   | Utility _
   | IndexedAccess _
-  | CharSet _
   | Conditional _
   | Infer _
   | Renders _ ->
@@ -1199,7 +1198,6 @@ let utility_types =
     "Partial";
     "Required";
     "$Call";
-    "$CharSet";
     "$Diff";
     "$ElementType";
     "$Exact";

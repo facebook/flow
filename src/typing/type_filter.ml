@@ -660,8 +660,7 @@ let rec tag_of_def_t cx = function
     Some (TypeTagSet.singleton BoolTag)
   | SingletonStrT _
   | NumericStrKeyT _
-  | StrT _
-  | CharSetT _ ->
+  | StrT _ ->
     Some (TypeTagSet.singleton StringTag)
   | SingletonNumT _
   | NumT _ ->

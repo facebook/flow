@@ -3408,7 +3408,6 @@ struct
           let proto = extract_non_spread cx arg2 in
           rec_flow cx trace (target, SetProtoT (reason_op, proto));
           rec_flow_t cx ~use_op trace (BoolT.why reason_op, OpenT call_tout)
-        | (DefT (reason, CharSetT _), _) -> rec_flow cx trace (StrT.why reason, u)
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
         (* Facebookisms are special Facebook-specific functions that are not
            expressable with our current type syntax, so we've hacked in special

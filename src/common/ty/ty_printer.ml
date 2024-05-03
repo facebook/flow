@@ -171,8 +171,6 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       type_interface ~depth if_extends if_props if_dict
     | TypeOf (pv, targs) ->
       fuse [Atom "typeof"; space; builtin_value pv; option ~f:(type_args ~depth) targs]
-    | CharSet s ->
-      fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes ~prefer_single_quotes s); Atom ">"]
     | Conditional { check_type; extends_type; true_type; false_type } ->
       group
         [

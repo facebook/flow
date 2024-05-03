@@ -41,7 +41,6 @@ let string_of_ctor_t = function
   | TypeOf _ -> "Typeof"
   | Utility _ -> "Utility"
   | IndexedAccess _ -> "IndexedAccess"
-  | CharSet _ -> "CharSet"
   | Conditional _ -> "Conditional"
   | Infer _ -> "Infer"
   | Renders _ -> "Renders"
@@ -378,7 +377,6 @@ struct
           (dump_t ~depth _object)
           (dump_t ~depth index)
           optional
-      | CharSet s -> spf "CharSet (%s)" s
       | Conditional { check_type; extends_type; true_type; false_type } ->
         spf
           "Conditional (%s, %s, %s, %s)"
@@ -545,7 +543,6 @@ struct
             ("index", json_of_t index);
             ("optional", JSON_Bool optional);
           ]
-        | CharSet s -> [("literal", JSON_String s)]
         | Conditional { check_type; extends_type; true_type; false_type } ->
           [
             ("check", json_of_t check_type);

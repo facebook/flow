@@ -1969,13 +1969,6 @@ let to_printable_error :
         text "The default export of a module cannot be accessed from import destructuring. ";
         text "To use the default export you must import it directly.";
       ]
-    | MessageCannotUseDollarCharset ->
-      [
-        text "Cannot use ";
-        code "$CharSet";
-        text " because the first type ";
-        text "argument must be a string literal.";
-      ]
     | MessageCannotUseDollarExports ->
       [
         text "Cannot use ";
@@ -2763,20 +2756,6 @@ let to_printable_error :
           ([ref lower; text " is not a React hook"], [ref upper; text " is a "; hook_wording])
       in
       lower @ [text " but "] @ upper
-    | MessageIncompatibleWithDollarCharSet { invalid_reason; invalid_chars; valid_reason } ->
-      let invalids =
-        InvalidCharSetSet.fold
-          (fun c acc ->
-            match c with
-            | InvalidChar c ->
-              [code (Base.String.of_char c); text " is not a member of the set"] :: acc
-            | DuplicateChar c -> [code (Base.String.of_char c); text " is duplicated"] :: acc)
-          invalid_chars
-          []
-        |> List.rev
-      in
-      [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-      @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids
     | MessageIncompatibleWithExact { kind; lower; upper } ->
       let object_kind =
         match kind with

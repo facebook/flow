@@ -247,7 +247,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, SingletonNumT _)
   | DefT (_, SingletonStrT _)
   | DefT (_, SingletonBigIntT _)
-  | DefT (_, CharSetT _)
   | AnyT _ ->
     acc
   | FunProtoBindT _

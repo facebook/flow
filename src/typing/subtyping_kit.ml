@@ -1619,36 +1619,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | (None, None) ->
           ()
       end
-    | (DefT (reason, StrT (Literal (_, name))), DefT (reason_op, CharSetT chars)) ->
-      let str = display_string_of_name name in
-      let module CharSet = String_utils.CharSet in
-      let open Flow_intermediate_error_types in
-      Error_message.(
-        let (invalid, _) =
-          String_utils.fold_left
-            ~f:(fun (invalid, seen) chr ->
-              if not (CharSet.mem chr chars) then
-                (InvalidCharSetSet.add (InvalidChar chr) invalid, seen)
-              else if CharSet.mem chr seen then
-                (InvalidCharSetSet.add (DuplicateChar chr) invalid, seen)
-              else
-                (invalid, CharSet.add chr seen))
-            ~acc:(InvalidCharSetSet.empty, CharSet.empty)
-            str
-        in
-        if not (InvalidCharSetSet.is_empty invalid) then
-          add_output
-            cx
-            (EInvalidCharSet
-               {
-                 invalid = (replace_desc_reason (RStringLit name) reason, invalid);
-                 valid = reason_op;
-                 use_op;
-               }
-            )
-      )
-    | (DefT (reason, CharSetT _), _) -> rec_flow_t cx trace ~use_op (StrT.why reason, u)
-    | (_, DefT (reason, CharSetT _)) -> rec_flow_t cx trace ~use_op (l, StrT.why reason)
     (* Custom functions are still functions, so they have all the prototype properties *)
     | (CustomFunT (r, _), AnyT _) -> rec_flow_t cx trace ~use_op (FunProtoT r, u)
     (* unwrap namespace type into object type, drop all information about types in the namespace *)

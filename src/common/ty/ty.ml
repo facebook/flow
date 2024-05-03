@@ -65,7 +65,6 @@ type t =
   | InlineInterface of interface_t
   | TypeOf of builtin_or_symbol * t list option
   | Utility of utility
-  | CharSet of string
   | IndexedAccess of {
       _object: t;
       index: t;
@@ -577,10 +576,9 @@ class ['A] comparator_ty =
       | Inter _ -> 24
       | Union _ -> 25
       | InlineInterface _ -> 26
-      | CharSet _ -> 27
-      | Conditional _ -> 28
-      | Infer _ -> 29
-      | Renders _ -> 30
+      | Conditional _ -> 27
+      | Infer _ -> 28
+      | Renders _ -> 29
 
     method tag_of_decl _ =
       function
@@ -807,7 +805,6 @@ let mk_exact ty =
   | Arr _
   | Tup _
   | InlineInterface _
-  | CharSet _
   | Infer _
   | Renders _ ->
     ty

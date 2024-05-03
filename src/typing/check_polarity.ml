@@ -41,7 +41,6 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | AnyT _
     | DefT (_, BoolT _)
     | DefT (_, BigIntT _)
-    | DefT (_, CharSetT _)
     | DefT (_, EmptyT)
     | DefT (_, EnumObjectT _)
     | DefT (_, EnumValueT _)

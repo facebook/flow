@@ -220,9 +220,6 @@ module rec TypeTerm : sig
     (* singleton bool, matches exactly a given boolean literal *)
     | SingletonBoolT of bool
     | SingletonBigIntT of bigint_literal
-    (* A subset of StrT that represents a set of characters,
-       e.g. RegExp flags *)
-    | CharSetT of String_utils.CharSet.t
     (* type aliases *)
     | TypeT of type_t_kind * t
     (* A polymorphic type is like a type-level "function" that, when applied to
@@ -4024,7 +4021,6 @@ let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
   | BigIntT _ -> "BigIntT"
   | BoolT _ -> "BoolT"
-  | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
   | EnumValueT _ -> "EnumValueT"

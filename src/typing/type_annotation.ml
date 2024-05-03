@@ -1152,34 +1152,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 )
                 targs
           )
-        | "$CharSet" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              match targs with
-              | Some
-                  ( targs_loc,
-                    {
-                      Ast.Type.TypeArgs.arguments = (str_loc, StringLiteral str_lit) :: _;
-                      comments;
-                    }
-                  ) ->
-                let { Ast.StringLiteral.value; _ } = str_lit in
-                let str_t = mk_singleton_string str_loc value in
-                let chars = String_utils.CharSet.of_string value in
-                let char_str = String_utils.CharSet.to_string chars in
-                (* sorts them *)
-                let reason = mk_annot_reason (RCustom (spf "character set `%s`" char_str)) loc in
-                reconstruct_ast
-                  (DefT (reason, CharSetT chars))
-                  (Some
-                     ( targs_loc,
-                       {
-                         Ast.Type.TypeArgs.arguments = [((str_loc, str_t), StringLiteral str_lit)];
-                         comments;
-                       }
-                     )
-                  )
-              | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast
-          )
         (* Class<T> is the type of the class whose instances are of type T *)
         | "Class" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

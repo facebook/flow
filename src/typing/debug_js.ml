@@ -278,7 +278,6 @@ let rec dump_t_ (depth, tvars) cx t =
           )
         t
     | DefT (_, ArrT (ROArrayAT (elemt, _))) -> p ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
-    | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
     | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
     | DefT (_, InstanceT inst_t) -> p ~extra:(instance_t inst_t) t
     | DefT (_, TypeT (kind, arg)) ->
@@ -1527,13 +1526,6 @@ let dump_error_message =
     | EInvalidExtends reason -> spf "EInvalidExtends (%s)" (dump_reason cx reason)
     | EPropertyTypeAnnot loc -> spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
     | EExportsAnnot loc -> spf "EExportsAnnot (%s)" (string_of_aloc loc)
-    | ECharSetAnnot loc -> spf "ECharSetAnnot (%s)" (string_of_aloc loc)
-    | EInvalidCharSet { invalid = (reason, _); valid; use_op } ->
-      spf
-        "EInvalidCharSet { invalid = (%s, _); valid = %s; use_op = %s }"
-        (dump_reason cx reason)
-        (dump_reason cx valid)
-        (string_of_use_op use_op)
     | EInvalidRendersTypeArgument
         { loc; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
       spf

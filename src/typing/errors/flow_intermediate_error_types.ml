@@ -90,16 +90,6 @@ type 'loc invalid_render_type_kind =
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
 
-type invalid_char_set =
-  | DuplicateChar of Char.t
-  | InvalidChar of Char.t
-
-module InvalidCharSetSet = Flow_set.Make (struct
-  type t = invalid_char_set
-
-  let compare = Stdlib.compare
-end)
-
 module IncorrectType = struct
   type t =
     | Partial
@@ -472,7 +462,6 @@ type 'loc message =
   | MessageCannotUseBeforeDeclaration of concrete_reason
   | MessageCannotUseComputedPropertyWithUnion of 'loc virtual_reason
   | MessageCannotUseDefaultImportWithDestrucuturing
-  | MessageCannotUseDollarCharset
   | MessageCannotUseDollarExports
   | MessageCannotUseDollarPropertyType
   | MessageCannotUseEnumMemberUsedAsType of {
@@ -647,11 +636,6 @@ type 'loc message =
       upper: 'loc virtual_reason;
       lower_is_hook: bool;
       hook_is_annot: bool;
-    }
-  | MessageIncompatibleWithDollarCharSet of {
-      invalid_reason: 'loc virtual_reason;
-      invalid_chars: InvalidCharSetSet.t;
-      valid_reason: 'loc virtual_reason;
     }
   | MessageIncompatibleWithExact of {
       kind: exactness_error_kind;

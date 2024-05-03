@@ -830,7 +830,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | DefT
             ( _,
               ( NumT _ | BigIntT _ | StrT _ | MixedT _ | SymbolT | FunT _ | ObjT _ | ArrT _
-              | ClassT _ | InstanceT _ | CharSetT _ | TypeT _ | PolyT _ | ReactAbstractComponentT _
+              | ClassT _ | InstanceT _ | TypeT _ | PolyT _ | ReactAbstractComponentT _
               | EnumValueT _ | EnumObjectT _ )
             )
           when Base.Option.is_some (UnionRep.check_enum rep) ->

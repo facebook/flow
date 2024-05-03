@@ -856,12 +856,6 @@ and merge_annot env file = function
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapConst t)), id))
-  | CharSet (loc, str) ->
-    let chars = String_utils.CharSet.of_string str in
-    let char_str = String_utils.CharSet.to_string chars in
-    let reason_str = Utils_js.spf "character set `%s`" char_str in
-    let reason = Reason.(mk_annot_reason (RCustom reason_str) loc) in
-    Type.(DefT (reason, CharSetT chars))
   | ClassT (loc, t) ->
     let t = merge env file t in
     let desc = TypeUtil.desc_of_t t in

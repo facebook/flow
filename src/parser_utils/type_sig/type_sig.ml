@@ -599,7 +599,6 @@ type ('loc, 'a) annot =
       obj: 'a;
       t: 'a;
     }
-  | CharSet of 'loc * string
   | ClassT of 'loc * 'a
   | Function_apply of 'loc
   | Function_bind of 'loc

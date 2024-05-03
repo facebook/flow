@@ -167,7 +167,6 @@ let visitor =
       | DefT (_, ArrT _)
       | DefT (_, BigIntT _)
       | DefT (_, BoolT _)
-      | DefT (_, CharSetT _)
       | DefT (_, ClassT _)
       | DefT (_, FunT _)
       | DefT (_, InstanceT _)

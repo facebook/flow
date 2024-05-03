@@ -886,7 +886,6 @@ module rec ConsGen : S = struct
     (****************)
     (* Custom types *)
     (****************)
-    | (DefT (reason, CharSetT _), _) -> elab_t cx (StrT.why reason) op
     | (CustomFunT (r, _), _) when function_like_op op -> elab_t cx (FunProtoT r) op
     (*****************)
     (* ObjTestProtoT *)
