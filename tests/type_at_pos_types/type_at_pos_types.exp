@@ -193,21 +193,6 @@ array.js:23:4 = {
   "start":3,
   "end":5
 }
-charset.js:3:13 = {
-  "types":{"unevaluated":{"type":"$CharSet<\"ab\">"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"charset.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":13,"offset":22},
-    "end":{"line":3,"column":13,"offset":23}
-  },
-  "path":"charset.js",
-  "line":3,
-  "endline":3,
-  "start":13,
-  "end":13
-}
 destructuring.js:3:6 = {
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
