@@ -111,6 +111,9 @@ class StringWrapper extends Wrapper         {
 // Export type
                   
 
+// Export type *
+export type * from 'some-module';
+
 // Regular export
 export { Wrapper };
 
