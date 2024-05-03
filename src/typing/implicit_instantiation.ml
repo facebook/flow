@@ -1441,29 +1441,20 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Instantiation_helper
 
-  (* Given a type parameter, a supplied type argument for specializing it, and a
-     reason for specialization, either return the type argument or, when directed,
-     unify the supplied type argument with a fresh type argument tvar. *)
-  let cache_instantiate cx trace ~use_op ?(cache = false) typeparam reason_op reason_tapp t =
-    if cache then (
-      let t_ =
-        Instantiation_utils.ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp
-      in
-      FlowJs.rec_unify cx trace ~use_op ~unify_any:true t t_;
-      t_
-    ) else
-      t
-
   let instantiate_poly_with_subst_map
-      cx ~cache trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
+      cx ~cache:_ trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
     let inferred_targ_map =
       Subst_name.Map.map
         (fun { tparam; inferred } ->
-          {
-            inferred =
-              cache_instantiate cx trace ~use_op ~cache tparam reason_op reason_tapp inferred;
-            tparam;
-          })
+          (* Create an OpenT indirection of inferred result.
+           * We specifically want the inferred type argument to have RTypeParam reason desc,
+           * so that we can detect loops in type expansion.
+           * See Instantiation_utils.ImplicitTypeArgument.abstract_targ *)
+          let inferred' =
+            Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
+          in
+          FlowJs.rec_unify cx trace ~use_op ~unify_any:true inferred inferred';
+          { inferred = inferred'; tparam })
         inferred_targ_map
     in
     let subst_map =
