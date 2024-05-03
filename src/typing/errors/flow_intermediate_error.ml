@@ -3412,7 +3412,7 @@ let to_printable_error :
         text ". ";
         text "Alternatively, you can enable experimental support for ";
         text "the feature by setting ";
-        code "experimental.as_const=true";
+        code "as_const=true";
         text " in your flow config.";
       ]
     | MessageTSKeyofType ->
