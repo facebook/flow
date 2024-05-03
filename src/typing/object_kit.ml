@@ -250,7 +250,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let id = Context.generate_property_map cx props in
         let proto = ObjProtoT reason in
         Slice_utils.mk_object_type
-          ~def_reason:r
+          ~reason:r
           ~invalidate_aliases:true
           ~interface:None
           ~reachable_targs
@@ -487,7 +487,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let id = Context.generate_property_map cx props in
           let proto = ObjProtoT reason in
           Slice_utils.mk_object_type
-            ~def_reason:reason
+            ~reason
             ~invalidate_aliases:false
             ~interface:None
             ~reachable_targs

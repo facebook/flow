@@ -13,7 +13,7 @@ open TypeUtil
 module Flow_js = struct end
 
 let mk_object_type
-    ~def_reason
+    ~reason
     ?(wrap_exact_t_on_exact_obj = false)
     ~invalidate_aliases
     ~interface
@@ -24,13 +24,13 @@ let mk_object_type
     id
     proto
     generics =
-  let def_reason =
+  let reason =
     if invalidate_aliases then
-      update_desc_reason invalidate_rtype_alias def_reason
+      update_desc_reason invalidate_rtype_alias reason
     else
-      def_reason
+      reason
   in
-  let (t, reason) =
+  let t =
     match interface with
     | Some (static, inst) ->
       let inst_dict =
@@ -41,16 +41,14 @@ let mk_object_type
       let inst = { inst with own_props = id; inst_dict } in
       (* Implemented/super interfaces are folded into the property map computed by the slice, so
            we effectively flatten the hierarchy in the output *)
-      ( DefT (def_reason, InstanceT { static; super = ObjProtoT def_reason; implements = []; inst }),
-        def_reason
-      )
+      DefT (reason, InstanceT { static; super = ObjProtoT reason; implements = []; inst })
     | None ->
-      let t = DefT (def_reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
+      let t = DefT (reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       if wrap_exact_t_on_exact_obj && Obj_type.is_exact flags.obj_kind then
-        (ExactT (def_reason, t), def_reason)
+        ExactT (reason, t)
       else
-        (t, def_reason)
+        t
   in
   Generic.make_op_id kind generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
@@ -556,7 +554,7 @@ let spread_mk_object
   let proto = ObjProtoT reason in
   let call = None in
   mk_object_type
-    ~def_reason:reason
+    ~reason
     ~wrap_exact_t_on_exact_obj:true
     ~invalidate_aliases:true
     ~interface:None
@@ -744,7 +742,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
     let call = None in
     Ok
       (mk_object_type
-         ~def_reason:reason
+         ~reason
          ~invalidate_aliases:true
          ~interface:None
          ~reachable_targs
@@ -1106,7 +1104,7 @@ let object_rest
     let proto = ObjProtoT r1 in
     let call = None in
     mk_object_type
-      ~def_reason:r1
+      ~reason:r1
       ~invalidate_aliases:true
       ~interface:None
         (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
@@ -1161,13 +1159,13 @@ let object_read_only =
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT reason in
     (* Avoid referring directly to the $ReadOnly keyword *)
-    let def_reason =
+    let reason =
       match desc_of_reason ~unwrap:false reason with
       | RReadOnlyType -> r
       | _ -> reason
     in
     mk_object_type
-      ~def_reason
+      ~reason
       ~invalidate_aliases:true
       ~interface
       ~reachable_targs
@@ -1213,7 +1211,7 @@ let object_update_optionality kind =
     let call = None in
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT reason in
-    let def_reason =
+    let reason =
       match (desc_of_reason ~unwrap:false reason, kind) with
       | (RPartialOf _, `Partial) -> r
       | (RRequiredOf _, `Required) -> r
@@ -1225,7 +1223,7 @@ let object_update_optionality kind =
       | `Required -> Subst_name.Required
     in
     mk_object_type
-      ~def_reason
+      ~reason
       ~invalidate_aliases:true
       ~interface
       ~reachable_targs
@@ -1795,7 +1793,7 @@ let map_object
   let proto = ObjProtoT reason in
   let flags = { flags with obj_kind } in
   mk_object_type
-    ~def_reason:reason
+    ~reason
     ~invalidate_aliases:true
     ~interface
     ~reachable_targs
