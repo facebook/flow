@@ -48,15 +48,9 @@ let mk_object_type
       let t = DefT (def_reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       Base.Option.value_map
-        ~f:(fun exact_reason ->
+        ~f:(fun _ ->
           if Obj_type.is_exact flags.obj_kind then
-            let exact_reason =
-              if invalidate_aliases then
-                update_desc_reason invalidate_rtype_alias exact_reason
-              else
-                exact_reason
-            in
-            (ExactT (exact_reason, t), exact_reason)
+            (ExactT (def_reason, t), def_reason)
           else
             (t, def_reason))
         ~default:(t, def_reason)
