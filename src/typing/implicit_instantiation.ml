@@ -1440,35 +1440,25 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Instantiation_helper
 
-  let instantiate_poly_with_subst_map
-      cx trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
+  let instantiate_poly_with_subst_map cx trace poly_t subst_map ~use_op ~reason_op ~reason_tapp =
     let inferred_targ_map =
       Subst_name.Map.map
         (fun { tparam; inferred } ->
           (* Create an OpenT indirection of inferred result.
            * We specifically want the inferred type argument to have RTypeParam reason desc,
            * so that we can detect loops in type expansion.
-           * See Instantiation_utils.ImplicitTypeArgument.abstract_targ *)
+           * See Instantiation_utils.ImplicitTypeArgument.abstract_targ.
+           *
+           * This OpenT indirection is also needed for performance purposes, since it prevents
+           * unnecessary deep substitution traversals. *)
           let inferred' =
             Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
           in
           FlowJs.rec_unify cx trace ~use_op ~unify_any:true inferred inferred';
           { inferred = inferred'; tparam })
-        inferred_targ_map
+        subst_map
     in
-    let subst_map =
-      Subst_name.Map.map
-        (fun { inferred; _ } ->
-          match inferred with
-          | OpenT _
-          | GenericT _ ->
-            inferred
-          | _ ->
-            (* This indirection is added for performance purposes, since it prevents
-             * unnecessary deep substitution traversals. *)
-            Tvar.mk_resolved cx (TypeUtil.reason_of_t inferred) inferred)
-        inferred_targ_map
-    in
+    let subst_map = Subst_name.Map.map (fun { inferred; _ } -> inferred) inferred_targ_map in
     inferred_targ_map
     |> Subst_name.Map.iter (fun _ { inferred; tparam } ->
            let frame = Frame (TypeParamBound { name = tparam.name }, use_op) in
