@@ -1653,6 +1653,69 @@ Flags: --pretty
   "end":6
 }
 
+tuple.js:10:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type R = $ReadOnly<Tup>"},
+    "evaluated":{"type":"type R = [+a: number, +_1: string, +_2: boolean]"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":6,"offset":126},
+    "end":{"line":10,"column":6,"offset":127}
+  },
+  "path":"tuple.js",
+  "line":10,
+  "endline":10,
+  "start":6,
+  "end":6
+}
+
+tuple.js:13:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type P = Partial<Tup>"},
+    "evaluated":{"type":"type P = [a?: number, _1?: string, _2?: boolean]"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":6,"offset":159},
+    "end":{"line":13,"column":6,"offset":160}
+  },
+  "path":"tuple.js",
+  "line":13,
+  "endline":13,
+  "start":6,
+  "end":6
+}
+
+tuple.js:16:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type Q = Partial<R>"},
+    "evaluated":{"type":"type Q = [+a?: number, +_1?: string, +_2?: boolean]"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":6,"offset":190},
+    "end":{"line":16,"column":6,"offset":191}
+  },
+  "path":"tuple.js",
+  "line":16,
+  "endline":16,
+  "start":6,
+  "end":6
+}
+
 unions.js:9:3 = {
   "types":{"unevaluated":{"type":"() => (number | string)"},"evaluated":null},
   "reasons":[],

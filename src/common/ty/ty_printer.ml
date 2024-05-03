@@ -116,27 +116,27 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       fuse [type_ ~depth _object; left_delim; type_ ~depth index; Atom "]"]
     | Tup { elements; inexact } ->
       let tuple_element ~depth = function
-        | TupleElement { name; t; polarity; optional } ->
-          fuse
-            [
-              variance_ polarity;
-              (match name with
-              | Some id ->
-                fuse
-                  [
-                    identifier (Reason.OrdinaryName id);
-                    ( if optional then
-                      Atom "?"
-                    else
-                      Empty
-                    );
-                    Atom ":";
-                    pretty_space;
-                  ]
-              | None -> Empty);
-              type_ ~depth t;
-            ]
-        | TupleSpread { name; t } ->
+        | (idx, TupleElement { name; t; polarity; optional }) ->
+          let opt_node =
+            if optional then
+              Atom "?"
+            else
+              Empty
+          in
+          let id_nodes id =
+            [identifier (Reason.OrdinaryName id); opt_node; Atom ":"; pretty_space]
+          in
+          let name =
+            match (name, polarity, optional) with
+            | (Some n, _, _) -> id_nodes n
+            | (None, Neutral, false) -> []
+            | (None, _, _) ->
+              (* We cannot omit the name of a non-neutral variance or optional
+               * element. If the name is missing, add a default name "_". *)
+              id_nodes (spf "_%d" idx)
+          in
+          fuse ((variance_ polarity :: name) @ [type_ ~depth t])
+        | (_, TupleSpread { name; t }) ->
           fuse
             [
               Atom "...";
@@ -146,7 +146,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               type_ ~depth t;
             ]
       in
-      let elements_rev = counted_map_rev (tuple_element ~depth) elements in
+      let elements_rev =
+        Base.List.mapi elements ~f:(fun i x -> (i, x)) |> counted_map_rev (tuple_element ~depth)
+      in
       let elements_rev =
         if inexact then
           Atom "..." :: elements_rev
