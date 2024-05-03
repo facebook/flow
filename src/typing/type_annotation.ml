@@ -1277,11 +1277,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 )
                 targs
           )
-        | "React$CreateClass" ->
-          check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let t = AnyT.at Untyped loc in
-              reconstruct_ast t None
-          )
         | "React$CreateElement" -> mk_custom_fun cx loc t_ast targs ident ReactCreateElement
         | "React$CloneElement" -> mk_custom_fun cx loc t_ast targs ident ReactCloneElement
         | "React$ElementProps" ->
