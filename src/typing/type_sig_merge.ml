@@ -1187,11 +1187,21 @@ and merge_value ?(as_const = false) env file = function
     merge_object_lit ~for_export:false ~as_const env file (loc, frozen, proto, props)
   | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
     merge_obj_spread_lit ~for_export:false ~as_const env file (loc, frozen, proto, elems_rev)
+  | EmptyConstArrayLit loc ->
+    let reason = Reason.(mk_reason RConstArrayLit loc) in
+    let elem_t = Type.EmptyT.make Reason.(mk_reason REmptyArrayElement loc) in
+    let arrtype = Type.(TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0) }) in
+    Type.(DefT (reason, ArrT arrtype))
   | ArrayLit (loc, t, ts) ->
-    let reason = Reason.(mk_reason RArrayLit loc) in
-    let t = merge env file t in
+    let reason =
+      if as_const then
+        Reason.(mk_reason RConstArrayLit loc)
+      else
+        Reason.(mk_reason RArrayLit loc)
+    in
+    let t = merge env file ~as_const t in
     (* NB: tail-recursive map in case of very large literals *)
-    let ts = Base.List.map ~f:(merge env file) ts in
+    let ts = Base.List.map ~f:(merge env file ~as_const) ts in
     let elem_t =
       match (t, ts) with
       | (t, []) -> t
@@ -1200,7 +1210,20 @@ and merge_value ?(as_const = false) env file = function
           UnionT (reason, UnionRep.make ~source_aloc:(Context.make_aloc_id file.cx loc) t0 t1 ts)
         )
     in
-    Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
+    let arrtype =
+      if as_const then
+        let elements =
+          Base.List.map (t :: ts) ~f:(fun t ->
+              let reason = Reason.(mk_reason RArrayLit (TypeUtil.loc_of_t t)) in
+              TypeUtil.mk_tuple_element ~polarity:Polarity.Positive reason t
+          )
+        in
+        let num_elts = List.length elements in
+        Type.(TupleAT { elem_t; elements; react_dro = None; arity = (num_elts, num_elts) })
+      else
+        Type.(ArrayAT { elem_t; tuple_view = None; react_dro = None })
+    in
+    Type.(DefT (reason, ArrT arrtype))
   | AsConst value -> merge_value ~as_const:true env file value
 
 and merge_declare_module_implicitly_exported_object env file (loc, module_name, props) =

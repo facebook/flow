@@ -3003,6 +3003,13 @@ let rec expression opts scope tbls (loc, expr) =
     | As
     | Both ->
       annot opts scope tbls SSet.empty t)
+  | E.AsConstExpression
+      {
+        E.AsConstExpression.expression = (_, E.Array { E.Array.elements = []; comments = _ });
+        comments = _;
+      } ->
+    (* Empty array literals are an error in general. Special-case `[] as const`. *)
+    Value (EmptyConstArrayLit loc)
   | E.AsConstExpression { E.AsConstExpression.expression = e; comments = _ } -> begin
     match expression opts scope tbls e with
     | Value v -> Value (AsConst v)

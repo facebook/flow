@@ -2714,30 +2714,29 @@ module Make
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
       (match elements with
+      | [] when as_const ->
+        (* Special case `[] as const` *)
+        let reason = mk_reason RConstArrayLit loc in
+        let elem_t = EmptyT.make (mk_reason REmptyArrayElement loc) in
+        let arrtype = TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0) } in
+        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
       | [] when Context.typing_mode cx <> Context.CheckingMode ->
         let reason = mk_reason REmptyArrayLit loc in
         let element_reason = mk_reason REmptyArrayElement loc in
         let elem_t = Context.mk_placeholder cx element_reason in
-        ( ( loc,
-            DefT
-              ( reason,
-                ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None })
-              )
-          ),
-          Array { Array.elements = []; comments }
-        )
+        let arrtype = ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None } in
+        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
       | [] ->
         let (reason, elem_t) = empty_array cx loc in
-        ( ( loc,
-            DefT
-              ( reason,
-                ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None })
-              )
-          ),
-          Array { Array.elements = []; comments }
-        )
+        let arrtype = ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None } in
+        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
       | elems ->
-        let reason = mk_reason RArrayLit loc in
+        let reason =
+          if as_const then
+            mk_reason RConstArrayLit loc
+          else
+            mk_reason RArrayLit loc
+        in
         let (elem_spread_list, elements) = array_elements cx ~as_const loc elems in
         ( ( loc,
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
@@ -2748,7 +2747,9 @@ module Make
                     reason_op
                 in
                 let elem_t = Tvar.mk cx element_reason in
-                let resolve_to = ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout) in
+                let resolve_to =
+                  ResolveSpreadsToArrayLiteral { id = mk_id (); as_const; elem_t; tout }
+                in
                 Flow.resolve_spread_list
                   cx
                   ~use_op:unknown_use
@@ -5706,7 +5707,7 @@ module Make
                 ~use_op:unknown_use
                 ~reason_op:reason
                 unresolved_params
-                (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout))
+                (ResolveSpreadsToArrayLiteral { id = mk_id (); as_const = false; elem_t; tout })
           )
         in
         ObjectExpressionAcc.add_prop

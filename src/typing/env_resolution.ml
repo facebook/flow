@@ -227,7 +227,7 @@ let resolve_hint cx loc hint =
             ~use_op:unknown_use
             ~reason_op
             elem_spread_list
-            (ResolveSpreadsToArrayLiteral (Reason.mk_id (), elem_t, tout))
+            (ResolveSpreadsToArrayLiteral { id = Reason.mk_id (); as_const = false; elem_t; tout })
       )
     | ComposedObjectPatternHint (loc, properties) ->
       let acc =
@@ -511,7 +511,9 @@ let rec resolve_binding cx reason loc b =
                   reason_op
               in
               let elem_t = Tvar.mk cx element_reason in
-              let resolve_to = ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout) in
+              let resolve_to =
+                ResolveSpreadsToArrayLiteral { id = mk_id (); as_const = false; elem_t; tout }
+              in
               Flow_js.resolve_spread_list
                 cx
                 ~use_op:unknown_use

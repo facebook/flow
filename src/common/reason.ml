@@ -81,6 +81,7 @@ type 'loc virtual_reason_desc =
   | RInterfaceType
   | RArray
   | RArrayLit
+  | RConstArrayLit
   | REmptyArrayLit
   | RArrayType
   | RArrayElement
@@ -275,10 +276,10 @@ let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
-    | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit
-    | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType | RTupleElement _
-    | RTupleLength _ | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType | RFunctionBody
-    | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
+    | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | RConstArrayLit
+    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType
+    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType
+    | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
     | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
     | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard
     | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
@@ -589,6 +590,7 @@ let rec string_of_desc = function
   | RInterfaceType -> "interface type"
   | RArray -> "array"
   | RArrayLit -> "array literal"
+  | RConstArrayLit -> "const array literal"
   | REmptyArrayLit -> "empty array literal"
   | RArrayType -> "array type"
   | RArrayElement -> "array element"
@@ -1393,6 +1395,7 @@ let classification_of_reason_desc desc =
     `Nullish
   | RArray
   | RArrayLit
+  | RConstArrayLit
   | REmptyArrayLit
   | RArrayType
   | RROArrayType

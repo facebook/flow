@@ -2330,7 +2330,7 @@ struct
              * carry an id around to break the infinite recursion that constant
              * constant folding can trigger *)
             | ResolveSpreadsToTupleType { id; elem_t; tout }
-            | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
+            | ResolveSpreadsToArrayLiteral { id; as_const = _; elem_t; tout } ->
               (* You might come across code like
                *
                * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
@@ -9838,7 +9838,7 @@ struct
                 replace_desc_reason (Reason.RInferredUnionElemArray { instantiable }) reason_op
               in
               let elem_t = Tvar.mk cx element_reason in
-              ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)
+              ResolveSpreadsToArrayLiteral { id = mk_id (); as_const = false; elem_t; tout }
               |> resolve_spread_list cx ~use_op ~reason_op elems
           )
         in
@@ -9969,17 +9969,23 @@ struct
            * of an `any` forces us to degrade an array literal to Array<any> then
            * we might get a new error. Since introducing `any`'s shouldn't cause
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
-          | ResolveToArrayLiteral
+          | ResolveToArrayLiteral { as_const = _ }
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
           | ResolveToTupleType ->
             AnyT.why any_src reason_op)
         | None ->
           (* Spreads that resolve to tuples are flattened *)
           let (elems, spread_after_opt) = flatten_spread_args cx resolved in
-
+          let as_const =
+            match resolve_to with
+            | ResolveToArrayLiteral { as_const } -> as_const
+            | ResolveToTupleType
+            | ResolveToArray ->
+              false
+          in
           let tuple_elements =
             match resolve_to with
-            | ResolveToArrayLiteral
+            | ResolveToArrayLiteral _
             | ResolveToTupleType ->
               elems
               (* If no spreads are left, then this is a tuple too! *)
@@ -9993,7 +9999,13 @@ struct
                         * just like object spread. *)
                        let elem =
                          let (TupleElement { t; optional; name; reason; polarity = _ }) = elem in
-                         TupleElement { t; optional; name; reason; polarity = Polarity.Neutral }
+                         let polarity =
+                           if as_const then
+                             Polarity.Positive
+                           else
+                             Polarity.Neutral
+                         in
+                         TupleElement { t; optional; name; reason; polarity }
                        in
                        Some (elem :: tuple_elements)
                      | (_, ResolvedAnySpreadArg _) -> failwith "Should not be hit")
@@ -10057,7 +10069,7 @@ struct
              a[i] = false;
 
              [*] Eventually, the element type does get pinned down to a union
-             when it is part of the module's exports. In the future we might
+             when the type of the expression is resolved. In the future we might
              have to do that pinning more carefully, and using an unresolved
              tvar instead of a union here doesn't conflict with those plans.
           *)
@@ -10066,10 +10078,16 @@ struct
           let t =
             match (resolve_to, tuple_elements, spread_after_opt) with
             | (ResolveToArray, _, _)
-            | (ResolveToArrayLiteral, None, _)
-            | (ResolveToArrayLiteral, _, true) ->
-              DefT (reason_op, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
-            | (ResolveToArrayLiteral, Some elements, _) ->
+            | (ResolveToArrayLiteral _, None, _)
+            | (ResolveToArrayLiteral _, _, true) ->
+              let arrtype =
+                if as_const then
+                  ROArrayAT (elem_t, None)
+                else
+                  ArrayAT { elem_t; tuple_view = None; react_dro = None }
+              in
+              DefT (reason_op, ArrT arrtype)
+            | (ResolveToArrayLiteral { as_const = false }, Some elements, _) ->
               let (valid, arity) =
                 validate_tuple_elements
                   cx
@@ -10091,7 +10109,8 @@ struct
                   )
               else
                 DefT (reason_op, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
-            | (ResolveToTupleType, Some elements, _) ->
+            | (ResolveToTupleType, Some elements, _)
+            | (ResolveToArrayLiteral { as_const = true }, Some elements, _) ->
               let (valid, arity) =
                 validate_tuple_elements
                   cx
@@ -10327,13 +10346,13 @@ struct
           resolved
           elem_t
           tout
-      | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
+      | ResolveSpreadsToArrayLiteral { as_const; elem_t; tout; _ } ->
         finish_array
           cx
           ~use_op
           ?trace
           ~reason_op
-          ~resolve_to:ResolveToArrayLiteral
+          ~resolve_to:(ResolveToArrayLiteral { as_const })
           resolved
           elem_t
           tout

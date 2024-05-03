@@ -1820,7 +1820,12 @@ module rec TypeTerm : sig
         tout: t;
       }
     (* Once we've finished resolving spreads, try to construct an array with known element types *)
-    | ResolveSpreadsToArrayLiteral of int * t * t (* elem type, array type *)
+    | ResolveSpreadsToArrayLiteral of {
+        id: int;
+        as_const: bool;
+        elem_t: t;
+        tout: t;
+      }
     (* Once we've finished resolving spreads, try to construct a non-tuple array *)
     | ResolveSpreadsToArray of t * t (* elem type, array type *)
     (* Once we've finished resolving spreads for a function's arguments, call the
@@ -1836,7 +1841,7 @@ module rec TypeTerm : sig
     | ResolveSpreadsToCallT of funcalltype * t
 
   and spread_array_resolve_to =
-    | ResolveToArrayLiteral
+    | ResolveToArrayLiteral of { as_const: bool }
     | ResolveToArray
     | ResolveToTupleType
 
@@ -4258,7 +4263,7 @@ let string_of_use_ctor = function
         match rrt_resolve_to with
         | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
         | ResolveSpreadsToTupleType { id; _ } -> spf "ResolveSpreadsToTupleType (%d)" id
-        | ResolveSpreadsToArrayLiteral (id, _, _) -> spf "ResolveSpreadsToArrayLiteral (%d)" id
+        | ResolveSpreadsToArrayLiteral { id; _ } -> spf "ResolveSpreadsToArrayLiteral (%d)" id
         | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
         | ResolveSpreadsToMultiflowSubtypeFull _ -> "ResolveSpreadsToMultiflowSubtypeFull"
         | ResolveSpreadsToCustomFunCall _ -> "ResolveSpreadsToCustomFunCall"

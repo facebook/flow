@@ -2,3 +2,4 @@
 all=true
 as_const=true
 experimental.ts_syntax=true
+inexact_tuple_types_syntax=true

@@ -212,8 +212,8 @@ module Eval = struct
       Nothing
     | Value
         ( ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | LongStringLit _ | NumberVal _
-          | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | ArrayLit _ | BigIntVal _
-          | BigIntLit _ | AsConst _ ),
+          | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | EmptyConstArrayLit _
+          | ArrayLit _ | BigIntVal _ | BigIntLit _ | AsConst _ ),
           _
         ) ->
       Nothing
@@ -342,6 +342,7 @@ module CJS = struct
         props
         acc
     | AsConst v -> exports_of_value acc type_sig v
+    | EmptyConstArrayLit _
     | ArrayLit _
     | BooleanLit _
     | BooleanVal _

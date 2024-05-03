@@ -73,7 +73,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   let resolve_spread_resolve resolve_tool =
     match resolve_tool with
     | ResolveSpreadsToTupleType { tout = t; _ }
-    | ResolveSpreadsToArrayLiteral (_, _, t)
+    | ResolveSpreadsToArrayLiteral { tout = t; _ }
     | ResolveSpreadsToArray (_, t) ->
       resolve t
     | ResolveSpreadsToMultiflowCallFull _ -> _TODO

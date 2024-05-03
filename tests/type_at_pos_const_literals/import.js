@@ -13,4 +13,12 @@ import {
 //  ^
     obj7,
 //  ^
+    arr1,
+//  ^
+    arr2,
+//  ^
+    arr6,
+//  ^
+    arr9,
+//  ^
 } from "./file";

@@ -1,3 +1,431 @@
+Error ---------------------------------------------------------------------------------------------------- array.js:22:3
+
+Cannot cast `arr1` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   array.js:22:3
+   22|   arr1 as [1, 2, 3]; // error cast to non-readonly
+         ^^^^
+
+References:
+   array.js:7:21
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                           ^^^^^^^^^ [1]
+   array.js:22:11
+   22|   arr1 as [1, 2, 3]; // error cast to non-readonly
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:22:3
+
+Cannot cast `arr1` to tuple type because tuple element at index `1` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   array.js:22:3
+   22|   arr1 as [1, 2, 3]; // error cast to non-readonly
+         ^^^^
+
+References:
+   array.js:7:21
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                           ^^^^^^^^^ [1]
+   array.js:22:11
+   22|   arr1 as [1, 2, 3]; // error cast to non-readonly
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:22:3
+
+Cannot cast `arr1` to tuple type because tuple element at index `2` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   array.js:22:3
+   22|   arr1 as [1, 2, 3]; // error cast to non-readonly
+         ^^^^
+
+References:
+   array.js:7:21
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                           ^^^^^^^^^ [1]
+   array.js:22:11
+   22|   arr1 as [1, 2, 3]; // error cast to non-readonly
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:25:8
+
+Cannot call `arr1.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   array.js:25:8
+   25|   arr1.push(4); // error cannot mutate readonly array
+              ^^^^
+
+References:
+   <BUILTINS>/prelude.js:26:15
+   26| declare class $ReadOnlyArray<+T> {
+                     ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:30:9
+
+Cannot cast `_` to `typeof arr1` because number [1] is incompatible with number literal `1` [2] in index 0.
+[incompatible-cast]
+
+   array.js:30:9
+   30|   _ as [number, 1, 3] as typeof arr1; // error number ~> 1, 1 ~> 2
+               ^^^^^^ [1]
+
+References:
+   array.js:7:22
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                            ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:30:17
+
+Cannot cast `_` to `typeof arr1` because number literal `1` [1] is incompatible with number literal `2` [2] in index 1.
+[incompatible-cast]
+
+   array.js:30:17
+   30|   _ as [number, 1, 3] as typeof arr1; // error number ~> 1, 1 ~> 2
+                       ^ [1]
+
+References:
+   array.js:7:25
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:34:3
+
+Cannot cast `arr2` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   array.js:34:3
+   34|   arr2 as [number]; // error cast to non-readonly
+         ^^^^
+
+References:
+   array.js:8:21
+    8| export const arr2 = [n] as const;         // readonly [number]
+                           ^^^ [1]
+   array.js:34:11
+   34|   arr2 as [number]; // error cast to non-readonly
+                 ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:53:3
+
+Cannot cast `arr5` to tuple type because const array literal [1] is incompatible with tuple type [2].
+[incompatible-cast]
+
+   array.js:53:3
+   53|   arr5 as [1, 2, 3]; // error arr5 is not a tuple
+         ^^^^
+
+References:
+   array.js:12:14
+   12| const arr5 = [...b] as const;              // readonly [number, number, number]
+                    ^^^^^^ [1]
+   array.js:53:11
+   53|   arr5 as [1, 2, 3]; // error arr5 is not a tuple
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:54:3
+
+Cannot cast `arr5` to array type because const array literal [1] is incompatible with array type [2].
+[incompatible-cast]
+
+   array.js:54:3
+   54|   arr5 as Array<number>; // error arr5 is readonly
+         ^^^^
+
+References:
+   array.js:12:14
+   12| const arr5 = [...b] as const;              // readonly [number, number, number]
+                    ^^^^^^ [1]
+   array.js:54:11
+   54|   arr5 as Array<number>; // error arr5 is readonly
+                 ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:65:3
+
+Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   array.js:65:3
+   65|   arr6 as [{+f: 1}]; // error cast to non-readonly array
+         ^^^^
+
+References:
+   array.js:13:21
+   13| export const arr6 = [{f: 1}] as const;            // readonly [{+f: 1}]
+                           ^^^^^^^^ [1]
+   array.js:65:11
+   65|   arr6 as [{+f: 1}]; // error cast to non-readonly array
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:66:3
+
+Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   array.js:66:3
+   66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
+         ^^^^
+
+References:
+   array.js:13:21
+   13| export const arr6 = [{f: 1}] as const;            // readonly [{+f: 1}]
+                           ^^^^^^^^ [1]
+   array.js:66:11
+   66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
+                 ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:66:3
+
+Cannot cast `arr6` to tuple type because property `f` is read-only in const object literal [1] but writable in object
+type [2] in index 0. [incompatible-variance]
+
+   array.js:66:3
+   66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
+         ^^^^
+
+References:
+   array.js:13:22
+   13| export const arr6 = [{f: 1}] as const;            // readonly [{+f: 1}]
+                            ^^^^^^ [1]
+   array.js:66:12
+   66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:81:3
+
+Cannot cast `arr8` to tuple type because null or undefined [1] is incompatible with undefined (out of bounds tuple
+access at index 0) [2] in index 0. [incompatible-cast]
+
+   array.js:81:3
+   81|   arr8 as [a?: ?number]; // error arity
+         ^^^^ [2]
+
+References:
+   array.js:81:16
+   81|   arr8 as [a?: ?number]; // error arity
+                      ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:81:3
+
+Cannot cast `arr8` to tuple type because number [1] is incompatible with undefined (out of bounds tuple access at index
+0) [2] in index 0. [incompatible-cast]
+
+   array.js:81:3
+   81|   arr8 as [a?: ?number]; // error arity
+         ^^^^ [2]
+
+References:
+   array.js:81:17
+   81|   arr8 as [a?: ?number]; // error arity
+                       ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:84:8
+
+Cannot cast `_` to `typeof arr8` because tuple type [1] has 1 element but const array literal [2] has 0 elements.
+[invalid-tuple-arity]
+
+   array.js:84:8
+   84|   _ as [1] as typeof arr8; // error arity
+              ^^^ [1]
+
+References:
+   array.js:84:15
+   84|   _ as [1] as typeof arr8; // error arity
+                     ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:85:8
+
+Cannot cast `_` to `typeof arr8` because tuple type [1] has 0-1 elements but const array literal [2] has 0 elements.
+[invalid-tuple-arity]
+
+   array.js:85:8
+   85|   _ as [a?: number] as typeof arr8; // error arity
+              ^^^^^^^^^^^^ [1]
+
+References:
+   array.js:85:24
+   85|   _ as [a?: number] as typeof arr8; // error arity
+                              ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- import-array.js:8:3
+
+Cannot cast `arr1` to tuple type because tuple element at index `2` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   import-array.js:8:3
+   8|   arr1 as [+_:1, +_:2, 3]; // error cast 3rd element to non-readonly
+        ^^^^
+
+References:
+   array.js:7:21
+   7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                          ^^^^^^^^^ [1]
+   import-array.js:8:11
+   8|   arr1 as [+_:1, +_:2, 3]; // error cast 3rd element to non-readonly
+                ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:15:9
+
+Cannot cast `_` to `typeof arr1` because number [1] is incompatible with number literal `1` [2] in index 0.
+[incompatible-cast]
+
+   import-array.js:15:9
+   15|   _ as [number, 1, 3] as typeof arr1; // error number ~> 1, 1 ~> 2
+               ^^^^^^ [1]
+
+References:
+   array.js:7:22
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import-array.js:15:17
+
+Cannot cast `_` to `typeof arr1` because number literal `1` [1] is incompatible with number literal `2` [2] in index 1.
+[incompatible-cast]
+
+   import-array.js:15:17
+   15|   _ as [number, 1, 3] as typeof arr1; // error number ~> 1, 1 ~> 2
+                       ^ [1]
+
+References:
+   array.js:7:25
+    7| export const arr1 = [1, 2, 3] as const;   // readonly [1, 2, 3]
+                               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:19:3
+
+Cannot cast `arr2` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   import-array.js:19:3
+   19|   arr2 as [number]; // error cast to non-readonly
+         ^^^^
+
+References:
+   array.js:8:21
+    8| export const arr2 = [n] as const;         // readonly [number]
+                           ^^^ [1]
+   import-array.js:19:11
+   19|   arr2 as [number]; // error cast to non-readonly
+                 ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:26:3
+
+Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
+in tuple type [2]. [incompatible-variance]
+
+   import-array.js:26:3
+   26|   arr6 as [{+f: 1}]; // error cast to non-readonly array
+         ^^^^
+
+References:
+   array.js:13:21
+   13| export const arr6 = [{f: 1}] as const;            // readonly [{+f: 1}]
+                           ^^^^^^^^ [1]
+   import-array.js:26:11
+   26|   arr6 as [{+f: 1}]; // error cast to non-readonly array
+                 ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:27:3
+
+Cannot cast `arr6` to `$ReadOnly` because property `f` is read-only in const object literal [1] but writable in object
+type [2] in index 0. [incompatible-variance]
+
+   import-array.js:27:3
+   27|   arr6 as readonly [{f: 1}]; // error cast to non-readonly prop
+         ^^^^
+
+References:
+   array.js:13:22
+   13| export const arr6 = [{f: 1}] as const;            // readonly [{+f: 1}]
+                            ^^^^^^ [1]
+   import-array.js:27:21
+   27|   arr6 as readonly [{f: 1}]; // error cast to non-readonly prop
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:37:3
+
+Cannot cast `arr8` to tuple type because null or undefined [1] is incompatible with undefined (out of bounds tuple
+access at index 0) [2] in index 0. [incompatible-cast]
+
+   import-array.js:37:3
+   37|   arr8 as [a?: ?number]; // error arity
+         ^^^^ [2]
+
+References:
+   import-array.js:37:16
+   37|   arr8 as [a?: ?number]; // error arity
+                      ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:37:3
+
+Cannot cast `arr8` to tuple type because number [1] is incompatible with undefined (out of bounds tuple access at index
+0) [2] in index 0. [incompatible-cast]
+
+   import-array.js:37:3
+   37|   arr8 as [a?: ?number]; // error arity
+         ^^^^ [2]
+
+References:
+   import-array.js:37:17
+   37|   arr8 as [a?: ?number]; // error arity
+                       ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:40:8
+
+Cannot cast `_` to `typeof arr8` because tuple type [1] has 1 element but const array literal [2] has 0 elements.
+[invalid-tuple-arity]
+
+   import-array.js:40:8
+   40|   _ as [1] as typeof arr8; // error arity
+              ^^^ [1]
+
+References:
+   import-array.js:40:15
+   40|   _ as [1] as typeof arr8; // error arity
+                     ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-array.js:41:8
+
+Cannot cast `_` to `typeof arr8` because tuple type [1] has 0-1 elements but const array literal [2] has 0 elements.
+[invalid-tuple-arity]
+
+   import-array.js:41:8
+   41|   _ as [a?: number] as typeof arr8; // error arity
+              ^^^^^^^^^^^^ [1]
+
+References:
+   import-array.js:41:24
+   41|   _ as [a?: number] as typeof arr8; // error arity
+                              ^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- import-object.js:10:3
 
 Cannot cast `obj1` to object type because property `f` is read-only in const object literal [1] but writable in object
@@ -971,4 +1399,4 @@ References:
 
 
 
-Found 65 errors
+Found 91 errors
