@@ -6,6 +6,9 @@ import {
   Something,
 } from 'some-module';
 
+// Regular import with types only
+
+
 // Import types
 
 // Typed function

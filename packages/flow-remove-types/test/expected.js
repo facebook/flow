@@ -8,6 +8,9 @@ import {
                        
 } from 'some-module';
 
+// Regular import with types only
+
+
 // Import types
                                             
 
