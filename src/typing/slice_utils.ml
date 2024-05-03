@@ -14,7 +14,7 @@ module Flow_js = struct end
 
 let mk_object_type
     ~def_reason
-    ~exact_reason
+    ?(wrap_exact_t_on_exact_obj = false)
     ~invalidate_aliases
     ~interface
     ~reachable_targs
@@ -47,14 +47,10 @@ let mk_object_type
     | None ->
       let t = DefT (def_reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
-      Base.Option.value_map
-        ~f:(fun _ ->
-          if Obj_type.is_exact flags.obj_kind then
-            (ExactT (def_reason, t), def_reason)
-          else
-            (t, def_reason))
-        ~default:(t, def_reason)
-        exact_reason
+      if wrap_exact_t_on_exact_obj && Obj_type.is_exact flags.obj_kind then
+        (ExactT (def_reason, t), def_reason)
+      else
+        (t, def_reason)
   in
   Generic.make_op_id kind generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
@@ -561,7 +557,7 @@ let spread_mk_object
   let call = None in
   mk_object_type
     ~def_reason:reason
-    ~exact_reason:(Some reason)
+    ~wrap_exact_t_on_exact_obj:true
     ~invalidate_aliases:true
     ~interface:None
     ~reachable_targs
@@ -749,7 +745,6 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
     Ok
       (mk_object_type
          ~def_reason:reason
-         ~exact_reason:None
          ~invalidate_aliases:true
          ~interface:None
          ~reachable_targs
@@ -1112,7 +1107,6 @@ let object_rest
     let call = None in
     mk_object_type
       ~def_reason:r1
-      ~exact_reason:None
       ~invalidate_aliases:true
       ~interface:None
         (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
@@ -1174,7 +1168,6 @@ let object_read_only =
     in
     mk_object_type
       ~def_reason
-      ~exact_reason:None
       ~invalidate_aliases:true
       ~interface
       ~reachable_targs
@@ -1233,7 +1226,6 @@ let object_update_optionality kind =
     in
     mk_object_type
       ~def_reason
-      ~exact_reason:None
       ~invalidate_aliases:true
       ~interface
       ~reachable_targs
@@ -1804,7 +1796,6 @@ let map_object
   let flags = { flags with obj_kind } in
   mk_object_type
     ~def_reason:reason
-    ~exact_reason:None
     ~invalidate_aliases:true
     ~interface
     ~reachable_targs
