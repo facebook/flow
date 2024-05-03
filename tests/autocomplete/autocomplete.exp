@@ -2584,9 +2584,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(string | E)) => input is E"},
+  "labelDetails":{"detail":": (input: ?(string | E)) => boolean"},
   "kind":3,
-  "detail":"(input: ?(string | E)) => input is E",
+  "detail":"(input: ?(string | E)) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{

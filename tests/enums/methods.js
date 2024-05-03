@@ -12,15 +12,9 @@ const a: void | E = E.cast('A');
 declare var maybeString: ?string;
 E.cast(maybeString);
 const b: Iterable<E> = E.members();
-const c: boolean = E.isValid('A');
-E.isValid(maybeString);
+const c: boolean = E.isValid('A'); // OK
+E.isValid(maybeString) as boolean; // OK
 const s: string = E.getName(E.A);
-{
-  const x = 'A';
-  if (E.isValid(x)) {
-    x as E; // OK
-  }
-}
 
 // .members()
 for (const x of E.members()) {
