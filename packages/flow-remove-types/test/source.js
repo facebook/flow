@@ -8,6 +8,12 @@ import {
   typeof SomeOtherThing
 } from 'some-module';
 
+// Regular import with types only
+import {
+  type SomeType,
+  typeof SomeOtherThing
+} from 'some-module';
+
 // Import types
 import type { SomeType } from 'some-module';
 
