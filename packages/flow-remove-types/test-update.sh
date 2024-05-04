@@ -10,6 +10,9 @@
 # Generate expected output with --ignore-uninitialized-fields flag
 ./flow-remove-types --ignore-uninitialized-fields test/source.js > test/expected-uninitialized-fields.js;
 
+# Generate expected output with --remove-empty-imports flag
+./flow-remove-types --remove-empty-imports test/source.js > test/expected-empty-imports.js;
+
 # Generate expected output with --pretty flag
 ./flow-remove-types --pretty test/source.js > test/expected-pretty.js;
 

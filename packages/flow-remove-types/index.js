@@ -27,6 +27,10 @@ var vlq = require('vlq');
  *     If true, removes uninitialized class fields (`foo;`, `foo: string;`)
  *     completely rather than only removing the type. THIS IS NOT SPEC
  *     COMPLIANT! Instead, use `declare foo: string;` for type-only fields.
+ * 
+ *   - removeEmptyImports: (default: false)
+ *     If true, removes empty imports (`import {} from 'some-module'`) that
+ *     are a result of removing all type and typeof imports.
  *
  * Returns an object with two methods:
  *
@@ -69,6 +73,9 @@ module.exports = function flowRemoveTypes(source, options) {
     ignoreUninitializedFields: Boolean(
       options && options.ignoreUninitializedFields,
     ),
+    removeEmptyImports: Boolean(
+      options && options.removeEmptyImports,
+    )
   };
 
   // Remove the flow pragma.
@@ -239,14 +246,24 @@ var removeFlowVisitor = {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
     }
-    // Remove import if all specifiers are type imports
-    if (node.importKind === 'value') {
-      var typesOnly = node.specifiers.every(function (specifier) {
-        return specifier.importKind === 'type' || specifier.importKind === 'typeof'
-      });
-      if (typesOnly) {
-        return removeNode(context, node);
+
+    // Remove non-empty import if all specifiers are type imports
+    // We check if there is at least one specifier inside to prevent 
+    // removing empty imports like `import {} from 'some-module'`
+    if (
+      context.removeEmptyImports &&
+      node.importKind === 'value' &&
+      node.specifiers.length > 0
+    ) {
+      for (var i = 0; i < node.specifiers.length; i++) {
+        if (
+          node.specifiers[i].importKind !== 'type' &&
+          node.specifiers[i].importKind !== 'typeof'
+        ) {
+          return;
+        }
       }
+      return removeNode(context, node);
     }
   },
 
