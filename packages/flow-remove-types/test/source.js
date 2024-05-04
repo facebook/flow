@@ -9,7 +9,7 @@ import {
 } from 'some-module';
 
 // Regular import with types only
-import {
+import DefaultImport, {
   type SomeType,
   typeof SomeOtherThing
 } from 'some-module';
