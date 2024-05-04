@@ -9,10 +9,10 @@ import {
 } from 'some-module';
 
 // Regular import with types only
-        
+import {
                 
                        
-                     
+} from 'some-module';
 
 // Import types
                                             
