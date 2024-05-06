@@ -6418,18 +6418,23 @@ module Make
         )
     in
     let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
-    let module CustomFunKit = Custom_fun_kit.Kit (Flow.FlowJs) in
-    CustomFunKit.run
-      ~return_hint
+    Flow.flow
       cx
-      DepthTrace.dummy_trace
-      ~use_op
-      reason
-      ReactCreateElement
-      targs_opt
-      ([component_t; props] @ children)
-      None
-      tout;
+      ( component_t,
+        ReactKitT
+          ( use_op,
+            reason,
+            React.CreateElement0
+              {
+                clone = false;
+                targs = targs_opt;
+                config = props;
+                children = (children, None);
+                tout;
+                return_hint;
+              }
+          )
+      );
     (tout, use_op)
 
   and mk_class cx class_loc ~name_loc ?tast_class_type reason c =
