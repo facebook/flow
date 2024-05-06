@@ -286,7 +286,15 @@ async function updateSuppressionsInText(
   // file.
   errors.sort(([line1, _errs1], [line2, _errs2]) => line2 - line1);
 
-  const ast = await getAst(contents);
+  let ast;
+  try {
+    ast = await getAst(contents);
+  } catch {
+    console.warn(`Unable to parse content:\n\n${contents}`);
+    // On parser failure, be conservative and do nothing.
+    // It's better than going ahead anyways and break original semantics.
+    return contents;
+  }
 
   for (const [
     _line,

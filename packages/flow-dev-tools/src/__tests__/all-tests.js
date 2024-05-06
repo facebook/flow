@@ -131,6 +131,31 @@ test('splitIntoChunks', () => {
   expect(splitIntoChunks('✓✓✓✓✓', 1)).toEqual(['✓', '✓', '✓', '✓', '✓']);
 });
 
+test('updateSuppressionsInText will do nothing on invalid file', async () => {
+  const testInput = `
+// $FlowFixMe
+const x = 4;
+const a;
+`.trimLeft();
+
+  const loc = makeLoc(testInput, 1, 1, 1, 14);
+
+  const testOutput = `
+// $FlowFixMe
+const x = 4;
+const a;
+`.trimLeft();
+
+  const errorsByLine = addErrorByLine(
+    new Map(),
+    testInput,
+    loc,
+    [],
+    ['foo', 'bar'],
+  );
+  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+});
+
 test('updateSuppressionsInText removes unused comments', async () => {
   const testInput = `
 // $FlowFixMe
