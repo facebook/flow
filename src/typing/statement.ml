@@ -5748,9 +5748,17 @@ module Make
               reason_of_t a |> AnyT.error)
           children
       in
-      let args = [component_t; props] @ children in
       let (tout, use_op) =
-        mk_react_jsx cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt args
+        mk_react_jsx
+          cx
+          reason
+          ~loc_element
+          ~loc_children
+          ~return_hint
+          component_t
+          targs_opt
+          props
+          children
       in
       (match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
@@ -6400,7 +6408,8 @@ module Make
         arg_asts
       )
 
-  and mk_react_jsx cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt args =
+  and mk_react_jsx
+      cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt props children =
     let reason_jsx = mk_reason (RFunction RNormal) loc_element in
     let use_op =
       Op
@@ -6408,14 +6417,20 @@ module Make
            { op = reason_jsx; component = reason_of_t component_t; children = loc_children }
         )
     in
-    let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
-    let tvar = (reason, Tvar.mk_no_wrap cx reason) in
-    let call_action =
-      let args = Base.List.map ~f:(fun c -> Arg c) args in
-      Funcalltype (mk_functioncalltype ~call_kind:RegularCallKind reason_jsx targs_opt args tvar)
-    in
-    Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint });
-    (OpenT tvar, use_op)
+    let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
+    let module CustomFunKit = Custom_fun_kit.Kit (Flow.FlowJs) in
+    CustomFunKit.run
+      ~return_hint
+      cx
+      DepthTrace.dummy_trace
+      ~use_op
+      reason
+      ReactCreateElement
+      targs_opt
+      ([component_t; props] @ children)
+      None
+      tout;
+    (tout, use_op)
 
   and mk_class cx class_loc ~name_loc ?tast_class_type reason c =
     let node_cache = Context.node_cache cx in
