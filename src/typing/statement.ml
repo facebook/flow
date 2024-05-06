@@ -6424,14 +6424,16 @@ module Make
         ReactKitT
           ( use_op,
             reason,
-            React.CreateElement0
+            React.CreateElement
               {
                 clone = false;
-                targs = targs_opt;
+                component = component_t;
                 config = props;
                 children = (children, None);
                 tout;
+                targs = targs_opt;
                 return_hint;
+                record_monomorphized_result = false;
               }
           )
       );
