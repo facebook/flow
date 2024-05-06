@@ -449,7 +449,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              )
           )
     in
-    let config_check clone config children_args =
+    let config_check use_op clone config children_args =
       (* Create the optional children input type from the children arguments. *)
       let children = coerce_children_args children_args in
 
@@ -534,7 +534,20 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       )
     in
     let create_element clone component config children_args record_monomorphized_result tout =
-      config_check clone config children_args;
+      let use_op =
+        (* Why do we try to remove the OpaqueTypeBound frame here?
+         * The frame will be added when we unwrap the opaque type bound of `React$CreateElement`.
+         * The error printing logic will unconditionally use the reason of `React$CreateElement`
+         * tracked here to replace the actual lower bound.
+         * TODO: generate reasons in a more principled way everywhere, so we don't need this hack. *)
+        let rec unwrap = function
+          | Frame (OpaqueTypeBound _, use_op) -> unwrap use_op
+          | Frame (f, use_op) -> Frame (f, unwrap use_op)
+          | Op _ as use_op -> use_op
+        in
+        unwrap use_op
+      in
+      config_check use_op clone config children_args;
 
       (* If our config is void or null then we want to replace it with an
        * empty object.
@@ -753,7 +766,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           record_monomorphized_result;
         } ->
       create_element clone component config children record_monomorphized_result tout
-    | ConfigCheck config -> config_check false config ([], None)
+    | ConfigCheck config -> config_check use_op false config ([], None)
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout

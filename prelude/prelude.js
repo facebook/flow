@@ -85,6 +85,8 @@ type AsyncIterable<+T> = $AsyncIterable<T,void,void>;
 
 declare opaque type $Flow$ModuleRef<+T>;
 
+declare opaque type React$CreateElement: React$Builtin$CreateElement;
+
 declare var module: {
   exports: any,
   ...

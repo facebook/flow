@@ -27,23 +27,6 @@ References:
             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:19:23
-
-Cannot resolve module `react`. [cannot-resolve-module]
-
-   19| const React = require('react');
-                             ^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:24:45
-
-Cannot use `Node` as a type because it is an `any`-typed value. Type `Node` properly, so it is no longer `any`-typed, to
-use it as an annotation. [value-as-type]
-
-   24| declare function MyComponent(props: Props): React.Node;
-                                                   ^^^^^^^^^^
-
-
 Warning ---------------------------------------------------------------------------------------------------- test.js:1:1
 
 Unused suppression comment.
@@ -60,13 +43,5 @@ Unused suppression comment.
       ^^^^^^^^^^^^^^^^^^^^^
 
 
-Warning --------------------------------------------------------------------------------------------------- test.js:26:1
 
-Unused suppression comment.
-
-   26| // $FlowFixMe unused
-       ^^^^^^^^^^^^^^^^^^^^
-
-
-
-Found 4 errors and 3 warnings
+Found 2 errors and 2 warnings

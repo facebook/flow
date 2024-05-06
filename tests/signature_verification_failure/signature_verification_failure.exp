@@ -146,14 +146,6 @@ simple key in object: [signature-verification-failure]
                                  ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:3:24
-
-Cannot resolve module `react`. [cannot-resolve-module]
-
-   3| import * as React from 'react';
-                             ^^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------------------- misc.js:5:15
 
 The type argument of a temporary base type must be a compatible literal type [invalid-temp-type]
@@ -193,16 +185,16 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2]. [prop-missing]
 
    misc.js:11:22
-   11| export const d = [...c];
-                            ^
+     11| export const d = [...c];
+                              ^
 
 References:
    misc.js:9:18
-    9| export const c = {['a' + 'b']: 42};
-                        ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/prelude.js:53:11
-   53| interface $Iterable<+Yield,+Return,-Next> {
-                 ^^^^^^^^^ [2]
+      9| export const c = {['a' + 'b']: 42};
+                          ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1748:11
+   1748| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
@@ -354,4 +346,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 36 errors
+Found 35 errors

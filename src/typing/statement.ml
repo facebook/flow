@@ -5768,39 +5768,57 @@ module Make
         in
         Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint })
       | Options.ReactRuntimeClassic ->
-        let prop_name = OrdinaryName "createElement" in
-        let reason_createElement = mk_reason (RProperty (Some prop_name)) loc_element in
+        (* Under classic jsx, we trust but verify:
+         * - We first unconditionally call the right createElement
+         * - Then we validate that we are calling the right one. By modeling React$CreateElement
+         *   as an opaque type bounded by the real definition, we can reliable check it. *)
+        let reason_jsx = mk_reason (RFunction RNormal) loc_element in
         let use_op =
           Op
             (ReactCreateElementCall
-               {
-                 op = reason_createElement;
-                 component = reason_of_t component_t;
-                 children = loc_children;
-               }
+               { op = reason_jsx; component = reason_of_t component_t; children = loc_children }
             )
         in
-        let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
-        Flow.flow
-          cx
-          ( react,
-            MethodT
-              ( use_op,
-                reason,
-                reason_createElement,
-                mk_named_prop ~reason:reason_createElement prop_name,
-                CallM
-                  {
-                    methodcalltype =
-                      mk_methodcalltype
-                        targs_opt
-                        ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
-                        tvar;
-                    return_hint;
-                    specialized_callee = None;
-                  }
-              )
-          ));
+        let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
+        let call_action =
+          Funcalltype (mk_functioncalltype ~call_kind:RegularCallKind reason_jsx targs_opt args tvar)
+        in
+        Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint });
+        (* Validate that we are actually calling the right React.createElement *)
+        let react_t =
+          Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element
+        in
+        let create_element_t =
+          get_prop
+            ~cond:None
+            cx
+            reason
+            ~use_op
+            ~hint:hint_unavailable
+            react_t
+            ( mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element,
+              "createElement"
+            )
+        in
+        if
+          not
+            (Speculation_flow.is_flow_successful
+               cx
+               reason
+               ~upper_unresolved:false
+               create_element_t
+               (UseT
+                  ( unknown_use,
+                    Flow.get_builtin_type cx reason ~use_desc:false "React$CreateElement"
+                  )
+               )
+            )
+        then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EInvalidReactCreateElement
+               { create_element_loc = loc_element; invalid_react = reason_of_t react_t }
+            ));
       OpenT tvar
     | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
       let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in

@@ -1,4 +1,3 @@
 [options]
 all=true
-
-[lints]
+no_flowlib=false

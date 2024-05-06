@@ -2492,7 +2492,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactConfig { loc; props; default })
     | _ -> Err (loc, CheckError)
   end
-  | "React$CreateElement" -> begin
+  | "React$Builtin$CreateElement" -> begin
     match targs with
     | None -> Annot (ReactCreateElement loc)
     | _ -> Err (loc, CheckError)

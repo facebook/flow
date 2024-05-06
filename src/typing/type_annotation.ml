@@ -1277,7 +1277,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 )
                 targs
           )
-        | "React$CreateElement" -> mk_custom_fun cx loc t_ast targs ident ReactCreateElement
+        | "React$Builtin$CreateElement" -> mk_custom_fun cx loc t_ast targs ident ReactCreateElement
         | "React$CloneElement" -> mk_custom_fun cx loc t_ast targs ident ReactCloneElement
         | "React$ElementProps" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

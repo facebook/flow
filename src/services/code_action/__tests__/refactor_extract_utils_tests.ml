@@ -105,6 +105,15 @@ let dummy_context () =
          "$AsyncIterable"
          (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "$Iterable" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "$JSXIntrinsics"
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "React$CreateElement"
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add "React$Element" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add "React$Key" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add "React$Ref" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   let ccx = Context.make_ccx () in
   let metadata = stub_metadata ~root ~checked:true in

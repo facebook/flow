@@ -313,6 +313,10 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | EInvalidReactCreateElement of {
+      create_element_loc: 'loc;
+      invalid_react: 'loc virtual_reason;
+    }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EReactRefInRender of {
       usage: 'loc virtual_reason;
@@ -910,6 +914,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ENotAReactComponent { reason = map_reason reason; use_op = map_use_op use_op }
   | EInvalidReactConfigType { reason; use_op } ->
     EInvalidReactConfigType { reason = map_reason reason; use_op = map_use_op use_op }
+  | EInvalidReactCreateElement { create_element_loc; invalid_react } ->
+    EInvalidReactCreateElement
+      { create_element_loc = f create_element_loc; invalid_react = map_reason invalid_react }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
@@ -1445,6 +1452,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidTypeArgs (_, _)
   | EInvalidInfer _
   | EInvalidExtends _
+  | EInvalidReactCreateElement _
   | EPropertyTypeAnnot _
   | EExportsAnnot _
   | EUnsupportedKeyInObject _
@@ -1675,6 +1683,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
   | EInvalidInfer loc
+  | EInvalidReactCreateElement { create_element_loc = loc; _ }
   | ENonstrictImport loc
   | EUnclearType loc
   | EDeprecatedBool loc
@@ -2068,6 +2077,8 @@ let friendly_message_of_msg = function
     Normal (MessageCannotUseTypeWithInvalidTypeArgs { reason_main; reason_tapp })
   | EInvalidInfer _ -> Normal MessageInvalidInferType
   | EInvalidExtends reason -> Normal (MessageCannotUseAsSuperClass reason)
+  | EInvalidReactCreateElement { create_element_loc = _; invalid_react } ->
+    Normal (MessageInvalidReactCreateElement invalid_react)
   | ETypeParamArity (_, n) ->
     if n = 0 then
       Normal MessageCannotApplyNonPolymorphicType
@@ -2907,6 +2918,7 @@ let error_code_of_message err : error_code option =
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject
   | EInvalidReactConfigType _ -> Some InvalidReactConfig
+  | EInvalidReactCreateElement _ -> Some InvalidReactCreateElement
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
   | EInvalidRef _ -> Some InvalidRef

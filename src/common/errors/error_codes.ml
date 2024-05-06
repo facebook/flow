@@ -95,6 +95,7 @@ type error_code =
   | InvalidPropertyTypeArg
   | InvalidPropType
   | InvalidReactConfig
+  | InvalidReactCreateElement
   | InvalidRendersTypeArgument
   | InvalidSupportsPlatformDecl
   | InvalidTupleArity
@@ -305,6 +306,7 @@ let string_of_code : error_code -> string = function
   | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactConfig -> "invalid-react-config"
+  | InvalidReactCreateElement -> "invalid-react-create-element"
   | InvalidRendersTypeArgument -> "invalid-render"
   | InvalidSupportsPlatformDecl -> "invalid-supports-platform"
   | InvalidTupleArity -> "invalid-tuple-arity"

@@ -2926,6 +2926,19 @@ let to_printable_error :
           code ",";
           text "?";
         ])
+    | MessageInvalidReactCreateElement invalid_react ->
+      [
+        text "Cannot create react element because the ";
+        code "createElement";
+        text " property of ";
+        ref invalid_react;
+        text " is incompatible with builtin ";
+        code "React.createElement";
+        text " type. ";
+        text "Please check the ";
+        ref invalid_react;
+        text " identifier in scope to ensure it is the right one.";
+      ]
     | MessageInvalidRefPropertyType typename ->
       [
         text "Cannot use ";

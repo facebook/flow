@@ -673,6 +673,7 @@ type 'loc message =
   | MessageInvalidMappedTypeWithExactOrInexact
   | MessageInvalidMappedTypeWithExtraProps
   | MessageInvalidMappedTypeWithOptionalityRemoval
+  | MessageInvalidReactCreateElement of 'loc virtual_reason
   | MessageInvalidRefPropertyType of string
   | MessageInvalidRefPropertyInSpread of {
       ref_loc: 'loc;

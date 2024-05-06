@@ -1522,6 +1522,8 @@ let dump_error_message =
         minimum_arity
     | EInvalidTypeArgs (reason_tapp, reason_arity) ->
       spf "EInvalidTypeArgs (%s, %s)" (dump_reason cx reason_tapp) (dump_reason cx reason_arity)
+    | EInvalidReactCreateElement { create_element_loc; _ } ->
+      spf "EInvalidReactCreateElement(%s)" (string_of_aloc create_element_loc)
     | EInvalidInfer loc -> spf "EInvalidInfer (%s)" (string_of_aloc loc)
     | EInvalidExtends reason -> spf "EInvalidExtends (%s)" (dump_reason cx reason)
     | EPropertyTypeAnnot loc -> spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
