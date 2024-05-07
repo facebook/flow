@@ -1,7 +1,7 @@
 [options]
 exact_by_default=false
 enums=true
-experimental.component_syntax=true
+component_syntax=true
 
 [lints]
 unused-promise=error

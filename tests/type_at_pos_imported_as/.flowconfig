@@ -8,7 +8,7 @@
 
 [options]
 enums=true
-experimental.component_syntax=true
+component_syntax=true
 all=true
 
 [strict]

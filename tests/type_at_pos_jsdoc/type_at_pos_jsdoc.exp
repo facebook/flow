@@ -1789,7 +1789,7 @@ components.js:10:4
 Flags: --strip-root --pretty
 {
   "documentation":"doc 1",
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"components.js",

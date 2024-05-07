@@ -1,5 +1,4 @@
 [options]
 all=true
 no_flowlib=false
-experimental.component_syntax=true
-experimental.react_rule=deepReadOnlyProps
+component_syntax=true

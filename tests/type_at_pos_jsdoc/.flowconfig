@@ -10,6 +10,6 @@
 all=true
 no_flowlib=false
 enums=true
-experimental.component_syntax=true
+component_syntax=true
 
 [strict]
