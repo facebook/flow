@@ -178,6 +178,13 @@ let is_call_to_object_dot_freeze callee =
     true
   | _ -> false
 
+let get_call_to_object_dot_freeze_arg callee targs args =
+  match (targs, args) with
+  | (None, (_args_loc, { E.ArgList.arguments = [E.Expression (obj_loc, E.Object o)]; comments = _ }))
+    when is_call_to_object_dot_freeze callee ->
+    Some (obj_loc, o)
+  | _ -> None
+
 let is_call_to_object_static_method callee =
   match callee with
   | ( _,

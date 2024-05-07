@@ -35,6 +35,12 @@ val is_call_to_is_array : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_call_to_object_dot_freeze : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val get_call_to_object_dot_freeze_arg :
+  ('a, 'b) Flow_ast.Expression.t ->
+  ('a, 'b) Flow_ast.Expression.CallTypeArgs.t option ->
+  ('a, 'b) Flow_ast.Expression.ArgList.t ->
+  ('b * ('a, 'b) Flow_ast.Expression.Object.t) option
+
 val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_super_member_access : ('a, 'b) Flow_ast.Expression.Member.t -> bool

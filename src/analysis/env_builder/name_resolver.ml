@@ -4123,50 +4123,68 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           super#declare_function loc expr
 
       method! call loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Call.t) =
-        (* Traverse everything up front. Now we don't need to worry about missing any reads
-         * of identifiers in sub-expressions *)
-        ignore @@ super#call loc expr;
-
         let open Ast.Expression.Call in
         let { callee; targs; arguments; _ } = expr in
-        if Flow_ast_utils.is_call_to_invariant callee then
-          match (targs, arguments) with
-          (* invariant() and invariant(false, ...) are treated like throw *)
-          | (None, (_, { Ast.Expression.ArgList.arguments = []; comments = _ })) ->
-            this#raise_abrupt_completion AbruptCompletion.throw
-          | ( None,
-              ( _,
-                {
-                  Ast.Expression.ArgList.arguments =
-                    Ast.Expression.Expression
-                      (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ })
-                    :: other_args;
-                  comments = _;
-                }
-              )
-            ) ->
-            let _ = List.map this#expression_or_spread other_args in
-            this#raise_abrupt_completion AbruptCompletion.throw
-          | ( None,
-              ( _,
-                {
-                  Ast.Expression.ArgList.arguments = Ast.Expression.Expression cond :: other_args;
-                  comments = _;
-                }
-              )
-            ) ->
-            this#push_refinement_scope empty_refinements;
-            ignore @@ this#expression_refinement cond;
-            let _ = List.map this#expression_or_spread other_args in
-            this#pop_refinement_scope_without_unrefining ()
-          | ( _,
-              (_, { Ast.Expression.ArgList.arguments = Ast.Expression.Spread _ :: _; comments = _ })
-            ) ->
-            error_todo
-          | (Some _, _) -> error_todo
-        else
-          this#havoc_current_env ~all:false ~loc;
-        expr
+        match Flow_ast_utils.get_call_to_object_dot_freeze_arg callee targs arguments with
+        | Some (obj_loc, obj) ->
+          ignore @@ super#expression callee;
+          ignore @@ super#object_ obj_loc obj;
+          let write_entries =
+            EnvMap.add
+              (Env_api.ExpressionLoc, loc)
+              (Env_api.AssigningWrite (Reason.mk_expression_reason (loc, Ast.Expression.Call expr)))
+              env_state.write_entries
+          in
+          env_state <- { env_state with write_entries };
+          expr
+        | None -> begin
+          (* Traverse everything up front. Now we don't need to worry about missing any reads
+           * of identifiers in sub-expressions *)
+          ignore @@ super#call loc expr;
+
+          let open Ast.Expression.Call in
+          let { callee; targs; arguments; _ } = expr in
+          if Flow_ast_utils.is_call_to_invariant callee then
+            match (targs, arguments) with
+            (* invariant() and invariant(false, ...) are treated like throw *)
+            | (None, (_, { Ast.Expression.ArgList.arguments = []; comments = _ })) ->
+              this#raise_abrupt_completion AbruptCompletion.throw
+            | ( None,
+                ( _,
+                  {
+                    Ast.Expression.ArgList.arguments =
+                      Ast.Expression.Expression
+                        (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ })
+                      :: other_args;
+                    comments = _;
+                  }
+                )
+              ) ->
+              let _ = List.map this#expression_or_spread other_args in
+              this#raise_abrupt_completion AbruptCompletion.throw
+            | ( None,
+                ( _,
+                  {
+                    Ast.Expression.ArgList.arguments = Ast.Expression.Expression cond :: other_args;
+                    comments = _;
+                  }
+                )
+              ) ->
+              this#push_refinement_scope empty_refinements;
+              ignore @@ this#expression_refinement cond;
+              let _ = List.map this#expression_or_spread other_args in
+              this#pop_refinement_scope_without_unrefining ()
+            | ( _,
+                ( _,
+                  { Ast.Expression.ArgList.arguments = Ast.Expression.Spread _ :: _; comments = _ }
+                )
+              ) ->
+              error_todo
+            | (Some _, _) -> error_todo
+          else
+            this#havoc_current_env ~all:false ~loc;
+          expr
+        end
 
       method! arg_list arg_list =
         let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = arg_list in
