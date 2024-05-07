@@ -757,8 +757,8 @@ type [2] in property `style`. [incompatible-call]
 
 References:
    <BUILTINS>/intl.js:185:11
-   185|   style?: 'decimal' | 'currency' | 'percent',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   185|   style?: 'decimal' | 'currency' | 'percent' | 'unit',
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- number_format.js:9:13
@@ -787,8 +787,8 @@ type [2] in property `currencyDisplay`. [incompatible-call]
 
 References:
    <BUILTINS>/intl.js:187:21
-   187|   currencyDisplay?: 'symbol' | 'code' | 'name',
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   187|   currencyDisplay?: 'symbol' | 'code' | 'name' | 'narrowSymbol',
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- number_format.js:11:16
