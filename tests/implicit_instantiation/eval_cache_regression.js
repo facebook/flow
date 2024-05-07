@@ -20,7 +20,7 @@ class Foo<T> extends React.Component<PropsP<T>> {
 
 declare var id: ?string;
 
-function LetterboxBusinessUnitInvariant() {
+function foo() {
   return (
     <Foo
       value={id}
