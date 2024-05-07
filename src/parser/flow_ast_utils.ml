@@ -6,6 +6,8 @@
  *)
 
 open Flow_ast
+module E = Expression
+module I = Identifier
 
 type 'loc binding = 'loc * string
 
@@ -41,17 +43,17 @@ let rec fold_bindings_of_pattern =
   )
 
 let fold_bindings_of_variable_declarations f acc declarations =
-  let open Flow_ast.Statement.VariableDeclaration in
+  let open Statement.VariableDeclaration in
   List.fold_left
     (fun acc -> function
       | (_, { Declarator.id = pattern; _ }) ->
         let has_anno =
           (* Only the toplevel annotation in a pattern is meaningful *)
-          let open Flow_ast.Pattern in
+          let open Pattern in
           match pattern with
-          | (_, Array { Array.annot = Flow_ast.Type.Available _; _ })
-          | (_, Object { Object.annot = Flow_ast.Type.Available _; _ })
-          | (_, Identifier { Identifier.annot = Flow_ast.Type.Available _; _ }) ->
+          | (_, Array { Array.annot = Type.Available _; _ })
+          | (_, Object { Object.annot = Type.Available _; _ })
+          | (_, Identifier { Identifier.annot = Type.Available _; _ }) ->
             true
           | _ -> false
         in
@@ -83,7 +85,7 @@ let rec pattern_has_binding =
   | (_, Expression _) -> false
 
 let partition_directives statements =
-  let open Flow_ast.Statement in
+  let open Statement in
   let rec helper directives = function
     | ((_, Expression { Expression.directive = Some _; _ }) as directive) :: rest ->
       helper (directive :: directives) rest
@@ -92,22 +94,19 @@ let partition_directives statements =
   helper [] statements
 
 let hoist_function_and_component_declarations stmts =
-  let open Flow_ast.Statement in
+  let open Statement in
   let (func_and_component_decs, other_stmts) =
     List.partition
       (function
         (* function f() {} / component F() {} *)
-        | (_, (FunctionDeclaration { Flow_ast.Function.id = Some _; _ } | ComponentDeclaration _))
+        | (_, (FunctionDeclaration { Function.id = Some _; _ } | ComponentDeclaration _))
         (* export function f() {} / export component F() {} *)
         | ( _,
             ExportNamedDeclaration
               {
                 ExportNamedDeclaration.declaration =
                   Some
-                    ( _,
-                      ( FunctionDeclaration { Flow_ast.Function.id = Some _; _ }
-                      | ComponentDeclaration _ )
-                    );
+                    (_, (FunctionDeclaration { Function.id = Some _; _ } | ComponentDeclaration _));
                 _;
               }
           )
@@ -117,10 +116,7 @@ let hoist_function_and_component_declarations stmts =
               {
                 ExportDefaultDeclaration.declaration =
                   ExportDefaultDeclaration.Declaration
-                    ( _,
-                      ( FunctionDeclaration { Flow_ast.Function.id = Some _; _ }
-                      | ComponentDeclaration _ )
-                    );
+                    (_, (FunctionDeclaration { Function.id = Some _; _ } | ComponentDeclaration _));
                 _;
               }
           )
@@ -159,16 +155,10 @@ let is_call_to_invariant callee =
 let is_call_to_is_array callee =
   match callee with
   | ( _,
-      Flow_ast.Expression.Member
+      E.Member
         {
-          Flow_ast.Expression.Member._object =
-            ( _,
-              Flow_ast.Expression.Identifier
-                (_, { Flow_ast.Identifier.name = "Array"; comments = _ })
-            );
-          property =
-            Flow_ast.Expression.Member.PropertyIdentifier
-              (_, { Flow_ast.Identifier.name = "isArray"; comments = _ });
+          E.Member._object = (_, E.Identifier (_, { I.name = "Array"; comments = _ }));
+          property = E.Member.PropertyIdentifier (_, { I.name = "isArray"; comments = _ });
           comments = _;
         }
     ) ->
@@ -178,16 +168,10 @@ let is_call_to_is_array callee =
 let is_call_to_object_dot_freeze callee =
   match callee with
   | ( _,
-      Flow_ast.Expression.Member
+      E.Member
         {
-          Flow_ast.Expression.Member._object =
-            ( _,
-              Flow_ast.Expression.Identifier
-                (_, { Flow_ast.Identifier.name = "Object"; comments = _ })
-            );
-          property =
-            Flow_ast.Expression.Member.PropertyIdentifier
-              (_, { Flow_ast.Identifier.name = "freeze"; comments = _ });
+          E.Member._object = (_, E.Identifier (_, { I.name = "Object"; comments = _ }));
+          property = E.Member.PropertyIdentifier (_, { I.name = "freeze"; comments = _ });
           comments = _;
         }
     ) ->
@@ -197,14 +181,10 @@ let is_call_to_object_dot_freeze callee =
 let is_call_to_object_static_method callee =
   match callee with
   | ( _,
-      Flow_ast.Expression.Member
+      E.Member
         {
-          Flow_ast.Expression.Member._object =
-            ( _,
-              Flow_ast.Expression.Identifier
-                (_, { Flow_ast.Identifier.name = "Object"; comments = _ })
-            );
-          property = Flow_ast.Expression.Member.PropertyIdentifier _;
+          E.Member._object = (_, E.Identifier (_, { I.name = "Object"; comments = _ }));
+          property = E.Member.PropertyIdentifier _;
           comments = _;
         }
     ) ->
@@ -212,11 +192,11 @@ let is_call_to_object_static_method callee =
   | _ -> false
 
 let is_super_member_access = function
-  | { Flow_ast.Expression.Member._object = (_, Flow_ast.Expression.Super _); _ } -> true
+  | { E.Member._object = (_, E.Super _); _ } -> true
   | _ -> false
 
 let acceptable_statement_in_declaration_context ~in_declare_namespace =
-  let open Flow_ast.Statement in
+  let open Statement in
   function
   | Block _ -> Error "block"
   | Break _ -> Error "break"
@@ -272,7 +252,7 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
     Ok ()
 
 let rec is_type_only_declaration_statement (_, stmt') =
-  let open Flow_ast.Statement in
+  let open Statement in
   let is_type_only_declaration_statement' = function
     | DeclareInterface _
     | DeclareOpaqueType _
@@ -384,7 +364,7 @@ let split_comments comments =
     (mk_comments_opt ~leading (), mk_comments_opt ~trailing ())
 
 let string_of_assignment_operator op =
-  let open Flow_ast.Expression.Assignment in
+  let open E.Assignment in
   match op with
   | PlusAssign -> "+="
   | MinusAssign -> "-="
@@ -403,7 +383,7 @@ let string_of_assignment_operator op =
   | OrAssign -> "||="
 
 let string_of_binary_operator op =
-  let open Flow_ast.Expression.Binary in
+  let open E.Binary in
   match op with
   | Equal -> "=="
   | NotEqual -> "!="
@@ -496,14 +476,14 @@ module ExpressionSort = struct
 end
 
 let loc_of_annotation_or_hint =
-  let open Flow_ast.Type in
+  let open Type in
   function
   | Missing loc
   | Available (_, (loc, _)) ->
     loc
 
 let loc_of_return_annot =
-  let open Flow_ast.Function.ReturnAnnot in
+  let open Function.ReturnAnnot in
   function
   | Missing loc
   | Available (_, (loc, _))
@@ -515,7 +495,7 @@ let loc_of_return_annot =
  * identifier and member property type position as well. This is to ensure that
  * type-at-pos searcher will detect the updated type. *)
 let push_toplevel_type t exp =
-  let open Flow_ast.Expression in
+  let open E in
   let push_toplevel_identifier id =
     let ((id_loc, _), id) = id in
     ((id_loc, t), id)
@@ -541,25 +521,18 @@ let hook_name s =
   let is_cap c = c = Char.uppercase_ascii c in
   String.starts_with ~prefix:"use" s && (String.length s = 3 || is_cap s.[3])
 
-let hook_function { Flow_ast.Function.id; _ } =
+let hook_function { Function.id; _ } =
   match id with
-  | Some (loc, { Flow_ast.Identifier.name; _ }) when hook_name name -> Some loc
+  | Some (loc, { I.name; _ }) when hook_name name -> Some loc
   | _ -> None
 
-let hook_call { Flow_ast.Expression.Call.callee; _ } =
+let hook_call { E.Call.callee; _ } =
   (* A.B.C.useFoo() is a hook, A().useFoo() is not *)
-  let open Flow_ast.Expression in
+  let open E in
   let rec hook_callee top exp =
     match exp with
-    | (_, Identifier (_, { Flow_ast.Identifier.name; _ })) -> hook_name name || not top
-    | ( _,
-        Member
-          {
-            Member._object;
-            property = Member.PropertyIdentifier (_, { Flow_ast.Identifier.name; _ });
-            _;
-          }
-      ) ->
+    | (_, Identifier (_, { I.name; _ })) -> hook_name name || not top
+    | (_, Member { Member._object; property = Member.PropertyIdentifier (_, { I.name; _ }); _ }) ->
       (hook_name name || not top) && hook_callee false _object
     | _ -> false
   in
