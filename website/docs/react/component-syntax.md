@@ -198,3 +198,7 @@ component UsesThis() {
   return null;
 }
 ```
+
+## Enable Component Syntax {#toc-enable-component-syntax}
+
+In your `.flowconfig`, under the `[options]` heading, add `component_syntax=true`.

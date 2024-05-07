@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
-Component syntax is not enabled. [unsupported-syntax]
+Component syntax is not enabled. You may opt-in to using component syntax by putting `component_syntax=true` into the
+`[options]` section of your `.flowconfig`. [unsupported-syntax]
 
    1| component Comp() {} // error: unsupported
       ^^^^^^^^^^^^^^^^^^^

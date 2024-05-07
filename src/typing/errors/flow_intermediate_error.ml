@@ -3700,7 +3700,17 @@ let to_printable_error :
       [text "Literal properties not yet supported."]
     | MessageUnsupportedSyntax ClassPropertyComputed ->
       [text "Computed property keys not supported."]
-    | MessageUnsupportedSyntax ComponentSyntax -> [text "Component syntax is not enabled."]
+    | MessageUnsupportedSyntax ComponentSyntax ->
+      [
+        text "Component syntax is not enabled. ";
+        text "You may opt-in to using component syntax by putting ";
+        code "component_syntax=true";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
     | MessageUnsupportedSyntax (ContextDependentUnsupportedStatement NonLibdefToplevelDeclareModule)
       ->
       [
