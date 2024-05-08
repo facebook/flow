@@ -386,7 +386,7 @@ let json_of_autocomplete_result initial_json_props = function
     (response, Some (Hh_json.JSON_Object json_props_to_log))
 
 let type_parse_artifacts_for_ac_with_cache
-    ~options ~profiling ~type_parse_artifacts_cache ~cached master_cx file contents artifacts =
+    ~options ~profiling ~type_parse_artifacts_cache master_cx file contents artifacts =
   let type_parse_artifacts =
     lazy
       (match Lazy.force artifacts with
@@ -412,7 +412,7 @@ let type_parse_artifacts_for_ac_with_cache
     | Ok (contents', _, _, _) -> contents = contents'
   in
   match type_parse_artifacts_cache with
-  | Some cache when cached ->
+  | Some cache ->
     let (result, did_hit) = FilenameCache.with_cache_sync ~cond file type_parse_artifacts cache in
     (result, Some did_hit)
   | _ -> (Lazy.force type_parse_artifacts, None)
@@ -431,8 +431,7 @@ let autocomplete_on_parsed
     ~imports_min_characters
     ~imports_ranked_usage
     ~imports_ranked_usage_boost_exact_match_min_length
-    ~show_ranking_info
-    ~canonical =
+    ~show_ranking_info =
   let cursor_loc =
     let (line, column) = cursor in
     Loc.cursor (Some filename) line column
@@ -441,11 +440,7 @@ let autocomplete_on_parsed
    * We will refer to this form of contents as canonical. *)
   let (contents, broader_context, canon_token) =
     let (line, column) = cursor in
-    if canonical then
-      Autocomplete_sigil.add_canonical (Some filename) contents line column
-    else
-      let (contents, broader_context) = Autocomplete_sigil.add contents line column in
-      (contents, broader_context, None)
+    Autocomplete_sigil.add (Some filename) contents line column
   in
   let canon_cursor =
     Base.Option.value_map ~default:cursor_loc ~f:Autocomplete_sigil.Canonical.cursor canon_token
@@ -469,7 +464,6 @@ let autocomplete_on_parsed
       ~options
       ~profiling
       ~type_parse_artifacts_cache
-      ~cached:canonical
       env.master_cx
       filename
       contents
@@ -546,7 +540,7 @@ let autocomplete
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
   | Ok (filename, contents) ->
-    let autocomplete =
+    let (initial_json_props, ac_result) =
       autocomplete_on_parsed
         ~filename
         ~contents
@@ -562,11 +556,6 @@ let autocomplete
         ~imports_ranked_usage
         ~imports_ranked_usage_boost_exact_match_min_length
         ~show_ranking_info
-    in
-    let (initial_json_props, ac_result) =
-      match Options.autocomplete_canonical options with
-      | Options.Ac_classic -> autocomplete ~canonical:false
-      | Options.Ac_canonical -> autocomplete ~canonical:true
     in
     json_of_autocomplete_result initial_json_props ac_result
 

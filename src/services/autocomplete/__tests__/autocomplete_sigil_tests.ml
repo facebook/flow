@@ -14,9 +14,7 @@ let tests =
            ( "empty_line" >:: fun ctxt ->
              let contents = "// @flow\n\nfoo\n\nbar" in
              let expected = "// @flow\n\nfoo\nAUTO332\nbar" in
-             let (actual, broader_context, _) =
-               Autocomplete_sigil.add_canonical None contents 4 0
-             in
+             let (actual, broader_context, _) = Autocomplete_sigil.add None contents 4 0 in
              assert_equal ~ctxt ~printer:(fun x -> x) expected actual;
              let expected = "foo\nAUTO332\nbar" in
              assert_equal ~ctxt ~printer:(fun x -> x) expected broader_context
@@ -24,9 +22,7 @@ let tests =
            ( "last_line" >:: fun ctxt ->
              let contents = "// @flow\n" in
              let expected = "// @flow\nAUTO332" in
-             let (actual, broader_context, _) =
-               Autocomplete_sigil.add_canonical None contents 2 0
-             in
+             let (actual, broader_context, _) = Autocomplete_sigil.add None contents 2 0 in
              assert_equal ~ctxt ~printer:(fun x -> x) expected actual;
              let expected = "// @flow\nAUTO332" in
              assert_equal ~ctxt ~printer:(fun x -> x) expected broader_context

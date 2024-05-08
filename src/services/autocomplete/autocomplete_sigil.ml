@@ -18,27 +18,6 @@ let sigil = "AUTO332"
 
 let sigil_len = String.length sigil
 
-let add contents line column =
-  let line = line - 1 in
-  let contents_with_sigil =
-    Line.transform_nth contents line (fun line_str ->
-        let length = String.length line_str in
-        if length >= column then
-          let start = String.sub line_str 0 column in
-          let end_ = String.sub line_str column (length - column) in
-          start ^ sigil ^ end_
-        else
-          line_str
-    )
-  in
-  let f (_, x, _) = x in
-  let default = "" in
-  ( contents_with_sigil,
-    Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil (line - 1))
-    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil line)
-    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_sigil (line + 1))
-  )
-
 module Canonical = struct
   type token = {
     cursor: Loc.t;
@@ -73,7 +52,7 @@ end
  * in restoring the results of `Autocomplete_js.process_location` to a form that
  * can be further processed by AutocompleteServices_js.
  *)
-let add_canonical source contents loc_line column =
+let add source contents loc_line column =
   let line = loc_line - 1 in
   let (contents_with_sigil, canon_token) =
     match Line.split_nth contents line with

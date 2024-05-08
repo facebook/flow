@@ -377,9 +377,7 @@ let autocomplete filename content line col js_config_object :
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
   let cursor_loc = Loc.cursor (Some filename) line col in
-  let (content, _, canon_token) =
-    Autocomplete_sigil.add_canonical (Some filename) content line col
-  in
+  let (content, _, canon_token) = Autocomplete_sigil.add (Some filename) content line col in
   let canon_cursor =
     Base.Option.value_map ~default:cursor_loc ~f:Autocomplete_sigil.Canonical.cursor canon_token
   in

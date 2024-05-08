@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val add : string -> int -> int -> string * string
-
 module Canonical : sig
   type token
 
@@ -15,8 +13,7 @@ module Canonical : sig
   val to_relative_token : canon:token option -> string -> string
 end
 
-val add_canonical :
-  File_key.t option -> string -> int -> int -> string * string * Canonical.token option
+val add : File_key.t option -> string -> int -> int -> string * string * Canonical.token option
 
 val remove_from_loc : canon:Canonical.token option -> Loc.t -> Loc.t
 

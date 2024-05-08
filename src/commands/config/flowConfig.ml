@@ -44,7 +44,6 @@ module Opts = struct
 
   type t = {
     all: bool option;
-    autocomplete_canonical: Options.autocomplete_canonical option;
     autoimports: bool option;
     autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool option;
@@ -172,7 +171,6 @@ module Opts = struct
   let default_options =
     {
       all = None;
-      autocomplete_canonical = None;
       autoimports = None;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = None;
@@ -386,11 +384,6 @@ module Opts = struct
 
   let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
-
-  let autocomplete_canonical_parser =
-    enum
-      [("canonical", Options.Ac_canonical); ("classic", Options.Ac_classic)]
-      (fun opts v -> Ok { opts with autocomplete_canonical = Some v })
 
   let casting_syntax_parser =
     enum
@@ -857,7 +850,6 @@ module Opts = struct
   let parsers =
     [
       ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
-      ("experimental.autocomplete_canonical", autocomplete_canonical_parser);
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ( "autoimports.min_characters",
         uint (fun opts v ->
@@ -1530,8 +1522,6 @@ let libs config = config.libs
 (* options *)
 
 let all c = c.options.Opts.all
-
-let autocomplete_canonical c = c.options.Opts.autocomplete_canonical
 
 let autoimports c = c.options.Opts.autoimports
 
