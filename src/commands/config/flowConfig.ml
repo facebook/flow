@@ -781,14 +781,6 @@ module Opts = struct
         let node_resolver_root_relative_dirnames = v :: opts.node_resolver_root_relative_dirnames in
         Ok { opts with node_resolver_root_relative_dirnames })
 
-  let precise_dependents_parser =
-    boolean (fun opts v ->
-        if not v then
-          Error "precise dependents must be enabled."
-        else
-          Ok opts
-    )
-
   let react_runtime_parser =
     enum
       [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
@@ -939,7 +931,6 @@ module Opts = struct
       );
       ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
-      ("experimenta.precise_dependents", precise_dependents_parser);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
