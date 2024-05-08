@@ -45,8 +45,17 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement0
-                  { clone = false; targs; config; children = ([], None); tout; return_hint }
+                React.CreateElement
+                  {
+                    clone = false;
+                    targs;
+                    config;
+                    children = ([], None);
+                    tout;
+                    return_hint;
+                    component;
+                    record_monomorphized_result = false;
+                  }
               )
           )
       (* React.createElement(component, config, ...children) *)
@@ -58,7 +67,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement0
+                React.CreateElement
                   {
                     clone = false;
                     targs;
@@ -66,6 +75,8 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
                     children = (children, spread_arg);
                     tout;
                     return_hint;
+                    component;
+                    record_monomorphized_result = false;
                   }
               )
           )
@@ -117,7 +128,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement0
+                React.CreateElement
                   {
                     clone = true;
                     targs;
@@ -125,6 +136,8 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
                     children = (children, spread_arg);
                     tout;
                     return_hint;
+                    component;
+                    record_monomorphized_result = false;
                   }
               )
           )

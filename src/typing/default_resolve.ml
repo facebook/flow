@@ -61,7 +61,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   let resolve_react_tool tool =
     let open React in
     match tool with
-    | CreateElement0 { tout; _ }
     | CreateElement { tout; _ }
     | ConfigCheck tout
     | GetProps tout

@@ -48,7 +48,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | GetProps _
       | GetConfig _
       | GetRef _
-      | CreateElement0 _
       | CreateElement _
       | ConfigCheck _ ->
         Error_message.ENotAReactComponent { reason; use_op }
@@ -753,7 +752,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, tout)
     in
     match u with
-    | CreateElement0 _ -> failwith "handled elsewhere"
     | CreateElement
         {
           clone;

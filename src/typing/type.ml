@@ -3093,14 +3093,6 @@ and React : sig
     | ResolveElem of TypeTerm.t list * TypeTerm.t list
 
   type tool =
-    | CreateElement0 of {
-        clone: bool;
-        config: TypeTerm.t;
-        children: TypeTerm.t list * TypeTerm.t option;
-        tout: TypeTerm.t_out;
-        targs: TypeTerm.targ list option;
-        return_hint: TypeTerm.lazy_hint_t;
-      }
     | CreateElement of {
         clone: bool;
         component: TypeTerm.t;
