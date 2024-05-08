@@ -82,8 +82,6 @@ module Opts = struct
     gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     generate_tests: bool;
-    global_find_ref: bool option;
-    global_rename: bool option;
     haste_module_ref_prefix: string option;
     haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_name_reducers: (Str.regexp * string) list;
@@ -212,8 +210,6 @@ module Opts = struct
       gc_worker_space_overhead = None;
       gc_worker_window_size = None;
       generate_tests = false;
-      global_find_ref = None;
-      global_rename = None;
       haste_module_ref_prefix = None;
       haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
@@ -918,10 +914,6 @@ module Opts = struct
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
       ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
       ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
-      ( "experimental.global_find_ref",
-        boolean (fun opts v -> Ok { opts with global_find_ref = Some v })
-      );
-      ("experimental.global_rename", boolean (fun opts v -> Ok { opts with global_rename = Some v }));
       ( "experimental.multi_platform",
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
       );
@@ -1613,10 +1605,6 @@ let gc_worker_minor_heap_size c = c.options.Opts.gc_worker_minor_heap_size
 let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
 
 let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
-
-let global_find_ref c = c.options.Opts.global_find_ref
-
-let global_rename c = c.options.Opts.global_rename
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 

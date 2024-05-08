@@ -1460,8 +1460,6 @@ let make_options
     opt_autoimports_ranked_by_usage_boost_exact_match_min_length =
       FlowConfig.autoimports_ranked_by_usage_boost_exact_match_min_length flowconfig;
     opt_flowconfig_hash = flowconfig_hash;
-    opt_global_find_ref = Base.Option.value (FlowConfig.global_find_ref flowconfig) ~default:true;
-    opt_global_rename = Base.Option.value (FlowConfig.global_rename flowconfig) ~default:true;
     opt_gc_worker =
       {
         Options.gc_minor_heap_size =

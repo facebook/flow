@@ -2733,46 +2733,25 @@ let handle_persistent_find_references
     ~loc_of_aloc ~options ~id ~params ~metadata ~client ~profiling ~env =
   let text_doc_position = params.FindReferences.loc in
   let ref_to_location (_, loc) = Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok in
-  if Options.global_find_ref options then
-    handle_global_find_references
-      ~loc_of_aloc
-      ~options
-      ~id
-      ~metadata
-      ~client
-      ~profiling
-      ~env
-      ~kind:FindRefsTypes.FindReferences
-      ~request:(LspProt.LspToServer (RequestMessage (id, FindReferencesRequest params)))
-      ~refs_to_lsp_result:(fun ~current_ast:_ refs ->
-        let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
-        let locs =
-          refs
-          |> Base.List.dedup_and_sort ~compare:result_compare
-          |> Base.List.filter_map ~f:ref_to_location
-        in
-        FindReferencesResult locs)
-      text_doc_position
-  else
-    let%lwt (result, extra_data) =
-      map_local_find_references_results
-        ~loc_of_aloc
-        ~options
-        ~client
-        ~profiling
-        ~env
-        ~f:ref_to_location
-        text_doc_position
-    in
-    let metadata = with_data ~extra_data metadata in
-    match result with
-    | Ok result ->
-      let r = FindReferencesResult result in
-      let response = ResponseMessage (id, r) in
-      Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-    | Error reason ->
-      let (resp, metadata) = mk_lsp_error_response ~id:(Some id) ~reason metadata in
-      Lwt.return (env, resp, metadata)
+  handle_global_find_references
+    ~loc_of_aloc
+    ~options
+    ~id
+    ~metadata
+    ~client
+    ~profiling
+    ~env
+    ~kind:FindRefsTypes.FindReferences
+    ~request:(LspProt.LspToServer (RequestMessage (id, FindReferencesRequest params)))
+    ~refs_to_lsp_result:(fun ~current_ast:_ refs ->
+      let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
+      let locs =
+        refs
+        |> Base.List.dedup_and_sort ~compare:result_compare
+        |> Base.List.filter_map ~f:ref_to_location
+      in
+      FindReferencesResult locs)
+    text_doc_position
 
 let handle_persistent_document_highlight
     ~loc_of_aloc ~options ~id ~params ~metadata ~client ~profiling ~env =
@@ -2801,153 +2780,66 @@ let handle_persistent_document_highlight
 let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let Rename.{ textDocument; position; newName } = params in
   let text_doc_position = TextDocumentPositionParams.{ textDocument; position } in
-  if Options.global_rename options then
-    handle_global_find_references
-      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-      ~options
-      ~id
-      ~metadata
-      ~client
-      ~profiling
-      ~env
-      ~kind:FindRefsTypes.Rename
-      ~request:(LspProt.LspToServer (RequestMessage (id, RenameRequest params)))
-      ~refs_to_lsp_result:(fun ~current_ast refs ->
-        let (ref_map, files) =
-          List.fold_left
-            (fun (ref_map, files) (ref_kind, loc) ->
-              ( Loc_collections.LocMap.add loc ref_kind ref_map,
-                loc
-                |> Loc.source
-                |> Base.Option.value_map ~default:files ~f:(fun f -> FilenameSet.add f files)
-              ))
-            (Loc_collections.LocMap.empty, FilenameSet.empty)
-            refs
-        in
-        let asts =
-          files
-          |> FilenameSet.elements
-          |> Base.List.filter_map ~f:(fun filename ->
-                 match current_ast with
-                 | Some (ast_loc, _) when Loc.source ast_loc = Some filename -> current_ast
-                 | _ -> Parsing_heaps.Reader.get_ast ~reader filename
-             )
-        in
-        let diff_of_ast ast =
-          Flow_ast_differ.program
-            ast
-            (RenameMapper.rename ~global:true ~targets:ref_map ~new_name:newName ast)
-        in
-        let all_diffs = Base.List.bind asts ~f:diff_of_ast in
-        let opts =
-          Js_layout_generator.
-            {
-              default_opts with
-              bracket_spacing = Options.format_bracket_spacing options;
-              single_quotes = Options.format_single_quotes options;
-            }
-        in
-        let changes =
-          Base.List.fold_right
-            (Replacement_printer.mk_loc_patch_ast_differ ~opts all_diffs)
-            ~init:UriMap.empty
-            ~f:(fun (loc, newText) acc ->
-              match Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok with
-              | None -> acc
-              | Some { Location.uri; range } ->
-                let edits = UriMap.find_opt uri acc |> Base.Option.value ~default:[] in
-                let edits = { TextEdit.range; newText } :: edits in
-                UriMap.add uri edits acc
-          )
-        in
-        RenameResult { WorkspaceEdit.changes })
-      text_doc_position
-  else
-    let%lwt (result, extra_data) =
-      let (file_artifacts_opt, extra_parse_data) =
-        get_file_artifacts ~options ~client ~profiling ~env text_doc_position
+  handle_global_find_references
+    ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+    ~options
+    ~id
+    ~metadata
+    ~client
+    ~profiling
+    ~env
+    ~kind:FindRefsTypes.Rename
+    ~request:(LspProt.LspToServer (RequestMessage (id, RenameRequest params)))
+    ~refs_to_lsp_result:(fun ~current_ast refs ->
+      let (ref_map, files) =
+        List.fold_left
+          (fun (ref_map, files) (ref_kind, loc) ->
+            ( Loc_collections.LocMap.add loc ref_kind ref_map,
+              loc
+              |> Loc.source
+              |> Base.Option.value_map ~default:files ~f:(fun f -> FilenameSet.add f files)
+            ))
+          (Loc_collections.LocMap.empty, FilenameSet.empty)
+          refs
       in
-      match file_artifacts_opt with
-      | Ok (Some (file_artifacts, file_key)) ->
-        let global = Options.global_rename options in
-        let%lwt (all_refs, extra_data) =
-          find_local_references
-            ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-            ~file_artifacts
-            ~kind:FindRefsTypes.Rename
-            file_key
-            text_doc_position
-        in
-        let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
-        let edits =
-          match all_refs with
-          | Ok (_def_info, FindRefsTypes.FoundReferences refs) ->
-            let (ref_map, files) =
-              List.fold_left
-                (fun (ref_map, files) (ref_kind, loc) ->
-                  ( Loc_collections.LocMap.add loc ref_kind ref_map,
-                    loc
-                    |> Loc.source
-                    |> Base.Option.value_map ~default:files ~f:(fun f -> FilenameSet.add f files)
-                  ))
-                (Loc_collections.LocMap.empty, FilenameSet.empty)
-                refs
-            in
-            let asts =
-              if global then
-                files
-                |> FilenameSet.elements
-                |> Base.List.filter_map ~f:(Parsing_heaps.Reader.get_ast ~reader)
-              else
-                match parse_artifacts with
-                | Types_js_types.Parse_artifacts { ast; _ } -> [ast]
-            in
-            let diff_of_ast ast =
-              Flow_ast_differ.program
-                ast
-                (RenameMapper.rename ~global ~targets:ref_map ~new_name:newName ast)
-            in
-            let all_diffs = Base.List.bind asts ~f:diff_of_ast in
-            let opts =
-              Js_layout_generator.
-                {
-                  default_opts with
-                  bracket_spacing = Options.format_bracket_spacing options;
-                  single_quotes = Options.format_single_quotes options;
-                }
-            in
-            let changes =
-              Base.List.fold_right
-                (Replacement_printer.mk_loc_patch_ast_differ ~opts all_diffs)
-                ~init:UriMap.empty
-                ~f:(fun (loc, newText) acc ->
-                  match Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok with
-                  | None -> acc
-                  | Some { Location.uri; range } ->
-                    let edits = UriMap.find_opt uri acc |> Base.Option.value ~default:[] in
-                    let edits = { TextEdit.range; newText } :: edits in
-                    UriMap.add uri edits acc
-              )
-            in
-            Ok { WorkspaceEdit.changes }
-          | Ok (_def_info, FindRefsTypes.NoDefinition _) ->
-            (* e.g. if it was requested on a place that's not even an identifier *)
-            Ok { WorkspaceEdit.changes = UriMap.empty }
-          | Error _ as err -> err
-        in
-        Lwt.return (edits, extra_data)
-      | Ok None -> Lwt.return (Ok { WorkspaceEdit.changes = UriMap.empty }, extra_parse_data)
-      | Error _ as err -> Lwt.return (err, extra_parse_data)
-    in
-    let metadata = with_data ~extra_data metadata in
-    match result with
-    | Ok result ->
-      let r = RenameResult result in
-      let response = ResponseMessage (id, r) in
-      Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-    | Error reason ->
-      let (resp, metadata) = mk_lsp_error_response ~id:(Some id) ~reason metadata in
-      Lwt.return (env, resp, metadata)
+      let asts =
+        files
+        |> FilenameSet.elements
+        |> Base.List.filter_map ~f:(fun filename ->
+               match current_ast with
+               | Some (ast_loc, _) when Loc.source ast_loc = Some filename -> current_ast
+               | _ -> Parsing_heaps.Reader.get_ast ~reader filename
+           )
+      in
+      let diff_of_ast ast =
+        Flow_ast_differ.program
+          ast
+          (RenameMapper.rename ~global:true ~targets:ref_map ~new_name:newName ast)
+      in
+      let all_diffs = Base.List.bind asts ~f:diff_of_ast in
+      let opts =
+        Js_layout_generator.
+          {
+            default_opts with
+            bracket_spacing = Options.format_bracket_spacing options;
+            single_quotes = Options.format_single_quotes options;
+          }
+      in
+      let changes =
+        Base.List.fold_right
+          (Replacement_printer.mk_loc_patch_ast_differ ~opts all_diffs)
+          ~init:UriMap.empty
+          ~f:(fun (loc, newText) acc ->
+            match Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok with
+            | None -> acc
+            | Some { Location.uri; range } ->
+              let edits = UriMap.find_opt uri acc |> Base.Option.value ~default:[] in
+              let edits = { TextEdit.range; newText } :: edits in
+              UriMap.add uri edits acc
+        )
+      in
+      RenameResult { WorkspaceEdit.changes })
+    text_doc_position
 
 let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in

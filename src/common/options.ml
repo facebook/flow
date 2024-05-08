@@ -100,8 +100,6 @@ type t = {
   opt_flowconfig_name: string;
   opt_format: format;
   opt_gc_worker: gc_control;
-  opt_global_find_ref: bool;
-  opt_global_rename: bool;
   opt_haste_module_ref_prefix: string option;
   opt_haste_module_ref_prefix_LEGACY_INTEROP: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
@@ -249,10 +247,6 @@ let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 let format_single_quotes opts = opts.opt_format.opt_single_quotes
 
 let gc_worker opts = opts.opt_gc_worker
-
-let global_find_ref opts = opts.opt_global_find_ref
-
-let global_rename opts = opts.opt_global_rename
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
