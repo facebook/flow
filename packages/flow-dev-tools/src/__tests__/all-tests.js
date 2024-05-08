@@ -79,7 +79,7 @@ const x = 4;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText does not remove eslint-disable multiline comment', async () => {
@@ -106,7 +106,7 @@ const x = 4;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('exec', async () => {
@@ -131,6 +131,8 @@ test('splitIntoChunks', () => {
   expect(splitIntoChunks('✓✓✓✓✓', 1)).toEqual(['✓', '✓', '✓', '✓', '✓']);
 });
 
+const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
 test('updateSuppressionsInText will do nothing on invalid file', async () => {
   const testInput = `
 // $FlowFixMe
@@ -153,7 +155,7 @@ const a;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText removes unused comments', async () => {
@@ -175,7 +177,7 @@ const x = 4;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText removes unused comments with sites', async () => {
@@ -197,7 +199,7 @@ const x = 4;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText can add site', async () => {
@@ -214,7 +216,7 @@ const x = 4;
 `.trimLeft();
 
   const errorsByLine = addErrorByLine(new Map(), testInput, loc, [], ['foo']);
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText keeps unknown sites', async () => {
@@ -237,7 +239,7 @@ const x = 4;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText keeps unknown sites (2)', async () => {
@@ -260,7 +262,7 @@ const x = 4;
     [],
     ['foo', 'bar'],
   );
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText adds site and keeps unknown sites', async () => {
@@ -277,7 +279,7 @@ const x = 4;
 `.trimLeft();
 
   const errorsByLine = addErrorByLine(new Map(), testInput, loc, [], ['foo']);
-  await expectUpdatedComments(testInput, testOutput, errorsByLine);
+  await expectUpdatedComments(testInput, testOutput, errorsByLine, flowBinPath);
 });
 
 test('updateSuppressionsInText handles JSX children', async () => {
@@ -299,7 +301,13 @@ test('updateSuppressionsInText handles JSX children', async () => {
 `.trimLeft();
 
   const errorsByLine = addErrorByLine(new Map(), testInput, loc, ['code'], []);
-  await expectUpdatedComments(testInput, testOutput, errorsByLine, []);
+  await expectUpdatedComments(
+    testInput,
+    testOutput,
+    errorsByLine,
+    flowBinPath,
+    [],
+  );
 });
 
 test('updateSuppressionsInText handles JSX children with multiline open tag', async () => {
@@ -323,7 +331,13 @@ test('updateSuppressionsInText handles JSX children with multiline open tag', as
 `.trimLeft();
 
   const errorsByLine = addErrorByLine(new Map(), testInput, loc, ['code'], []);
-  await expectUpdatedComments(testInput, testOutput, errorsByLine, []);
+  await expectUpdatedComments(
+    testInput,
+    testOutput,
+    errorsByLine,
+    flowBinPath,
+    [],
+  );
 });
 
 function addErrorByLine(errorsByLine, contents, loc, errorCodes, unusedRoots) {
@@ -363,11 +377,9 @@ function posToOffset(contents, line, col) {
   // Using 1-indexed line and column for this
   let currentLine = 1;
   let currentCol = 1;
-  while (
-    offset < contents.length &&
-    !(currentLine === line && currentCol === col)
-  ) {
-    const char = contents[offset];
+  const buf = Buffer.from(contents, 'utf8');
+  while (offset < buf.length && !(currentLine === line && currentCol === col)) {
+    const char = buf.toString('utf8', offset, offset + 1);
     if (char === '\n') {
       currentLine++;
       currentCol = 1;
@@ -384,20 +396,25 @@ async function expectUpdatedComments(
   input,
   expectedOutput,
   errorsByLine,
+  flowBinPath,
   sites = ['foo', 'bar'],
 ) {
   const actualOutput = await updateSuppressionsInText(
-    input,
+    Buffer.from(input),
     new Set(sites),
     1,
     errorsByLine,
     '',
+    flowBinPath,
   );
-  expect(actualOutput).toEqual(expectedOutput);
+  expect(actualOutput.toString()).toEqual(expectedOutput);
 }
 
 test('addCommentsToCode > basic', async () => {
-  expect(await addCommentsToCode('foobar', null, '', [])).toEqual(['', 0]);
+  expect(await addCommentsToCode('foobar', null, '', [], flowBinPath)).toEqual([
+    '',
+    0,
+  ]);
 });
 
 test('addCommentsToCode > advanced', async () => {
@@ -408,6 +425,7 @@ test('addCommentsToCode > advanced', async () => {
       testInput,
       /* Intentionally made these out of order to test that they are still inserted properly */
       [1, 6, 5, 3].map(line => makeSuppression(line, testInput)),
+      flowBinPath,
     ),
   ).toEqual([testOutput, 8]);
 });
@@ -460,6 +478,7 @@ function bar<a>(): b {}
           error_codes: ['code4'],
         },
       ],
+      flowBinPath,
     ),
   ).toEqual([
     `// $FlowFixMe[code1]
@@ -477,17 +496,23 @@ function bar<a>(): b {}
 
 test('addCommentsToCode > does not touch AST when no errors match the given code', async () => {
   expect(
-    await addCommentsToCode('', 'code2', `function foo() {}`, [
-      {
-        loc: {
-          start: {line: 1, column: 13, offset: 13},
-          end: {line: 1, column: 14, offset: 14},
+    await addCommentsToCode(
+      '',
+      'code2',
+      `function foo() {}`,
+      [
+        {
+          loc: {
+            start: {line: 1, column: 13, offset: 13},
+            end: {line: 1, column: 14, offset: 14},
+          },
+          isError: true,
+          lints: new Set(),
+          error_codes: ['code1'],
         },
-        isError: true,
-        lints: new Set(),
-        error_codes: ['code1'],
-      },
-    ]),
+      ],
+      flowBinPath,
+    ),
   ).toEqual([`function foo() {}`, 0]);
 });
 
@@ -519,6 +544,7 @@ function bar<a>(): b {}
           error_codes: ['code2'],
         },
       ],
+      flowBinPath,
     ),
   ).toEqual([
     `function foo() {}
@@ -553,6 +579,7 @@ class A {
           error_codes: ['code1'],
         },
       ],
+      flowBinPath,
     ),
   ).toEqual([
     `
@@ -588,6 +615,7 @@ class Foo {
           error_codes: ['code1'],
         },
       ],
+      flowBinPath,
     ),
   ).toEqual([
     `
@@ -664,6 +692,7 @@ test('addCommentsToCode > JSX', async () => {
           error_codes: ['code7'],
         },
       ],
+      flowBinPath,
     ),
   ).toEqual([
     `function A(): React.Node {
@@ -765,6 +794,8 @@ function locForLine(line, text) {
 }
 
 test('removeUnusedErrorSuppressionsFromText', async () => {
+  const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
   const testInput = `   // single line comment with some whitespace
 const bar = 4;
   /* multiline
@@ -799,10 +830,12 @@ const foo = 4;
     [7, 4, 8, 20],
     [],
   ].map(args => makeLoc(testInput, ...args));
-  await expectCommentsAreRemoved(testInput, testOutput, errorLocs);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('removeExtraSpaceWhenRemovingUnusedFlowLint', async () => {
+  const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
   const testInput = `// flowlint foo bar
 //flowlint foo bar
 // flowlint foo bar
@@ -836,10 +869,12 @@ test('removeExtraSpaceWhenRemovingUnusedFlowLint', async () => {
     [8, 22, 8, 25],
     [9, 27, 9, 30],
   ].map(args => makeLoc(testInput, ...args));
-  await expectCommentsAreRemoved(testInput, testOutput, errorLocs);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('deleteUnusedFlowLintComments', async () => {
+  const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
   const testInput = `// flowlint foo bar
 //flowlint foo bar
 // flowlint-next-line foo bar
@@ -907,10 +942,12 @@ let x =
     [19, 15, 19, 18],
     [21, 6, 21, 9],
   ].map(args => makeLoc(testInput, ...args));
-  await expectCommentsAreRemoved(testInput, testOutput, errorLocs);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
 test('unicode', async () => {
+  const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
   const testInput = `const unicode = "\u{714E}\u{8336}";
 const smiley = "\uD83D\uDE00";
 
@@ -980,15 +1017,21 @@ let x =
     [21, 17, 21, 20],
     [22, 15, 22, 18],
   ].map(args => makeLoc(testInput, ...args));
-  await expectCommentsAreRemoved(testInput, testOutput, errorLocs);
+  await expectCommentsAreRemoved(testInput, testOutput, errorLocs, flowBinPath);
 });
 
-async function expectCommentsAreRemoved(input, expectedOutput, errorLocs) {
+async function expectCommentsAreRemoved(
+  input,
+  expectedOutput,
+  errorLocs,
+  flowBinPath,
+) {
   const actualOutput = await removeUnusedErrorSuppressionsFromText(
-    input,
+    Buffer.from(input),
     errorLocs,
+    flowBinPath,
   );
-  expect(actualOutput).toEqual(expectedOutput);
+  expect(actualOutput.toString()).toEqual(expectedOutput);
 }
 
 (async () => {

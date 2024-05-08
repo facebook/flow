@@ -15,6 +15,10 @@ const {getNodeAtRange} = require('./getPathToLoc');
 const {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} = require('./getContext');
 const {format} = require('util');
 
+function bufferCharAt(buf: Buffer, pos: number): string {
+  return buf.toString('utf8', pos, pos + 1);
+}
+
 const flowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?\b/;
 function isLintSuppression(commentAST: {value: string}): boolean {
   return flowlintRegex.test(commentAST.value);
@@ -41,7 +45,7 @@ const edible = /[\t ]/;
  * in the case where there is nothing before or after it
  */
 function expandComment(
-  contents: string,
+  contents: Buffer,
   startOffset: number,
   endOffset: number,
   commentAST: {value: string, range: [number, number]} | void,
@@ -85,18 +89,21 @@ function expandComment(
   // Find the next interesting characters before and after the removed comment
   let beforeStart = origBeforeStart;
   let afterEnd = origAfterEnd;
-  while (beforeStart >= 0 && contents[beforeStart].match(edible)) {
+  while (
+    beforeStart >= 0 &&
+    bufferCharAt(contents, beforeStart).match(edible)
+  ) {
     beforeStart--;
   }
-  while (afterEnd < length && contents[afterEnd].match(edible)) {
+  while (afterEnd < length && bufferCharAt(contents, afterEnd).match(edible)) {
     afterEnd++;
   }
 
   if (
     beforeStart >= 0 &&
     afterEnd < length &&
-    contents[beforeStart] === '{' &&
-    contents[afterEnd] === '}'
+    bufferCharAt(contents, beforeStart) === '{' &&
+    bufferCharAt(contents, afterEnd) === '}'
   ) {
     // If this is JSX, then the curly braces start and stop a JSXExpressionContainer
     const node = getNodeAtRange([beforeStart, afterEnd + 1], ast);
@@ -109,18 +116,24 @@ function expandComment(
       origBeforeStart = beforeStart;
       origAfterEnd = afterEnd;
 
-      while (beforeStart >= 0 && contents[beforeStart].match(edible)) {
+      while (
+        beforeStart >= 0 &&
+        bufferCharAt(contents, beforeStart).match(edible)
+      ) {
         beforeStart--;
       }
-      while (afterEnd < length && contents[afterEnd].match(edible)) {
+      while (
+        afterEnd < length &&
+        bufferCharAt(contents, afterEnd).match(edible)
+      ) {
         afterEnd++;
       }
     }
   }
 
-  if (beforeStart < 0 || contents[beforeStart] === '\n') {
+  if (beforeStart < 0 || bufferCharAt(contents, beforeStart) === '\n') {
     // There's nothing before the removed comment on this line
-    if (afterEnd > length || contents[afterEnd] === '\n') {
+    if (afterEnd > length || bufferCharAt(contents, afterEnd) === '\n') {
       // The line is completely empty. Let's remove a newline from the start or
       // end of the line
       if (afterEnd < length) {
@@ -133,7 +146,7 @@ function expandComment(
       // preceding whitespace thanks to indentation
       beforeStart = origBeforeStart;
     }
-  } else if (afterEnd >= length || contents[afterEnd] === '\n') {
+  } else if (afterEnd >= length || bufferCharAt(contents, afterEnd) === '\n') {
     // There's something preceding the comment but nothing afterwards. We can
     // just remove the rest of the line
   } else {
@@ -145,40 +158,47 @@ function expandComment(
   return [beforeStart + 1, afterEnd];
 }
 
-function findStartOfLine(contents: string, startOffset: number): number {
+function findStartOfLine(contents: Buffer, startOffset: number): number {
   // if startOffset is already a newline, that's not the start of the line,
   // it's the end of the line. so start from the character before.
   let start = startOffset - 1;
-  while (start >= 0 && !contents[start].match(newlineRegex)) {
+  while (start >= 0 && !bufferCharAt(contents, start).match(newlineRegex)) {
     start--;
   }
   return start + 1;
 }
 
-function findEndOfLine(contents: string, startOffset: number): number {
+function findEndOfLine(contents: Buffer, startOffset: number): number {
   let start = startOffset;
-  while (start < contents.length && !contents[start].match(newlineRegex)) {
+  while (
+    start < contents.length &&
+    !bufferCharAt(contents, start).match(newlineRegex)
+  ) {
     start++;
   }
   return start;
 }
 
 function insertCommentToText(
-  contents: string,
+  contents: Buffer,
   startOffset: number,
   comment: string,
-): string {
-  return contents.slice(0, startOffset) + comment + contents.slice(startOffset);
+): Buffer {
+  return Buffer.concat([
+    contents.slice(0, startOffset),
+    Buffer.from(comment),
+    contents.slice(startOffset),
+  ]);
 }
 
 function addCommentToText(
-  contents: string,
+  contents: Buffer,
   loc: FlowLoc,
   inside: Context,
   comments: Array<string>,
   ast: any,
   startOfLine?: number,
-): string {
+): Buffer {
   let startOffset;
   let start;
   if (startOfLine == null) {
@@ -190,7 +210,7 @@ function addCommentToText(
   }
 
   const endOfLine = findEndOfLine(contents, startOffset);
-  let line = contents.slice(start, endOfLine);
+  let line = contents.toString('utf8', start, endOfLine);
   const inJSX = inside === JSX_FRAGMENT || inside === JSX;
   if (inside === NORMAL) {
     return insertCommentToText(
@@ -252,11 +272,11 @@ function addCommentToText(
       newCodeParts.push(padding + part2);
     }
 
-    return (
-      contents.slice(0, start) +
-      newCodeParts.join('\n') +
-      contents.slice(endOfLine)
-    );
+    return Buffer.concat([
+      contents.slice(0, start),
+      Buffer.from(newCodeParts.join('\n')),
+      contents.slice(endOfLine),
+    ]);
   } else if (inJSX && ast.type === 'JSXText') {
     /* Ignore the case where the error's loc starts after the last non-whitespace
      * character of the line. This can occur when an error's loc spans the
@@ -273,9 +293,13 @@ function addCommentToText(
     let firstNonWhitespaceCharacter = startOffset;
     let atEndOfLine = true;
     while (firstNonWhitespaceCharacter < contents.length) {
-      if (contents[firstNonWhitespaceCharacter].match(newlineRegex)) {
+      if (
+        bufferCharAt(contents, firstNonWhitespaceCharacter).match(newlineRegex)
+      ) {
         break;
-      } else if (contents[firstNonWhitespaceCharacter].match(edible)) {
+      } else if (
+        bufferCharAt(contents, firstNonWhitespaceCharacter).match(edible)
+      ) {
         firstNonWhitespaceCharacter++;
       } else {
         atEndOfLine = false;
@@ -303,12 +327,12 @@ function addCommentToText(
 }
 
 function removeUnusedErrorSuppressionFromText(
-  contents: string,
+  contents: Buffer,
   startOffset: number,
   endOffset: number,
   commentAST: Object | void,
   ast: Object,
-): string {
+): Buffer {
   // remove the comment and surrounding whitespace
   let [start, end] = expandComment(
     contents,
@@ -318,7 +342,7 @@ function removeUnusedErrorSuppressionFromText(
     ast,
   );
 
-  return contents.slice(0, start) + contents.slice(end);
+  return Buffer.concat([contents.slice(0, start), contents.slice(end)]);
 }
 
 /* Take up to `max` characters from str, trying to split at a space or dash or

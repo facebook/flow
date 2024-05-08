@@ -201,14 +201,14 @@ function replaceSites(text: string, sites: $ReadOnlyArray<string>): string {
  * comment if it's unused everywhere.
  */
 function updateErrorSuppression(
-  contents: string,
+  contents: Buffer,
   startOffset: number,
   endOffset: number,
   commentAST: Object | void,
   ast: Object,
   knownRoots: Set<RootName>,
   unusedRoots: Set<RootName>,
-): string {
+): Buffer {
   let commentStartOffset;
   let commentEndOffset;
   if (commentAST) {
@@ -218,7 +218,7 @@ function updateErrorSuppression(
     commentEndOffset = endOffset;
   }
   let innerOffset = commentStartOffset + 2; // `/*` and `//` are both 2 chars
-  let text = contents.slice(innerOffset, endOffset);
+  let text = contents.slice(innerOffset, endOffset).toString('utf8');
 
   // do not remove the comment if it's a eslint suppression
   // TODO update the logging provided in the end of the command
@@ -251,7 +251,11 @@ function updateErrorSuppression(
       text = replaceSites(text, [...roots]);
     }
 
-    return contents.slice(0, innerOffset) + text + contents.slice(endOffset);
+    return Buffer.concat([
+      contents.slice(0, innerOffset),
+      Buffer.from(text),
+      contents.slice(endOffset),
+    ]);
   }
 }
 
@@ -261,37 +265,38 @@ async function updateSuppressions(
   numBins: number,
   errors: Map<number, ErrorsForLine>,
   comment: string,
+  flowBinPath: string,
 ): Promise<void> {
   const contentsString = await readFile(filename, 'utf8');
   const contents = await updateSuppressionsInText(
-    contentsString,
+    Buffer.from(contentsString, 'utf8'),
     allRoots,
     numBins,
     errors,
     comment,
+    flowBinPath,
   );
-  await writeFile(filename, contents);
+  await writeFile(filename, contents.toString('utf8'));
 }
 
 // Exported for testing
 async function updateSuppressionsInText(
-  contents: string,
+  contents: Buffer,
   allRoots: Set<RootName>,
   numBins: number,
   errorsByLine: Map<number, ErrorsForLine>,
   comment: string,
-): Promise<string> {
+  flowBinPath: string,
+): Promise<Buffer> {
   const errors = Array.from(errorsByLine);
   // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
   // removal of comments earlier in the file would outdate the locations for comments later in the
   // file.
   errors.sort(([line1, _errs1], [line2, _errs2]) => line2 - line1);
 
-  let ast;
-  try {
-    ast = await getAst(contents);
-  } catch {
-    console.warn(`Unable to parse content:\n\n${contents}`);
+  let ast = await getAst(contents.toString('utf8'), flowBinPath);
+  if (ast.errors.length > 0) {
+    console.warn(`Unable to parse content:\n\n${contents.toString('utf8')}`);
     // On parser failure, be conservative and do nothing.
     // It's better than going ahead anyways and break original semantics.
     return contents;
@@ -434,6 +439,7 @@ async function runner(args: Args): Promise<void> {
           args.diffBin ? 2 : 1,
           errors,
           args.comment,
+          args.bin,
         );
       }),
     );

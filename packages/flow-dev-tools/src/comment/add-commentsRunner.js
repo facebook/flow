@@ -147,6 +147,7 @@ async function addCommentsToSource(
     args.error_code,
     codeString,
     locs,
+    args.bin,
   );
   await writeFile(source, code);
   return commentCount;
@@ -159,7 +160,13 @@ function addCommentsToCodeInternal(
   path: Array<PathNode>,
 ) {
   const [inside, ast] = getContext(loc, path);
-  return addCommentToText(code, loc, inside, comments, ast).toString();
+  return addCommentToText(
+    Buffer.from(code),
+    loc,
+    inside,
+    comments,
+    ast,
+  ).toString();
 }
 
 async function addCommentsToCode(
@@ -167,12 +174,13 @@ async function addCommentsToCode(
   error_code: ?string,
   code: string,
   locs: Array<Suppression>,
+  flowBinPath: string,
 ): Promise<
   [string, number],
 > /* [resulting code, number of comments inserted] */ {
   locs.sort((l1, l2) => l2.loc.start.line - l1.loc.start.line);
 
-  const ast = await getAst(code);
+  const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
   for (let {loc, isError, lints, error_codes} of locs) {
