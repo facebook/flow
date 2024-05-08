@@ -1496,8 +1496,7 @@ module Make (I : INPUT) : S = struct
          *    type SFC<T> = (config: T, context: any) => React$Element<T>
          *    <T>(fn: SFC<T>, config: T, children?: any) => React$Element<T>
          *)
-        | ReactCreateElement
-        | ReactCloneElement ->
+        | ReactCreateElement ->
           return
             Ty.(
               let param_t = mk_tparam "T" in
@@ -1588,7 +1587,6 @@ module Make (I : INPUT) : S = struct
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
         | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
         | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
-        | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
         | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))
