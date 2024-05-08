@@ -1285,27 +1285,6 @@ struct
             | _ ->
               rec_flow cx trace (left, PredicateT (NotP MaybeP, u));
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
-        | ( _,
-            ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement0 { clone; targs; config; children; tout; return_hint }
-              )
-          ) ->
-          let tool =
-            React.CreateElement
-              {
-                clone;
-                component = l;
-                config;
-                children;
-                tout;
-                targs;
-                return_hint;
-                record_monomorphized_result = false;
-              }
-          in
-          rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
         | (_, ExtractReactRefT (reason, tout)) ->
           let t_ = ImplicitInstantiationKit.run_ref_extractor cx ~use_op:unknown_use ~reason l in
           rec_flow_t cx ~use_op:unknown_use trace (t_, tout)

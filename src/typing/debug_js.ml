@@ -460,15 +460,6 @@ and dump_use_t_ (depth, tvars) cx t =
   let react_kit =
     React.(
       function
-      | CreateElement0
-          {
-            clone = _;
-            targs = _;
-            config;
-            children = (children, children_spread);
-            tout;
-            return_hint = _;
-          }
       | CreateElement
           {
             clone = _;
