@@ -244,7 +244,6 @@ function addCommentToText(
     const padding = match ? match[0] + '  ' : '  ';
     const part2 = line.substr(start_col);
 
-    // $FlowFixMe[incompatible-exact] unsealed object but should just be {||}
     const newCodeParts = [part1, ...formatComment(comments, padding, {})];
 
     // If the remainder of the line is empty we don't want to add a newline

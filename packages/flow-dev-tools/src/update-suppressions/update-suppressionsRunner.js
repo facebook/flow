@@ -242,7 +242,8 @@ function updateErrorSuppression(
   } else {
     if (commentAST && isLintSuppression(commentAST)) {
       // lints can't be suppressed per site, so we have to convert it to a
-      // $FlowFixMe(site=<roots>)
+      // $ FlowFixMe(site=<roots>)
+      // (deliberately insert space above to avoid removing the comment by suppression removal tool)
       const sites = [...roots].sort().join(',');
       text = ` $FlowFixMe(site=${sites}) --${text}`;
     } else {

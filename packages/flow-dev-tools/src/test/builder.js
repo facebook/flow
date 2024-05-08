@@ -160,7 +160,6 @@ class TestBuilder {
 
   async addCode(code: string): Promise<void> {
     const filename = this.getFileName();
-    // $FlowIssue
     await appendFile(filename, '\n' + code + '\n');
     await this.forceRecheck([filename]);
   }
