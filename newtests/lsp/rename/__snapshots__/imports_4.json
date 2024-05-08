@@ -7,14 +7,14 @@
           "range": {
             "start": {
               "line": 24,
-              "character": 0
+              "character": 14
             },
             "end": {
               "line": 24,
-              "character": 36
+              "character": 18
             }
           },
-          "newText": "import { type wut5 as NEW_NAME } from \"wutland\";"
+          "newText": "NEW_NAME"
         },
         {
           "range": {

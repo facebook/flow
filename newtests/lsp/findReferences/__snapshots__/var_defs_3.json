@@ -52,6 +52,19 @@
           "character": 7
         }
       }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/to_be_imported.js",
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 13
+        },
+        "end": {
+          "line": 2,
+          "character": 14
+        }
+      }
     }
   ]
 }

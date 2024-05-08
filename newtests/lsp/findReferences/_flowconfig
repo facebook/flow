@@ -1,3 +1,2 @@
 [options]
 react.runtime=automatic
-experimental.global_find_ref=false
