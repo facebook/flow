@@ -2497,11 +2497,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (ReactCreateElement loc)
     | _ -> Err (loc, CheckError)
   end
-  | "React$CloneElement" -> begin
-    match targs with
-    | None -> Annot (ReactCloneElement loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "React$ElementProps" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

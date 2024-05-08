@@ -178,7 +178,7 @@ class virtual ['a] t =
       | CustomFunT
           ( _r,
             ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactCreateElement
-            | ReactCloneElement | DebugPrint | DebugThrow | DebugSleep )
+            | DebugPrint | DebugThrow | DebugSleep )
           ) ->
         t
       | AnyT _ -> t

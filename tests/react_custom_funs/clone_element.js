@@ -29,7 +29,7 @@ React.cloneElement(a, {}); // OK
 React.cloneElement(a, undefined); // OK
 React.cloneElement(a, null); // OK
 React.cloneElement(a, {foo: 1}); // OK
-React.cloneElement(a, {foo: 1, bar: 2}); // OK
+React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
 React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
 React.cloneElement(b, {}); // OK
 React.cloneElement(b, undefined); // OK
@@ -90,7 +90,7 @@ type CompProps = $ReadOnly<{|
 // MixedElement
 {
   declare const el: React.MixedElement;
-  React.cloneElement(el); // OK - no props supplied
+  React.cloneElement(el); // ERROR
   React.cloneElement(el, {}); // ERROR
 }
 

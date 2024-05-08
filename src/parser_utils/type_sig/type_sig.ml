@@ -620,7 +620,6 @@ type ('loc, 'a) annot =
     }
   | ReactCreateClass of 'loc
   | ReactCreateElement of 'loc
-  | ReactCloneElement of 'loc
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a
   | ReactElementRef of 'loc * 'a

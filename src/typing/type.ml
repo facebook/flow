@@ -1762,7 +1762,6 @@ module rec TypeTerm : sig
     | ObjectSetPrototypeOf
     (* 3rd party libs *)
     | ReactCreateElement
-    | ReactCloneElement
     (* Internal tools *)
     | DebugPrint
     | DebugThrow
