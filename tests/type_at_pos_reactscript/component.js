@@ -24,5 +24,5 @@ type xElement = x;
 
 component FooForParam(foo: ?number) { return null; }
 //                     ^
-type TypeofFoo = typeof Foo; // TODO do not print evaluated version - it's the same
+type TypeofFoo = typeof Foo; // do not print evaluated version - it's the same
 //   ^

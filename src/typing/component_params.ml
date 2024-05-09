@@ -115,7 +115,8 @@ module Make
     in
     let rest_t =
       match rest with
-      | None -> Obj_type.mk_exact_empty cx config_reason
+      | None ->
+        Obj_type.mk_with_proto cx config_reason ~obj_kind:Type.Exact (Type.ObjProtoT config_reason)
       | Some rest ->
         let t = C.rest_type rest in
         (* The rest param must be an object type. *)

@@ -63,7 +63,6 @@ type TypeofFoo = React$AbstractComponent<
   mixed,
   renders React$Node,
 >
-= React$AbstractComponent<{+foo: number}, mixed, renders React$Node>
 component.js:27:6,27:14
 
 render_types.js:1:6
