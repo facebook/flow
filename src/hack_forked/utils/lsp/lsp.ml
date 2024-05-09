@@ -749,7 +749,6 @@ module PublishDiagnostics = struct
     message: string;  (** the diagnostic's message *)
     tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
-    relatedLocations: relatedLocation list;  (** legacy FB extension *)
   }
 
   and diagnosticCode =
@@ -761,9 +760,6 @@ module PublishDiagnostics = struct
     relatedLocation: Location.t;  (** wire: just "location" *)
     relatedMessage: string;  (** wire: just "message" *)
   }
-
-  (* legacy FB extension *)
-  and relatedLocation = diagnosticRelatedInformation
 end
 
 (** DidOpenTextDocument notification, method="textDocument/didOpen" *)

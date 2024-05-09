@@ -20,8 +20,7 @@
           "code": "ParseError",
           "source": "Flow",
           "message": "You must use `'string-key' as localBinding?: <TYPE>` for props with invalid identifier names.",
-          "relatedInformation": [],
-          "relatedLocations": []
+          "relatedInformation": []
         }
       ],
       "edit": {

@@ -20,8 +20,7 @@
           "code": "ParseError",
           "source": "Flow",
           "message": "Unexpected token `>`. Did you mean `{'>'}`?",
-          "relatedInformation": [],
-          "relatedLocations": []
+          "relatedInformation": []
         }
       ],
       "edit": {

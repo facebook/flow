@@ -27,7 +27,6 @@ let mk_diagnostic { uri = _; kind; msg } =
     message = msg;
     tags = [];
     relatedInformation = [];
-    relatedLocations = [];
   }
 
 (* Take the json output and convert it back into a list of errors *)
@@ -54,7 +53,6 @@ let error_list_of_json_response json =
                   ("source", JSON_String "Flow");
                   ("message", JSON_String msg);
                   ("relatedInformation", _);
-                  ("relatedLocations", _);
                 ] ->
               { uri; kind; msg }
             | _ -> assert_failure "Diagnostic JSON doesn't match expected format")

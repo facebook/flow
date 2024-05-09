@@ -20,8 +20,7 @@
           "code": "InferError",
           "source": "Flow",
           "message": "Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].",
-          "relatedInformation": [],
-          "relatedLocations": []
+          "relatedInformation": []
         }
       ],
       "edit": {

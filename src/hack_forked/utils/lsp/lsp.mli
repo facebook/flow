@@ -592,15 +592,12 @@ module PublishDiagnostics : sig
     message: string;
     tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
-    relatedLocations: relatedLocation list;
   }
 
   and diagnosticRelatedInformation = {
     relatedLocation: Location.t;
     relatedMessage: string;
   }
-
-  and relatedLocation = diagnosticRelatedInformation
 end
 
 module DidOpen : sig

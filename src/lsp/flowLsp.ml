@@ -1135,7 +1135,6 @@ let diagnostic_of_parse_error (loc, parse_error) : PublishDiagnostics.diagnostic
     tags = [];
     message = Parse_error.PP.error parse_error;
     relatedInformation = [];
-    relatedLocations = [] (* legacy fb extension *);
   }
 
 let live_syntax_errors_enabled (state : server_state) =

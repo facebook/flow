@@ -550,18 +550,6 @@ module.exports = (suite(
                         message: '[1] exports',
                       },
                     ],
-                    relatedLocations: [
-                      {
-                        location: {
-                          uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
-                          range: {
-                            start: {line: 0, character: 0},
-                            end: {line: 0, character: 0},
-                          },
-                        },
-                        message: '[1] exports',
-                      },
-                    ],
                   },
                 ],
               },

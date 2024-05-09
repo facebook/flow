@@ -114,7 +114,6 @@ let limit_errors errors =
           tags = [];
           message;
           relatedInformation = [];
-          relatedLocations = [];
         }
       in
 

@@ -20,8 +20,7 @@
           "code": "InferError",
           "source": "Flow",
           "message": "Cannot get `(new A).f` because  property `f` [1] cannot be unbound from the  context [2] where it was defined.",
-          "relatedInformation": [],
-          "relatedLocations": []
+          "relatedInformation": []
         }
       ],
       "edit": {

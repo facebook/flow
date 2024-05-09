@@ -20,8 +20,7 @@
           "code": "InferError",
           "source": "Flow",
           "message": "Cannot call `baz` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.",
-          "relatedInformation": [],
-          "relatedLocations": []
+          "relatedInformation": []
         }
       ],
       "edit": {

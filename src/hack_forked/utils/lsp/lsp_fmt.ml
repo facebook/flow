@@ -534,7 +534,7 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
       | StringCode s -> Some (string_ s)
       | NoCode -> None
     in
-    let print_related (related : relatedLocation) : json =
+    let print_related (related : diagnosticRelatedInformation) : json =
       Hh_json.JSON_Object
         [
           ("location", print_location related.relatedLocation);
@@ -550,9 +550,6 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
         ("message", Some (JSON_String diagnostic.message));
         ( "relatedInformation",
           Some (JSON_Array (Base.List.map diagnostic.relatedInformation ~f:print_related))
-        );
-        ( "relatedLocations",
-          Some (JSON_Array (Base.List.map diagnostic.relatedLocations ~f:print_related))
         );
       ]
   )
@@ -614,8 +611,6 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
       tags = Jget.array_d j "tags" ~default:[] |> Base.List.filter_map ~f:DiagnosticTagFmt.of_json;
       relatedInformation =
         Jget.array_d j "relatedInformation" ~default:[] |> Base.List.map ~f:parse_info;
-      relatedLocations =
-        Jget.array_d j "relatedLocations" ~default:[] |> Base.List.map ~f:parse_info;
     }
   )
 

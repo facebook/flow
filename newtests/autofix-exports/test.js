@@ -99,7 +99,6 @@ module.exports = (suite(
                     source: 'Flow',
                     message: 'Cannot build a typed interface for this module.',
                     relatedInformation: [],
-                    relatedLocations: [],
                   },
                 ],
                 edit: {
