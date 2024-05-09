@@ -9,7 +9,7 @@ Cannot call `FormData` with empty string bound to `form` because string [1] is i
 
 References:
    <BUILTINS>/bom.js:629:24
-   629|     constructor(form?: HTMLFormElement): void;
+   629|     constructor(form?: HTMLFormElement, submitter?: HTMLElement | null): void;
                                ^^^^^^^^^^^^^^^ [2]
 
 
@@ -27,84 +27,103 @@ References:
    1174|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
                                                                               ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:629:24
-    629|     constructor(form?: HTMLFormElement): void;
+    629|     constructor(form?: HTMLFormElement, submitter?: HTMLElement | null): void;
                                 ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
+Error ------------------------------------------------------------------------------------------------ FormData.js:10:46
+
+Cannot call `FormData` with `"submitter"` bound to `submitter` because: [incompatible-call]
+ - Either string [1] is incompatible with `HTMLElement` [2].
+ - Or string [1] is incompatible with null [3].
+
+   FormData.js:10:46
+    10| new FormData(document.createElement('form'), "submitter"); // incorrect
+                                                     ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:629:53
+   629|     constructor(form?: HTMLFormElement, submitter?: HTMLElement | null): void;
+                                                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:629:67
+   629|     constructor(form?: HTMLFormElement, submitter?: HTMLElement | null): void;
+                                                                          ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:17:19
 
 Cannot assign `a.get(...)` to `d` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   FormData.js:14:19
-    14| const d: string = a.get('foo'); // incorrect
+   FormData.js:17:19
+    17| const d: string = a.get('foo'); // incorrect
                           ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:632:24
    632|     get(name: string): ?FormDataEntryValue;
                                ^^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:14:10
-    14| const d: string = a.get('foo'); // incorrect
+   FormData.js:17:10
+    17| const d: string = a.get('foo'); // incorrect
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
+Error ------------------------------------------------------------------------------------------------ FormData.js:17:19
 
 Cannot assign `a.get(...)` to `d` because `File` [1] is incompatible with string [2]. [incompatible-type]
 
-   FormData.js:14:19
-    14| const d: string = a.get('foo'); // incorrect
+   FormData.js:17:19
+    17| const d: string = a.get('foo'); // incorrect
                           ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:632:25
    632|     get(name: string): ?FormDataEntryValue;
                                 ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:14:10
-    14| const d: string = a.get('foo'); // incorrect
+   FormData.js:17:10
+    17| const d: string = a.get('foo'); // incorrect
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:15:17
+Error ------------------------------------------------------------------------------------------------ FormData.js:18:17
 
 Cannot assign `a.get(...)` to `e` because null or undefined [1] is incompatible with `Blob` [2]. [incompatible-type]
 
-   FormData.js:15:17
-    15| const e: Blob = a.get('foo'); // incorrect
+   FormData.js:18:17
+    18| const e: Blob = a.get('foo'); // incorrect
                         ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:632:24
    632|     get(name: string): ?FormDataEntryValue;
                                ^^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:15:10
-    15| const e: Blob = a.get('foo'); // incorrect
+   FormData.js:18:10
+    18| const e: Blob = a.get('foo'); // incorrect
                  ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:15:17
+Error ------------------------------------------------------------------------------------------------ FormData.js:18:17
 
 Cannot assign `a.get(...)` to `e` because string [1] is incompatible with `Blob` [2]. [incompatible-type]
 
-   FormData.js:15:17
-    15| const e: Blob = a.get('foo'); // incorrect
+   FormData.js:18:17
+    18| const e: Blob = a.get('foo'); // incorrect
                         ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:632:25
    632|     get(name: string): ?FormDataEntryValue;
                                 ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:15:10
-    15| const e: Blob = a.get('foo'); // incorrect
+   FormData.js:18:10
+    18| const e: Blob = a.get('foo'); // incorrect
                  ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:17:7
+Error ------------------------------------------------------------------------------------------------- FormData.js:20:7
 
 Cannot call `a.get` with `2` bound to `name` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   FormData.js:17:7
-    17| a.get(2); // incorrect
+   FormData.js:20:7
+    20| a.get(2); // incorrect
               ^ [1]
 
 References:
@@ -113,7 +132,7 @@ References:
                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:21:43
+Error ------------------------------------------------------------------------------------------------ FormData.js:24:43
 
 Cannot assign `a.getAll(...)` to `a2` because in array element: [incompatible-type]
  - Either number [1] is incompatible with string [2].
@@ -122,13 +141,13 @@ Cannot assign `a.getAll(...)` to `a2` because in array element: [incompatible-ty
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   FormData.js:21:43
-    21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+   FormData.js:24:43
+    24| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
                                                   ^^^^^^^^^^^^^^^
 
 References:
-   FormData.js:21:33
-    21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+   FormData.js:24:33
+    24| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
                                         ^^^^^^ [1]
    <BUILTINS>/bom.js:626:27
    626| type FormDataEntryValue = string | File
@@ -138,7 +157,7 @@ References:
                                            ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:22:41
+Error ------------------------------------------------------------------------------------------------ FormData.js:25:41
 
 Cannot assign `a.getAll(...)` to `a3` because in array element: [incompatible-type]
  - Either `Blob` [1] is incompatible with `File` [2].
@@ -147,13 +166,13 @@ Cannot assign `a.getAll(...)` to `a3` because in array element: [incompatible-ty
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   FormData.js:22:41
-    22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+   FormData.js:25:41
+    25| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                                                 ^^^^^^^^^^^^^^^
 
 References:
-   FormData.js:22:26
-    22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+   FormData.js:25:26
+    25| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
                                  ^^^^ [1]
    <BUILTINS>/bom.js:626:36
    626| type FormDataEntryValue = string | File
@@ -163,12 +182,12 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:23:10
+Error ------------------------------------------------------------------------------------------------ FormData.js:26:10
 
 Cannot call `a.getAll` with `23` bound to `name` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   FormData.js:23:10
-    23| a.getAll(23); // incorrect
+   FormData.js:26:10
+    26| a.getAll(23); // incorrect
                  ^^ [1]
 
 References:
@@ -177,19 +196,19 @@ References:
                          ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:27:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:30:3
 
 Cannot call `a.set` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Blob` [2].
  - Or object literal [1] is incompatible with `File` [3].
 
-   FormData.js:27:3
-    27| a.set('foo', {}); // incorrect
+   FormData.js:30:3
+    30| a.set('foo', {}); // incorrect
           ^^^
 
 References:
-   FormData.js:27:14
-    27| a.set('foo', {}); // incorrect
+   FormData.js:30:14
+    30| a.set('foo', {}); // incorrect
                      ^^ [1]
    <BUILTINS>/bom.js:636:30
    636|     set(name: string, value: Blob, filename?: string): void;
@@ -199,20 +218,20 @@ References:
                                      ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:28:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:31:3
 
 Cannot call `a.set` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
  - Or number [1] is incompatible with string [4].
 
-   FormData.js:28:3
-    28| a.set(2, 'bar'); // incorrect
+   FormData.js:31:3
+    31| a.set(2, 'bar'); // incorrect
           ^^^
 
 References:
-   FormData.js:28:7
-    28| a.set(2, 'bar'); // incorrect
+   FormData.js:31:7
+    31| a.set(2, 'bar'); // incorrect
               ^ [1]
    <BUILTINS>/bom.js:635:15
    635|     set(name: string, value: string): void;
@@ -225,19 +244,19 @@ References:
                       ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:29:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:32:3
 
 Cannot call `a.set` because: [incompatible-call]
  - Either string [1] is incompatible with `Blob` [2].
  - Or string [1] is incompatible with `File` [3].
 
-   FormData.js:29:3
-    29| a.set('foo', 'bar', 'baz'); // incorrect
+   FormData.js:32:3
+    32| a.set('foo', 'bar', 'baz'); // incorrect
           ^^^
 
 References:
-   FormData.js:29:14
-    29| a.set('foo', 'bar', 'baz'); // incorrect
+   FormData.js:32:14
+    32| a.set('foo', 'bar', 'baz'); // incorrect
                      ^^^^^ [1]
    <BUILTINS>/bom.js:636:30
    636|     set(name: string, value: Blob, filename?: string): void;
@@ -247,19 +266,19 @@ References:
                                      ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:32:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:35:3
 
 Cannot call `a.set` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
-   FormData.js:32:3
-    32| a.set('bar', new File([], 'q'), 2) // incorrect
+   FormData.js:35:3
+    35| a.set('bar', new File([], 'q'), 2) // incorrect
           ^^^
 
 References:
-   FormData.js:32:33
-    32| a.set('bar', new File([], 'q'), 2) // incorrect
+   FormData.js:35:33
+    35| a.set('bar', new File([], 'q'), 2) // incorrect
                                         ^ [1]
    <BUILTINS>/bom.js:636:47
    636|     set(name: string, value: Blob, filename?: string): void;
@@ -269,44 +288,44 @@ References:
                                                       ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:35:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:38:3
 
 Cannot call `a.set` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or `Blob` [3] is incompatible with `File` [4].
 
-   FormData.js:35:3
-    35| a.set('bar', new Blob, 2) // incorrect
+   FormData.js:38:3
+    38| a.set('bar', new Blob, 2) // incorrect
           ^^^
 
 References:
-   FormData.js:35:24
-    35| a.set('bar', new Blob, 2) // incorrect
+   FormData.js:38:24
+    38| a.set('bar', new Blob, 2) // incorrect
                                ^ [1]
    <BUILTINS>/bom.js:636:47
    636|     set(name: string, value: Blob, filename?: string): void;
                                                       ^^^^^^ [2]
-   FormData.js:35:14
-    35| a.set('bar', new Blob, 2) // incorrect
+   FormData.js:38:14
+    38| a.set('bar', new Blob, 2) // incorrect
                      ^^^^^^^^ [3]
    <BUILTINS>/bom.js:637:30
    637|     set(name: string, value: File, filename?: string): void;
                                      ^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:39:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:42:3
 
 Cannot call `a.append` because: [incompatible-call]
  - Either object literal [1] is incompatible with `Blob` [2].
  - Or object literal [1] is incompatible with `File` [3].
 
-   FormData.js:39:3
-    39| a.append('foo', {}); // incorrect
+   FormData.js:42:3
+    42| a.append('foo', {}); // incorrect
           ^^^^^^
 
 References:
-   FormData.js:39:17
-    39| a.append('foo', {}); // incorrect
+   FormData.js:42:17
+    42| a.append('foo', {}); // incorrect
                         ^^ [1]
    <BUILTINS>/bom.js:640:33
    640|     append(name: string, value: Blob, filename?: string): void;
@@ -316,20 +335,20 @@ References:
                                         ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:40:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:43:3
 
 Cannot call `a.append` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
  - Or number [1] is incompatible with string [4].
 
-   FormData.js:40:3
-    40| a.append(2, 'bar'); // incorrect
+   FormData.js:43:3
+    43| a.append(2, 'bar'); // incorrect
           ^^^^^^
 
 References:
-   FormData.js:40:10
-    40| a.append(2, 'bar'); // incorrect
+   FormData.js:43:10
+    43| a.append(2, 'bar'); // incorrect
                  ^ [1]
    <BUILTINS>/bom.js:639:18
    639|     append(name: string, value: string): void;
@@ -342,19 +361,19 @@ References:
                          ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:41:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:44:3
 
 Cannot call `a.append` because: [incompatible-call]
  - Either string [1] is incompatible with `Blob` [2].
  - Or string [1] is incompatible with `File` [3].
 
-   FormData.js:41:3
-    41| a.append('foo', 'bar', 'baz'); // incorrect
+   FormData.js:44:3
+    44| a.append('foo', 'bar', 'baz'); // incorrect
           ^^^^^^
 
 References:
-   FormData.js:41:17
-    41| a.append('foo', 'bar', 'baz'); // incorrect
+   FormData.js:44:17
+    44| a.append('foo', 'bar', 'baz'); // incorrect
                         ^^^^^ [1]
    <BUILTINS>/bom.js:640:33
    640|     append(name: string, value: Blob, filename?: string): void;
@@ -364,19 +383,19 @@ References:
                                         ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:45:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:48:3
 
 Cannot call `a.append` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with string [3].
 
-   FormData.js:45:3
-    45| a.append('bar', new File([], 'q'), 2) // incorrect
+   FormData.js:48:3
+    48| a.append('bar', new File([], 'q'), 2) // incorrect
           ^^^^^^
 
 References:
-   FormData.js:45:36
-    45| a.append('bar', new File([], 'q'), 2) // incorrect
+   FormData.js:48:36
+    48| a.append('bar', new File([], 'q'), 2) // incorrect
                                            ^ [1]
    <BUILTINS>/bom.js:640:50
    640|     append(name: string, value: Blob, filename?: string): void;
@@ -386,37 +405,37 @@ References:
                                                          ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- FormData.js:48:3
+Error ------------------------------------------------------------------------------------------------- FormData.js:51:3
 
 Cannot call `a.append` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
  - Or `Blob` [3] is incompatible with `File` [4].
 
-   FormData.js:48:3
-    48| a.append('bar', new Blob, 2) // incorrect
+   FormData.js:51:3
+    51| a.append('bar', new Blob, 2) // incorrect
           ^^^^^^
 
 References:
-   FormData.js:48:27
-    48| a.append('bar', new Blob, 2) // incorrect
+   FormData.js:51:27
+    51| a.append('bar', new Blob, 2) // incorrect
                                   ^ [1]
    <BUILTINS>/bom.js:640:50
    640|     append(name: string, value: Blob, filename?: string): void;
                                                          ^^^^^^ [2]
-   FormData.js:48:17
-    48| a.append('bar', new Blob, 2) // incorrect
+   FormData.js:51:17
+    51| a.append('bar', new Blob, 2) // incorrect
                         ^^^^^^^^ [3]
    <BUILTINS>/bom.js:641:33
    641|     append(name: string, value: File, filename?: string): void;
                                         ^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:52:10
+Error ------------------------------------------------------------------------------------------------ FormData.js:55:10
 
 Cannot call `a.delete` with `3` bound to `name` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   FormData.js:52:10
-    52| a.delete(3); // incorrect
+   FormData.js:55:10
+    55| a.delete(3); // incorrect
                  ^ [1]
 
 References:
@@ -425,36 +444,36 @@ References:
                          ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:56:23
+Error ------------------------------------------------------------------------------------------------ FormData.js:59:23
 
 Cannot assign `x` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   FormData.js:56:23
-    56| for (let x: number of a.keys()) {} // incorrect
+   FormData.js:59:23
+    59| for (let x: number of a.keys()) {} // incorrect
                               ^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:645:22
    645|     keys(): Iterator<string>;
                              ^^^^^^ [1]
-   FormData.js:56:13
-    56| for (let x: number of a.keys()) {} // incorrect
+   FormData.js:59:13
+    59| for (let x: number of a.keys()) {} // incorrect
                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:64:52
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:52
 
 Cannot assign for-of element to destructuring because in index 1: [incompatible-type]
  - Either `Blob` [1] is incompatible with `File` [2].
  - Or `Blob` [1] is incompatible with string [3].
 
-   FormData.js:64:52
-    64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+   FormData.js:67:52
+    67| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
                                                            ^^^^^^^^^^^
 
 References:
-   FormData.js:64:43
-    64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+   FormData.js:67:43
+    67| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
                                                   ^^^^ [1]
    <BUILTINS>/bom.js:626:36
    626| type FormDataEntryValue = string | File
@@ -464,91 +483,91 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:68:38
 
 Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 0.
 [incompatible-type]
 
-   FormData.js:65:38
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+   FormData.js:68:38
+    68| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:26
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                  ^^^^^^ [1]
-   FormData.js:65:19
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+   FormData.js:68:19
+    68| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:68:38
 
 Cannot assign for-of element to destructuring because `File` [1] is incompatible with string [2] in index 1.
 [incompatible-type]
 
-   FormData.js:65:38
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+   FormData.js:68:38
+    68| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:34
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:65:27
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+   FormData.js:68:27
+    68| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:69:38
 
 Cannot assign for-of element to destructuring because `File` [1] is incompatible with number [2] in index 1.
 [incompatible-type]
 
-   FormData.js:66:38
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+   FormData.js:69:38
+    69| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:34
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:66:27
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+   FormData.js:69:27
+    69| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:69:38
 
 Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 1.
 [incompatible-type]
 
-   FormData.js:66:38
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+   FormData.js:69:38
+    69| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:34
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:66:27
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+   FormData.js:69:27
+    69| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:69:38
 
 Cannot assign for-of element to destructuring because in index 1: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `File` [3].
 
-   FormData.js:66:38
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+   FormData.js:69:38
+    69| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
-   FormData.js:66:27
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+   FormData.js:69:27
+    69| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [1]
    <BUILTINS>/bom.js:626:27
    626| type FormDataEntryValue = string | File
@@ -558,73 +577,73 @@ References:
                                            ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:70:38
 
 Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 0.
 [incompatible-type]
 
-   FormData.js:67:38
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:38
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:26
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                  ^^^^^^ [1]
-   FormData.js:67:19
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:19
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:70:38
 
 Cannot assign for-of element to destructuring because `File` [1] is incompatible with number [2] in index 1.
 [incompatible-type]
 
-   FormData.js:67:38
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:38
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:34
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:67:27
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:27
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:70:38
 
 Cannot assign for-of element to destructuring because string [1] is incompatible with number [2] in index 1.
 [incompatible-type]
 
-   FormData.js:67:38
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:38
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:647:34
    647|     entries(): Iterator<[string, FormDataEntryValue]>;
                                          ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:67:27
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:27
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+Error ------------------------------------------------------------------------------------------------ FormData.js:70:38
 
 Cannot assign for-of element to destructuring because in index 1: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `File` [3].
 
-   FormData.js:67:38
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:38
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
-   FormData.js:67:27
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+   FormData.js:70:27
+    70| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [1]
    <BUILTINS>/bom.js:626:27
    626| type FormDataEntryValue = string | File
@@ -1064,7 +1083,7 @@ References:
 
 
 
-Found 53 errors
+Found 54 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
