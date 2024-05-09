@@ -430,7 +430,7 @@ let merge_exports =
       let exports =
         match exports with
         | Some (lazy t) -> t
-        | None -> Obj_type.mk_exact_empty file.cx reason
+        | None -> Obj_type.mk_frozen_exact_empty file.cx reason
       in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
@@ -1879,7 +1879,7 @@ and merge_component
     let param =
       let rest_t =
         match rest_param with
-        | None -> Obj_type.mk_exact_empty file.cx config_reason
+        | None -> Obj_type.mk_frozen_exact_empty file.cx config_reason
         | Some (Type_sig.ComponentRestParam { t }) -> merge env file t
       in
       EvalT

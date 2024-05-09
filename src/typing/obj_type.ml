@@ -36,7 +36,7 @@ let mk_with_proto
   in
   DefT (reason, ObjT (mk_objecttype ?reachable_targs ~flags ~call pmap proto))
 
-let mk_exact_empty cx reason =
+let mk_frozen_exact_empty cx reason =
   ObjProtoT reason |> mk_with_proto cx reason ~obj_kind:Exact ~frozen:true
 
 let mk ~obj_kind cx reason = mk_with_proto cx ~obj_kind reason (ObjProtoT reason)

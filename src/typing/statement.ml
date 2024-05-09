@@ -2208,7 +2208,7 @@ module Make
         in
         Flow.flow cx (elem_t, check);
         (* No properties are added in this case. *)
-        Obj_type.mk_exact_empty cx reason_obj
+        Obj_type.mk_frozen_exact_empty cx reason_obj
       | Named { name; reason; _ } ->
         let prop =
           Field
