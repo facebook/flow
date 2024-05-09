@@ -1,3 +1,31 @@
+### 0.236.0
+
+Likely to cause new Flow errors:
+* Ensure React class component constructors call `super` with a props object. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0STMjAglAkAAIAFRcjAkLkAJVYyi5MEo6S5AB0QFFlLKANzSqAqlbGLkAMWIAAVJYxBQBeLnAGDEZBc+ymKAIenK1VfIwc7lPAWC7UQLkKBZQNiCkXRKwAYXS7K+PgAPB69bCSAA+E0qrlc2xWoTKDkACmpBot0f1JAAlImoMnkyQhJ5M4Wk2WAPR1rkAPS5ABE4GwfFzHCRBTmSLX6Sqhw6VQp2ZyU7g3VriAAmL3yH1+4WimIhkRhixR3UFhPAWupqTptKUbMFvO72PFg+lssVqv9wv25Mj+kyqC5EANEwkODQJIMnsEwQHpIA)
+* Modified typing of `React.cloneElement`. You might see errors being shifted around, and some advanced patterns no longer supported. [The API is not encouraged by React](https://react.dev/reference/react/cloneElement), so migrating away from it is recommended.
+* For JSX elements under `react.runtime=classic`, we now type check the JSX unconditionally using the right `React.createElement` typing, and check whether the locally defined React has the right `React.createElement` definition. If you have some JSX that's already invalid, you might see different errors. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFHBcDBISODAQfiEyfBE4eWw2fDgofDAMCTAAC3wANyo4LFxscWQuHgMNOvxoXFp-WmN8FmZXTv4NZmwKiSKAWgkhxPa3AxIAa2wq6tp54VxccfdN7Zq94REcSmODISgwFqpF5dvsqCgZ1pIqPdKG0wYHxvED3T5gb6-eYQRgSODQbjzGoYUog+4-GDYeYIbZzSgkeZkCR4toddz3HILZgQfJkW4AX34kA0SWAAB0oAACbmcgA8bDgdU5AHoAHyc1KcgBKrGUABIAKItbwSXkAciYQLVooA3ByeSLhZyAEKaCAsTkABisACYAMwANmQnL6tE5Jko5pdXNp6SgCGlsok+p5wqN1vtTvd1C90E5vtKAZl0V4EqgbED0UVyos6oFdW1fOdyflSuwKvVmqg2o59I5HPZXJ5tnsmeUnIAvJzgGAonMyyrnWrqnA1fS9U3ufzBSLxZKSxJs+XcxrHNXdSHuWGTWaLRHHc77KZ-Zy4CROVAIBIJZyYPdlPCoJvDVbbQfo57KN7OZgMwubH22ADhYqZAn+QZLhWar5oWvLFhBwE+JWa41lAdZQFkIB1CY6TQEkIipHiID0kAA)
+* `React$CreateClass` type, aliased to any since v0.176, is removed.
+* Fix typing of `isValid` Flow Enums method, reverting back to behavior from before v0.232.
+* Support for `$CharSet`, an undocumented feature, has been removed. `RegExp$flags`, which depends on `$CharSet`, is also removed. In most cases, you should replace these types with `string`.
+* Support for `--traces` and the corresponding flowconfig option has been removed.
+* `React.createFactory` libdef is removed. This API is already deprecated and will be removed in React 19.
+
+Notable bug fixes:
+* Fixed interactions of various types with specialized versions of `mixed` (such as `$NonMaybeType<mixed>`). ([try-Flow examples](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRgD2UcGgAAIFvZ8AA5aAAWToOAAFABKLnAAA6UC5XIALAAmLkYEhc4QiG5cgA+mu0uDVGoAJIKoCLaDgACqrAA8RRKbAAfABuLkAeg9XJMlAglANxy5AD9nVyhcVStauWLzZacBK5XKFSrjQbtSY9VyGhA4Gw02bhaLsLbjA7Iy73V6fdR-VyHhp4F986HwxXo7Gi1bsImoMmlar1VyAPxanVDwsW4ul7Dlp1uz3e-kAUQA6jW-QGjkb9Q3NBVSiGwxGnR248Xe-Sk7B2fD5byVGzHnexTAoMguY7SlLZfKuXAYBjFZjAgQC3y5ABeKCuRlEAnw5aBYJ-fsFQVWx7C5aBsEgrkAEY02A7BQK5N8qyXNcNzrMdM1bE8oxjOiyngu9e1Q1CsKsDBGEYQZXX7K8oAEuVmM5e92hUKRUlqWgxXkD8vzYZC-wAmN5CUti0OgDCyXIHCdII1ZiPkMiuRXddfTrfTaPbBiK3wSSJGk1iNJUsUAEIdPwH9Fx5WpBC5NAaEeWoeQwHY+z-DTUM8tNsBEOFaD4yLUIEhUBIE3IQAaEwSFEpIGgABisZUAGYAFYrFwkB6SAA))
+
+Misc:
+* Support removing `export type *` (ExportAllDeclaration) nodes with `flow-remove-types` (thanks @jbroma!)
+
+Parser:
+* Updated bigint literal AST output for `bigint` property to match ESTree spec. Numeric separators are removed (`_`), and should contain only decimal digits.
+
+IDE:
+* Under `component_syntax=true`, autocomplete will provide `component` and `hook` keyword in appropriate places.
+
+Library Definitions:
+* `$asyncIterator`, which is never a real global, is removed from global libdef.
+* We removed `$await` in the libdef. If you are depending on it like `typeof $await`, you can replace it with `<T>(Promise<T> | T) => T`.
+
 ### 0.235.1
 
 Misc:
