@@ -23,9 +23,9 @@ class Bar extends React.Component<{}, void> {}
 }
 
 {
-  const foo: {current: Foo | null} = React.useRef(new Foo()); // Ok
+  const foo: {current: Foo | null} = React.useRef(new Foo({})); // Ok
 }
 
 {
-  const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+  const foo: {current: Foo | null} = React.useRef(new Bar({})); // Error: Bar is incompatible with Foo in property current
 }
