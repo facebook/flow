@@ -771,7 +771,7 @@ module Friendly = struct
     }
 end
 
-type 'loc printable_error = error_kind * 'loc message list * 'loc Friendly.t'
+type 'loc printable_error = error_kind * 'loc Friendly.t'
 
 let info_to_messages = function
   | (loc, []) -> [BlameM (loc, "")]
@@ -789,7 +789,6 @@ let mk_error
     (message : 'loc Friendly.message) : 'loc printable_error =
   Friendly.
     ( kind,
-      [],
       {
         loc;
         root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
@@ -802,10 +801,9 @@ let mk_speculation_error
     ?(kind = InferError) ~loc ~root ~frames ~explanations ~error_code speculation_errors =
   Friendly.(
     let branches =
-      Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
+      Base.List.map ~f:(fun (score, (_, error)) -> (score, error)) speculation_errors
     in
     ( kind,
-      [],
       {
         loc;
         root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
@@ -817,7 +815,7 @@ let mk_speculation_error
 
 (*******************************)
 
-let code_of_printable_error (_, _, f) = f.Friendly.code
+let code_of_printable_error (_, f) = f.Friendly.code
 
 let to_pp = function
   | BlameM (loc, s) -> (loc, s)
@@ -825,24 +823,11 @@ let to_pp = function
 
 type stdin_file = (File_path.t * string) option
 
-let append_trace_reasons message_list trace_reasons =
-  match trace_reasons with
-  | [] -> message_list
-  | _ -> message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
-
 let default_style text = (Tty.Normal Tty.Default, text)
-
-let source_fragment_style text = (Tty.Normal Tty.Default, text)
 
 let error_fragment_style text = (Tty.Normal Tty.Red, text)
 
 let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
-
-let line_number_style text = (Tty.Bold Tty.Default, text)
-
-let comment_style text = (Tty.Bold Tty.Default, text)
-
-let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
 
 let dim_style text = (Tty.Dim Tty.Default, text)
 
@@ -875,12 +860,6 @@ let relative_lib_path ~strip_root filename =
     else
       Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
   | None -> relative_path ~strip_root filename
-
-let highlight_error_in_line ~severity_style line c0 c1 =
-  let prefix = String.sub line 0 c0 in
-  let fragment = String.sub line c0 (c1 - c0) in
-  let suffix = String.sub line c1 (String.length line - c1) in
-  [source_fragment_style prefix; severity_style fragment; source_fragment_style suffix]
 
 (* 0-indexed
  *
@@ -960,17 +939,16 @@ let file_of_source source =
     Some filename
   | None -> None
 
-let loc_of_printable_error ((_, _, { Friendly.loc; _ }) : 'loc printable_error) = loc
+let loc_of_printable_error ((_, { Friendly.loc; _ }) : 'loc printable_error) = loc
 
-let loc_of_printable_error_for_compare ((_, _, err) : 'a printable_error) =
+let loc_of_printable_error_for_compare ((_, err) : 'a printable_error) =
   Friendly.(
     match err with
     | { root = Some { root_loc; _ }; _ } -> root_loc
     | { loc; _ } -> loc
   )
 
-let patch_misplaced_error
-    ~strip_root source_file ((error_kind, message_list, friendly) : 'loc printable_error) =
+let patch_misplaced_error ~strip_root source_file ((error_kind, friendly) : 'loc printable_error) =
   let open Friendly in
   let { message; _ } = friendly in
   let message =
@@ -1002,9 +980,9 @@ let patch_misplaced_error
       (* TODO this patch does not render well for speculative errors *)
       message
   in
-  (error_kind, message_list, { friendly with message })
+  (error_kind, { friendly with message })
 
-let kind_of_printable_error (kind, _, _) = kind
+let kind_of_printable_error (kind, _) = kind
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc ~strip_root loc =
@@ -1115,7 +1093,7 @@ let rec compare compare_loc =
             if k = 0 then
               compare_lists
                 (fun (_, err1) (_, err2) ->
-                  compare compare_loc (InferError, [], err1) (InferError, [], err2))
+                  compare compare_loc (InferError, err1) (InferError, err2))
                 b1
                 b2
             else
@@ -1131,7 +1109,7 @@ let rec compare compare_loc =
       let (loc1, loc2) =
         (loc_of_printable_error_for_compare err1, loc_of_printable_error_for_compare err2)
       in
-      let ((k1, _, err1), (k2, _, err2)) = (err1, err2) in
+      let ((k1, err1), (k2, err2)) = (err1, err2) in
       let k = compare_loc loc1 loc2 in
       if k = 0 then
         let k = kind_cmp k1 k2 in
@@ -1175,7 +1153,7 @@ module ConcreteLocPrintableErrorSet = Flow_set.Make (struct
   let compare = compare Loc.compare
 end)
 
-type 'a error_group = error_kind * 'a message list * 'a Friendly.t'
+type 'a error_group = error_kind * 'a Friendly.t'
 
 exception Interrupt_PrintableErrorSet_fold of Loc.t error_group list
 
@@ -1185,16 +1163,11 @@ let collect_errors_into_groups max set =
   try
     let (_, acc) =
       ConcreteLocPrintableErrorSet.fold
-        (fun (kind, trace, error) (n, acc) ->
+        (fun (kind, error) (n, acc) ->
           let omit = Base.Option.value_map max ~default:false ~f:(fun max -> max <= n) in
           let acc =
-            match error with
-            | error when trace <> [] ->
-              if omit then raise (Interrupt_PrintableErrorSet_fold acc);
-              (kind, trace, error) :: acc
-            | error ->
-              if omit then raise (Interrupt_PrintableErrorSet_fold acc);
-              (kind, trace, error) :: acc
+            if omit then raise (Interrupt_PrintableErrorSet_fold acc);
+            (kind, error) :: acc
           in
           (n + 1, acc))
         set
@@ -1224,177 +1197,6 @@ module Cli_output = struct
     | Err -> error_fragment_style
     | Warn -> warning_fragment_style
     | Off -> Utils_js.assert_false "CLI output is only called with warnings and errors."
-
-  let print_file_at_location ~strip_root ~severity stdin_file main_file loc s =
-    Loc.(
-      let l0 = loc.start.line in
-      let l1 = loc._end.line in
-      let c0 = loc.start.column in
-      let c1 = loc._end.column in
-      let filename = file_of_source loc.source in
-      let severity_style = severity_fragment_style severity in
-      let see_another_file ~is_lib filename =
-        if filename = main_file then
-          [default_style ""]
-        else
-          let prefix =
-            Printf.sprintf
-              ". See%s: "
-              ( if is_lib then
-                " lib"
-              else
-                ""
-              )
-          in
-          let filename =
-            if is_lib then
-              relative_lib_path ~strip_root filename
-            else
-              relative_path ~strip_root filename
-          in
-          [comment_style prefix; comment_file_style (Printf.sprintf "%s:%d" filename l0)]
-      in
-      let code_line = read_lines_in_file loc filename stdin_file in
-      match (code_line, filename) with
-      | (_, None) -> [comment_style s; default_style "\n"]
-      | (None, _) ->
-        let (original_filename, is_lib) =
-          match (filename, loc.source) with
-          | (Some filename, Some (File_key.LibFile _))
-          | (None, Some (File_key.LibFile filename)) ->
-            (filename, true)
-          | (Some filename, _)
-          | (None, Some (File_key.SourceFile filename))
-          | (None, Some (File_key.JsonFile filename))
-          | (None, Some (File_key.ResourceFile filename)) ->
-            (filename, false)
-          | (None, None) -> failwith "Should only have lib and source files at this point"
-        in
-        [comment_style s] @ see_another_file ~is_lib original_filename @ [default_style "\n"]
-      | (Some code_lines, Some filename) ->
-        let is_lib =
-          match loc.source with
-          | Some (File_key.LibFile _) -> true
-          | _ -> false
-        in
-        begin
-          match code_lines with
-          | (code_line, []) ->
-            (* Here we have a single line of context *)
-            let line_number_text = Printf.sprintf "%3d: " l0 in
-            let highlighted_line =
-              if l1 == l0 && String.length code_line >= c1 then
-                highlight_error_in_line ~severity_style code_line c0 c1
-              else
-                [source_fragment_style code_line]
-            in
-            let padding =
-              let line_num = String.make (String.length line_number_text) ' ' in
-              let spaces =
-                let prefix =
-                  if String.length code_line <= c0 then
-                    code_line
-                  else
-                    String.sub code_line 0 c0
-                in
-                Str.global_replace (Str.regexp "[^\t ]") " " prefix
-              in
-              line_num ^ spaces
-            in
-            let underline_size =
-              if l1 == l0 then
-                max 1 (c1 - c0)
-              else
-                1
-            in
-            let underline = String.make underline_size '^' in
-            (line_number_style line_number_text :: highlighted_line)
-            @ [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)]
-            @ see_another_file ~is_lib filename
-            @ [default_style "\n"]
-          | code_lines ->
-            (* Here we have multiple lines of context *)
-
-            (* The most lines of context that we'll show before abridging *)
-            let max_lines = 5 in
-            (* Don't abridge if we could just show all the lines *)
-            let abridged = l1 - l0 + 1 > max_lines in
-            (* Highlight the context *)
-            let highlighted_lines =
-              code_lines
-              |> Nel.to_list
-              |> List.fold_left
-                   (fun (line_num, acc) line ->
-                     if (not abridged) || line_num - l0 < max_lines - 2 || line_num = l1 then
-                       let line_number_text = line_number_style (Utils_js.spf "\n%3d: " line_num) in
-                       let highlighted_line =
-                         (* First line *)
-                         if line_num = l0 then
-                           highlight_error_in_line ~severity_style line c0 (String.length line)
-                         (* Last line *)
-                         else if line_num = l1 then
-                           highlight_error_in_line ~severity_style line 0 c1
-                         (* middle lines *)
-                         else
-                           [error_fragment_style line]
-                       in
-                       (line_num + 1, (line_number_text :: highlighted_line) :: acc)
-                     else if line_num - l0 = max_lines - 1 then
-                       (line_num + 1, [line_number_style "\n...:"] :: acc)
-                     else
-                       (line_num + 1, acc))
-                   (l0, [])
-              |> snd
-              |> List.rev
-              |> List.flatten
-            in
-            let first_line = code_lines |> Nel.hd in
-            let last_line = code_lines |> Nel.rev |> Nel.hd in
-            (* Don't underline the whitespace at the beginning of the last line *)
-            let underline_prefix =
-              if Str.string_match (Str.regexp "^\\([\t ]*\\).*") last_line 0 then
-                Str.matched_group 1 last_line
-              else
-                ""
-            in
-            let overline_size = max 1 (String.length first_line - c0) in
-            let underline_size = max 1 (c1 - String.length underline_prefix) in
-            let line len =
-              if len > 0 then
-                String.make len '-'
-              else
-                ""
-            in
-            let overline = "v" ^ line (overline_size - 1) in
-            let underline = line (underline_size - 1) ^ "^" in
-            let overline_padding =
-              let line_num = String.make (String.length (Printf.sprintf "%3d: " l0)) ' ' in
-              let spaces =
-                if String.length first_line <= c0 then
-                  ""
-                else
-                  let prefix = String.sub first_line 0 c0 in
-                  Str.global_replace (Str.regexp "[^\t ]") " " prefix
-              in
-              line_num ^ spaces
-            in
-            let underlineline_padding =
-              String.make (String.length (Printf.sprintf "%3d: " l1)) ' '
-            in
-            let comment =
-              Printf.sprintf "\n%s%s%s %s" underlineline_padding underline_prefix underline s
-            in
-            [comment_style (Printf.sprintf "%s%s" overline_padding overline)]
-            @ highlighted_lines
-            @ [comment_style comment]
-            @ see_another_file ~is_lib filename
-            @ [default_style "\n"]
-        end
-    )
-
-  let print_message_nice ~strip_root ~severity stdin_file main_file message =
-    let (loc, s) = to_pp message in
-    print_file_at_location ~strip_root ~severity stdin_file main_file loc s
 
   let remove_newlines (color, text) = (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
@@ -2728,7 +2530,7 @@ module Cli_output = struct
     )
 
   let get_pretty_printed_friendly_error_group
-      ~stdin_file ~strip_root ~flags ~severity ~trace ~primary_locs ~message_group =
+      ~stdin_file ~strip_root ~flags ~severity ~primary_locs ~message_group =
     Friendly.(
       (* Get the primary location. *)
       let primary_loc = LocSet.min_elt primary_locs in
@@ -2797,23 +2599,6 @@ module Cli_output = struct
           (match code_frame with
           | [] -> []
           | code_frame -> default_style "\n" :: code_frame);
-          (* Trace: *)
-          (match trace with
-          | [] -> []
-          | _ -> [default_style "\n"]);
-          Base.List.concat
-            (Base.List.map
-               ~f:
-                 (print_message_nice
-                    ~strip_root
-                    ~severity
-                    stdin_file
-                    (match file_of_source root_loc.Loc.source with
-                    | Some filename -> filename
-                    | None -> "[No file]")
-                 )
-               (append_trace_reasons [] trace)
-            );
           (* Next error: *)
           [default_style "\n"];
         ]
@@ -2825,11 +2610,10 @@ module Cli_output = struct
       if hidden_branches then on_hidden_branches ();
       (a, b)
     in
-    let (_, trace, error) = group in
+    let (_, error) = group in
 
     (* Singleton errors concatenate the optional error root with the error
-     * message and render a single message. Sometimes singletons will also
-     * render a trace. *)
+     * message and render a single message. *)
     Friendly.(
       let (primary_loc, { group_message; group_message_list; group_message_post }) =
         let (hidden_branches, loc, err) =
@@ -2842,7 +2626,6 @@ module Cli_output = struct
         ~strip_root
         ~flags
         ~severity
-        ~trace
         ~primary_locs:(LocSet.singleton primary_loc)
         ~message_group:
           { group_message = capitalize group_message; group_message_list; group_message_post }
@@ -3237,7 +3020,7 @@ module Json_output = struct
       ~severity
       ~offset_kind
       ?(suppression_locs = Loc_collections.LocSet.empty)
-      (kind, trace, error) =
+      (kind, error) =
     Hh_json.(
       let kind_str =
         match kind with
@@ -3275,14 +3058,10 @@ module Json_output = struct
       in
       props
       (* add the error type specific props *)
-      @ (match version with
-        | JsonV1 -> json_of_classic_error_props ~json_of_message (Friendly.to_classic error)
-        | JsonV2 -> json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error)
       @
-      (* add trace if present *)
-      match trace with
-      | [] -> []
-      | _ -> [("trace", JSON_Array (Base.List.map ~f:json_of_message trace))]
+      match version with
+      | JsonV1 -> json_of_classic_error_props ~json_of_message (Friendly.to_classic error)
+      | JsonV2 -> json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error
     )
 
   let json_of_error_with_context
@@ -3466,9 +3245,8 @@ module Vim_emacs_output = struct
       let loc_str = string_of_loc ~strip_root loc in
       Printf.sprintf "%s%s%s" (endline loc_str) prefix (endline msg)
     in
-    let classic_to_string ~strip_root prefix trace error =
+    let classic_to_string ~strip_root prefix error =
       let { messages; _ } = error in
-      let messages = append_trace_reasons messages trace in
       let buf = Buffer.create 50 in
       (match messages with
       | [] -> assert false
@@ -3481,8 +3259,8 @@ module Vim_emacs_output = struct
           rest_of_error);
       Buffer.contents buf
     in
-    let to_string ~strip_root prefix ((_, trace, error) : Loc.t printable_error) : string =
-      classic_to_string ~strip_root prefix trace (Friendly.to_classic error)
+    let to_string ~strip_root prefix ((_, error) : Loc.t printable_error) : string =
+      classic_to_string ~strip_root prefix (Friendly.to_classic error)
     in
     fun ~strip_root oc ~errors ~warnings () ->
       let sl =
@@ -3520,7 +3298,7 @@ module Lsp_output = struct
     (* e.g. "Error about `code` in type Ref(`foo`)"                    *)
     (* will produce LSP message "Error about `code` in type `foo` [1]" *)
     (* and the LSP related location will have message "[1]: `foo`"      *)
-    let (kind, _, friendly) = error in
+    let (kind, friendly) = error in
     let (_, loc, group) =
       Friendly.message_group_of_error
         ~show_all_branches:false
