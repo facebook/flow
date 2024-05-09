@@ -2350,20 +2350,20 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:30:51
 
-Cannot call `React.useRef` with `new Bar()` bound to `initialValue` because: [incompatible-call]
+Cannot call `React.useRef` with `new Bar(...)` bound to `initialValue` because: [incompatible-call]
  - Either `Bar` [1] is incompatible with `Foo` [2].
  - Or `Bar` [1] is incompatible with null [3].
 
    useRef_hook.js:30:51
-   30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
-                                                         ^^^^^^^^^ [1]
+   30|   const foo: {current: Foo | null} = React.useRef(new Bar({})); // Error: Bar is incompatible with Foo in property current
+                                                         ^^^^^^^^^^^ [1]
 
 References:
    useRef_hook.js:30:24
-   30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+   30|   const foo: {current: Foo | null} = React.useRef(new Bar({})); // Error: Bar is incompatible with Foo in property current
                               ^^^ [2]
    useRef_hook.js:30:30
-   30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+   30|   const foo: {current: Foo | null} = React.useRef(new Bar({})); // Error: Bar is incompatible with Foo in property current
                                     ^^^^ [3]
 
 
