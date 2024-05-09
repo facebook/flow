@@ -56,6 +56,16 @@ Flags:
 ?number
 component.js:25:23,25:25
 
+component.js:27:6
+Flags:
+type TypeofFoo = React$AbstractComponent<
+  {+foo: number},
+  mixed,
+  renders React$Node,
+>
+= React$AbstractComponent<{+foo: number}, mixed, renders React$Node>
+component.js:27:6,27:14
+
 render_types.js:1:6
 Flags:
 type X = renders null
