@@ -58,7 +58,7 @@ let run_daemon (scuba_table, roots) (ic, oc) =
   let env = DfindEnv.make roots in
   Base.List.iter ~f:(DfindAddFile.path env) roots;
   FlowEventLogger.dfind_ready scuba_table t;
-  Marshal_tools.to_fd_with_preamble outfd Ready |> ignore;
+  Marshal_tools.to_fd outfd Ready |> ignore;
   ignore @@ Hh_logger.log_duration "Initialization" t;
   let acc = ref SSet.empty in
   let descr_in = Daemon.descr_of_in_channel ic in
@@ -66,10 +66,10 @@ let run_daemon (scuba_table, roots) (ic, oc) =
     acc := Base.List.fold events ~f:(process_fsnotify_event env) ~init:!acc
   in
   let message_in_callback () =
-    let () = Marshal_tools.from_fd_with_preamble infd in
+    let () = Marshal_tools.from_fd infd in
     let count = SSet.cardinal !acc in
     if count > 0 then Hh_logger.log "Sending %d file updates" count;
-    Marshal_tools.to_fd_with_preamble outfd (Updates !acc) |> ignore;
+    Marshal_tools.to_fd outfd (Updates !acc) |> ignore;
     acc := SSet.empty
   in
   while true do

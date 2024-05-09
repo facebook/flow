@@ -398,7 +398,7 @@ let selectively_omit_errors (request_name : string) (response : lsp_message) =
   | _ -> response
 
 let get_next_event_from_server (fd : Unix.file_descr) : event =
-  try Server_message (Marshal_tools.from_fd_with_preamble fd) with
+  try Server_message (Marshal_tools.from_fd fd) with
   | e ->
     let e = Exception.wrap e in
     let edata = edata_of_exception e in
@@ -663,7 +663,7 @@ let send_to_server (env : connected_env) (request : LspProt.request) (metadata :
      the canonical files, even if there are multiple clients operating on various symlinks. *)
   let request = convert_to_server_uris request in
   let _bytesWritten =
-    Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
+    Marshal_tools.to_fd (Unix.descr_of_out_channel env.c_conn.oc) (request, metadata)
   in
   ()
 

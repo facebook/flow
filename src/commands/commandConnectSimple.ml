@@ -82,7 +82,7 @@ let open_connection ~timeout ~client_handshake sockaddr =
           Marshal.to_string (snd client_handshake) []
         )
       in
-      Marshal_tools.to_fd_with_preamble fd wire |> ignore;
+      Marshal_tools.to_fd fd wire |> ignore;
       conn
     )
 
@@ -102,7 +102,7 @@ let get_handshake ~timeout sockaddr ic oc =
   SocketHandshake.(
     try
       let fd = Timeout.descr_of_in_channel ic in
-      let wire = (Marshal_tools.from_fd_with_preamble ~timeout fd : server_handshake_wire) in
+      let wire = (Marshal_tools.from_fd ~timeout fd : server_handshake_wire) in
       let server_handshake =
         ( fst wire |> Hh_json.json_of_string |> json_to__monitor_to_client_1,
           snd wire |> Base.Option.map ~f:(fun s : monitor_to_client_2 -> Marshal.from_string s 0)

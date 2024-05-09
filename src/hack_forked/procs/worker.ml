@@ -101,7 +101,7 @@ let worker_job_main infd outfd =
 
     let len =
       Measure.time "worker_send_response" (fun () ->
-          try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd (Some data) with
+          try Marshal_tools.to_fd ~flags:[Marshal.Closures] outfd (Some data) with
           | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
       )
     in
@@ -117,7 +117,7 @@ let worker_job_main infd outfd =
 
     let stats = Measure.serialize (Measure.pop_global ()) in
     let _ =
-      try Marshal_tools.to_fd_with_preamble outfd stats with
+      try Marshal_tools.to_fd outfd stats with
       | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
     in
     result_sent := true
@@ -126,7 +126,7 @@ let worker_job_main infd outfd =
     Measure.push_global ();
     let (Request do_process) =
       Measure.time "worker_read_request" (fun () ->
-          try Marshal_tools.from_fd_with_preamble infd with
+          try Marshal_tools.from_fd infd with
           | End_of_file -> raise Connection_closed
       )
     in
@@ -147,7 +147,7 @@ let worker_job_main infd outfd =
     | WorkerCancel.Worker_should_cancel ->
       (* Send `None` to reflect canceled status. *)
       if not !result_sent then (
-        try ignore (Marshal_tools.to_fd_with_preamble outfd None) with
+        try ignore (Marshal_tools.to_fd outfd None) with
         | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
       )
   with

@@ -27,6 +27,6 @@ include Marshal_tools_lwt
 
 (* The Timeout module probably doesn't work terribly well with Lwt. Luckily, timeouts are super easy
  * to write in Lwt, so we don't **really** need them *)
-let to_fd_with_preamble ?flags fd obj = to_fd_with_preamble ?flags fd obj
+let to_fd ?flags fd obj = to_fd ?flags fd obj
 
-let from_fd_with_preamble fd = from_fd_with_preamble fd
+let from_fd fd = from_fd fd

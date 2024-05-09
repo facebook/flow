@@ -51,7 +51,7 @@ let register_entry_point (start : start_function) : entry_point =
  * initialization to complete *)
 let rec wait_loop ~should_wait child_pid ic =
   let msg : wait_msg =
-    try Marshal_tools.from_fd_with_preamble (Daemon.descr_of_in_channel ic) with
+    try Marshal_tools.from_fd (Daemon.descr_of_in_channel ic) with
     | End_of_file ->
       (* The pipe broke before we got the all-clear from the monitor. What kind
        * of things could go wrong? Well we check the lock before forking the

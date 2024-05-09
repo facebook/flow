@@ -419,14 +419,10 @@ end = struct
     Profiling_js.with_timer_lwt profiling ~timer:"Write" ~f:(fun () ->
         Hh_logger.info "Writing saved-state file at %S" filename;
         let%lwt data_bytes_written =
-          Marshal_tools_lwt.to_fd_with_preamble
-            fd
-            (saved_state_contents : Saved_state_compression.compressed)
+          Marshal_tools_lwt.to_fd fd (saved_state_contents : Saved_state_compression.compressed)
         in
         let%lwt () = Lwt_unix.close fd in
-        let bytes_written =
-          header_bytes_written + Marshal_tools_lwt.expected_preamble_size + data_bytes_written
-        in
+        let bytes_written = header_bytes_written + data_bytes_written in
         Hh_logger.info "Finished writing %d bytes to saved-state file at %S" bytes_written filename;
 
         Lwt.return_unit
@@ -701,7 +697,7 @@ end = struct
     let%lwt () = verify_version options fd in
     let%lwt (compressed_data : Saved_state_compression.compressed) =
       Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () ->
-          try%lwt Marshal_tools_lwt.from_fd_with_preamble fd with
+          try%lwt Marshal_tools_lwt.from_fd fd with
           | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to parse saved state data";

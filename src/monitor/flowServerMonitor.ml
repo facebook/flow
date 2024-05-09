@@ -25,7 +25,7 @@ let handle_waiting_start_command waiting_fd =
   (* Send a message to the fd, but don't worry if it's already closed *)
   let send_message msg =
     try%lwt
-      let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble waiting_fd msg in
+      let%lwt _ = Marshal_tools_lwt.to_fd waiting_fd msg in
       Lwt.return_unit
     with
     (* If the waiting process decided not to wait and closed the pipe, then that's fine *)
