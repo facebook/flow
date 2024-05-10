@@ -3,6 +3,8 @@ title: Defining enums
 slug: /enums/defining-enums
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Learn how to define a Flow Enum. Looking for a quick overview? Check out the [Quickstart Guide](../#toc-quickstart).
 
 An enum declaration is a statement. Its name defines both a value (from which to [access its members](../using-enums/#toc-accessing-enum-members),
@@ -136,11 +138,19 @@ enum Status of number {
 
 We do not allow defaulting of number enums (unlike some other languages), because if a member from the middle of such an enum is added or removed,
 all subsequent member values would be changed. This can be unsafe (e.g. push safety, serialization, logging).
- Requiring the user to be explicit about the renumbering makes them think about the consequences of doing so.
+Requiring the user to be explicit about the renumbering makes them think about the consequences of doing so.
 
-The value provided must be a number literal. (Note: there is no literal for negative numbers in JavaScript, they are the application of a unary `-` operation on a number literal.)
-We could expand allowed values in the future to include certain non-literals, if requests to do so arise.
+The value provided must be a number literal. Negative numbers are not literals in JS, but since Flow version 0.234 we allow negative number initializers as well.
 
+Example <SinceVersion version="0.234" />:
+
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 0,
+  Off = -1,
+}
+```
 
 ## Boolean enums {#toc-boolean-enums}
 Boolean enums must have their values specified. Boolean enums can only have two members.
