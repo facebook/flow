@@ -3,6 +3,8 @@ title: Using enums
 slug: /enums/using-enums
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Flow Enums are not a syntax for [union types](../../types/unions/). They are their own type, and each member of a Flow Enum has the same type.
 Large union types can cause performance issues, as Flow has to consider each member as a separate type. With Flow Enums, no matter how large your enum is,
 Flow will always exhibit good performance as it only has one type to keep track of.
@@ -543,22 +545,101 @@ const Status = require('status');
 ```
 
 
-### Generic enums {#toc-generic-enums}
-There is currently no way to specify a generic enum type, but there have been enough requests that it is something we will look into in the future.
+### Abstract enums <SinceVersion version="0.234" /> {#toc-abstract-enums}
 
-For some use cases of generic enums, you can currently ask users to supply functions which call the enum [methods](#toc-methods) instead (rather than passing in the enum itself), for example:
+You can write code that operates on Flow Enums in a generic way using two types: `Enum<>` and `EnumValue<>`, which accept any Flow Enum and its values.
 
-```js
-function castToEnumArray<TRepresentationType, TEnum>(
-  f: TRepresentationType => TEnum,
-  xs: Array<TRepresentationType>,
-): Array<TEnum | void> {
-  return xs.map(f);
-}
+#### EnumValue&lt;&gt;
+`EnumValue<>` accepts any Flow Enum value. Want to narrow it down to enum values with a specific representation type? Just add a type argument:
 
-castToEnumArray((input) => Status.cast(input), ["Active", "Paused", "Invalid"]);
+```js flow-check
+enum Status {Active, Paused, Off}
+
+Status.Active as EnumValue<>; // OK
+Status.Active as EnumValue<string>; // OK - its a string enum
+Status.Active as EnumValue<number>; // ERROR - not a number enum
 ```
 
+The new `EnumRepresentationTypes` type represents all the valid representation types: `string`, `number`, etc.
+
+Flow Enum values don’t implicitly coerce to their representation type, so we allow [explicit conversion](#toc-casting-to-representation-type)
+with casts like `Status.Active as string`. With `EnumValue<>` you might not know the specific representation type,
+so we now allow casts using `.valueOf()` directly on the enum value. For example:
+
+```js flow-check
+function f(e: EnumValue<>) {
+  const x: EnumRepresentationTypes = e.valueOf(); // OK
+}
+```
+
+#### Enum&lt;&gt;
+`Enum<>` accepts any Flow Enum - the enum itself, rather than its value. You can optionally supply a type argument to
+restrict it to enums with a certain enum value, which you can pair with the `EnumValue` type above:
+
+```js flow-check
+enum Status {Active, Paused, Off}
+
+Status as Enum<>; // OK
+Status as Enum<Status>; // OK
+Status as Enum<EnumValue<string>>; // OK
+```
+
+With the `Enum<>` type you can use all the Flow Enum [methods](#toc-methods) like `.cast` and `.members`.
+This lets you craft code that generically handles Flow Enums, for example creating a full React selector component from only a Flow Enum:
+
+##### Usage
+
+```js
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+<Selector items={Status} callback={doStuff} />
+```
+
+##### Definition
+
+```js flow-check
+import * as React from 'react';
+import {useCallback, useMemo, useState} from 'react';
+
+component Selector<
+  TEnumValue: EnumValue<string>,
+>(
+  items: Enum<TEnumValue>,
+  callback: (TEnumValue) => void,
+) {
+  // Typing the `useState` selector with the enum value generic
+  const [value, setValue] = useState<?TEnumValue>(null);
+
+  const handleChange = useCallback((e: SyntheticInputEvent<>) => {
+    // Using the `.cast` method
+    const value = items.cast(e.target.value);
+    if (value == null) { throw new Error("Invalid value"); }
+    setValue(value);
+    callback(value);
+  }, [items, callback]);
+
+  return <ul>
+    {Array.from(items.members(), item => // Using the `.members()` method
+      <li>
+        <label>
+          {// Using the `.getName` method:
+            items.getName(item)
+          }:
+          <input
+            type="radio"
+            // Casting to the representation type using `.valueOf()`
+            value={item.valueOf()}
+            checked={item === value}
+            onChange={handleChange} />
+         </label>
+      </li>
+    )}
+  </ul>;
+}
+```
 
 ### When to not use enums {#toc-when-to-not-use-enums}
 Enums are designed to cover many use cases and exhibit certain benefits. The design makes a variety of trade-offs to make this happen, and in certain situations,
