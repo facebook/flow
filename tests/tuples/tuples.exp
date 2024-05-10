@@ -1225,44 +1225,36 @@ References:
               ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:105:3
+Error -------------------------------------------------------------------------------------------------- spread.js:106:3
 
 Cannot cast `x` to tuple type because `T` [1] has 2 elements but tuple type [2] has 3 elements. [invalid-tuple-arity]
 
-   spread.js:105:3
-   105|   x as [1, 2, 3]; // ERROR
+   spread.js:106:3
+   106|   x as [1, 2, 3]; // ERROR
           ^
 
 References:
-   spread.js:96:37
-    96| declare function tail<T>(xs: [1, ...T]): T;
+   spread.js:97:37
+    97| declare function tail<T>(xs: [1, ...T]): T;
                                             ^ [1]
-   spread.js:105:8
-   105|   x as [1, 2, 3]; // ERROR
+   spread.js:106:8
+   106|   x as [1, 2, 3]; // ERROR
                ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:107:7
+Error -------------------------------------------------------------------------------------------------- spread.js:108:7
 
 Cannot call `tail` with array literal bound to `xs` because number [1] is incompatible with number literal `1` [2] in
 index 0. [incompatible-call]
 
-   spread.js:107:7
-   107| tail([666, 2, 3]); // ERROR
+   spread.js:108:7
+   108| tail([666, 2, 3]); // ERROR
               ^^^ [1]
 
 References:
-   spread.js:96:31
-    96| declare function tail<T>(xs: [1, ...T]): T;
+   spread.js:97:31
+    97| declare function tail<T>(xs: [1, ...T]): T;
                                       ^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- spread.js:108:6
-
-Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
-
-   108| tail([]); // ERROR
-             ^^
 
 
 Error -------------------------------------------------------------------------------------------------- spread.js:111:1
@@ -2070,4 +2062,4 @@ References:
 
 
 
-Found 130 errors
+Found 129 errors

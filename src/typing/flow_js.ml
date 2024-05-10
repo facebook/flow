@@ -9894,9 +9894,10 @@ struct
               let (args_rev, seen_opt) =
                 match arrtype with
                 | ArrayAT { tuple_view = None; _ }
-                | ArrayAT { tuple_view = Some (TupleView { elements = []; _ }); _ } ->
-                  (* The latter case corresponds to the empty array literal. If
-                   * we folded over the empty tuple_types list, then this would
+                | ArrayAT { tuple_view = Some (TupleView { elements = []; _ }); _ }
+                | TupleAT { elements = []; _ } ->
+                  (* The latter two cases corresponds to the empty array. If
+                   * we folded over the empty elements list, then this would
                    * cause an empty result. *)
                   (arg :: args_rev, seen_opt)
                 | ArrayAT { tuple_view = Some (TupleView { elements; _ }); _ }
@@ -9970,6 +9971,16 @@ struct
                    (fun acc elem ->
                      match (acc, elem) with
                      | (None, _) -> None
+                     | ( Some _,
+                         ResolvedSpreadArg
+                           ( _,
+                             ( ArrayAT { tuple_view = Some (TupleView { elements = []; _ }); _ }
+                             | TupleAT { elements = []; _ } ),
+                             _
+                           )
+                       ) ->
+                       (* Spread of empty array/tuple results in same tuple elements as before. *)
+                       acc
                      | (_, ResolvedSpreadArg _) -> None
                      | (Some tuple_elements, ResolvedArg (elem, _)) ->
                        (* Spreading array values into a fresh literal drops variance,

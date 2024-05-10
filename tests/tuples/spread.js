@@ -93,6 +93,7 @@ type WithTail<T> = [1, ...T];
   [0, 1, 2] as TupleArrSpread; // OK
 }
 
+// Reversal
 declare function tail<T>(xs: [1, ...T]): T;
 tail<[2, 3]>([ 1, 2, 3]); // OK
 {
@@ -105,10 +106,17 @@ tail<[2, 3]>([ 1, 2, 3]); // OK
   x as [1, 2, 3]; // ERROR
 }
 tail([666, 2, 3]); // ERROR
-tail([]); // ERROR
 
 declare function noReversal1<T>(xs: [1, ...T, 2]): T;
 noReversal1([1, 9, 2]); // ERROR
 
 declare function noReversal2<T>(xs: [...T, ...any]): T;
 noReversal2([1, 2, 3]); // ERROR
+
+// Spreading empty array/tuple
+{
+  [...[]] as []; // OK
+
+  declare const x: [];
+  [...x] as []; // OK
+}
