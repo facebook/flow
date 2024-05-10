@@ -151,6 +151,7 @@ type t = {
   opt_one_sided_type_guards: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
+  opt_vscode_detailed_diagnostics: bool;
   opt_wait_for_recheck: bool;
   opt_distributed: bool;
 }
@@ -355,6 +356,8 @@ let one_sided_type_guards opts = opts.opt_one_sided_type_guards
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 
 let verbose opts = opts.opt_verbose
+
+let vscode_detailed_diagnostics opts = opts.opt_vscode_detailed_diagnostics
 
 let wait_for_recheck opts = opts.opt_wait_for_recheck
 

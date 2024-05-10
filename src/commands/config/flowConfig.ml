@@ -132,6 +132,7 @@ module Opts = struct
     ts_syntax: bool;
     one_sided_type_guards: bool;
     use_mixed_in_catch_variables: bool option;
+    vscode_detailed_diagnostics: bool;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
     watchman_sync_timeout: int option;
@@ -260,6 +261,7 @@ module Opts = struct
       ts_syntax = false;
       one_sided_type_guards = false;
       use_mixed_in_catch_variables = None;
+      vscode_detailed_diagnostics = false;
       wait_for_recheck = false;
       watchman_defer_states = [];
       watchman_sync_timeout = None;
@@ -915,6 +917,9 @@ module Opts = struct
       );
       ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
+      ( "experimental.vscode_detailed_diagnostics",
+        boolean (fun opts v -> Ok { opts with vscode_detailed_diagnostics = v })
+      );
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1706,6 +1711,8 @@ let ts_syntax c = c.options.Opts.ts_syntax
 let one_sided_type_guards c = c.options.Opts.one_sided_type_guards
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
+
+let vscode_detailed_diagnostics c = c.options.Opts.vscode_detailed_diagnostics
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 
