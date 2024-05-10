@@ -5,6 +5,9 @@ const a: FormData = new FormData(); // correct
 new FormData(''); // incorrect
 new FormData(document.createElement('input')); // incorrect
 new FormData(document.createElement('form')); // correct
+new FormData(document.createElement('form'), null); // correct
+new FormData(document.createElement('form'), document.createElement("button")); // correct
+new FormData(document.createElement('form'), "submitter"); // incorrect
 
 // has
 const b: boolean = a.has('foo'); // correct
