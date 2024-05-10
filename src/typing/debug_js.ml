@@ -251,7 +251,11 @@ let rec dump_t_ (depth, tvars) cx t =
         ( _,
           ArrT
             (ArrayAT
-              { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ }
+              {
+                elem_t;
+                tuple_view = Some (TupleView { elements; arity = _; inexact = _ });
+                react_dro = _;
+              }
               )
         ) ->
       p
@@ -896,7 +900,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p t ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
     | ResolveSpreadT (use_op, _, { rrt_resolve_to; _ }) ->
       (match rrt_resolve_to with
-      | ResolveSpreadsToTupleType { id = _; elem_t; tout }
+      | ResolveSpreadsToTupleType { id = _; inexact = _; elem_t; tout }
       | ResolveSpreadsToArrayLiteral { elem_t; tout; _ }
       | ResolveSpreadsToArray (elem_t, tout) ->
         p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid elem_t) (kid tout)) t
@@ -1388,17 +1392,23 @@ let dump_error_message =
           use_op;
           lower_reason;
           lower_arity = (num_req1, num_total1);
+          lower_inexact;
           upper_reason;
           upper_arity = (num_req2, num_total2);
+          upper_inexact;
+          unify;
         } ->
       spf
-        "ETupleArityMismatch (%s, %s, %d-%d, %d-%d, %s)"
+        "ETupleArityMismatch (%s, %s, %d-%d inexact:%b, %d-%d inexact:%b, unify:%b, %s)"
         (dump_reason cx lower_reason)
         (dump_reason cx upper_reason)
         num_req1
         num_total1
+        lower_inexact
         num_req2
         num_total2
+        upper_inexact
+        unify
         (string_of_use_op use_op)
     | ENonLitArrayToTuple ((reason1, reason2), use_op) ->
       spf
@@ -1417,12 +1427,13 @@ let dump_error_message =
         "ETupleInvalidTypeSpread {reason_spread = %s; reason_arg = %s}"
         (dump_reason cx reason_spread)
         (dump_reason cx reason_arg)
-    | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+    | ETupleOutOfBounds { use_op; reason; reason_op; inexact; length; index } ->
       spf
-        "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"
+        "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; inexact = %b; length = %d; index = %s }"
         (string_of_use_op use_op)
         (dump_reason cx reason)
         (dump_reason cx reason_op)
+        inexact
         length
         index
     | ETupleNonIntegerIndex { use_op; reason; index } ->
@@ -1458,6 +1469,8 @@ let dump_error_message =
         (dump_reason cx reason_upper)
         (Polarity.string polarity_upper)
         (string_of_use_op use_op)
+    | ETupleElementAfterInexactSpread reason ->
+      spf "ETupleElementAfterInexactSpread (%s)" (dump_reason cx reason)
     | EROArrayWrite ((reason1, reason2), use_op) ->
       spf
         "EROArrayWrite (%s, %s, %s)"

@@ -1044,7 +1044,7 @@ struct
                 (r, ObjT { o with Type.flags = { flags with react_dro = Some (dro_loc, dro_type) } }),
               OpenT tout
             )
-        | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
+        | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro = _ })),
             DeepReadOnlyT (tout, dro_loc, dro_type)
           ) ->
           rec_flow_t
@@ -1052,7 +1052,12 @@ struct
             cx
             trace
             ( DefT
-                (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some (dro_loc, dro_type) })),
+                ( r,
+                  ArrT
+                    (TupleAT
+                       { elem_t; elements; arity; inexact; react_dro = Some (dro_loc, dro_type) }
+                    )
+                ),
               OpenT tout
             )
         | ( DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
@@ -2308,7 +2313,7 @@ struct
             (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
              * carry an id around to break the infinite recursion that constant
              * constant folding can trigger *)
-            | ResolveSpreadsToTupleType { id; elem_t; tout }
+            | ResolveSpreadsToTupleType { id; inexact = _; elem_t; tout }
             | ResolveSpreadsToArrayLiteral { id; as_const = _; elem_t; tout } ->
               (* You might come across code like
                *
@@ -4207,6 +4212,7 @@ struct
         begin
           match arrtype with
           | ArrayAT { elem_t; tuple_view = None; react_dro = _ }
+          | ArrayAT { elem_t; tuple_view = Some (TupleView { inexact = true; _ }); react_dro = _ }
           | ROArrayAT (elem_t, _) ->
             (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
             rec_flow cx trace (elem_t, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
@@ -4222,7 +4228,7 @@ struct
                     );
                 rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
               elements
-          | ArrayAT { tuple_view = Some (TupleView { elements; arity = _ }); _ } ->
+          | ArrayAT { tuple_view = Some (TupleView { elements; arity = _; inexact = _ }); _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
             let ts = tuple_ts_of_elements elements in
             List.iter
@@ -4625,18 +4631,20 @@ struct
             | ArrayAT
                 {
                   elem_t;
-                  tuple_view = Some (TupleView { elements; arity = (num_req, num_total) });
+                  tuple_view = Some (TupleView { elements; arity = (num_req, num_total); inexact });
                   react_dro;
                 } ->
               let elements = Base.List.drop elements i in
               let arity = (max (num_req - i) 0, max (num_total - i) 0) in
-              ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity }); react_dro }
-            | TupleAT { elem_t; elements; arity = (num_req, num_total); react_dro } ->
+              ArrayAT
+                { elem_t; tuple_view = Some (TupleView { elements; arity; inexact }); react_dro }
+            | TupleAT { elem_t; elements; arity = (num_req, num_total); inexact; react_dro } ->
               TupleAT
                 {
                   elem_t;
                   elements = Base.List.drop elements i;
                   arity = (max (num_req - i) 0, max (num_total - i) 0);
+                  inexact;
                   react_dro;
                 }
           in
@@ -4678,17 +4686,17 @@ struct
                   react_dro;
                   tuple_view =
                     Base.Option.map
-                      ~f:(fun (TupleView { elements; arity }) ->
+                      ~f:(fun (TupleView { elements; arity; inexact }) ->
                         let elements =
                           Base.List.map
                             ~f:(fun (TupleElement { name; t; polarity; optional; reason }) ->
                               TupleElement { name; t = f t; polarity; optional; reason })
                             elements
                         in
-                        TupleView { elements; arity })
+                        TupleView { elements; arity; inexact })
                       tuple_view;
                 }
-            | TupleAT { elem_t; elements; arity; react_dro } ->
+            | TupleAT { elem_t; elements; arity; inexact; react_dro } ->
               TupleAT
                 {
                   elem_t = f elem_t;
@@ -4699,6 +4707,7 @@ struct
                         TupleElement { name; t = f t; polarity; optional; reason })
                       elements;
                   arity;
+                  inexact;
                 }
             | ROArrayAT (elemt, dro) -> ROArrayAT (f elemt, dro)
           in
@@ -6000,7 +6009,7 @@ struct
         (*************************)
         (* Tuple "length" access *)
         (*************************)
-        | ( DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; react_dro = _ })),
+        | ( DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; inexact; react_dro = _ })),
             GetPropT
               {
                 use_op = _;
@@ -6012,7 +6021,7 @@ struct
                 hint = _;
               }
           ) ->
-          GetPropTKit.on_array_length cx trace reason arity (reason_of_use_t u) tout
+          GetPropTKit.on_array_length cx trace reason ~inexact arity (reason_of_use_t u) tout
         | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
@@ -6587,7 +6596,7 @@ struct
     match t with
     | DefT (r, ArrT (ArrayAT _)) ->
       DefT (r, ArrT (ArrayAT { elem_t = any; tuple_view = None; react_dro = None }))
-    | DefT (r, ArrT (TupleAT { elements; arity; react_dro; _ })) ->
+    | DefT (r, ArrT (TupleAT { elements; arity; inexact; react_dro; _ })) ->
       DefT
         ( r,
           ArrT
@@ -6601,6 +6610,7 @@ struct
                        TupleElement { name; t = only_any t; polarity; optional; reason })
                      elements;
                  arity;
+                 inexact;
                }
             )
         )
@@ -7751,7 +7761,7 @@ struct
                   ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
                 )
               )
-            | SpreadTupleType { reason_tuple; reason_spread = _; resolved; unresolved } ->
+            | SpreadTupleType { reason_tuple; reason_spread = _; inexact; resolved; unresolved } ->
               let elem_t = Tvar.mk cx reason_tuple in
               ResolveSpreadT
                 ( use_op,
@@ -7760,7 +7770,8 @@ struct
                     rrt_resolved = resolved;
                     rrt_unresolved = unresolved;
                     rrt_resolve_to =
-                      ResolveSpreadsToTupleType { id = Reason.mk_id (); elem_t; tout = OpenT tout };
+                      ResolveSpreadsToTupleType
+                        { id = Reason.mk_id (); inexact; elem_t; tout = OpenT tout };
                   }
                 )
             | ReactCheckComponentRef -> ExtractReactRefT (reason, OpenT tout)
@@ -8800,14 +8811,14 @@ struct
           (* TODO: add test for sentinel test on implements *)
           flow_sentinel sense own_props obj s
         (* tuple.length ===/!== literal value *)
-        | DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; react_dro = _ }))
+        | DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; inexact; react_dro = _ }))
           when key = "length" ->
           let test =
             let desc = RMatchingProp (key, desc_of_sentinel s) in
             let r = replace_desc_reason desc (fst result) in
             SentinelPropTestT (r, orig_obj, sense, s, result)
           in
-          rec_flow cx trace (tuple_length reason arity, test)
+          rec_flow cx trace (tuple_length reason ~inexact arity, test)
         | IntersectionT (_, rep) ->
           (* For an intersection of object types, try the test for each object
              type in turn, while recording the original intersection so that we
@@ -9314,34 +9325,61 @@ struct
           let ts1 =
             Base.Option.value_map
               ~default:[]
-              ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
+              ~f:(fun (TupleView { elements; arity = _; inexact = _ }) ->
+                tuple_ts_of_elements elements)
               tv1
           in
           let ts2 =
             Base.Option.value_map
               ~default:[]
-              ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
+              ~f:(fun (TupleView { elements; arity = _; inexact = _ }) ->
+                tuple_ts_of_elements elements)
               tv2
           in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
         | ( DefT
               ( r1,
                 ArrT
-                  (TupleAT { elem_t = _; elements = elements1; arity = lower_arity; react_dro = _ })
+                  (TupleAT
+                    {
+                      elem_t = _;
+                      elements = elements1;
+                      arity = lower_arity;
+                      inexact = lower_inexact;
+                      react_dro = _;
+                    }
+                    )
               ),
             DefT
               ( r2,
                 ArrT
-                  (TupleAT { elem_t = _; elements = elements2; arity = upper_arity; react_dro = _ })
+                  (TupleAT
+                    {
+                      elem_t = _;
+                      elements = elements2;
+                      arity = upper_arity;
+                      inexact = upper_inexact;
+                      react_dro = _;
+                    }
+                    )
               )
           ) ->
           let (num_req1, num_total1) = lower_arity in
           let (num_req2, num_total2) = upper_arity in
-          if num_req1 <> num_req2 || num_total1 <> num_total2 then
+          if lower_inexact <> upper_inexact || num_req1 <> num_req2 || num_total1 <> num_total2 then
             add_output
               cx
               (Error_message.ETupleArityMismatch
-                 { use_op; lower_reason = r1; lower_arity; upper_reason = r2; upper_arity }
+                 {
+                   use_op;
+                   lower_reason = r1;
+                   lower_arity;
+                   lower_inexact;
+                   upper_reason = r2;
+                   upper_arity;
+                   upper_inexact;
+                   unify = true;
+                 }
               );
           let n = ref 0 in
           iter2opt
@@ -9885,39 +9923,47 @@ struct
 
     (* Turn tuple rest params into single params *)
     let flatten_spread_args cx args =
-      let (args_rev, spread_after_opt, _) =
-        Base.List.fold_left args ~init:([], false, false) ~f:(fun acc arg ->
-            let (args_rev, spread_after_opt, seen_opt) = acc in
+      let (args_rev, spread_after_opt, _, inexact_spread) =
+        Base.List.fold_left args ~init:([], false, false, false) ~f:(fun acc arg ->
+            let (args_rev, spread_after_opt, seen_opt, inexact_spread) = acc in
+            ( if inexact_spread then
+              (* We have an element after an inexact spread *)
+              let reason = reason_of_resolved_param arg in
+              add_output cx (Error_message.ETupleElementAfterInexactSpread reason)
+            );
             match arg with
             | ResolvedSpreadArg (_, arrtype, generic) -> begin
               let spread_after_opt = spread_after_opt || seen_opt in
-              let (args_rev, seen_opt) =
+              let (args_rev, seen_opt, inexact_spread) =
                 match arrtype with
-                | ArrayAT { tuple_view = None; _ }
-                | ArrayAT { tuple_view = Some (TupleView { elements = []; _ }); _ }
-                | TupleAT { elements = []; _ } ->
+                | ArrayAT { tuple_view = None; _ } -> (arg :: args_rev, seen_opt, inexact_spread)
+                | ArrayAT { tuple_view = Some (TupleView { elements = []; inexact; _ }); _ }
+                | TupleAT { elements = []; inexact; _ } ->
                   (* The latter two cases corresponds to the empty array. If
                    * we folded over the empty elements list, then this would
                    * cause an empty result. *)
-                  (arg :: args_rev, seen_opt)
-                | ArrayAT { tuple_view = Some (TupleView { elements; _ }); _ }
-                | TupleAT { elements; _ } ->
-                  Base.List.fold_left
-                    ~f:(fun (args_rev, seen_opt) (TupleElement ({ optional; t; _ } as elem)) ->
-                      let elem = TupleElement { elem with t = propagate_dro cx t arrtype } in
-                      (ResolvedArg (elem, generic) :: args_rev, seen_opt || optional))
-                    ~init:(args_rev, seen_opt)
-                    elements
-                | ROArrayAT _ -> (arg :: args_rev, seen_opt)
+                  (arg :: args_rev, seen_opt, inexact_spread || inexact)
+                | ArrayAT { tuple_view = Some (TupleView { elements; inexact; _ }); _ }
+                | TupleAT { elements; inexact; _ } ->
+                  let (args_rev, seen_opt) =
+                    Base.List.fold_left
+                      ~f:(fun (args_rev, seen_opt) (TupleElement ({ optional; t; _ } as elem)) ->
+                        let elem = TupleElement { elem with t = propagate_dro cx t arrtype } in
+                        (ResolvedArg (elem, generic) :: args_rev, seen_opt || optional))
+                      ~init:(args_rev, seen_opt)
+                      elements
+                  in
+                  (args_rev, seen_opt, inexact_spread || inexact)
+                | ROArrayAT _ -> (arg :: args_rev, seen_opt, inexact_spread)
               in
-              (args_rev, spread_after_opt, seen_opt)
+              (args_rev, spread_after_opt, seen_opt, inexact_spread)
             end
-            | ResolvedAnySpreadArg _ -> (arg :: args_rev, spread_after_opt, seen_opt)
+            | ResolvedAnySpreadArg _ -> (arg :: args_rev, spread_after_opt, seen_opt, inexact_spread)
             | ResolvedArg (TupleElement { optional; _ }, _) ->
-              (arg :: args_rev, spread_after_opt, seen_opt || optional)
+              (arg :: args_rev, spread_after_opt, seen_opt || optional, inexact_spread)
         )
       in
-      (List.rev args_rev, spread_after_opt)
+      (List.rev args_rev, spread_after_opt, inexact_spread)
     in
     let spread_resolved_to_any_src =
       List.find_map (function
@@ -9949,22 +9995,22 @@ struct
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
           | ResolveToArrayLiteral { as_const = _ }
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          | ResolveToTupleType ->
+          | ResolveToTupleType _ ->
             AnyT.why any_src reason_op)
         | None ->
           (* Spreads that resolve to tuples are flattened *)
-          let (elems, spread_after_opt) = flatten_spread_args cx resolved in
+          let (elems, spread_after_opt, inexact_spread) = flatten_spread_args cx resolved in
           let as_const =
             match resolve_to with
             | ResolveToArrayLiteral { as_const } -> as_const
-            | ResolveToTupleType
+            | ResolveToTupleType _
             | ResolveToArray ->
               false
           in
           let tuple_elements =
             match resolve_to with
             | ResolveToArrayLiteral _
-            | ResolveToTupleType ->
+            | ResolveToTupleType _ ->
               elems
               (* If no spreads are left, then this is a tuple too! *)
               |> List.fold_left
@@ -10061,7 +10107,27 @@ struct
              have to do that pinning more carefully, and using an unresolved
              tvar instead of a union here doesn't conflict with those plans.
           *)
-          TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elem_t)));
+          if inexact_spread then
+            let reason_mixed = replace_desc_reason RTupleUnknownElementFromInexact reason_op in
+            let t = MixedT.make reason_mixed in
+            flow cx (t, UseT (use_op, elem_t))
+          else
+            TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elem_t)));
+
+          let create_tuple_type ~inexact elements =
+            let (valid, arity) =
+              validate_tuple_elements
+                cx
+                ~reason_tuple:reason_op
+                ~error_on_req_after_opt:true
+                elements
+            in
+            let inexact = inexact || inexact_spread in
+            if valid then
+              DefT (reason_op, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro = None }))
+            else
+              AnyT.error reason_op
+          in
 
           let t =
             match (resolve_to, tuple_elements, spread_after_opt) with
@@ -10090,27 +10156,19 @@ struct
                       (ArrayAT
                          {
                            elem_t;
-                           tuple_view = Some (TupleView { elements; arity });
+                           tuple_view =
+                             Some (TupleView { elements; arity; inexact = inexact_spread });
                            react_dro = None;
                          }
                       )
                   )
               else
                 DefT (reason_op, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
-            | (ResolveToTupleType, Some elements, _)
+            | (ResolveToTupleType { inexact }, Some elements, _) ->
+              create_tuple_type ~inexact elements
             | (ResolveToArrayLiteral { as_const = true }, Some elements, _) ->
-              let (valid, arity) =
-                validate_tuple_elements
-                  cx
-                  ~reason_tuple:reason_op
-                  ~error_on_req_after_opt:true
-                  elements
-              in
-              if valid then
-                DefT (reason_op, ArrT (TupleAT { elem_t; elements; arity; react_dro = None }))
-              else
-                AnyT.error reason_op
-            | (ResolveToTupleType, None, _) -> AnyT.error reason_op
+              create_tuple_type ~inexact:false elements
+            | (ResolveToTupleType _, None, _) -> AnyT.error reason_op
           in
           Base.Option.value_map
             ~f:(fun id ->
@@ -10286,7 +10344,7 @@ struct
     (* This is used for things like Function.prototype.apply, whose second arg is
      * basically a spread argument that we'd like to resolve *)
     let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
-      let (flattened, _) = flatten_spread_args cx resolved in
+      let (flattened, _, _) = flatten_spread_args cx resolved in
       let call_args_tlist =
         Base.List.map
           ~f:(function
@@ -10324,13 +10382,13 @@ struct
     in
     fun cx ?trace ~use_op ~reason_op resolved resolve_to ->
       match resolve_to with
-      | ResolveSpreadsToTupleType { id = _; elem_t; tout } ->
+      | ResolveSpreadsToTupleType { id = _; inexact; elem_t; tout } ->
         finish_array
           cx
           ~use_op
           ?trace
           ~reason_op
-          ~resolve_to:ResolveToTupleType
+          ~resolve_to:(ResolveToTupleType { inexact })
           resolved
           elem_t
           tout

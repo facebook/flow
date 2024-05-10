@@ -1772,24 +1772,42 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let ts1 =
         Base.Option.value_map
           ~default:[]
-          ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
+          ~f:(fun (TupleView { elements; arity = _; inexact = _ }) -> tuple_ts_of_elements elements)
           tv1
       in
       let ts2 =
         Base.Option.value_map
           ~default:[]
-          ~f:(fun (TupleView { elements; arity = _ }) -> tuple_ts_of_elements elements)
+          ~f:(fun (TupleView { elements; arity = _; inexact = _ }) -> tuple_ts_of_elements elements)
           tv2
       in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
     | ( DefT
           ( r1,
-            ArrT (TupleAT { elem_t = _; elements = elements1; arity = lower_arity; react_dro = _ })
+            ArrT
+              (TupleAT
+                {
+                  elem_t = _;
+                  elements = elements1;
+                  arity = lower_arity;
+                  inexact = lower_inexact;
+                  react_dro = _;
+                }
+                )
           ),
         DefT
           ( r2,
-            ArrT (TupleAT { elem_t = _; elements = elements2; arity = upper_arity; react_dro = _ })
+            ArrT
+              (TupleAT
+                {
+                  elem_t = _;
+                  elements = elements2;
+                  arity = upper_arity;
+                  inexact = upper_inexact;
+                  react_dro = _;
+                }
+                )
           )
       ) ->
       let fresh =
@@ -1803,13 +1821,26 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       let (num_req1, num_total1) = lower_arity in
       let (num_req2, num_total2) = upper_arity in
-      (* Arity range LHS is within arity range RHS *)
-      let arities_are_valid = num_req1 >= num_req2 && num_total1 <= num_total2 in
-      if not arities_are_valid then
+      if
+        not
+          ((upper_inexact || not lower_inexact)
+          && num_req1 >= num_req2
+          && (num_total1 <= num_total2 || upper_inexact)
+          )
+      then
         add_output
           cx
           (Error_message.ETupleArityMismatch
-             { use_op; lower_reason = r1; lower_arity; upper_reason = r2; upper_arity }
+             {
+               use_op;
+               lower_reason = r1;
+               lower_arity;
+               lower_inexact;
+               upper_reason = r2;
+               upper_arity;
+               upper_inexact;
+               unify = false;
+             }
           )
       else
         let n = ref 0 in
@@ -1892,12 +1923,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       -> begin
       match tuple_view with
       | None -> add_output cx (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
-      | Some (TupleView { elements; arity }) ->
+      | Some (TupleView { elements; arity; inexact }) ->
         rec_flow_t
           cx
           trace
           ~use_op
-          (DefT (r1, ArrT (TupleAT { elem_t = t1; elements; arity; react_dro })), u)
+          (DefT (r1, ArrT (TupleAT { elem_t = t1; elements; arity; inexact; react_dro })), u)
     end
     (* Read only arrays are the super type of all tuples and arrays *)
     | ( DefT (r1, ArrT (ArrayAT { elem_t = t1; _ } | TupleAT { elem_t = t1; _ } | ROArrayAT (t1, _))),

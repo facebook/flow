@@ -278,17 +278,17 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> merge_lower_bounds cx
                |> use_t_result_of_t_option
            )
-      | SpreadTupleType { reason_tuple = _; reason_spread; resolved; unresolved } ->
+      | SpreadTupleType { reason_tuple = _; inexact; reason_spread; resolved; unresolved } ->
         let is_spread = function
           | ResolvedArg _ -> false
           | ResolvedSpreadArg _
           | ResolvedAnySpreadArg _ ->
             true
         in
-        (* Reverse if the spread is the last item in the tuple and there are
-           no other spreads. *)
+        (* Reverse if the spread is the last item in the tuple, there are
+           no other spreads, and the tuple type is not inexact. *)
         (match (unresolved, Base.List.exists ~f:is_spread resolved) with
-        | ([], false) ->
+        | ([], false) when not inexact ->
           let n = List.length resolved in
           merge_lower_or_upper_bounds r (OpenT tout)
           |> bind_use_t_result ~f:(fun t ->
@@ -578,6 +578,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               elem_t;
               elements = Base.List.rev tuple_elements_rev;
               arity = (len, len);
+              inexact = false;
               react_dro = None;
             }
         in

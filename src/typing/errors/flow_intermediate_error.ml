@@ -2671,25 +2671,52 @@ let to_printable_error :
         text " of ";
         ref upper;
       ]
-    | MessageIncompatibleTupleArity { lower_reason; lower_arity; upper_reason; upper_arity } ->
-      let str_of_arity (num_req, num_total) =
+    | MessageIncompatibleTupleArity
+        {
+          lower_reason;
+          lower_arity;
+          lower_inexact;
+          upper_reason;
+          upper_arity;
+          upper_inexact;
+          unify;
+        } ->
+      let str_of_arity ~inexact (num_req, num_total) =
+        let suffix =
+          if inexact then
+            "or more elements (inexact tuple)"
+          else
+            "elements"
+        in
         if num_req = num_total then
-          if num_total = 1 then
+          if num_total = 1 && not inexact then
             spf "%d element" num_total
           else
-            spf "%d elements" num_total
+            spf "%d %s" num_total suffix
         else
-          spf "%d-%d elements" num_req num_total
+          spf "%d-%d %s" num_req num_total suffix
       in
-      [
-        ref lower_reason;
-        text " has ";
-        text (str_of_arity lower_arity);
-        text " but ";
-        ref upper_reason;
-        text " has ";
-        text (str_of_arity upper_arity);
-      ]
+      if unify && upper_inexact && not upper_inexact then
+        [
+          ref upper_reason;
+          text " and ";
+          ref lower_reason;
+          text " do not have the same amount of elements. ";
+          ref upper_reason;
+          text " is inexact, but ";
+          ref lower_reason;
+          text " is not.";
+        ]
+      else
+        [
+          ref lower_reason;
+          text " has ";
+          text (str_of_arity ~inexact:lower_inexact lower_arity);
+          text " but ";
+          ref upper_reason;
+          text " has ";
+          text (str_of_arity ~inexact:upper_inexact upper_arity);
+        ]
     | MessageIncompatibleImplicitReturn { lower; upper; return } ->
       let upper_loc = loc_of_aloc (loc_of_reason upper) in
       let return_loc = loc_of_aloc (loc_of_reason return) in
@@ -2978,6 +3005,8 @@ let to_printable_error :
       ]
     | MessageInvalidTupleTypeSpread reason_arg ->
       [text "Cannot spread non-tuple ("; ref reason_arg; text ") into tuple type."]
+    | MessageTupleElementAfterInexactSpread ->
+      [text "Cannot have element after spread of inexact tuple."]
     | MessageInvalidRendersTypeArgument
         { renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
       let additional_explanation =
@@ -3571,19 +3600,29 @@ let to_printable_error :
       mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable"
     | MessageTupleElementNotWritable { reason; index; name } ->
       mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "writable"
-    | MessageTupleIndexOutOfBound { reason_op; length; index } ->
+    | MessageTupleIndexOutOfBound { reason_op; inexact; length; index } ->
       [
         ref reason_op;
         text
           (spf
-             " only has %d element%s, so index %s is out of bounds"
+             " only has %d element%s%s, so index %s is %s"
              length
              ( if length == 1 then
                ""
              else
                "s"
              )
+             ( if inexact then
+               " explicitly defined"
+             else
+               ""
+             )
              index
+             ( if inexact then
+               "unknown or out of bounds"
+             else
+               "out of bounds"
+             )
           );
       ]
     | MessageTupleNonIntegerIndex { index_def_loc; index } ->

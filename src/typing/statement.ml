@@ -2718,7 +2718,9 @@ module Make
         (* Special case `[] as const` *)
         let reason = mk_reason RConstArrayLit loc in
         let elem_t = EmptyT.make (mk_reason REmptyArrayElement loc) in
-        let arrtype = TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0) } in
+        let arrtype =
+          TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0); inexact = false }
+        in
         ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
       | [] when Context.typing_mode cx <> Context.CheckingMode ->
         let reason = mk_reason REmptyArrayLit loc in
@@ -6197,6 +6199,7 @@ module Make
                        mk_tuple_element ~name:"value" elem_reason values_t;
                      ];
                    arity = (2, 2);
+                   inexact = false;
                  }
               )
           )

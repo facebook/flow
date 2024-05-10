@@ -368,7 +368,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                  (ArrayAT
                     {
                       elem_t = union_of_ts r ts;
-                      tuple_view = Some (TupleView { elements; arity = (arity, arity) });
+                      tuple_view =
+                        Some (TupleView { elements; arity = (arity, arity); inexact = false });
                       react_dro = None;
                     }
                  )

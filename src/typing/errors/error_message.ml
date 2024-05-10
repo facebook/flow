@@ -121,14 +121,18 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       lower_reason: 'loc virtual_reason;
       lower_arity: int * int;
+      lower_inexact: bool;
       upper_reason: 'loc virtual_reason;
       upper_arity: int * int;
+      upper_inexact: bool;
+      unify: bool;
     }
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | ETupleOutOfBounds of {
       use_op: 'loc virtual_use_op;
       reason: 'loc virtual_reason;
       reason_op: 'loc virtual_reason;
+      inexact: bool;
       length: int;
       index: string;
     }
@@ -170,6 +174,7 @@ and 'loc t' =
       reason_spread: 'loc virtual_reason;
       reason_arg: 'loc virtual_reason;
     }
+  | ETupleElementAfterInexactSpread of 'loc virtual_reason
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -837,23 +842,37 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; name } ->
     EPlatformSpecificImplementationModuleLookupFailed { loc = f loc; name }
-  | ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity } ->
+  | ETupleArityMismatch
+      {
+        use_op;
+        lower_reason;
+        lower_arity;
+        lower_inexact;
+        upper_reason;
+        upper_arity;
+        upper_inexact;
+        unify;
+      } ->
     ETupleArityMismatch
       {
         use_op = map_use_op use_op;
         lower_reason = map_reason lower_reason;
         lower_arity;
+        lower_inexact;
         upper_reason = map_reason upper_reason;
         upper_arity;
+        upper_inexact;
+        unify;
       }
   | ENonLitArrayToTuple ((r1, r2), op) ->
     ENonLitArrayToTuple ((map_reason r1, map_reason r2), map_use_op op)
-  | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
+  | ETupleOutOfBounds { use_op; reason; reason_op; inexact; length; index } ->
     ETupleOutOfBounds
       {
         use_op = map_use_op use_op;
         reason = map_reason reason;
         reason_op = map_reason reason_op;
+        inexact;
         length;
         index;
       }
@@ -886,6 +905,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETupleInvalidTypeSpread { reason_spread; reason_arg } ->
     ETupleInvalidTypeSpread
       { reason_spread = map_reason reason_spread; reason_arg = map_reason reason_arg }
+  | ETupleElementAfterInexactSpread reason -> ETupleElementAfterInexactSpread (map_reason reason)
   | EROArrayWrite ((r1, r2), op) -> EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed { use_op; reason; op_reasons; branches } ->
     EUnionSpeculationFailed
@@ -1360,13 +1380,35 @@ let util_use_op_of_msg nope util = function
   | EPropPolarityMismatch (rs, p, ps, op) ->
     util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
   | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
-  | ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity } ->
+  | ETupleArityMismatch
+      {
+        use_op;
+        lower_reason;
+        lower_arity;
+        lower_inexact;
+        upper_reason;
+        upper_arity;
+        upper_inexact;
+        unify;
+      } ->
     util use_op (fun use_op ->
-        ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity }
+        ETupleArityMismatch
+          {
+            use_op;
+            lower_reason;
+            lower_arity;
+            lower_inexact;
+            upper_reason;
+            upper_arity;
+            upper_inexact;
+            unify;
+          }
     )
   | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
-  | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
-    util use_op (fun use_op -> ETupleOutOfBounds { use_op; reason; reason_op; length; index })
+  | ETupleOutOfBounds { use_op; reason; reason_op; inexact; length; index } ->
+    util use_op (fun use_op ->
+        ETupleOutOfBounds { use_op; reason; reason_op; inexact; length; index }
+    )
   | ETupleNonIntegerIndex { use_op; reason; index } ->
     util use_op (fun use_op -> ETupleNonIntegerIndex { use_op; reason; index })
   | ETupleUnsafeWrite { reason; use_op } ->
@@ -1572,6 +1614,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidMappedType _
   | ETupleRequiredAfterOptional _
   | ETupleInvalidTypeSpread _
+  | ETupleElementAfterInexactSpread _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _
@@ -1648,6 +1691,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidBinaryArith { reason_out = reason; _ }
   | ETupleRequiredAfterOptional { reason_tuple = reason; _ }
   | ETupleInvalidTypeSpread { reason_spread = reason; _ }
+  | ETupleElementAfterInexactSpread reason
   | EPredicateInvalidParameter { pred_reason = reason; _ }
   | ETypeGuardParamUnbound reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
@@ -2155,12 +2199,31 @@ let friendly_message_of_msg = function
   | EComparison (lower, upper) -> Normal (MessageCannotCompare { lower; upper })
   | ENonStrictEqualityComparison (lower, upper) ->
     Normal (MessageCannotCompareNonStrict { lower; upper })
-  | ETupleArityMismatch { use_op; lower_reason; lower_arity; upper_reason; upper_arity } ->
+  | ETupleArityMismatch
+      {
+        use_op;
+        lower_reason;
+        lower_arity;
+        lower_inexact;
+        upper_reason;
+        upper_arity;
+        upper_inexact;
+        unify;
+      } ->
     UseOp
       {
         loc = loc_of_reason lower_reason;
         message =
-          MessageIncompatibleTupleArity { lower_reason; lower_arity; upper_reason; upper_arity };
+          MessageIncompatibleTupleArity
+            {
+              lower_reason;
+              lower_arity;
+              lower_inexact;
+              upper_reason;
+              upper_arity;
+              upper_inexact;
+              unify;
+            };
         use_op;
         explanation = None;
       }
@@ -2169,6 +2232,7 @@ let friendly_message_of_msg = function
       (MessageInvalidTupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional })
   | ETupleInvalidTypeSpread { reason_arg; reason_spread = _ } ->
     Normal (MessageInvalidTupleTypeSpread reason_arg)
+  | ETupleElementAfterInexactSpread _ -> Normal MessageTupleElementAfterInexactSpread
   | ENonLitArrayToTuple ((lower, upper), use_op) ->
     UseOp
       {
@@ -2177,11 +2241,11 @@ let friendly_message_of_msg = function
         use_op;
         explanation = None;
       }
-  | ETupleOutOfBounds { reason; reason_op; length; index; use_op } ->
+  | ETupleOutOfBounds { reason; reason_op; inexact; length; index; use_op } ->
     UseOp
       {
         loc = loc_of_reason reason;
-        message = MessageTupleIndexOutOfBound { reason_op; length; index };
+        message = MessageTupleIndexOutOfBound { reason_op; inexact; length; index };
         use_op;
         explanation = None;
       }
@@ -2965,6 +3029,7 @@ let error_code_of_message err : error_code option =
   | ETupleArityMismatch _ -> Some InvalidTupleArity
   | ETupleRequiredAfterOptional _ -> Some TupleRequiredAfterOptional
   | ETupleInvalidTypeSpread _ -> Some TupleInvalidTypeSpread
+  | ETupleElementAfterInexactSpread _ -> Some ElementAfterInexactTupleSpread
   | ETupleElementNotReadable _ -> Some CannotRead
   | ETupleElementNotWritable _ -> Some CannotWrite
   | ETupleElementPolarityMismatch _ -> Some IncompatibleVariance

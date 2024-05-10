@@ -598,8 +598,11 @@ type 'loc message =
   | MessageIncompatibleTupleArity of {
       lower_reason: 'loc virtual_reason;
       lower_arity: int * int;
+      lower_inexact: bool;
       upper_reason: 'loc virtual_reason;
       upper_arity: int * int;
+      upper_inexact: bool;
+      unify: bool;
     }
   | MessageIncompatibleImplicitReturn of {
       lower: 'loc virtual_reason;
@@ -695,6 +698,7 @@ type 'loc message =
       reason_optional: 'loc virtual_reason;
     }
   | MessageInvalidTupleTypeSpread of 'loc virtual_reason
+  | MessageTupleElementAfterInexactSpread
   | MessageInvalidTypeCastingSyntax of Options.CastingSyntax.t
   | MessageInvalidTypeGuardFunctionKind of string
   | MessageInvalidTypeGuardFunctionWritten of {
@@ -835,6 +839,7 @@ type 'loc message =
     }
   | MessageTupleIndexOutOfBound of {
       reason_op: 'loc virtual_reason;
+      inexact: bool;
       length: int;
       index: string;
     }

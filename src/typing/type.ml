@@ -1331,6 +1331,7 @@ module rec TypeTerm : sig
     | TupleView of {
         elements: tuple_element list;
         arity: int * int;
+        inexact: bool;
       }
 
   and arrtype =
@@ -1351,6 +1352,7 @@ module rec TypeTerm : sig
         (* Arity represents the range of valid arities, considering optional elements.
            It ranges from the number of required elements, to the total number of elements. *)
         arity: int * int;
+        inexact: bool;
       }
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
@@ -1680,6 +1682,7 @@ module rec TypeTerm : sig
     | SpreadTupleType of {
         reason_tuple: reason;
         reason_spread: reason;
+        inexact: bool;
         resolved: resolved_param list;
         unresolved: unresolved_param list;
       }
@@ -1816,6 +1819,7 @@ module rec TypeTerm : sig
     | ResolveSpreadsToTupleType of {
         id: int;
         elem_t: t;
+        inexact: bool;
         tout: t;
       }
     (* Once we've finished resolving spreads, try to construct an array with known element types *)
@@ -1842,7 +1846,7 @@ module rec TypeTerm : sig
   and spread_array_resolve_to =
     | ResolveToArrayLiteral of { as_const: bool }
     | ResolveToArray
-    | ResolveToTupleType
+    | ResolveToTupleType of { inexact: bool }
 
   (* Add some flavor to the TypeT constructor. For now this information is only
    * used by the type normalizer. *)
@@ -4596,4 +4600,4 @@ type annotated_or_inferred =
   | Annotated of TypeTerm.t
   | Inferred of TypeTerm.t
 
-let empty_tuple_view = TupleView { elements = []; arity = (0, 0) }
+let empty_tuple_view = TupleView { elements = []; arity = (0, 0); inexact = false }

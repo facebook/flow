@@ -66,6 +66,21 @@ References:
                      ^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- array.js:29:17
+
+Cannot cast `_` to `typeof arr1` because tuple type [1] has 3 or more elements (inexact tuple) but const array
+literal [2] has 3 elements. [invalid-tuple-arity]
+
+   array.js:29:17
+   29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERRROR: inexact ~> exact
+                       ^^^^^^^^^^^^^^ [1]
+
+References:
+   array.js:29:35
+   29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERRROR: inexact ~> exact
+                                         ^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- array.js:30:9
 
 Cannot cast `_` to `typeof arr1` because number [1] is incompatible with number literal `1` [2] in index 0.
@@ -280,6 +295,21 @@ References:
    import-array.js:8:11
    8|   arr1 as [+_:1, +_:2, 3]; // error cast 3rd element to non-readonly
                 ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import-array.js:14:17
+
+Cannot cast `_` to `typeof arr1` because tuple type [1] has 3 or more elements (inexact tuple) but const array
+literal [2] has 3 elements. [invalid-tuple-arity]
+
+   import-array.js:14:17
+   14|   _ as readonly [1, 2, 3, ...] as typeof arr1; // TODO error inexact ~> exact
+                       ^^^^^^^^^^^^^^ [1]
+
+References:
+   import-array.js:14:35
+   14|   _ as readonly [1, 2, 3, ...] as typeof arr1; // TODO error inexact ~> exact
+                                         ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- import-array.js:15:9
@@ -1399,4 +1429,4 @@ References:
 
 
 
-Found 91 errors
+Found 93 errors

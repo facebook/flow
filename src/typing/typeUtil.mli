@@ -113,12 +113,14 @@ val all_explicit_targs : Type.targ Base.List.t option -> Type.targ list option
 
 val all_explicit_targ_ts : Type.targ Base.List.t option -> Type.t list option
 
-val tuple_length : reason -> int * int -> Type.t
+val tuple_length : reason -> inexact:bool -> int * int -> Type.t
 
 val tuple_ts_of_elements : Type.tuple_element list -> Type.t list
 
 val mk_tuple_element :
   ?name:string -> ?optional:bool -> ?polarity:Polarity.t -> reason -> Type.t -> Type.tuple_element
+
+val reason_of_resolved_param : Type.resolved_param -> reason
 
 val type_guard_of_predicate : Type.fun_predicate -> Type.t option
 

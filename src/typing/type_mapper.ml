@@ -588,7 +588,7 @@ class virtual ['a] t =
           t
         else
           SpreadType (options, tlist', acc')
-      | SpreadTupleType { reason_tuple; reason_spread; resolved; unresolved } ->
+      | SpreadTupleType { reason_tuple; reason_spread; inexact; resolved; unresolved } ->
         let unresolved' =
           ListUtils.ident_map
             (fun unresolved_el ->
@@ -630,7 +630,7 @@ class virtual ['a] t =
           t
         else
           SpreadTupleType
-            { reason_tuple; reason_spread; resolved = resolved'; unresolved = unresolved' }
+            { reason_tuple; reason_spread; inexact; resolved = resolved'; unresolved = unresolved' }
       | RestType (options, x) ->
         let x' = self#type_ cx map_cx x in
         if x' == x then
@@ -854,25 +854,25 @@ class virtual ['a] t =
         let elem_t' = self#type_ cx map_cx elem_t in
         let tuple_view' =
           OptionUtils.ident_map
-            (fun (TupleView { elements; arity } as tuple_view) ->
+            (fun (TupleView { elements; arity; inexact } as tuple_view) ->
               let elements' = ListUtils.ident_map (self#tuple_element cx map_cx) elements in
               if elements' == elements then
                 tuple_view
               else
-                TupleView { elements = elements'; arity })
+                TupleView { elements = elements'; arity; inexact })
             tuple_view
         in
         if elem_t' == elem_t && tuple_view' == tuple_view then
           t
         else
           ArrayAT { elem_t = elem_t'; tuple_view = tuple_view'; react_dro }
-      | TupleAT { elem_t; elements; arity; react_dro } ->
+      | TupleAT { elem_t; elements; arity; inexact; react_dro } ->
         let elem_t' = self#type_ cx map_cx elem_t in
         let elements' = ListUtils.ident_map (self#tuple_element cx map_cx) elements in
         if elem_t' == elem_t && elements' == elements then
           t
         else
-          TupleAT { elem_t = elem_t'; elements = elements'; arity; react_dro }
+          TupleAT { elem_t = elem_t'; elements = elements'; arity; inexact; react_dro }
       | ROArrayAT (t', dro) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

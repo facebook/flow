@@ -1575,7 +1575,7 @@ let resolve
           }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
-  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = ReadOnly ->
+  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro })) when tool = ReadOnly ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity = _; optional; reason }) ->
           TupleElement { t; name; polarity = Polarity.Positive; optional; reason }
@@ -1586,8 +1586,11 @@ let resolve
       | RReadOnlyType -> r
       | _ -> reason
     in
-    return cx use_op (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
-  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Partial ->
+    return
+      cx
+      use_op
+      (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro })))
+  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro })) when tool = Partial ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
           let t = TypeUtil.optional t in
@@ -1602,8 +1605,11 @@ let resolve
     let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
     let (_, num_total) = arity in
     let arity = (0, num_total) in
-    return cx use_op (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
-  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Required ->
+    return
+      cx
+      use_op
+      (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro })))
+  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro })) when tool = Required ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
           let t =
@@ -1622,7 +1628,10 @@ let resolve
     let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
     let (_, num_total) = arity in
     let arity = (num_total, num_total) in
-    return cx use_op (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
+    return
+      cx
+      use_op
+      (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro })))
   (* If we see an empty then propagate empty to tout. *)
   | DefT (r, EmptyT) -> return cx use_op (EmptyT.make r)
   (* Propagate any. *)

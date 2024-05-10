@@ -37,6 +37,7 @@ type error_code =
   | DuplicateJsxDecl
   | DuplicateJsxRuntimeDecl
   | DuplicateModule
+  | ElementAfterInexactTupleSpread
   | EmptyArrayNoAnnot
   | EnumValueAsType
   | ExponentialSpread
@@ -249,6 +250,7 @@ let string_of_code : error_code -> string = function
   | DuplicateJsxDecl -> "duplicate-jsx-decl"
   | DuplicateJsxRuntimeDecl -> "duplicate-jsx-runtime-decl"
   | DuplicateModule -> "duplicate-module"
+  | ElementAfterInexactTupleSpread -> "element-after-inexact-tuple-spread"
   | EnumValueAsType -> "enum-value-as-type"
   | ExponentialSpread -> "exponential-spread"
   | ExportRenamedDefault -> "export-renamed-default"

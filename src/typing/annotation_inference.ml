@@ -961,10 +961,13 @@ module rec ConsGen : S = struct
     (************)
     | (DefT (r, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT (_, dro_loc, dro_kind)) ->
       DefT (r, ObjT { o with Type.flags = { flags with react_dro = Some (dro_loc, dro_kind) } })
-    | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
+    | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro = _ })),
         Annot_DeepReadOnlyT (_, dro_loc, dro_kind)
       ) ->
-      DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some (dro_loc, dro_kind) }))
+      DefT
+        ( r,
+          ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro = Some (dro_loc, dro_kind) })
+        )
     | ( DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
         Annot_DeepReadOnlyT (_, dro_loc, dro_kind)
       ) ->
@@ -1195,10 +1198,10 @@ module rec ConsGen : S = struct
     | (DefT (reason, ArrT (ArrayAT { elem_t; _ })), (Annot_GetPropT _ | Annot_LookupT _)) ->
       let arr = get_builtin_typeapp cx reason "Array" [elem_t] in
       elab_t cx arr op
-    | ( DefT (reason, ArrT (TupleAT { arity; _ })),
+    | ( DefT (reason, ArrT (TupleAT { arity; inexact; _ })),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })
       ) ->
-      GetPropTKit.on_array_length cx dummy_trace reason arity reason_op
+      GetPropTKit.on_array_length cx dummy_trace reason ~inexact arity reason_op
     | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
         (Annot_GetPropT _ | Annot_LookupT _)
       ) ->

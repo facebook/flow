@@ -57,6 +57,7 @@ type 'loc virtual_reason_desc =
   | RTupleElement of { name: string option }
   | RTupleLength of int
   | RTupleOutOfBoundsAccess of int
+  | RTupleUnknownElementFromInexact
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody

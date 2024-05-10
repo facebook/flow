@@ -490,7 +490,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           AnyT.at AnnotatedAny loc
         ) else
           let id = mk_eval_id env.cx loc in
-          Flow_js_utils.mk_tuple_type env.cx ~id ~mk_type_destructor reason unresolved
+          Flow_js_utils.mk_tuple_type env.cx ~id ~mk_type_destructor ~inexact reason unresolved
       in
       ((loc, t), Tuple { Tuple.elements = els_asts; inexact; comments })
     | (loc, Array { Array.argument = t; comments }) ->

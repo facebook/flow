@@ -92,6 +92,7 @@ type 'loc virtual_reason_desc =
   | RTupleElement of { name: string option }
   | RTupleLength of int
   | RTupleOutOfBoundsAccess of int
+  | RTupleUnknownElementFromInexact
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
@@ -278,11 +279,12 @@ let rec map_desc_locs f = function
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
     | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | RConstArrayLit
     | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType
-    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType
-    | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
-    | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
-    | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard
-    | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
+    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _
+    | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
+    | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _ | RComponent _
+    | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -605,6 +607,7 @@ let rec string_of_desc = function
     in
     spf "%s%s" "tuple element" suffix
   | RTupleOutOfBoundsAccess i -> spf "undefined (out of bounds tuple access at index %d)" i
+  | RTupleUnknownElementFromInexact -> "an unknown element of an inexact tuple type"
   | RTupleLength i -> spf "length `%d` (number) of tuple" i
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
@@ -1425,6 +1428,7 @@ let classification_of_reason_desc desc =
   | RTupleElement _
   | RTupleLength _
   | RTupleOutOfBoundsAccess _
+  | RTupleUnknownElementFromInexact
   | RComponent _
   | RComponentType
   | RPropsOfComponent _

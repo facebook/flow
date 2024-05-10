@@ -140,9 +140,15 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT
       ( _,
         ArrT
-          (ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ })
+          (ArrayAT
+            {
+              elem_t;
+              tuple_view = Some (TupleView { elements; arity = _; inexact = _ });
+              react_dro = _;
+            }
+            )
       )
-  | DefT (_, ArrT (TupleAT { elem_t; elements; arity = _; react_dro = _ })) ->
+  | DefT (_, ArrT (TupleAT { elem_t; elements; arity = _; inexact = _; react_dro = _ })) ->
     collect_of_types ?log_unresolved cx acc (elem_t :: TypeUtil.tuple_ts_of_elements elements)
   | DefT (_, ArrT (ROArrayAT (elemt, _))) -> collect_of_type ?log_unresolved cx acc elemt
   | DefT
@@ -284,7 +290,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
       | Some head_slice ->
         collect_of_object_kit_spread_operand_slice ?log_unresolved cx acc head_slice
     end
-  | SpreadTupleType { resolved; unresolved; reason_tuple = _; reason_spread = _ } ->
+  | SpreadTupleType { resolved; unresolved; inexact = _; reason_tuple = _; reason_spread = _ } ->
     let acc =
       List.fold_left
         (fun acc -> function
@@ -301,8 +307,13 @@ and collect_of_destructor ?log_unresolved cx acc = function
           (match arr with
           | ArrayAT { elem_t; tuple_view = None; react_dro = _ } ->
             collect_of_type ?log_unresolved cx acc elem_t
-          | ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ }
-          | TupleAT { elem_t; elements; arity = _; react_dro = _ } ->
+          | ArrayAT
+              {
+                elem_t;
+                tuple_view = Some (TupleView { elements; arity = _; inexact = _ });
+                react_dro = _;
+              }
+          | TupleAT { elem_t; elements; arity = _; inexact = _; react_dro = _ } ->
             collect_of_types
               ?log_unresolved
               cx

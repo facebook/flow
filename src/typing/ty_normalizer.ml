@@ -1073,12 +1073,12 @@ module Make (I : INPUT) : S = struct
       | ( T.ArrayAT
             {
               elem_t = _;
-              tuple_view = Some (T.TupleView { elements = elements'; arity = _ });
+              tuple_view = Some (T.TupleView { elements = elements'; inexact; arity = _ });
               react_dro = _;
             },
           RRestArrayLit _
         )
-      | (T.TupleAT { elements = elements'; _ }, _) ->
+      | (T.TupleAT { elements = elements'; inexact; _ }, _) ->
         (* Heuristic to use $ReadOnly<> instead of repeating the polarity symbol
          * and a made up label in each element. *)
         let readonly =
@@ -1104,7 +1104,7 @@ module Make (I : INPUT) : S = struct
               Ty.TupleElement { name; t; polarity; optional })
             elements'
         in
-        let t = Ty.Tup { elements; inexact = false } in
+        let t = Ty.Tup { elements; inexact } in
         if readonly then
           Ty.Utility (Ty.ReadOnly t)
         else
@@ -1719,7 +1719,7 @@ module Make (I : INPUT) : S = struct
         in
         mk_spread ty target prefix_tys head_slice
 
-    and tuple_spread ~env ty resolved unresolved =
+    and tuple_spread ~env ~inexact ty resolved unresolved =
       let%bind head =
         mapM
           (function
@@ -1756,7 +1756,7 @@ module Make (I : INPUT) : S = struct
               Ty.TupleSpread { name = None; t })
           unresolved
       in
-      return (Ty.Tup { elements = head @ (spread_ty :: tail); inexact = false })
+      return (Ty.Tup { elements = head @ (spread_ty :: tail); inexact })
 
     and check_component ~env ty pmap =
       let%bind map_props =
@@ -1872,7 +1872,8 @@ module Make (I : INPUT) : S = struct
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Diff (ty, ty'))
       | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
-      | T.SpreadTupleType { resolved; unresolved; _ } -> tuple_spread ~env ty resolved unresolved
+      | T.SpreadTupleType { inexact; resolved; unresolved; _ } ->
+        tuple_spread ~env ~inexact ty resolved unresolved
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))

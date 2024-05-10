@@ -232,7 +232,8 @@ let rec merge_type cx =
             (ArrayAT
               {
                 elem_t = t1;
-                tuple_view = Some (TupleView { elements = elements1; arity = arity1 });
+                tuple_view =
+                  Some (TupleView { elements = elements1; arity = arity1; inexact = inexact1 });
                 react_dro = dro1;
               }
               )
@@ -243,13 +244,15 @@ let rec merge_type cx =
             (ArrayAT
               {
                 elem_t = t2;
-                tuple_view = Some (TupleView { elements = elements2; arity = arity2 });
+                tuple_view =
+                  Some (TupleView { elements = elements2; arity = arity2; inexact = inexact2 });
                 react_dro = dro2;
               }
               )
         )
     )
     when arity1 = arity2
+         && inexact1 = inexact2
          && List.for_all2
               (fun (TupleElement { polarity = p1; optional = o1; _ })
                    (TupleElement { polarity = p2; optional = o2; _ }) ->
@@ -279,7 +282,7 @@ let rec merge_type cx =
           (ArrayAT
              {
                elem_t = merge_type cx (t1, t2);
-               tuple_view = Some (TupleView { elements; arity = arity1 });
+               tuple_view = Some (TupleView { elements; arity = arity1; inexact = inexact1 });
                react_dro =
                  ( if Base.Option.is_some dro1 && Base.Option.is_some dro2 then
                    dro1
@@ -308,10 +311,23 @@ let rec merge_type cx =
              }
           )
       )
-  | ( DefT (_, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1; react_dro = dro1 })),
-      DefT (_, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2; react_dro = dro2 }))
+  | ( DefT
+        ( _,
+          ArrT
+            (TupleAT
+              { elem_t = t1; elements = ts1; arity = arity1; inexact = inexact1; react_dro = dro1 }
+              )
+        ),
+      DefT
+        ( _,
+          ArrT
+            (TupleAT
+              { elem_t = t2; elements = ts2; arity = arity2; inexact = inexact2; react_dro = dro2 }
+              )
+        )
     )
     when arity1 = arity2
+         && inexact1 = inexact2
          && List.for_all2
               (fun (TupleElement { polarity = p1; optional = o1; _ })
                    (TupleElement { polarity = p2; optional = o2; _ }) ->
@@ -349,6 +365,7 @@ let rec merge_type cx =
                    ts1
                    ts2;
                arity = arity1;
+               inexact = inexact1;
              }
           )
       )

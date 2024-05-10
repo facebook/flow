@@ -896,27 +896,37 @@ let all_explicit_targ_ts = function
         | _ -> None
     )
 
-let tuple_length reason (num_req, num_total) =
-  let t_of_n n =
-    let r =
-      let desc = RTupleLength n in
-      replace_desc_reason desc reason
+let tuple_length reason ~inexact (num_req, num_total) =
+  if inexact then
+    let r = replace_desc_reason RNumber reason in
+    DefT (r, NumT AnyLiteral)
+  else
+    let t_of_n n =
+      let r =
+        let desc = RTupleLength n in
+        replace_desc_reason desc reason
+      in
+      let t =
+        let float = Base.Float.of_int n in
+        let string = Base.Int.to_string n in
+        SingletonNumT (float, string)
+      in
+      DefT (r, t)
     in
-    let t =
-      let float = Base.Float.of_int n in
-      let string = Base.Int.to_string n in
-      SingletonNumT (float, string)
-    in
-    DefT (r, t)
-  in
-  Base.List.range num_req ~stop:`inclusive num_total
-  |> Base.List.map ~f:t_of_n
-  |> union_of_ts reason
+    Base.List.range num_req ~stop:`inclusive num_total
+    |> Base.List.map ~f:t_of_n
+    |> union_of_ts reason
 
 let tuple_ts_of_elements elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> t) elements
 
 let mk_tuple_element ?name ?(optional = false) ?(polarity = Polarity.Neutral) reason t =
   TupleElement { reason; name; t; polarity; optional }
+
+let reason_of_resolved_param = function
+  | ResolvedSpreadArg (reason, _, _)
+  | ResolvedAnySpreadArg (reason, _)
+  | ResolvedArg (TupleElement { reason; _ }, _) ->
+    reason
 
 let type_guard_of_predicate predicate =
   match predicate with

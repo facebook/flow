@@ -568,7 +568,7 @@ and merge_annot env file = function
         Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
       in
       let id = eval_id_of_aloc file loc in
-      Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor reason unresolved
+      Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor ~inexact reason unresolved
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let elem_t = merge env file t in
@@ -1187,7 +1187,9 @@ and merge_value ?(as_const = false) env file = function
   | EmptyConstArrayLit loc ->
     let reason = Reason.(mk_reason RConstArrayLit loc) in
     let elem_t = Type.EmptyT.make Reason.(mk_reason REmptyArrayElement loc) in
-    let arrtype = Type.(TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0) }) in
+    let arrtype =
+      Type.(TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0); inexact = false })
+    in
     Type.(DefT (reason, ArrT arrtype))
   | ArrayLit (loc, t, ts) ->
     let reason =
@@ -1216,7 +1218,10 @@ and merge_value ?(as_const = false) env file = function
           )
         in
         let num_elts = List.length elements in
-        Type.(TupleAT { elem_t; elements; react_dro = None; arity = (num_elts, num_elts) })
+        Type.(
+          TupleAT
+            { elem_t; elements; react_dro = None; arity = (num_elts, num_elts); inexact = false }
+        )
       else
         Type.(ArrayAT { elem_t; tuple_view = None; react_dro = None })
     in

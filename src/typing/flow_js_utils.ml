@@ -2190,11 +2190,11 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       F.cg_get_prop cx trace t access
     | InternalName _ -> error_invalid_access ~suggestion:None
 
-  let on_array_length cx trace reason arity reason_op =
+  let on_array_length cx trace reason ~inexact arity reason_op =
     (* Use definition as the reason for the length, as this is
      * the actual location where the length is in fact set. *)
     let loc = Reason.loc_of_reason reason_op in
-    let t = tuple_length reason arity in
+    let t = tuple_length reason ~inexact arity in
     F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
 
   let get_obj_prop cx trace o propref reason_op =
@@ -2272,16 +2272,18 @@ end
 (***************)
 
 let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
-  let (elem_t, elements, is_index_restricted, is_tuple, react_dro) =
+  let (elem_t, elements, is_index_restricted, is_tuple, tuple_is_inexact, react_dro) =
     match arrtype with
     | ArrayAT { elem_t; tuple_view; react_dro } ->
       let elements =
-        Base.Option.map ~f:(fun (TupleView { elements; arity = _ }) -> elements) tuple_view
+        Base.Option.map
+          ~f:(fun (TupleView { elements; arity = _; inexact = _ }) -> elements)
+          tuple_view
       in
-      (elem_t, elements, false, false, react_dro)
-    | TupleAT { elem_t; elements; arity = _; react_dro } ->
-      (elem_t, Some elements, true, true, react_dro)
-    | ROArrayAT (elem_t, react_dro) -> (elem_t, None, true, false, react_dro)
+      (elem_t, elements, false, false, false, react_dro)
+    | TupleAT { elem_t; elements; arity = _; inexact; react_dro } ->
+      (elem_t, Some elements, true, true, inexact, react_dro)
+    | ROArrayAT (elem_t, react_dro) -> (elem_t, None, true, false, false, react_dro)
   in
   let (can_write_tuple, value, use_op) =
     match l with
@@ -2332,6 +2334,7 @@ let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
                          use_op;
                          reason;
                          reason_op = reason_tup;
+                         inexact = tuple_is_inexact;
                          length = List.length elements;
                          index = index_string;
                        }
@@ -2634,7 +2637,7 @@ let validate_tuple_elements cx ~reason_tuple ~error_on_req_after_opt elements =
   let arity = (num_req, num_req + num_opt) in
   (valid, arity)
 
-let mk_tuple_type cx ~id ~mk_type_destructor reason elements =
+let mk_tuple_type cx ~id ~mk_type_destructor ~inexact reason elements =
   let (resolved_rev, unresolved_rev, first_spread) =
     Base.List.fold elements ~init:([], [], None) ~f:(fun (resolved, unresolved, first_spread) el ->
         match (el, first_spread) with
@@ -2655,7 +2658,7 @@ let mk_tuple_type cx ~id ~mk_type_destructor reason elements =
       unknown_use (* not used *)
       reason
       spread_t
-      (SpreadTupleType { reason_tuple = reason; reason_spread; resolved; unresolved })
+      (SpreadTupleType { reason_tuple = reason; reason_spread; inexact; resolved; unresolved })
       id
   | None ->
     let elements = Base.List.rev_map ~f:fst resolved_rev in
@@ -2664,25 +2667,15 @@ let mk_tuple_type cx ~id ~mk_type_destructor reason elements =
     in
     if valid then
       let elem_t =
-        let ts = tuple_ts_of_elements elements in
-        let elem_t_reason = replace_desc_reason (RTupleElement { name = None }) reason in
-        (* If a tuple should be viewed as an array, what would the element type of
-           the array be?
-
-           Using a union here seems appealing but is wrong: setting elements
-           through arbitrary indices at the union type would be unsound, since it
-           might violate the projected types of the tuple at their corresponding
-           positions. This also shows why `mixed` doesn't work, either.
-
-           On the other hand, using the empty type would prevent writes, but admit
-           unsound reads.
-
-           The correct solution is to safely case a tuple type to a covariant
-           array interface whose element type would be a union.
-        *)
-        union_of_ts elem_t_reason ts
+        if inexact then
+          let reason_mixed = replace_desc_reason RTupleUnknownElementFromInexact reason in
+          MixedT.make reason_mixed
+        else
+          let ts = tuple_ts_of_elements elements in
+          let elem_t_reason = replace_desc_reason (RTupleElement { name = None }) reason in
+          union_of_ts elem_t_reason ts
       in
-      DefT (reason, ArrT (TupleAT { elem_t; elements; arity; react_dro = None }))
+      DefT (reason, ArrT (TupleAT { elem_t; elements; arity; inexact; react_dro = None }))
     else
       AnyT.error reason
 

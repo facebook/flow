@@ -243,7 +243,8 @@ class ['a] t =
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
         self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
-      | SpreadTupleType { resolved; unresolved; reason_tuple = _; reason_spread = _ } ->
+      | SpreadTupleType { resolved; unresolved; inexact = _; reason_tuple = _; reason_spread = _ }
+        ->
         let acc =
           self#list
             (fun acc resolved_el ->
@@ -387,8 +388,13 @@ class ['a] t =
     method private arr_type cx pole acc =
       function
       | ArrayAT { elem_t; tuple_view = None; react_dro = _ } -> self#type_ cx P.Neutral acc elem_t
-      | ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity = _ }); react_dro = _ }
-      | TupleAT { elem_t; elements; arity = _; react_dro = _ } ->
+      | ArrayAT
+          {
+            elem_t;
+            tuple_view = Some (TupleView { elements; arity = _; inexact = _ });
+            react_dro = _;
+          }
+      | TupleAT { elem_t; elements; arity = _; inexact = _; react_dro = _ } ->
         let acc = self#type_ cx P.Neutral acc elem_t in
         let acc = self#list (self#tuple_element cx pole) acc elements in
         acc
