@@ -244,15 +244,15 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Expression.t ->
     Type.t * Type.t list * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
 
-  val string_literal : Context.t -> as_const:bool -> ALoc.t -> ALoc.t Ast.StringLiteral.t -> Type.t
+  val string_literal : Context.t -> singleton:bool -> ALoc.t -> ALoc.t Ast.StringLiteral.t -> Type.t
 
-  val boolean_literal : as_const:bool -> ALoc.t -> ALoc.t Ast.BooleanLiteral.t -> Type.t
+  val boolean_literal : singleton:bool -> ALoc.t -> ALoc.t Ast.BooleanLiteral.t -> Type.t
 
   val null_literal : ALoc.t -> Type.t
 
-  val number_literal : as_const:bool -> ALoc.t -> ALoc.t Ast.NumberLiteral.t -> Type.t
+  val number_literal : singleton:bool -> ALoc.t -> ALoc.t Ast.NumberLiteral.t -> Type.t
 
-  val bigint_literal : as_const:bool -> ALoc.t -> ALoc.t Ast.BigIntLiteral.t -> Type.t
+  val bigint_literal : singleton:bool -> ALoc.t -> ALoc.t Ast.BigIntLiteral.t -> Type.t
 
   val regexp_literal : Context.t -> ALoc.t -> Type.t
 

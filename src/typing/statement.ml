@@ -668,13 +668,13 @@ module Make
     let t = identifier_ cx name loc in
     t
 
-  let string_literal_value cx ~as_const loc value =
+  let string_literal_value cx ~singleton loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason RString loc) in
       let error () = EmptyT.at loc in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
-    else if as_const then
+    else if singleton then
       let reason = mk_annot_reason (RStringLit (OrdinaryName value)) loc in
       DefT (reason, SingletonStrT (OrdinaryName value))
     else
@@ -687,11 +687,11 @@ module Make
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
         DefT (reason, StrT AnyLiteral)
 
-  let string_literal cx ~as_const loc { Ast.StringLiteral.value; _ } =
-    string_literal_value cx ~as_const loc value
+  let string_literal cx ~singleton loc { Ast.StringLiteral.value; _ } =
+    string_literal_value cx ~singleton loc value
 
-  let boolean_literal ~as_const loc { Ast.BooleanLiteral.value; _ } =
-    if as_const then
+  let boolean_literal ~singleton loc { Ast.BooleanLiteral.value; _ } =
+    if singleton then
       let reason = mk_annot_reason (RBooleanLit value) loc in
       DefT (reason, SingletonBoolT value)
     else
@@ -700,16 +700,16 @@ module Make
 
   let null_literal loc = NullT.at loc
 
-  let number_literal ~as_const loc { Ast.NumberLiteral.value; raw; _ } =
-    if as_const then
+  let number_literal ~singleton loc { Ast.NumberLiteral.value; raw; _ } =
+    if singleton then
       let reason = mk_annot_reason (RNumberLit raw) loc in
       DefT (reason, SingletonNumT (value, raw))
     else
       let reason = mk_annot_reason RNumber loc in
       DefT (reason, NumT (Literal (None, (value, raw))))
 
-  let bigint_literal ~as_const loc { Ast.BigIntLiteral.value; raw; _ } =
-    if as_const then
+  let bigint_literal ~singleton loc { Ast.BigIntLiteral.value; raw; _ } =
+    if singleton then
       let reason = mk_annot_reason (RBigIntLit raw) loc in
       DefT (reason, SingletonBigIntT (value, raw))
     else
@@ -2606,19 +2606,19 @@ module Make
     let open Ast.Expression in
     match e with
     | StringLiteral lit ->
-      let t = string_literal cx ~as_const loc lit in
+      let t = string_literal cx ~singleton:as_const loc lit in
       ((loc, t), StringLiteral lit)
     | BooleanLiteral lit ->
-      let t = boolean_literal ~as_const loc lit in
+      let t = boolean_literal ~singleton:as_const loc lit in
       ((loc, t), BooleanLiteral lit)
     | NullLiteral lit ->
       let t = null_literal loc in
       ((loc, t), NullLiteral lit)
     | NumberLiteral lit ->
-      let t = number_literal ~as_const loc lit in
+      let t = number_literal ~singleton:as_const loc lit in
       ((loc, t), NumberLiteral lit)
     | BigIntLiteral lit ->
-      let t = bigint_literal ~as_const loc lit in
+      let t = bigint_literal ~singleton:as_const loc lit in
       ((loc, t), BigIntLiteral lit)
     | RegExpLiteral lit ->
       let t = regexp_literal cx loc in
@@ -3121,7 +3121,7 @@ module Make
               ) =
             head
           in
-          let t = string_literal_value cx ~as_const:false elem_loc cooked in
+          let t = string_literal_value cx ~singleton:false elem_loc cooked in
           (t, [])
         | _ ->
           let t_out = StrT.at loc in
@@ -5614,7 +5614,7 @@ module Make
               match value with
               (* <element name="literal" /> *)
               | Some (Attribute.StringLiteral (loc, lit)) ->
-                let t = string_literal cx ~as_const:false loc lit in
+                let t = string_literal cx ~singleton:false loc lit in
                 (t, Some (Attribute.StringLiteral ((loc, t), lit)))
               (* <element name={expression} /> *)
               | Some
@@ -6519,16 +6519,16 @@ module Make
         let (annot_t, annot_ast) =
           match (expr, annot) with
           | ((loc, Ast.Expression.StringLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = string_literal cx ~as_const:false loc lit in
+            let t = string_literal cx ~singleton:false loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.BooleanLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = boolean_literal ~as_const:false loc lit in
+            let t = boolean_literal ~singleton:false loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.NumberLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = number_literal ~as_const:false loc lit in
+            let t = number_literal ~singleton:false loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.BigIntLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = bigint_literal loc ~as_const:false lit in
+            let t = bigint_literal loc ~singleton:false lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.RegExpLiteral _), Ast.Type.Missing annot_loc) ->
             let t = regexp_literal cx loc in
