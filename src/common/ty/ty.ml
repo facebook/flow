@@ -164,7 +164,6 @@ and obj_kind =
 
 and obj_t = {
   obj_def_loc: aloc option;
-  obj_frozen: bool;
   (* `None` means that this field was not computed, because the normalizer config
      option preserve_inferred_literal_types was set to false. `Some b` means that
      it was computed and `b` is true iff this is a literal type. *)

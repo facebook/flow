@@ -621,7 +621,7 @@ struct
         )
     and json_of_obj_t o =
       Hh_json.(
-        let { obj_def_loc; obj_kind; obj_props; obj_literal; obj_frozen } = o in
+        let { obj_def_loc; obj_kind; obj_props; obj_literal } = o in
         let obj_kind =
           match obj_kind with
           | ExactObj -> JSON_String "Exact"
@@ -636,7 +636,6 @@ struct
             | Some loc -> JSON_String (string_of_aloc loc)
           );
           ("obj_kind", obj_kind);
-          ("frozen", JSON_Bool obj_frozen);
           ("literal", Base.Option.value_map obj_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
           ("props", JSON_Array (Base.List.map ~f:json_of_prop obj_props));
         ]

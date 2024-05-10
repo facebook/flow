@@ -26,7 +26,6 @@ let tests =
                {
                  Ty.obj_kind = Ty.ExactObj;
                  obj_def_loc = None;
-                 obj_frozen = false;
                  obj_literal = None;
                  obj_props = [getter];
                }
@@ -50,7 +49,6 @@ let tests =
                {
                  Ty.obj_kind = Ty.ExactObj;
                  obj_def_loc = None;
-                 obj_frozen = false;
                  obj_literal = None;
                  obj_props = [setter];
                }

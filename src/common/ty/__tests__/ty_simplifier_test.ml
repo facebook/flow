@@ -25,7 +25,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_frozen = false;
                   obj_literal = None;
                   obj_props =
                     [
@@ -44,7 +43,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_frozen = false;
                   obj_literal = None;
                   obj_props =
                     [
@@ -68,7 +66,6 @@ module UnionSimplification = struct
             {
               Ty.obj_kind = Ty.InexactObj;
               obj_def_loc = None;
-              obj_frozen = false;
               obj_literal = None;
               obj_props =
                 [
@@ -98,7 +95,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_frozen = false;
                   obj_literal = None;
                   obj_props =
                     [
@@ -117,7 +113,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_frozen = false;
                   obj_literal = None;
                   obj_props =
                     [
@@ -160,7 +155,6 @@ module BotAndTopSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_frozen = false;
                   obj_literal = None;
                   obj_props =
                     [
@@ -180,7 +174,6 @@ module BotAndTopSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_frozen = false;
                   obj_literal = None;
                   obj_props =
                     [
@@ -209,7 +202,6 @@ module BotAndTopSimplification = struct
             {
               Ty.obj_kind = Ty.InexactObj;
               obj_def_loc = None;
-              obj_frozen = false;
               obj_literal = None;
               obj_props =
                 [
