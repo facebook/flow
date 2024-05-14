@@ -94,7 +94,8 @@ Cannot find type guard parameter `y` [1] in the parameters of this function (typ
 Error ------------------------------------------------------------------------------------------------- classes.js:23:14
 
 Cannot return `(typeof x) === 'number'` because number [1] is incompatible with string [2] in the type inferred for type
-guard parameter `x` [3]. [incompatible-return]
+guard parameter `x` [3]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-return]
 
    classes.js:23:14
    23|       return typeof x === 'number'; // error number ~> string
@@ -188,7 +189,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:52:14
 
 Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
-`x` [3]. [incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    classes.js:52:14
    52|       return true; // error mixed ~> number
@@ -318,7 +320,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ classes.js:119:14
 
 Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
-`x` [3]. [incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    classes.js:119:14
    119|       return true; // error mixed ~> number
@@ -371,7 +374,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:10:12
 
 Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
-`x` [3]. [incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    consistency.js:10:12
    10|     return true; // error x: mixed ~> number
@@ -392,7 +396,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:15:12
 
 Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
-`x` [3]. [incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    consistency.js:15:12
    15|     return true; // error in this branch x: mixed ~> number
@@ -413,8 +418,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:26:10
 
 Cannot return `false` because mixed [1] is incompatible with `A` [2] in the type inferred for type guard parameter
-`x` [3]. Consider replacing the body of this predicate function with a single conditional expression.
-[incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. Consider
+replacing the body of this predicate function with a single conditional expression. [incompatible-return]
 
    consistency.js:26:10
    26|   return false; // error (technically this should hold but that's not what we do in other refinements)
@@ -435,8 +440,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:31:12
 
 Cannot return `false` because number [1] is incompatible with boolean [2] in the type inferred for type guard parameter
-`x` [3]. Consider replacing the body of this predicate function with a single conditional expression.
-[incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. Consider
+replacing the body of this predicate function with a single conditional expression. [incompatible-return]
 
    consistency.js:31:12
    31|     return false; // error (for the same reason as above)
@@ -457,8 +462,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:33:12
 
 Cannot return `false` because string [1] is incompatible with boolean [2] in the type inferred for type guard parameter
-`x` [3]. Consider replacing the body of this predicate function with a single conditional expression.
-[incompatible-return]
+`x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. Consider
+replacing the body of this predicate function with a single conditional expression. [incompatible-return]
 
    consistency.js:33:12
    33|     return false; // error (for the same reason as above)
@@ -479,7 +484,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:45:3
 
 Cannot return `((typeof x) === 'number') || ((typeof x) === 'string')` because string [1] is incompatible with
-number [2] in the type inferred for type guard parameter `x` [3]. [incompatible-return]
+number [2] in the type inferred for type guard parameter `x` [3]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-return]
 
    consistency.js:45:3
    45|   typeof x === 'string' // error x: string ~> number
@@ -497,7 +503,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:50:12
 
 Cannot return `(typeof x) === 'string'` because string [1] is incompatible with number [2] in the type inferred for type
-guard parameter `x` [3]. [incompatible-return]
+guard parameter `x` [3]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-return]
 
    consistency.js:50:12
    50|     return typeof x === 'string'; // error x: string ~> number
@@ -530,7 +537,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:56:5
 
 Cannot return `x != null` because number [1] is incompatible with string [2] in the type inferred for type guard
-parameter `x` [3]. [incompatible-return]
+parameter `x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    consistency.js:56:5
    56|     x != null // error number ~> string
@@ -551,7 +559,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:60:5
 
 Cannot return `x !== null` because null or undefined [1] is incompatible with number [2] in the type inferred for type
-guard parameter `x` [3]. [incompatible-return]
+guard parameter `x` [3]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-return]
 
    consistency.js:60:5
    60|     x !== null // error null | undefined ~> string
@@ -587,7 +596,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:72:5
 
 Cannot return `x != null` because number [1] is incompatible with string [2] in the type inferred for type guard
-parameter `x` [3]. [incompatible-return]
+parameter `x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    consistency.js:72:5
    72|     x != null // error number ~> string
@@ -608,7 +618,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:76:5
 
 Cannot return `x !== null` because null or undefined [1] is incompatible with number [2] in the type inferred for type
-guard parameter `x` [3]. [incompatible-return]
+guard parameter `x` [3]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-return]
 
    consistency.js:76:5
    76|     x !== null // error null | undefined ~> string
@@ -629,7 +640,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:99:23
 
 Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2] in the type inferred for type guard
-parameter `x` [3]. [incompatible-return]
+parameter `x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    consistency.js:99:23
    99|   return x instanceof A; // error A ~> B
@@ -647,7 +659,8 @@ References:
 Error -------------------------------------------------------------------------------------------- consistency.js:125:10
 
 Cannot return `Array.isArray(...)` because array element of refined mixed [1] is incompatible with `A` [2] in array
-element of the type inferred for type guard parameter `x` [3]. [incompatible-return]
+element of the type inferred for type guard parameter `x` [3]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-return]
 
    consistency.js:125:10
    125|   return Array.isArray(x);
@@ -736,7 +749,8 @@ References:
 Error -------------------------------------------------------------------------------------------- consistency.js:176:25
 
 Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2] in the type inferred for type guard
-parameter `x` [3]. [incompatible-return]
+parameter `x` [3]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-return]
 
    consistency.js:176:25
    176|     return x instanceof A; // error A ~> B

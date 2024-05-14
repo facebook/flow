@@ -1185,7 +1185,13 @@ let to_printable_error :
     | FrameIndexerProperty -> [text "the indexer property"]
     | FrameIndexerPropertyKey -> [text "the indexer property's key"]
     | FrameInferredTypeForTypeGuardParameter { param; is_return_false_statement } ->
-      [text "the type inferred for "; ref param]
+      [
+        text "the type inferred for ";
+        ref param;
+        text ". See 1. in ";
+        text
+          "https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions";
+      ]
       @
       if is_return_false_statement then
         [

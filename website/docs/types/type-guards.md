@@ -165,7 +165,7 @@ function nonMaybe<V: {...}>(x: ?V): x is V {
 }
 ```
 
-### Predicate type is consistent with refined type
+### Predicate type is consistent with refined type {#toc-consistency-checks-of-type-guard-functions}
 
 In addition to the above checks, Flow also ensures that the declared type guard is consistent with the check happening in the body of the function. To establish this it needs to guarantee two things:
 
