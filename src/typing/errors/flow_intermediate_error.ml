@@ -3659,6 +3659,15 @@ let to_printable_error :
       [ref lower; text " does not appear in the same position as "; ref upper]
     | MessageTypeGuardImpliesMismatch { lower; upper } ->
       [text "one-sided "; ref lower; text " is incompatible with default "; ref upper]
+    | MessageNegativeTypeGuardConsistency { reason = _; return_reason; type_reason } ->
+      [
+        text "Inconsistent type guard declaration.";
+        text " The negation of the predicate encoded in return expression ";
+        ref return_reason;
+        text " needs to completely refine away the guard type ";
+        ref type_reason;
+        text ".";
+      ]
     | MessageUnexpectedTemporaryBaseType ->
       [text "The type argument of a temporary base type must be a compatible literal type"]
     | MessageUnexpectedUseOfThisType -> [text "Unexpected use of "; code "this"; text " type."]

@@ -7,7 +7,7 @@ class M {}
 function no_return(x: mixed): x is number {} // error no return
 
 function return_true(x: mixed): x is number {
-    return true; // error x: mixed ~> number
+    return true; // error x: mixed ~> number and (negation) number ~> empty
 }
 
 function return_true_in_branch(x: mixed): x is number {
@@ -23,7 +23,7 @@ function negation_on_union(x: number | string | boolean): x is boolean {
 }
 
 function always_false_error(x: mixed): x is A {
-  return false; // error (technically this should hold but that's not what we do in other refinements)
+  return false; // error (negation) A ~> empty, TODO: positive side should not error
 }
 
 function return_false_under_condition(x: number | string | boolean): x is boolean {
@@ -32,7 +32,7 @@ function return_false_under_condition(x: number | string | boolean): x is boolea
   } else if (typeof x ==='string') {
     return false; // error (for the same reason as above)
   } else {
-    return true; // okay
+    return true; // TODO okay (no negation error)
   }
 }
 
@@ -47,7 +47,7 @@ const arrow_error = (x: mixed): x is number => (
 
 class C {
   m(x: mixed): x is number {
-    return typeof x === 'string'; // error x: string ~> number
+    return typeof x === 'string'; // error x: string ~> number and (negation) number ~> empty
   }
 }
 
@@ -91,11 +91,11 @@ function contextual() {
 }
 
 
-function instanceof_ok(x: mixed): x is A {
-  return x instanceof B; // okay
+function instanceof_error_1(x: mixed): x is A {
+  return x instanceof B; // error (negation) A ~> empty
 }
 
-function instanceof_error(x: mixed): x is B {
+function instanceof_error_2(x: mixed): x is B {
   return x instanceof A; // error A ~> B
 }
 
@@ -113,7 +113,7 @@ function non_maybe_poly_1<X>(x: X): x is $NonMaybeType<X> {
   return x != null;
 }
 
-function non_maybe_poly_2<X>(x: ?X): x is X { // okay
+function non_maybe_poly_2<X: {...}>(x: ?X): x is X { // okay
   return x != null;
 }
 
@@ -135,7 +135,7 @@ function pipe_result() {
   }
 
   function error(x: mixed): x is string {
-    return isNumberOrString(x) && isBoolean(x); // okay. empty ~> string
+    return isNumberOrString(x) && isBoolean(x); // error (negation) string ~> empty
   }
 }
 
@@ -168,7 +168,7 @@ function multi_return_ok(x: mixed): x is A {
   if (0 < 1) {
     return x instanceof A; // okay
   }
-  return x instanceof B; // okay
+  return x instanceof B; // error (negation) A ~> empty
 }
 
 function multi_return_one_branch_error(x: mixed): x is B {

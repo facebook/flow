@@ -176,5 +176,6 @@ val type_guard_at_return :
   Reason.reason ->
   param_loc:ALoc.t ->
   return_loc:ALoc.t ->
-  Env_api.write_locs ->
-  (Type.t, ALoc.t list) result
+  pos_write_locs:Env_api.write_locs ->
+  neg_refi:Env_api.predicate_refinement ->
+  (Type.t * Type.predicate, ALoc.t list) result

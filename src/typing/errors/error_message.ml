@@ -260,6 +260,11 @@ and 'loc t' =
       loc: 'loc;
       kind: string;
     }
+  | ENegativeTypeGuardConsistency of {
+      reason: 'loc virtual_reason;
+      return_reason: 'loc virtual_reason;
+      type_reason: 'loc virtual_reason;
+    }
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
@@ -1023,6 +1028,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | ETypeGuardIncompatibleWithFunctionKind { loc; kind } ->
     ETypeGuardIncompatibleWithFunctionKind { loc = f loc; kind }
+  | ENegativeTypeGuardConsistency { reason; return_reason; type_reason } ->
+    ENegativeTypeGuardConsistency
+      {
+        reason = map_reason reason;
+        return_reason = map_reason return_reason;
+        type_reason = map_reason type_reason;
+      }
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
@@ -1619,6 +1631,7 @@ let util_use_op_of_msg nope util = function
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _
   | ETypeGuardFunctionInvalidWrites _
+  | ENegativeTypeGuardConsistency _
   | EDuplicateComponentProp _
   | ERefComponentProp _
   | EInvalidRendersTypeArgument _
@@ -1695,6 +1708,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPredicateInvalidParameter { pred_reason = reason; _ }
   | ETypeGuardParamUnbound reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
+  | ENegativeTypeGuardConsistency { reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
@@ -2366,6 +2380,8 @@ let friendly_message_of_msg = function
   | ETypeGuardParamUnbound reason -> Normal (MessageInvalidTypeGuardParamUnbound reason)
   | ETypeGuardFunctionInvalidWrites { reason = _; type_guard_reason; write_locs } ->
     Normal (MessageInvalidTypeGuardFunctionWritten { type_guard_reason; write_locs })
+  | ENegativeTypeGuardConsistency { reason; return_reason; type_reason } ->
+    Normal (MessageNegativeTypeGuardConsistency { reason; return_reason; type_reason })
   | ETypeGuardFunctionParamHavoced { type_guard_reason; param_reason; call_locs } ->
     Normal
       (MessageCannotUseTypeGuardWithFunctionParamHavoced
@@ -2952,6 +2968,7 @@ let error_code_of_message err : error_code option =
   | ETypeGuardImpliesMismatch _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionInvalidWrites _
+  | ENegativeTypeGuardConsistency _
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _ ->
     Some FunctionPredicate

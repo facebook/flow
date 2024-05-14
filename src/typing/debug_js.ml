@@ -1991,6 +1991,8 @@ let dump_error_message =
       spf "EUnionOptimizationOnNonUnion (%s)" (string_of_aloc loc)
     | ECannotCallReactComponent { reason } ->
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
+    | ENegativeTypeGuardConsistency { reason; _ } ->
+      spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let print_if_verbose_lazy

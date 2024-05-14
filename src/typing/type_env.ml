@@ -557,28 +557,27 @@ let read_entry_exn ~lookup_mode cx loc reason =
       | Ok x -> x
   )
 
+let read_to_predicate cx var_info ({ Env_api.write_locs; _ }, _, _) =
+  let predicates =
+    Base.List.filter_map write_locs ~f:(function
+        | Env_api.With_ALoc.Refinement { refinement_id; _ } ->
+          Some (find_refi var_info refinement_id |> snd |> predicate_of_refinement cx)
+        | _ -> None
+        )
+  in
+  predicates
+  |> Nel.of_list
+  |> Base.Option.map ~f:(fun (p, rest) -> Base.List.fold rest ~init:p ~f:(fun acc p -> OrP (acc, p)))
+
 let predicate_refinement_maps cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
   let { Env_api.predicate_refinement_maps; _ } = var_info in
-  let read_to_predicate ({ Env_api.write_locs; _ }, _, _) =
-    let predicates =
-      Base.List.filter_map write_locs ~f:(function
-          | Env_api.With_ALoc.Refinement { refinement_id; _ } ->
-            Some (find_refi var_info refinement_id |> snd |> predicate_of_refinement cx)
-          | _ -> None
-          )
-    in
-    predicates
-    |> Nel.of_list
-    |> Base.Option.map ~f:(fun (p, rest) ->
-           Base.List.fold rest ~init:p ~f:(fun acc p -> OrP (acc, p))
-       )
-  in
   let to_predicate_key_map map =
     map
     |> SMap.elements
     |> Base.List.filter_map ~f:(fun (name, read) ->
-           read_to_predicate read |> Base.Option.map ~f:(fun p -> ((OrdinaryName name, []), p))
+           read_to_predicate cx var_info read
+           |> Base.Option.map ~f:(fun p -> ((OrdinaryName name, []), p))
        )
     |> Key_map.of_list
   in
@@ -587,7 +586,8 @@ let predicate_refinement_maps cx loc =
   | Some (expr_reason, p_map, n_map) ->
     Some (expr_reason, lazy (to_predicate_key_map p_map, to_predicate_key_map n_map))
 
-let type_guard_at_return cx reason ~param_loc ~return_loc write_locs =
+let type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_refi =
+  let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   let rec is_invalid (acc_result, acc_locs) write_loc =
     match write_loc with
     | Env_api.Write reason when ALoc.equal (Reason.loc_of_reason reason) param_loc ->
@@ -601,14 +601,16 @@ let type_guard_at_return cx reason ~param_loc ~return_loc write_locs =
       (true, acc_locs)
   in
   let (is_invalid, invalid_writes) =
-    Base.List.fold_left write_locs ~init:(false, []) ~f:is_invalid
+    Base.List.fold_left pos_write_locs ~init:(false, []) ~f:is_invalid
   in
-  let env = Context.environment cx in
   if is_invalid then
     Error invalid_writes
   else
     let lookup_mode = LookupMode.ForValue in
-    Ok (type_of_state ~lookup_mode cx env return_loc reason write_locs None None)
+    Ok
+      ( type_of_state ~lookup_mode cx env return_loc reason pos_write_locs None None,
+        Base.Option.value ~default:NoP (read_to_predicate cx var_info neg_refi)
+      )
 
 let ref_entry_exn ~lookup_mode cx loc reason =
   let t = read_entry_exn ~lookup_mode cx loc reason in

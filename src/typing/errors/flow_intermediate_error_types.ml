@@ -705,6 +705,11 @@ type 'loc message =
       type_guard_reason: 'loc virtual_reason;
       write_locs: 'loc list;
     }
+  | MessageNegativeTypeGuardConsistency of {
+      reason: 'loc virtual_reason;
+      return_reason: 'loc virtual_reason;
+      type_reason: 'loc virtual_reason;
+    }
   | MessageInvalidTypeGuardParamUnbound of 'loc virtual_reason
   | MessageInvalidUseOfFlowEnforceOptimized of 'loc virtual_reason
   | MessageLowerIsNotArray of 'loc virtual_reason
