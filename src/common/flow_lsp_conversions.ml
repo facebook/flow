@@ -251,6 +251,7 @@ let diagnostics_of_flow_errors =
             message = error.Flow_errors_utils.Lsp_output.message;
             tags = [];
             relatedInformation;
+            data = Lsp.PublishDiagnostics.NoExtraDetailedDiagnostic;
           }
         )
     | Error _ -> None

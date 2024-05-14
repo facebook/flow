@@ -542,16 +542,22 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
         ]
     in
     Jprint.object_opt
-      [
-        ("range", Some (print_range diagnostic.range));
-        ("severity", Base.Option.map diagnostic.severity ~f:print_diagnosticSeverity);
-        ("code", print_diagnosticCode diagnostic.code);
-        ("source", Base.Option.map diagnostic.source ~f:string_);
-        ("message", Some (JSON_String diagnostic.message));
-        ( "relatedInformation",
-          Some (JSON_Array (Base.List.map diagnostic.relatedInformation ~f:print_related))
-        );
-      ]
+      ([
+         ("range", Some (print_range diagnostic.range));
+         ("severity", Base.Option.map diagnostic.severity ~f:print_diagnosticSeverity);
+         ("code", print_diagnosticCode diagnostic.code);
+         ("source", Base.Option.map diagnostic.source ~f:string_);
+         ("message", Some (JSON_String diagnostic.message));
+         ( "relatedInformation",
+           Some (JSON_Array (Base.List.map diagnostic.relatedInformation ~f:print_related))
+         );
+       ]
+      @
+      match diagnostic.data with
+      | PublishDiagnostics.NoExtraDetailedDiagnostic -> []
+      | PublishDiagnostics.ExtraDetailedDiagnosticV0 str ->
+        [("data", Some (JSON_Object [("version", JSON_Number "0"); ("rendered", JSON_String str)]))]
+      )
   )
 
 let print_diagnostic_list (ds : PublishDiagnostics.diagnostic list) : json =
@@ -611,6 +617,9 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
       tags = Jget.array_d j "tags" ~default:[] |> Base.List.filter_map ~f:DiagnosticTagFmt.of_json;
       relatedInformation =
         Jget.array_d j "relatedInformation" ~default:[] |> Base.List.map ~f:parse_info;
+      (* The parsing is for recovering diagnostics in the code action. The extra detailed one is
+       * not relevant, since it contains the same information as the rest of the diagnostic. *)
+      data = PublishDiagnostics.NoExtraDetailedDiagnostic;
     }
   )
 

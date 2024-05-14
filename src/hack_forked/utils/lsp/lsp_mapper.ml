@@ -239,14 +239,32 @@ let default_mapper =
       (fun _mapper { ConnectionStatus.isConnected } -> { ConnectionStatus.isConnected });
     of_diagnostic =
       (fun mapper
-           { PublishDiagnostics.range; severity; code; source; message; tags; relatedInformation } ->
+           {
+             PublishDiagnostics.range;
+             severity;
+             code;
+             source;
+             message;
+             tags;
+             relatedInformation;
+             data;
+           } ->
         let range = mapper.of_range mapper range in
         let map_related_info { PublishDiagnostics.relatedLocation; relatedMessage } =
           let relatedLocation = mapper.of_location mapper relatedLocation in
           { PublishDiagnostics.relatedLocation; relatedMessage }
         in
         let relatedInformation = Base.List.map ~f:map_related_info relatedInformation in
-        { PublishDiagnostics.range; severity; code; source; message; tags; relatedInformation });
+        {
+          PublishDiagnostics.range;
+          severity;
+          code;
+          source;
+          message;
+          tags;
+          relatedInformation;
+          data;
+        });
     of_definition_params = (fun mapper t -> mapper.of_text_document_position_params mapper t);
     of_definition_result =
       (fun mapper results -> Base.List.map ~f:(mapper.of_location mapper) results);

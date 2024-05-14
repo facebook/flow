@@ -749,6 +749,7 @@ module PublishDiagnostics = struct
     message: string;  (** the diagnostic's message *)
     tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
+    data: extraDetailedDiagnostic;
   }
 
   and diagnosticCode =
@@ -760,6 +761,10 @@ module PublishDiagnostics = struct
     relatedLocation: Location.t;  (** wire: just "location" *)
     relatedMessage: string;  (** wire: just "message" *)
   }
+
+  and extraDetailedDiagnostic =
+    | NoExtraDetailedDiagnostic
+    | ExtraDetailedDiagnosticV0 of string
 end
 
 (** DidOpenTextDocument notification, method="textDocument/didOpen" *)
