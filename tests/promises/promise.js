@@ -224,3 +224,11 @@ Promise.resolve(0)
     var a: ?number = num;
     var b: string = num; // Error: string ~> number
   });
+
+// Promise<T> -> catch() with throw
+function catchDefaultWithThrow<T>(p: Promise<T>) {
+  const r = p.catch(() => {
+    throw "";
+  })
+  r as Promise<T>; // okay
+}
