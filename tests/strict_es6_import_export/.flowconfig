@@ -4,4 +4,9 @@ experimental.strict_es6_import_export=true
 no_flowlib=false
 
 [lints]
-all=error
+default-import-access=error
+export-renamed-default=error
+invalid-import-star-use=error
+mixed-import-and-require=error
+non-const-var-export=error
+this-in-exported-function=error
