@@ -2641,6 +2641,30 @@ module Cli_output = struct
     Tty.cprint ~out_channel ~color_mode:flags.color styles;
     Tty.cprint ~out_channel ~color_mode:flags.color [default_style "\n"]
 
+  let format_single_error_to_string ~strip_root ~severity (error : Loc.t printable_error) =
+    let styles =
+      get_pretty_printed_error
+        ~flags:
+          {
+            color = Tty.Color_Never;
+            include_warnings = true;
+            max_warnings = None;
+            one_line = false;
+            list_files = false;
+            show_all_errors = true;
+            show_all_branches = true;
+            unicode = true;
+            message_width = 80;
+          }
+        ~stdin_file:None
+        ~strip_root
+        ~severity
+        ~show_all_branches:true
+        ~on_hidden_branches:ignore
+        error
+    in
+    styles |> Base.List.map ~f:snd |> Base.String.concat ~sep:""
+
   let format_errors =
     let render_counts =
       let error_or_errors n =

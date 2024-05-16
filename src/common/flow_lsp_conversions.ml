@@ -226,11 +226,12 @@ let position_of_document_position { Lsp.TextDocumentPositionParams.position; _ }
 
 let diagnostics_of_flow_errors =
   let error_to_lsp
-      ~(severity : Lsp.PublishDiagnostics.diagnosticSeverity)
-      (error : Loc.t Flow_errors_utils.printable_error) :
+      ~vscode_detailed_diagnostics
+      ~(severity : Severity.severity)
+      (printable_error : Loc.t Flow_errors_utils.printable_error) :
       (Lsp.DocumentUri.t * Lsp.PublishDiagnostics.diagnostic) option =
-    let error = Flow_errors_utils.Lsp_output.lsp_of_error error in
-    match loc_to_lsp error.Flow_errors_utils.Lsp_output.loc with
+    let lsp_error = Flow_errors_utils.Lsp_output.lsp_of_error printable_error in
+    match loc_to_lsp lsp_error.Flow_errors_utils.Lsp_output.loc with
     | Ok location ->
       let uri = location.Lsp.Location.uri in
       let related_to_lsp (loc, relatedMessage) =
@@ -239,31 +240,46 @@ let diagnostics_of_flow_errors =
         | Error _ -> None
       in
       let relatedInformation =
-        Base.List.filter_map error.Flow_errors_utils.Lsp_output.relatedLocations ~f:related_to_lsp
+        Base.List.filter_map
+          lsp_error.Flow_errors_utils.Lsp_output.relatedLocations
+          ~f:related_to_lsp
+      in
+      let data =
+        if vscode_detailed_diagnostics then
+          Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0
+            (Flow_errors_utils.Cli_output.format_single_error_to_string
+               ~strip_root:None
+               ~severity
+               printable_error
+            )
+        else
+          Lsp.PublishDiagnostics.NoExtraDetailedDiagnostic
       in
       Some
         ( uri,
           {
             Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
-            severity = Some severity;
-            code = Lsp.PublishDiagnostics.StringCode error.Flow_errors_utils.Lsp_output.code;
+            severity =
+              (match severity with
+              | Severity.Err -> Some Lsp.PublishDiagnostics.Error
+              | Severity.Warn -> Some Lsp.PublishDiagnostics.Warning
+              | Severity.Off -> None);
+            code = Lsp.PublishDiagnostics.StringCode lsp_error.Flow_errors_utils.Lsp_output.code;
             source = Some "Flow";
-            message = error.Flow_errors_utils.Lsp_output.message;
+            message = lsp_error.Flow_errors_utils.Lsp_output.message;
             tags = [];
             relatedInformation;
-            data = Lsp.PublishDiagnostics.NoExtraDetailedDiagnostic;
+            data;
           }
         )
     | Error _ -> None
   in
-  fun ~errors ~warnings ->
+  fun ~vscode_detailed_diagnostics ~errors ~warnings ->
     let add severity error acc =
-      match error_to_lsp ~severity error with
+      match error_to_lsp ~vscode_detailed_diagnostics ~severity error with
       | Some (uri, diagnostic) -> Lsp.UriMap.add ~combine:List.append uri [diagnostic] acc
       | None -> acc
     in
     Lsp.UriMap.empty
-    |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Error) errors
-    |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold
-         (add Lsp.PublishDiagnostics.Warning)
-         warnings
+    |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Severity.Err) errors
+    |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Severity.Warn) warnings

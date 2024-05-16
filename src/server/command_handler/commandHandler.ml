@@ -2047,19 +2047,22 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload :
   in
   { WorkloadStream.workload_should_be_cancelled; workload_handler }
 
-let did_open env client (_files : (string * string) Nel.t) : ServerEnv.env Lwt.t =
+let did_open env client ~vscode_detailed_diagnostics (_files : (string * string) Nel.t) :
+    ServerEnv.env Lwt.t =
   let (errors, warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
+    ~vscode_detailed_diagnostics
     ~errors_reason:LspProt.Env_change
     ~errors
     ~warnings;
   Lwt.return env
 
-let did_close env client : ServerEnv.env Lwt.t =
+let did_close env client ~vscode_detailed_diagnostics : ServerEnv.env Lwt.t =
   let (errors, warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
+    ~vscode_detailed_diagnostics
     ~errors_reason:LspProt.Env_change
     ~errors
     ~warnings;
@@ -2100,9 +2103,13 @@ let mk_lsp_error_response ~id ~reason ?stack metadata =
   in
   (LspProt.LspFromServer (Some message), metadata)
 
-let handle_persistent_subscribe ~metadata ~client ~profiling:_ ~env =
+let handle_persistent_subscribe ~metadata ~client ~vscode_detailed_diagnostics ~profiling:_ ~env =
   let (current_errors, current_warnings) = ErrorCollator.get_with_separate_warnings env in
-  Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
+  Persistent_connection.subscribe_client
+    ~client
+    ~vscode_detailed_diagnostics
+    ~current_errors
+    ~current_warnings;
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 (* A did_open notification can come in about N files, which is great. But sometimes we'll get
@@ -2119,11 +2126,12 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
     pending := SMap.empty;
     ret
   in
-  let handle_persistent_did_open_notification ~metadata ~client ~profiling:_ ~env =
+  let handle_persistent_did_open_notification
+      ~metadata ~client ~vscode_detailed_diagnostics ~profiling:_ ~env =
     let%lwt env =
       match get_and_clear_did_open_files () with
       | [] -> Lwt.return env
-      | first :: rest -> did_open env client (first, rest)
+      | first :: rest -> did_open env client ~vscode_detailed_diagnostics (first, rest)
     in
     Lwt.return (env, LspProt.LspFromServer None, metadata)
   in
@@ -2143,8 +2151,9 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   (LspProt.LspFromServer None, metadata)
 
-let handle_persistent_did_close_notification ~metadata ~client ~profiling:_ ~env =
-  let%lwt env = did_close env client in
+let handle_persistent_did_close_notification
+    ~metadata ~client ~vscode_detailed_diagnostics ~profiling:_ ~env =
+  let%lwt env = did_close env client ~vscode_detailed_diagnostics in
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
@@ -3219,6 +3228,7 @@ let handle_live_errors_request =
             let live_errors_uri = Lsp.DocumentUri.of_string uri in
             let live_diagnostics =
               Flow_lsp_conversions.diagnostics_of_flow_errors
+                ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
                 ~errors:live_errors
                 ~warnings:live_warnings
               |> Lsp.UriMap.find_opt live_errors_uri
@@ -3287,7 +3297,11 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     Handle_persistent_immediately (handle_persistent_canceled ~id ~metadata)
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~metadata)
+    Handle_nonparallelizable_persistent
+      (handle_persistent_subscribe
+         ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
+         ~metadata
+      )
   | LspToServer (NotificationMessage (DidOpenNotification params)) ->
     let { Lsp.DidOpen.textDocument } = params in
     let { Lsp.TextDocumentItem.text; uri; languageId = _; version = _ } = textDocument in
@@ -3305,7 +3319,11 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
       enqueue_did_open_files files;
 
       (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent (handle_persistent_did_open_notification ~metadata)
+      Handle_nonparallelizable_persistent
+        (handle_persistent_did_open_notification
+           ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
+           ~metadata
+        )
     ) else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)
@@ -3328,7 +3346,11 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     in
     if did_anything_change then
       (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent (handle_persistent_did_close_notification ~metadata)
+      Handle_nonparallelizable_persistent
+        (handle_persistent_did_close_notification
+           ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
+           ~metadata
+        )
     else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)

@@ -95,7 +95,7 @@ let send_errors =
           File_key.ResourceFile filename;
         ]
   in
-  fun ~errors_reason ~errors ~warnings client ->
+  fun ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings client ->
     let warnings =
       SMap.fold
         (fun filename _ warn_acc ->
@@ -104,11 +104,15 @@ let send_errors =
         client.opened_files
         Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
     in
-    let diagnostics = Flow_lsp_conversions.diagnostics_of_flow_errors ~errors ~warnings in
+    let diagnostics =
+      Flow_lsp_conversions.diagnostics_of_flow_errors ~vscode_detailed_diagnostics ~errors ~warnings
+    in
     send_notification (Prot.Errors { diagnostics; errors_reason }) client
 
-let send_errors_if_subscribed ~client ~errors_reason ~errors ~warnings =
-  if client.subscribed then send_errors ~errors_reason ~errors ~warnings client
+let send_errors_if_subscribed ~client ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings
+    =
+  if client.subscribed then
+    send_errors ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings client
 
 let send_single_lsp (message, metadata) client =
   send_response (Prot.LspFromServer message, metadata) client
@@ -157,7 +161,7 @@ let get_subscribed_clients =
       | _ -> acc)
     ~init:[]
 
-let update_clients ~clients ~errors_reason ~calc_errors_and_warnings =
+let update_clients ~clients ~vscode_detailed_diagnostics ~errors_reason ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
   let subscribed_client_count = List.length subscribed_clients in
   let all_client_count = List.length clients in
@@ -171,7 +175,9 @@ let update_clients ~clients ~errors_reason ~calc_errors_and_warnings =
       warning_file_count
       subscribed_client_count
       all_client_count;
-    List.iter (send_errors ~errors_reason ~errors ~warnings) subscribed_clients
+    List.iter
+      (send_errors ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings)
+      subscribed_clients
   )
 
 let send_lsp clients json = clients |> get_subscribed_clients |> List.iter (send_single_lsp json)
@@ -182,14 +188,19 @@ let send_start_recheck clients =
 let send_end_recheck ~lazy_stats clients =
   clients |> get_subscribed_clients |> List.iter (send_single_end_recheck ~lazy_stats)
 
-let subscribe_client ~client ~current_errors ~current_warnings =
+let subscribe_client ~client ~vscode_detailed_diagnostics ~current_errors ~current_warnings =
   Hh_logger.info "Subscribing client #%d to push diagnostics" client.client_id;
   if client.subscribed then
     (* noop *)
     ()
   else
     let errors_reason = Prot.New_subscription in
-    send_errors ~errors_reason ~errors:current_errors ~warnings:current_warnings client;
+    send_errors
+      ~vscode_detailed_diagnostics
+      ~errors_reason
+      ~errors:current_errors
+      ~warnings:current_warnings
+      client;
     client.subscribed <- true
 
 let client_did_open (client : single_client) ~(files : (string * string) Nel.t) : bool =

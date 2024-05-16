@@ -162,6 +162,9 @@ module Cli_output : sig
     unit ->
     unit
 
+  val format_single_error_to_string :
+    strip_root:File_path.t option -> severity:Severity.severity -> Loc.t printable_error -> string
+
   (* print errors *)
 end
 
