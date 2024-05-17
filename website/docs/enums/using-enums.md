@@ -49,23 +49,38 @@ const status: Status = calculateStatus();
 
 ### Casting to representation type {#toc-casting-to-representation-type}
 Enums do not implicitly coerce to their representation type or vice-versa.
-If you want to convert from the enum type to the representation type, you can use an explicit cast `(x: string)`:
+If you want to convert from the enum type to the representation type, you can use an explicit cast `x as string`:
 
 ```js flow-check
-enum Status {
-  Active,
-  Paused,
-  Off,
-}
+enum Status {Active, Paused, Off}
 
 const s: string = Status.Active; // Error: 'Status' is not compatible with 'string'
-const statusString: string = Status.Active as string;
+
+declare const status: Status;
+const statusString: string = status as string;
 ```
 
-To convert from a nullable enum type to nullable string, you can do:
-```js
-const maybeStatus: ?Status = ....;
-const maybeStatusString: ?string = maybeStatus && (maybeStatus as string);
+You can also call `.valueOf()` on the enum value <SinceVersion version="0.234" />.
+This is particularly useful if you are dealing with [abstract enums](#toc-abstract-enums) and don't know the representation type.
+
+```js flow-check
+enum Status {Active, Paused, Off}
+
+declare const status: Status;
+const statusString: string = status.valueOf();
+```
+
+To convert from a nullable enum type to nullable representation type, you can do:
+
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const maybeStatus: ?Status;
+
+// Using `as` cast and `&&`:
+const maybeStatusString1: ?string = maybeStatus && (maybeStatus as string);
+
+// Using `.valueOf()` and optional chaining:
+const maybeStatusString2: ?string = maybeStatus?.valueOf();
 ```
 
 If you want to convert from the representation type (e.g. `string`) to an enum type (if valid), check out the [cast method](#toc-cast).
