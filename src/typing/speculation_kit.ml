@@ -38,24 +38,11 @@ module type OUTPUT = sig
     Type.use_t ->
     unit
 
-  val prep_try_intersection :
-    Context.t ->
-    Type.DepthTrace.t ->
-    reason ->
-    Type.t list ->
-    Type.t list ->
-    Type.use_t ->
-    Reason.reason ->
-    Type.InterRep.t ->
-    unit
-
   val fully_resolve_type :
     Context.t -> Type.DepthTrace.t -> reason -> Graph_explorer.Tbl.key -> Type.t -> unit
 
   val speculative_matches :
     Context.t -> Type.DepthTrace.t -> ALoc.t Reason.virtual_reason -> int -> Type.spec -> unit
-
-  val intersection_preprocess_kit : reason -> Type.intersection_preprocess_tool -> Type.use_t
 end
 
 module Make (Flow : INPUT) : OUTPUT = struct
@@ -243,7 +230,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
   and try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u =
     let speculation_id = mk_id () in
     Speculation.init_speculation cx speculation_id;
-
     let imap =
       if upper_unresolved then
         (* collect parts of the intersection type to be fully resolved *)
@@ -259,45 +245,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
     @@ (* ...and then begin the choice-making process *)
     try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
-
-  (** Preprocessing for intersection types.
-
-    Before feeding into the choice-making machinery described above, we
-    preprocess upper bounds of intersection types. This preprocessing seems
-    asymmetric, but paradoxically, it is not: the purpose of the preprocessing is
-    to bring choice-making on intersections to parity with choice-making on
-    unions.
-
-    Consider what happens when a lower bound is checked against a union type. The
-    lower bound is always concretized before a choice is made! In other words,
-    even if we emit a flow from an unresolved tvar to a union type, the
-    constraint fires only when the unresolved tvar has been concretized.
-
-    Now, consider checking an intersection type with an upper bound. As an
-    artifact of how tvars and concrete types are processed, the upper bound would
-    appear to be concrete even though the actual parts of the upper bound that
-    are involved in the choice-making may be unresolved! (These parts are the
-    top-level input positions in the upper bound, which end up choosing between
-    the top-level input positions in the members of the intersection type.) If we
-    did not concretize the parts of the upper bound involved in choice-making, we
-    would start the choice-making process at a disadvantage (compared to
-    choice-making with a union type and an already concretized lower
-    bound). Thus, we do an extra preprocessing step where we collect the parts of
-    the upper bound to be concretized, and for each combination of concrete types
-    for those parts, call the choice-making process.
-  *)
-
-  (** The following function concretizes each tvar in unresolved in turn,
-      recording their corresponding concrete lower bounds in resolved as it
-      goes. At each step, it emits a ConcretizeTypes constraint on an unresolved
-      tvar, which in turn calls into this function when a concrete lower bound
-      appears on that tvar. **)
-  and prep_try_intersection cx trace reason unresolved resolved u r rep =
-    match unresolved with
-    | [] -> try_intersection cx trace (replace_parts cx resolved u) r rep
-    | tvar :: unresolved ->
-      let tgt = ConcretizeIntersectionT (unresolved, resolved, r, rep, u) in
-      rec_flow cx trace (tvar, intersection_preprocess_kit reason (ConcretizeTypes tgt))
 
   (************************)
   (* Full type resolution *)
@@ -439,8 +386,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
   and choice_kit reason k = InternalT (ChoiceKitT (reason, k))
 
   and choice_kit_use reason k = ChoiceKitUseT (reason, k)
-
-  and intersection_preprocess_kit reason k = PreprocessKitT (reason, k)
 
   (** utils for emitting toolkit constraints **)
 

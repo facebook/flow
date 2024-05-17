@@ -275,125 +275,6 @@ let is_union_resolvable = function
     true
   | _ -> false
 
-(* some patterns need to be concretized before proceeding further *)
-let patt_that_needs_concretization = function
-  | OpenT _
-  | UnionT _
-  | MaybeT _
-  | OptionalT _
-  | AnnotT _ ->
-    true
-  | _ -> false
-
-let parts_to_replace_t cx = function
-  | DefT (_, ObjT { call_t = Some id; _ }) -> begin
-    match Context.find_call cx id with
-    | DefT (_, FunT (_, ft)) ->
-      let ts =
-        List.fold_left
-          (fun acc (_, t) ->
-            if patt_that_needs_concretization t then
-              t :: acc
-            else
-              acc)
-          []
-          ft.params
-      in
-      (match ft.rest_param with
-      | Some (_, _, t) when patt_that_needs_concretization t -> t :: ts
-      | _ -> ts)
-    | _ -> []
-  end
-  | DefT (_, FunT (_, ft)) ->
-    let ts =
-      List.fold_left
-        (fun acc (_, t) ->
-          if patt_that_needs_concretization t then
-            t :: acc
-          else
-            acc)
-        []
-        ft.params
-    in
-    (match ft.rest_param with
-    | Some (_, _, t) when patt_that_needs_concretization t -> t :: ts
-    | _ -> ts)
-  | _ -> []
-
-(* for now, we only care about concretizating parts of functions and calls *)
-let parts_to_replace cx = function
-  | UseT (_, t) -> parts_to_replace_t cx t
-  | CallT { use_op = _; reason = _; call_action = Funcalltype callt; return_hint = _ } ->
-    List.fold_left
-      (fun acc -> function
-        | Arg t
-        | SpreadArg t
-          when patt_that_needs_concretization t ->
-          t :: acc
-        | _ -> acc)
-      []
-      callt.call_args_tlist
-  | _ -> []
-
-(* replace unresolved types (xs) with resolved (ys) *)
-let replace_parts =
-  let rec replace_params acc = function
-    | (ys, []) -> (ys, List.rev acc)
-    | (ys, ((name, x) as param) :: params) ->
-      if patt_that_needs_concretization x then
-        replace_params ((name, List.hd ys) :: acc) (List.tl ys, params)
-      else
-        replace_params (param :: acc) (ys, params)
-  in
-  let replace_rest_param = function
-    | (ys, None) -> (ys, None)
-    | (ys, (Some (name, loc, x) as param)) ->
-      if patt_that_needs_concretization x then
-        (List.tl ys, Some (name, loc, List.hd ys))
-      else
-        (ys, param)
-  in
-  let replace_arg ys = function
-    | Arg x when patt_that_needs_concretization x -> (Arg (List.hd ys), List.tl ys)
-    | SpreadArg x when patt_that_needs_concretization x -> (SpreadArg (List.hd ys), List.tl ys)
-    | arg -> (arg, ys)
-  in
-  let rec replace_args acc = function
-    | (ys, []) -> (ys, List.rev acc)
-    | (ys, arg :: args) ->
-      let (arg, ys) = replace_arg ys arg in
-      replace_args (arg :: acc) (ys, args)
-  in
-  fun cx resolved -> function
-    | UseT (op, DefT (r1, ObjT ({ call_t = Some id; _ } as o))) as u -> begin
-      match Context.find_call cx id with
-      | DefT (r2, FunT (static, ft)) ->
-        let (resolved, params) = replace_params [] (resolved, ft.params) in
-        let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
-        assert (resolved = []);
-        let id' =
-          Context.make_call_prop cx (DefT (r2, FunT (static, { ft with params; rest_param })))
-        in
-        UseT (op, DefT (r1, ObjT { o with call_t = Some id' }))
-      | _ -> u
-    end
-    | UseT (op, DefT (r, FunT (t1, ft))) ->
-      let (resolved, params) = replace_params [] (resolved, ft.params) in
-      let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
-      assert (resolved = []);
-      UseT (op, DefT (r, FunT (t1, { ft with params; rest_param })))
-    | CallT { use_op; reason; call_action = Funcalltype funcalltype; return_hint } ->
-      let (resolved, call_args_tlist) = replace_args [] (resolved, funcalltype.call_args_tlist) in
-      assert (resolved = []);
-      CallT
-        {
-          use_op;
-          reason;
-          call_action = Funcalltype { funcalltype with call_args_tlist };
-          return_hint;
-        }
-    | u -> u
-
 (** Errors *)
 
 let error_message_kind_of_lower = function
@@ -2741,7 +2622,12 @@ end = struct
 
   let add_callee_use cx kind l u =
     match u with
-    | Type.CallT Type.{ call_action = Funcalltype { call_specialized_callee; _ }; _ } ->
+    | Type.CallT
+        Type.
+          {
+            call_action = Funcalltype { call_kind = RegularCallKind; call_specialized_callee; _ };
+            _;
+          } ->
       add_callee cx kind l call_specialized_callee
     | _ -> ()
 
