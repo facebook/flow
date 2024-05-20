@@ -55,8 +55,8 @@ type ux =
   | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
-  | PushedLiveNonParseErrors
-  | PushedLiveParseErrors
+  | PushedLiveNonParseErrors of Lsp.DocumentUri.t
+  | PushedLiveParseErrors of Lsp.DocumentUri.t
   | Responded
   | Timeout
 
@@ -149,10 +149,25 @@ let string_of_ux = function
   | ErroredPushingLiveNonParseErrors -> "ErroredPushingLiveNonParseErrors"
   | ErroredPushingLiveParseErrors -> "ErroredPushingLiveParseErrors"
   | PushedErrors -> "PushedErrors"
-  | PushedLiveNonParseErrors -> "PushedLiveNonParseErrors"
-  | PushedLiveParseErrors -> "PushedLiveParseErrors"
+  | PushedLiveNonParseErrors _ -> "PushedLiveNonParseErrors"
+  | PushedLiveParseErrors _ -> "PushedLiveParseErrors"
   | Responded -> "Responded"
   | Timeout -> "Timeout"
+
+let uri_of_ux = function
+  | PushedLiveNonParseErrors uri
+  | PushedLiveParseErrors uri ->
+    Some uri
+  | Canceled
+  | CanceledPushingLiveNonParseErrors
+  | Dismissed
+  | Errored
+  | ErroredPushingLiveNonParseErrors
+  | ErroredPushingLiveParseErrors
+  | PushedErrors
+  | Responded
+  | Timeout ->
+    None
 
 let string_of_server_status = function
   | Stopped -> "Stopped"
@@ -247,6 +262,7 @@ let log ~ux ~trigger ~start_state ~end_state =
     ~source:(trigger |> source_of_trigger |> string_of_source)
     ~trigger:(trigger |> string_of_trigger)
     ~ux:(ux |> string_of_ux)
+    ~uri:(ux |> uri_of_ux |> Base.Option.map ~f:Lsp.DocumentUri.to_string)
     ~start_time_ms:(start_state.time *. 1000. |> int_of_float)
     ~end_time_ms:(end_state.time *. 1000. |> int_of_float)
     ~start_server_status:(start_state.server_status |> string_of_server_status)

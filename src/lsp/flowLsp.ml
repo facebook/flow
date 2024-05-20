@@ -1695,7 +1695,7 @@ let do_live_diagnostics
         state
         |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
       in
-      (state, LspInteraction.PushedLiveParseErrors)
+      (state, LspInteraction.PushedLiveParseErrors uri)
   in
   log_interaction ~ux state interaction_id;
   let error_count =
@@ -2259,7 +2259,7 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
            the request was sent, then we will just ignore the response *)
         Base.Option.iter
           metadata.LspProt.interaction_tracking_id
-          ~f:(log_interaction ~ux:LspInteraction.PushedLiveNonParseErrors state);
+          ~f:(log_interaction ~ux:(LspInteraction.PushedLiveNonParseErrors uri) state);
         FlowEventLogger.live_non_parse_errors
           ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
           ~data:
