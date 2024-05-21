@@ -898,9 +898,7 @@ end = struct
         print
           [
             (C.Bold C.Default, spf "Passed: %d (%d cases), " results.ok_tests results.ok_cases);
-            ( C.BoldWithBG (C.White, C.Red),
-              spf "Failed: %d (%d cases)" results.failed_tests results.failed_cases
-            );
+            (C.Bold C.Red, spf "Failed: %d (%d cases)" results.failed_tests results.failed_cases);
             (C.Bold C.Default, spf ", Skipped: %d cases\n" results.skipped_cases);
           ]
       in

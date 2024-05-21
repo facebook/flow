@@ -23,8 +23,6 @@ type style =
   | Underline of raw_color
   | BoldUnderline of raw_color
   | DimUnderline of raw_color
-  | NormalWithBG of raw_color * raw_color
-  | BoldWithBG of raw_color * raw_color
 
 type color_mode =
   | Color_Always
