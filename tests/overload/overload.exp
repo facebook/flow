@@ -201,8 +201,77 @@ References:
                         ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test3.js:8:1
 
-Found 11 errors
+Cannot call `f` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or string [3] is incompatible with number [4].
+
+   test3.js:8:1
+   8| f(x_f); // ok
+      ^
+
+References:
+   test3.js:7:27
+   7| declare var x_f: string | number;
+                                ^^^^^^ [1]
+   test3.js:5:23
+   5| declare function f(x: string): void;
+                            ^^^^^^ [2]
+   test3.js:7:18
+   7| declare var x_f: string | number;
+                       ^^^^^^ [3]
+   test3.js:6:23
+   6| declare function f(x: number): void;
+                            ^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- test3.js:15:1
+
+Cannot call `g` because: [incompatible-call]
+ - Either null or undefined [1] is incompatible with null [2].
+ - Or null or undefined [1] is incompatible with undefined [3].
+
+   test3.js:15:1
+   15| g(x_g); // ok
+       ^
+
+References:
+   test3.js:14:18
+   14| declare var x_g: ?string;
+                        ^^^^^^^ [1]
+   test3.js:11:23
+   11| declare function g(x: null): void;
+                             ^^^^ [2]
+   test3.js:12:23
+   12| declare function g(x: void): void;
+                             ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test3.js:21:1
+
+Cannot call `h` because: [incompatible-call]
+ - Either string [1] is incompatible with undefined [2].
+ - Or undefined [1] is incompatible with string [3].
+
+   test3.js:21:1
+   21| h(x_h.p); // ok
+       ^
+
+References:
+   test3.js:20:23
+   20| declare var x_h: {p?: string};
+                             ^^^^^^ [1]
+   test3.js:18:23
+   18| declare function h(x: void): void;
+                             ^^^^ [2]
+   test3.js:19:23
+   19| declare function h(x: string): void;
+                             ^^^^^^ [3]
+
+
+
+Found 14 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

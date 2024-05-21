@@ -602,19 +602,6 @@ struct
           SpeculationKit.fully_resolve_type cx trace reason id t
         | (InternalT (ChoiceKitT (_, Trigger)), ChoiceKitUseT (reason, TryFlow (i, spec))) ->
           SpeculationKit.speculative_matches cx trace reason i spec
-        (* Intersection types need a preprocessing step before they can be checked;
-           this step brings it closer to parity with the checking of union types,
-           where the preprocessing effectively happens "automatically." This
-           apparent asymmetry is explained in prep_try_intersection.
-
-           Here, it suffices to note that the preprocessing step involves
-           concretizing some types. Type concretization is distinct from full type
-           resolution. Whereas full type resolution is a recursive process that
-           needs careful orchestration, type concretization is a relatively simple
-           one-step process: a tvar is concretized when any lower bound appears on
-           it. Also, unlike full type resolution, the tvars that are concretized
-           don't necessarily have the 0->1 property: they could be concretized at
-           different types, as more and more lower bounds appear. *)
         | (UnionT (_, urep), PreprocessKitT (_, ConcretizeTypes _)) ->
           flow_all_in_union cx trace urep u
         | (MaybeT (lreason, t), PreprocessKitT (_, ConcretizeTypes _)) ->
@@ -635,11 +622,6 @@ struct
               None
           in
           rec_flow cx trace (reposition ~trace cx loc ?annot_loc:(annot_loc_of_reason r) ?desc t, u)
-        | ( t,
-            PreprocessKitT
-              (reason, ConcretizeTypes (ConcretizeIntersectionT (unresolved, resolved, r, rep, u)))
-          ) ->
-          SpeculationKit.prep_try_intersection cx trace reason unresolved (t :: resolved) u r rep
         (*************)
         (* Debugging *)
         (*************)
@@ -2119,27 +2101,6 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
-        (* CallT uses that arise from the CallType type destructor are processed
-           without preparation (see below). This is because in these cases, the
-           return type is intended to be 0-1, whereas preparation (as implemented
-           currently) destroys 0-1 behavior. *)
-        | ( IntersectionT (r, rep),
-            CallT
-              {
-                use_op = _;
-                reason = _;
-                call_action = Funcalltype { call_kind = CallTypeKind | MapTypeKind; _ };
-                return_hint = _;
-              }
-          ) ->
-          SpeculationKit.try_intersection cx trace u r rep
-        (* All other pairs with an intersection lower bound come here. Before
-           further processing, we ensure that the upper bound is concretized. See
-           prep_try_intersection for details. **)
-        (* (After the above preprocessing step, try the branches of the intersection
-           in turn, with the goal of selecting the correct branch. This process is
-           reused for unions as well. See comments on try_union and
-           try_intersection.) *)
         | (IntersectionT (r, rep), u) ->
           let u' =
             match u with
@@ -2155,8 +2116,7 @@ struct
            * intersection as the type for the callee node. (This happens in
            * Default_resolver.) *)
           CalleeRecorder.add_callee_use cx CalleeRecorder.SigHelp l u';
-          let unresolved = parts_to_replace cx u in
-          SpeculationKit.prep_try_intersection cx trace (reason_of_use_t u) unresolved [] u r rep
+          SpeculationKit.try_intersection cx trace u r rep
         (******************************)
         (* optional chaining - part B *)
         (******************************)
@@ -8592,9 +8552,8 @@ struct
                cx
                trace
                ( obj,
-                 SpeculationKit.intersection_preprocess_kit
-                   reason
-                   (PropExistsTest (sense, key, reason, orig_obj, result, (pred, not_pred)))
+                 PreprocessKitT
+                   (reason, PropExistsTest (sense, key, reason, orig_obj, result, (pred, not_pred)))
                )
          )
     | _ -> rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
@@ -8830,11 +8789,7 @@ struct
                  rec_flow
                    cx
                    trace
-                   ( obj,
-                     SpeculationKit.intersection_preprocess_kit
-                       reason
-                       (SentinelPropTest (sense, key, t, orig_obj, result))
-                   )
+                   (obj, PreprocessKitT (reason, SentinelPropTest (sense, key, t, orig_obj, result)))
              )
         | _ ->
           (* not enough info to refine *)

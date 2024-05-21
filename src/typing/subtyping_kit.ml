@@ -1046,9 +1046,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * try_intersection.)
      *)
     | (IntersectionT (r, rep), _) ->
-      let unresolved = parts_to_replace_t cx u in
-      let u' = UseT (use_op, u) in
-      SpeculationKit.prep_try_intersection cx trace (reason_of_t u) unresolved [] u' r rep
+      SpeculationKit.try_intersection cx trace (UseT (use_op, u)) r rep
     (************)
     (* matching *)
     (************)

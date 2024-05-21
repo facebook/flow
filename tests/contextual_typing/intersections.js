@@ -29,14 +29,6 @@ function test2() {
   bak('boolean', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
 }
 
-function test3() {
-  declare function foo(x: number, f: (number) => void): void;
-  declare function foo(x: string, f: (string) => void): void;
-
-  declare var x: number | string;
-  foo(x, y => {}); // error missing annotation for y
-}
-
 function test4() {
   [[1]].filter(([n], i: number) => (n: number) > 0); // okay
 }
@@ -67,7 +59,7 @@ function test8() {
 
   declare var foo: ?string;
   overload(foo || "", (s) => {}); // okay
-  overload(foo || 42, (s) => {}); // error because we can't resolve overload
+  overload(foo || 42, (s) => {}); // error because we can't resolve overload, and on 1st arg
 }
 
 function test9() {
@@ -76,5 +68,4 @@ function test9() {
 
   (f1(x => (0: any)): {||});
   (f2(x => (0: any)): {||});
-
 }

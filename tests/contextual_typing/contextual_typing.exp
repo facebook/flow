@@ -656,36 +656,53 @@ References:
                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:37:10
-
-An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
-
-   37|   foo(x, y => {}); // error missing annotation for y
-                ^
-
-
-Error ------------------------------------------------------------------------------------------- intersections.js:61:28
+Error ------------------------------------------------------------------------------------------- intersections.js:53:28
 
 Cannot cast `tag` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   intersections.js:61:28
-   61|   tagsList.forEach(tag => (tag: number)); // error: string ~> number
+   intersections.js:53:28
+   53|   tagsList.forEach(tag => (tag: number)); // error: string ~> number
                                   ^^^
 
 References:
-   intersections.js:59:37
-   59|   declare var tags: ?$ReadOnlyArray<string>;
+   intersections.js:51:37
+   51|   declare var tags: ?$ReadOnlyArray<string>;
                                            ^^^^^^ [1]
-   intersections.js:61:33
-   61|   tagsList.forEach(tag => (tag: number)); // error: string ~> number
+   intersections.js:53:33
+   53|   tagsList.forEach(tag => (tag: number)); // error: string ~> number
                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:70:24
+Error -------------------------------------------------------------------------------------------- intersections.js:62:3
+
+Cannot call `overload` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or string [3] is incompatible with number [4].
+
+   intersections.js:62:3
+   62|   overload(foo || 42, (s) => {}); // error because we can't resolve overload, and on 1st arg
+         ^^^^^^^^
+
+References:
+   intersections.js:62:19
+   62|   overload(foo || 42, (s) => {}); // error because we can't resolve overload, and on 1st arg
+                         ^^ [1]
+   intersections.js:57:29
+   57|   declare function overload(string, (string) => void): void;
+                                   ^^^^^^ [2]
+   intersections.js:60:21
+   60|   declare var foo: ?string;
+                           ^^^^^^ [3]
+   intersections.js:58:29
+   58|   declare function overload(number, (number) => void): void;
+                                   ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- intersections.js:62:24
 
 An annotation on `s` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   70|   overload(foo || 42, (s) => {}); // error because we can't resolve overload
+   62|   overload(foo || 42, (s) => {}); // error because we can't resolve overload, and on 1st arg
                               ^
 
 

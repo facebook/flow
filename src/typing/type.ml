@@ -1777,7 +1777,6 @@ module rec TypeTerm : sig
     | TryFlow of int * spec
 
   and concretization_target =
-    | ConcretizeIntersectionT of t list * t list * reason * InterRep.t * use_t
     | ConcretizeForImportsExports of ident
     (* The purpose of this utility is to concretize a resolved type for the purpose
      * of type inspection. The goal here is to simplify types like EvalT, OpenT,
@@ -4227,7 +4226,14 @@ let string_of_use_ctor = function
       "PreprocessKitT %s"
       begin
         match tool with
-        | ConcretizeTypes _ -> "ConcretizeTypes"
+        | ConcretizeTypes c ->
+          let s =
+            match c with
+            | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
+            | ConcretizeForInspection _ -> "ConcretizeForInspection"
+            | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
+          in
+          "ConcretizeTypes(" ^ s ^ ")"
         | SentinelPropTest _ -> "SentinelPropTest"
         | PropExistsTest _ -> "PropExistsTest"
       end

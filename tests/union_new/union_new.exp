@@ -202,6 +202,53 @@ References:
            ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test26.js:8:1
+
+Cannot call `foo` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2].
+ - Or number [3] is incompatible with string [4].
+
+   test26.js:8:1
+   8| foo(x) as number | string;
+      ^^^
+
+References:
+   test26.js:6:25
+   6| declare var x: number | string;
+                              ^^^^^^ [1]
+   test26.js:3:25
+   3| declare function foo(x: number): number;
+                              ^^^^^^ [2]
+   test26.js:6:16
+   6| declare var x: number | string;
+                     ^^^^^^ [3]
+   test26.js:4:25
+   4| declare function foo(x: string): string;
+                              ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- test26.js:13:1
+
+Cannot call `foo` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2].
+ - Or number [1] is incompatible with string [3].
+
+   test26.js:13:1
+   13| foo(y) as T;
+       ^^^
+
+References:
+   test26.js:11:16
+   11| declare var y: T;
+                      ^ [1]
+   test26.js:3:25
+    3| declare function foo(x: number): number;
+                               ^^^^^^ [2]
+   test26.js:4:25
+    4| declare function foo(x: string): string;
+                               ^^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- test26.js:20:14
 
 Cannot call `(new Record()).set` because: [incompatible-call]
@@ -356,7 +403,7 @@ References:
 
 
 
-Found 19 errors
+Found 21 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

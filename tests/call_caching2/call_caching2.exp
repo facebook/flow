@@ -1,1 +1,30 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:2:3
+
+Cannot call `Iterable` because: [incompatible-call]
+ - Either `Iterable` [1] is incompatible with `Array` [2].
+ - Or empty array literal [3] is incompatible with `Iterable` [4].
+
+   test.js:2:3
+   2|   Iterable(items || []).size;
+        ^^^^^^^^
+
+References:
+   test.js:1:22
+   1| function Foo(items: ?Iterable<number>) {
+                           ^^^^^^^^^^^^^^^^ [1]
+   lib/immutable.js:7:20
+   7|   static <T>(iter: Array<T>): Iterable<T>;
+                         ^^^^^^^^ [2]
+   test.js:2:21
+   2|   Iterable(items || []).size;
+                          ^^ [3]
+   lib/immutable.js:6:18
+   6|   static <V,Iter:Iterable<V>>(iter: Iter): Iter;
+                       ^^^^^^^^^^^ [4]
+
+
+
+Found 1 error
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

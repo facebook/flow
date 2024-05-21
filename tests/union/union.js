@@ -10,12 +10,3 @@ function CD(b: boolean) {
   function qux2(e: C | D) { } // OK
   qux2(new C);
 }
-
-declare class F {
-    foo(x: number):void;
-    foo(x: string):void;
-}
-function corge(b: boolean) {
-    var x = b ? "" : 0;
-    new F().foo(x);
-}
