@@ -564,8 +564,8 @@ References:
    request.js:24:15
      24| h.text().then((t: Buffer) => t); // incorrect
                        ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1946:18
-   1946|       onFulfill: null | void,
+   <BUILTINS>/core.js:1939:18
+   1939|       onFulfill: null | void,
                           ^^^^^^^^^^^ [4]
 
 
@@ -589,8 +589,8 @@ References:
    request.js:26:22
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                               ^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1946:18
-   1946|       onFulfill: null | void,
+   <BUILTINS>/core.js:1939:18
+   1939|       onFulfill: null | void,
                           ^^^^^^^^^^^ [4]
 
 
@@ -721,17 +721,17 @@ References:
    <BUILTINS>/bom.js:1615:62
    1615| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                       ^^^^^^^^^^^ [5]
-   <BUILTINS>/core.js:2051:20
-   2051| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
+   <BUILTINS>/core.js:2038:20
+   2038| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
                             ^^^^^^^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:2051:40
-   2051| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
+   <BUILTINS>/core.js:2038:40
+   2038| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
                                                 ^^^^^^^^^^^^^ [7]
-   <BUILTINS>/core.js:2051:56
-   2051| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
+   <BUILTINS>/core.js:2038:56
+   2038| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
                                                                 ^^^^^^^^^^^^^^ [8]
-   <BUILTINS>/core.js:2047:39
-   2047| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:2034:39
+   2034| type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ [9]
    <BUILTINS>/bom.js:1615:95
    1615| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
@@ -758,8 +758,8 @@ References:
    response.js:42:15
      42| h.text().then((t: Buffer) => t); // incorrect
                        ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1946:18
-   1946|       onFulfill: null | void,
+   <BUILTINS>/core.js:1939:18
+   1939|       onFulfill: null | void,
                           ^^^^^^^^^^^ [4]
 
 
@@ -783,8 +783,8 @@ References:
    response.js:44:22
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                               ^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1946:18
-   1946|       onFulfill: null | void,
+   <BUILTINS>/core.js:1939:18
+   1939|       onFulfill: null | void,
                           ^^^^^^^^^^^ [4]
 
 
