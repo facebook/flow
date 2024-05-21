@@ -555,8 +555,39 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
       @
       match diagnostic.data with
       | PublishDiagnostics.NoExtraDetailedDiagnostic -> []
-      | PublishDiagnostics.ExtraDetailedDiagnosticV0 str ->
-        [("data", Some (JSON_Object [("version", JSON_Number "0"); ("rendered", JSON_String str)]))]
+      | PublishDiagnostics.ExtraDetailedDiagnosticV0 rendered ->
+        let map_color = function
+          | ExtraDetailedDiagnosticV0.Default -> "default"
+          | ExtraDetailedDiagnosticV0.Black -> "black"
+          | ExtraDetailedDiagnosticV0.Red -> "red"
+          | ExtraDetailedDiagnosticV0.Green -> "green"
+          | ExtraDetailedDiagnosticV0.Yellow -> "yellow"
+          | ExtraDetailedDiagnosticV0.Blue -> "blue"
+          | ExtraDetailedDiagnosticV0.Magenta -> "magenta"
+          | ExtraDetailedDiagnosticV0.Cyan -> "cyan"
+          | ExtraDetailedDiagnosticV0.White -> "white"
+        in
+        let map_style = function
+          | ExtraDetailedDiagnosticV0.Normal c ->
+            JSON_Object [("type", JSON_String "normal"); ("color", JSON_String (map_color c))]
+          | ExtraDetailedDiagnosticV0.Bold c ->
+            JSON_Object [("type", JSON_String "bold"); ("color", JSON_String (map_color c))]
+          | ExtraDetailedDiagnosticV0.Dim c ->
+            JSON_Object [("type", JSON_String "dim"); ("color", JSON_String (map_color c))]
+          | ExtraDetailedDiagnosticV0.Underline c ->
+            JSON_Object [("type", JSON_String "underline"); ("color", JSON_String (map_color c))]
+          | ExtraDetailedDiagnosticV0.BoldUnderline c ->
+            JSON_Object
+              [("type", JSON_String "bold-underline"); ("color", JSON_String (map_color c))]
+          | ExtraDetailedDiagnosticV0.DimUnderline c ->
+            JSON_Object
+              [("type", JSON_String "dim-underline"); ("color", JSON_String (map_color c))]
+        in
+        let map_styled (style, text) =
+          JSON_Object [("style", map_style style); ("text", JSON_String text)]
+        in
+        let rendered = JSON_Array (List.map map_styled rendered) in
+        [("data", Some (JSON_Object [("version", JSON_Number "0"); ("rendered", rendered)]))]
       )
   )
 

@@ -558,6 +558,27 @@ module Hover : sig
 end
 
 module PublishDiagnostics : sig
+  module ExtraDetailedDiagnosticV0 : sig
+    type raw_color =
+      | Default
+      | Black
+      | Red
+      | Green
+      | Yellow
+      | Blue
+      | Magenta
+      | Cyan
+      | White
+
+    type style =
+      | Normal of raw_color
+      | Bold of raw_color
+      | Dim of raw_color
+      | Underline of raw_color
+      | BoldUnderline of raw_color
+      | DimUnderline of raw_color
+  end
+
   type diagnosticCode =
     | IntCode of int
     | StringCode of string
@@ -602,7 +623,7 @@ module PublishDiagnostics : sig
 
   and extraDetailedDiagnostic =
     | NoExtraDetailedDiagnostic
-    | ExtraDetailedDiagnosticV0 of string
+    | ExtraDetailedDiagnosticV0 of (ExtraDetailedDiagnosticV0.style * string) list
 end
 
 module DidOpen : sig
