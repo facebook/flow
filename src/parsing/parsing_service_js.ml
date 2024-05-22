@@ -141,6 +141,7 @@ let parse_file_sig options file docblock ast =
   let haste_module_ref_prefix_LEGACY_INTEROP =
     Options.haste_module_ref_prefix_LEGACY_INTEROP options
   in
+  let enable_jest_integration = Options.enable_jest_integration options in
   let enable_relay_integration = Options.enable_relay_integration options in
   let relay_integration_excludes = Options.relay_integration_excludes options in
   let relay_integration_module_prefix = Options.relay_integration_module_prefix options in
@@ -160,6 +161,7 @@ let parse_file_sig options file docblock ast =
   let file_sig_opts =
     {
       File_sig.enable_enums;
+      enable_jest_integration;
       enable_relay_integration;
       explicit_available_platforms = Docblock.supportsPlatform docblock;
       file_options;

@@ -14,6 +14,7 @@ module Loc = Loc_sig.LocS
 
 type options = {
   enable_enums: bool;
+  enable_jest_integration: bool;
   enable_relay_integration: bool;
   explicit_available_platforms: string list option;
   file_options: Files.options;
@@ -66,6 +67,7 @@ let empty = []
 
 let default_opts =
   {
+    enable_jest_integration = false;
     enable_relay_integration = false;
     enable_enums = false;
     explicit_available_platforms = None;

@@ -82,6 +82,7 @@ type t = {
   opt_react_rules: react_rules list;
   opt_debug: bool;
   opt_enable_const_params: bool;
+  opt_enable_jest_integration: bool;
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
@@ -213,6 +214,8 @@ let typecheck_component_syntax_in_file opts file =
 let react_rules opts = opts.opt_react_rules
 
 let enable_const_params opts = opts.opt_enable_const_params
+
+let enable_jest_integration opts = opts.opt_enable_jest_integration
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 
