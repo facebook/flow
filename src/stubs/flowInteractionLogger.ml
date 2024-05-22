@@ -15,6 +15,7 @@ let interaction
     ~source:_
     ~trigger:_
     ~ux:_
+    ~uri:_
     ~start_time_ms:_
     ~end_time_ms:_
     ~start_server_status:_

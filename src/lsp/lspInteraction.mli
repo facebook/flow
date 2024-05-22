@@ -44,8 +44,8 @@ type ux =
   | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
   | PushedErrors
-  | PushedLiveNonParseErrors
-  | PushedLiveParseErrors
+  | PushedLiveNonParseErrors of Lsp.DocumentUri.t
+  | PushedLiveParseErrors of Lsp.DocumentUri.t
   | Responded
   | Timeout
 
