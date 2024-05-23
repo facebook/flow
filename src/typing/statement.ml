@@ -3817,6 +3817,18 @@ module Make
           )
         in
         Some ast
+      | Call { Call.callee; targs = _; arguments; comments = _ }
+        when Context.enable_jest_integration cx ->
+        (match Flow_ast_utils.get_call_to_jest_module_mocking_fn callee arguments with
+        | Some (jest_loc, source_loc, module_name)
+          when not (Type_env.local_scope_entry_exists cx jest_loc) ->
+          ignore
+          @@ Import_export.get_module_t
+               cx
+               (source_loc, module_name)
+               ~perform_platform_validation:false
+        | _ -> ());
+        None
       | _ -> None
     in
     let (e', opt_state, call_ast, member_ast) = factor_out_optional ex in

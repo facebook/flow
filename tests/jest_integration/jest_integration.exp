@@ -1,0 +1,74 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:11:27
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   11| jest.createMockFromModule('BAD') // error
+                                 ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:11
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   12| jest.mock('BAD') // error
+                 ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:13
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   13| jest.unmock('BAD') // error
+                   ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:17
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   14| jest.deepUnmock('BAD') // error
+                       ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:13
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   15| jest.doMock('BAD')
+                   ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:15
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   16| jest.dontMock('BAD') // error
+                     ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:14
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   17| jest.setMock('BAD') // error
+                    ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:20
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   18| jest.requireActual('BAD') // error
+                          ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:18
+
+Cannot resolve module `BAD`. [cannot-resolve-module]
+
+   19| jest.requireMock('BAD') // error
+                        ^^^^^
+
+
+
+Found 9 errors

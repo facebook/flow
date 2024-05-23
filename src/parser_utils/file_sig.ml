@@ -516,7 +516,12 @@ class requires_calculator ~file_key ~ast ~opts =
                  { source = (source_loc, name); require_loc = call_loc; bindings; prefix = None }
               )
         | _ -> ()
-      )
+      );
+      if opts.enable_jest_integration then
+        match Flow_ast_utils.get_call_to_jest_module_mocking_fn callee arguments with
+        | Some (jest_loc, source_loc, name) when not (Scope_api.is_local_use scope_info jest_loc) ->
+          this#add_require (Import0 { source = (source_loc, name) })
+        | _ -> ()
 
     (* skip declare module *)
     method! declare_module _loc (m : (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) = m
