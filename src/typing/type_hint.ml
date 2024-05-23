@@ -259,7 +259,6 @@ and instantiate_component cx component instantiation_hint =
         (tparams_loc, tparams, t_out)
         unknown_use
         reason
-        false
         ~component
         ~config:(Lazy.force config)
         ~targs:None

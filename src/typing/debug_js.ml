@@ -465,7 +465,6 @@ and dump_use_t_ (depth, tvars) cx t =
       function
       | CreateElement
           {
-            clone = _;
             component = _;
             config;
             children = (children, children_spread);

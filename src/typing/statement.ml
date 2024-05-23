@@ -6429,7 +6429,6 @@ module Make
             reason,
             React.CreateElement
               {
-                clone = false;
                 component = component_t;
                 config = props;
                 children = (children, None);
