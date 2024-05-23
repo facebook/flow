@@ -8,17 +8,19 @@
 module Prot = LspProt
 
 module Client_config = struct
-  type rank_autoimports_by_usage =
-    [ `Default
-    | `True
-    | `False
-    ]
+  type client_toggle =
+    | Default
+    | True
+    | False
 
   type t = {
-    rank_autoimports_by_usage: rank_autoimports_by_usage;
+    detailed_error_rendering: client_toggle;
+    rank_autoimports_by_usage: client_toggle;
     suggest_autoimports: bool;
     show_suggest_ranking_info: bool;
   }
+
+  let detailed_error_rendering { detailed_error_rendering; _ } = detailed_error_rendering
 
   let rank_autoimports_by_usage { rank_autoimports_by_usage; _ } = rank_autoimports_by_usage
 
@@ -132,8 +134,9 @@ let add_client client_id lsp_initialize_params =
       type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
       client_config =
         {
-          Client_config.suggest_autoimports = true;
-          rank_autoimports_by_usage = `Default;
+          Client_config.detailed_error_rendering = Client_config.Default;
+          suggest_autoimports = true;
+          rank_autoimports_by_usage = Client_config.Default;
           show_suggest_ranking_info = false;
         };
       outstanding_handlers = Lsp.IdMap.empty;
@@ -261,6 +264,19 @@ let client_did_change_configuration (client : single_client) (new_config : Clien
   Hh_logger.info "Client #%d changed configuration" client.client_id;
   let old_config = client.client_config in
 
+  let old_detailed_error_rendering = Client_config.detailed_error_rendering old_config in
+  let new_detailed_error_rendering = Client_config.detailed_error_rendering new_config in
+  let client_toggle_to_string = function
+    | Client_config.Default -> "default"
+    | Client_config.True -> "true"
+    | Client_config.False -> "false"
+  in
+  if old_detailed_error_rendering <> new_detailed_error_rendering then
+    Hh_logger.info
+      "  detailed_error_rendering: %s -> %s"
+      (client_toggle_to_string old_detailed_error_rendering)
+      (client_toggle_to_string new_detailed_error_rendering);
+
   let old_suggest_autoimports = Client_config.suggest_autoimports old_config in
   let new_suggest_autoimports = Client_config.suggest_autoimports new_config in
   if new_suggest_autoimports <> old_suggest_autoimports then
@@ -268,17 +284,11 @@ let client_did_change_configuration (client : single_client) (new_config : Clien
 
   let old_rank_autoimports_by_usage = Client_config.rank_autoimports_by_usage old_config in
   let new_rank_autoimports_by_usage = Client_config.rank_autoimports_by_usage new_config in
-  ( if new_rank_autoimports_by_usage <> old_rank_autoimports_by_usage then
-    let to_string = function
-      | `Default -> "default"
-      | `True -> "true"
-      | `False -> "false"
-    in
+  if new_rank_autoimports_by_usage <> old_rank_autoimports_by_usage then
     Hh_logger.info
       "  rank_autoimports_by_usage: %s -> %s"
-      (to_string old_rank_autoimports_by_usage)
-      (to_string new_rank_autoimports_by_usage)
-  );
+      (client_toggle_to_string old_rank_autoimports_by_usage)
+      (client_toggle_to_string new_rank_autoimports_by_usage);
 
   let old_show_suggest_ranking_info = Client_config.show_suggest_ranking_info old_config in
   let new_show_suggest_ranking_info = Client_config.show_suggest_ranking_info new_config in
