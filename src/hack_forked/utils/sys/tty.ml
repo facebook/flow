@@ -23,8 +23,6 @@ type style =
   | Underline of raw_color
   | BoldUnderline of raw_color
   | DimUnderline of raw_color
-  | NormalWithBG of raw_color * raw_color
-  | BoldWithBG of raw_color * raw_color
 
 type color_mode =
   | Color_Always
@@ -42,17 +40,6 @@ let text_num = function
   | Cyan -> "36"
   | White -> "37"
 
-let background_num = function
-  | Default -> "49"
-  | Black -> "40"
-  | Red -> "41"
-  | Green -> "42"
-  | Yellow -> "43"
-  | Blue -> "44"
-  | Magenta -> "45"
-  | Cyan -> "46"
-  | White -> "47"
-
 let color_num = function
   | Default -> "0"
   | x -> text_num x
@@ -64,8 +51,6 @@ let style_num = function
   | Underline c -> color_num c ^ ";4"
   | BoldUnderline c -> color_num c ^ ";1;4"
   | DimUnderline c -> color_num c ^ ";2;4"
-  | NormalWithBG (text, bg) -> text_num text ^ ";" ^ background_num bg
-  | BoldWithBG (text, bg) -> text_num text ^ ";" ^ background_num bg ^ ";1"
 
 let supports_color =
   let memo = ref None in

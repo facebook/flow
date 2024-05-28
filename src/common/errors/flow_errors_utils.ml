@@ -1661,8 +1661,6 @@ module Cli_output = struct
         | Tty.Underline _ -> true
         | Tty.BoldUnderline _ -> true
         | Tty.DimUnderline _ -> true
-        | Tty.NormalWithBG _ -> false
-        | Tty.BoldWithBG _ -> false
       in
       let is_first_underlined = function
         | [] -> false
