@@ -5,7 +5,6 @@ must exist for this interface. Read the docs on Flow's multi-platform support fo
 https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 
-
 Error ---------------------------------------------------------------------------------------------- bar.android.js:1:24
 
 The imported module supports the `ios` platform, but the current module requires the support of the `android` platform.
@@ -29,7 +28,6 @@ Error --------------------------------------------------------------------------
 Cannot resolve platform-specific implementation module `./foo.android`. All platform-specific implementations must exist
 for this interface. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
-
 
 
 Error ---------------------------------------------------------------------------------------------- foo.windows.js:1:18
