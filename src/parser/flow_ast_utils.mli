@@ -43,6 +43,11 @@ val get_call_to_object_dot_freeze_arg :
 
 val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val get_call_to_jest_module_mocking_fn :
+  ('loc, 'annot) Flow_ast.Expression.t ->
+  ('loc, 'annot) Flow_ast.Expression.ArgList.t ->
+  ('annot * 'annot * string) option
+
 val is_super_member_access : ('a, 'b) Flow_ast.Expression.Member.t -> bool
 
 (* Returns Ok () for such statement, and Error kind_of_statement otherwise. *)

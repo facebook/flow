@@ -198,6 +198,55 @@ let is_call_to_object_static_method callee =
     true
   | _ -> false
 
+let get_call_to_jest_module_mocking_fn callee arguments =
+  match (callee, arguments) with
+  | ( ( _,
+        E.Member
+          {
+            E.Member._object = (_, E.Identifier (jest_loc, { I.name = "jest"; comments = _ }));
+            property =
+              E.Member.PropertyIdentifier
+                ( _,
+                  (* See https://jestjs.io/docs/jest-object#mock-modules *)
+                  {
+                    I.name =
+                      ( "createMockFromModule" | "mock" | "unmock" | "deepUnmock" | "doMock"
+                      | "dontMock" | "setMock" | "requireActual" | "requireMock" );
+                    comments = _;
+                  }
+                );
+            _;
+          }
+      ),
+      ( _,
+        {
+          E.ArgList.arguments =
+            E.Expression
+              ( source_loc,
+                ( E.StringLiteral { StringLiteral.value = name; _ }
+                | E.TemplateLiteral
+                    {
+                      E.TemplateLiteral.quasis =
+                        [
+                          ( _,
+                            {
+                              E.TemplateLiteral.Element.value =
+                                { E.TemplateLiteral.Element.cooked = name; _ };
+                              _;
+                            }
+                          );
+                        ];
+                      _;
+                    } )
+              )
+            :: _;
+          comments = _;
+        }
+      )
+    ) ->
+    Some (jest_loc, source_loc, name)
+  | _ -> None
+
 let is_super_member_access = function
   | { E.Member._object = (_, E.Super _); _ } -> true
   | _ -> false
