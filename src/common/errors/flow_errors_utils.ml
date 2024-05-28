@@ -1892,381 +1892,379 @@ module Cli_output = struct
    * We render the root location for our friendly error message. Decorated with
    * the reference locations from the message. *)
   let print_code_frames_friendly ~stdin_file ~strip_root ~flags ~references ~colors ~tags root_loc =
-    Loc.(
-      (* Get a list of all the locations we will want to display. We want to
-       * display references and the root location with some extra lines
-       * for context. *)
-      let locs =
-        (* Expand the root location with 3 lines of context in either direction.
-         * However, don't expand before the first line or after the last line. If
-         * we expand past the last line then read_lines_in_file will skip
-         * those lines. *)
-        let expanded_root_loc =
-          let start_line = max 1 (root_loc.start.line - root_context_lines) in
-          let end_line = root_loc._end.line + root_context_lines in
-          {
-            root_loc with
-            start = { root_loc.start with line = start_line };
-            _end = { root_loc._end with line = end_line };
-          }
-        in
-        expanded_root_loc :: Base.List.map ~f:snd (IMap.bindings references)
+    let open Loc in
+    (* Get a list of all the locations we will want to display. We want to
+     * display references and the root location with some extra lines
+     * for context. *)
+    let locs =
+      (* Expand the root location with 3 lines of context in either direction.
+       * However, don't expand before the first line or after the last line. If
+       * we expand past the last line then read_lines_in_file will skip
+       * those lines. *)
+      let expanded_root_loc =
+        let start_line = max 1 (root_loc.start.line - root_context_lines) in
+        let end_line = root_loc._end.line + root_context_lines in
+        {
+          root_loc with
+          start = { root_loc.start with line = start_line };
+          _end = { root_loc._end with line = end_line };
+        }
       in
-      (* Group our locs by their file key.
-       *
-       * Also split large locs into two smaller locs.
-       *
-       * Also compute the largest line number. We need this to compute the
-       * gutter width. *)
-      let (max_line, locs) =
-        List.fold_left
-          (fun (max_line, acc) loc ->
+      expanded_root_loc :: Base.List.map ~f:snd (IMap.bindings references)
+    in
+    (* Group our locs by their file key.
+     *
+     * Also split large locs into two smaller locs.
+     *
+     * Also compute the largest line number. We need this to compute the
+     * gutter width. *)
+    let (max_line, locs) =
+      List.fold_left
+        (fun (max_line, acc) loc ->
+          match loc.source with
+          | None -> failwith "expected loc to have a source"
+          | Some source ->
+            (* If our loc is larger then some threshold determined by
+             * omit_after_lines then split it into two locs. *)
+            let new_locs =
+              if loc._end.line - loc.start.line + 1 <= omit_after_lines * 2 then
+                [loc]
+              else
+                let loc1 =
+                  {
+                    loc with
+                    _end = { loc.start with line = loc.start.line + (omit_after_lines - 1) };
+                  }
+                in
+                let loc2 =
+                  {
+                    loc with
+                    start = { loc._end with line = loc._end.line - (omit_after_lines - 1) };
+                  }
+                in
+                [loc1; loc2]
+            in
+            (* Add the new locs to our FileKeyMap. *)
+            let locs = Base.Option.value (FileKeyMap.find_opt source acc) ~default:[] in
+            (max max_line loc._end.line, FileKeyMap.add source (new_locs @ locs) acc))
+        (0, FileKeyMap.empty)
+        locs
+    in
+    (* Perform some organization operations on our locs. *)
+    let locs =
+      FileKeyMap.map
+        (fun locs ->
+          (* Sort all of the locations we want to display. Locations in the root
+           * file should appear first. Sort in the reverse direction. Our next merge
+           * step will flip the list back around. *)
+          let locs = List.sort Loc.compare locs in
+          (* Merge the locations we want to display. We start with the location with
+           * the lowest line number. Our fold depends on this to merge correctly. *)
+          let locs =
+            List.fold_left
+              (fun acc loc ->
+                match acc with
+                (* Init. *)
+                | [] -> [loc]
+                (* If the previous loc + 3 lines below intersects with the next loc then
+                 * we want to merge those locs into one code frame. *)
+                | last_loc :: acc
+                  when Loc.lines_intersect
+                         loc
+                         {
+                           last_loc with
+                           _end =
+                             {
+                               last_loc._end with
+                               line = last_loc._end.line + (merge_nearby_lines + 1);
+                             };
+                         } ->
+                  let loc =
+                    {
+                      source = last_loc.source;
+                      start =
+                        ( if pos_cmp loc.start last_loc.start < 0 then
+                          loc.start
+                        else
+                          last_loc.start
+                        );
+                      _end =
+                        ( if pos_cmp loc._end last_loc._end > 0 then
+                          loc._end
+                        else
+                          last_loc._end
+                        );
+                    }
+                  in
+                  loc :: acc
+                (* Otherwise, add the loc by itself. *)
+                | acc -> loc :: acc)
+              []
+              locs
+          in
+          (* Return the reversed locs. *)
+          List.rev locs)
+        locs
+    in
+    (* Organize all our references onto the line which we will find them on. We
+     * do a second pass to sort these references and determine the
+     * gutter width. *)
+    let file_line_references =
+      IMap.fold
+        (fun id loc file_line_references ->
+          if id < 0 then
+            file_line_references
+          else
             match loc.source with
             | None -> failwith "expected loc to have a source"
             | Some source ->
-              (* If our loc is larger then some threshold determined by
-               * omit_after_lines then split it into two locs. *)
-              let new_locs =
-                if loc._end.line - loc.start.line + 1 <= omit_after_lines * 2 then
-                  [loc]
-                else
-                  let loc1 =
-                    {
-                      loc with
-                      _end = { loc.start with line = loc.start.line + (omit_after_lines - 1) };
-                    }
-                  in
-                  let loc2 =
-                    {
-                      loc with
-                      start = { loc._end with line = loc._end.line - (omit_after_lines - 1) };
-                    }
-                  in
-                  [loc1; loc2]
+              let line_references =
+                Base.Option.value
+                  (FileKeyMap.find_opt source file_line_references)
+                  ~default:IMap.empty
               in
-              (* Add the new locs to our FileKeyMap. *)
-              let locs = Base.Option.value (FileKeyMap.find_opt source acc) ~default:[] in
-              (max max_line loc._end.line, FileKeyMap.add source (new_locs @ locs) acc))
-          (0, FileKeyMap.empty)
-          locs
-      in
-      (* Perform some organization operations on our locs. *)
-      let locs =
-        FileKeyMap.map
-          (fun locs ->
-            (* Sort all of the locations we want to display. Locations in the root
-             * file should appear first. Sort in the reverse direction. Our next merge
-             * step will flip the list back around. *)
-            let locs = List.sort Loc.compare locs in
-            (* Merge the locations we want to display. We start with the location with
-             * the lowest line number. Our fold depends on this to merge correctly. *)
-            let locs =
-              List.fold_left
-                (fun acc loc ->
-                  match acc with
-                  (* Init. *)
-                  | [] -> [loc]
-                  (* If the previous loc + 3 lines below intersects with the next loc then
-                   * we want to merge those locs into one code frame. *)
-                  | last_loc :: acc
-                    when Loc.lines_intersect
-                           loc
-                           {
-                             last_loc with
-                             _end =
-                               {
-                                 last_loc._end with
-                                 line = last_loc._end.line + (merge_nearby_lines + 1);
-                               };
-                           } ->
-                    let loc =
-                      {
-                        source = last_loc.source;
-                        start =
-                          ( if pos_cmp loc.start last_loc.start < 0 then
-                            loc.start
-                          else
-                            last_loc.start
-                          );
-                        _end =
-                          ( if pos_cmp loc._end last_loc._end > 0 then
-                            loc._end
-                          else
-                            last_loc._end
-                          );
-                      }
-                    in
-                    loc :: acc
-                  (* Otherwise, add the loc by itself. *)
-                  | acc -> loc :: acc)
-                []
-                locs
-            in
-            (* Return the reversed locs. *)
-            List.rev locs)
-          locs
-      in
-      (* Organize all our references onto the line which we will find them on. We
-       * do a second pass to sort these references and determine the
-       * gutter width. *)
-      let file_line_references =
-        IMap.fold
-          (fun id loc file_line_references ->
-            if id < 0 then
-              file_line_references
-            else
-              match loc.source with
-              | None -> failwith "expected loc to have a source"
-              | Some source ->
-                let line_references =
-                  Base.Option.value
-                    (FileKeyMap.find_opt source file_line_references)
-                    ~default:IMap.empty
-                in
-                let references =
-                  Base.Option.value (IMap.find_opt loc.start.line line_references) ~default:[]
-                in
-                let references = (id, loc.start) :: references in
-                let line_references = IMap.add loc.start.line references line_references in
-                FileKeyMap.add source line_references file_line_references)
-          references
-          FileKeyMap.empty
-      in
-      (* Create the styled text which we will put in the gutter for all of our
-       * file line references.
-       *
-       * We use a ref for gutter_width since we want to map file_line_references
-       * in place instead of using a fold which would re-create the map. *)
-      let gutter_width = ref 5 in
-      let file_line_references =
-        FileKeyMap.map
-          (IMap.map (fun references ->
-               (* Reverse sort the references by their start position. We reverse sort
-                * since we fold_left next. *)
-               let references = List.sort (fun (_, a) (_, b) -> pos_cmp b a) references in
-               (* Fold the list. Creating the width and the string we will
-                * ultimately render. *)
-               let (width, references) =
-                 List.fold_left
-                   (fun (width, acc) (id, _) ->
-                     let string_id = string_of_int id in
-                     let width = width + 2 + String.length string_id in
-                     let acc =
-                       dim_style "["
-                       :: (Tty.Normal (get_tty_color id colors), string_id)
-                       :: dim_style "]"
-                       :: acc
-                     in
-                     (width, acc))
-                   (1, [default_style " "])
-                   references
-               in
-               let (width, references) = (width + 1, default_style " " :: references) in
-               (* Set gutter_width to the larger of the current gutter_width or the width
-                * for this line. *)
-               gutter_width := max !gutter_width width;
+              let references =
+                Base.Option.value (IMap.find_opt loc.start.line line_references) ~default:[]
+              in
+              let references = (id, loc.start) :: references in
+              let line_references = IMap.add loc.start.line references line_references in
+              FileKeyMap.add source line_references file_line_references)
+        references
+        FileKeyMap.empty
+    in
+    (* Create the styled text which we will put in the gutter for all of our
+     * file line references.
+     *
+     * We use a ref for gutter_width since we want to map file_line_references
+     * in place instead of using a fold which would re-create the map. *)
+    let gutter_width = ref 5 in
+    let file_line_references =
+      FileKeyMap.map
+        (IMap.map (fun references ->
+             (* Reverse sort the references by their start position. We reverse sort
+              * since we fold_left next. *)
+             let references = List.sort (fun (_, a) (_, b) -> pos_cmp b a) references in
+             (* Fold the list. Creating the width and the string we will
+              * ultimately render. *)
+             let (width, references) =
+               List.fold_left
+                 (fun (width, acc) (id, _) ->
+                   let string_id = string_of_int id in
+                   let width = width + 2 + String.length string_id in
+                   let acc =
+                     dim_style "["
+                     :: (Tty.Normal (get_tty_color id colors), string_id)
+                     :: dim_style "]"
+                     :: acc
+                   in
+                   (width, acc))
+                 (1, [default_style " "])
+                 references
+             in
+             let (width, references) = (width + 1, default_style " " :: references) in
+             (* Set gutter_width to the larger of the current gutter_width or the width
+              * for this line. *)
+             gutter_width := max !gutter_width width;
 
-               (* Return the final list of references for the line along with the width. *)
-               (width, references)
-           )
-          )
-          file_line_references
-      in
-      let gutter_width = !gutter_width in
-      (* Get the line number gutter length by looking at the string length for the
-       * maximum line number.
-       *
-       * Sometimes, the maximum line number will not be read. So this might not be
-       * the true maximum line number. However, for the purposes of
-       * max_line_number_length this imprecision is not important.
-       *
-       * The penalty for this imprecision is our code frame gutter might be a
-       * little wider then it needs to be in unlikely edge cases. *)
-      let max_line_number_length = String.length (string_of_int max_line) in
-      let vertical_line = vertical_line ~flags in
-      (* Print the code frame for each loc. Highlighting appropriate references. *)
+             (* Return the final list of references for the line along with the width. *)
+             (width, references)
+         )
+        )
+        file_line_references
+    in
+    let gutter_width = !gutter_width in
+    (* Get the line number gutter length by looking at the string length for the
+     * maximum line number.
+     *
+     * Sometimes, the maximum line number will not be read. So this might not be
+     * the true maximum line number. However, for the purposes of
+     * max_line_number_length this imprecision is not important.
+     *
+     * The penalty for this imprecision is our code frame gutter might be a
+     * little wider then it needs to be in unlikely edge cases. *)
+    let max_line_number_length = String.length (string_of_int max_line) in
+    let vertical_line = vertical_line ~flags in
+    (* Print the code frame for each loc. Highlighting appropriate references. *)
+    let code_frames =
+      FileKeyMap.mapi
+        (fun file_key locs ->
+          (* Used by read_lines_in_file. *)
+          let filename = file_of_source (Some file_key) in
+          (* Get some data structures associated with this file. *)
+          let tags = Base.Option.value (FileKeyMap.find_opt file_key tags) ~default:[] in
+          let line_references =
+            Base.Option.value
+              (FileKeyMap.find_opt file_key file_line_references)
+              ~default:IMap.empty
+          in
+          (* Fold all the locs for this file into code frames. *)
+          let (_, _, code_frames) =
+            List.fold_left
+              (fun (tags, opened, code_frames) loc ->
+                (* Read the lines from this location. *)
+                let lines = read_lines_in_file loc filename stdin_file in
+                match lines with
+                | None ->
+                  (* Failed to read the file, so skip this code frame *)
+                  (tags, opened, code_frames)
+                | Some lines ->
+                  (try
+                     (* Create the code frame styles. *)
+                     let (_, tags, opened, code_frame) =
+                       List.fold_left
+                         (fun (n, tags, opened, acc) line ->
+                           (* Loop which will paint the different parts of a line of code in
+                            * our code frame. Eats tags on the current line. *)
+                           let rec loop acc col tags opened line =
+                             (* Get the current style for the line. *)
+                             let style =
+                               Base.Option.value_map
+                                 (get_tty_color_from_stack opened colors)
+                                 ~f:(fun color -> Tty.Normal color)
+                                 ~default:(Tty.Dim Tty.Default)
+                             in
+                             match tags with
+                             (* If we have no more tags then use our current style with
+                              * the line. *)
+                             | [] -> (tags, opened, (style, line) :: acc)
+                             (* If we have a tag on this line then eat it and add the new
+                              * opened tag to `opened`. Note that our condition depends on tag
+                              * being well formed by layout_references! *)
+                             | (pos, tag_id, tag_kind) :: tags when pos.line = n ->
+                               let opened =
+                                 match tag_kind with
+                                 | Open _ -> tag_id :: opened
+                                 | Close -> List.filter (fun id -> tag_id <> id) opened
+                               in
+                               let split = pos.column - col in
+                               let (left, right) =
+                                 (* TODO: Get a SHA for each file when we parse it, and include the SHA in the
+                                  * loc. Then, we can know for sure whether a file has changed or not when we
+                                  * go to pretty print an error.
+                                  *
+                                  * Here we only know for sure that a file has changed when a particular line
+                                  * is too short, which means we can sometimes print bad code frames.
+                                  *)
+                                 try
+                                   ( String.sub line 0 split,
+                                     String.sub line split (String.length line - split)
+                                   )
+                                 with
+                                 | Invalid_argument _ -> raise Oh_no_file_contents_have_changed
+                               in
+                               let acc = (style, left) :: acc in
+                               loop acc pos.column tags opened right
+                             (* If we do not have a tag on this line then use our current style
+                              * with this line of code. *)
+                             | tags -> (tags, opened, (style, line) :: acc)
+                           in
+                           (* Start that loop! *)
+                           let (tags, opened, code_line) = loop [] 0 tags opened line in
+                           let code_line = List.rev code_line in
+                           (* Create the gutter text. *)
+                           let gutter =
+                             match IMap.find_opt n line_references with
+                             | None -> [default_style (String.make gutter_width ' ')]
+                             | Some (width, references) when width < gutter_width ->
+                               default_style (String.make (gutter_width - width) ' ') :: references
+                             | Some (_, references) -> references
+                           in
+                           (* Create the next line. *)
+                           let next_line =
+                             (* Get the line number string with appropriate padding. *)
+                             let line_number =
+                               let n = string_of_int n in
+                               let padding =
+                                 String.make (max_line_number_length - String.length n) ' '
+                               in
+                               let n = (Tty.Dim Tty.Default, n) in
+                               [default_style padding; n; dim_style vertical_line]
+                             in
+                             gutter
+                             @ line_number
+                             (* If the line is empty then strip the whitespace which would be
+                              * trailing whitespace anyways. *)
+                             @ ( if line = "" then
+                                 []
+                               else
+                                 [default_style " "]
+                               )
+                             @ code_line
+                             @ [default_style "\n"]
+                           in
+                           (* Increment our line count and add the next line to
+                            * our accumulator. *)
+                           (n + 1, tags, opened, next_line :: acc))
+                         (loc.start.line, tags, opened, [])
+                         (Nel.to_list lines)
+                     in
+                     (tags, opened, Base.List.concat (List.rev code_frame) :: code_frames)
+                   with
+                  | Oh_no_file_contents_have_changed ->
+                    (* Realized the file has changed, so skip this code frame *)
+                    (tags, opened, code_frames)))
+              (tags, [], [])
+              locs
+          in
+          match code_frames with
+          | [] -> []
+          | code_frame :: code_frames ->
+            (* Add all of our code frames together with a colon for omitted chunks
+             * of code in the file. *)
+            Base.List.concat
+              (List.fold_left
+                 (fun acc code_frame ->
+                   code_frame
+                   :: [
+                        default_style (String.make (gutter_width + max_line_number_length) ' ');
+                        dim_style ":";
+                        default_style "\n";
+                      ]
+                   :: acc)
+                 [code_frame]
+                 code_frames
+              ))
+        locs
+    in
+    (* Get the root code frame from our map of code frames. We will start with
+     * this code frame. *)
+    let root_file_key =
+      match root_loc.source with
+      | None -> failwith "expected loc to have a source"
+      | Some file_key -> file_key
+    in
+    let root_code_frame = FileKeyMap.find_opt root_file_key code_frames in
+    let code_frames = FileKeyMap.remove root_file_key code_frames in
+    (* If we only have a root code frame then only render that. *)
+    if FileKeyMap.is_empty code_frames then
+      Base.Option.value root_code_frame ~default:[]
+    else
+      let code_frames = FileKeyMap.bindings code_frames in
       let code_frames =
-        FileKeyMap.mapi
-          (fun file_key locs ->
-            (* Used by read_lines_in_file. *)
-            let filename = file_of_source (Some file_key) in
-            (* Get some data structures associated with this file. *)
-            let tags = Base.Option.value (FileKeyMap.find_opt file_key tags) ~default:[] in
-            let line_references =
-              Base.Option.value
-                (FileKeyMap.find_opt file_key file_line_references)
-                ~default:IMap.empty
-            in
-            (* Fold all the locs for this file into code frames. *)
-            let (_, _, code_frames) =
-              List.fold_left
-                (fun (tags, opened, code_frames) loc ->
-                  (* Read the lines from this location. *)
-                  let lines = read_lines_in_file loc filename stdin_file in
-                  match lines with
-                  | None ->
-                    (* Failed to read the file, so skip this code frame *)
-                    (tags, opened, code_frames)
-                  | Some lines ->
-                    (try
-                       (* Create the code frame styles. *)
-                       let (_, tags, opened, code_frame) =
-                         List.fold_left
-                           (fun (n, tags, opened, acc) line ->
-                             (* Loop which will paint the different parts of a line of code in
-                              * our code frame. Eats tags on the current line. *)
-                             let rec loop acc col tags opened line =
-                               (* Get the current style for the line. *)
-                               let style =
-                                 Base.Option.value_map
-                                   (get_tty_color_from_stack opened colors)
-                                   ~f:(fun color -> Tty.Normal color)
-                                   ~default:(Tty.Dim Tty.Default)
-                               in
-                               match tags with
-                               (* If we have no more tags then use our current style with
-                                * the line. *)
-                               | [] -> (tags, opened, (style, line) :: acc)
-                               (* If we have a tag on this line then eat it and add the new
-                                * opened tag to `opened`. Note that our condition depends on tag
-                                * being well formed by layout_references! *)
-                               | (pos, tag_id, tag_kind) :: tags when pos.line = n ->
-                                 let opened =
-                                   match tag_kind with
-                                   | Open _ -> tag_id :: opened
-                                   | Close -> List.filter (fun id -> tag_id <> id) opened
-                                 in
-                                 let split = pos.column - col in
-                                 let (left, right) =
-                                   (* TODO: Get a SHA for each file when we parse it, and include the SHA in the
-                                    * loc. Then, we can know for sure whether a file has changed or not when we
-                                    * go to pretty print an error.
-                                    *
-                                    * Here we only know for sure that a file has changed when a particular line
-                                    * is too short, which means we can sometimes print bad code frames.
-                                    *)
-                                   try
-                                     ( String.sub line 0 split,
-                                       String.sub line split (String.length line - split)
-                                     )
-                                   with
-                                   | Invalid_argument _ -> raise Oh_no_file_contents_have_changed
-                                 in
-                                 let acc = (style, left) :: acc in
-                                 loop acc pos.column tags opened right
-                               (* If we do not have a tag on this line then use our current style
-                                * with this line of code. *)
-                               | tags -> (tags, opened, (style, line) :: acc)
-                             in
-                             (* Start that loop! *)
-                             let (tags, opened, code_line) = loop [] 0 tags opened line in
-                             let code_line = List.rev code_line in
-                             (* Create the gutter text. *)
-                             let gutter =
-                               match IMap.find_opt n line_references with
-                               | None -> [default_style (String.make gutter_width ' ')]
-                               | Some (width, references) when width < gutter_width ->
-                                 default_style (String.make (gutter_width - width) ' ')
-                                 :: references
-                               | Some (_, references) -> references
-                             in
-                             (* Create the next line. *)
-                             let next_line =
-                               (* Get the line number string with appropriate padding. *)
-                               let line_number =
-                                 let n = string_of_int n in
-                                 let padding =
-                                   String.make (max_line_number_length - String.length n) ' '
-                                 in
-                                 let n = (Tty.Dim Tty.Default, n) in
-                                 [default_style padding; n; dim_style vertical_line]
-                               in
-                               gutter
-                               @ line_number
-                               (* If the line is empty then strip the whitespace which would be
-                                * trailing whitespace anyways. *)
-                               @ ( if line = "" then
-                                   []
-                                 else
-                                   [default_style " "]
-                                 )
-                               @ code_line
-                               @ [default_style "\n"]
-                             in
-                             (* Increment our line count and add the next line to
-                              * our accumulator. *)
-                             (n + 1, tags, opened, next_line :: acc))
-                           (loc.start.line, tags, opened, [])
-                           (Nel.to_list lines)
-                       in
-                       (tags, opened, Base.List.concat (List.rev code_frame) :: code_frames)
-                     with
-                    | Oh_no_file_contents_have_changed ->
-                      (* Realized the file has changed, so skip this code frame *)
-                      (tags, opened, code_frames)))
-                (tags, [], [])
-                locs
-            in
-            match code_frames with
-            | [] -> []
-            | code_frame :: code_frames ->
-              (* Add all of our code frames together with a colon for omitted chunks
-               * of code in the file. *)
-              Base.List.concat
-                (List.fold_left
-                   (fun acc code_frame ->
-                     code_frame
-                     :: [
-                          default_style (String.make (gutter_width + max_line_number_length) ' ');
-                          dim_style ":";
-                          default_style "\n";
-                        ]
-                     :: acc)
-                   [code_frame]
-                   code_frames
-                ))
-          locs
+        match root_code_frame with
+        | None -> code_frames
+        | Some root_code_frame -> (root_file_key, root_code_frame) :: code_frames
       in
-      (* Get the root code frame from our map of code frames. We will start with
-       * this code frame. *)
-      let root_file_key =
-        match root_loc.source with
-        | None -> failwith "expected loc to have a source"
-        | Some file_key -> file_key
-      in
-      let root_code_frame = FileKeyMap.find_opt root_file_key code_frames in
-      let code_frames = FileKeyMap.remove root_file_key code_frames in
-      (* If we only have a root code frame then only render that. *)
-      if FileKeyMap.is_empty code_frames then
-        Base.Option.value root_code_frame ~default:[]
-      else
-        let code_frames = FileKeyMap.bindings code_frames in
-        let code_frames =
-          match root_code_frame with
-          | None -> code_frames
-          | Some root_code_frame -> (root_file_key, root_code_frame) :: code_frames
-        in
-        (* Add a title to non-root code frames and concatenate them all together! *)
-        Base.List.concat
-          (List.rev
-             (List.fold_left
-                (fun acc (file_key, code_frame) ->
-                  let file_key = print_file_key ~strip_root (Some file_key) in
-                  let header =
-                    [default_style (String.make gutter_width ' '); default_style (file_key ^ "\n")]
-                  in
-                  let header =
-                    if acc = [] then
-                      header
-                    else
-                      default_style "\n" :: header
-                  in
-                  (header @ code_frame) :: acc)
-                []
-                code_frames
-             )
-          )
-    )
+      (* Add a title to non-root code frames and concatenate them all together! *)
+      Base.List.concat
+        (List.rev
+           (List.fold_left
+              (fun acc (file_key, code_frame) ->
+                let file_key = print_file_key ~strip_root (Some file_key) in
+                let header =
+                  [default_style (String.make gutter_width ' '); default_style (file_key ^ "\n")]
+                in
+                let header =
+                  if acc = [] then
+                    header
+                  else
+                    default_style "\n" :: header
+                in
+                (header @ code_frame) :: acc)
+              []
+              code_frames
+           )
+        )
 
   (* ===================================
    * Error Message Colorless Code Frames
@@ -2276,172 +2274,169 @@ module Cli_output = struct
    * without color! *)
   let print_colorless_code_frames_friendly
       ~stdin_file ~strip_root ~flags ~references ~root_reference_id root_loc =
-    Loc.(
-      let vertical_line = vertical_line ~flags in
-      (* Get the maximum end line number. We will use this for computing our
-       * gutter width. *)
-      let max_end_line =
-        IMap.fold
-          (fun _ loc max_end_line -> max max_end_line loc._end.line)
-          references
-          root_loc._end.line
-      in
-      (* Get the max gutter extension length which is the length of the longest
-       * line number plus 3. *)
-      let gutter_width = 3 + String.length (string_of_int max_end_line) in
-      (* Prints a single, colorless, location. *)
-      let print_loc ~with_filename id loc =
-        (* Get the lines for the location... *)
-        let filename = file_of_source loc.source in
-        let lines = read_lines_in_file loc filename stdin_file in
-        let lines =
-          Base.Option.map lines ~f:(fun line_list ->
-              (* Print every line by appending the line number and appropriate
-               * gutter width. *)
-              let (_, lines) =
-                Nel.fold_left
-                  (fun (n, lines) line ->
-                    (* If we show more lines then some upper limit omit any extra code. *)
-                    if
-                      n >= loc.start.line + omit_after_lines
-                      && n <= loc._end.line - omit_after_lines
-                    then
-                      if n = loc.start.line + omit_after_lines then
-                        let gutter = String.make gutter_width ' ' in
-                        (n + 1, lines ^ gutter ^ ":\n")
+    let open Loc in
+    let vertical_line = vertical_line ~flags in
+    (* Get the maximum end line number. We will use this for computing our
+     * gutter width. *)
+    let max_end_line =
+      IMap.fold
+        (fun _ loc max_end_line -> max max_end_line loc._end.line)
+        references
+        root_loc._end.line
+    in
+    (* Get the max gutter extension length which is the length of the longest
+     * line number plus 3. *)
+    let gutter_width = 3 + String.length (string_of_int max_end_line) in
+    (* Prints a single, colorless, location. *)
+    let print_loc ~with_filename id loc =
+      (* Get the lines for the location... *)
+      let filename = file_of_source loc.source in
+      let lines = read_lines_in_file loc filename stdin_file in
+      let lines =
+        Base.Option.map lines ~f:(fun line_list ->
+            (* Print every line by appending the line number and appropriate
+             * gutter width. *)
+            let (_, lines) =
+              Nel.fold_left
+                (fun (n, lines) line ->
+                  (* If we show more lines then some upper limit omit any extra code. *)
+                  if n >= loc.start.line + omit_after_lines && n <= loc._end.line - omit_after_lines
+                  then
+                    if n = loc.start.line + omit_after_lines then
+                      let gutter = String.make gutter_width ' ' in
+                      (n + 1, lines ^ gutter ^ ":\n")
+                    else
+                      (n + 1, lines)
+                    (* Otherwise, render the line. *)
+                  else
+                    let n_string = string_of_int n in
+                    let gutter_space = String.make (gutter_width - String.length n_string) ' ' in
+                    let gutter = gutter_space ^ n_string ^ vertical_line in
+                    let lines =
+                      if line = "" then
+                        lines ^ gutter ^ "\n"
                       else
-                        (n + 1, lines)
-                      (* Otherwise, render the line. *)
-                    else
-                      let n_string = string_of_int n in
-                      let gutter_space = String.make (gutter_width - String.length n_string) ' ' in
-                      let gutter = gutter_space ^ n_string ^ vertical_line in
-                      let lines =
-                        if line = "" then
-                          lines ^ gutter ^ "\n"
-                        else
-                          lines ^ gutter ^ " " ^ line ^ "\n"
-                      in
-                      (n + 1, lines))
-                  (loc.start.line, "")
-                  line_list
-              in
-              (* Get our gutter space for the underline and overline. *)
-              let gutter_space = String.make (gutter_width + 2) ' ' in
-              (* Add the overline for our loc. *)
-              let lines =
-                if loc.start.line = loc._end.line then
-                  lines
-                else
-                  let first_line_len = String.length (Nel.hd line_list) in
-                  (* In some cases, we create a location that starts at or after the
-                     end of a line. This probably shouldn't happen, but if it does, we
-                     can still create an overline with a carat pointing to that column
-                     position. *)
-                  let first_line_len = max first_line_len (loc.start.column + 1) in
-                  gutter_space
-                  ^ String.make loc.start.column ' '
-                  ^ "v"
-                  ^ String.make (first_line_len - loc.start.column - 1) '-'
-                  ^ "\n"
-                  ^ lines
-              in
-              (* Add the underline for our loc. *)
-              let lines =
+                        lines ^ gutter ^ " " ^ line ^ "\n"
+                    in
+                    (n + 1, lines))
+                (loc.start.line, "")
+                line_list
+            in
+            (* Get our gutter space for the underline and overline. *)
+            let gutter_space = String.make (gutter_width + 2) ' ' in
+            (* Add the overline for our loc. *)
+            let lines =
+              if loc.start.line = loc._end.line then
                 lines
-                ^ gutter_space
-                ^
-                if loc.start.line = loc._end.line then
-                  String.make loc.start.column ' '
-                  ^ String.make (loc._end.column - loc.start.column) '^'
-                else
-                  let last_line = Nel.hd (Nel.rev line_list) in
-                  (* Don't underline the whitespace at the beginning of the last line *)
-                  let underline_prefix =
-                    if Str.string_match (Str.regexp "^\\([\t ]*\\).*") last_line 0 then
-                      Str.matched_group 1 last_line
-                    else
-                      ""
-                  in
-                  (* TODO - if dash_length is less than 0 that means the line in question probably
-                   * changed. As mentioned in another comment in this file, we should have better
-                   * detection and behavior when we notice that the file we're reading for context has
-                   * changed. But at the very least we shouldn't crash, which is what will happen if
-                   * we call String.make with a negative length *)
-                  let dash_length = loc._end.column - String.length underline_prefix - 1 in
-                  underline_prefix ^ String.make (max dash_length 0) '-' ^ "^"
-              in
-              (* If we have a reference id then add it just after the underline. *)
-              let lines =
-                match id with
-                | Some id when id > 0 -> lines ^ " [" ^ string_of_int id ^ "]"
-                | _ -> lines
-              in
-              (* Add a final newline to lines. *)
-              let lines = lines ^ "\n" in
-              (* Return our final lines string *)
+              else
+                let first_line_len = String.length (Nel.hd line_list) in
+                (* In some cases, we create a location that starts at or after the
+                   end of a line. This probably shouldn't happen, but if it does, we
+                   can still create an overline with a carat pointing to that column
+                   position. *)
+                let first_line_len = max first_line_len (loc.start.column + 1) in
+                gutter_space
+                ^ String.make loc.start.column ' '
+                ^ "v"
+                ^ String.make (first_line_len - loc.start.column - 1) '-'
+                ^ "\n"
+                ^ lines
+            in
+            (* Add the underline for our loc. *)
+            let lines =
               lines
-          )
-        in
-        (* If we were configured to print the filename then add it to our lines
-         * before returning. *)
-        if not with_filename then
-          lines
-        else
-          let space = String.make 3 ' ' in
-          let filename = print_file_key ~strip_root loc.source in
-          match lines with
-          | None ->
-            (* if the file has no lines -- couldn't read it, empty file, or loc
-               is pointing at the whole file (line 0, col 0) -- then point at
-               the filename itself. *)
-            let underline = String.make (String.length filename) '^' in
-            let id =
+              ^ gutter_space
+              ^
+              if loc.start.line = loc._end.line then
+                String.make loc.start.column ' '
+                ^ String.make (loc._end.column - loc.start.column) '^'
+              else
+                let last_line = Nel.hd (Nel.rev line_list) in
+                (* Don't underline the whitespace at the beginning of the last line *)
+                let underline_prefix =
+                  if Str.string_match (Str.regexp "^\\([\t ]*\\).*") last_line 0 then
+                    Str.matched_group 1 last_line
+                  else
+                    ""
+                in
+                (* TODO - if dash_length is less than 0 that means the line in question probably
+                 * changed. As mentioned in another comment in this file, we should have better
+                 * detection and behavior when we notice that the file we're reading for context has
+                 * changed. But at the very least we shouldn't crash, which is what will happen if
+                 * we call String.make with a negative length *)
+                let dash_length = loc._end.column - String.length underline_prefix - 1 in
+                underline_prefix ^ String.make (max dash_length 0) '-' ^ "^"
+            in
+            (* If we have a reference id then add it just after the underline. *)
+            let lines =
               match id with
-              | Some id when id > 0 -> " [" ^ string_of_int id ^ "]"
-              | _ -> ""
+              | Some id when id > 0 -> lines ^ " [" ^ string_of_int id ^ "]"
+              | _ -> lines
             in
-            Some (space ^ filename ^ "\n" ^ space ^ underline ^ id ^ "\n")
-          | Some lines ->
-            let filename =
-              filename
-              ^ ":"
-              ^ string_of_int loc.start.line
-              ^ ":"
-              ^ string_of_int (loc.start.column + 1)
-            in
-            Some (space ^ filename ^ "\n" ^ lines)
+            (* Add a final newline to lines. *)
+            let lines = lines ^ "\n" in
+            (* Return our final lines string *)
+            lines
+        )
       in
-      (* Print the locations for all of our references. *)
-      let references =
-        IMap.fold
-          (fun id loc acc ->
-            let is_root =
-              Base.Option.value_map root_reference_id ~default:false ~f:(fun root_id -> root_id = id)
-            in
-            (* Skip this reference if either it is a "shadow reference" or it is the
-             * reference for the root. *)
-            if id <= 0 || is_root then
-              acc
-            else
-              let code = print_loc ~with_filename:true (Some id) loc in
-              match code with
-              | None -> acc
-              | Some code -> acc ^ code)
-          references
-          ""
-      in
-      (* Add the "References:" label if we have some references. *)
-      let references =
-        match references with
-        | "" -> ""
-        | _ -> "\nReferences:\n" ^ references
-      in
-      (* Print the root location. *)
-      match print_loc ~with_filename:(references <> "") root_reference_id root_loc with
-      | Some root_code -> [default_style (root_code ^ references)]
-      | None -> [default_style references]
-    )
+      (* If we were configured to print the filename then add it to our lines
+       * before returning. *)
+      if not with_filename then
+        lines
+      else
+        let space = String.make 3 ' ' in
+        let filename = print_file_key ~strip_root loc.source in
+        match lines with
+        | None ->
+          (* if the file has no lines -- couldn't read it, empty file, or loc
+             is pointing at the whole file (line 0, col 0) -- then point at
+             the filename itself. *)
+          let underline = String.make (String.length filename) '^' in
+          let id =
+            match id with
+            | Some id when id > 0 -> " [" ^ string_of_int id ^ "]"
+            | _ -> ""
+          in
+          Some (space ^ filename ^ "\n" ^ space ^ underline ^ id ^ "\n")
+        | Some lines ->
+          let filename =
+            filename
+            ^ ":"
+            ^ string_of_int loc.start.line
+            ^ ":"
+            ^ string_of_int (loc.start.column + 1)
+          in
+          Some (space ^ filename ^ "\n" ^ lines)
+    in
+    (* Print the locations for all of our references. *)
+    let references =
+      IMap.fold
+        (fun id loc acc ->
+          let is_root =
+            Base.Option.value_map root_reference_id ~default:false ~f:(fun root_id -> root_id = id)
+          in
+          (* Skip this reference if either it is a "shadow reference" or it is the
+           * reference for the root. *)
+          if id <= 0 || is_root then
+            acc
+          else
+            let code = print_loc ~with_filename:true (Some id) loc in
+            match code with
+            | None -> acc
+            | Some code -> acc ^ code)
+        references
+        ""
+    in
+    (* Add the "References:" label if we have some references. *)
+    let references =
+      match references with
+      | "" -> ""
+      | _ -> "\nReferences:\n" ^ references
+    in
+    (* Print the root location. *)
+    match print_loc ~with_filename:(references <> "") root_reference_id root_loc with
+    | Some root_code -> [default_style (root_code ^ references)]
+    | None -> [default_style references]
 
   (* Goes through the process of laying out a friendly error message group by
    * combining our lower level functions like extract_references_intermediate
