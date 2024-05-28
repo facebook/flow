@@ -269,7 +269,7 @@ let diagnostics_of_flow_errors =
               Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.DimUnderline (map_color c)
           in
           Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0
-            (Flow_errors_utils.Cli_output.format_single_styled_error
+            (Flow_errors_utils.Cli_output.format_single_styled_error_for_vscode
                ~strip_root:None
                ~severity
                printable_error

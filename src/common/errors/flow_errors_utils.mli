@@ -128,8 +128,14 @@ val deprecated_json_props_of_loc :
 
 (* Human readable output *)
 module Cli_output : sig
+  type rendering_mode =
+    | CLI_Color_Always
+    | CLI_Color_Never
+    | CLI_Color_Auto
+    | IDE_Detailed_Error
+
   type error_flags = {
-    color: Tty.color_mode;
+    rendering_mode: rendering_mode;
     include_warnings: bool;
     max_warnings: int option;
     one_line: bool;
@@ -162,7 +168,7 @@ module Cli_output : sig
     unit ->
     unit
 
-  val format_single_styled_error :
+  val format_single_styled_error_for_vscode :
     strip_root:File_path.t option ->
     severity:Severity.severity ->
     Loc.t printable_error ->

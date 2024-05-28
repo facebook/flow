@@ -1179,8 +1179,14 @@ let collect_errors_into_groups max set =
 
 (* Human readable output *)
 module Cli_output = struct
+  type rendering_mode =
+    | CLI_Color_Always
+    | CLI_Color_Never
+    | CLI_Color_Auto
+    | IDE_Detailed_Error
+
   type error_flags = {
-    color: Tty.color_mode;
+    rendering_mode: rendering_mode;
     include_warnings: bool;
     (* This has to do with the exit code, which is not controlled by this module, but it's
        convenient to keep the flags about errors co-located *)
@@ -1199,6 +1205,15 @@ module Cli_output = struct
     | Off -> Utils_js.assert_false "CLI output is only called with warnings and errors."
 
   let remove_newlines (color, text) = (color, Str.global_replace (Str.regexp "\n") "\\n" text)
+
+  let color_mode_of_rendering_mode = function
+    | IDE_Detailed_Error
+    | CLI_Color_Always ->
+      Tty.Color_Always
+    | CLI_Color_Never -> Tty.Color_Never
+    | CLI_Color_Auto -> Tty.Color_Auto
+
+  let should_color rendering_mode = Tty.should_color (color_mode_of_rendering_mode rendering_mode)
 
   (* ==========================
    * Full Terminal Width Header
@@ -1789,7 +1804,7 @@ module Cli_output = struct
       (* Create the tuple structure we pass into split_into_words. Code is not
        * breakable but Text is breakable. *)
       let print_message_inline ~flags ~reference = function
-        | Code s when not (Tty.should_color flags.color) ->
+        | Code s when not (should_color flags.rendering_mode) ->
           (false, Tty.Normal Tty.Default, "`" ^ s ^ "`")
         | Text s when reference -> (true, Tty.Underline Tty.Default, s)
         | Code s when reference -> (false, Tty.BoldUnderline Tty.Default, s)
@@ -1885,13 +1900,15 @@ module Cli_output = struct
 
   exception Oh_no_file_contents_have_changed
 
-  (* =========================
-   * Error Message Code Frames
-   * =========================
+  (* ===================================================
+   * Error Message Code Frames with Coalesced References
+   * ===================================================
    *
    * We render the root location for our friendly error message. Decorated with
-   * the reference locations from the message. *)
-  let print_code_frames_friendly ~stdin_file ~strip_root ~flags ~references ~colors ~tags root_loc =
+   * the reference locations from the message. When references are close together
+   * they are coalesced into a single code block. *)
+  let print_colorful_code_frames_friendly_with_coalesced_references
+      ~stdin_file ~strip_root ~flags ~references ~colors ~tags root_loc =
     let open Loc in
     (* Get a list of all the locations we will want to display. We want to
      * display references and the root location with some extra lines
@@ -2266,13 +2283,13 @@ module Cli_output = struct
            )
         )
 
-  (* ===================================
-   * Error Message Colorless Code Frames
-   * ===================================
+  (* ======================================================
+   * Error Message Code Frames without Coalesced References
+   * ======================================================
    *
    * Renders the root location along with reference locations, but
-   * without color! *)
-  let print_colorless_code_frames_friendly
+   * without coalesing close references. *)
+  let print_code_frames_friendly_without_coalesced_references
       ~stdin_file ~strip_root ~flags ~references ~root_reference_id root_loc =
     let open Loc in
     let vertical_line = vertical_line ~flags in
@@ -2562,8 +2579,10 @@ module Cli_output = struct
       in
       (* Print the code frame for our error message. *)
       let code_frame =
-        if Tty.should_color flags.color then
-          print_code_frames_friendly
+        match flags.rendering_mode with
+        | CLI_Color_Always
+        | IDE_Detailed_Error ->
+          print_colorful_code_frames_friendly_with_coalesced_references
             ~stdin_file
             ~strip_root
             ~flags
@@ -2571,8 +2590,18 @@ module Cli_output = struct
             ~colors
             ~tags
             root_loc
-        else
-          print_colorless_code_frames_friendly
+        | CLI_Color_Auto when Tty.supports_color () ->
+          print_colorful_code_frames_friendly_with_coalesced_references
+            ~stdin_file
+            ~strip_root
+            ~flags
+            ~references
+            ~colors
+            ~tags
+            root_loc
+        | CLI_Color_Auto
+        | CLI_Color_Never ->
+          print_code_frames_friendly_without_coalesced_references
             ~stdin_file
             ~strip_root
             ~flags
@@ -2631,14 +2660,15 @@ module Cli_output = struct
       else
         styles
     in
-    Tty.cprint ~out_channel ~color_mode:flags.color styles;
-    Tty.cprint ~out_channel ~color_mode:flags.color [default_style "\n"]
+    let color_mode = color_mode_of_rendering_mode flags.rendering_mode in
+    Tty.cprint ~out_channel ~color_mode styles;
+    Tty.cprint ~out_channel ~color_mode [default_style "\n"]
 
-  let format_single_styled_error ~strip_root ~severity (error : Loc.t printable_error) =
+  let format_single_styled_error_for_vscode ~strip_root ~severity (error : Loc.t printable_error) =
     get_pretty_printed_error
       ~flags:
         {
-          color = Tty.Color_Always;
+          rendering_mode = IDE_Detailed_Error;
           include_warnings = true;
           max_warnings = None;
           one_line = false;
