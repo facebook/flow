@@ -169,7 +169,6 @@ https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 
 
-
 Found 1 error
 
 
@@ -186,7 +185,6 @@ Error --------------------------------------------------------------------------
 Cannot resolve platform-specific implementation module `./B.android`. All platform-specific implementations must exist
 for this interface. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
-
 
 
 

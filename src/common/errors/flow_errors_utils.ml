@@ -2308,43 +2308,49 @@ module Cli_output = struct
     let print_loc ~with_filename id loc =
       (* Get the lines for the location... *)
       let filename = file_of_source loc.source in
-      let lines = read_lines_in_file loc filename stdin_file in
-      let lines =
-        Base.Option.map lines ~f:(fun line_list ->
+      let source_code_lines = read_lines_in_file loc filename stdin_file in
+      let styled_lines =
+        Base.Option.map source_code_lines ~f:(fun line_list ->
             (* Print every line by appending the line number and appropriate
              * gutter width. *)
-            let (_, lines) =
+            let (_, styled_code_block_lines_rev) =
               Nel.fold_left
-                (fun (n, lines) line ->
+                (fun (n, styled_lines_rev) line ->
                   (* If we show more lines then some upper limit omit any extra code. *)
                   if n >= loc.start.line + omit_after_lines && n <= loc._end.line - omit_after_lines
                   then
                     if n = loc.start.line + omit_after_lines then
                       let gutter = String.make gutter_width ' ' in
-                      (n + 1, lines ^ gutter ^ ":\n")
+                      (n + 1, default_style ":\n" :: default_style gutter :: styled_lines_rev)
                     else
-                      (n + 1, lines)
+                      (n + 1, styled_lines_rev)
                     (* Otherwise, render the line. *)
                   else
                     let n_string = string_of_int n in
                     let gutter_space = String.make (gutter_width - String.length n_string) ' ' in
-                    let gutter = gutter_space ^ n_string ^ vertical_line in
-                    let lines =
-                      if line = "" then
-                        lines ^ gutter ^ "\n"
-                      else
-                        lines ^ gutter ^ " " ^ line ^ "\n"
+                    let styled_lines_rev =
+                      default_style vertical_line
+                      :: default_style n_string
+                      :: default_style gutter_space
+                      :: styled_lines_rev
                     in
-                    (n + 1, lines))
-                (loc.start.line, "")
+                    let styled_lines_rev =
+                      if line = "" then
+                        styled_lines_rev
+                      else
+                        default_style line :: default_style " " :: styled_lines_rev
+                    in
+                    (n + 1, default_style "\n" :: styled_lines_rev))
+                (loc.start.line, [])
                 line_list
             in
+            let styled_code_block_lines = List.rev styled_code_block_lines_rev in
             (* Get our gutter space for the underline and overline. *)
             let gutter_space = String.make (gutter_width + 2) ' ' in
             (* Add the overline for our loc. *)
-            let lines =
+            let styled_lines =
               if loc.start.line = loc._end.line then
-                lines
+                styled_code_block_lines
               else
                 let first_line_len = String.length (Nel.hd line_list) in
                 (* In some cases, we create a location that starts at or after the
@@ -2352,58 +2358,63 @@ module Cli_output = struct
                    can still create an overline with a carat pointing to that column
                    position. *)
                 let first_line_len = max first_line_len (loc.start.column + 1) in
-                gutter_space
-                ^ String.make loc.start.column ' '
-                ^ "v"
-                ^ String.make (first_line_len - loc.start.column - 1) '-'
-                ^ "\n"
-                ^ lines
+                default_style gutter_space
+                :: default_style
+                     (String.make loc.start.column ' '
+                     ^ "v"
+                     ^ String.make (first_line_len - loc.start.column - 1) '-'
+                     )
+                :: default_style "\n"
+                :: styled_code_block_lines
             in
             (* Add the underline for our loc. *)
-            let lines =
-              lines
-              ^ gutter_space
-              ^
-              if loc.start.line = loc._end.line then
-                String.make loc.start.column ' '
-                ^ String.make (loc._end.column - loc.start.column) '^'
-              else
-                let last_line = Nel.hd (Nel.rev line_list) in
-                (* Don't underline the whitespace at the beginning of the last line *)
-                let underline_prefix =
-                  if Str.string_match (Str.regexp "^\\([\t ]*\\).*") last_line 0 then
-                    Str.matched_group 1 last_line
-                  else
-                    ""
-                in
-                (* TODO - if dash_length is less than 0 that means the line in question probably
-                 * changed. As mentioned in another comment in this file, we should have better
-                 * detection and behavior when we notice that the file we're reading for context has
-                 * changed. But at the very least we shouldn't crash, which is what will happen if
-                 * we call String.make with a negative length *)
-                let dash_length = loc._end.column - String.length underline_prefix - 1 in
-                underline_prefix ^ String.make (max dash_length 0) '-' ^ "^"
+            let styled_lines =
+              let styled_underline =
+                if loc.start.line = loc._end.line then
+                  default_style
+                    (String.make loc.start.column ' '
+                    ^ String.make (loc._end.column - loc.start.column) '^'
+                    )
+                else
+                  let last_line = Nel.hd (Nel.rev line_list) in
+                  (* Don't underline the whitespace at the beginning of the last line *)
+                  let underline_prefix =
+                    if Str.string_match (Str.regexp "^\\([\t ]*\\).*") last_line 0 then
+                      Str.matched_group 1 last_line
+                    else
+                      ""
+                  in
+                  (* TODO - if dash_length is less than 0 that means the line in question probably
+                   * changed. As mentioned in another comment in this file, we should have better
+                   * detection and behavior when we notice that the file we're reading for context has
+                   * changed. But at the very least we shouldn't crash, which is what will happen if
+                   * we call String.make with a negative length *)
+                  let dash_length = loc._end.column - String.length underline_prefix - 1 in
+                  default_style (underline_prefix ^ String.make (max dash_length 0) '-' ^ "^")
+              in
+              styled_lines @ [default_style gutter_space; styled_underline]
             in
             (* If we have a reference id then add it just after the underline. *)
-            let lines =
+            let styled_lines =
               match id with
-              | Some id when id > 0 -> lines ^ " [" ^ string_of_int id ^ "]"
-              | _ -> lines
+              | Some id when id > 0 ->
+                styled_lines @ [default_style (" [" ^ string_of_int id ^ "]")]
+              | _ -> styled_lines
             in
             (* Add a final newline to lines. *)
-            let lines = lines ^ "\n" in
+            let styled_lines = styled_lines @ [default_style "\n"] in
             (* Return our final lines string *)
-            lines
+            styled_lines
         )
       in
       (* If we were configured to print the filename then add it to our lines
        * before returning. *)
       if not with_filename then
-        lines
+        styled_lines
       else
         let space = String.make 3 ' ' in
         let filename = print_file_key ~strip_root loc.source in
-        match lines with
+        match styled_lines with
         | None ->
           (* if the file has no lines -- couldn't read it, empty file, or loc
              is pointing at the whole file (line 0, col 0) -- then point at
@@ -2414,8 +2425,17 @@ module Cli_output = struct
             | Some id when id > 0 -> " [" ^ string_of_int id ^ "]"
             | _ -> ""
           in
-          Some (space ^ filename ^ "\n" ^ space ^ underline ^ id ^ "\n")
-        | Some lines ->
+          Some
+            [
+              default_style space;
+              default_style filename;
+              default_style "\n";
+              default_style space;
+              default_style underline;
+              default_style id;
+              default_style "\n";
+            ]
+        | Some styled_lines ->
           let filename =
             filename
             ^ ":"
@@ -2423,7 +2443,7 @@ module Cli_output = struct
             ^ ":"
             ^ string_of_int (loc.start.column + 1)
           in
-          Some (space ^ filename ^ "\n" ^ lines)
+          Some (default_style space :: default_style filename :: default_style "\n" :: styled_lines)
     in
     (* Print the locations for all of our references. *)
     let references =
@@ -2437,23 +2457,25 @@ module Cli_output = struct
           if id <= 0 || is_root then
             acc
           else
-            let code = print_loc ~with_filename:true (Some id) loc in
-            match code with
+            let styled_lines = print_loc ~with_filename:true (Some id) loc in
+            match styled_lines with
             | None -> acc
-            | Some code -> acc ^ code)
+            | Some styled_lines -> styled_lines :: acc)
         references
-        ""
+        []
+      |> List.rev
+      |> Base.List.concat
     in
     (* Add the "References:" label if we have some references. *)
     let references =
       match references with
-      | "" -> ""
-      | _ -> "\nReferences:\n" ^ references
+      | [] -> []
+      | _ -> default_style "\nReferences:\n" :: references
     in
     (* Print the root location. *)
-    match print_loc ~with_filename:(references <> "") root_reference_id root_loc with
-    | Some root_code -> [default_style (root_code ^ references)]
-    | None -> [default_style references]
+    match print_loc ~with_filename:(references <> []) root_reference_id root_loc with
+    | Some root_code -> root_code @ references
+    | None -> references
 
   (* Goes through the process of laying out a friendly error message group by
    * combining our lower level functions like extract_references_intermediate

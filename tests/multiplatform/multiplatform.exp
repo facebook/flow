@@ -142,7 +142,6 @@ implementations must exist for this interface. Read the docs on Flow's multi-pla
 https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 
-
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
