@@ -154,6 +154,8 @@ val include_warnings : config -> bool
 
 val inexact_tuple_types_syntax : config -> bool
 
+val jest_integration : config -> bool
+
 val lazy_mode : config -> lazy_mode option
 
 (* global defaults for lint suppressions and strict mode *)

@@ -69,6 +69,7 @@ let get_rename_edits ~reader ~options ~old_haste_name ~new_haste_name old_file_k
   let opts =
     {
       File_sig.enable_enums = Options.enums options;
+      enable_jest_integration = Options.enable_jest_integration options;
       enable_relay_integration = Options.enable_relay_integration options;
       (* This field is only necessary for implicit imports for multiplatform purposes.
        * Renaming will never edit these implicit imports. *)
