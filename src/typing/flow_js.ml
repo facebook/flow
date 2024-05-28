@@ -2820,7 +2820,6 @@ struct
                 reason_op,
                 React.CreateElement
                   {
-                    clone;
                     component;
                     config;
                     children;
@@ -2835,7 +2834,7 @@ struct
           let uparts = (use_op, reason_op, targs, return_hint) in
           let check =
             let poly_t = (tparams_loc, ids, t) in
-            lazy (IICheck.of_jsx l poly_t use_op reason_op clone ~component ~config ~targs children)
+            lazy (IICheck.of_jsx l poly_t use_op reason_op ~component ~config ~targs children)
           in
           let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
           let u =
@@ -2844,7 +2843,6 @@ struct
                 reason_op,
                 React.CreateElement
                   {
-                    clone;
                     component;
                     config;
                     children;

@@ -883,7 +883,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             }
         in
         (inferred_targ_list, lhs, constructor_t, Some new_tout)
-      | Check.Jsx { clone; component; config; targs; children } ->
+      | Check.Jsx { component; config; targs; children } ->
         let new_tout = Tvar.mk cx reason_op in
         let (_, inferred_targ_list) = merge_targs targs in
         let react_kit_t =
@@ -892,7 +892,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               reason_op,
               React.CreateElement
                 {
-                  clone;
                   component;
                   config;
                   children;

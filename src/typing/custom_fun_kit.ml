@@ -46,7 +46,6 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
                 reason_op,
                 React.CreateElement
                   {
-                    clone = false;
                     targs;
                     config;
                     children = ([], None);
@@ -68,7 +67,6 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
                 reason_op,
                 React.CreateElement
                   {
-                    clone = false;
                     targs;
                     config;
                     children = (children, spread_arg);

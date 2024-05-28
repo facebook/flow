@@ -449,55 +449,16 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              )
           )
     in
-    let config_check use_op clone config children_args =
+    let config_check use_op config children_args =
       (* Create the optional children input type from the children arguments. *)
       let children = coerce_children_args children_args in
 
-      let make_readonly_partial t =
-        let reason = reason_of_t t in
-        let loc = loc_of_t t in
-        let readonly_reason = mk_reason RReadOnlyType loc in
-        let t =
-          EvalT
-            (t, TypeDestructorT (unknown_use, readonly_reason, ReadOnlyType), Eval.generate_id ())
-        in
-        let partial_reason = mk_reason (RPartialOf (desc_of_reason reason)) loc in
-        EvalT (t, TypeDestructorT (unknown_use, partial_reason, PartialType), Eval.generate_id ())
-      in
-
       (* Create a type variable for our props. *)
-      (* If we are cloning an existing element, the config does not need to
-       * provide the entire props type. *)
       let (props, defaults) =
         match drop_generic l with
-        | DefT (_, ReactAbstractComponentT { config; _ }) ->
-          (* This is a bit of a hack. We will be passing these props and
-           * default props to react_config in flow_js.ml to calculate the
-           * config and check the passed config against it. Since our config is
-           * already calculated, we can pretend the props type is the config
-           * type and that we have no defaultProps for identical behavior.
-           *
-           * This hack is necessary because we (by design) do not calculate
-           * props from Config and DefaultProps. Even if we did do that, we would
-           * just introduce unnecessary work here-- we would calculate the props from
-           * the config and defaultProps just so that we could re-calculate the config
-           * down the line.
-           *
-           * Additionally, this hack enables us to not have to explicitly handle
-           * AbstractComponent past this point. *)
-          ( ( if clone then
-              make_readonly_partial config
-            else
-              config
-            ),
-            None
-          )
+        | DefT (_, ReactAbstractComponentT { config; _ }) -> (config, None)
         | _ ->
-          ( ( if clone then
-              make_readonly_partial (Tvar.mk_where cx (reason_of_t config) props_to_tout)
-            else
-              Tvar.mk_where cx reason_op tin_to_props
-            ),
+          ( Tvar.mk_where cx reason_op tin_to_props,
             (* For class components and function components we want to lookup the
              * static default props property so that we may add it to our config input. *)
             get_defaults cx trace l ~reason_op
@@ -533,7 +494,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         )
       )
     in
-    let create_element clone component config children_args record_monomorphized_result tout =
+    let create_element component config children_args record_monomorphized_result tout =
       let use_op =
         (* Why do we try to remove the OpaqueTypeBound frame here?
          * The frame will be added when we unwrap the opaque type bound of `React$CreateElement`.
@@ -547,7 +508,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         unwrap use_op
       in
-      config_check use_op clone config children_args;
+      config_check use_op config children_args;
 
       (* If our config is void or null then we want to replace it with an
        * empty object.
@@ -755,7 +716,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     match u with
     | CreateElement
         {
-          clone;
           component;
           config;
           children;
@@ -764,8 +724,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           return_hint = _;
           record_monomorphized_result;
         } ->
-      create_element clone component config children record_monomorphized_result tout
-    | ConfigCheck config -> config_check use_op false config ([], None)
+      create_element component config children record_monomorphized_result tout
+    | ConfigCheck config -> config_check use_op config ([], None)
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout

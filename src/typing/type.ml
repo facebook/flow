@@ -3096,7 +3096,6 @@ and React : sig
 
   type tool =
     | CreateElement of {
-        clone: bool;
         component: TypeTerm.t;
         config: TypeTerm.t;
         children: TypeTerm.t list * TypeTerm.t option;
