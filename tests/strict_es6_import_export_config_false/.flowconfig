@@ -1,5 +1,10 @@
-[lints]
-all=error
-
 [options]
 all=true
+
+[lints]
+default-import-access=error
+export-renamed-default=error
+invalid-import-star-use=error
+mixed-import-and-require=error
+non-const-var-export=error
+this-in-exported-function=error
