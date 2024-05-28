@@ -208,7 +208,7 @@ function test20() {
 
   const result: (
     value: mixed,
-    records: Record<interface {}>,
+    records: Record<{...}>,
   ) => any = fn((value, records) => 42); // okay
 }
 

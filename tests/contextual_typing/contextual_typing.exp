@@ -538,22 +538,6 @@ References:
                                ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- implicit_instantiation.js:211:21
-
-Cannot instantiate `Record` because interface type [1] is not a subtype of object type [2]. Class instances are not
-subtypes of object types; consider rewriting object type [2] as an interface in type argument `T`.
-[class-object-subtyping]
-
-   implicit_instantiation.js:211:21
-   211|     records: Record<interface {}>,
-                            ^^^^^^^^^^^^ [1]
-
-References:
-   implicit_instantiation.js:203:18
-   203|   type Record<T: {...}> = { ...T, ... };
-                         ^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- intersections.js:7:24
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -1279,4 +1263,4 @@ References:
 
 
 
-Found 91 errors
+Found 90 errors
