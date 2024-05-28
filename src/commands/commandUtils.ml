@@ -92,7 +92,7 @@ let expand_path file =
 
 let collect_error_flags
     main
-    color
+    rendering_mode
     include_warnings
     max_warnings
     one_line
@@ -119,7 +119,7 @@ let collect_error_flags
   in
   main
     {
-      Flow_errors_utils.Cli_output.color;
+      Flow_errors_utils.Cli_output.rendering_mode;
       include_warnings;
       max_warnings;
       one_line;
@@ -155,9 +155,16 @@ let error_flags prev =
     |> flag
          "--color"
          (required
-            ~default:Tty.Color_Auto
+            ~default:Flow_errors_utils.Cli_output.CLI_Color_Auto
             (enum
-               [("never", Tty.Color_Never); ("always", Tty.Color_Always); ("auto", Tty.Color_Auto)]
+               [
+                 ("never", Flow_errors_utils.Cli_output.CLI_Color_Never);
+                 ("always", Flow_errors_utils.Cli_output.CLI_Color_Always);
+                 ("auto", Flow_errors_utils.Cli_output.CLI_Color_Auto);
+                 ( "unstable_ide_mode_EXPOSED_FOR_TESTING",
+                   Flow_errors_utils.Cli_output.IDE_Detailed_Error
+                 );
+               ]
             )
          )
          ~doc:"Display terminal output in color. never, always, auto (default: auto)"
