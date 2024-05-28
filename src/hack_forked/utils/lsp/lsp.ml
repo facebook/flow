@@ -727,6 +727,27 @@ end
 
 (** PublishDiagnostics notification, method="textDocument/PublishDiagnostics" *)
 module PublishDiagnostics = struct
+  module ExtraDetailedDiagnosticV0 = struct
+    type raw_color =
+      | Default
+      | Black
+      | Red
+      | Green
+      | Yellow
+      | Blue
+      | Magenta
+      | Cyan
+      | White
+
+    type style =
+      | Normal of raw_color
+      | Bold of raw_color
+      | Dim of raw_color
+      | Underline of raw_color
+      | BoldUnderline of raw_color
+      | DimUnderline of raw_color
+  end
+
   type diagnosticSeverity =
     | Error [@value 1]
     | Warning [@value 2]
@@ -764,7 +785,7 @@ module PublishDiagnostics = struct
 
   and extraDetailedDiagnostic =
     | NoExtraDetailedDiagnostic
-    | ExtraDetailedDiagnosticV0 of string
+    | ExtraDetailedDiagnosticV0 of (ExtraDetailedDiagnosticV0.style * string) list
 end
 
 (** DidOpenTextDocument notification, method="textDocument/didOpen" *)

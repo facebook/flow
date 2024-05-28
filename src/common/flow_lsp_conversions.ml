@@ -246,11 +246,34 @@ let diagnostics_of_flow_errors =
       in
       let data =
         if vscode_detailed_diagnostics then
+          let map_color = function
+            | Tty.Default -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Default
+            | Tty.Black -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Black
+            | Tty.Red -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Red
+            | Tty.Green -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Green
+            | Tty.Yellow -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Yellow
+            | Tty.Blue -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Blue
+            | Tty.Magenta -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Magenta
+            | Tty.Cyan -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Cyan
+            | Tty.White -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.White
+          in
+          let map_style = function
+            | Tty.Normal c -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Normal (map_color c)
+            | Tty.Bold c -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Bold (map_color c)
+            | Tty.Dim c -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Dim (map_color c)
+            | Tty.Underline c ->
+              Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Underline (map_color c)
+            | Tty.BoldUnderline c ->
+              Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.BoldUnderline (map_color c)
+            | Tty.DimUnderline c ->
+              Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.DimUnderline (map_color c)
+          in
           Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0
-            (Flow_errors_utils.Cli_output.format_single_error_to_string
+            (Flow_errors_utils.Cli_output.format_single_styled_error
                ~strip_root:None
                ~severity
                printable_error
+            |> Base.List.map ~f:(fun (style, text) -> (map_style style, text))
             )
         else
           Lsp.PublishDiagnostics.NoExtraDetailedDiagnostic
