@@ -11,19 +11,21 @@ type t
 type single_client
 
 module Client_config : sig
-  type rank_autoimports_by_usage =
-    [ `Default
-    | `True
-    | `False
-    ]
+  type client_toggle =
+    | Default
+    | True
+    | False
 
   type t = {
-    rank_autoimports_by_usage: rank_autoimports_by_usage;
+    detailed_error_rendering: client_toggle;
+    rank_autoimports_by_usage: client_toggle;
     suggest_autoimports: bool;
     show_suggest_ranking_info: bool;
   }
 
-  val rank_autoimports_by_usage : t -> rank_autoimports_by_usage
+  val detailed_error_rendering : t -> client_toggle
+
+  val rank_autoimports_by_usage : t -> client_toggle
 
   val suggest_autoimports : t -> bool
 

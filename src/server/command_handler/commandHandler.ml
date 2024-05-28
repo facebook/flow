@@ -1190,12 +1190,19 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
         (Ok result, None)
     )
 
+let vscode_detailed_diagnostics ~options client =
+  let client_config = Persistent_connection.client_config client in
+  match Persistent_connection.Client_config.detailed_error_rendering client_config with
+  | Persistent_connection.Client_config.Default -> Options.vscode_detailed_diagnostics options
+  | Persistent_connection.Client_config.True -> true
+  | Persistent_connection.Client_config.False -> false
+
 let rank_autoimports_by_usage ~options client =
   let client_config = Persistent_connection.client_config client in
   match Persistent_connection.Client_config.rank_autoimports_by_usage client_config with
-  | `Default -> Options.autoimports_ranked_by_usage options
-  | `True -> true
-  | `False -> false
+  | Persistent_connection.Client_config.Default -> Options.autoimports_ranked_by_usage options
+  | Persistent_connection.Client_config.True -> true
+  | Persistent_connection.Client_config.False -> false
 
 let handle_autocomplete
     ~trigger_character
@@ -2173,6 +2180,18 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
   let { Lsp.DidChangeConfiguration.settings } = params in
   let client_config = client_config client in
   let json = Some settings in
+  let client_config =
+    match Jget.val_opt json "detailedErrorRendering" with
+    | Some (Hh_json.JSON_String "true")
+    | Some (Hh_json.JSON_Bool true) ->
+      { client_config with Client_config.detailed_error_rendering = Client_config.True }
+    | Some (Hh_json.JSON_String "false")
+    | Some (Hh_json.JSON_Bool false) ->
+      { client_config with Client_config.detailed_error_rendering = Client_config.False }
+    | Some _
+    | None ->
+      { client_config with Client_config.detailed_error_rendering = Client_config.Default }
+  in
   let suggest = Jget.obj_opt json "suggest" in
   let client_config =
     match Jget.bool_opt suggest "autoImports" with
@@ -2183,13 +2202,13 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
     match Jget.val_opt suggest "rankAutoimportsByUsage" with
     | Some (Hh_json.JSON_String "true")
     | Some (Hh_json.JSON_Bool true) ->
-      { client_config with Client_config.rank_autoimports_by_usage = `True }
+      { client_config with Client_config.rank_autoimports_by_usage = Client_config.True }
     | Some (Hh_json.JSON_String "false")
     | Some (Hh_json.JSON_Bool false) ->
-      { client_config with Client_config.rank_autoimports_by_usage = `False }
+      { client_config with Client_config.rank_autoimports_by_usage = Client_config.False }
     | Some _
     | None ->
-      { client_config with Client_config.rank_autoimports_by_usage = `Default }
+      { client_config with Client_config.rank_autoimports_by_usage = Client_config.Default }
   in
   let client_config =
     let show_suggest_ranking_info = Jget.bool_d suggest "showRankingInfo" ~default:false in
@@ -3228,7 +3247,7 @@ let handle_live_errors_request =
             let live_errors_uri = Lsp.DocumentUri.of_string uri in
             let live_diagnostics =
               Flow_lsp_conversions.diagnostics_of_flow_errors
-                ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
+                ~vscode_detailed_diagnostics:(vscode_detailed_diagnostics ~options client)
                 ~errors:live_errors
                 ~warnings:live_warnings
               |> Lsp.UriMap.find_opt live_errors_uri
