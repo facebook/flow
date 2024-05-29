@@ -2290,9 +2290,29 @@ module Cli_output = struct
    * Renders the root location along with reference locations, but
    * without coalesing close references. *)
   let print_code_frames_friendly_without_coalesced_references
-      ~stdin_file ~strip_root ~flags ~references ~root_reference_id root_loc =
+      ~stdin_file ~strip_root ~flags ~references ~colors ~root_reference_id root_loc =
     let open Loc in
     let vertical_line = vertical_line ~flags in
+    let should_color =
+      match flags.rendering_mode with
+      | IDE_Detailed_Error -> true
+      | CLI_Color_Always
+      | CLI_Color_Auto
+      | CLI_Color_Never ->
+        false
+    in
+    let dim_style text =
+      if should_color then
+        dim_style text
+      else
+        default_style text
+    in
+    let styled_id id =
+      if should_color then
+        (Tty.Normal (get_tty_color id colors), " [" ^ string_of_int id ^ "]")
+      else
+        default_style (" [" ^ string_of_int id ^ "]")
+    in
     (* Get the maximum end line number. We will use this for computing our
      * gutter width. *)
     let max_end_line =
@@ -2309,6 +2329,11 @@ module Cli_output = struct
       (* Get the lines for the location... *)
       let filename = file_of_source loc.source in
       let source_code_lines = read_lines_in_file loc filename stdin_file in
+      let colored text =
+        match id with
+        | Some id when should_color -> (Tty.Normal (get_tty_color id colors), text)
+        | _ -> default_style text
+      in
       let styled_lines =
         Base.Option.map source_code_lines ~f:(fun line_list ->
             (* Print every line by appending the line number and appropriate
@@ -2329,8 +2354,8 @@ module Cli_output = struct
                     let n_string = string_of_int n in
                     let gutter_space = String.make (gutter_width - String.length n_string) ' ' in
                     let styled_lines_rev =
-                      default_style vertical_line
-                      :: default_style n_string
+                      dim_style vertical_line
+                      :: dim_style n_string
                       :: default_style gutter_space
                       :: styled_lines_rev
                     in
@@ -2338,7 +2363,56 @@ module Cli_output = struct
                       if line = "" then
                         styled_lines_rev
                       else
-                        default_style line :: default_style " " :: styled_lines_rev
+                        let styled_lines_rev = default_style " " :: styled_lines_rev in
+                        try
+                          if not should_color then
+                            default_style line :: styled_lines_rev
+                          else if n < loc.start.line || n > loc._end.line then
+                            (* If the line is outside of the reference range,
+                             * color with default dim style *)
+                            dim_style line :: styled_lines_rev
+                          else if n > loc.start.line && n < loc._end.line then
+                            (* If the line is in between start and end lines,
+                             * the entire line is colored. *)
+                            colored line :: styled_lines_rev
+                          else if n = loc.start.line && n <> loc._end.line then
+                            (*     vvv
+                             * abcdefg <- we are here
+                             * hijklmn
+                             * ^^^
+                             *)
+                            let first = String.sub line 0 loc.start.column in
+                            let mid =
+                              String.sub
+                                line
+                                loc.start.column
+                                (String.length line - loc.start.column)
+                            in
+                            colored mid :: dim_style first :: styled_lines_rev
+                          else if n = loc._end.line && n <> loc.start.line then
+                            (*     vvv
+                             * abcdefg
+                             * hijklmn <- we are here
+                             * ^^^
+                             *)
+                            let mid = String.sub line 0 loc._end.column in
+                            let last =
+                              String.sub line loc._end.column (String.length line - loc._end.column)
+                            in
+                            dim_style last :: colored mid :: styled_lines_rev
+                          else
+                            let first = String.sub line 0 loc.start.column in
+                            let mid =
+                              String.sub line loc.start.column (loc._end.column - loc.start.column)
+                            in
+                            let last =
+                              String.sub line loc._end.column (String.length line - loc._end.column)
+                            in
+                            dim_style last :: colored mid :: dim_style first :: styled_lines_rev
+                        with
+                        (* If the substring failed, we might be in a state where the file content
+                         * has changed. Fall back to the non-coloring mode instead of crashing. *)
+                        | Invalid_argument _b -> dim_style line :: styled_lines_rev
                     in
                     (n + 1, default_style "\n" :: styled_lines_rev))
                 (loc.start.line, [])
@@ -2359,7 +2433,7 @@ module Cli_output = struct
                    position. *)
                 let first_line_len = max first_line_len (loc.start.column + 1) in
                 default_style gutter_space
-                :: default_style
+                :: colored
                      (String.make loc.start.column ' '
                      ^ "v"
                      ^ String.make (first_line_len - loc.start.column - 1) '-'
@@ -2371,7 +2445,7 @@ module Cli_output = struct
             let styled_lines =
               let styled_underline =
                 if loc.start.line = loc._end.line then
-                  default_style
+                  colored
                     (String.make loc.start.column ' '
                     ^ String.make (loc._end.column - loc.start.column) '^'
                     )
@@ -2390,15 +2464,14 @@ module Cli_output = struct
                    * changed. But at the very least we shouldn't crash, which is what will happen if
                    * we call String.make with a negative length *)
                   let dash_length = loc._end.column - String.length underline_prefix - 1 in
-                  default_style (underline_prefix ^ String.make (max dash_length 0) '-' ^ "^")
+                  colored (underline_prefix ^ String.make (max dash_length 0) '-' ^ "^")
               in
               styled_lines @ [default_style gutter_space; styled_underline]
             in
             (* If we have a reference id then add it just after the underline. *)
             let styled_lines =
               match id with
-              | Some id when id > 0 ->
-                styled_lines @ [default_style (" [" ^ string_of_int id ^ "]")]
+              | Some id when id > 0 -> styled_lines @ [styled_id id]
               | _ -> styled_lines
             in
             (* Add a final newline to lines. *)
@@ -2420,10 +2493,10 @@ module Cli_output = struct
              is pointing at the whole file (line 0, col 0) -- then point at
              the filename itself. *)
           let underline = String.make (String.length filename) '^' in
-          let id =
+          let styled_id =
             match id with
-            | Some id when id > 0 -> " [" ^ string_of_int id ^ "]"
-            | _ -> ""
+            | Some id when id > 0 -> styled_id id
+            | _ -> default_style ""
           in
           Some
             [
@@ -2432,7 +2505,7 @@ module Cli_output = struct
               default_style "\n";
               default_style space;
               default_style underline;
-              default_style id;
+              styled_id;
               default_style "\n";
             ]
         | Some styled_lines ->
@@ -2602,8 +2675,7 @@ module Cli_output = struct
       (* Print the code frame for our error message. *)
       let code_frame =
         match flags.rendering_mode with
-        | CLI_Color_Always
-        | IDE_Detailed_Error ->
+        | CLI_Color_Always ->
           print_colorful_code_frames_friendly_with_coalesced_references
             ~stdin_file
             ~strip_root
@@ -2622,12 +2694,14 @@ module Cli_output = struct
             ~tags
             root_loc
         | CLI_Color_Auto
-        | CLI_Color_Never ->
+        | CLI_Color_Never
+        | IDE_Detailed_Error ->
           print_code_frames_friendly_without_coalesced_references
             ~stdin_file
             ~strip_root
             ~flags
             ~references
+            ~colors
             ~root_reference_id
             root_loc
       in
