@@ -121,11 +121,11 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
   let handle_command conn = function
     | Write msg ->
-      let%lwt _size = Marshal_tools_lwt.to_fd conn.out_fd msg in
+      let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
       Lwt.return_unit
     | WriteAndClose msg ->
       Lwt.cancel conn.command_thread;
-      let%lwt _size = Marshal_tools_lwt.to_fd conn.out_fd msg in
+      let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
       close_immediately conn
 
   (** Attempts to write everything available in the stream and then close the connection,
@@ -181,7 +181,9 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
     let main connection =
       let%lwt msg =
-        (Marshal_tools_lwt.from_fd connection.in_fd : ConnectionProcessor.in_message Lwt.t)
+        ( Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
+          : ConnectionProcessor.in_message Lwt.t
+          )
       in
       let%lwt () = connection.on_read ~msg ~connection in
       Lwt.return connection

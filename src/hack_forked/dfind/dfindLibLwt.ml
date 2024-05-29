@@ -26,13 +26,13 @@ let init log_fds (scuba_table, roots) =
 let pid handle = handle.daemon_handle.Daemon.pid
 
 let wait_until_ready handle =
-  let%lwt msg = Marshal_tools_lwt.from_fd handle.infd in
+  let%lwt msg = Marshal_tools_lwt.from_fd_with_preamble handle.infd in
   assert (msg = DfindServer.Ready);
   Lwt.return ()
 
 let request_changes handle =
-  let%lwt _ = Marshal_tools_lwt.to_fd handle.outfd () in
-  Marshal_tools_lwt.from_fd handle.infd
+  let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble handle.outfd () in
+  Marshal_tools_lwt.from_fd_with_preamble handle.infd
 
 let get_changes handle =
   let rec loop acc =

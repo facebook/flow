@@ -1698,7 +1698,7 @@ let rec connect_and_make_request flowconfig_name =
         command = cmd;
       }
     in
-    Marshal_tools.to_fd ?timeout (Unix.descr_of_out_channel oc) command |> ignore;
+    Marshal_tools.to_fd_with_preamble ?timeout (Unix.descr_of_out_channel oc) command |> ignore;
     flush oc
   in
   let eprintf_with_spinner msg =
@@ -1713,7 +1713,7 @@ let rec connect_and_make_request flowconfig_name =
   let rec wait_for_response ?timeout ~quiet ~emoji ~root (ic : Timeout.in_channel) =
     let use_emoji = Tty.supports_emoji () && emoji in
     let response : MonitorProt.monitor_to_client_message =
-      try Marshal_tools.from_fd ?timeout (Timeout.descr_of_in_channel ic) with
+      try Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic) with
       | Unix.Unix_error ((Unix.EPIPE | Unix.ECONNRESET), _, _) ->
         if (not quiet) && Tty.spinner_used () then Tty.print_clear_line stderr;
         raise End_of_file

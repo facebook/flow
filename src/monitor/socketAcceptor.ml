@@ -168,7 +168,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
   let server_build_id = build_revision in
   let server_bin = Sys.executable_name in
   (* handshake step 1: client sends handshake *)
-  let%lwt (wire : client_handshake_wire) = Marshal_tools_lwt.from_fd client_fd in
+  let%lwt (wire : client_handshake_wire) = Marshal_tools_lwt.from_fd_with_preamble client_fd in
   let {
     client_build_id;
     client_version;
@@ -200,7 +200,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
         Base.Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 [])
       )
     in
-    let%lwt _ = Marshal_tools_lwt.to_fd client_fd wire in
+    let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble client_fd wire in
     Lwt.return_unit
   in
   let error_client () =
@@ -270,6 +270,10 @@ let catch close exn =
     match Exception.unwrap exn with
     (* Monitor is dying *)
     | Lwt.Canceled -> ()
+    | Marshal_tools.Malformed_Preamble_Exception ->
+      Logger.error
+        ~exn:(Exception.to_exn exn)
+        "Someone tried to connect to the socket, but spoke a different protocol. Ignoring them"
     | _ ->
       Logger.error
         ~exn:(Exception.to_exn exn)
