@@ -1,3 +1,8 @@
+### 0.237.1
+
+Notable bug fixes:
+* Fixed an issue that might cause connecting to flow server to fail with out of retries.
+
 ### 0.237.0
 
 Likely to cause new Flow errors:
