@@ -19,10 +19,16 @@
    * libancillary) to start reading the next object.
    *
  * The solution:
-   * Use unbuffered IO directly with Unix file descriptors. We can read the size
-   * of the serialized value by first reading the header then extracting the
-   * size, using the Marshal.data_size API.
+   * Start each message with a fixed-size preamble that describes the
+   * size of the payload to read. Read precisely that many bytes directly
+   * from the FD avoiding Ocaml channels entirely.
  *)
+
+exception Payload_Size_Too_Large_Exception
+
+exception Malformed_Preamble_Exception
+
+exception Writing_Preamble_Exception
 
 exception Writing_Payload_Exception
 
@@ -82,7 +88,7 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
    *
    * People using Marshal_tools probably are calling Unix.select first. However that only guarantees
    * that the first read won't block. Marshal_tools will always do at least 2 reads (one for the
-   * header and one or more for the data). Any read after the first might block.
+   * preamble and one or more for the data). Any read after the first might block.
    *)
   let rec read ?timeout fd ~buffer ~offset ~size =
     match Timeout.select ?timeout [fd] [] [] ~-.1.0 with
@@ -97,16 +103,65 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
 end
 
 module MarshalToolsFunctor (WriterReader : WRITER_READER) : sig
-  val to_fd :
+  val expected_preamble_size : int
+
+  val to_fd_with_preamble :
     ?timeout:Timeout.t ->
     ?flags:Marshal.extern_flags list ->
     WriterReader.fd ->
     'a ->
     int WriterReader.result
 
-  val from_fd : ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
+  val from_fd_with_preamble : ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
 end = struct
   let ( >>= ) = WriterReader.( >>= )
+
+  let preamble_start_sentinel = '\142'
+
+  (* Size in bytes. *)
+  let preamble_core_size = 4
+
+  let expected_preamble_size = preamble_core_size + 1
+
+  (* Payload size in bytes = 2^31 - 1. *)
+  let maximum_payload_size = (1 lsl (preamble_core_size * 8)) - 1
+
+  let get_preamble_core (size : int) =
+    (* We limit payload size to 2^31 - 1 bytes. *)
+    if size >= maximum_payload_size then raise Payload_Size_Too_Large_Exception;
+    let rec loop i (remainder : int) acc =
+      if i < 0 then
+        acc
+      else
+        loop
+          (i - 1)
+          (remainder / 256)
+          ( Bytes.set acc i (Char.chr (remainder mod 256));
+            acc
+          )
+    in
+    loop (preamble_core_size - 1) size (Bytes.create preamble_core_size)
+
+  let make_preamble (size : int) =
+    let preamble_core = get_preamble_core size in
+    let preamble = Bytes.create (preamble_core_size + 1) in
+    Bytes.set preamble 0 preamble_start_sentinel;
+    Bytes.blit preamble_core 0 preamble 1 4;
+    preamble
+
+  let parse_preamble preamble =
+    if
+      Bytes.length preamble <> expected_preamble_size
+      || Bytes.get preamble 0 <> preamble_start_sentinel
+    then
+      raise Malformed_Preamble_Exception;
+    let rec loop i acc =
+      if i >= 5 then
+        acc
+      else
+        loop (i + 1) ((acc * 256) + int_of_char (Bytes.get preamble i))
+    in
+    loop 1 0
 
   let rec write_payload ?timeout fd buffer offset to_write =
     if to_write = 0 then
@@ -119,14 +174,19 @@ end = struct
         write_payload ?timeout fd buffer (offset + bytes_written) (to_write - bytes_written)
 
   (* Returns the size of the marshaled payload *)
-  let to_fd ?timeout ?(flags = []) fd obj =
+  let to_fd_with_preamble ?timeout ?(flags = []) fd obj =
     let payload = Marshal.to_bytes obj flags in
     let size = Bytes.length payload in
-    write_payload ?timeout fd payload 0 size >>= fun bytes_written ->
-    if bytes_written <> size then
-      raise Writing_Payload_Exception
+    let preamble = make_preamble size in
+    write_payload ?timeout fd preamble 0 expected_preamble_size >>= fun preamble_bytes_written ->
+    if preamble_bytes_written <> expected_preamble_size then
+      raise Writing_Preamble_Exception
     else
-      WriterReader.return size
+      write_payload ?timeout fd payload 0 size >>= fun bytes_written ->
+      if bytes_written <> size then
+        raise Writing_Payload_Exception
+      else
+        WriterReader.return size
 
   let rec read_payload ?timeout fd buffer offset to_read =
     if to_read = 0 then
@@ -138,18 +198,16 @@ end = struct
       else
         read_payload ?timeout fd buffer (offset + bytes_read) (to_read - bytes_read)
 
-  let from_fd ?timeout fd =
-    let header = Bytes.create Marshal.header_size in
-    read_payload ?timeout fd header 0 Marshal.header_size >>= fun bytes_read ->
-    if bytes_read <> Marshal.header_size then
+  let from_fd_with_preamble ?timeout fd =
+    let preamble = Bytes.create expected_preamble_size in
+    read_payload ?timeout fd preamble 0 expected_preamble_size >>= fun bytes_read ->
+    if bytes_read <> expected_preamble_size then
       raise End_of_file
     else
-      let data_size = Marshal.data_size header 0 in
-      let payload = Bytes.create (Marshal.header_size + data_size) in
-      Bytes.unsafe_blit header 0 payload 0 Marshal.header_size;
-      read_payload ?timeout fd payload Marshal.header_size data_size >>= fun offset_after_read ->
-      let data_size_read = offset_after_read - Marshal.header_size in
-      if data_size_read <> data_size then
+      let payload_size = parse_preamble preamble in
+      let payload = Bytes.create payload_size in
+      read_payload ?timeout fd payload 0 payload_size >>= fun payload_size_read ->
+      if payload_size_read <> payload_size then
         raise End_of_file
       else
         WriterReader.return (Marshal.from_bytes payload 0)

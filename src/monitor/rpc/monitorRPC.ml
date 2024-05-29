@@ -46,7 +46,9 @@ let disable () = state := Disabled
 
 (* Read a single message from the monitor. *)
 let read () =
-  with_infd ~on_disabled:(fun () -> failwith "MonitorRPC is disabled") ~f:Marshal_tools_lwt.from_fd
+  with_infd
+    ~on_disabled:(fun () -> failwith "MonitorRPC is disabled")
+    ~f:Marshal_tools_lwt.from_fd_with_preamble
 
 (* Sends a message to the monitor.
  *
@@ -60,7 +62,7 @@ let send ~msg =
   with_outfd
     ~on_disabled:(fun () -> ())
     ~f:(fun outfd ->
-      try Marshal_tools.to_fd outfd msg |> ignore with
+      try Marshal_tools.to_fd_with_preamble outfd msg |> ignore with
       | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Monitor_died)
 
 (* Respond to a request from an ephemeral client *)

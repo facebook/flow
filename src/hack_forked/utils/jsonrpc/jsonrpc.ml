@@ -169,15 +169,15 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
             | Hh_json.Syntax_error _ -> (true, Recoverable_exception edata)
             | _ -> (false, Fatal_exception edata)
           in
-          Marshal_tools.to_fd out_fd marshal |> ignore;
+          Marshal_tools.to_fd_with_preamble out_fd marshal |> ignore;
           should_continue
       end
       | Write ->
         assert (not (Queue.is_empty messages_to_send));
         let timestamped_json = Queue.pop messages_to_send in
         (* We can assume that the entire write will succeed, since otherwise
-           Marshal_tools.to_fd will throw an exception. *)
-        Marshal_tools.to_fd out_fd (Timestamped_json timestamped_json) |> ignore;
+           Marshal_tools.to_fd_with_preamble will throw an exception. *)
+        Marshal_tools.to_fd_with_preamble out_fd (Timestamped_json timestamped_json) |> ignore;
         true
     in
     if should_continue then loop ()
@@ -196,7 +196,8 @@ let internal_run_daemon (_dummy_param : unit) (_ic, (oc : queue_message Daemon.o
     let stack = Exception.get_full_backtrace_string 500 e in
     (try
        let out_fd = Daemon.descr_of_out_channel oc in
-       Marshal_tools.to_fd out_fd (Fatal_exception { Marshal_tools.message; stack }) |> ignore
+       Marshal_tools.to_fd_with_preamble out_fd (Fatal_exception { Marshal_tools.message; stack })
+       |> ignore
      with
     | _ ->
       (* There may be a broken pipe, for example. We should just give up on
@@ -231,7 +232,7 @@ let get_read_fd (queue : queue) : Unix.file_descr = Lwt_unix.unix_file_descr que
 let read_single_message_into_queue_wait (message_queue : queue) : queue_message Lwt.t =
   let%lwt message =
     try%lwt
-      let%lwt message = Marshal_tools_lwt.from_fd message_queue.daemon_in_fd in
+      let%lwt message = Marshal_tools_lwt.from_fd_with_preamble message_queue.daemon_in_fd in
       Lwt.return message
     with
     | End_of_file as e ->

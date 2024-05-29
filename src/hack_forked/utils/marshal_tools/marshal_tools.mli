@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+exception Payload_Size_Too_Large_Exception
+
+exception Malformed_Preamble_Exception
+
+exception Writing_Preamble_Exception
+
 exception Writing_Payload_Exception
 
 type remote_exception_data = {
@@ -12,9 +18,10 @@ type remote_exception_data = {
   stack: string;
 }
 
-val to_fd : ?timeout:Timeout.t -> ?flags:Marshal.extern_flags list -> Unix.file_descr -> 'a -> int
+val to_fd_with_preamble :
+  ?timeout:Timeout.t -> ?flags:Marshal.extern_flags list -> Unix.file_descr -> 'a -> int
 
-val from_fd : ?timeout:Timeout.t -> Unix.file_descr -> 'a
+val from_fd_with_preamble : ?timeout:Timeout.t -> Unix.file_descr -> 'a
 
 module type WRITER_READER = sig
   type 'a result
@@ -31,12 +38,14 @@ module type WRITER_READER = sig
 end
 
 module MarshalToolsFunctor (WriterReader : WRITER_READER) : sig
-  val to_fd :
+  val expected_preamble_size : int
+
+  val to_fd_with_preamble :
     ?timeout:Timeout.t ->
     ?flags:Marshal.extern_flags list ->
     WriterReader.fd ->
     'a ->
     int WriterReader.result
 
-  val from_fd : ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
+  val from_fd_with_preamble : ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
 end

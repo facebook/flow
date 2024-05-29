@@ -180,7 +180,9 @@ let send_non_blocking worker worker_pid infd outfd (f : 'a -> 'b) (x : 'a) : uni
     Lwt.protected
       ( (* This write must happen first, to synchronize with the Canceled exception handler. *)
         sent_request := true;
-        let%lwt _ = Marshal_tools_lwt.to_fd ~flags:[Stdlib.Marshal.Closures] outfd request in
+        let%lwt _ =
+          Marshal_tools_lwt.to_fd_with_preamble ~flags:[Stdlib.Marshal.Closures] outfd request
+        in
         Lwt.return_unit
       )
   with
@@ -198,10 +200,10 @@ let send_non_blocking worker worker_pid infd outfd (f : 'a -> 'b) (x : 'a) : uni
         (* We should not be canceled again at this point, but just in case prevent this operation
            from being canceled. We will re-raise the Canceled exception anyway. *)
         Lwt.no_cancel
-          (match%lwt Marshal_tools_lwt.from_fd infd with
+          (match%lwt Marshal_tools_lwt.from_fd_with_preamble infd with
           | None -> Lwt.return_unit
           | Some _ ->
-            let%lwt _ = Marshal_tools_lwt.from_fd infd in
+            let%lwt _ = Marshal_tools_lwt.from_fd_with_preamble infd in
             Lwt.return_unit)
       else
         Lwt.return_unit
@@ -244,13 +246,13 @@ let read_non_blocking (type result) worker_pid infd : (result * Measure.record_d
     Lwt.protected
       ( (* This write must happen first, to synchronize with the Canceled exception handler. *)
         read_response := true;
-        let%lwt (data : result option) = Marshal_tools_lwt.from_fd infd in
+        let%lwt (data : result option) = Marshal_tools_lwt.from_fd_with_preamble infd in
         match data with
         | None ->
           Lwt.wakeup signal_finished_read ();
           Lwt.return_none
         | Some data ->
-          let%lwt (stats : Measure.record_data) = Marshal_tools_lwt.from_fd infd in
+          let%lwt (stats : Measure.record_data) = Marshal_tools_lwt.from_fd_with_preamble infd in
           Lwt.wakeup signal_finished_read ();
           Lwt.return (Some (data, stats))
       )
@@ -272,10 +274,10 @@ let read_non_blocking (type result) worker_pid infd : (result * Measure.record_d
         (* We should not be canceled again at this point, but just in case prevent this operation
            from being canceled. We will re-raise the Canceled exception anyway. *)
         Lwt.no_cancel
-          (match%lwt Marshal_tools_lwt.from_fd infd with
+          (match%lwt Marshal_tools_lwt.from_fd_with_preamble infd with
           | None -> Lwt.return_unit
           | Some _ ->
-            let%lwt _ = Marshal_tools_lwt.from_fd infd in
+            let%lwt _ = Marshal_tools_lwt.from_fd_with_preamble infd in
             Lwt.return_unit)
     in
     Exception.reraise exn
