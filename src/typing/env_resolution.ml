@@ -56,13 +56,16 @@ let expression cx ?cond exp =
 
 let make_hooklike cx t =
   if Context.hook_compatibility cx then
-    Flow_js.mk_possibly_evaluated_destructor
-      cx
-      unknown_use
-      (TypeUtil.reason_of_t t)
-      t
-      MakeHooklike
-      (Eval.generate_id ())
+    match t with
+    | DefT (_, TypeT _) -> t
+    | _ ->
+      Flow_js.mk_possibly_evaluated_destructor
+        cx
+        unknown_use
+        (TypeUtil.reason_of_t t)
+        t
+        MakeHooklike
+        (Eval.generate_id ())
   else
     t
 

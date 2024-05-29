@@ -1176,6 +1176,11 @@ Flags: --pretty --expand-json-output
   "end":13
 }
 
+import-hooklike-regression.js:5:16
+Flags:
+type useA = {}
+import-hooklike-regression.js:5:16,5:19
+
 exports-class-cjs.js:3:23
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
@@ -2353,4 +2358,9 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   "start":13,
   "end":13
 }
+
+import-hooklike-regression.js:5:16
+Flags: --do_not_use_typed_AST_for_imports
+type useA = {}
+import-hooklike-regression.js:5:16,5:19
 
