@@ -1,3 +1,15 @@
+### 0.237.0
+
+Likely to cause new Flow errors:
+* Flow will no longer break up a union argument when calling an overloaded function. The code in this [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABDAHso4NBucQABTyZCc4QiG4ASmQDQgcDYAG4ADpQNm4Dnc3nwqCCiAisX2UxQBAyuUKlVQVXqzWAzmi8XXEycgA+nKNFQQlpgwvkUsVnIA9IHOQB3ODHcUQUOckyUCC3fgNEwkflQJINAAMVgATABmABsVkzIHpQA) will now be an error.
+
+New Features:
+* Under `jest_integration=true`, Flow will now error on some jest mocking APIs (e.g. `jest.mock('./my-module')`) if the module doesn't exist.
+
+Notable bug fixes:
+* Fixed spread of empty array when calculating tuple elements, e.g. `[...[]] as []` now works.
+* Fixed inferred type of `React.ElementConfig/Props` when passed in a component syntax component (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABJARIxoBZOQAxYgACigyE5whENwAlABuAA6UCVbNwHM5gO50HgCAlACVWMorABRNreCQAYW1iAAPCtjBAYELiAA+RWPa0ITkYEic4DiyXXEycgA+nPspigCHpcs5AHo45yAO5wY6SiBJzkmSgQSgSqCc2npiScqJsGFQQaFgv+-NByih8NSCrRpUquZqlgaqic6mMEj6w0xU3Yc0ABRz-btq0dzogbqVfd9Pr9AalN0bEZbMfjiZTaagGaz1Fz+cLvsPJbLFarFVXdelwbDW6j9KVuRADRMJDg0CSGXsEwQHpIA))
+
 ### 0.236.0
 
 Likely to cause new Flow errors:
