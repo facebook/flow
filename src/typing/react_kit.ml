@@ -701,6 +701,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             Flow_js_utils.CalleeRecorder.Tast
             inst_component
             specialized_component
+        | ((DefT (_, FunT _) as fn), _) ->
+          Flow_js_utils.CalleeRecorder.add_callee
+            cx
+            Flow_js_utils.CalleeRecorder.Tast
+            fn
+            specialized_component
         | _ -> ()
       in
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)

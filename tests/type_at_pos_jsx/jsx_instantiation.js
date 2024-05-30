@@ -97,3 +97,15 @@ function test_Nominal_inter_of_union(
     <Bar x={""} y = {1} />; // TODO should show instantiation for both Foo1 and Foo2
 //   ^
 }
+
+function test_func() {
+    type Props<T> = $ReadOnly<{ x: T, y: T }>;
+    declare function Foo<T>(props: Props<T>): React.Node;
+
+    <Foo x={1} y={""} />;
+//   ^
+
+    declare var Indirection: {f: typeof Foo}['f'];
+    <Indirection x={1} y={""} />;
+//   ^
+}

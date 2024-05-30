@@ -134,3 +134,13 @@ Flags:
 component Foo2<string, number>
 jsx_instantiation.js:97:6,97:8
 
+jsx_instantiation.js:105:6
+Flags:
+(props: Props<(number | string)>) => Node
+jsx_instantiation.js:105:6,105:8
+
+jsx_instantiation.js:109:6
+Flags:
+(props: Props<(number | string)>) => Node
+jsx_instantiation.js:109:6,109:16
+
