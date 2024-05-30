@@ -59,6 +59,7 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   namespaces: bool;
+  react_disable_function_components_default_props: bool;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   relay_integration_esmodules: bool;
@@ -279,6 +280,8 @@ let metadata_of_options options =
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
     namespaces = Options.namespaces options;
+    react_disable_function_components_default_props =
+      Options.react_disable_function_components_default_props options;
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     relay_integration_esmodules = Options.relay_integration_esmodules options;
@@ -563,6 +566,9 @@ let property_maps cx = cx.ccx.sig_cx.property_maps
 let call_props cx = cx.ccx.sig_cx.call_props
 
 let export_maps cx = cx.ccx.sig_cx.export_maps
+
+let react_disable_function_components_default_props cx =
+  cx.metadata.react_disable_function_components_default_props
 
 let react_runtime cx = cx.metadata.react_runtime
 
