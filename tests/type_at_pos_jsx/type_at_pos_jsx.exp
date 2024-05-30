@@ -33,3 +33,104 @@ Flags:
 number
 test.js:27:8,27:8
 
+jsx_instantiation.js:3:19
+Flags:
+component Foo1<T>
+jsx_instantiation.js:3:19,3:22
+
+jsx_instantiation.js:10:6
+Flags:
+component Foo1<number | string>
+jsx_instantiation.js:10:6,10:9
+
+jsx_instantiation.js:15:6
+Flags:
+component Foo1<number | string>
+jsx_instantiation.js:15:6,15:9
+
+jsx_instantiation.js:20:6
+Flags:
+component Foo4<string, number>
+jsx_instantiation.js:20:6,20:9
+
+jsx_instantiation.js:26:13
+Flags:
+component Bar<any | number>
+jsx_instantiation.js:26:13,26:15
+
+jsx_instantiation.js:41:17
+Flags:
+component Foo<any (explicit)>
+jsx_instantiation.js:41:17,41:19
+
+jsx_instantiation.js:55:6
+Flags:
+
+  React$AbstractComponent<{+x: string, +y: number}, mixed, renders React$Node>
+  |
+  React$AbstractComponent<
+    {+x: (number | string), +y: (number | string)},
+    mixed,
+    renders React$Node,
+  >
+jsx_instantiation.js:55:6,55:9
+
+jsx_instantiation.js:57:6
+Flags:
+React$AbstractComponent<
+  {+x: (number | string), +y: (number | string)},
+  mixed,
+  renders React$Node,
+>
+jsx_instantiation.js:57:6,57:9
+
+jsx_instantiation.js:67:5
+Flags:
+component Foo1<number | string>
+jsx_instantiation.js:67:5,67:9
+
+jsx_instantiation.js:69:5
+Flags:
+component Foo2<string, number>
+jsx_instantiation.js:69:5,69:9
+
+jsx_instantiation.js:71:5
+Flags:
+
+  React$AbstractComponent<{+x: T, +y: T}, mixed, renders React$Node>
+  &
+  React$AbstractComponent<{+x: T, +y: S}, mixed, renders React$Node>
+jsx_instantiation.js:71:5,71:9
+
+jsx_instantiation.js:73:5
+Flags:
+component Foo2<string, number>
+jsx_instantiation.js:73:5,73:9
+
+jsx_instantiation.js:81:6
+Flags:
+component Foo2<string, number>
+jsx_instantiation.js:81:6,81:11
+
+jsx_instantiation.js:83:6
+Flags:
+component Foo2<string, number>
+jsx_instantiation.js:83:6,83:11
+
+jsx_instantiation.js:90:6
+Flags:
+
+  React$AbstractComponent<{+x: string, +y: number}, mixed, renders React$Node>
+  |
+  React$AbstractComponent<
+    {+x: (number | string), +y: (number | string)},
+    mixed,
+    renders React$Node,
+  >
+jsx_instantiation.js:90:6,90:8
+
+jsx_instantiation.js:97:6
+Flags:
+component Foo2<string, number>
+jsx_instantiation.js:97:6,97:8
+

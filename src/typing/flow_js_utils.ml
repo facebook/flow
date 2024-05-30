@@ -2573,6 +2573,8 @@ module CalleeRecorder : sig
   val type_for_sig_help : Reason.t -> Type.specialized_callee -> Type.t
 
   val type_for_tast : Reason.t -> Type.specialized_callee -> Type.t
+
+  val type_for_tast_opt : Reason.t -> Type.specialized_callee -> Type.t option
 end = struct
   type kind =
     | Tast
@@ -2638,4 +2640,10 @@ end = struct
   let type_for_tast reason specialized_callee =
     let (Specialized_callee { finalized; _ }) = specialized_callee in
     union_of_ts reason finalized
+
+  let type_for_tast_opt reason specialized_callee =
+    let (Specialized_callee { finalized; _ }) = specialized_callee in
+    match finalized with
+    | [] -> None
+    | _ -> Some (union_of_ts reason finalized)
 end

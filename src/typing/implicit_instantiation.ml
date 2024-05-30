@@ -66,7 +66,7 @@ module type S = sig
     ?allow_underconstrained:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
-    inferred_targ Subst_name.Map.t
+    inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
 
   val solve_conditional_type_targs :
     Context.t ->
@@ -899,6 +899,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                   tout = new_tout;
                   return_hint = Type.hint_unavailable;
                   record_monomorphized_result = false;
+                  inferred_targs = None;
+                  specialized_component = None;
                 }
             )
         in
@@ -1005,34 +1007,37 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         Subst_name.Map.empty
         inferred_targ_list
     in
-    List.fold_right
-      (fun (name, t, bound, is_inferred) acc ->
-        let tparam = Subst_name.Map.find name tparams_map in
-        let polarity =
-          if allow_underconstrained then
-            None
-          else
-            Marked.get name marked_tparams
-        in
-        let result =
-          if is_inferred then
-            pin_type
-              cx
-              ~use_op
-              tparam
-              polarity
-              ~default_bound:
-                (Base.Option.some_if has_new_errors (AnyT.error (TypeUtil.reason_of_t t)))
-              instantiation_reason
-              t
-          else
-            Observer.on_pinned_tparam cx tparam t
-        in
-        let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
-        Flow.flow_t cx (t, bound_t);
-        Subst_name.Map.add name result acc)
-      inferred_targ_list
-      Subst_name.Map.empty
+    let soln =
+      List.fold_right
+        (fun (name, t, bound, is_inferred) acc ->
+          let tparam = Subst_name.Map.find name tparams_map in
+          let polarity =
+            if allow_underconstrained then
+              None
+            else
+              Marked.get name marked_tparams
+          in
+          let result =
+            if is_inferred then
+              pin_type
+                cx
+                ~use_op
+                tparam
+                polarity
+                ~default_bound:
+                  (Base.Option.some_if has_new_errors (AnyT.error (TypeUtil.reason_of_t t)))
+                instantiation_reason
+                t
+            else
+              Observer.on_pinned_tparam cx tparam t
+          in
+          let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
+          Flow.flow_t cx (t, bound_t);
+          Subst_name.Map.add name result acc)
+        inferred_targ_list
+        Subst_name.Map.empty
+    in
+    (soln, Base.List.map ~f:(fun (name, t, _, _) -> (t, name)) inferred_targ_list)
 
   let check_fun cx ~tparams ~tparams_map ~return_t ~implicit_instantiation =
     (* Visit the return type *)
@@ -1255,7 +1260,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       Base.List.fold_left
         ~f:(fun acc check ->
           let { Implicit_instantiation_check.operation = (use_op, _, _); _ } = check in
-          let pinned = solve_targs ~use_op implicit_instantiation_cx check in
+          let (pinned, _) = solve_targs ~use_op implicit_instantiation_cx check in
           f implicit_instantiation_cx acc check pinned)
         ~init
         implicit_instantiation_checks
@@ -1402,7 +1407,7 @@ module type KIT = sig
     use_op:use_op ->
     reason_op:reason ->
     reason_tapp:reason ->
-    Type.t
+    Type.t * (Type.t * Subst_name.Name.t) list
 
   val run_monomorphize :
     Context.t ->
@@ -1529,14 +1534,11 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     let f () =
       Context.run_in_implicit_instantiation_mode cx (fun () ->
           let (_, _, t) = check.Implicit_instantiation_check.poly_t in
-          instantiate_poly_with_subst_map
-            cx
-            trace
-            t
-            (Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check)
-            ~use_op
-            ~reason_op
-            ~reason_tapp
+          let (soln, inferred_targs) =
+            Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check
+          in
+          let t = instantiate_poly_with_subst_map cx trace t soln ~use_op ~reason_op ~reason_tapp in
+          (t, inferred_targs)
       )
     in
     if in_nested_instantiation then
@@ -1557,7 +1559,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         }
       in
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          let map = Pierce.solve_targs cx ~use_op ~allow_underconstrained:false check in
+          let (map, _) = Pierce.solve_targs cx ~use_op ~allow_underconstrained:false check in
           let { inferred; _ } = Subst_name.Map.find name map in
           inferred
       )

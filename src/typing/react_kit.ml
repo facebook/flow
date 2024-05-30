@@ -500,7 +500,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         )
       )
     in
-    let create_element component config children_args record_monomorphized_result tout =
+    let create_element
+        component
+        config
+        children_args
+        record_monomorphized_result
+        inferred_targs
+        specialized_component
+        tout =
       let use_op =
         (* Why do we try to remove the OpaqueTypeBound frame here?
          * The frame will be added when we unwrap the opaque type bound of `React$CreateElement`.
@@ -670,6 +677,32 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           (*TODO(jmbrown): Internal Error *)
           elem
       in
+      (* Record the instantiated type for hover types. *)
+      let () =
+        let component = l in
+        match (drop_generic component, inferred_targs) with
+        | ( DefT
+              ( r,
+                ReactAbstractComponentT
+                  { config; instance; renders; component_kind = Nominal (loc, name, _) }
+              ),
+            Some inferred_targs
+          ) ->
+          let ts = Some (Base.List.map ~f:fst inferred_targs) in
+          let inst_component =
+            DefT
+              ( r,
+                ReactAbstractComponentT
+                  { config; instance; renders; component_kind = Nominal (loc, name, ts) }
+              )
+          in
+          Flow_js_utils.CalleeRecorder.add_callee
+            cx
+            Flow_js_utils.CalleeRecorder.Tast
+            inst_component
+            specialized_component
+        | _ -> ()
+      in
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in
     let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
@@ -729,8 +762,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           targs = _;
           return_hint = _;
           record_monomorphized_result;
+          inferred_targs;
+          specialized_component;
         } ->
-      create_element component config children record_monomorphized_result tout
+      create_element
+        component
+        config
+        children
+        record_monomorphized_result
+        inferred_targs
+        specialized_component
+        tout
     | ConfigCheck config -> config_check use_op config ([], None)
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout

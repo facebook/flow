@@ -207,3 +207,14 @@ function test19() {
   error();
 // ^
 }
+
+function test20(
+  Foo1: <T>(x: T, y: T) => void,
+  Foo2: <T>(x: T, y: mixed) => void,
+  Foo3: <T: number>(x: T, y: T) => void,
+  Foo4: <T, S: string>(x: T, y: S) => void,
+  Bar: (typeof Foo1 | typeof Foo2) & (typeof Foo3 | typeof Foo4),
+) {
+  Bar("", 1); // TODO should include type of both Foo1 and Foo2
+//  ^
+}

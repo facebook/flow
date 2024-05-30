@@ -91,7 +91,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           _,
           _,
           (CallM { specialized_callee = Some c; _ } | ChainM { specialized_callee = Some c; _ })
-        ) ->
+        )
+    | ReactKitT (_, _, React.CreateElement { specialized_component = Some c; _ }) ->
       let (Specialized_callee data) = c in
       let spec_id = (speculation_id, case.Speculation_state.case_id) in
       Base.List.find data.speculative_candidates ~f:(fun (_, spec_id') -> spec_id = spec_id')

@@ -1336,7 +1336,7 @@ module Make (I : INPUT) : S = struct
         | DefT
             ( r,
               ReactAbstractComponentT
-                { component_kind = Nominal (_, name); config = _; instance = _; renders = _ }
+                { component_kind = Nominal (_, name, _); config = _; instance = _; renders = _ }
             ) ->
           let symbol = Reason_utils.component_symbol env name r in
           mk_generic ~env symbol Ty.ComponentKind tparams targs
@@ -1424,7 +1424,7 @@ module Make (I : INPUT) : S = struct
 
     and react_element_shorthand ~env opaque_reason opaque_type targs t =
       match t with
-      | T.(DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })) ->
+      | T.(DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name, _); _ })) ->
         let symbol = Reason_utils.component_symbol env name reason in
         return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | _ ->
@@ -2040,7 +2040,7 @@ module Make (I : INPUT) : S = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let component_decl ~env tparams name reason =
+      let component_decl ~env ?targs tparams name reason =
         let%bind tparams =
           match tparams with
           | Some tparams ->
@@ -2048,15 +2048,15 @@ module Make (I : INPUT) : S = struct
             ps
           | None -> return None
         in
-        return
-          (Ty.Decl
-             (Ty.NominalComponentDecl
-                {
-                  name = Reason_utils.component_symbol env name reason;
-                  tparams;
-                  is_type = Env.toplevel_is_type_identifier_reference env;
-                }
-             )
+        let%map targs = optMapM (TypeConverter.convert_t ~env) targs in
+        Ty.Decl
+          (Ty.NominalComponentDecl
+             {
+               name = Reason_utils.component_symbol env name reason;
+               tparams;
+               targs;
+               is_type = Env.toplevel_is_type_identifier_reference env;
+             }
           )
       in
       let enum_decl ~env reason =
@@ -2087,8 +2087,8 @@ module Make (I : INPUT) : S = struct
                 (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ })
             ) ->
           toplevel ~env type_
-        | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
-          component_decl ~env (Some tparams) name reason
+        | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name, targs); _ }) ->
+          component_decl ~env ?targs (Some tparams) name reason
         (* Type Aliases *)
         | DefT (r, TypeT (kind, t)) ->
           let%bind (env, ps) = TypeConverter.convert_type_params_t ~env tparams in
@@ -2125,8 +2125,8 @@ module Make (I : INPUT) : S = struct
         | DefT (reason, EnumObjectT _)
         | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumValueT _))) ->
           enum_decl ~env reason
-        | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
-          component_decl ~env None name reason
+        | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name, targs); _ }) ->
+          component_decl ~env ?targs None name reason
         | DefT (_, ReactAbstractComponentT { component_kind = Structural; _ })
           when Env.toplevel_is_type_identifier_reference env ->
           let orig_reason = TypeUtil.reason_of_t orig_t in

@@ -5383,7 +5383,7 @@ module Make
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_opening_element, children_loc) in
-    let t =
+    let (t, _) =
       jsx_desugar cx "React.Fragment" fragment_t None (NullT.at expr_loc) [] unresolved_params locs
     in
     Tvar_resolver.resolve cx t;
@@ -5476,7 +5476,8 @@ module Make
               attributes
               children
           in
-          let t = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
+          let (t, c_opt) = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
+          let c = Base.Option.value c_opt ~default:c in
           let name = Identifier ((loc, c), { Identifier.name; comments }) in
           (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
@@ -5498,7 +5499,7 @@ module Make
             attributes
             children
         in
-        let t = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
+        let (t, _) = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
@@ -5762,7 +5763,7 @@ module Make
               reason_of_t a |> AnyT.error)
           children
       in
-      let (tout, use_op) =
+      let (tout, instantiated_component, use_op) =
         mk_react_jsx
           cx
           reason
@@ -5820,7 +5821,7 @@ module Make
             (Error_message.EInvalidReactCreateElement
                { create_element_loc = loc_element; invalid_react = reason_of_t react_t }
             ));
-      tout
+      (tout, instantiated_component)
     | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
       let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
       (* A JSX element with no attributes should pass in null as the second
@@ -5840,30 +5841,34 @@ module Make
       in
       let use_op = Op (JSXCreateElement { op = reason; component = reason_of_t component_t }) in
       let open Ast.Expression in
-      (match jsx_expr with
-      | ( _,
-          Member
-            {
-              Member._object;
-              property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ });
-              _;
-            }
-        ) ->
-        let ot = jsx_pragma_expression cx raw_jsx_expr (fst _object) _object in
-        snd
-          (method_call
-             cx
-             reason
-             ~use_op
-             ~call_strict_arity:false
-             prop_loc
-             (jsx_expr, ot, name)
-             targs_opt
-             argts
-          )
-      | _ ->
-        let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-        func_call cx loc_element reason ~use_op ~call_strict_arity:false f targs_opt argts None)
+      let t =
+        match jsx_expr with
+        | ( _,
+            Member
+              {
+                Member._object;
+                property =
+                  Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ });
+                _;
+              }
+          ) ->
+          let ot = jsx_pragma_expression cx raw_jsx_expr (fst _object) _object in
+          snd
+            (method_call
+               cx
+               reason
+               ~use_op
+               ~call_strict_arity:false
+               prop_loc
+               (jsx_expr, ot, name)
+               targs_opt
+               argts
+            )
+        | _ ->
+          let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
+          func_call cx loc_element reason ~use_op ~call_strict_arity:false f targs_opt argts None
+      in
+      (t, None)
 
   (* The @jsx pragma specifies a left hand side expression EXPR such that
    *
@@ -6426,13 +6431,12 @@ module Make
   and mk_react_jsx
       cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt props children =
     let reason_jsx = mk_reason (RFunction RNormal) loc_element in
+    let reason_c = reason_of_t component_t in
     let use_op =
-      Op
-        (ReactCreateElementCall
-           { op = reason_jsx; component = reason_of_t component_t; children = loc_children }
-        )
+      Op (ReactCreateElementCall { op = reason_jsx; component = reason_c; children = loc_children })
     in
     let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
+    let specialized_component = Context.new_specialized_callee cx in
     Flow.flow
       cx
       ( component_t,
@@ -6448,10 +6452,15 @@ module Make
                 targs = targs_opt;
                 return_hint;
                 record_monomorphized_result = false;
+                inferred_targs = None;
+                specialized_component = Some specialized_component;
               }
           )
       );
-    (tout, use_op)
+    let specialized_component_t =
+      Flow_js_utils.CalleeRecorder.type_for_tast_opt reason_c specialized_component
+    in
+    (tout, specialized_component_t, use_op)
 
   and mk_class cx class_loc ~name_loc ?tast_class_type reason c =
     let node_cache = Context.node_cache cx in

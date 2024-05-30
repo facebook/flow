@@ -5,3 +5,4 @@
 # LICENSE file in the root directory of this source tree.
 
 queries_in_file "type-at-pos" "test.js"
+queries_in_file "type-at-pos" "jsx_instantiation.js"

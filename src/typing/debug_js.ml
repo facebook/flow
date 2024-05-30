@@ -472,6 +472,8 @@ and dump_use_t_ (depth, tvars) cx t =
             targs = _;
             return_hint = _;
             record_monomorphized_result = _;
+            inferred_targs = _;
+            specialized_component = _;
           } ->
         p
           ~extra:

@@ -288,7 +288,7 @@ module rec TypeTerm : sig
 
   and component_kind =
     | Structural
-    | Nominal of ALoc.id * string
+    | Nominal of ALoc.id * string * t list option (* Instantiation types - used for hover type *)
 
   and hint_eval_result =
     | HintAvailable of t * Hint.hint_kind
@@ -3103,6 +3103,8 @@ and React : sig
         targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;
         record_monomorphized_result: bool;
+        inferred_targs: (TypeTerm.t * Subst_name.Name.t) list option;
+        specialized_component: TypeTerm.specialized_callee option;
       }
     | ConfigCheck of TypeTerm.t
     | GetProps of TypeTerm.t_out

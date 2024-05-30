@@ -1899,7 +1899,7 @@ and merge_component
       | None -> Structural
       | Some (loc, name) ->
         let id = Context.make_aloc_id file.cx loc in
-        Nominal (id, name)
+        Nominal (id, name, None)
     in
     DefT (reason, ReactAbstractComponentT { config = param; instance; renders; component_kind })
   in

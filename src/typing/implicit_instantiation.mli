@@ -54,7 +54,7 @@ module type S = sig
     ?allow_underconstrained:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
-    inferred_targ Subst_name.Map.t
+    inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
 
   val solve_conditional_type_targs :
     Context.t ->
@@ -98,7 +98,7 @@ module type KIT = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    Type.t
+    Type.t * (Type.t * Subst_name.Name.t) list
 
   val run_monomorphize :
     Context.t ->

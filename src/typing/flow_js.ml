@@ -2827,6 +2827,8 @@ struct
                     targs;
                     tout;
                     record_monomorphized_result = _;
+                    inferred_targs = _;
+                    specialized_component;
                   }
               )
           ) ->
@@ -2836,7 +2838,9 @@ struct
             let poly_t = (tparams_loc, ids, t) in
             lazy (IICheck.of_jsx l poly_t use_op reason_op ~component ~config ~targs children)
           in
-          let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
+          let (t_, inferred_targs) =
+            instantiate_poly_call_or_new_with_soln cx trace lparts uparts check
+          in
           let u =
             ReactKitT
               ( use_op,
@@ -2850,6 +2854,8 @@ struct
                     targs = None;
                     tout;
                     record_monomorphized_result = true;
+                    inferred_targs = Some inferred_targs;
+                    specialized_component;
                   }
               )
           in
@@ -2949,7 +2955,7 @@ struct
               ( _,
                 ReactAbstractComponentT
                   {
-                    component_kind = Nominal (renders_id, renders_name);
+                    component_kind = Nominal (renders_id, renders_name, _);
                     renders = renders_super;
                     _;
                   }
@@ -7908,7 +7914,8 @@ struct
 
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or
    * New expression. *)
-  and instantiate_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) targs =
+  and instantiate_with_targs_with_soln
+      cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) targs =
     let (_, ts) =
       Nel.fold_left
         (fun (targs, ts) _ ->
@@ -7921,17 +7928,44 @@ struct
         (targs, [])
         xs
     in
+    instantiate_poly_with_targs
+      cx
+      trace
+      ~use_op
+      ~reason_op
+      ~reason_tapp
+      (tparams_loc, xs, t)
+      (List.rev ts)
+
+  and instantiate_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) targs =
     let (t, _) =
-      instantiate_poly_with_targs
+      instantiate_with_targs_with_soln
         cx
         trace
         ~use_op
         ~reason_op
         ~reason_tapp
         (tparams_loc, xs, t)
-        (List.rev ts)
+        targs
     in
     t
+
+  and instantiate_poly_call_or_new_with_soln cx trace lparts uparts check =
+    let (reason_tapp, tparams_loc, ids, t) = lparts in
+    let (use_op, reason_op, targs, return_hint) = uparts in
+    match all_explicit_targs targs with
+    | Some targs ->
+      instantiate_with_targs_with_soln
+        cx
+        trace
+        (tparams_loc, ids, t)
+        targs
+        ~use_op
+        ~reason_op
+        ~reason_tapp
+    | None ->
+      let check = Lazy.force check in
+      ImplicitInstantiationKit.run_call cx check trace ~use_op ~reason_op ~reason_tapp ~return_hint
 
   and instantiate_poly_call_or_new cx trace lparts uparts check =
     let (reason_tapp, tparams_loc, ids, t) = lparts in
@@ -7941,7 +7975,17 @@ struct
       instantiate_with_targs cx trace (tparams_loc, ids, t) targs ~use_op ~reason_op ~reason_tapp
     | None ->
       let check = Lazy.force check in
-      ImplicitInstantiationKit.run_call cx check trace ~use_op ~reason_op ~reason_tapp ~return_hint
+      let (t, _) =
+        ImplicitInstantiationKit.run_call
+          cx
+          check
+          trace
+          ~use_op
+          ~reason_op
+          ~reason_tapp
+          ~return_hint
+      in
+      t
 
   (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
   (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)

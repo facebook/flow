@@ -542,13 +542,16 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         option ~f:(type_parameter ~depth) typeParameters;
       ]
   in
-  let nominal_component_decl ~depth s typeParameters is_type =
+  let nominal_component_decl ~depth s typeParameters typeArgs is_type =
     let base =
       [
         Atom "component";
         space;
         identifier (local_name_of_symbol s);
-        option ~f:(type_parameter ~depth) typeParameters;
+        (* Prefer displaying type arguments if they exist *)
+        (match typeArgs with
+        | Some ts -> type_args ~depth ts
+        | None -> option ~f:(type_parameter ~depth) typeParameters);
       ]
     in
     if is_type then
@@ -586,8 +589,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
     | EnumDecl n -> enum_decl n
-    | NominalComponentDecl { name; tparams; is_type } ->
-      nominal_component_decl ~depth name tparams is_type
+    | NominalComponentDecl { name; tparams; targs; is_type } ->
+      nominal_component_decl ~depth name tparams targs is_type
     | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in
   match elt with

@@ -322,6 +322,8 @@ and decl =
   | NominalComponentDecl of {
       name: symbol;
       tparams: type_param list option;
+      (* Used to show instantiation at JSX creation site. *)
+      targs: t list option;
       is_type: bool;
     }
   | ModuleDecl of {

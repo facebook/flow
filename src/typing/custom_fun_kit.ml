@@ -53,6 +53,8 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
                     return_hint;
                     component;
                     record_monomorphized_result = false;
+                    inferred_targs = None;
+                    specialized_component = None;
                   }
               )
           )
@@ -74,6 +76,8 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
                     return_hint;
                     component;
                     record_monomorphized_result = false;
+                    inferred_targs = None;
+                    specialized_component = None;
                   }
               )
           )

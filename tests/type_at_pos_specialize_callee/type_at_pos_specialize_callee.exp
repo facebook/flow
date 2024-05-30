@@ -213,3 +213,8 @@ Flags:
 mixed
 file.js:207:3,207:7
 
+file.js:218:5
+Flags:
+(x: string, y: mixed) => void
+file.js:218:3,218:5
+

@@ -420,7 +420,7 @@ struct
     | InterfaceDecl (s, ps) ->
       spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
-    | NominalComponentDecl { name; tparams; is_type } ->
+    | NominalComponentDecl { name; tparams; targs = _; is_type } ->
       spf
         "NominalComponentDecl (%s, %s, %b)"
         (dump_symbol name)
@@ -791,7 +791,7 @@ struct
       | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
       | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
       | EnumDecl name -> [("name", json_of_symbol name)]
-      | NominalComponentDecl { name; tparams; is_type } ->
+      | NominalComponentDecl { name; tparams; targs = _; is_type } ->
         json_of_nominal_component_decl (name, tparams, is_type)
       | ModuleDecl { name; exports; default } -> json_of_module name exports default
     in
