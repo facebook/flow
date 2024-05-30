@@ -35,14 +35,12 @@ type 'loc virtual_reason_desc =
   | RBooleanLit of bool
   | RIndexedAccess of { optional: bool }
   | RConditionalType
-  | RInferType of string
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
   | RConstObjectLit
   | RObjectType
   | RMappedType
-  | RObjectClassName
   | RInterfaceType
   | RArray
   | RArrayLit
@@ -81,10 +79,7 @@ type 'loc virtual_reason_desc =
   | RThis
   | RThisType
   | RImplicitInstantiation
-  | RTooFewArgs
-  | RTooFewArgsExpectedRest
   | RConstructorVoidReturn
-  | RNewObject
   | RUnion
   | RUnionType
   | RIntersection
@@ -103,7 +98,6 @@ type 'loc virtual_reason_desc =
   | RReturn
   | RRegExp
   | RSuper
-  | RNoSuper
   | RDummyPrototype
   | RDummyThis
   | RImplicitThis of 'loc virtual_reason_desc
@@ -126,7 +120,6 @@ type 'loc virtual_reason_desc =
   | RRestParameter of string option
   | RPatternParameter of string
   | RIdentifier of name
-  | RIdentifierAssignment of string
   | RPropertyAssignment of string option
   | RProperty of name option
   | RPrivateProperty of string
@@ -142,8 +135,6 @@ type 'loc virtual_reason_desc =
   | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
-  | RMissingAbstract of 'loc virtual_reason_desc
-  | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string * string
   | RImportStarType of string
@@ -159,10 +150,8 @@ type 'loc virtual_reason_desc =
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
   | RRestArrayLit of 'loc virtual_reason_desc
-  | RAbstract of 'loc virtual_reason_desc
   | RTypeApp of 'loc virtual_reason_desc
   | RTypeAppImplicit of 'loc virtual_reason_desc
-  | RThisTypeApp of 'loc virtual_reason_desc
   | RExtends of 'loc virtual_reason_desc
   | RClass of 'loc virtual_reason_desc
   | RStatics of 'loc virtual_reason_desc
@@ -170,12 +159,9 @@ type 'loc virtual_reason_desc =
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
   | RPredicateOf of 'loc virtual_reason_desc
-  | RPredicateCall of 'loc virtual_reason_desc
-  | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of Subst_name.t
-  | RSpreadOf of 'loc virtual_reason_desc
   | RPartialOf of 'loc virtual_reason_desc
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
@@ -189,16 +175,11 @@ type 'loc virtual_reason_desc =
       name_opt: name option;
       from_component_syntax: bool;
     }
-  | RReactClass
-  | RReactComponent
-  | RReactStatics
   | RReactDefaultProps
-  | RReactState
   | RReactChildren
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactRef
-  | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
@@ -211,7 +192,6 @@ type 'loc virtual_reason_desc =
   | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
   | RInstanceOfComponent of 'loc virtual_reason_desc
-  | RRenderTypeOfComponent of 'loc virtual_reason_desc
   | RDefaultTypeArgumentAtIndex of {
       desc_type: 'loc virtual_reason_desc;
       desc_default: 'loc virtual_reason_desc;

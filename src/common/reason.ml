@@ -70,14 +70,12 @@ type 'loc virtual_reason_desc =
   | RBooleanLit of bool
   | RIndexedAccess of { optional: bool }
   | RConditionalType
-  | RInferType of string
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
   | RConstObjectLit
   | RObjectType
   | RMappedType
-  | RObjectClassName
   | RInterfaceType
   | RArray
   | RArrayLit
@@ -116,10 +114,7 @@ type 'loc virtual_reason_desc =
   | RThis
   | RThisType
   | RImplicitInstantiation
-  | RTooFewArgs
-  | RTooFewArgsExpectedRest
   | RConstructorVoidReturn
-  | RNewObject
   | RUnion
   | RUnionType
   | RIntersection
@@ -138,7 +133,6 @@ type 'loc virtual_reason_desc =
   | RReturn
   | RRegExp
   | RSuper
-  | RNoSuper
   | RDummyPrototype
   | RDummyThis
   | RImplicitThis of 'loc virtual_reason_desc
@@ -166,7 +160,6 @@ type 'loc virtual_reason_desc =
   | RRestParameter of string option
   | RPatternParameter of string
   | RIdentifier of name
-  | RIdentifierAssignment of string
   | RPropertyAssignment of string option
   | RProperty of name option
   | RPrivateProperty of string
@@ -182,8 +175,6 @@ type 'loc virtual_reason_desc =
   | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
-  | RMissingAbstract of 'loc virtual_reason_desc
-  | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string (* module *) * string (* local name *)
   | RImportStarType of string
@@ -199,10 +190,8 @@ type 'loc virtual_reason_desc =
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
   | RRestArrayLit of 'loc virtual_reason_desc
-  | RAbstract of 'loc virtual_reason_desc
   | RTypeApp of 'loc virtual_reason_desc
   | RTypeAppImplicit of 'loc virtual_reason_desc
-  | RThisTypeApp of 'loc virtual_reason_desc
   | RExtends of 'loc virtual_reason_desc
   | RClass of 'loc virtual_reason_desc
   | RStatics of 'loc virtual_reason_desc
@@ -210,12 +199,9 @@ type 'loc virtual_reason_desc =
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
   | RPredicateOf of 'loc virtual_reason_desc
-  | RPredicateCall of 'loc virtual_reason_desc
-  | RPredicateCallNeg of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of Subst_name.t
-  | RSpreadOf of 'loc virtual_reason_desc
   | RPartialOf of 'loc virtual_reason_desc
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
@@ -230,16 +216,11 @@ type 'loc virtual_reason_desc =
       name_opt: name option;
       from_component_syntax: bool;
     }
-  | RReactClass
-  | RReactComponent
-  | RReactStatics
   | RReactDefaultProps
-  | RReactState
   | RReactChildren
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactRef
-  | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
@@ -252,7 +233,6 @@ type 'loc virtual_reason_desc =
   | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
   | RInstanceOfComponent of 'loc virtual_reason_desc
-  | RRenderTypeOfComponent of 'loc virtual_reason_desc
   | RDefaultTypeArgumentAtIndex of {
       desc_type: 'loc virtual_reason_desc;
       desc_default: 'loc virtual_reason_desc;
@@ -277,14 +257,14 @@ let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
-    | RObjectType | RObjectClassName | RInterfaceType | RArray | RArrayLit | RConstArrayLit
-    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType
-    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
-    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
-    | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _
-    | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
-    | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _ | RComponent _
-    | RComponentType | RInferredUnionElemArray _ ) as r ->
+    | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit | REmptyArrayLit
+    | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType | RTupleElement _
+    | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact | RFunction _
+    | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument | RJSXChild
+    | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
+    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
+    | RTypeGuard | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ )
+    as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -292,19 +272,18 @@ let rec map_desc_locs f = function
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
   | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RThis | RThisType
-    | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest | RConstructorVoidReturn
-    | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType | RKeySet | RAnd
-    | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype | RDestructuring
-    | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp | RSuper | RNoSuper
-    | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _ | RTypeof _ | RMethod _
-    | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _ | RIdentifier _
-    | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _ | RMember _
-    | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _ | RUndefinedProperty _
-    | RSomeProperty | RFieldInitializer _ | RUntypedModule _ | RNamedImportedType _
+    | RImplicitInstantiation | RConstructorVoidReturn | RUnion | RUnionType | RIntersection
+    | RIntersectionType | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype
+    | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RReturn
+    | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap
+    | RType _ | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _
+    | RPatternParameter _ | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
+    | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
+    | RUndefinedProperty _ | RSomeProperty | RUntypedModule _ | RNamedImportedType _
     | RImportStarType _ | RImportStarTypeOf _ | RImportStar _ | RDefaultImportedType _
     | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
-    | RObjectMapi | RObjectKeyMirror | RObjectMapConst | RIndexedAccess _ | RConditionalType
-    | RInferType _ ) as r ->
+    | RObjectMapi | RObjectKeyMirror | RObjectMapConst | RIndexedAccess _ | RConditionalType ) as r
+    ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -315,17 +294,14 @@ let rec map_desc_locs f = function
   | RTypeParamDefault r -> RTypeParamDefault (map_desc_locs f r)
   | RPropertyOf (s, d) -> RPropertyOf (s, map_desc_locs f d)
   | RNameProperty desc -> RNameProperty (map_desc_locs f desc)
-  | RMissingAbstract desc -> RMissingAbstract (map_desc_locs f desc)
   | RPolyType desc -> RPolyType (map_desc_locs f desc)
   | RExactType desc -> RExactType (map_desc_locs f desc)
   | RReadOnlyType -> RReadOnlyType
   | ROptional desc -> ROptional (map_desc_locs f desc)
   | RMaybe desc -> RMaybe (map_desc_locs f desc)
   | RRestArrayLit desc -> RRestArrayLit (map_desc_locs f desc)
-  | RAbstract desc -> RAbstract (map_desc_locs f desc)
   | RTypeApp desc -> RTypeApp (map_desc_locs f desc)
   | RTypeAppImplicit desc -> RTypeAppImplicit (map_desc_locs f desc)
-  | RThisTypeApp desc -> RThisTypeApp (map_desc_locs f desc)
   | RExtends desc -> RExtends (map_desc_locs f desc)
   | RClass desc -> RClass (map_desc_locs f desc)
   | RStatics desc -> RStatics (map_desc_locs f desc)
@@ -333,28 +309,23 @@ let rec map_desc_locs f = function
   | RFrozen desc -> RFrozen (map_desc_locs f desc)
   | RBound desc -> RBound (map_desc_locs f desc)
   | RPredicateOf desc -> RPredicateOf (map_desc_locs f desc)
-  | RPredicateCall desc -> RPredicateCall (map_desc_locs f desc)
-  | RPredicateCallNeg desc -> RPredicateCallNeg (map_desc_locs f desc)
   | RRefined desc -> RRefined (map_desc_locs f desc)
   | RRefinedElement desc -> RRefinedElement (map_desc_locs f desc)
-  | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
   | RPartialOf desc -> RPartialOf (map_desc_locs f desc)
   | RRequiredOf desc -> RRequiredOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
   | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _ | RNamespace _
-    | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
-    | RReactDefaultProps | RReactState | RReactChildren ) as r ->
+    | ROptionalChain | RReactProps | RReactElement _ | RReactDefaultProps | RReactChildren
+    | RReactRef | RReactConfig ) as r ->
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
-  | (RReactSFC | RReactRef | RReactConfig) as r -> r
   | RPossiblyMissingPropFromObj (propname, desc) ->
     RPossiblyMissingPropFromObj (propname, map_desc_locs f desc)
   | RUnionBranching (desc, i) -> RUnionBranching (map_desc_locs f desc, i)
   | RPropsOfComponent desc -> RPropsOfComponent (map_desc_locs f desc)
   | RInstanceOfComponent desc -> RInstanceOfComponent (map_desc_locs f desc)
-  | RRenderTypeOfComponent desc -> RRenderTypeOfComponent (map_desc_locs f desc)
   | RDefaultTypeArgumentAtIndex { desc_type; desc_default; position } ->
     RDefaultTypeArgumentAtIndex
       {
@@ -581,14 +552,12 @@ let rec string_of_desc = function
     else
       "indexed access"
   | RConditionalType -> "conditional type"
-  | RInferType name -> spf "infer type `%s`" name
   | RMatchingProp (k, v) -> spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
   | RConstObjectLit -> "const object literal"
   | RObjectType -> "object type"
   | RMappedType -> "mapped type"
-  | RObjectClassName -> "Object"
   | RInterfaceType -> "interface type"
   | RArray -> "array"
   | RArrayLit -> "array literal"
@@ -640,10 +609,7 @@ let rec string_of_desc = function
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RImplicitInstantiation -> "implicit instantiation"
-  | RTooFewArgs -> "undefined (too few arguments)"
-  | RTooFewArgsExpectedRest -> "undefined (too few arguments, expected default/rest parameters)"
   | RConstructorVoidReturn -> "constructor void return"
-  | RNewObject -> "new object"
   | RUnion -> "union"
   | RUnionType -> "union type"
   | RIntersection -> "intersection"
@@ -664,7 +630,6 @@ let rec string_of_desc = function
   | RReturn -> "return"
   | RRegExp -> "regexp"
   | RSuper -> "super"
-  | RNoSuper -> "empty super object"
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
   | RImplicitThis desc -> spf "implicit `this` parameter of %s" (string_of_desc desc)
@@ -683,7 +648,6 @@ let rec string_of_desc = function
   | RMethod (Some x) -> spf "method `%s`" x
   | RMethod None -> "computed method"
   | RIdentifier x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
-  | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
   | RMethodCall (Some x) -> spf "call of method `%s`" x
   | RMethodCall None -> "call of computed property"
   | RParameter (Some x) -> spf "`%s`" x
@@ -710,8 +674,6 @@ let rec string_of_desc = function
   | RUndefinedProperty x -> spf "undefined property `%s`" (display_string_of_name x)
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
-  | RMissingAbstract d -> spf "undefined. Did you forget to declare %s?" (string_of_desc d)
-  | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
   | RNamedImportedType (m, _) -> spf "Named import from module `%s`" m
   | RImportStarType n -> spf "import type * as %s" n
@@ -733,10 +695,8 @@ let rec string_of_desc = function
     in
     spf "nullable %s" (string_of_desc (loop d))
   | RRestArrayLit _ -> "rest array"
-  | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> string_of_desc d
   | RTypeAppImplicit d -> string_of_desc d
-  | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
   | RClass d -> spf "class %s" (string_of_desc d)
   | RStatics d -> spf "statics of %s" (string_of_desc d)
@@ -744,12 +704,9 @@ let rec string_of_desc = function
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
   | RPredicateOf d -> spf "predicate encoded in %s" (string_of_desc d)
-  | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
-  | RPredicateCallNeg d -> spf "negation of predicate call to %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
   | RRefinedElement d -> spf "array element of refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> Subst_name.formatted_string_of_subst_name x
-  | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
   | RPartialOf d -> spf "partial %s" (string_of_desc d)
   | RRequiredOf d -> spf "required of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
@@ -763,15 +720,10 @@ let rec string_of_desc = function
     (match name_opt with
     | Some x -> spf "`%s` element" (display_string_of_name x)
     | None -> "React element")
-  | RReactClass -> "React class"
-  | RReactComponent -> "React component"
-  | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
-  | RReactState -> "state of React component"
   | RReactChildren -> "children array"
   | RReactChildrenOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactChildrenOrUndefinedOrType desc -> spf "children array or %s" (string_of_desc desc)
-  | RReactSFC -> "React stateless functional component"
   | RReactRef -> "React component ref"
   | RReactConfig -> "config of React component"
   | RPossiblyMissingPropFromObj (propname, desc) ->
@@ -789,7 +741,6 @@ let rec string_of_desc = function
   | RComponentType -> "component"
   | RPropsOfComponent desc -> spf "props of %s" (string_of_desc desc)
   | RInstanceOfComponent desc -> spf "instance of %s" (string_of_desc desc)
-  | RRenderTypeOfComponent desc -> spf "render type of %s" (string_of_desc desc)
   | RDefaultTypeArgumentAtIndex { desc_type; desc_default; position } ->
     let position_suffix =
       match position with
@@ -923,7 +874,6 @@ let is_literal_object_reason r =
   match desc_of_reason r with
   | RObjectLit
   | RFrozen RObjectLit
-  | RSpreadOf _
   | RObjectPatternRestProp
   | RFunction _
   | RStatics (RFunction _)
@@ -1416,14 +1366,12 @@ let classification_of_reason_desc desc =
   | RInferredUnionElemArray _
   | RIndexedAccess _
   | RConditionalType
-  | RInferType _
   | RMatchingProp _
   | RObject
   | RObjectLit
   | RConstObjectLit
   | RObjectType
   | RMappedType
-  | RObjectClassName
   | RInterfaceType
   | RTupleElement _
   | RTupleLength _
@@ -1437,7 +1385,6 @@ let classification_of_reason_desc desc =
   | RRenderStarType _
   | RRendersNothing
   | RInstanceOfComponent _
-  | RRenderTypeOfComponent _
   | RDefaultTypeArgumentAtIndex _
   | RFunction _
   | RFunctionType
@@ -1456,10 +1403,7 @@ let classification_of_reason_desc desc =
   | RThis
   | RThisType
   | RImplicitInstantiation
-  | RTooFewArgs
-  | RTooFewArgsExpectedRest
   | RConstructorVoidReturn
-  | RNewObject
   | RUnion
   | RUnionType
   | RIntersection
@@ -1476,7 +1420,6 @@ let classification_of_reason_desc desc =
   | RConstructorCall _
   | RReturn
   | RSuper
-  | RNoSuper
   | RDummyPrototype
   | RDummyThis
   | RImplicitThis _
@@ -1498,7 +1441,6 @@ let classification_of_reason_desc desc =
   | RRestParameter _
   | RPatternParameter _
   | RIdentifier _
-  | RIdentifierAssignment _
   | RPropertyAssignment _
   | RProperty _
   | RPrivateProperty _
@@ -1511,8 +1453,6 @@ let classification_of_reason_desc desc =
   | RUndefinedProperty _
   | RSomeProperty
   | RNameProperty _
-  | RMissingAbstract _
-  | RFieldInitializer _
   | RUntypedModule _
   | RNamedImportedType _
   | RImportStarType _
@@ -1528,10 +1468,8 @@ let classification_of_reason_desc desc =
   | RReadOnlyType
   | ROptional _
   | RMaybe _
-  | RAbstract _
   | RTypeApp _
   | RTypeAppImplicit _
-  | RThisTypeApp _
   | RExtends _
   | RClass _
   | RStatics _
@@ -1539,12 +1477,9 @@ let classification_of_reason_desc desc =
   | RFrozen _
   | RBound _
   | RPredicateOf _
-  | RPredicateCall _
-  | RPredicateCallNeg _
   | RRefined _
   | RRefinedElement _
   | RIncompatibleInstantiation _
-  | RSpreadOf _
   | RPartialOf _
   | RRequiredOf _
   | RObjectPatternRestProp
@@ -1554,16 +1489,11 @@ let classification_of_reason_desc desc =
   | ROptionalChain
   | RReactProps
   | RReactElement _
-  | RReactClass
-  | RReactComponent
-  | RReactStatics
   | RReactDefaultProps
-  | RReactState
   | RReactChildren
   | RReactChildrenOrType _
   | RReactChildrenOrUndefinedOrType _
   | RReactRef
-  | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj _
   | RUnionBranching _

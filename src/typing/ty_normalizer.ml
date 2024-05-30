@@ -616,11 +616,6 @@ module Make (I : INPUT) : S = struct
     val convert_type_params_t :
       env:Env.t -> T.typeparam Nel.t -> (Env.t * Ty.type_param list option, error) t
 
-    val convert_react_component_class : env:Env.t -> T.t -> Type.Properties.id -> (Ty.t, error) t
-
-    val convert_instance_t :
-      env:Env.t -> Reason.reason -> Type.super -> Type.insttype -> (Ty.t, error_kind * string) t
-
     val convert_inline_interface :
       env:Env.t -> Type.super -> T.Properties.id -> int option -> T.Object.dict -> (Ty.t, error) t
 
@@ -776,7 +771,9 @@ module Make (I : INPUT) : S = struct
       | DefT (r, InstanceT { super; inst; _ }) ->
         instance_t ~env r super inst
       | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) -> this_class_t ~env r t
-      | DefT (_, ClassT t) -> class_t ~env t
+      | DefT (_, ClassT t) ->
+        let%map ty = type__ ~env t in
+        Ty.Utility (Ty.Class ty)
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
@@ -1116,63 +1113,6 @@ module Make (I : INPUT) : S = struct
         let%map t = type__ ~env t in
         Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
 
-    (* Used for instances of React.createClass(..) *)
-    and react_component_instance =
-      let react_props ~env ~default props name =
-        match NameUtils.Map.find (OrdinaryName name) props with
-        | exception Not_found -> return default
-        | Type.Field { type_ = t; _ } -> type__ ~env t
-        | _ -> return default
-      in
-      let inexactify = function
-        | Ty.Obj ({ Ty.obj_kind = Ty.ExactObj; _ } as obj) ->
-          Ty.Obj { obj with Ty.obj_kind = Ty.InexactObj }
-        | ty -> ty
-      in
-      fun ~env own_props ->
-        let cx = Env.(env.genv.cx) in
-        let own_props = Context.find_props cx own_props in
-        let%bind props_ty = react_props ~env ~default:Ty.explicit_any own_props "props" in
-        let%bind state_ty = react_props ~env ~default:Ty.explicit_any own_props "state" in
-        let state_ty = inexactify state_ty in
-        return (generic_builtin_t (Reason.OrdinaryName "React$Component") [props_ty; state_ty])
-
-    (* Used for return of React.createClass(..) *)
-    and react_component_class =
-      let react_static_props ~env static =
-        let cx = Env.(env.genv.cx) in
-        match static with
-        | T.DefT (_, T.ObjT { T.props_tmap; _ }) ->
-          Context.find_props cx props_tmap
-          |> NameUtils.Map.bindings
-          |> mapM (fun (name, p) -> obj_prop_t ~env (name, p))
-          >>| Base.List.concat
-        | _ -> return []
-      in
-      fun ~env static own_props ->
-        let%bind static_flds = react_static_props ~env static in
-        let%bind parent_instance = react_component_instance ~env own_props in
-        let parent_class = Ty.Utility (Ty.Class parent_instance) in
-        (*
-         * {
-         *   +propTypes: {
-         *     foo: React$PropType$Primitive$Required<string>,
-         *     bar: React$PropType$Primitive<number>,
-         *   },
-         *   defaultProps: { ... },
-         * }
-         *)
-        let props_obj =
-          Ty.Obj
-            {
-              Ty.obj_def_loc = None;
-              obj_kind = Ty.InexactObj;
-              obj_literal = None;
-              obj_props = static_flds;
-            }
-        in
-        return (Ty.mk_inter (parent_class, [props_obj]))
-
     and to_generic ~env kind r inst =
       let%bind symbol = Reason_utils.instance_symbol env r in
       let%map tys = mapM (fun (_, _, t, _) -> type__ ~env t) inst.T.type_args in
@@ -1187,7 +1127,6 @@ module Make (I : INPUT) : S = struct
       let { T.inst_kind; own_props; inst_call_t; inst_dict; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc) with
-      | (_, Reason.RReactComponent) -> react_component_instance ~env own_props
       | (T.InterfaceKind { inline = true }, _) ->
         inline_interface ~env super own_props inst_call_t inst_dict
       | (T.InterfaceKind { inline = false }, _) -> to_generic ~env Ty.InterfaceKind r inst
@@ -1219,17 +1158,6 @@ module Make (I : INPUT) : S = struct
           | None -> return None
         in
         Ty.InlineInterface { Ty.if_extends; if_props; if_dict }
-
-    (* The Class<T> utility type *)
-    and class_t ~env t =
-      match t with
-      | T.DefT (r, T.InstanceT { T.static; inst; _ })
-        when desc_of_reason ~unwrap:false r = RReactComponent ->
-        let { Type.own_props; _ } = inst in
-        react_component_class ~env static own_props
-      | _ ->
-        let%map ty = type__ ~env t in
-        Ty.Utility (Ty.Class ty)
 
     and this_class_t ~env r t =
       let open Type in
@@ -1903,10 +1831,6 @@ module Make (I : INPUT) : S = struct
 
     let convert_type_params_t ~env = type_params_t ~env:(reset_env env)
 
-    let convert_react_component_class ~env = react_component_class ~env:(reset_env env)
-
-    let convert_instance_t ~env = instance_t ~env:(reset_env env)
-
     let convert_inline_interface ~env = inline_interface ~env:(reset_env env)
 
     let convert_obj_props_t ~env = obj_props_t ~env:(reset_env env)
@@ -2014,7 +1938,7 @@ module Make (I : INPUT) : S = struct
      *)
     let rec toplevel =
       let open Type in
-      let class_or_interface_decl ~env r tparams static super inst =
+      let class_or_interface_decl ~env r tparams super inst =
         let%bind ps =
           match tparams with
           | Some tparams ->
@@ -2025,9 +1949,6 @@ module Make (I : INPUT) : S = struct
         let { T.inst_kind; own_props; inst_call_t; inst_dict; _ } = inst in
         let desc = desc_of_reason ~unwrap:false r in
         match (inst_kind, desc) with
-        | (_, Reason.RReactComponent) ->
-          let%map ty = TypeConverter.convert_react_component_class ~env static own_props in
-          Ty.Type ty
         | (T.InterfaceKind { inline = false }, _) ->
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.InterfaceDecl (symbol, ps))
@@ -2070,13 +1991,13 @@ module Make (I : INPUT) : S = struct
             ~msg:"Mapped Type properties should never appear in the toplevels"
             (Some t)
         (* Imported interfaces *)
-        | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { static; super; inst; _ }))) ->
-          class_or_interface_decl ~env r (Some tparams) static super inst
+        | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { super; inst; _ }))) ->
+          class_or_interface_decl ~env r (Some tparams) super inst
         (* Classes *)
-        | DefT (_, ClassT (ThisInstanceT (r, { static; super; inst; _ }, _, _)))
+        | DefT (_, ClassT (ThisInstanceT (r, { super; inst; _ }, _, _)))
         (* Interfaces *)
-        | DefT (_, ClassT (DefT (r, InstanceT { static; super; inst; _ }))) ->
-          class_or_interface_decl ~env r (Some tparams) static super inst
+        | DefT (_, ClassT (DefT (r, InstanceT { super; inst; _ }))) ->
+          class_or_interface_decl ~env r (Some tparams) super inst
         (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
            The initial abstraction is wrapper within an abstraction and a type application.
            The current case unwraps the abstraction and application to reveal the
@@ -2116,11 +2037,11 @@ module Make (I : INPUT) : S = struct
           let%map (name, exports, default) = module_of_namespace ~env r o types_tmap in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
-        | DefT (_, ClassT (ThisInstanceT (r, { static; super; inst; _ }, _, _)))
-        | DefT (_, ClassT (DefT (r, InstanceT { static; super; inst; _ })))
-        | DefT (_, TypeT (InstanceKind, DefT (r, InstanceT { static; super; inst; _ })))
-        | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { static; super; inst; _ }))) ->
-          class_or_interface_decl ~env r None static super inst
+        | DefT (_, ClassT (ThisInstanceT (r, { super; inst; _ }, _, _)))
+        | DefT (_, ClassT (DefT (r, InstanceT { super; inst; _ })))
+        | DefT (_, TypeT (InstanceKind, DefT (r, InstanceT { super; inst; _ })))
+        | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { super; inst; _ }))) ->
+          class_or_interface_decl ~env r None super inst
         (* Enums *)
         | DefT (reason, EnumObjectT _)
         | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumValueT _))) ->
@@ -2459,7 +2380,6 @@ module Make (I : INPUT) : S = struct
       let { T.inst_kind; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc, imode) with
-      | (_, Reason.RReactComponent, _) -> TypeConverter.convert_instance_t ~env r super inst
       | (T.ClassKind, _, IMStatic) -> type__ ~env ~inherited ~source ~imode static
       | (T.ClassKind, _, (IMUnset | IMInstance))
       | (T.InterfaceKind _, _, _) ->
