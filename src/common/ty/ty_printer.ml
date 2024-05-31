@@ -13,8 +13,6 @@ open Ty
 (* Utils   *)
 (***********)
 
-let varname n = spf "V$%d" n
-
 let crop_symbol = "..."
 
 let crop_atom = Atom crop_symbol
@@ -25,8 +23,6 @@ let utf8_escape = Js_layout_generator.utf8_escape
 let better_quote = Js_layout_generator.better_quote
 
 let wrap_in_parens = Js_layout_generator.wrap_in_parens
-
-let with_semicolon = Js_layout_generator.with_semicolon
 
 let in_quotes ~prefer_single_quotes s =
   let quote = better_quote ~prefer_single_quotes s in
