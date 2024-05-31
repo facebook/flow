@@ -1846,7 +1846,7 @@ unions.js:57:5 = {
   "end":5
 }
 unions.js:59:18 = {
-  "types":{"unevaluated":{"type":"?empty"},"evaluated":null},
+  "types":{"unevaluated":{"type":"void | null"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",

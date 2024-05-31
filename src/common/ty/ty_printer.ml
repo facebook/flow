@@ -459,7 +459,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       o
   and type_union ~depth ts =
     let (prefix, ts) =
-      if List.mem Null ts && List.mem Void ts then
+      if List.mem Null ts && List.mem Void ts && List.length ts > 2 then
         let ts = List.filter (fun t -> t <> Null && t <> Void) ts in
         let ts =
           match ts with
