@@ -69,7 +69,7 @@ Flags:
   React$AbstractComponent<{+x: string, +y: number}, mixed, renders React$Node>
   |
   React$AbstractComponent<
-    {+x: (number | string), +y: (number | string)},
+    {+x: number | string, +y: number | string},
     mixed,
     renders React$Node,
   >
@@ -78,7 +78,7 @@ jsx_instantiation.js:55:6,55:9
 jsx_instantiation.js:57:6
 Flags:
 React$AbstractComponent<
-  {+x: (number | string), +y: (number | string)},
+  {+x: number | string, +y: number | string},
   mixed,
   renders React$Node,
 >
@@ -123,7 +123,7 @@ Flags:
   React$AbstractComponent<{+x: string, +y: number}, mixed, renders React$Node>
   |
   React$AbstractComponent<
-    {+x: (number | string), +y: (number | string)},
+    {+x: number | string, +y: number | string},
     mixed,
     renders React$Node,
   >
@@ -136,11 +136,11 @@ jsx_instantiation.js:97:6,97:8
 
 jsx_instantiation.js:105:6
 Flags:
-(props: Props<(number | string)>) => Node
+(props: Props<number | string>) => Node
 jsx_instantiation.js:105:6,105:8
 
 jsx_instantiation.js:109:6
 Flags:
-(props: Props<(number | string)>) => Node
+(props: Props<number | string>) => Node
 jsx_instantiation.js:109:6,109:16
 

@@ -470,14 +470,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       else
         (Empty, ts)
     in
-    let wrap =
-      if depth > 1 && List.length ts > 1 then
-        Some (Atom "(", Atom ")")
-      else
-        None
-    in
     let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "|") in
-    fuse [prefix; list ?wrap ~inline:(false, true) elts]
+    fuse [prefix; list ~inline:(false, true) elts]
   and type_intersection ~depth ts =
     let wrap =
       if depth > 1 then

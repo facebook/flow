@@ -315,7 +315,7 @@
     "end":18
   },
   {
-    "type":"(f: (?(any | string)) => mixed) => void",
+    "type":"(f: (?any | string) => mixed) => void",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -330,7 +330,7 @@
     "end":31
   },
   {
-    "type":"(?(any | string)) => mixed",
+    "type":"(?any | string) => mixed",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -345,7 +345,7 @@
     "end":33
   },
   {
-    "type":"(?(any | string)) => mixed",
+    "type":"(?any | string) => mixed",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -360,7 +360,7 @@
     "end":83
   },
   {
-    "type":"(?(any | string)) => mixed",
+    "type":"(?any | string) => mixed",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -570,7 +570,7 @@
     "end":84
   },
   {
-    "type":"(f: (?(any | string)) => mixed) => void",
+    "type":"(f: (?any | string) => mixed) => void",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -585,7 +585,7 @@
     "end":22
   },
   {
-    "type":"(f: (?(any | string)) => mixed) => void",
+    "type":"(f: (?any | string) => mixed) => void",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -615,7 +615,7 @@
     "end":63
   },
   {
-    "type":"(val: ?(any | string)) => (any | void | string)",
+    "type":"(val: ?any | string) => any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",

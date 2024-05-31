@@ -441,7 +441,7 @@ let eval_hint_tests =
           [Decomp_FuncRest ([None; None; None], None)];
     "fun_decomp_rest_arguments_overlap_with_normal_parameters"
     >:: mk_eval_hint_test
-          ~expected:"Array<(number | string)>"
+          ~expected:"Array<number | string>"
           "(string, number, ...Array<string>) => number"
           [Decomp_FuncRest ([None], None)];
     (*

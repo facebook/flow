@@ -92,7 +92,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "at",
-               "type": "(index: number) => (string | void)"
+               "type": "(index: number) => string | void"
              },
              {
                "name": "charAt",
@@ -136,15 +136,15 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "localeCompare",
-               "type": "(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number"
+               "type": "(that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
              },
              {
                "name": "match",
-               "type": "(regexp: (string | RegExp)) => (RegExp$matchResult | null)"
+               "type": "(regexp: string | RegExp) => RegExp$matchResult | null"
              },
              {
                "name": "matchAll",
-               "type": "(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>"
+               "type": "(regexp: string | RegExp) => Iterator<RegExp$matchResult>"
              },
              {
                "name": "normalize",
@@ -164,15 +164,15 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "replace",
-               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+               "type": "(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
              },
              {
                "name": "replaceAll",
-               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+               "type": "(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
              },
              {
                "name": "search",
-               "type": "(regexp: (string | RegExp)) => number"
+               "type": "(regexp: string | RegExp) => number"
              },
              {
                "name": "slice",
@@ -180,7 +180,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "split",
-               "type": "(separator?: (string | RegExp), limit?: number) => Array<string>"
+               "type": "(separator?: string | RegExp, limit?: number) => Array<string>"
              },
              {
                "name": "startsWith",
@@ -196,11 +196,11 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleLowerCase",
-               "type": "(locale?: (string | Array<string>)) => string"
+               "type": "(locale?: string | Array<string>) => string"
              },
              {
                "name": "toLocaleUpperCase",
-               "type": "(locale?: (string | Array<string>)) => string"
+               "type": "(locale?: string | Array<string>) => string"
              },
              {
                "name": "toLowerCase",
@@ -262,7 +262,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
+               "type": "(locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
              },
              {
                "name": "toPrecision",
@@ -440,7 +440,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
+               "type": "(locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
              },
              {
                "name": "toPrecision",

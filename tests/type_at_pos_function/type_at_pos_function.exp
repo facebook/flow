@@ -275,7 +275,7 @@ function-poly-2.js:3:10 = {
   "end":14
 }
 function-poly-2.js:4:12 = {
-  "types":{"unevaluated":{"type":"<T>(x: T, z: (TOuter | T)) => T"},"evaluated":null},
+  "types":{"unevaluated":{"type":"<T>(x: T, z: TOuter | T) => T"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
@@ -305,7 +305,7 @@ function-poly-2.js:5:5 = {
   "end":5
 }
 function-poly-2.js:6:5 = {
-  "types":{"unevaluated":{"type":"(x: T, z: (TOuter | T)) => T"},"evaluated":null},
+  "types":{"unevaluated":{"type":"(x: T, z: TOuter | T) => T"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
@@ -336,7 +336,7 @@ function-poly-2.js:7:12 = {
 }
 function-poly-2.js:9:13 = {
   "types":{
-    "unevaluated":{"type":"(x: number, z: (TOuter | number)) => number"},
+    "unevaluated":{"type":"(x: number, z: TOuter | number) => number"},
     "evaluated":null
   },
   "reasons":[],
@@ -414,7 +414,7 @@ function-poly-4.js:9:7 = {
 }
 function-poly-5.js:3:10 = {
   "types":{
-    "unevaluated":{"type":"<T: (number | string)>(x: T) => number"},
+    "unevaluated":{"type":"<T: number | string>(x: T) => number"},
     "evaluated":null
   },
   "reasons":[],

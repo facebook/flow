@@ -75,12 +75,12 @@ file.js:67:14,67:16
 
 file.js:69:14
 Flags:
-((F1 | G1)) & F2
+(F1 | G1) & F2
 file.js:69:14,69:16
 
 file.js:71:17
 Flags:
-((F1 | G1)) & F2
+(F1 | G1) & F2
 file.js:71:17,71:19
 
 file.js:77:13

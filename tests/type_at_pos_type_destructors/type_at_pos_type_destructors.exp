@@ -358,7 +358,7 @@ type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
 Flags:
-type DiffFromEmptyObjectOkay = $Diff<{...}, {nope: (number | void), ...}>
+type DiffFromEmptyObjectOkay = $Diff<{...}, {nope: number | void, ...}>
 = {...}
 type-destructor.js:55:6,55:28
 
@@ -464,17 +464,17 @@ type-destructor.js:101:6,101:15
 
 type-destructor.js:105:6
 Flags:
-type ObjMapiProps = $ObjMapi<Props, <K, V>(K, V) => Array<(K | V)>>
-= {age: Array<("age" | number)>, name: Array<("name" | string)>, ...}
+type ObjMapiProps = $ObjMapi<Props, <K, V>(K, V) => Array<K | V>>
+= {age: Array<"age" | number>, name: Array<"name" | string>, ...}
 type-destructor.js:105:6,105:17
 
 type-destructor.js:107:6
 Flags:
 type ObjMapiPoly<X, Y> = $ObjMapi<
   {a: X, b?: Y, ...},
-  <K, V>(K, V) => Array<(K | V)>,
+  <K, V>(K, V) => Array<K | V>,
 >
-= {a: Array<("a" | X)>, b?: Array<("b" | Y)>, ...}
+= {a: Array<"a" | X>, b?: Array<"b" | Y>, ...}
 type-destructor.js:107:6,107:16
 
 type-destructor.js:112:6
@@ -489,14 +489,14 @@ type-destructor.js:112:6,112:24
 
 type-destructor.js:116:6
 Flags:
-type TupleMapMixedPair = $TupleMap<[mixed, mixed], <K>(k: K) => (K | null)>
+type TupleMapMixedPair = $TupleMap<[mixed, mixed], <K>(k: K) => K | null>
 = [mixed, mixed]
 type-destructor.js:116:6,116:22
 
 type-destructor.js:118:6
 Flags:
-type TupleMapMixedPairPoly<X> = $TupleMap<[X, mixed], <K>(k: K) => (K | null)>
-= [(X | null), mixed]
+type TupleMapMixedPairPoly<X> = $TupleMap<[X, mixed], <K>(k: K) => K | null>
+= [X | null, mixed]
 type-destructor.js:118:6,118:26
 
 type-destructor.js:123:6
@@ -550,9 +550,9 @@ type-destructor.js:171:6,171:28
 type-destructor.js:178:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
-  f: ({|h: RecursiveTypeDestructorPoly<X>["f"]|} | X)
+  f: {|h: RecursiveTypeDestructorPoly<X>["f"]|} | X
 |}
-= {|f: ({|h: ({|h: ({|h: any|} | X)|} | X)|} | X)|}
+= {|f: {|h: {|h: {|h: any|} | X|} | X|} | X|}
 type-destructor.js:178:6,178:32
 
 type-destructor.js:184:6

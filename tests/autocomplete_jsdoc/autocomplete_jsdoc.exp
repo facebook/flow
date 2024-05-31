@@ -2487,9 +2487,9 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":": (input: ?string) => (void | DefaultedStringEnum)"},
+  "labelDetails":{"detail":": (input: ?string) => void | DefaultedStringEnum"},
   "kind":3,
-  "detail":"(input: ?string) => (void | DefaultedStringEnum)",
+  "detail":"(input: ?string) => void | DefaultedStringEnum",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2545,9 +2545,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(string | DefaultedStringEnum)) => boolean"},
+  "labelDetails":{"detail":": (input: ?string | DefaultedStringEnum) => boolean"},
   "kind":3,
-  "detail":"(input: ?(string | DefaultedStringEnum)) => boolean",
+  "detail":"(input: ?string | DefaultedStringEnum) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2666,9 +2666,9 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":": (input: ?string) => (void | InitializedStringEnum)"},
+  "labelDetails":{"detail":": (input: ?string) => void | InitializedStringEnum"},
   "kind":3,
-  "detail":"(input: ?string) => (void | InitializedStringEnum)",
+  "detail":"(input: ?string) => void | InitializedStringEnum",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2724,9 +2724,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(string | InitializedStringEnum)) => boolean"},
+  "labelDetails":{"detail":": (input: ?string | InitializedStringEnum) => boolean"},
   "kind":3,
-  "detail":"(input: ?(string | InitializedStringEnum)) => boolean",
+  "detail":"(input: ?string | InitializedStringEnum) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2845,9 +2845,9 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":": (input: ?number) => (void | NumberEnum)"},
+  "labelDetails":{"detail":": (input: ?number) => void | NumberEnum"},
   "kind":3,
-  "detail":"(input: ?number) => (void | NumberEnum)",
+  "detail":"(input: ?number) => void | NumberEnum",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2903,9 +2903,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(number | NumberEnum)) => boolean"},
+  "labelDetails":{"detail":": (input: ?number | NumberEnum) => boolean"},
   "kind":3,
-  "detail":"(input: ?(number | NumberEnum)) => boolean",
+  "detail":"(input: ?number | NumberEnum) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -3024,9 +3024,9 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":": (input: ?boolean) => (void | BooleanEnum)"},
+  "labelDetails":{"detail":": (input: ?boolean) => void | BooleanEnum"},
   "kind":3,
-  "detail":"(input: ?boolean) => (void | BooleanEnum)",
+  "detail":"(input: ?boolean) => void | BooleanEnum",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -3082,9 +3082,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(boolean | BooleanEnum)) => boolean"},
+  "labelDetails":{"detail":": (input: ?boolean | BooleanEnum) => boolean"},
   "kind":3,
-  "detail":"(input: ?(boolean | BooleanEnum)) => boolean",
+  "detail":"(input: ?boolean | BooleanEnum) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -3203,9 +3203,9 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":": (input: ?symbol) => (void | SymbolEnum)"},
+  "labelDetails":{"detail":": (input: ?symbol) => void | SymbolEnum"},
   "kind":3,
-  "detail":"(input: ?symbol) => (void | SymbolEnum)",
+  "detail":"(input: ?symbol) => void | SymbolEnum",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -3261,9 +3261,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(symbol | SymbolEnum)) => boolean"},
+  "labelDetails":{"detail":": (input: ?symbol | SymbolEnum) => boolean"},
   "kind":3,
-  "detail":"(input: ?(symbol | SymbolEnum)) => boolean",
+  "detail":"(input: ?symbol | SymbolEnum) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{

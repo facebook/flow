@@ -414,10 +414,7 @@ literals.js:17:6 = {
   "end":6
 }
 literals.js:19:7 = {
-  "types":{
-    "unevaluated":{"type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")"},
-    "evaluated":null
-  },
+  "types":{"unevaluated":{"type":"(x: \"A\" | \"B\") => \"A\" | \"B\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -462,10 +459,7 @@ literals.js:22:7 = {
   "end":8
 }
 literals.js:24:7 = {
-  "types":{
-    "unevaluated":{"type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")"},
-    "evaluated":null
-  },
+  "types":{"unevaluated":{"type":"(x: \"A\" | \"B\") => \"A\" | \"B\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -587,7 +581,7 @@ object-resolution.js:13:5 = {
 }
 object.js:3:15 = {
   "types":{
-    "unevaluated":{"type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}"},
+    "unevaluated":{"type":"{a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...}"},
     "evaluated":null
   },
   "reasons":[],
@@ -605,7 +599,7 @@ object.js:3:15 = {
 }
 object.js:3:19 = {
   "types":{
-    "unevaluated":{"type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}"},
+    "unevaluated":{"type":"void | {b: ?{c: null | {d: number, ...}, ...}, ...}"},
     "evaluated":null
   },
   "reasons":[],
@@ -622,10 +616,7 @@ object.js:3:19 = {
   "end":19
 }
 object.js:3:24 = {
-  "types":{
-    "unevaluated":{"type":"?{c: (null | {d: number, ...}), ...}"},
-    "evaluated":null
-  },
+  "types":{"unevaluated":{"type":"?{c: null | {d: number, ...}, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -671,7 +662,7 @@ object.js:3:40 = {
 }
 object.js:6:5 = {
   "types":{
-    "unevaluated":{"type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}"},
+    "unevaluated":{"type":"{a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...}"},
     "evaluated":null
   },
   "reasons":[],
@@ -689,7 +680,7 @@ object.js:6:5 = {
 }
 object.js:6:7 = {
   "types":{
-    "unevaluated":{"type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}"},
+    "unevaluated":{"type":"void | {b: ?{c: null | {d: number, ...}, ...}, ...}"},
     "evaluated":null
   },
   "reasons":[],
@@ -707,7 +698,7 @@ object.js:6:7 = {
 }
 object.js:7:10 = {
   "types":{
-    "unevaluated":{"type":"{b: ?{c: (null | {d: number, ...}), ...}, ...}"},
+    "unevaluated":{"type":"{b: ?{c: null | {d: number, ...}, ...}, ...}"},
     "evaluated":null
   },
   "reasons":[],
@@ -724,10 +715,7 @@ object.js:7:10 = {
   "end":10
 }
 object.js:7:12 = {
-  "types":{
-    "unevaluated":{"type":"?{c: (null | {d: number, ...}), ...}"},
-    "evaluated":null
-  },
+  "types":{"unevaluated":{"type":"?{c: null | {d: number, ...}, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -742,7 +730,7 @@ object.js:7:12 = {
   "end":12
 }
 object.js:8:14 = {
-  "types":{"unevaluated":{"type":"{c: (null | {d: number, ...}), ...}"},"evaluated":null},
+  "types":{"unevaluated":{"type":"{c: null | {d: number, ...}, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",

@@ -1513,7 +1513,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -1522,7 +1522,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -1551,7 +1551,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -1560,7 +1560,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },
@@ -1626,7 +1626,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -1635,7 +1635,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -1664,7 +1664,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -1673,7 +1673,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },
@@ -1740,7 +1740,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -1749,7 +1749,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -1778,7 +1778,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -1787,7 +1787,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },
@@ -1854,7 +1854,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -1863,7 +1863,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -1892,7 +1892,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -1901,7 +1901,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },
@@ -1968,7 +1968,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -1977,7 +1977,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -2006,7 +2006,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -2015,7 +2015,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },
@@ -2082,7 +2082,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -2091,7 +2091,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -2120,7 +2120,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -2129,7 +2129,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },
@@ -2196,7 +2196,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                      '(x: number | void, y: number | void, z: Array<number | void>): void',
                     parameters: [
                       {
                         label: 'x: number | void',
@@ -2205,7 +2205,7 @@ module.exports = (suite(
                         label: 'y: number | void',
                       },
                       {
-                        label: 'z: Array<(number | void)>',
+                        label: 'z: Array<number | void>',
                       },
                     ],
                   },
@@ -2234,7 +2234,7 @@ module.exports = (suite(
                 signatures: [
                   {
                     label:
-                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                      '(x: number | string, y: number | string, z: Array<number | string>): void',
                     parameters: [
                       {
                         label: 'x: number | string',
@@ -2243,7 +2243,7 @@ module.exports = (suite(
                         label: 'y: number | string',
                       },
                       {
-                        label: 'z: Array<(number | string)>',
+                        label: 'z: Array<number | string>',
                       },
                     ],
                   },

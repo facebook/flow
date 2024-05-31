@@ -179,7 +179,7 @@ array.js:19:4 = {
   "end":5
 }
 array.js:23:4 = {
-  "types":{"unevaluated":{"type":"Array<(string | number)>"},"evaluated":null},
+  "types":{"unevaluated":{"type":"Array<string | number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"array.js",
@@ -998,7 +998,7 @@ optional.js:4:10 = {
   "end":10
 }
 optional.js:7:2 = {
-  "types":{"unevaluated":{"type":"(x?: string) => (void | string)"},"evaluated":null},
+  "types":{"unevaluated":{"type":"(x?: string) => void | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -1478,7 +1478,7 @@ type-alias.js:24:6 {
   "end":6
 }
 type-alias.js:25:6 {
-  "types":{"unevaluated":{"type":"type I = G<(G<number> | string)>"},"evaluated":null},
+  "types":{"unevaluated":{"type":"type I = G<G<number> | string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1621,7 +1621,7 @@ tuple.js:6:6
 Flags: --pretty
 {
   "types":{
-    "unevaluated":{"type":"type S = [0, ...T, d?: (void | 4)]"},
+    "unevaluated":{"type":"type S = [0, ...T, d?: void | 4]"},
     "evaluated":{"type":"type S = [0, 1, b: 2, c?: 3, d?: 4]"}
   },
   "reasons":[],
@@ -1723,7 +1723,7 @@ Flags: --pretty
 }
 
 unions.js:9:3 = {
-  "types":{"unevaluated":{"type":"() => (number | string)"},"evaluated":null},
+  "types":{"unevaluated":{"type":"() => number | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",

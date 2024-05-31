@@ -16,7 +16,7 @@ Flags: --pretty
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
-    {"name":"at","type":"(index: number) => (string | void)"},
+    {"name":"at","type":"(index: number) => string | void"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
     {"name":"codePointAt","type":"(index: number) => number"},
@@ -38,15 +38,15 @@ Flags: --pretty
     {"name":"link","type":"(href: string) => string"},
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number"
+      "type":"(that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
     },
     {
       "name":"match",
-      "type":"(regexp: (string | RegExp)) => (RegExp$matchResult | null)"
+      "type":"(regexp: string | RegExp) => RegExp$matchResult | null"
     },
     {
       "name":"matchAll",
-      "type":"(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>"
+      "type":"(regexp: string | RegExp) => Iterator<RegExp$matchResult>"
     },
     {"name":"normalize","type":"(format?: string) => string"},
     {"name":"padEnd","type":"(targetLength: number, padString?: string) => string"},
@@ -57,17 +57,17 @@ Flags: --pretty
     {"name":"repeat","type":"(count: number) => string"},
     {
       "name":"replace",
-      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
     },
     {
       "name":"replaceAll",
-      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
     },
-    {"name":"search","type":"(regexp: (string | RegExp)) => number"},
+    {"name":"search","type":"(regexp: string | RegExp) => number"},
     {"name":"slice","type":"(start?: number, end?: number) => string"},
     {
       "name":"split",
-      "type":"(separator?: (string | RegExp), limit?: number) => Array<string>"
+      "type":"(separator?: string | RegExp, limit?: number) => Array<string>"
     },
     {
       "name":"startsWith",
@@ -77,11 +77,11 @@ Flags: --pretty
     {"name":"substring","type":"(start: number, end?: number) => string"},
     {
       "name":"toLocaleLowerCase",
-      "type":"(locale?: (string | Array<string>)) => string"
+      "type":"(locale?: string | Array<string>) => string"
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"(locale?: (string | Array<string>)) => string"
+      "type":"(locale?: string | Array<string>) => string"
     },
     {"name":"toLowerCase","type":"() => string"},
     {"name":"toString","type":"() => string"},
@@ -103,7 +103,7 @@ Flags: --pretty
     {"name":"toFixed","type":"(fractionDigits?: number) => string"},
     {
       "name":"toLocaleString",
-      "type":"(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
+      "type":"(locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
     },
     {"name":"toPrecision","type":"(precision?: number) => string"},
     {"name":"toString","type":"(radix?: number) => string"},
@@ -177,7 +177,7 @@ Flags: --pretty
     {"name":"toFixed","type":"(fractionDigits?: number) => string"},
     {
       "name":"toLocaleString",
-      "type":"(locales?: (string | Array<string>), options?: Intl$NumberFormatOptions) => string"
+      "type":"(locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
     },
     {"name":"toPrecision","type":"(precision?: number) => string"},
     {"name":"toString","type":"(radix?: number) => string"},
@@ -313,7 +313,7 @@ Flags: --pretty
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
-    {"name":"at","type":"(index: number) => (string | void)"},
+    {"name":"at","type":"(index: number) => string | void"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
     {"name":"codePointAt","type":"(index: number) => number"},
@@ -335,15 +335,15 @@ Flags: --pretty
     {"name":"link","type":"(href: string) => string"},
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: (string | Array<string>), options?: Intl$CollatorOptions) => number"
+      "type":"(that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
     },
     {
       "name":"match",
-      "type":"(regexp: (string | RegExp)) => (RegExp$matchResult | null)"
+      "type":"(regexp: string | RegExp) => RegExp$matchResult | null"
     },
     {
       "name":"matchAll",
-      "type":"(regexp: (string | RegExp)) => Iterator<RegExp$matchResult>"
+      "type":"(regexp: string | RegExp) => Iterator<RegExp$matchResult>"
     },
     {"name":"normalize","type":"(format?: string) => string"},
     {"name":"padEnd","type":"(targetLength: number, padString?: string) => string"},
@@ -354,17 +354,17 @@ Flags: --pretty
     {"name":"repeat","type":"(count: number) => string"},
     {
       "name":"replace",
-      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
     },
     {
       "name":"replaceAll",
-      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string"
+      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
     },
-    {"name":"search","type":"(regexp: (string | RegExp)) => number"},
+    {"name":"search","type":"(regexp: string | RegExp) => number"},
     {"name":"slice","type":"(start?: number, end?: number) => string"},
     {
       "name":"split",
-      "type":"(separator?: (string | RegExp), limit?: number) => Array<string>"
+      "type":"(separator?: string | RegExp, limit?: number) => Array<string>"
     },
     {
       "name":"startsWith",
@@ -374,11 +374,11 @@ Flags: --pretty
     {"name":"substring","type":"(start: number, end?: number) => string"},
     {
       "name":"toLocaleLowerCase",
-      "type":"(locale?: (string | Array<string>)) => string"
+      "type":"(locale?: string | Array<string>) => string"
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"(locale?: (string | Array<string>)) => string"
+      "type":"(locale?: string | Array<string>) => string"
     },
     {"name":"toLowerCase","type":"() => string"},
     {"name":"toString","type":"() => string"},
@@ -605,10 +605,10 @@ Flags: --pretty
 {
   "result":[
     {"name":"?.[Symbol.iterator]","type":"void | (() => Iterator<T>)"},
-    {"name":"?.at","type":"void | ((index: number) => (T | void))"},
+    {"name":"?.at","type":"void | ((index: number) => T | void)"},
     {
       "name":"?.concat",
-      "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>)"
+      "type":"void | (<S, Item: $ReadOnlyArray<S> | S>(...items: Array<Item>) => Array<T | S>)"
     },
     {
       "name":"?.copyWithin",
@@ -629,7 +629,7 @@ Flags: --pretty
     },
     {
       "name":"?.find",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => (T | void))"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => T | void)"
     },
     {
       "name":"?.findIndex",
@@ -637,7 +637,7 @@ Flags: --pretty
     },
     {
       "name":"?.findLast",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => (T | void))"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => T | void)"
     },
     {
       "name":"?.findLastIndex",
@@ -646,7 +646,7 @@ Flags: --pretty
     {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
-      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg: This) => Array<U>)"
+      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => $ReadOnlyArray<U> | U, thisArg: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
@@ -704,7 +704,7 @@ Flags: --pretty
     },
     {
       "name":"?.toSpliced",
-      "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<(T | S)>)"
+      "type":"void | (<S, Item: $ReadOnlyArray<S> | S>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<T | S>)"
     },
     {"name":"?.unshift","type":"void | ((...items: Array<T>) => number)"},
     {"name":"?.values","type":"void | (() => Iterator<T>)"},
@@ -717,10 +717,10 @@ Flags: --pretty
 {
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<T>"},
-    {"name":"at","type":"(index: number) => (T | void)"},
+    {"name":"at","type":"(index: number) => T | void"},
     {
       "name":"concat",
-      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>"
+      "type":"<S, Item: $ReadOnlyArray<S> | S>(...items: Array<Item>) => Array<T | S>"
     },
     {
       "name":"copyWithin",
@@ -738,7 +738,7 @@ Flags: --pretty
     },
     {
       "name":"find",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => (T | void)"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => T | void"
     },
     {
       "name":"findIndex",
@@ -746,7 +746,7 @@ Flags: --pretty
     },
     {
       "name":"findLast",
-      "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => (T | void)"
+      "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => T | void"
     },
     {
       "name":"findLastIndex",
@@ -755,7 +755,7 @@ Flags: --pretty
     {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {
       "name":"flatMap",
-      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg: This) => Array<U>"
+      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => $ReadOnlyArray<U> | U, thisArg: This) => Array<U>"
     },
     {
       "name":"forEach",
@@ -807,7 +807,7 @@ Flags: --pretty
     {"name":"toSorted","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
     {
       "name":"toSpliced",
-      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<(T | S)>"
+      "type":"<S, Item: $ReadOnlyArray<S> | S>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<T | S>"
     },
     {"name":"unshift","type":"(...items: Array<T>) => number"},
     {"name":"values","type":"() => Iterator<T>"},
@@ -2528,9 +2528,9 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":": (input: ?string) => (void | E)"},
+  "labelDetails":{"detail":": (input: ?string) => void | E"},
   "kind":3,
-  "detail":"(input: ?string) => (void | E)",
+  "detail":"(input: ?string) => void | E",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -2584,9 +2584,9 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":": (input: ?(string | E)) => boolean"},
+  "labelDetails":{"detail":": (input: ?string | E) => boolean"},
   "kind":3,
-  "detail":"(input: ?(string | E)) => boolean",
+  "detail":"(input: ?string | E) => boolean",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{

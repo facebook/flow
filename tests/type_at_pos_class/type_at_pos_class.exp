@@ -89,7 +89,7 @@ class-0.js:21:5 = {
   "end":5
 }
 class-0.js:24:5 = {
-  "types":{"unevaluated":{"type":"Class<(C1 | C2)>"},"evaluated":null},
+  "types":{"unevaluated":{"type":"Class<C1 | C2>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
