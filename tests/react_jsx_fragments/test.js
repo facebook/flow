@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-React.createElement(React.Fragment, null);
+<React.Fragment />;
 
 < ></>; // success
 

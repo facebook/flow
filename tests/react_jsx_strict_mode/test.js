@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-React.createElement(React.StrictMode, null);
+<React.StrictMode />; // success
 
 <React.StrictMode></React.StrictMode>; // success
 

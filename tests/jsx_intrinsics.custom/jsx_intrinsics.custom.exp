@@ -82,28 +82,30 @@ References:
                 ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- strings.js:13:28
+Error -------------------------------------------------------------------------------------------------- strings.js:13:2
 
-Cannot call `React.createElement` because property `id` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot create `div` element because property `id` is missing in props [1] but exists in object type [2]. [prop-missing]
 
-   strings.js:13:28
-   13| React.createElement('div', {}); // This is fine
-                                  ^^ [1]
+   strings.js:13:2
+   13| <div />; // This is not fine
+        ^^^
 
 References:
+   strings.js:13:1
+   13| <div />; // This is not fine
+       ^^^^^^^ [1]
    lib/jsx.js:4:22
     4|   div: $JSXIntrinsic<{id: string, ...}>,
                             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- strings.js:14:21
+Error -------------------------------------------------------------------------------------------------- strings.js:14:2
 
 Cannot create `bad` element because property `bad` is missing in `$JSXIntrinsics` [1]. [prop-missing]
 
-   strings.js:14:21
-   14| React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                           ^^^^^
+   strings.js:14:2
+   14| <bad />; // Error: 'bad' not in JSXIntrinsics
+        ^^^
 
 References:
    lib/jsx.js:3:23
@@ -116,14 +118,14 @@ References:
        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- strings.js:15:21
+Error -------------------------------------------------------------------------------------------------- strings.js:15:2
 
 Cannot create string element because an index signature declaring the expected key / value type is missing in
 `$JSXIntrinsics` [1]. [prop-missing]
 
-   strings.js:15:21
-   15| React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                           ^^^
+   strings.js:15:2
+   15| <Str />; // Error: string ~> keys of JSXIntrinsics
+        ^^^
 
 References:
    lib/jsx.js:3:23
@@ -136,13 +138,13 @@ References:
        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- strings.js:15:21
+Error -------------------------------------------------------------------------------------------------- strings.js:15:2
 
 Cannot access object with computed property using string [1]. [invalid-computed-prop]
 
-   strings.js:15:21
-   15| React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                           ^^^
+   strings.js:15:2
+   15| <Str />; // Error: string ~> keys of JSXIntrinsics
+        ^^^
 
 References:
    strings.js:7:10

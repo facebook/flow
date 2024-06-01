@@ -14,7 +14,7 @@ const empty_exact: {||} = {...null};
 <Bad />; // This is fine
 <Str />; // This is fine
 
-React.createElement('div', empty_exact); // This is fine
-React.createElement('bad', empty_exact); // This is fine
+<div {...empty_exact} />;  // This is fine
+<bad {...empty_exact} />;  // This is fine
 
 <Div id={42} />; // This is fine
