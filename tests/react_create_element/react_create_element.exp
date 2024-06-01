@@ -966,8 +966,8 @@ Cannot call `React.createElement` because property `children` is missing in prop
 
 References:
    test.js:106:33
-   106| class G extends React.Component<{children: number | Array<number>}> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:112:24
@@ -984,14 +984,14 @@ References:
    test.js:112:28
    112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
                                    ^^^^^^ [1]
-   test.js:106:59
-   106| class G extends React.Component<{children: number | Array<number>}> {}
-                                                                  ^^^^^^ [2]
+   test.js:106:68
+   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
+                                                                           ^^^^^^ [2]
    test.js:112:1
    112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    test.js:106:44
-   106| class G extends React.Component<{children: number | Array<number>}> {}
+   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
                                                    ^^^^^^ [4]
 
 
@@ -1006,15 +1006,15 @@ Cannot call `React.createElement` because property `children` is missing in prop
 
 References:
    test.js:106:33
-   106| class G extends React.Component<{children: number | Array<number>}> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:116:24
 
 Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
- - Or undefined [1] is incompatible with array type [3].
+ - Or undefined [1] is incompatible with read-only array type [3].
 
    test.js:116:24
    116| React.createElement(G, {}, ...(any: Array<number>)); // Error
@@ -1025,11 +1025,11 @@ References:
    116| React.createElement(G, {}, ...(any: Array<number>)); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:106:44
-   106| class G extends React.Component<{children: number | Array<number>}> {}
+   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
                                                    ^^^^^^ [2]
    test.js:106:53
-   106| class G extends React.Component<{children: number | Array<number>}> {}
-                                                            ^^^^^^^^^^^^^ [3]
+   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
+                                                            ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:127:25
@@ -1046,14 +1046,14 @@ References:
    test.js:127:29
    127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                                     ^^^^^^ [1]
-   test.js:121:61
-   121| class G2 extends React.Component<{children?: number | Array<number>}> {}
-                                                                    ^^^^^^ [2]
+   test.js:121:70
+   121| class G2 extends React.Component<{children?: number | $ReadOnlyArray<number>}> {}
+                                                                             ^^^^^^ [2]
    test.js:127:1
    127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    test.js:121:46
-   121| class G2 extends React.Component<{children?: number | Array<number>}> {}
+   121| class G2 extends React.Component<{children?: number | $ReadOnlyArray<number>}> {}
                                                      ^^^^^^ [4]
 
 
@@ -1091,7 +1091,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
- - Or undefined [1] is incompatible with array type [3].
+ - Or undefined [1] is incompatible with read-only array type [3].
 
    test.js:147:24
    147| React.createElement(H, {}, ...(any: Array<number>)); // Error
@@ -1102,11 +1102,11 @@ References:
    147| React.createElement(H, {}, ...(any: Array<number>)); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:136:29
-   136| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+   136| type NumberArrayRecursive = number | $ReadOnlyArray<NumberArrayRecursive>;
                                     ^^^^^^ [2]
    test.js:136:38
-   136| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   136| type NumberArrayRecursive = number | $ReadOnlyArray<NumberArrayRecursive>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:155:24

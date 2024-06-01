@@ -103,7 +103,7 @@ React.createElement(F, {}, 1, ...[]); // Error
 React.createElement(F, {}, 1, ...[2]); // OK
 React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
 
-class G extends React.Component<{children: number | Array<number>}> {}
+class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
 React.createElement(G, {}); // Error
 React.createElement(G, {}, 1); // OK
 React.createElement(G, {}, 1, 2); // OK
@@ -118,7 +118,7 @@ React.createElement(G, {}, 1, ...[]); // OK
 React.createElement(G, {}, 1, ...[2]); // OK
 React.createElement(G, {}, 1, ...(any: Array<number>)); // OK
 
-class G2 extends React.Component<{children?: number | Array<number>}> {}
+class G2 extends React.Component<{children?: number | $ReadOnlyArray<number>}> {}
 React.createElement(G2, {}); // OK
 React.createElement(G2, {}, 1); // OK
 React.createElement(G2, {}, 1, 2); // OK
@@ -133,7 +133,7 @@ React.createElement(G2, {}, 1, ...[]); // OK
 React.createElement(G2, {}, 1, ...[2]); // OK
 React.createElement(G2, {}, 1, ...(any: Array<number>)); // OK
 
-type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+type NumberArrayRecursive = number | $ReadOnlyArray<NumberArrayRecursive>;
 class H extends React.Component<{children: NumberArrayRecursive}> {}
 React.createElement(H, {}); // Error
 React.createElement(H, {}, 1); // OK
@@ -183,7 +183,7 @@ React.createElement(K, {children: 42}); // OK
 React.createElement(K, {children: 42}, 42); // OK
 React.createElement(K, {}, '42'); // Error
 React.createElement(K, {children: '42'}); // Error
-React.createElement(K, {children: '42'}, 42); // Error
+React.createElement(K, {children: '42'}, 42); // OK
 React.createElement(K, {children: 42}, '42'); // Error
 React.createElement(K, {children: '42'}, '42'); // Error
 
