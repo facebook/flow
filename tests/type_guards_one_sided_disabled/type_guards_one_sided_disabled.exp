@@ -6,5 +6,13 @@ One-sided type guards are not yet supported. [unsupported-syntax]
                           ^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- file.js:3:22
 
-Found 1 error
+One-sided type guards are not yet supported. [unsupported-syntax]
+
+   3| type A = (x: any) => implies x is number;
+                           ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors
