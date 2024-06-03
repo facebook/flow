@@ -22,6 +22,13 @@ module Client_config = struct
 
   let detailed_error_rendering { detailed_error_rendering; _ } = detailed_error_rendering
 
+  let detailed_error_rendering_merge_with_options
+      ~flowconfig_enabled { detailed_error_rendering; _ } =
+    match detailed_error_rendering with
+    | Default -> flowconfig_enabled
+    | True -> true
+    | False -> false
+
   let rank_autoimports_by_usage { rank_autoimports_by_usage; _ } = rank_autoimports_by_usage
 
   let suggest_autoimports { suggest_autoimports; _ } = suggest_autoimports
@@ -97,7 +104,7 @@ let send_errors =
           File_key.ResourceFile filename;
         ]
   in
-  fun ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings client ->
+  fun ~flowconfig_vscode_detailed_diagnostics ~errors_reason ~errors ~warnings client ->
     let warnings =
       SMap.fold
         (fun filename _ warn_acc ->
@@ -106,15 +113,20 @@ let send_errors =
         client.opened_files
         Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
     in
+    let vscode_detailed_diagnostics =
+      Client_config.detailed_error_rendering_merge_with_options
+        ~flowconfig_enabled:flowconfig_vscode_detailed_diagnostics
+        client.client_config
+    in
     let diagnostics =
       Flow_lsp_conversions.diagnostics_of_flow_errors ~vscode_detailed_diagnostics ~errors ~warnings
     in
     send_notification (Prot.Errors { diagnostics; errors_reason }) client
 
-let send_errors_if_subscribed ~client ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings
-    =
+let send_errors_if_subscribed
+    ~client ~flowconfig_vscode_detailed_diagnostics ~errors_reason ~errors ~warnings =
   if client.subscribed then
-    send_errors ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings client
+    send_errors ~flowconfig_vscode_detailed_diagnostics ~errors_reason ~errors ~warnings client
 
 let send_single_lsp (message, metadata) client =
   send_response (Prot.LspFromServer message, metadata) client
@@ -164,7 +176,8 @@ let get_subscribed_clients =
       | _ -> acc)
     ~init:[]
 
-let update_clients ~clients ~vscode_detailed_diagnostics ~errors_reason ~calc_errors_and_warnings =
+let update_clients
+    ~clients ~flowconfig_vscode_detailed_diagnostics ~errors_reason ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
   let subscribed_client_count = List.length subscribed_clients in
   let all_client_count = List.length clients in
@@ -179,7 +192,7 @@ let update_clients ~clients ~vscode_detailed_diagnostics ~errors_reason ~calc_er
       subscribed_client_count
       all_client_count;
     List.iter
-      (send_errors ~vscode_detailed_diagnostics ~errors_reason ~errors ~warnings)
+      (send_errors ~flowconfig_vscode_detailed_diagnostics ~errors_reason ~errors ~warnings)
       subscribed_clients
   )
 
@@ -191,7 +204,8 @@ let send_start_recheck clients =
 let send_end_recheck ~lazy_stats clients =
   clients |> get_subscribed_clients |> List.iter (send_single_end_recheck ~lazy_stats)
 
-let subscribe_client ~client ~vscode_detailed_diagnostics ~current_errors ~current_warnings =
+let subscribe_client
+    ~client ~flowconfig_vscode_detailed_diagnostics ~current_errors ~current_warnings =
   Hh_logger.info "Subscribing client #%d to push diagnostics" client.client_id;
   if client.subscribed then
     (* noop *)
@@ -199,7 +213,7 @@ let subscribe_client ~client ~vscode_detailed_diagnostics ~current_errors ~curre
   else
     let errors_reason = Prot.New_subscription in
     send_errors
-      ~vscode_detailed_diagnostics
+      ~flowconfig_vscode_detailed_diagnostics
       ~errors_reason
       ~errors:current_errors
       ~warnings:current_warnings
