@@ -25,7 +25,8 @@ module Client_config : sig
 
   val detailed_error_rendering : t -> client_toggle
 
-  val detailed_error_rendering_merge_with_options : flowconfig_enabled:bool -> t -> bool
+  val detailed_error_rendering_merge_with_options :
+    flowconfig_enabled:bool -> client_init_options_enabled:bool option -> t -> bool
 
   val rank_autoimports_by_usage : t -> client_toggle
 

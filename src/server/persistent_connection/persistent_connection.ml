@@ -23,9 +23,9 @@ module Client_config = struct
   let detailed_error_rendering { detailed_error_rendering; _ } = detailed_error_rendering
 
   let detailed_error_rendering_merge_with_options
-      ~flowconfig_enabled { detailed_error_rendering; _ } =
+      ~flowconfig_enabled ~client_init_options_enabled { detailed_error_rendering; _ } =
     match detailed_error_rendering with
-    | Default -> flowconfig_enabled
+    | Default -> Base.Option.value client_init_options_enabled ~default:flowconfig_enabled
     | True -> true
     | False -> false
 
@@ -116,6 +116,8 @@ let send_errors =
     let vscode_detailed_diagnostics =
       Client_config.detailed_error_rendering_merge_with_options
         ~flowconfig_enabled:flowconfig_vscode_detailed_diagnostics
+        ~client_init_options_enabled:
+          Lsp.Initialize.(client.lsp_initialize_params.initializationOptions.detailedErrorRendering)
         client.client_config
     in
     let diagnostics =

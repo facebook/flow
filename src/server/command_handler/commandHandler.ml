@@ -1191,9 +1191,13 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
     )
 
 let vscode_detailed_diagnostics ~options client =
+  let client_config = Persistent_connection.client_config client in
+  let lsp_initialize_params = Persistent_connection.lsp_initialize_params client in
   Persistent_connection.Client_config.detailed_error_rendering_merge_with_options
     ~flowconfig_enabled:(Options.vscode_detailed_diagnostics options)
-    (Persistent_connection.client_config client)
+    ~client_init_options_enabled:
+      Lsp.Initialize.(lsp_initialize_params.initializationOptions.detailedErrorRendering)
+    client_config
 
 let rank_autoimports_by_usage ~options client =
   let client_config = Persistent_connection.client_config client in

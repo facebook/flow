@@ -422,7 +422,10 @@ module Initialize : sig
     | Messages
     | Verbose
 
-  and initializationOptions = { liveSyntaxErrors: bool }
+  and initializationOptions = {
+    liveSyntaxErrors: bool;
+    detailedErrorRendering: bool option;
+  }
 
   and client_capabilities = {
     workspace: workspaceClientCapabilities;
