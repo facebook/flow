@@ -67,19 +67,7 @@ let metadata =
 
 (* somewhat copied from Flow_dot_js *)
 let parse_content file content =
-  let parse_options =
-    Some
-      {
-        Parser_env.components = true;
-        enums = true;
-        esproposal_decorators = true;
-        types = true;
-        use_strict = false;
-        module_ref_prefix = None;
-        module_ref_prefix_LEGACY_INTEROP = None;
-      }
-  in
-
+  let parse_options = Some Parser_env.permissive_parse_options in
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in

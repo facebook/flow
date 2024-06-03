@@ -40,6 +40,8 @@ type parse_options = {
 
 val default_parse_options : parse_options
 
+val permissive_parse_options : parse_options
+
 type env
 
 type allowed_super =

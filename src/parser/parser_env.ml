@@ -144,6 +144,17 @@ let default_parse_options =
     module_ref_prefix_LEGACY_INTEROP = None;
   }
 
+let permissive_parse_options =
+  {
+    components = true;
+    enums = true;
+    esproposal_decorators = true;
+    types = true;
+    use_strict = false;
+    module_ref_prefix = None;
+    module_ref_prefix_LEGACY_INTEROP = None;
+  }
+
 type allowed_super =
   | No_super
   | Super_prop

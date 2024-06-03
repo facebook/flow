@@ -152,13 +152,10 @@ let main
         let parse_options =
           Some
             {
+              Parser_env.permissive_parse_options with
               Parser_env.components = not no_component_syntax;
               enums = not no_enums;
-              esproposal_decorators = true;
-              types = true;
               use_strict;
-              module_ref_prefix = None;
-              module_ref_prefix_LEGACY_INTEROP = None;
             }
         in
 

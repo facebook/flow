@@ -177,11 +177,8 @@ let refactor_extract_code_actions
           in
           let parse_options =
             {
-              Parser_env.components = true;
-              enums = true;
-              esproposal_decorators = true;
-              types = true;
-              use_strict;
+              Parser_env.permissive_parse_options with
+              Parser_env.use_strict;
               module_ref_prefix;
               module_ref_prefix_LEGACY_INTEROP;
             }

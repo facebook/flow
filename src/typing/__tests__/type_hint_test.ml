@@ -81,18 +81,7 @@ module TypeParser : sig
   val parse : Context.t -> string -> Type.t
 end = struct
   let parse_type content =
-    let parse_options =
-      Some
-        {
-          Parser_env.components = true;
-          enums = true;
-          esproposal_decorators = true;
-          types = true;
-          use_strict = false;
-          module_ref_prefix = None;
-          module_ref_prefix_LEGACY_INTEROP = None;
-        }
-    in
+    let parse_options = Some Parser_env.permissive_parse_options in
     (* the parser expects a colon *)
     let content = ": " ^ content in
     let (t, errs) = Parser_flow.parse_annot ~parse_options (Some dummy_filename) content in
@@ -154,23 +143,7 @@ module TypeLoader : sig
   val get_type_of_last_expression : Context.t -> string -> Type.t
 end = struct
   let parse_content file content =
-    let parse_options =
-      Some
-        {
-          Parser_env.components = true;
-          enums = true;
-          (*
-           * Always parse ES proposal syntax. The user-facing config option to
-           * ignore/warn/enable them is handled during inference so that a clean error
-           * can be surfaced (rather than a more cryptic parse error).
-           *)
-          esproposal_decorators = true;
-          types = true;
-          use_strict = false;
-          module_ref_prefix = None;
-          module_ref_prefix_LEGACY_INTEROP = None;
-        }
-    in
+    let parse_options = Some Parser_env.permissive_parse_options in
     let (ast, _) = Parser_flow.program_file ~fail:false ~parse_options content (Some file) in
     ast
 

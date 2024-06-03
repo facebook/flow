@@ -11,17 +11,7 @@ open Flow_ast_differ
 open Utils_js
 open OUnit2
 
-let parse_options =
-  Some
-    {
-      Parser_env.components = false;
-      enums = true;
-      esproposal_decorators = true;
-      types = true;
-      use_strict = false;
-      module_ref_prefix = None;
-      module_ref_prefix_LEGACY_INTEROP = None;
-    }
+let parse_options = Some Parser_env.permissive_parse_options
 
 class useless_mapper =
   object (this)

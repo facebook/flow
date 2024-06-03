@@ -86,16 +86,8 @@ let parse_source_file ~options content file =
   let parse_options =
     Some
       {
-        Parser_env.components = true;
-        (*
-         * Always parse ES proposal syntax. The user-facing config option to
-         * ignore/warn/enable them is handled during inference so that a clean error
-         * can be surfaced (rather than a more cryptic parse error).
-         *)
-        enums = true;
-        esproposal_decorators = true;
-        types = true;
-        use_strict;
+        Parser_env.permissive_parse_options with
+        Parser_env.use_strict;
         module_ref_prefix = Options.haste_module_ref_prefix options;
         module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
       }
@@ -104,18 +96,7 @@ let parse_source_file ~options content file =
 
 let parse_package_json_file ~options content file =
   let node_main_fields = Options.node_main_fields options in
-  let parse_options =
-    Some
-      {
-        Parser_env.components = false;
-        enums = false;
-        esproposal_decorators = false;
-        types = true;
-        use_strict = false;
-        module_ref_prefix = None;
-        module_ref_prefix_LEGACY_INTEROP = None;
-      }
-  in
+  let parse_options = Some Parser_env.default_parse_options in
   match Parser_flow.package_json_file ~parse_options content (Some file) with
   | exception Parse_error.Error (err, _) -> Error err
   | ((_loc, obj), _parse_errors) -> Ok (Package_json.parse ~node_main_fields obj)

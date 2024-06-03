@@ -840,19 +840,7 @@ let mk_program ?(loc = Loc.none) ?(interpreter = None) ?(comments = None) ?(all_
   (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments })
 
 let test_ast_of_string ~parser str =
-  let parse_options =
-    Some
-      {
-        Parser_env.components = true;
-        enums = true;
-        esproposal_decorators = true;
-        types = true;
-        use_strict = false;
-        module_ref_prefix = None;
-        module_ref_prefix_LEGACY_INTEROP = None;
-      }
-  in
-
+  let parse_options = Some Parser_env.permissive_parse_options in
   let env = Parser_env.init_env ~token_sink:None ~parse_options None str in
   let (ast, _) = Parser_flow.do_parse env parser false in
   ast

@@ -18,25 +18,7 @@ let error_of_parse_error source_file (loc, err) =
   |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:None
 
 let parse_content file content =
-  let parse_options =
-    let open Parser_env in
-    Some
-      {
-        components = true;
-        enums = true;
-        (*
-         * Always parse ES proposal syntax. The user-facing config option to
-         * ignore/warn/enable them is handled during inference so that a clean error
-         * can be surfaced (rather than a more cryptic parse error).
-         *)
-        esproposal_decorators = true;
-        types = true;
-        use_strict = false;
-        module_ref_prefix = None;
-        module_ref_prefix_LEGACY_INTEROP = None;
-      }
-  in
-
+  let parse_options = Some Parser_env.permissive_parse_options in
   let (ast, parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in

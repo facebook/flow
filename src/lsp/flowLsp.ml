@@ -1166,11 +1166,8 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
     in
     Some
       {
-        Parser_env.components = true;
-        enums = true;
-        esproposal_decorators = true;
-        types = true;
-        use_strict;
+        Parser_env.permissive_parse_options with
+        Parser_env.use_strict;
         module_ref_prefix;
         module_ref_prefix_LEGACY_INTEROP;
       }
