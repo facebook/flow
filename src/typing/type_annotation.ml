@@ -2426,7 +2426,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             comments;
           }
         )
-      when kind <> Ast.Type.TypeGuard.Implies || Context.one_sided_type_guards env.cx ->
+      when kind <> Ast.Type.TypeGuard.Implies
+           || Context.one_sided_type_guards env.cx
+           || File_key.is_lib_file (Context.file env.cx) ->
       if meth_kind <> MethodKind then (
         let bool_t = BoolT.at gloc in
         let return = Tast_utils.error_mapper#function_type_return_annotation return in

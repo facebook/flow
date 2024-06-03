@@ -248,4 +248,11 @@ function one_sided(
   arr.filter(fn) as Array<number>; // okay
   arr.filter(fn) as Array<string>; // error number ~> string
 
+  declare var ro_arr: $ReadOnlyArray<mixed>;
+  ro_arr.filter(fn) as Array<number>; // okay
+  ro_arr.filter(fn) as Array<string>; // error number ~> string
+
+  declare var rw_arr: $ReadOnlyArray<mixed>;
+  rw_arr.filter(fn) as Array<number>; // okay
+  rw_arr.filter(fn) as Array<string>; // error number ~> string
 }

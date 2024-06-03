@@ -2119,6 +2119,56 @@ References:
                       ^^^^^^^ [4]
 
 
+Error --------------------------------------------------------------------------------------------- refinement.js:253:10
+
+Cannot call `ro_arr.filter` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2] in the type predicate.
+ - Or property `name` is missing in statics of function type [3] but exists in statics of `Boolean` [4].
+
+   refinement.js:253:10
+   253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
+                 ^^^^^^
+
+References:
+   refinement.js:231:34
+   231|   fn: (x: mixed) => implies x is number,
+                                         ^^^^^^ [1]
+   refinement.js:253:30
+   253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
+                                     ^^^^^^ [2]
+   refinement.js:231:7
+   231|   fn: (x: mixed) => implies x is number,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:376:15
+   376| declare class Boolean {
+                      ^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- refinement.js:257:10
+
+Cannot call `rw_arr.filter` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2] in the type predicate.
+ - Or property `name` is missing in statics of function type [3] but exists in statics of `Boolean` [4].
+
+   refinement.js:257:10
+   257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
+                 ^^^^^^
+
+References:
+   refinement.js:231:34
+   231|   fn: (x: mixed) => implies x is number,
+                                         ^^^^^^ [1]
+   refinement.js:257:30
+   257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
+                                     ^^^^^^ [2]
+   refinement.js:231:7
+   231|   fn: (x: mixed) => implies x is number,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:376:15
+   376| declare class Boolean {
+                      ^^^^^^^ [4]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -2495,7 +2545,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 145 errors
+Found 147 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
