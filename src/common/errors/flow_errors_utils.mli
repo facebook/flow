@@ -171,6 +171,7 @@ module Cli_output : sig
   val format_single_styled_error_for_vscode :
     strip_root:File_path.t option ->
     severity:Severity.severity ->
+    unsaved_content:(File_path.t * string) option ->
     Loc.t printable_error ->
     (Tty.style * string) list
 
