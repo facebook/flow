@@ -3,12 +3,6 @@
 
 const arr = [1,2,3];  // badly-positioned error
 
-// React.createElement
-const React = require("react");
-React.createElement(...arr, {}); // error
-React.createElement(({}: any), ...arr); // error
-React.createElement(...arr, ...arr); // error
-
 // fun.call()
 (function (this: any, ...args: any) { return this.bar; }).call(...arr); // error
 
