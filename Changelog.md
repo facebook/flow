@@ -1,3 +1,9 @@
+### 0.237.2
+
+New Features:
+* We added a flag to help prepare your codebase for React 19's defaultProps change. [defaultProps on function components will no longer work in React 19](https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-proptypes-and-defaultprops). Under `
+react.disable_function_components_default_props=true`, Flow will ignore `defaultProps` on function components for React typing purposes. Note that we do not intend to keep this flag forever, so you should try to turn this flag on as soon as possible.
+
 ### 0.237.1
 
 Notable bug fixes:
