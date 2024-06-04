@@ -226,6 +226,7 @@ let position_of_document_position { Lsp.TextDocumentPositionParams.position; _ }
 
 let diagnostics_of_flow_errors =
   let error_to_lsp
+      ~unsaved_content
       ~vscode_detailed_diagnostics
       ~(severity : Severity.severity)
       (printable_error : Loc.t Flow_errors_utils.printable_error) :
@@ -272,6 +273,7 @@ let diagnostics_of_flow_errors =
             (Flow_errors_utils.Cli_output.format_single_styled_error_for_vscode
                ~strip_root:None
                ~severity
+               ~unsaved_content
                printable_error
             |> Base.List.map ~f:(fun (style, text) -> (map_style style, text))
             )
@@ -297,9 +299,9 @@ let diagnostics_of_flow_errors =
         )
     | Error _ -> None
   in
-  fun ~vscode_detailed_diagnostics ~errors ~warnings ->
+  fun ~unsaved_content ~vscode_detailed_diagnostics ~errors ~warnings ->
     let add severity error acc =
-      match error_to_lsp ~vscode_detailed_diagnostics ~severity error with
+      match error_to_lsp ~unsaved_content ~vscode_detailed_diagnostics ~severity error with
       | Some (uri, diagnostic) -> Lsp.UriMap.add ~combine:List.append uri [diagnostic] acc
       | None -> acc
     in

@@ -119,7 +119,11 @@ let send_errors =
         client.client_config
     in
     let diagnostics =
-      Flow_lsp_conversions.diagnostics_of_flow_errors ~vscode_detailed_diagnostics ~errors ~warnings
+      Flow_lsp_conversions.diagnostics_of_flow_errors
+        ~unsaved_content:None
+        ~vscode_detailed_diagnostics
+        ~errors
+        ~warnings
     in
     send_notification (Prot.Errors { diagnostics; errors_reason }) client
 

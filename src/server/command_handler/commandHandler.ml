@@ -3242,6 +3242,7 @@ let handle_live_errors_request =
             let live_errors_uri = Lsp.DocumentUri.of_string uri in
             let live_diagnostics =
               Flow_lsp_conversions.diagnostics_of_flow_errors
+                ~unsaved_content:(Some (File_path.make file_path, content))
                 ~vscode_detailed_diagnostics:(vscode_detailed_diagnostics ~options client)
                 ~errors:live_errors
                 ~warnings:live_warnings

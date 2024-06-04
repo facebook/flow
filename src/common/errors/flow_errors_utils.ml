@@ -2760,7 +2760,8 @@ module Cli_output = struct
     Tty.cprint ~out_channel ~color_mode styles;
     Tty.cprint ~out_channel ~color_mode [default_style "\n"]
 
-  let format_single_styled_error_for_vscode ~strip_root ~severity (error : Loc.t printable_error) =
+  let format_single_styled_error_for_vscode
+      ~strip_root ~severity ~unsaved_content (error : Loc.t printable_error) =
     get_pretty_printed_error
       ~flags:
         {
@@ -2774,7 +2775,7 @@ module Cli_output = struct
           unicode = true;
           message_width = 80;
         }
-      ~stdin_file:None
+      ~stdin_file:unsaved_content
       ~strip_root
       ~severity
       ~show_all_branches:true
