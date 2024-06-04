@@ -28,11 +28,7 @@ module.exports = (suite(
             '{Cannot assign}',
           )
           .verifyLSPMessageSnapshot(
-            join(
-              __dirname,
-              '__snapshots__',
-              'flowconfig-enabled-no-client-config-errors.json',
-            ),
+            join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
             ['window/showStatus', '$/cancelRequest'],
           ),
       ],
@@ -57,11 +53,7 @@ module.exports = (suite(
           '{Cannot assign}',
         )
         .verifyLSPMessageSnapshot(
-          join(
-            __dirname,
-            '__snapshots__',
-            'flowconfig-enabled-client-enabled-errors.json',
-          ),
+          join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
           ['window/showStatus', '$/cancelRequest'],
         ),
     ]).flowConfig('_flowconfig_enabled'),
@@ -87,11 +79,7 @@ module.exports = (suite(
             '{Cannot assign}',
           )
           .verifyLSPMessageSnapshot(
-            join(
-              __dirname,
-              '__snapshots__',
-              'flowconfig-enabled-client-disabled-errors.json',
-            ),
+            join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
             ['window/showStatus', '$/cancelRequest'],
           ),
       ],
@@ -108,11 +96,7 @@ module.exports = (suite(
             '{Cannot assign}',
           )
           .verifyLSPMessageSnapshot(
-            join(
-              __dirname,
-              '__snapshots__',
-              'flowconfig-disabled-no-client-config-errors.json',
-            ),
+            join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
             ['window/showStatus', '$/cancelRequest'],
           ),
       ],
@@ -139,11 +123,7 @@ module.exports = (suite(
             '{Cannot assign}',
           )
           .verifyLSPMessageSnapshot(
-            join(
-              __dirname,
-              '__snapshots__',
-              'flowconfig-disabled-client-enabled-errors.json',
-            ),
+            join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
             ['window/showStatus', '$/cancelRequest'],
           ),
       ],
@@ -170,11 +150,7 @@ module.exports = (suite(
             '{Cannot assign}',
           )
           .verifyLSPMessageSnapshot(
-            join(
-              __dirname,
-              '__snapshots__',
-              'flowconfig-disabled-client-disabled-errors.json',
-            ),
+            join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
             ['window/showStatus', '$/cancelRequest'],
           ),
       ],
