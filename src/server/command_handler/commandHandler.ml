@@ -2173,43 +2173,49 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
   let open Hh_json_helpers in
   let open Persistent_connection in
   let { Lsp.DidChangeConfiguration.settings } = params in
-  let client_config = client_config client in
-  let json = Some settings in
-  let client_config =
-    match Jget.val_opt json "detailedErrorRendering" with
-    | Some (Hh_json.JSON_String "true")
-    | Some (Hh_json.JSON_Bool true) ->
-      { client_config with Client_config.detailed_error_rendering = Client_config.True }
-    | Some (Hh_json.JSON_String "false")
-    | Some (Hh_json.JSON_Bool false) ->
-      { client_config with Client_config.detailed_error_rendering = Client_config.False }
-    | Some _
-    | None ->
-      { client_config with Client_config.detailed_error_rendering = Client_config.Default }
-  in
-  let suggest = Jget.obj_opt json "suggest" in
-  let client_config =
-    match Jget.bool_opt suggest "autoImports" with
-    | Some suggest_autoimports -> { client_config with Client_config.suggest_autoimports }
-    | None -> client_config
-  in
-  let client_config =
-    match Jget.val_opt suggest "rankAutoimportsByUsage" with
-    | Some (Hh_json.JSON_String "true")
-    | Some (Hh_json.JSON_Bool true) ->
-      { client_config with Client_config.rank_autoimports_by_usage = Client_config.True }
-    | Some (Hh_json.JSON_String "false")
-    | Some (Hh_json.JSON_Bool false) ->
-      { client_config with Client_config.rank_autoimports_by_usage = Client_config.False }
-    | Some _
-    | None ->
-      { client_config with Client_config.rank_autoimports_by_usage = Client_config.Default }
-  in
-  let client_config =
-    let show_suggest_ranking_info = Jget.bool_d suggest "showRankingInfo" ~default:false in
-    { client_config with Client_config.show_suggest_ranking_info }
-  in
-  client_did_change_configuration client client_config;
+  (match settings with
+  | Hh_json.JSON_Null ->
+    (* a null notification means we should pull the configs we care about.
+     * In this case, we should not update the client config will all the defaults. *)
+    ()
+  | _ ->
+    let client_config = client_config client in
+    let json = Some settings in
+    let client_config =
+      match Jget.val_opt json "detailedErrorRendering" with
+      | Some (Hh_json.JSON_String "true")
+      | Some (Hh_json.JSON_Bool true) ->
+        { client_config with Client_config.detailed_error_rendering = Client_config.True }
+      | Some (Hh_json.JSON_String "false")
+      | Some (Hh_json.JSON_Bool false) ->
+        { client_config with Client_config.detailed_error_rendering = Client_config.False }
+      | Some _
+      | None ->
+        { client_config with Client_config.detailed_error_rendering = Client_config.Default }
+    in
+    let suggest = Jget.obj_opt json "suggest" in
+    let client_config =
+      match Jget.bool_opt suggest "autoImports" with
+      | Some suggest_autoimports -> { client_config with Client_config.suggest_autoimports }
+      | None -> client_config
+    in
+    let client_config =
+      match Jget.val_opt suggest "rankAutoimportsByUsage" with
+      | Some (Hh_json.JSON_String "true")
+      | Some (Hh_json.JSON_Bool true) ->
+        { client_config with Client_config.rank_autoimports_by_usage = Client_config.True }
+      | Some (Hh_json.JSON_String "false")
+      | Some (Hh_json.JSON_Bool false) ->
+        { client_config with Client_config.rank_autoimports_by_usage = Client_config.False }
+      | Some _
+      | None ->
+        { client_config with Client_config.rank_autoimports_by_usage = Client_config.Default }
+    in
+    let client_config =
+      let show_suggest_ranking_info = Jget.bool_d suggest "showRankingInfo" ~default:false in
+      { client_config with Client_config.show_suggest_ranking_info }
+    in
+    client_did_change_configuration client client_config);
   (LspProt.LspFromServer None, metadata)
 
 let handle_persistent_get_def
