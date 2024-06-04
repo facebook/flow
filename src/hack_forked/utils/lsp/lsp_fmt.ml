@@ -1375,7 +1375,17 @@ let parse_initialize (params : json option) : Initialize.params =
       | Some "verbose" -> Verbose
       | _ -> Off
     and parse_initializationOptions json =
-      { liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true }
+      {
+        liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
+        detailedErrorRendering =
+          (match Jget.bool_opt json "detailedErrorRendering" with
+          | Some b -> Some b
+          | None ->
+            (match Jget.string_opt json "detailedErrorRendering" with
+            | Some "true" -> Some true
+            | Some "false" -> Some false
+            | _ -> None));
+      }
     and parse_capabilities json =
       {
         workspace = Jget.obj_opt json "workspace" |> parse_workspace;
