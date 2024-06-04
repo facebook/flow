@@ -1,0 +1,34 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot create `Foo` element because property `foo` is missing in props [1] but exists in object type [2]. [prop-missing]
+
+   test.js:4:2
+   4| <Foo />; // error: missing foo prop
+       ^^^
+
+References:
+   test.js:4:1
+   4| <Foo />; // error: missing foo prop
+      ^^^^^^^ [1]
+   test.js:1:22
+   1| function Foo(_props: {foo: string}) {}
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:48
+
+Cannot assign object literal to `props` because property `foo` is missing in object literal [1] but exists in object
+type [2]. [prop-missing]
+
+   test.js:5:48
+   5| const props: React.ElementConfig<typeof Foo> = {}; // error: missing foo prop
+                                                     ^^ [1]
+
+References:
+   test.js:5:14
+   5| const props: React.ElementConfig<typeof Foo> = {}; // error: missing foo prop
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors

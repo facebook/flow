@@ -145,6 +145,7 @@ let stub_metadata ~root ~checked =
     max_workers = 0;
     missing_module_generators = [];
     namespaces = true;
+    react_disable_function_components_default_props = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
     relay_integration_esmodules = false;
