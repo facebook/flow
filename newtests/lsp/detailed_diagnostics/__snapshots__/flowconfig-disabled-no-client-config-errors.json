@@ -1,0 +1,58 @@
+{
+  "method": "textDocument/publishDiagnostics",
+  "params": {
+    "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
+    "diagnostics": [
+      {
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 18
+          },
+          "end": {
+            "line": 0,
+            "character": 19
+          }
+        },
+        "severity": 1,
+        "code": "incompatible-type",
+        "source": "Flow",
+        "message": "Cannot assign `3` to `a` because  number [1] is incompatible with  string [2].",
+        "relatedInformation": [
+          {
+            "location": {
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
+              "range": {
+                "start": {
+                  "line": 0,
+                  "character": 18
+                },
+                "end": {
+                  "line": 0,
+                  "character": 19
+                }
+              }
+            },
+            "message": "[1] number"
+          },
+          {
+            "location": {
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
+              "range": {
+                "start": {
+                  "line": 0,
+                  "character": 9
+                },
+                "end": {
+                  "line": 0,
+                  "character": 15
+                }
+              }
+            },
+            "message": "[2] string"
+          }
+        ]
+      }
+    ]
+  }
+}
