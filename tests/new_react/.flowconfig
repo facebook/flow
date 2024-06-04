@@ -5,3 +5,4 @@ fakelib
 no_flowlib=false
 all=true
 exact_by_default=false
+react.disable_function_components_default_props=false
