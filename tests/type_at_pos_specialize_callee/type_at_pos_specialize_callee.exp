@@ -218,3 +218,38 @@ Flags:
 (x: string, y: mixed) => void
 file.js:218:3,218:5
 
+file.js:227:14
+Flags:
+(x: number) => void
+file.js:227:18,227:18
+
+file.js:229:17
+Flags:
+(x: number) => void
+file.js:229:18,229:18
+
+file.js:231:18
+Flags:
+class C<X>
+file.js:231:18,231:18
+
+file.js:241:13
+Flags:
+(x: number | string, y: number | string) => void
+file.js:241:17,241:17
+
+file.js:250:13
+Flags:
+(x: number) => C<string>
+file.js:250:17,250:17
+
+file.js:256:14
+Flags:
+any (explicit)
+file.js:256:18,256:19
+
+file.js:259:14
+Flags:
+mixed
+file.js:259:18,259:19
+

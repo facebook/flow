@@ -205,6 +205,8 @@ type component_t = {
   mutable monomorphized_components: Type.t Type.Properties.Map.t;
   (* Signature help *)
   mutable signature_help_callee: Type.t ALocMap.t;
+  (* Hover type *)
+  mutable ctor_callee: Type.t ALocMap.t;
   (* Union optimization checks *)
   mutable union_opt: Type.t ALocMap.t;
 }
@@ -408,6 +410,7 @@ let make_ccx () =
     allow_method_unbinding = ALocSet.empty;
     monomorphized_components = Type.Properties.Map.empty;
     signature_help_callee = ALocMap.empty;
+    ctor_callee = ALocMap.empty;
     union_opt = ALocMap.empty;
   }
 
@@ -778,6 +781,10 @@ let set_signature_help_callee cx loc t =
   cx.ccx.signature_help_callee <- ALocMap.add loc t cx.ccx.signature_help_callee
 
 let get_signature_help_callee cx loc = ALocMap.find_opt loc cx.ccx.signature_help_callee
+
+let set_ctor_callee cx loc t = cx.ccx.ctor_callee <- ALocMap.add loc t cx.ccx.ctor_callee
+
+let get_ctor_callee cx loc = ALocMap.find_opt loc cx.ccx.ctor_callee
 
 let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
 

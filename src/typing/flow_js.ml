@@ -2804,14 +2804,24 @@ struct
           in
           rec_flow cx trace (t_, u)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
-            ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint }
+            ConstructorT
+              { use_op; reason = reason_op; targs; args; tout; return_hint; specialized_ctor }
           ) ->
           let check = lazy (IICheck.of_ctor l (tparams_loc, ids, t) use_op reason_op targs args) in
           let lparts = (reason_tapp, tparams_loc, ids, t) in
           let uparts = (use_op, reason_op, targs, return_hint) in
           let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
           let u =
-            ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
+            ConstructorT
+              {
+                use_op;
+                reason = reason_op;
+                targs = None;
+                args;
+                tout;
+                return_hint;
+                specialized_ctor;
+              }
           in
           rec_flow cx trace (t_, u)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
@@ -3603,7 +3613,8 @@ struct
         (* class types derive instance types (with constructors) *)
         (*********************************************************)
         | ( DefT (reason, ClassT this),
-            ConstructorT { use_op; reason = reason_op; targs; args; tout = t; return_hint }
+            ConstructorT
+              { use_op; reason = reason_op; targs; args; tout = t; return_hint; specialized_ctor }
           ) ->
           let reason_o = replace_desc_reason RConstructorVoidReturn reason in
           let annot_loc = loc_of_reason reason_op in
@@ -3635,8 +3646,12 @@ struct
                         reason_op,
                         reason_o,
                         propref,
-                        (* TODO(jmbrown) return_hint threading unblocked by ConstructorT *)
-                        CallM { methodcalltype = funtype; return_hint; specialized_callee = None }
+                        CallM
+                          {
+                            methodcalltype = funtype;
+                            return_hint;
+                            specialized_callee = specialized_ctor;
+                          }
                       )
                   )
             )
@@ -3644,7 +3659,16 @@ struct
           (* return this *)
           rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
         | ( AnyT (_, src),
-            ConstructorT { use_op; reason = reason_op; targs; args; tout = t; return_hint = _ }
+            ConstructorT
+              {
+                use_op;
+                reason = reason_op;
+                targs;
+                args;
+                tout = t;
+                return_hint = _;
+                specialized_ctor = _;
+              }
           ) ->
           ignore targs;
 
@@ -3657,7 +3681,15 @@ struct
         (* Only classes (and `any`) can be constructed. *)
         | ( _,
             ConstructorT
-              { use_op; reason = reason_op; tout = t; args = _; targs = _; return_hint = _ }
+              {
+                use_op;
+                reason = reason_op;
+                tout = t;
+                args = _;
+                targs = _;
+                return_hint = _;
+                specialized_ctor = _;
+              }
           ) ->
           add_output cx Error_message.(EInvalidConstructor (reason_of_t l));
           rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
@@ -6485,13 +6517,23 @@ struct
           | _ -> false
         else
           wait_for_concrete_bound ()
-      | ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint } ->
+      | ConstructorT
+          { use_op; reason = reason_op; targs; args; tout; return_hint; specialized_ctor } ->
         if is_concrete bound then
           match bound with
           | DefT (_, ClassT _) ->
             narrow_generic
               (fun tout' ->
-                ConstructorT { use_op; reason = reason_op; targs; args; tout = tout'; return_hint })
+                ConstructorT
+                  {
+                    use_op;
+                    reason = reason_op;
+                    targs;
+                    args;
+                    tout = tout';
+                    return_hint;
+                    specialized_ctor;
+                  })
               tout;
             true
           | _ -> false

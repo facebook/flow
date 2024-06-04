@@ -254,8 +254,10 @@ let rec util_use_op_of_use_t :
     util use_op (fun use_op -> OptionalIndexedAccessT { x with use_op })
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
-  | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
-    util use_op (fun use_op -> ConstructorT { use_op; reason; targs; args; tout; return_hint })
+  | ConstructorT { use_op; reason; targs; args; tout; return_hint; specialized_ctor } ->
+    util use_op (fun use_op ->
+        ConstructorT { use_op; reason; targs; args; tout; return_hint; specialized_ctor }
+    )
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
   | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
     util use_op (fun use_op -> ArithT { use_op; reason; flip; rhs_t; result_t; kind })

@@ -269,6 +269,8 @@ module Type_at_pos = struct
 
       method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
+      method covers_target_loc loc = Reason.in_range target_loc loc
+
       method find_loc
           : 'a. ALoc.t -> Type.t -> is_type_identifier:bool -> tparams_rev:Type.typeparam list -> 'a
           =
@@ -326,6 +328,26 @@ module Type_at_pos = struct
           when self#covers_target loc ->
           self#annot_with_tparams (self#find_loc loc t ~is_type_identifier:false)
         | _ -> super#expression expr
+
+      (*
+       *     Class information
+       *     v
+       * new C(e1, e2);
+       * ^^^^
+       * Constructor information
+       *)
+      method! new_ ((expr_loc, _) as annot) expr =
+        let open Ast.Expression.New in
+        let { callee = ((callee_loc, _), _); _ } = expr in
+        let expr_start_loc = Loc.first_char (ALoc.to_loc_exn expr_loc) in
+        let callee_start_loc = Loc.char_before (Loc.char_before (ALoc.to_loc_exn callee_loc)) in
+        let new_loc = Loc.btwn expr_start_loc callee_start_loc in
+        if self#covers_target_loc new_loc then
+          match Context.get_ctor_callee cx expr_loc with
+          | Some t -> self#annot_with_tparams (self#find_loc callee_loc t ~is_type_identifier:false)
+          | None -> super#new_ annot expr
+        else
+          super#new_ annot expr
 
       method! implicit (((loc, t), _) as impl) =
         if self#covers_target loc then

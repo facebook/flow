@@ -648,6 +648,7 @@ module rec TypeTerm : sig
         args: call_arg list;
         tout: t;
         return_hint: lazy_hint_t;
+        specialized_ctor: specialized_callee option;
       }
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t

@@ -470,14 +470,30 @@ module Make
       then those values are returned by constructions.
   *)
   let new_call cx loc reason ~use_op class_ targs args =
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-        Flow.flow
-          cx
-          ( class_,
-            ConstructorT
-              { use_op; reason; targs; args; tout; return_hint = Type_env.get_hint cx loc }
-          )
-    )
+    let specialized_ctor = Context.new_specialized_callee cx in
+    let t =
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+          Flow.flow
+            cx
+            ( class_,
+              ConstructorT
+                {
+                  use_op;
+                  reason;
+                  targs;
+                  args;
+                  tout;
+                  return_hint = Type_env.get_hint cx loc;
+                  specialized_ctor = Some specialized_ctor;
+                }
+            )
+      )
+    in
+    let ctor_t =
+      Flow_js_utils.CalleeRecorder.type_for_tast_opt reason specialized_ctor
+      |> Base.Option.value ~default:class_
+    in
+    (t, ctor_t)
 
   let func_call_opt_use
       cx loc reason ~use_op ?(call_strict_arity = true) targts argts specialized_callee =
@@ -2903,7 +2919,9 @@ module Make
                { op = reason; fn = reason_of_t id_t; args = [reason_of_t arg_t]; local = true }
             )
         in
-        ( (loc, new_call cx loc reason_call ~use_op id_t targ_ts [Arg arg_t]),
+        let (t, ctor_t) = new_call cx loc reason_call ~use_op id_t targ_ts [Arg arg_t] in
+        Context.set_ctor_callee cx loc ctor_t;
+        ( (loc, t),
           New
             {
               New.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
@@ -2938,7 +2956,9 @@ module Make
              }
           )
       in
-      ( (loc, new_call cx loc reason ~use_op class_ targts argts),
+      let (t, ctor_t) = new_call cx loc reason ~use_op class_ targts argts in
+      Context.set_ctor_callee cx loc ctor_t;
+      ( (loc, t),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
     | Call _ -> subscript ~cond cx ex

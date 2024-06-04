@@ -218,3 +218,44 @@ function test20(
   Bar("", 1); // TODO should include type of both Foo1 and Foo2
 //  ^
 }
+
+function test_21() {
+  class C<X> {
+    constructor(x: X) {}
+  }
+
+  const c1 = new C(1);
+//           ^
+  const c2 = new C(1);
+//              ^
+  const c3 = new C(1);
+//               ^
+}
+
+function test_22() {
+  declare class C<X> {
+    constructor(x: X): void;
+    constructor(x: X, y: X): void;
+  }
+
+  const c = new C(1, "");
+//          ^
+}
+
+function test_23() {
+  declare class C<X> {
+    constructor(x: X): C<string>;
+  }
+
+  const c = new C(1);
+//          ^
+}
+
+function test_24() {
+  declare var C1: any
+  const c1 = new C1(1);
+//           ^
+  declare var C2: mixed;
+  const c2 = new C2(1); // error
+//           ^
+}

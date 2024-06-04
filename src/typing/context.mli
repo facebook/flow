@@ -394,6 +394,8 @@ val set_environment : t -> Loc_env.t -> unit
 
 val set_signature_help_callee : t -> ALoc.t -> Type.t -> unit
 
+val set_ctor_callee : t -> ALoc.t -> Type.t -> unit
+
 val set_union_opt : t -> ALoc.t -> Type.t -> unit
 
 val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
@@ -540,6 +542,8 @@ val find_avar_opt : t -> int -> Type.AConstraint.t option
 val find_monomorphized_component : t -> Type.Properties.id -> Type.t option
 
 val get_signature_help_callee : t -> ALoc.t -> Type.t option
+
+val get_ctor_callee : t -> ALoc.t -> Type.t option
 
 val iter_union_opt : t -> f:(ALocMap.key -> Type.t -> unit) -> unit
 

@@ -880,6 +880,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               args = call_args;
               tout = new_tout;
               return_hint = Type.hint_unavailable;
+              specialized_ctor = None;
             }
         in
         (inferred_targ_list, lhs, constructor_t, Some new_tout)

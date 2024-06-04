@@ -122,7 +122,9 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ReposLowerT _
   | ReposUseT _ ->
     _TODO
-  | ConstructorT { use_op = _; reason = _; targs = _; args = _; tout; return_hint = _ } ->
+  | ConstructorT
+      { use_op = _; reason = _; targs = _; args = _; tout; return_hint = _; specialized_ctor = _ }
+    ->
     resolve tout
   | SuperT _ -> ()
   | ImplementsT _ -> ()
