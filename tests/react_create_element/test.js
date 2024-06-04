@@ -101,7 +101,7 @@ React.createElement(F, {}, ...[1, 2]); // OK
 React.createElement(F, {}, ...(any: Array<number>)); // Error
 React.createElement(F, {}, 1, ...[]); // Error
 React.createElement(F, {}, 1, ...[2]); // OK
-React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
+React.createElement(F, {}, 1, ...(any: Array<number>)); // missing error, potentially unsafe when any = []
 
 class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
 React.createElement(G, {}); // Error
@@ -144,7 +144,7 @@ React.createElement(H, {}, [1, 2], [3, 4]); // OK
 React.createElement(H, {}, ...[]); // Error
 React.createElement(H, {}, ...[1]); // OK
 React.createElement(H, {}, ...[1, 2]); // OK
-React.createElement(H, {}, ...(any: Array<number>)); // Error
+React.createElement(H, {}, ...(any: Array<number>)); // missing error, potentially unsafe when any = [1]
 React.createElement(H, {}, 1, ...[]); // OK
 React.createElement(H, {}, 1, ...[2]); // OK
 React.createElement(H, {}, 1, ...(any: Array<number>)); // OK
