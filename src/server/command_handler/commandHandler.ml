@@ -1191,11 +1191,9 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
     )
 
 let vscode_detailed_diagnostics ~options client =
-  let client_config = Persistent_connection.client_config client in
-  match Persistent_connection.Client_config.detailed_error_rendering client_config with
-  | Persistent_connection.Client_config.Default -> Options.vscode_detailed_diagnostics options
-  | Persistent_connection.Client_config.True -> true
-  | Persistent_connection.Client_config.False -> false
+  Persistent_connection.Client_config.detailed_error_rendering_merge_with_options
+    ~flowconfig_enabled:(Options.vscode_detailed_diagnostics options)
+    (Persistent_connection.client_config client)
 
 let rank_autoimports_by_usage ~options client =
   let client_config = Persistent_connection.client_config client in
@@ -2054,22 +2052,21 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload :
   in
   { WorkloadStream.workload_should_be_cancelled; workload_handler }
 
-let did_open env client ~vscode_detailed_diagnostics (_files : (string * string) Nel.t) :
-    ServerEnv.env Lwt.t =
+let did_open env client ~options (_files : (string * string) Nel.t) : ServerEnv.env Lwt.t =
   let (errors, warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
-    ~vscode_detailed_diagnostics
+    ~flowconfig_vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
     ~errors_reason:LspProt.Env_change
     ~errors
     ~warnings;
   Lwt.return env
 
-let did_close env client ~vscode_detailed_diagnostics : ServerEnv.env Lwt.t =
+let did_close env client ~options : ServerEnv.env Lwt.t =
   let (errors, warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
-    ~vscode_detailed_diagnostics
+    ~flowconfig_vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
     ~errors_reason:LspProt.Env_change
     ~errors
     ~warnings;
@@ -2110,11 +2107,11 @@ let mk_lsp_error_response ~id ~reason ?stack metadata =
   in
   (LspProt.LspFromServer (Some message), metadata)
 
-let handle_persistent_subscribe ~metadata ~client ~vscode_detailed_diagnostics ~profiling:_ ~env =
+let handle_persistent_subscribe ~options ~metadata ~client ~profiling:_ ~env =
   let (current_errors, current_warnings) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.subscribe_client
     ~client
-    ~vscode_detailed_diagnostics
+    ~flowconfig_vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
     ~current_errors
     ~current_warnings;
   Lwt.return (env, LspProt.LspFromServer None, metadata)
@@ -2133,12 +2130,11 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
     pending := SMap.empty;
     ret
   in
-  let handle_persistent_did_open_notification
-      ~metadata ~client ~vscode_detailed_diagnostics ~profiling:_ ~env =
+  let handle_persistent_did_open_notification ~options ~metadata ~client ~profiling:_ ~env =
     let%lwt env =
       match get_and_clear_did_open_files () with
       | [] -> Lwt.return env
-      | first :: rest -> did_open env client ~vscode_detailed_diagnostics (first, rest)
+      | first :: rest -> did_open env client ~options (first, rest)
     in
     Lwt.return (env, LspProt.LspFromServer None, metadata)
   in
@@ -2158,9 +2154,8 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   (LspProt.LspFromServer None, metadata)
 
-let handle_persistent_did_close_notification
-    ~metadata ~client ~vscode_detailed_diagnostics ~profiling:_ ~env =
-  let%lwt env = did_close env client ~vscode_detailed_diagnostics in
+let handle_persistent_did_close_notification ~options ~metadata ~client ~profiling:_ ~env =
+  let%lwt env = did_close env client ~options in
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
@@ -3316,11 +3311,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     Handle_persistent_immediately (handle_persistent_canceled ~id ~metadata)
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent
-      (handle_persistent_subscribe
-         ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
-         ~metadata
-      )
+    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~options ~metadata)
   | LspToServer (NotificationMessage (DidOpenNotification params)) ->
     let { Lsp.DidOpen.textDocument } = params in
     let { Lsp.TextDocumentItem.text; uri; languageId = _; version = _ } = textDocument in
@@ -3339,10 +3330,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
 
       (* This mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent
-        (handle_persistent_did_open_notification
-           ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
-           ~metadata
-        )
+        (handle_persistent_did_open_notification ~options ~metadata)
     ) else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)
@@ -3366,10 +3354,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     if did_anything_change then
       (* This mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent
-        (handle_persistent_did_close_notification
-           ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
-           ~metadata
-        )
+        (handle_persistent_did_close_notification ~options ~metadata)
     else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)

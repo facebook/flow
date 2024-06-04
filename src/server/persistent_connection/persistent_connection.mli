@@ -25,6 +25,8 @@ module Client_config : sig
 
   val detailed_error_rendering : t -> client_toggle
 
+  val detailed_error_rendering_merge_with_options : flowconfig_enabled:bool -> t -> bool
+
   val rank_autoimports_by_usage : t -> client_toggle
 
   val suggest_autoimports : t -> bool
@@ -45,7 +47,7 @@ val remove_client_from_clients : t -> LspProt.client_id -> t
 (* Send updates to all clients that are subscribed *)
 val update_clients :
   clients:t ->
-  vscode_detailed_diagnostics:bool ->
+  flowconfig_vscode_detailed_diagnostics:bool ->
   errors_reason:LspProt.errors_reason ->
   calc_errors_and_warnings:
     (unit ->
@@ -65,7 +67,7 @@ val send_response : LspProt.response_with_metadata -> single_client -> unit
 
 val send_errors_if_subscribed :
   client:single_client ->
-  vscode_detailed_diagnostics:bool ->
+  flowconfig_vscode_detailed_diagnostics:bool ->
   errors_reason:LspProt.errors_reason ->
   errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.t ->
   warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
@@ -74,7 +76,7 @@ val send_errors_if_subscribed :
 (* getters/setters on single_client *)
 val subscribe_client :
   client:single_client ->
-  vscode_detailed_diagnostics:bool ->
+  flowconfig_vscode_detailed_diagnostics:bool ->
   current_errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.t ->
   current_warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
   unit

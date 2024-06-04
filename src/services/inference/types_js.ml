@@ -384,7 +384,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       if not (ConcreteLocPrintableErrorSet.is_empty errors && FilenameMap.is_empty warnings) then
         Persistent_connection.update_clients
           ~clients
-          ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
+          ~flowconfig_vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
           ~errors_reason:LspProt.Recheck_streaming
           ~calc_errors_and_warnings:(fun () -> (errors, warnings)
         )
@@ -957,7 +957,7 @@ end = struct
         if not (Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty errors) then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections
-            ~vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
+            ~flowconfig_vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
             ~errors_reason:LspProt.Recheck_streaming
             ~calc_errors_and_warnings:(fun () -> (errors, FilenameMap.empty)
           )
