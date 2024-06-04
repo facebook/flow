@@ -224,7 +224,7 @@ module Callee_finder = struct
         in
         this#find (fun () -> super#call annot expr) (fun () -> t) arguments callee_loc
 
-      method! new_ expr =
+      method! new_ annot expr =
         let { Flow_ast.Expression.New.callee = ((callee_loc, class_t), _); arguments; _ } = expr in
         match arguments with
         | Some arguments ->
@@ -243,8 +243,8 @@ module Callee_finder = struct
                 Flow_js.flow cx (instance, use_t)
             )
           in
-          this#find (fun () -> super#new_ expr) get_callee_type arguments callee_loc
-        | None -> super#new_ expr
+          this#find (fun () -> super#new_ annot expr) get_callee_type arguments callee_loc
+        | None -> super#new_ annot expr
 
       method! class_body body =
         let _ = super#class_body body in

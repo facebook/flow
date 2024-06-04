@@ -546,7 +546,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method meta_property : 'M Ast.Expression.MetaProperty.t -> 'N Ast.Expression.MetaProperty.t
 
-    method new_ : ('M, 'T) Ast.Expression.New.t -> ('N, 'U) Ast.Expression.New.t
+    method new_ : 'T -> ('M, 'T) Ast.Expression.New.t -> ('N, 'U) Ast.Expression.New.t
 
     method nullable_type : ('M, 'T) Ast.Type.Nullable.t -> ('N, 'U) Ast.Type.Nullable.t
 

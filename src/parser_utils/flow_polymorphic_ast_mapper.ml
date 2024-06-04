@@ -144,7 +144,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Logical x -> Logical (this#logical x)
         | Member x -> Member (this#member annot x)
         | MetaProperty x -> MetaProperty (this#meta_property x)
-        | New x -> New (this#new_ x)
+        | New x -> New (this#new_ annot x)
         | Object x -> Object (this#object_ x)
         | OptionalCall x -> OptionalCall (this#optional_call annot x)
         | OptionalMember x -> OptionalMember (this#optional_member annot x)
@@ -2095,7 +2095,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         comments = this#syntax_opt comments;
       }
 
-    method new_ (expr : ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
+    method new_ _annot (expr : ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
       let open Ast.Expression.New in
       let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in

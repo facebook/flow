@@ -478,7 +478,7 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
       | _ -> ());
       super#object_property prop
 
-    method! new_ expr =
+    method! new_ annot expr =
       let { Ast.Expression.New.callee = (_, callee); _ } = expr in
       begin
         match callee with
@@ -498,7 +498,7 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
             )
         | _ -> ()
       end;
-      super#new_ expr
+      super#new_ annot expr
 
     method! comment c =
       let (loc, _) = c in
