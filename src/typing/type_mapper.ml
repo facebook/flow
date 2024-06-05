@@ -177,8 +177,8 @@ class virtual ['a] t =
       | InternalT (EnforceUnionOptimized _) -> t
       | CustomFunT
           ( _r,
-            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactCreateElement
-            | DebugPrint | DebugThrow | DebugSleep )
+            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow
+            | DebugSleep )
           ) ->
         t
       | AnyT _ -> t

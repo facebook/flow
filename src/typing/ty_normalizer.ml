@@ -259,8 +259,6 @@ module Make (I : INPUT) : S = struct
 
   let builtin_t name = generic_talias (Ty.builtin_symbol name) None
 
-  let generic_builtin_t name ts = generic_talias (Ty.builtin_symbol name) (Some ts)
-
   let empty_type = Ty.Bot Ty.EmptyType
 
   let empty_matching_prop_t = Ty.Bot Ty.EmptyMatchingPropT
@@ -305,9 +303,6 @@ module Make (I : INPUT) : S = struct
           fun_effect = effect;
         }
     )
-
-  let mk_tparam ?bound ?(pol = Ty.Neutral) ?default name =
-    Ty.{ tp_name = name; tp_bound = bound; tp_polarity = pol; tp_default = default }
 
   let symbol_from_loc env sym_def_loc sym_name =
     let open File_key in
@@ -1415,46 +1410,6 @@ module Make (I : INPUT) : S = struct
         (* debugSleep: (seconds: number) => void *)
         | DebugSleep ->
           return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] (ReturnType Void))
-        (*
-         * 1. Component class:
-         *    <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
-         *
-         * 2. Stateless functional component
-         *    type SFC<T> = (config: T, context: any) => React$Element<T>
-         *    <T>(fn: SFC<T>, config: T, children?: any) => React$Element<T>
-         *)
-        | ReactCreateElement ->
-          return
-            Ty.(
-              let param_t = mk_tparam "T" in
-              let tparams = [param_t] in
-              let t = Bound (ALoc.none, "T") in
-              let params =
-                [
-                  ( Some "name",
-                    generic_builtin_t (Reason.OrdinaryName "ReactClass") [t],
-                    non_opt_param
-                  );
-                  (Some "config", t, non_opt_param);
-                  (Some "children", explicit_any, opt_param);
-                ]
-              in
-              let reactElement = generic_builtin_t (Reason.OrdinaryName "React$Element") [t] in
-              let f1 = mk_fun ~tparams ~params (ReturnType reactElement) in
-              let params =
-                [(Some "config", t, non_opt_param); (Some "context", explicit_any, non_opt_param)]
-              in
-              let sfc = mk_fun ~tparams ~params (ReturnType reactElement) in
-              let params =
-                [
-                  (Some "fn", sfc, non_opt_param);
-                  (Some "config", t, non_opt_param);
-                  (Some "children", explicit_any, opt_param);
-                ]
-              in
-              let f2 = mk_fun ~tparams ~params (ReturnType reactElement) in
-              mk_inter (f1, [f2])
-            )
       )
 
     and subst_name ~env loc t bound name =
@@ -1513,7 +1468,6 @@ module Make (I : INPUT) : S = struct
         | ObjectAssign -> return (builtin_t (Reason.OrdinaryName "Object$Assign"))
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
         | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
-        | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
         | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))

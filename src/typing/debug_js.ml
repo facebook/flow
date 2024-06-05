@@ -127,7 +127,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
-    | ReactCreateElement -> "ReactCreateElement"
     | DebugPrint -> "DebugPrint"
     | DebugThrow -> "DebugThrow"
     | DebugSleep -> "DebugSleep"

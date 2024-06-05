@@ -35,8 +35,8 @@ class ['a] t =
         acc
       | CustomFunT
           ( _,
-            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactCreateElement
-            | DebugPrint | DebugThrow | DebugSleep )
+            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow
+            | DebugSleep )
           ) ->
         acc
       | EvalT (t, defer_use_t, id) ->

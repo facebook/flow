@@ -927,9 +927,6 @@ and merge_annot env file = function
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (props, TypeDestructorT (use_op, reason, ReactConfigType default), id))
   | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
-  | ReactCreateElement loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.ReactCreateElement)
   | ReactElementProps (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Flow_js_utils
-open Reason
-open Type
-
 module type CUSTOM_FUN = sig
   val run :
     Context.t ->
@@ -27,69 +23,6 @@ end
 module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
   include Flow
 
-  let run cx trace ~use_op ~return_hint reason_op kind targs args spread_arg tout =
-    match kind with
-    | ReactCreateElement ->
-      (match args with
-      (* React.createElement(component) *)
-      | [component] ->
-        let config =
-          let r = replace_desc_reason RReactProps reason_op in
-          Obj_type.mk_with_proto cx r ~obj_kind:Exact ~frozen:true (ObjProtoT r)
-        in
-        rec_flow
-          cx
-          trace
-          ( component,
-            ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement
-                  {
-                    targs;
-                    config;
-                    children = ([], None);
-                    tout;
-                    return_hint;
-                    component;
-                    record_monomorphized_result = false;
-                    inferred_targs = None;
-                    specialized_component = None;
-                  }
-              )
-          )
-      (* React.createElement(component, config, ...children) *)
-      | component :: config :: children ->
-        rec_flow
-          cx
-          trace
-          ( component,
-            ReactKitT
-              ( use_op,
-                reason_op,
-                React.CreateElement
-                  {
-                    targs;
-                    config;
-                    children = (children, spread_arg);
-                    tout;
-                    return_hint;
-                    component;
-                    record_monomorphized_result = false;
-                    inferred_targs = None;
-                    specialized_component = None;
-                  }
-              )
-          )
-      (* React.createElement() *)
-      | _ ->
-        (* If we don't have the arguments we need, add an arity error. *)
-        add_output cx (Error_message.EReactElementFunArity (reason_op, "createElement", 1)))
-    | ObjectAssign
-    | ObjectGetPrototypeOf
-    | ObjectSetPrototypeOf
-    | DebugPrint
-    | DebugThrow
-    | DebugSleep ->
-      failwith "implemented elsewhere"
+  let run _cx _trace ~use_op:_ ~return_hint:_ _reason_op _kind _targs _args _spread_arg _tout =
+    failwith "implemented elsewhere"
 end

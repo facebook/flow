@@ -3321,7 +3321,7 @@ struct
         | ( CustomFunT
               ( _,
                 ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint
-                | DebugThrow | DebugSleep | ReactCreateElement )
+                | DebugThrow | DebugSleep )
               ),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
@@ -3408,53 +3408,6 @@ struct
           let t = extract_non_spread cx arg1 in
           rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
-        | ( CustomFunT (lreason, (ReactCreateElement as kind)),
-            CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
-          ) ->
-          let {
-            call_targs;
-            call_args_tlist = args;
-            call_tout = tout;
-            call_this_t = _;
-            call_strict_arity = _;
-            call_speculation_hint_state = _;
-            call_kind = _;
-            call_specialized_callee;
-          } =
-            calltype
-          in
-          CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
-          (match kind with
-          | ReactCreateElement -> ()
-          | _ ->
-            (* None of the other custom funs are polymorphic, so error here
-               instead of threading targs into spread resolution. *)
-            Base.Option.iter call_targs ~f:(fun _ ->
-                add_output
-                  cx
-                  Error_message.(
-                    ECallTypeArity
-                      {
-                        call_loc = loc_of_reason reason_op;
-                        is_new = false;
-                        reason_arity = lreason;
-                        expected_arity = 0;
-                      }
-                  )
-            ));
-          let make_op_nonlocal = function
-            | FunCall op -> FunCall { op with local = false }
-            | FunCallMethod op -> FunCallMethod { op with local = false }
-            | op -> op
-          in
-          let use_op = mod_root_of_use_op make_op_nonlocal use_op in
-          resolve_call_list
-            cx
-            ~trace
-            ~use_op
-            reason_op
-            args
-            (ResolveSpreadsToCustomFunCall (mk_id (), kind, call_targs, OpenT tout, return_hint))
         | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
             MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
           ) ->
@@ -6945,7 +6898,6 @@ struct
     | UseT (_, CustomFunT (_, ObjectAssign))
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
-    | UseT (_, CustomFunT (_, ReactCreateElement))
     | UseT (_, CustomFunT (_, DebugPrint))
     | UseT (_, CustomFunT (_, DebugThrow))
     | UseT (_, CustomFunT (_, DebugSleep))
@@ -7039,7 +6991,6 @@ struct
     | CustomFunT (_, ObjectAssign)
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)
-    | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
     | DefT _

@@ -619,7 +619,6 @@ type ('loc, 'a) annot =
       default: 'a;
     }
   | ReactCreateClass of 'loc
-  | ReactCreateElement of 'loc
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a
   | ReactElementRef of 'loc * 'a
