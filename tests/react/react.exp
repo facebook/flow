@@ -1535,8 +1535,8 @@ References:
    useCallback_hook.js:4:3
      4|   React.useCallback(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:865:33
-   865|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   <BUILTINS>/react.js:881:33
+   881|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1611,13 +1611,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useContext_hook.js:4:9
-     4|   React.useMutationEffect(); // Error: function requires another argument.
-                ^^^^^^^^^^^^^^^^^
+      4|   React.useMutationEffect(); // Error: function requires another argument.
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:19:18
@@ -1680,8 +1680,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:790:28
-   790|     declare hook useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:806:28
+   806|     declare hook useContext<T>(context: React$Context<T>): T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1694,8 +1694,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:790:28
-   790|     declare hook useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:806:28
+   806|     declare hook useContext<T>(context: React$Context<T>): T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1721,13 +1721,13 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useDebugValue` because property `useDebugValue` is missing in namespace React [1]. [prop-missing]
 
    useDebugValue_hook.js:3:30
-     3| const undefinedValue = React.useDebugValue(123);
-                                     ^^^^^^^^^^^^^
+      3| const undefinedValue = React.useDebugValue(123);
+                                      ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- useEffect_hook.js:4:9
@@ -1739,12 +1739,12 @@ Cannot call `React.useEffect` because function [1] requires another argument. [i
                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:841:27
+   <BUILTINS>/react.js:857:27
                                   v
-   841|     declare hook useEffect(
-   842|       create: () => MaybeCleanUpFn,
-   843|       inputs?: ?$ReadOnlyArray<mixed>,
-   844|     ): void;
+   857|     declare hook useEffect(
+   858|       create: () => MaybeCleanUpFn,
+   859|       inputs?: ?$ReadOnlyArray<mixed>,
+   860|     ): void;
             ------^ [1]
 
 
@@ -1758,8 +1758,8 @@ Cannot call `React.useEffect` with `1` bound to `create` because number [1] is i
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:842:15
-   842|       create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:858:15
+   858|       create: () => MaybeCleanUpFn,
                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1773,8 +1773,8 @@ type [2]. [incompatible-call]
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:843:17
-   843|       inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:859:17
+   859|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1829,13 +1829,13 @@ Cannot call `React.useImperativeHandle` because function [1] requires another ar
                 ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:887:37
+   <BUILTINS>/react.js:903:37
                                             v---
-   887|     declare hook useImperativeHandle<T>(
-   888|       ref: React$RefSetter<T> | null | void,
-   889|       create: () => T,
-   890|       inputs: ?$ReadOnlyArray<mixed>,
-   891|     ): void;
+   903|     declare hook useImperativeHandle<T>(
+   904|       ref: React$RefSetter<T> | null | void,
+   905|       create: () => T,
+   906|       inputs: ?$ReadOnlyArray<mixed>,
+   907|     ): void;
             ------^ [1]
 
 
@@ -1899,12 +1899,12 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
                 ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:854:33
+   <BUILTINS>/react.js:870:33
                                         v
-   854|     declare hook useLayoutEffect(
-   855|       create: () => MaybeCleanUpFn,
-   856|       inputs?: ?$ReadOnlyArray<mixed>,
-   857|     ): void;
+   870|     declare hook useLayoutEffect(
+   871|       create: () => MaybeCleanUpFn,
+   872|       inputs?: ?$ReadOnlyArray<mixed>,
+   873|     ): void;
             ------^ [1]
 
 
@@ -1918,8 +1918,8 @@ type [2]. [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/react.js:855:15
-   855|       create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:871:15
+   871|       create: () => MaybeCleanUpFn,
                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1933,8 +1933,8 @@ type [2]. [incompatible-call]
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:856:17
-   856|       inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:872:17
+   872|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1990,12 +1990,12 @@ Cannot call `React.useMemo` because function [1] requires another argument. [inc
                 ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:876:25
+   <BUILTINS>/react.js:892:25
                                 v---
-   876|     declare hook useMemo<T>(
-   877|       create: () => T,
-   878|       inputs: ?$ReadOnlyArray<mixed>,
-   879|     ): T;
+   892|     declare hook useMemo<T>(
+   893|       create: () => T,
+   894|       inputs: ?$ReadOnlyArray<mixed>,
+   895|     ): T;
             ---^ [1]
 
 
@@ -2022,13 +2022,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:4:9
-     4|   React.useMutationEffect(); // Error: function requires another argument.
-                ^^^^^^^^^^^^^^^^^
+      4|   React.useMutationEffect(); // Error: function requires another argument.
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:9:9
@@ -2037,13 +2037,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:9:9
-     9|   React.useMutationEffect(() => {});
-                ^^^^^^^^^^^^^^^^^
+      9|   React.useMutationEffect(() => {});
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:10:9
@@ -2052,13 +2052,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:10:9
-    10|   React.useMutationEffect(() => {}, []);
-                ^^^^^^^^^^^^^^^^^
+     10|   React.useMutationEffect(() => {}, []);
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:11:9
@@ -2067,13 +2067,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:11:9
-    11|   React.useMutationEffect(() => {}, [1, 2, 3]);
-                ^^^^^^^^^^^^^^^^^
+     11|   React.useMutationEffect(() => {}, [1, 2, 3]);
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:14:9
@@ -2082,13 +2082,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:14:9
-    14|   React.useMutationEffect(() => () => {});
-                ^^^^^^^^^^^^^^^^^
+     14|   React.useMutationEffect(() => () => {});
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:15:9
@@ -2097,13 +2097,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:15:9
-    15|   React.useMutationEffect(() => () => {}, []);
-                ^^^^^^^^^^^^^^^^^
+     15|   React.useMutationEffect(() => () => {}, []);
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:16:9
@@ -2112,13 +2112,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:16:9
-    16|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
-                ^^^^^^^^^^^^^^^^^
+     16|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:20:9
@@ -2127,13 +2127,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:20:9
-    20|   React.useMutationEffect(1); // Error: number is incompatible with function type
-                ^^^^^^^^^^^^^^^^^
+     20|   React.useMutationEffect(1); // Error: number is incompatible with function type
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:21:9
@@ -2142,13 +2142,13 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
 [prop-missing]
 
    useMutationEffect_hook.js:21:9
-    21|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
-                ^^^^^^^^^^^^^^^^^
+     21|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:4:9
@@ -2163,31 +2163,31 @@ Cannot call `React.useReducer` because: [incompatible-call]
                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:810:28
+   <BUILTINS>/react.js:826:28
                                    v------
-   810|     declare hook useReducer<S, A>(
-   811|       reducer: (S, A) => S,
-   812|       initialState: S,
-   813|     ): [S, Dispatch<A>];
+   826|     declare hook useReducer<S, A>(
+   827|       reducer: (S, A) => S,
+   828|       initialState: S,
+   829|     ): [S, Dispatch<A>];
             ------------------^ [1]
    useReducer_hook.js:4:3
      4|   React.useReducer(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:815:28
+   <BUILTINS>/react.js:831:28
                                    v------
-   815|     declare hook useReducer<S, A>(
-   816|       reducer: (S, A) => S,
-   817|       initialState: S,
-   818|       init: void,
-   819|     ): [S, Dispatch<A>];
+   831|     declare hook useReducer<S, A>(
+   832|       reducer: (S, A) => S,
+   833|       initialState: S,
+   834|       init: void,
+   835|     ): [S, Dispatch<A>];
             ------------------^ [3]
-   <BUILTINS>/react.js:821:28
+   <BUILTINS>/react.js:837:28
                                    v---------
-   821|     declare hook useReducer<S, A, I>(
-   822|       reducer: (S, A) => S,
-   823|       initialArg: I,
-   824|       init: (I) => S,
-   825|     ): [S, Dispatch<A>];
+   837|     declare hook useReducer<S, A, I>(
+   838|       reducer: (S, A) => S,
+   839|       initialArg: I,
+   840|       init: (I) => S,
+   841|     ): [S, Dispatch<A>];
             ------------------^ [4]
 
 
@@ -2391,16 +2391,16 @@ Cannot call `setCount` with `true` bound to the first parameter because: [incomp
  - Or boolean [1] is incompatible with function type [3].
 
    useState_hook.js:11:10
-    11| setCount(true); // Error: boolean is incompatible with number
-                 ^^^^ [1]
+     11| setCount(true); // Error: boolean is incompatible with number
+                  ^^^^ [1]
 
 References:
    useState_hook.js:5:42
-     5| const [count, setCount] = React.useState<number>(1);
-                                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:982:39
-   982|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
-                                              ^^^^^^ [3]
+      5| const [count, setCount] = React.useState<number>(1);
+                                                  ^^^^^^ [2]
+   <BUILTINS>/react.js:1036:39
+   1036|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+                                               ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ use_hook.js:19:21

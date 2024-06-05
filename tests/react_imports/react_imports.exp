@@ -99,13 +99,13 @@ Error --------------------------------------------------------------------------
 Cannot get `React.Missing` because property `Missing` is missing in namespace React [1]. [prop-missing]
 
    es-default.js:7:14
-     7| (null: React.Missing); // Error: Not in default export.
-                     ^^^^^^^
+      7| (null: React.Missing); // Error: Not in default export.
+                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:990:26
-   990|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1044:26
+   1044|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
