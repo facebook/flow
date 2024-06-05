@@ -437,7 +437,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ResolveSpreadsToArrayLiteral _
       | ResolveSpreadsToArray _
       | ResolveSpreadsToMultiflowCallFull _
-      | ResolveSpreadsToCustomFunCall _
       | ResolveSpreadsToMultiflowPartial _
       | ResolveSpreadsToCallT _ ->
         UpperNonT u)

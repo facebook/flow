@@ -217,7 +217,6 @@ module M__flow
     (FlowJs : Flow_common.S)
     (ReactJs : React_kit.REACT)
     (CheckPolarity : Flow_common.CHECK_POLARITY)
-    (CustomFunKit : Custom_fun_kit.CUSTOM_FUN)
     (ObjectKit : Object_kit.OBJECT)
     (SpeculationKit : Speculation_kit.OUTPUT)
     (SubtypingKit : Subtyping_kit.OUTPUT) =
@@ -2215,7 +2214,6 @@ struct
                 (* Otherwise we're spreading values *)
                 | ResolveSpreadsToArray _
                 | ResolveSpreadsToArrayLiteral _
-                | ResolveSpreadsToCustomFunCall _
                 | ResolveSpreadsToMultiflowCallFull _
                 | ResolveSpreadsToMultiflowPartial _ ->
                   (* Babel's "loose mode" array spread transform deviates from
@@ -2332,7 +2330,6 @@ struct
               )
             | ResolveSpreadsToMultiflowCallFull (id, _)
             | ResolveSpreadsToMultiflowSubtypeFull (id, _)
-            | ResolveSpreadsToCustomFunCall (id, _, _, _, _)
             | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
               let reason_elemt = reason_of_t elemt in
               let pos = Base.List.length rrt_resolved in
@@ -10319,19 +10316,6 @@ struct
         ~rest_param
         (args, params)
     in
-    (* Similar to finish_multiflow_full but for custom functions. *)
-    let finish_custom_fun_call ~return_hint cx ?trace ~use_op ~reason_op kind targs tout resolved =
-      (* Multiflows always come out of a flow *)
-      let trace =
-        match trace with
-        | Some trace -> trace
-        | None -> failwith "All multiflows show have a trace"
-      in
-      let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
-      let spread_arg = Base.Option.map ~f:fst spread_arg in
-      let args = Base.List.map ~f:fst args in
-      CustomFunKit.run ~return_hint cx trace ~use_op reason_op kind targs args spread_arg tout
-    in
     (* This is used for things like Function.prototype.apply, whose second arg is
      * basically a spread argument that we'd like to resolve *)
     let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
@@ -10401,8 +10385,6 @@ struct
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:true ft resolved
       | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:false ft resolved
-      | ResolveSpreadsToCustomFunCall (_, kind, targs, tout, return_hint) ->
-        finish_custom_fun_call ~return_hint cx ?trace ~use_op ~reason_op kind targs tout resolved
       | ResolveSpreadsToCallT (funcalltype, tin) ->
         finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
 
@@ -10951,12 +10933,10 @@ end
 module rec FlowJs : Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
   module CheckPolarity = Check_polarity.Kit (FlowJs)
-  module CustomFun = Custom_fun_kit.Kit (FlowJs)
   module ObjectKit = Object_kit.Kit (FlowJs)
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
-  include
-    M__flow (FlowJs) (React) (CheckPolarity) (CustomFun) (ObjectKit) (SpeculationKit) (SubtypingKit)
+  include M__flow (FlowJs) (React) (CheckPolarity) (ObjectKit) (SpeculationKit) (SubtypingKit)
 
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
 

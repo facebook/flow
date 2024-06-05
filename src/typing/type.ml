@@ -1836,8 +1836,6 @@ module rec TypeTerm : sig
      * function with those arguments *)
     | ResolveSpreadsToMultiflowCallFull of int * funtype
     | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
-    (* We can also call custom functions. *)
-    | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * targ list option * t * lazy_hint_t
     (* Once we've finished resolving spreads for a function's arguments,
      * partially apply the arguments to the function and return the resulting
      * function (basically what func.bind(that, ...args) does) *)
@@ -4270,7 +4268,6 @@ let string_of_use_ctor = function
         | ResolveSpreadsToArrayLiteral { id; _ } -> spf "ResolveSpreadsToArrayLiteral (%d)" id
         | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
         | ResolveSpreadsToMultiflowSubtypeFull _ -> "ResolveSpreadsToMultiflowSubtypeFull"
-        | ResolveSpreadsToCustomFunCall _ -> "ResolveSpreadsToCustomFunCall"
         | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
         | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
       end

@@ -78,7 +78,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     | ResolveSpreadsToMultiflowCallFull _ -> _TODO
     | ResolveSpreadsToMultiflowPartial (_, _, _, t) -> resolve t
     | ResolveSpreadsToMultiflowSubtypeFull _ -> _TODO
-    | ResolveSpreadsToCustomFunCall (_, _, _, t, _) -> resolve t
     | ResolveSpreadsToCallT ({ call_tout; _ }, _) -> resolve_tvar call_tout
   in
   let resolve_cont cont =
