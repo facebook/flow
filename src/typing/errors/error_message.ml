@@ -2847,7 +2847,9 @@ let error_code_of_use_op use_op ~default =
     | FunReturnStatement _
     | FunImplicitReturn _ ->
       Some IncompatibleReturn
-    | TypeGuardIncompatibility _ -> Some IncompatibleTypeGuard
+    | TypeGuardIncompatibility _
+    | PositiveTypeGuardConsistency _ ->
+      Some IncompatibleTypeGuard
     | _ -> None
   in
   let code_of_frame acc frame =
@@ -2968,10 +2970,10 @@ let error_code_of_message err : error_code option =
   | ETypeGuardImpliesMismatch _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionInvalidWrites _
-  | ENegativeTypeGuardConsistency _
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _ ->
     Some FunctionPredicate
+  | ENegativeTypeGuardConsistency _ -> Some IncompatibleTypeGuard
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
   | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
   | EImportValueAsType (_, _) -> Some ImportValueAsType

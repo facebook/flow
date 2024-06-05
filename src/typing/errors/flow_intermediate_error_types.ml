@@ -188,6 +188,12 @@ type 'loc explanation =
   | ExplanationReactHookReturnDeepReadOnly of 'loc
   | ExplanationRenderTypeRequirement
   | ExplanationTypeGuardCompatibility
+  | ExplanationTypeGuardPositiveConsistency of {
+      return: 'loc virtual_reason;
+      param: 'loc virtual_reason;
+      guard_type: 'loc virtual_reason;
+      is_return_false_statement: bool;
+    }
 
 type 'loc frame =
   | FrameAnonymous
@@ -200,10 +206,6 @@ type 'loc frame =
   | FrameFunThisParam
   | FrameIndexerProperty
   | FrameIndexerPropertyKey
-  | FrameInferredTypeForTypeGuardParameter of {
-      param: 'loc virtual_reason;
-      is_return_false_statement: bool;
-    }
   | FrameProperty of name Nel.t
   | FrameTupleIndex of int
   | FrameTypeArgument of 'loc virtual_reason
@@ -302,6 +304,7 @@ type 'loc root_message =
       param_name: string;
     }
   | RootCannotYield of 'loc virtual_reason_desc
+  | RootPositiveTypeGuardConsistency
 
 type 'loc message =
   | MessagePlainTextReservedForInternalErrorOnly of string

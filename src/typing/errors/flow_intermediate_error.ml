@@ -209,9 +209,8 @@ let flip_frame = function
   | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | TupleAssignment _
     | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | OpaqueTypeBound _
     | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
-    | MappedTypeKeyCompatibility _ | TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter _ | RendersCompatibility | ReactDeepReadOnly _ ) as use_op
-    ->
+    | MappedTypeKeyCompatibility _ | TypePredicateCompatibility | RendersCompatibility
+    | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -586,6 +585,25 @@ let rec make_intermediate_error :
          * our error messages can compose in a way that would miss the special case we'd rather
          * output a bad error than crash. *)
         unknown_root loc frames
+      | Op
+          (PositiveTypeGuardConsistency
+            {
+              reason;
+              return_reason = return;
+              param_reason = param;
+              guard_type_reason = guard_type;
+              is_return_false_statement;
+            }
+            ) ->
+        let (all_frames, explanations) = frames in
+        let frames =
+          ( all_frames,
+            ExplanationTypeGuardPositiveConsistency
+              { return; param; guard_type; is_return_false_statement }
+            :: explanations
+          )
+        in
+        root loc frames reason RootPositiveTypeGuardConsistency
       | Frame (ReactDeepReadOnly (props_loc, Props), use_op) ->
         explanation loc frames use_op (ExplanationReactComponentPropsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (props_loc, HookArg), use_op) ->
@@ -671,14 +689,6 @@ let rec make_intermediate_error :
           (FrameTypeParameterBound (Subst_name.string_of_subst_name name))
       | Frame (TypePredicateCompatibility, use_op) ->
         unwrap_frame_without_loc loc frames use_op FrameTypePredicate
-      | Frame
-          (InferredTypeForTypeGuardParameter { reason = param; is_return_false_statement }, use_op)
-        ->
-        unwrap_frame_without_loc
-          loc
-          frames
-          use_op
-          (FrameInferredTypeForTypeGuardParameter { param; is_return_false_statement })
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
       | Frame (OpaqueTypeBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
       | Frame (FunMissingArg _, use_op)
@@ -1109,6 +1119,28 @@ let to_printable_error :
       ]
     | ExplanationTypeGuardCompatibility ->
       [text "A user defined type guard needs to be compatible with its parameter's type"]
+    | ExplanationTypeGuardPositiveConsistency
+        { return; param; guard_type; is_return_false_statement } ->
+      [
+        text "The type of ";
+        ref param;
+        text " refined with the predicate encoded in return expression ";
+        ref return;
+        text " needs to be compatible with the guard type ";
+        ref guard_type;
+        text ".";
+        text " See 1. in ";
+        text
+          "https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions";
+      ]
+      @
+      if is_return_false_statement then
+        [
+          text ". Consider replacing the body of this predicate ";
+          text "function with a single conditional expression";
+        ]
+      else
+        []
     | ExplanationConstrainedAssign { name; declaration; providers } ->
       let assignments =
         match providers with
@@ -1184,22 +1216,6 @@ let to_printable_error :
     | FrameFunThisParam -> [text "the "; code "this"; text " parameter"]
     | FrameIndexerProperty -> [text "the indexer property"]
     | FrameIndexerPropertyKey -> [text "the indexer property's key"]
-    | FrameInferredTypeForTypeGuardParameter { param; is_return_false_statement } ->
-      [
-        text "the type inferred for ";
-        ref param;
-        text ". See 1. in ";
-        text
-          "https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions";
-      ]
-      @
-      if is_return_false_statement then
-        [
-          text ". Consider replacing the body of this predicate ";
-          text "function with a single conditional expression";
-        ]
-      else
-        []
     | FrameProperty (prop, props) ->
       [
         text "property ";
@@ -1290,6 +1306,7 @@ let to_printable_error :
         ref guard_type;
         text (spf " as type prediate for parameter `%s`" param_name);
       ]
+    | RootPositiveTypeGuardConsistency -> [text "Inconsistent type guard declaration"]
     | RootCannotYield value -> [text "Cannot yield "; desc value]
   in
   let msg_to_friendly_msgs = function

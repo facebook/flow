@@ -7651,11 +7651,17 @@ module Make
             with
             | Ok (t, neg_pred) ->
               (* Positive *)
+              let guard_type_reason = reason_of_t type_guard in
               let use_op =
-                Frame
-                  ( InferredTypeForTypeGuardParameter
-                      { reason = tg_reason; is_return_false_statement },
-                    Op (FunReturnStatement { value = return_reason })
+                Op
+                  (PositiveTypeGuardConsistency
+                     {
+                       reason;
+                       param_reason;
+                       guard_type_reason;
+                       return_reason;
+                       is_return_false_statement;
+                     }
                   )
               in
               Flow.flow cx (t, UseT (use_op, type_guard));
@@ -7678,7 +7684,7 @@ module Make
                     cx
                     Error_message.(
                       ENegativeTypeGuardConsistency
-                        { reason; return_reason; type_reason = TypeUtil.reason_of_t type_guard }
+                        { reason; return_reason; type_reason = reason_of_t type_guard }
                     )
             | Error write_locs ->
               Flow_js_utils.add_output
@@ -7895,7 +7901,7 @@ module Make
           | (Ast.Function.ReturnAnnot.Missing _, Func_class_sig_types.Func.Ctor) -> ()
           | (_, Func_class_sig_types.Func.Ctor) ->
             let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-            let use_op = Op (FunReturnStatement { value = TypeUtil.reason_of_t return_t }) in
+            let use_op = Op (FunReturnStatement { value = reason_of_t return_t }) in
             (* Check delayed so that we don't have to force return_t which might contain a currently
              * unresolved OpenT with implicit this tparam. *)
             Context.add_post_inference_subtyping_check

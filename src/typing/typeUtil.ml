@@ -463,6 +463,16 @@ let rec mod_loc_of_virtual_use_op f =
       RenderTypeInstantiation { render_type = mod_reason render_type }
     | ComponentRestParamCompatibility { rest_param } ->
       ComponentRestParamCompatibility { rest_param = mod_reason rest_param }
+    | PositiveTypeGuardConsistency
+        { reason; return_reason; param_reason; guard_type_reason; is_return_false_statement } ->
+      PositiveTypeGuardConsistency
+        {
+          reason = mod_reason reason;
+          return_reason = mod_reason return_reason;
+          param_reason = mod_reason param_reason;
+          guard_type_reason = mod_reason guard_type_reason;
+          is_return_false_statement;
+        }
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function
@@ -513,8 +523,6 @@ let rec mod_loc_of_virtual_use_op f =
     | OpaqueTypeBound { opaque_t_reason } ->
       OpaqueTypeBound { opaque_t_reason = mod_reason opaque_t_reason }
     | TypePredicateCompatibility -> TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter { reason; is_return_false_statement } ->
-      InferredTypeForTypeGuardParameter { reason = mod_reason reason; is_return_false_statement }
     | RendersCompatibility -> RendersCompatibility
     | UnifyFlip -> UnifyFlip
     | EnumRepresentationTypeCompatibility { lower; upper } ->

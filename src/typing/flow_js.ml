@@ -8956,6 +8956,7 @@ struct
               | TypeGuardIncompatibility _
               | RenderTypeInstantiation _
               | ComponentRestParamCompatibility _
+              | PositiveTypeGuardConsistency _
               | UnknownUse ->
                 false)
             | UnifyFlip when not should_replace ->

@@ -446,6 +446,13 @@ module rec TypeTerm : sig
       }
     | RenderTypeInstantiation of { render_type: 'loc virtual_reason }
     | ComponentRestParamCompatibility of { rest_param: 'loc virtual_reason }
+    | PositiveTypeGuardConsistency of {
+        reason: 'loc virtual_reason;
+        return_reason: 'loc virtual_reason;
+        param_reason: 'loc virtual_reason;
+        guard_type_reason: 'loc virtual_reason;
+        is_return_false_statement: bool;
+      }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -527,10 +534,6 @@ module rec TypeTerm : sig
     | TypeParamBound of { name: Subst_name.t }
     | OpaqueTypeBound of { opaque_t_reason: 'loc virtual_reason }
     | TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter of {
-        reason: 'loc virtual_reason;
-        is_return_false_statement: bool;
-      }
     | RendersCompatibility
     | UnifyFlip
     | EnumRepresentationTypeCompatibility of {
@@ -4126,6 +4129,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"
   | RenderTypeInstantiation _ -> "RenderTypeInstantiation"
   | ComponentRestParamCompatibility _ -> "ComponentRestParamCompatibility"
+  | PositiveTypeGuardConsistency _ -> "PositiveTypeGuardConsistency"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function
@@ -4156,7 +4160,6 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | UnifyFlip -> "UnifyFlip"
   | TypePredicateCompatibility -> "TypePredicateCompatibility"
   | RendersCompatibility -> "RendersCompatibility"
-  | InferredTypeForTypeGuardParameter _ -> "InferredTypeForTypeGuardParameter"
   | EnumRepresentationTypeCompatibility _ -> "EnumRepresentationTypeCompatibility"
 
 let string_of_use_op (type a) : a virtual_use_op -> string = function
