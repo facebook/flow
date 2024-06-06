@@ -9,7 +9,7 @@ const Any2 = require("any");
 
 import * as Any3 from "any";
 (Any3: number); // error
-(Any3: {[key: string]: any}); // ok
+(Any3: {+[key: string]: any}); // ok
 (Any3.foo: string); (Any3.foo: empty); // ok: Any3.foo is any
 
 import {x as obj_x, y as obj_y} from "object";
@@ -22,7 +22,7 @@ const Any5 = require("object");
 
 import * as Any6 from "object";
 (Any6: number); // error
-(Any6: {[key: string]: any}); // ok
+(Any6: {+[key: string]: any}); // ok
 (Any6.foo: string); (Any3.foo: empty); // ok: Any6.foo is any
 
 import {x as str_x, y as str_y} from "string"; // error

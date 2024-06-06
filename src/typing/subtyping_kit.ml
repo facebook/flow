@@ -180,7 +180,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     in
     (* if inflowing type is literal (thus guaranteed to be
        unaliased), propertywise subtyping is sound *)
-    let lit = is_literal_object_reason lreason || lflags.frozen in
+    let lit = is_literal_object_reason lreason in
     (* If both are dictionaries, ensure the keys and values are compatible
        with each other. *)
     let ldict = Obj_type.get_dict_opt lflags.obj_kind in

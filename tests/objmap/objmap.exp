@@ -760,16 +760,16 @@ Cannot cast `map(...)` to object type because string [1] is incompatible with nu
 [incompatible-cast]
 
    lti_implicit_instantiation.js:9:12
-   9| const o1 = map(foo) as {bar: number}; // error
+   9| const o1 = map(foo) as {+bar: number}; // error
                  ^^^^^^^^
 
 References:
    lti_implicit_instantiation.js:8:49
    8| const foo = Object.freeze({bar: {log: (f: () => string) => {}}})
                                                       ^^^^^^ [1]
-   lti_implicit_instantiation.js:9:30
-   9| const o1 = map(foo) as {bar: number}; // error
-                                   ^^^^^^ [2]
+   lti_implicit_instantiation.js:9:31
+   9| const o1 = map(foo) as {+bar: number}; // error
+                                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ main.js:7:2
