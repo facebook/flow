@@ -379,12 +379,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              )
           )
     in
-    let config_check use_op config children_args =
+    let config_check use_op jsx_props children_args =
       (* Create the optional children input type from the children arguments. *)
-      let children = coerce_children_args children_args in
+      let jsx_children = coerce_children_args children_args in
 
       (* Create a type variable for our props. *)
-      let (props, defaults) =
+      let (component_props, component_default_props) =
         match drop_generic l with
         | DefT (_, ReactAbstractComponentT { config; _ }) -> (config, None)
         | _ ->
@@ -403,9 +403,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        *)
       Object.(
         Object.ReactConfig.(
-          (* We need to treat config input as a literal here so we ensure it has the
+          (* We need to treat jsx props input as a literal here so we ensure it has the
            * RReactProps reason description. *)
-          let reason = replace_desc_new_reason RReactProps (reason_of_t config) in
+          let reason = replace_desc_new_reason RReactProps (reason_of_t jsx_props) in
           (* Create the final config object using the ReactConfig object kit tool
            * and flow it to our type for props.
            *
@@ -417,17 +417,22 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           rec_flow
             cx
             trace
-            ( config,
+            ( jsx_props,
               ObjKitT
-                (use_op, reason, Resolve Next, ReactConfig (Config { defaults; children }), props)
+                ( use_op,
+                  reason,
+                  Resolve Next,
+                  ReactConfig (Config { component_default_props; jsx_children }),
+                  component_props
+                )
             )
         )
       )
     in
     let create_element
         component
-        config
-        children_args
+        jsx_props
+        jsx_children_args
         record_monomorphized_result
         inferred_targs
         specialized_component
@@ -445,22 +450,22 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         unwrap use_op
       in
-      config_check use_op config children_args;
+      config_check use_op jsx_props jsx_children_args;
 
-      (* If our config is void or null then we want to replace it with an
+      (* If our jsx props is void or null then we want to replace it with an
        * empty object.
        *
        * NOTE: We only need the normalized config to look up the key
        * and ref.
        *)
-      let normalized_config =
-        Tvar.mk_where cx (reason_of_t config) (fun normalized_config ->
+      let normalized_jsx_props =
+        Tvar.mk_where cx (reason_of_t jsx_props) (fun normalized_config ->
             Object.(
-              let reason = reason_of_t config in
+              let reason = reason_of_t jsx_props in
               rec_flow
                 cx
                 trace
-                (config, ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
+                (jsx_props, ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
             )
         )
       in
@@ -473,7 +478,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        * in existing React code. *)
       let () =
         let reason_key =
-          replace_desc_reason (RCustom "React key") (reason_of_t normalized_config)
+          replace_desc_reason (RCustom "React key") (reason_of_t normalized_jsx_props)
         in
         (* Create the key type. *)
         let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
@@ -484,7 +489,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let use_op =
           Frame
             ( PropertyCompatibility
-                { prop = Some prop_name; lower = reason_of_t normalized_config; upper = reason_key },
+                {
+                  prop = Some prop_name;
+                  lower = reason_of_t normalized_jsx_props;
+                  upper = reason_key;
+                },
               use_op
             )
         in
@@ -494,7 +503,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow
           cx
           trace
-          ( normalized_config,
+          ( normalized_jsx_props,
             LookupT
               {
                 reason = reason_key;
@@ -517,7 +526,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        * in existing React code. *)
       let () =
         let reason_ref =
-          replace_desc_reason (RCustom "React ref") (reason_of_t normalized_config)
+          replace_desc_reason (RCustom "React ref") (reason_of_t normalized_jsx_props)
         in
         (* Create the ref type. *)
         let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
@@ -528,7 +537,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let use_op =
           Frame
             ( PropertyCompatibility
-                { prop = Some prop_name; lower = reason_of_t normalized_config; upper = reason_ref },
+                {
+                  prop = Some prop_name;
+                  lower = reason_of_t normalized_jsx_props;
+                  upper = reason_ref;
+                },
               use_op
             )
         in
@@ -538,7 +551,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow
           cx
           trace
-          ( normalized_config,
+          ( normalized_jsx_props,
             LookupT
               {
                 reason = reason_ref;
@@ -686,8 +699,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | CreateElement
         {
           component;
-          config;
-          children;
+          jsx_props;
+          jsx_children;
           tout;
           targs = _;
           return_hint = _;
@@ -697,8 +710,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         } ->
       create_element
         component
-        config
-        children
+        jsx_props
+        jsx_children
         record_monomorphized_result
         inferred_targs
         specialized_component

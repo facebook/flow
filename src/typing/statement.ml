@@ -6449,7 +6449,8 @@ module Make
       )
 
   and mk_react_jsx
-      cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt props children =
+      cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt jsx_props jsx_children
+      =
     let reason_jsx = mk_reason (RFunction RNormal) loc_element in
     let reason_c = reason_of_t component_t in
     let use_op =
@@ -6466,8 +6467,8 @@ module Make
             React.CreateElement
               {
                 component = component_t;
-                config = props;
-                children;
+                jsx_props;
+                jsx_children;
                 tout;
                 targs = targs_opt;
                 return_hint;

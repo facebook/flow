@@ -2828,8 +2828,8 @@ struct
                 React.CreateElement
                   {
                     component;
-                    config;
-                    children;
+                    jsx_props;
+                    jsx_children;
                     return_hint;
                     targs;
                     tout;
@@ -2843,7 +2843,7 @@ struct
           let uparts = (use_op, reason_op, targs, return_hint) in
           let check =
             let poly_t = (tparams_loc, ids, t) in
-            lazy (IICheck.of_jsx l poly_t use_op reason_op ~component ~config ~targs children)
+            lazy (IICheck.of_jsx l poly_t use_op reason_op ~component ~jsx_props ~targs jsx_children)
           in
           let (t_, inferred_targs) =
             instantiate_poly_call_or_new_with_soln cx trace lparts uparts check
@@ -2855,8 +2855,8 @@ struct
                 React.CreateElement
                   {
                     component;
-                    config;
-                    children;
+                    jsx_props;
+                    jsx_children;
                     return_hint;
                     targs = None;
                     tout;

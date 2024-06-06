@@ -502,14 +502,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           match state with
           (* If we have some type for default props then we need to wait for that
            * type to resolve before finishing our props type. *)
-          | Config { defaults = Some t; children } ->
+          | Config { component_default_props = Some t; jsx_children } ->
             let tool = Resolve Next in
-            let state = Defaults { config = x; children } in
+            let state = Defaults { config = x; children = jsx_children } in
             rec_flow cx trace (t, ObjKitT (use_op, reason, tool, ReactConfig state, tout))
           (* If we have no default props then finish our object and flow it to our
            * tout type. *)
-          | Config { defaults = None; children } ->
-            let ts = Nel.map (fun x -> finish cx trace reason x None children) x in
+          | Config { component_default_props = None; jsx_children } ->
+            let ts = Nel.map (fun x -> finish cx trace reason x None jsx_children) x in
             let t =
               match ts with
               | (t, []) -> t

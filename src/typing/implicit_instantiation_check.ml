@@ -14,9 +14,9 @@ type operation =
   | Constructor of Type.targ list option * Type.call_arg list
   | Jsx of {
       component: Type.t;
-      config: Type.t;
+      jsx_props: Type.t;
       targs: Type.targ list option;
-      children: Type.t list;
+      jsx_children: Type.t list;
     }
 
 type t = {
@@ -31,5 +31,9 @@ let of_call lhs poly_t use_op reason funcalltype =
 let of_ctor lhs poly_t use_op reason_op targs args =
   { lhs; poly_t; operation = (use_op, reason_op, Constructor (targs, args)) }
 
-let of_jsx lhs poly_t use_op reason_op ~component ~config ~targs children =
-  { lhs; poly_t; operation = (use_op, reason_op, Jsx { component; targs; config; children }) }
+let of_jsx lhs poly_t use_op reason_op ~component ~jsx_props ~targs jsx_children =
+  {
+    lhs;
+    poly_t;
+    operation = (use_op, reason_op, Jsx { component; targs; jsx_props; jsx_children });
+  }

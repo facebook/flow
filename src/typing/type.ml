@@ -3040,8 +3040,8 @@ and Object : sig
   module ReactConfig : sig
     type state =
       | Config of {
-          defaults: TypeTerm.t option;
-          children: TypeTerm.t option;
+          component_default_props: TypeTerm.t option;
+          jsx_children: TypeTerm.t option;
         }
       | Defaults of {
           config: resolved;
@@ -3081,8 +3081,8 @@ and React : sig
   type tool =
     | CreateElement of {
         component: TypeTerm.t;
-        config: TypeTerm.t;
-        children: TypeTerm.t list;
+        jsx_props: TypeTerm.t;
+        jsx_children: TypeTerm.t list;
         tout: TypeTerm.t_out;
         targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;

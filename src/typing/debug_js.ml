@@ -465,8 +465,8 @@ and dump_use_t_ (depth, tvars) cx t =
       | CreateElement
           {
             component = _;
-            config;
-            children;
+            jsx_props;
+            jsx_children;
             tout;
             targs = _;
             return_hint = _;
@@ -478,8 +478,8 @@ and dump_use_t_ (depth, tvars) cx t =
           ~extra:
             (spf
                "CreateElement (%s; %s) => %s"
-               (kid config)
-               (String.concat "; " (Base.List.map ~f:kid children))
+               (kid jsx_props)
+               (String.concat "; " (Base.List.map ~f:kid jsx_children))
                (kid tout)
             )
           t
