@@ -78,7 +78,7 @@ type typecheck_mode =
   | Restarting of restart_reason  (** Same as initializing but with a reason why we restarted *)
 
 type status =
-  | Starting_up  (** The server's initial state *)
+  | Starting_up_flow_server  (** The server's initial state *)
   | Free  (** Not busy doing something else *)
   | Typechecking of typecheck_mode * typecheck_status  (** Busy doing Flow stuff *)
   | Garbage_collecting  (** This one is pretty obvious *)
@@ -235,7 +235,8 @@ let string_of_restart_reason = function
 let string_of_status ?(use_emoji = false) ?(terse = false) status =
   let status_string =
     match status with
-    | Starting_up -> spf "starting up%s" (render_emoji ~use_emoji ~pad:Before Sleeping_face)
+    | Starting_up_flow_server ->
+      spf "starting up Flow server%s" (render_emoji ~use_emoji ~pad:Before Sleeping_face)
     | Free -> spf "free%s" (render_emoji ~use_emoji ~pad:Before Smiling_face_with_mouth_open)
     | Typechecking (Initializing, tcs) ->
       spf "initializing (%s)" (string_of_typecheck_status ~use_emoji tcs)
@@ -322,7 +323,7 @@ let update ~event ~status =
     else
       Unknown
 
-let initial_status = Starting_up
+let initial_status = Starting_up_flow_server
 
 let is_free = function
   | Free -> true
@@ -379,7 +380,7 @@ let is_significant_transition old_status new_status =
               (* also handled above *)
               false
           end
-     | (_, Starting_up)
+     | (_, Starting_up_flow_server)
      | (_, Free)
      | (_, Typechecking _)
      | (_, Garbage_collecting)
