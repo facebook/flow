@@ -1881,7 +1881,12 @@ and merge_component
     let param =
       let rest_t =
         match rest_param with
-        | None -> Obj_type.mk_frozen_exact_empty file.cx config_reason
+        | None ->
+          Obj_type.mk_with_proto
+            file.cx
+            config_reason
+            ~obj_kind:Type.Exact
+            (Type.ObjProtoT config_reason)
         | Some (Type_sig.ComponentRestParam { t }) -> merge env file t
       in
       EvalT
