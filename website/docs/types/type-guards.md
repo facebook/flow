@@ -64,8 +64,42 @@ function test(x: AorB) {
 ```
 In the then-branch of the conditional `if (isA(x))`, `x` will have the type `A`.
 
+### One-sided Type Guards
 
+**Note:** This feature is available as of v0.237.0 when option `one_sided_type_guards=true` is set in the flowconfig.
 
+In some cases we may want to declare that a type guard function only refines the then-branch of a conditional. Consider for example the function
+```js flow-check
+function isPositive(n: ?number): boolean {
+  return n != null && n > 0;
+}
+```
+If we declared `n is number` as the type guard of this function then in the following code:
+```js
+declare n: ?number;
+if (isPositive(n)) {
+  // n is number here
+} else {
+  // n would be null | void here
+}
+```
+we would be able to establish that `n` is `null | void` in the else-branch. This is not true, however, since `n` could just be a non-negative number.
+
+One-sided type guards, which we annotate as `implies param is PredicateType`, let us specify that a predicate narrows the type in only the positive case. For example,
+```js flow-check
+function isPositive(n: ?number): implies n is number {
+  return n != null && n > 0;
+}
+```
+Now, we'll get the following behavior
+```js
+declare n: ?number;
+if (isPositive(n)) {
+  // n is number here
+} else {
+  // n is still ?number
+}
+```
 
 ## Refine with `Array.filter`
 
@@ -194,7 +228,32 @@ function numOrStrError(x: mixed): x is number | string {
 }
 ```
 
-2. The parameter that is refined cannot be reassigned in the body of the type guard function. Therefore the following are errors:
+2. Type guard functions can be used to refine the else-branch of conditionals. For example,
+```js flow-check
+function isNumber(x: mixed): x is number {
+  return typeof x === "number";
+}
+
+declare var value: number | string;
+if (isNumber(value)) {
+  value as number; // okay
+} else {
+  value as string; // also okay
+}
+```
+Therefore, the inverse form of the first requirement also needs to hold. Specifically, if we negate the predicate encoded in the function, and use it to refine the input, then the result must not overlap with the type guard at all. This condition is equivalent to checking that the type guard refined with the negation of the function predicate is a subtype of `empty`. For example the following raises an error:
+```js flow-check
+function isPosNum(x: mixed): x is number {
+    return typeof x === 'number' && x > 0;
+}
+```
+This is because the negation of the predicate of `isPosNum` is "`x` is not a number or `x<=0`". This predicate is equivalent to the empty predicate and does not refine the input type it is applied to.
+
+If you're seeing errors related to this check, consider using a one-sided type guard (write `implies x is T`). Ones-sided type guards do not require this check, since they do not refine the else-branch of conditionals.
+
+**Note:** This check only happens when `one_sided_type_guards=true` is set in the flowconfig.
+
+3. The parameter that is refined cannot be reassigned in the body of the type guard function. Therefore the following are errors:
 ```js flow-check
 function isNumberError1(x: mixed): x is number {
   x = 1;
@@ -216,7 +275,7 @@ function isNumberError2(x: mixed): x is number {
 
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`.
+- `flow` and `flow-parser`: 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`. One-sided type guards are available as of version 0.237.0 with the option `one_sided_type_guards=true`.
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.

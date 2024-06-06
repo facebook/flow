@@ -3683,7 +3683,11 @@ let to_printable_error :
         ref return_reason;
         text " needs to completely refine away the guard type ";
         ref type_reason;
-        text ".";
+        text ". ";
+        text "Consider using a one-sided type-guard (`implies x is T`). ";
+        text "See 2. in ";
+        text
+          "https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.";
       ]
     | MessageUnexpectedTemporaryBaseType ->
       [text "The type argument of a temporary base type must be a compatible literal type"]

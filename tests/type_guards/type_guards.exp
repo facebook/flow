@@ -117,7 +117,9 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:22:25
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression
-`(typeof x) === 'number'` [1] needs to completely refine away the guard type string [2]. [incompatible-type-guard]
+`(typeof x) === 'number'` [1] needs to completely refine away the guard type string [2]. Consider using a one-sided
+type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    classes.js:22:25
    22|     invalid3(x: mixed): x is string {
@@ -211,7 +213,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:46:18
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type mixed [2]. [incompatible-type-guard]
+completely refine away the guard type mixed [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    classes.js:46:18
    46|     m(x: mixed): x is mixed { // error extends
@@ -254,7 +257,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:51:18
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type number [2]. [incompatible-type-guard]
+completely refine away the guard type number [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    classes.js:51:18
    51|     m(x: mixed): x is number {
@@ -381,7 +385,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ classes.js:113:18
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type mixed [2]. [incompatible-type-guard]
+completely refine away the guard type mixed [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    classes.js:113:18
    113|     m(x: mixed): x is mixed { // error mixed ~> number
@@ -424,7 +429,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ classes.js:118:18
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type number [2]. [incompatible-type-guard]
+completely refine away the guard type number [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    classes.js:118:18
    118|     m(x: mixed): x is number {
@@ -499,7 +505,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:9:33
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type number [2]. [incompatible-type-guard]
+completely refine away the guard type number [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:9:33
     9| function return_true(x: mixed): x is number {
@@ -542,7 +549,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:13:43
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type number [2]. [incompatible-type-guard]
+completely refine away the guard type number [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:13:43
    13| function return_true_in_branch(x: mixed): x is number {
@@ -586,7 +594,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:25:40
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `false` [1] needs to
-completely refine away the guard type `A` [2]. [incompatible-type-guard]
+completely refine away the guard type `A` [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:25:40
    25| function always_false_error(x: mixed): x is A {
@@ -656,7 +665,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:29:70
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `true` [1] needs to
-completely refine away the guard type boolean [2]. [incompatible-type-guard]
+completely refine away the guard type boolean [2]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:29:70
    29| function return_false_under_condition(x: number | string | boolean): x is boolean {
@@ -725,7 +735,9 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:49:16
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression
-`(typeof x) === 'string'` [1] needs to completely refine away the guard type number [2]. [incompatible-type-guard]
+`(typeof x) === 'string'` [1] needs to completely refine away the guard type number [2]. Consider using a one-sided
+type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:49:16
    49|   m(x: mixed): x is number {
@@ -875,7 +887,8 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:94:40
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `x instanceof B` [1]
-needs to completely refine away the guard type `A` [2]. [incompatible-type-guard]
+needs to completely refine away the guard type `A` [2]. Consider using a one-sided type-guard (`implies x is T`). See 2.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:94:40
    94| function instanceof_error_1(x: mixed): x is A {
@@ -947,8 +960,9 @@ References:
 Error -------------------------------------------------------------------------------------------- consistency.js:137:29
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression
-`isNumberOrString(...) && isBoolean(...)` [1] needs to completely refine away the guard type string [2].
-[incompatible-type-guard]
+`isNumberOrString(...) && isBoolean(...)` [1] needs to completely refine away the guard type string [2]. Consider using
+a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:137:29
    137|   function error(x: mixed): x is string {
@@ -1034,7 +1048,8 @@ References:
 Error -------------------------------------------------------------------------------------------- consistency.js:167:37
 
 Inconsistent type guard declaration. The negation of the predicate encoded in return expression `x instanceof B` [1]
-needs to completely refine away the guard type `A` [2]. [incompatible-type-guard]
+needs to completely refine away the guard type `A` [2]. Consider using a one-sided type-guard (`implies x is T`). See 2.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:167:37
    167| function multi_return_ok(x: mixed): x is A {
