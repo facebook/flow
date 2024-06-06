@@ -88,8 +88,8 @@ Cannot assign function to `bliffl.toString` because property `toString` is not w
 
 Error ------------------------------------------------------------------------------------------- object_freeze.js:20:41
 
-Cannot assign `Object.freeze(...)` to `xx` because string [1] is incompatible with number [2] in property `x`.
-[incompatible-type]
+Cannot assign `Object.freeze(...)` to `xx` because string literal `error` [1] is incompatible with number [2] in
+property `x`. [incompatible-type]
 
    object_freeze.js:20:41
    20| var xx: {x: number} = Object.freeze({x: 'error'});

@@ -33,3 +33,9 @@ declare var litobj: {
 }
 
 litobj;
+
+const frozenObject1 = Object.freeze({ A: "a", B: "b" });
+//    ^
+
+const frozenObject2 = Object.freeze({ A: "a", B: { C: "c"} });
+//    ^

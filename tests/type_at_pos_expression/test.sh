@@ -134,6 +134,8 @@ assert_ok "$FLOW" type-at-pos object.js 22 7 --strip-root --pretty
 printf "object.js:35:1 = "
 assert_ok "$FLOW" type-at-pos object.js 35 1 --strip-root --pretty
 
+queries_in_file "type-at-pos" "object.js"
+
 # optional_chaining.js
 printf "optional_chaining.js:16:7 = "
 assert_ok "$FLOW" type-at-pos optional_chaining.js 16 7 --strip-root --pretty

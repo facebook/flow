@@ -323,7 +323,7 @@ type-destructor.js:27:6,27:16
 
 type-destructor.js:31:6
 Flags:
-type ValuesOfFrozenObject = $Values<{|A: string, B: string|}>
+type ValuesOfFrozenObject = $Values<{|+A: "a", +B: "b"|}>
 = "b" | "a"
 type-destructor.js:31:6,31:25
 

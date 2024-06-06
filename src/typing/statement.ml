@@ -2028,7 +2028,7 @@ module Make
       in
       (t, { Ast.Statement.DeclareNamespace.id; body; comments })
 
-  and object_prop cx ~as_const acc prop =
+  and object_prop cx ~as_const ~frozen acc prop =
     let open Ast.Expression.Object in
     match prop with
     (* named prop *)
@@ -2056,16 +2056,16 @@ module Make
             let key = translate_identifer_or_literal_key t key in
             (* don't add `name` to `acc` because `name` is the autocomplete token *)
             let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
-            let (((_, _t), _) as value) = expression cx ~as_const v in
+            let (((_, _t), _) as value) = expression cx ~as_const ~frozen v in
             (acc, key, value)
           else
-            let (((_, t), _) as value) = expression cx ~as_const v in
+            let (((_, t), _) as value) = expression cx ~as_const ~frozen v in
             let key = translate_identifer_or_literal_key t key in
             let acc =
               ObjectExpressionAcc.add_prop
                 (Properties.add_field
                    (OrdinaryName name)
-                   (Polarity.object_literal_polarity as_const)
+                   (Polarity.object_literal_polarity (as_const || frozen))
                    ~key_loc:(Some loc)
                    t
                 )
@@ -2206,7 +2206,7 @@ module Make
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (map, rev_prop_asts) prop ->
-          let (map, prop) = object_prop cx ~as_const:false map prop in
+          let (map, prop) = object_prop cx ~as_const:false ~frozen:false map prop in
           (map, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty (), [])
         props
@@ -2350,7 +2350,7 @@ module Make
               :: rev_prop_asts
             )
           | prop ->
-            let (acc, prop) = object_prop cx ~as_const acc prop in
+            let (acc, prop) = object_prop cx ~as_const ~frozen acc prop in
             (acc, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty (), [])
         props
@@ -2561,7 +2561,7 @@ module Make
   (* can raise Abnormal.(Exn (_, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond ?(as_const = false) cx (loc, e) =
+  and expression ?cond ?(as_const = false) ?(frozen = false) cx (loc, e) =
     let log_slow_to_check ~f =
       match Context.slow_to_check_logging cx with
       | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
@@ -2588,7 +2588,7 @@ module Make
             (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
           node
         | None ->
-          let res = expression_ ~cond ~as_const cx loc e in
+          let res = expression_ ~cond ~as_const ~frozen cx loc e in
           if not (Context.typing_mode cx <> Context.CheckingMode) then begin
             let cache = Context.constraint_cache cx in
             cache := FlowSet.empty;
@@ -2617,24 +2617,24 @@ module Make
 
   and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
-  and expression_ ~cond ~as_const cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+  and expression_ ~cond ~as_const ~frozen cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
     | StringLiteral lit ->
-      let t = string_literal cx ~singleton:as_const loc lit in
+      let t = string_literal cx ~singleton:(as_const || frozen) loc lit in
       ((loc, t), StringLiteral lit)
     | BooleanLiteral lit ->
-      let t = boolean_literal ~singleton:as_const loc lit in
+      let t = boolean_literal ~singleton:(as_const || frozen) loc lit in
       ((loc, t), BooleanLiteral lit)
     | NullLiteral lit ->
       let t = null_literal loc in
       ((loc, t), NullLiteral lit)
     | NumberLiteral lit ->
-      let t = number_literal ~singleton:as_const loc lit in
+      let t = number_literal ~singleton:(as_const || frozen) loc lit in
       ((loc, t), NumberLiteral lit)
     | BigIntLiteral lit ->
-      let t = bigint_literal ~singleton:as_const loc lit in
+      let t = bigint_literal ~singleton:(as_const || frozen) loc lit in
       ((loc, t), BigIntLiteral lit)
     | RegExpLiteral lit ->
       let t = regexp_literal cx loc in
@@ -5441,7 +5441,7 @@ module Make
           jsx_mk_props
             cx
             fbt_reason
-            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
+            ~check_expression:(Statement.expression ?cond:None ?as_const:None ?frozen:None)
             ~collapse_children
             name
             attributes

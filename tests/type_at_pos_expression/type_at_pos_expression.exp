@@ -917,6 +917,16 @@ object.js:35:1 = {
   "start":1,
   "end":6
 }
+object.js:37:7
+Flags:
+{|+A: "a", +B: "b"|}
+object.js:37:7,37:19
+
+object.js:40:7
+Flags:
+{|+A: "a", +B: {|C: string|}|}
+object.js:40:7,40:19
+
 optional_chaining.js:16:7 = {
   "types":{"unevaluated":{"type":"number | void"},"evaluated":null},
   "reasons":[],

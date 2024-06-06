@@ -75,6 +75,7 @@ module type S = sig
   val expression :
     ?cond:Type.cond_context ->
     ?as_const:bool ->
+    ?frozen:bool ->
     Context.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
