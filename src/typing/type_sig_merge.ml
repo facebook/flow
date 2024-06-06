@@ -430,7 +430,7 @@ let merge_exports =
       let exports =
         match exports with
         | Some (lazy t) -> t
-        | None -> Obj_type.mk_frozen_exact_empty file.cx reason
+        | None -> Obj_type.mk_with_proto file.cx reason ~obj_kind:Type.Exact (Type.ObjProtoT reason)
       in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
