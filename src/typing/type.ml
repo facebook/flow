@@ -3067,22 +3067,6 @@ end =
   Object
 
 and React : sig
-  module PropType : sig
-    type t =
-      | Primitive of is_required * TypeTerm.t
-      | Complex of complex
-
-    and is_required = bool
-
-    and complex =
-      | ArrayOf
-      | InstanceOf
-      | ObjectOf
-      | OneOf
-      | OneOfType
-      | Shape
-  end
-
   type resolved_object = reason * Properties.t * TypeTerm.flags
 
   type resolve_object =
