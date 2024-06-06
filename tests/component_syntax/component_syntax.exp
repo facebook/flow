@@ -849,9 +849,9 @@ object type [2]. [incompatible-variance]
       ^^^^^^
 
 References:
-   config.js:3:21
-   3| declare var config: React.ElementConfig<typeof Foo>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   config.js:3:28
+   3| declare export var config: React.ElementConfig<typeof Foo>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    config.js:4:11
    4| config as {n: number | string}; // error: n is not read-only in {n: number | string}
                 ^^^^^^^^^^^^^^^^^^^^ [2]
@@ -867,9 +867,9 @@ object type [2]. [incompatible-variance]
       ^^^^^
 
 References:
-   config.js:6:20
-   6| declare var props: React.ElementProps<typeof Foo>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   config.js:6:27
+   6| declare export var props: React.ElementProps<typeof Foo>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    config.js:7:10
    7| props as {n: number | string}; // error: n is not read-only in {n: number | string}
                ^^^^^^^^^^^^^^^^^^^^ [2]
