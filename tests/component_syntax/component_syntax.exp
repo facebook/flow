@@ -1281,7 +1281,7 @@ Missing an annotation on `unannotated`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------------------------------- errors.js:30:5
 
-Components may not be nested directly within other components.
+Components may not be nested directly within other components. [nested-component]
 
    30|     component Inner () { return null; } // lint error
            ^^^^^^^^^^^^^^^^^^
@@ -1289,7 +1289,7 @@ Components may not be nested directly within other components.
 
 Error --------------------------------------------------------------------------------------------------- errors.js:40:9
 
-Components may not be nested directly within other components.
+Components may not be nested directly within other components. [nested-component]
 
    40|         component IfNested() { return null; } // lint error
                ^^^^^^^^^^^^^^^^^^^^

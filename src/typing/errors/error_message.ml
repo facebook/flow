@@ -1918,6 +1918,7 @@ let kind_of_msg =
     | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
     | EUnusedPromise _ -> LintError Lints.UnusedPromise
     | EReactIntrinsicOverlap _ -> LintError Lints.ReactIntrinsicOverlap
+    | ENestedComponent _ -> LintError Lints.NestedComponent
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
