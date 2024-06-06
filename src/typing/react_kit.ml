@@ -343,18 +343,15 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.error reason)
     in
     let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
-    let coerce_children_args (children, children_spread) =
-      match (children, children_spread) with
-      (* If we have no children and no variable spread argument then React will
-       * not pass in any value for children. *)
-      | ([], None) -> None
-      (* If we know that we have exactly one argument and no variable spread
-       * argument then React will pass in that single value. Notable we do not
-       * wrap the type in an array as React returns the single value. *)
-      | ([t], None) -> Some t
-      (* If we have two or more known arguments and no spread argument then we
-       * want to create a tuple array type for our children. *)
-      | (t :: ts, None) ->
+    let coerce_children_args children =
+      match children with
+      (* If we have no children then React will not pass in any value for children. *)
+      | [] -> None
+      (* If we know that we have exactly one argument then React will pass in that single value.
+       * Notable we do not wrap the type in an array as React returns the single value. *)
+      | [t] -> Some t
+      (* If we have two or more known arguments then we want to create a tuple array type for our children. *)
+      | t :: ts ->
         (* Create a reason where the location is between our first and last known
          * argument. *)
         let r =
@@ -376,79 +373,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       elem_t = union_of_ts r ts;
                       tuple_view =
                         Some (TupleView { elements; arity = (arity, arity); inexact = false });
-                      react_dro = None;
-                    }
-                 )
-             )
-          )
-      (* If we only have a spread of unknown length then React may not pass in
-       * children, React may pass in a single child, or React may pass in an array
-       * of children. We need to model all of these possibilities. *)
-      | ([], Some spread) ->
-        let r =
-          update_desc_reason (fun desc -> RReactChildrenOrUndefinedOrType desc) (reason_of_t spread)
-        in
-        Some
-          (OptionalT
-             {
-               reason = r;
-               type_ =
-                 union_of_ts
-                   r
-                   [
-                     spread;
-                     DefT
-                       (r, ArrT (ArrayAT { elem_t = spread; tuple_view = None; react_dro = None }));
-                   ];
-               use_desc = false;
-             }
-          )
-      (* If we have one children argument and a spread of unknown length then
-       * React may either pass in the unwrapped argument, or an array where the
-       * element type is the union of the known argument and the spread type. *)
-      | ([t], Some spread) ->
-        (* Create a reason between our known argument and the spread argument. *)
-        let r =
-          mk_reason
-            (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
-            (match use_op with
-            | Op (ReactCreateElementCall { children; _ }) -> children
-            | _ -> loc_of_reason reason_op)
-        in
-        Some
-          (union_of_ts
-             r
-             [
-               t;
-               DefT
-                 ( r,
-                   ArrT
-                     (ArrayAT
-                        { elem_t = union_of_ts r [spread; t]; tuple_view = None; react_dro = None }
-                     )
-                 );
-             ]
-          )
-      (* If we have two or more arguments and a spread argument of unknown length
-       * then we want to return an array type where the element type is the union
-       * of all argument types and the spread argument type. *)
-      | (t :: ts, Some spread) ->
-        (* Create a reason between our known argument and the spread argument. *)
-        let r =
-          mk_reason
-            RReactChildren
-            (match use_op with
-            | Op (ReactCreateElementCall { children; _ }) -> children
-            | _ -> loc_of_reason reason_op)
-        in
-        Some
-          (DefT
-             ( r,
-               ArrT
-                 (ArrayAT
-                    {
-                      elem_t = union_of_ts r (spread :: t :: ts);
-                      tuple_view = None;
                       react_dro = None;
                     }
                  )
@@ -779,7 +703,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         inferred_targs
         specialized_component
         tout
-    | ConfigCheck config -> config_check use_op config ([], None)
+    | ConfigCheck config -> config_check use_op config []
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout

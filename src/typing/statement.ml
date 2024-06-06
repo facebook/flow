@@ -6467,7 +6467,7 @@ module Make
               {
                 component = component_t;
                 config = props;
-                children = (children, None);
+                children;
                 tout;
                 targs = targs_opt;
                 return_hint;

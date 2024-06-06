@@ -14,7 +14,7 @@ val evaluate_hint :
     Type.targ list option,
     (ALoc.t * Type.call_arg) list,
     Type.t Lazy.t,
-    (Type.t list * Type.t option) Lazy.t
+    Type.t list Lazy.t
   )
   Hint.hint ->
   Type.hint_eval_result
@@ -26,7 +26,7 @@ val evaluate_hints :
     Type.targ list option,
     (ALoc.t * Type.call_arg) list,
     Type.t Lazy.t,
-    (Type.t list * Type.t option) Lazy.t
+    Type.t list Lazy.t
   )
   Hint.hint
   list ->

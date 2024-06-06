@@ -466,7 +466,7 @@ and dump_use_t_ (depth, tvars) cx t =
           {
             component = _;
             config;
-            children = (children, children_spread);
+            children;
             tout;
             targs = _;
             return_hint = _;
@@ -477,12 +477,9 @@ and dump_use_t_ (depth, tvars) cx t =
         p
           ~extra:
             (spf
-               "CreateElement (%s; %s%s) => %s"
+               "CreateElement (%s; %s) => %s"
                (kid config)
                (String.concat "; " (Base.List.map ~f:kid children))
-               (match children_spread with
-               | Some children_spread -> spf "; ...%s" (kid children_spread)
-               | None -> "")
                (kid tout)
             )
           t

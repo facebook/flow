@@ -16,7 +16,7 @@ type operation =
       component: Type.t;
       config: Type.t;
       targs: Type.targ list option;
-      children: Type.t list * Type.t option;
+      children: Type.t list;
     }
 
 type t = {

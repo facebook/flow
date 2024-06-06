@@ -306,7 +306,7 @@ let resolve_hint cx loc hint =
                  | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
                unresolved_params
            in
-           (props, (children, None))
+           (props, children)
           )
       in
       let props = Lazy.map fst result in

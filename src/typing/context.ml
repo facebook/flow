@@ -227,10 +227,7 @@ type t = {
   resolve_require: resolve_require;
   hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
   hint_map_jsx_cache:
-    ( Reason.t * string * ALoc.t list * ALoc.t,
-      Type.t Lazy.t * (Type.t list * Type.t option) Lazy.t
-    )
-    Hashtbl.t;
+    (Reason.t * string * ALoc.t list * ALoc.t, Type.t Lazy.t * Type.t list Lazy.t) Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable environment: Loc_env.t;
   mutable typing_mode: typing_mode;
