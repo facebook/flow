@@ -249,7 +249,7 @@ and instantiate_component cx component instantiation_hint =
       | _ -> None
     in
     let check =
-      Implicit_instantiation_check.of_jsx
+      Implicit_instantiation_check.of_react_jsx
         component
         (tparams_loc, tparams, t_out)
         unknown_use

@@ -12,7 +12,7 @@ type operation =
       Type.t (* When we want to infer a targ on a lower bound that will flow into this type.t *)
   | Call of Type.funcalltype
   | Constructor of Type.targ list option * Type.call_arg list
-  | Jsx of {
+  | ReactJSX of {
       component: Type.t;
       jsx_props: Type.t;
       targs: Type.targ list option;
@@ -31,9 +31,9 @@ let of_call lhs poly_t use_op reason funcalltype =
 let of_ctor lhs poly_t use_op reason_op targs args =
   { lhs; poly_t; operation = (use_op, reason_op, Constructor (targs, args)) }
 
-let of_jsx lhs poly_t use_op reason_op ~component ~jsx_props ~targs jsx_children =
+let of_react_jsx lhs poly_t use_op reason_op ~component ~jsx_props ~targs jsx_children =
   {
     lhs;
     poly_t;
-    operation = (use_op, reason_op, Jsx { component; targs; jsx_props; jsx_children });
+    operation = (use_op, reason_op, ReactJSX { component; targs; jsx_props; jsx_children });
   }

@@ -883,7 +883,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             }
         in
         (inferred_targ_list, lhs, constructor_t, Some new_tout)
-      | Check.Jsx { component; jsx_props; targs; jsx_children } ->
+      | Check.ReactJSX { component; jsx_props; targs; jsx_children } ->
         let new_tout = Tvar.mk cx reason_op in
         let (_, inferred_targ_list) = merge_targs targs in
         let react_kit_t =
@@ -1091,7 +1091,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
       | (DefT (_, ReactAbstractComponentT { config; _ }), _) ->
         check_react_fun cx ~tparams ~tparams_map ~props:(Some config) ~implicit_instantiation
-      | (DefT (_, FunT (_, funtype)), Check.Jsx _) ->
+      | (DefT (_, FunT (_, funtype)), Check.ReactJSX _) ->
         let props =
           match funtype.params with
           | (_, props) :: _ -> Some props
