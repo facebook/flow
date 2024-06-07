@@ -5761,134 +5761,177 @@ module Make
     (t, attributes, unresolved_params, children)
 
   and jsx_desugar cx name component_t targs_opt props attributes children locs =
-    let (loc_element, loc_opening, loc_children) = locs in
-    let return_hint = Type_env.get_hint cx loc_element in
     match Context.jsx cx with
     | Options.Jsx_react ->
-      let reason =
-        mk_reason
-          (RReactElement { name_opt = Some (OrdinaryName name); from_component_syntax = false })
-          loc_element
+      let (loc_element, _loc_opening, loc_children) = locs in
+      react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children
+    | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
+      let (loc_element, loc_opening, _loc_children) = locs in
+      non_react_jsx_desugar
+        cx
+        ~raw_jsx_expr
+        ~jsx_expr
+        ~loc_element
+        ~loc_opening
+        component_t
+        targs_opt
+        props
+        attributes
+        children
+
+  and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children =
+    let return_hint = Type_env.get_hint cx loc_element in
+    let reason =
+      mk_reason
+        (RReactElement { name_opt = Some (OrdinaryName name); from_component_syntax = false })
+        loc_element
+    in
+    let children =
+      Base.List.map
+        ~f:(function
+          | UnresolvedArg (TupleElement { t; _ }, _) -> t
+          | UnresolvedSpreadArg a ->
+            Flow.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (loc_children, Flow_intermediate_error_types.SpreadArgument)
+              );
+            reason_of_t a |> AnyT.error)
+        children
+    in
+    let (tout, instantiated_component, use_op) =
+      let reason_jsx = mk_reason (RFunction RNormal) loc_element in
+      let reason_c = reason_of_t component_t in
+      let use_op =
+        Op
+          (ReactCreateElementCall { op = reason_jsx; component = reason_c; children = loc_children })
       in
-      let children =
-        Base.List.map
-          ~f:(function
-            | UnresolvedArg (TupleElement { t; _ }, _) -> t
-            | UnresolvedSpreadArg a ->
-              Flow.add_output
-                cx
-                (Error_message.EUnsupportedSyntax
-                   (loc_children, Flow_intermediate_error_types.SpreadArgument)
-                );
-              reason_of_t a |> AnyT.error)
-          children
+      let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
+      let specialized_component = Context.new_specialized_callee cx in
+      let jsx_children = TypeUtil.normalize_jsx_children_prop loc_children children in
+      Flow.flow
+        cx
+        ( component_t,
+          ReactKitT
+            ( use_op,
+              reason,
+              React.CreateElement
+                {
+                  component = component_t;
+                  jsx_props = props;
+                  jsx_children;
+                  tout;
+                  targs = targs_opt;
+                  return_hint;
+                  record_monomorphized_result = false;
+                  inferred_targs = None;
+                  specialized_component = Some specialized_component;
+                }
+            )
+        );
+      let specialized_component_t =
+        Flow_js_utils.CalleeRecorder.type_for_tast_opt reason_c specialized_component
       in
-      let (tout, instantiated_component, use_op) =
-        mk_react_jsx
+      (tout, specialized_component_t, use_op)
+    in
+    (match Context.react_runtime cx with
+    | Options.ReactRuntimeAutomatic ->
+      (* TODO(jmbrown): Model jsx more faithfully. children are now passed in as part of the props
+       * object. See https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
+       * for more details. *)
+      ()
+    | Options.ReactRuntimeClassic ->
+      (* Under classic jsx, we trust but verify:
+       * - We first unconditionally call the right createElement (already done above)
+       * - Then we validate that we are calling the right one. By modeling React$CreateElement
+       *   as an opaque type bounded by the real definition, we can reliable check it. *)
+      (* Validate that we are actually calling the right React.createElement *)
+      let react_t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
+      let create_element_t =
+        get_prop
+          ~cond:None
           cx
           reason
-          ~loc_element
-          ~loc_children
-          ~return_hint
-          component_t
-          targs_opt
-          props
+          ~use_op
+          ~hint:hint_unavailable
+          react_t
+          (mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element, "createElement")
+      in
+      if
+        not
+          (Speculation_flow.is_flow_successful
+             cx
+             reason
+             ~upper_unresolved:false
+             create_element_t
+             (UseT
+                (unknown_use, Flow.get_builtin_type cx reason ~use_desc:false "React$CreateElement")
+             )
+          )
+      then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EInvalidReactCreateElement
+             { create_element_loc = loc_element; invalid_react = reason_of_t react_t }
+          ));
+    (tout, instantiated_component)
+
+  and non_react_jsx_desugar
+      cx
+      ~raw_jsx_expr
+      ~jsx_expr
+      ~loc_element
+      ~loc_opening
+      component_t
+      targs_opt
+      props
+      attributes
+      children =
+    let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
+    (* A JSX element with no attributes should pass in null as the second
+     * arg *)
+    let props =
+      match attributes with
+      | [] -> NullT.at loc_opening
+      | _ -> props
+    in
+    let argts =
+      [Arg component_t; Arg props]
+      @ Base.List.map
+          ~f:(function
+            | UnresolvedArg (TupleElement { t; _ }, _) -> Arg t
+            | UnresolvedSpreadArg c -> SpreadArg c)
           children
-      in
-      (match Context.react_runtime cx with
-      | Options.ReactRuntimeAutomatic ->
-        (* TODO(jmbrown): Model jsx more faithfully. children are now passed in as part of the props
-         * object. See https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-         * for more details. *)
-        ()
-      | Options.ReactRuntimeClassic ->
-        (* Under classic jsx, we trust but verify:
-         * - We first unconditionally call the right createElement (already done above)
-         * - Then we validate that we are calling the right one. By modeling React$CreateElement
-         *   as an opaque type bounded by the real definition, we can reliable check it. *)
-        (* Validate that we are actually calling the right React.createElement *)
-        let react_t =
-          Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element
-        in
-        let create_element_t =
-          get_prop
-            ~cond:None
-            cx
-            reason
-            ~use_op
-            ~hint:hint_unavailable
-            react_t
-            ( mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element,
-              "createElement"
-            )
-        in
-        if
-          not
-            (Speculation_flow.is_flow_successful
-               cx
-               reason
-               ~upper_unresolved:false
-               create_element_t
-               (UseT
-                  ( unknown_use,
-                    Flow.get_builtin_type cx reason ~use_desc:false "React$CreateElement"
-                  )
-               )
-            )
-        then
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EInvalidReactCreateElement
-               { create_element_loc = loc_element; invalid_react = reason_of_t react_t }
-            ));
-      (tout, instantiated_component)
-    | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
-      let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
-      (* A JSX element with no attributes should pass in null as the second
-       * arg *)
-      let props =
-        match attributes with
-        | [] -> NullT.at loc_opening
-        | _ -> props
-      in
-      let argts =
-        [Arg component_t; Arg props]
-        @ Base.List.map
-            ~f:(function
-              | UnresolvedArg (TupleElement { t; _ }, _) -> Arg t
-              | UnresolvedSpreadArg c -> SpreadArg c)
-            children
-      in
-      let use_op = Op (JSXCreateElement { op = reason; component = reason_of_t component_t }) in
-      let open Ast.Expression in
-      let t =
-        match jsx_expr with
-        | ( _,
-            Member
-              {
-                Member._object;
-                property =
-                  Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ });
-                _;
-              }
-          ) ->
-          let ot = jsx_pragma_expression cx raw_jsx_expr (fst _object) _object in
-          snd
-            (method_call
-               cx
-               reason
-               ~use_op
-               ~call_strict_arity:false
-               prop_loc
-               (jsx_expr, ot, name)
-               targs_opt
-               argts
-            )
-        | _ ->
-          let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-          func_call cx loc_element reason ~use_op ~call_strict_arity:false f targs_opt argts None
-      in
-      (t, None)
+    in
+    let use_op = Op (JSXCreateElement { op = reason; component = reason_of_t component_t }) in
+    let open Ast.Expression in
+    let t =
+      match jsx_expr with
+      | ( _,
+          Member
+            {
+              Member._object;
+              property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ });
+              _;
+            }
+        ) ->
+        let ot = jsx_pragma_expression cx raw_jsx_expr (fst _object) _object in
+        snd
+          (method_call
+             cx
+             reason
+             ~use_op
+             ~call_strict_arity:false
+             prop_loc
+             (jsx_expr, ot, name)
+             targs_opt
+             argts
+          )
+      | _ ->
+        let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
+        func_call cx loc_element reason ~use_op ~call_strict_arity:false f targs_opt argts None
+    in
+    (t, None)
 
   (* The @jsx pragma specifies a left hand side expression EXPR such that
    *
@@ -6447,42 +6490,6 @@ module Make
         targ_asts,
         arg_asts
       )
-
-  and mk_react_jsx
-      cx reason ~loc_element ~loc_children ~return_hint component_t targs_opt jsx_props jsx_children
-      =
-    let reason_jsx = mk_reason (RFunction RNormal) loc_element in
-    let reason_c = reason_of_t component_t in
-    let use_op =
-      Op (ReactCreateElementCall { op = reason_jsx; component = reason_c; children = loc_children })
-    in
-    let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
-    let specialized_component = Context.new_specialized_callee cx in
-    let jsx_children = TypeUtil.normalize_jsx_children_prop loc_children jsx_children in
-    Flow.flow
-      cx
-      ( component_t,
-        ReactKitT
-          ( use_op,
-            reason,
-            React.CreateElement
-              {
-                component = component_t;
-                jsx_props;
-                jsx_children;
-                tout;
-                targs = targs_opt;
-                return_hint;
-                record_monomorphized_result = false;
-                inferred_targs = None;
-                specialized_component = Some specialized_component;
-              }
-          )
-      );
-    let specialized_component_t =
-      Flow_js_utils.CalleeRecorder.type_for_tast_opt reason_c specialized_component
-    in
-    (tout, specialized_component_t, use_op)
 
   and mk_class cx class_loc ~name_loc ?tast_class_type reason c =
     let node_cache = Context.node_cache cx in
