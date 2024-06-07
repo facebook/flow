@@ -110,7 +110,7 @@ file.js:96:14,96:16
 
 file.js:98:17
 Flags:
-((G1 & G2 & G3)) | ((F1 & F2 & F3))
+(G1 & G2 & G3) | (F1 & F2 & F3)
 file.js:98:17,98:19
 
 file.js:110:16
@@ -165,7 +165,7 @@ file.js:141:18,141:20
 
 file.js:149:13
 Flags:
-{foo?: (F1 & F2 & F3)}
+{foo?: F1 & F2 & F3}
 file.js:149:13,149:15
 
 file.js:156:18
