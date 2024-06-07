@@ -198,8 +198,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:762:44
-   762|       count(children: ChildrenArray<any>): number,
+   <BUILTINS>/react.js:767:44
+   767|       count(children: ChildrenArray<any>): number,
                                                    ^^^^^^ [1]
    api.js:32:15
     32| function s(x: string) {}

@@ -46,8 +46,8 @@ Cannot create `FancyButton` element because in property `ref`: [incompatible-typ
                                              ^^^^^^
 
 References:
-   <BUILTINS>/react.js:683:8
-   683|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:688:8
+   688|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:165:6
    165|   | ((React$ElementRef<ElementType> | null) => mixed)
@@ -91,8 +91,8 @@ Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
                                           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:683:8
-   683|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:688:8
+   688|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:165:6
    165|   | ((React$ElementRef<ElementType> | null) => mixed)

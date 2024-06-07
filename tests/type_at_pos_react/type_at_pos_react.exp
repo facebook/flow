@@ -21,7 +21,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:738:5,740:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:743:5,745:22"},
           "name":"Fragment"
         },
         "typeParams":[
