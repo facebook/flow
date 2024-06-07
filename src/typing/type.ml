@@ -3082,7 +3082,7 @@ and React : sig
     | CreateElement of {
         component: TypeTerm.t;
         jsx_props: TypeTerm.t;
-        jsx_children: TypeTerm.t list;
+        jsx_children: TypeTerm.t option;
         tout: TypeTerm.t_out;
         targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;

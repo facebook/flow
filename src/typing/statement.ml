@@ -6458,6 +6458,7 @@ module Make
     in
     let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
     let specialized_component = Context.new_specialized_callee cx in
+    let jsx_children = TypeUtil.normalize_jsx_children_prop loc_children jsx_children in
     Flow.flow
       cx
       ( component_t,

@@ -16,7 +16,7 @@ type operation =
       component: Type.t;
       jsx_props: Type.t;
       targs: Type.targ list option;
-      jsx_children: Type.t list;
+      jsx_children: Type.t option;
     }
 
 type t = {

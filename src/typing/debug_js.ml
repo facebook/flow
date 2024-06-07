@@ -479,7 +479,7 @@ and dump_use_t_ (depth, tvars) cx t =
             (spf
                "CreateElement (%s; %s) => %s"
                (kid jsx_props)
-               (String.concat "; " (Base.List.map ~f:kid jsx_children))
+               (Base.Option.value_map ~default:"None" ~f:kid jsx_children)
                (kid tout)
             )
           t

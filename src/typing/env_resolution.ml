@@ -289,7 +289,7 @@ let resolve_hint cx loc hint =
       Context.reset_errors cx Flow_error.ErrorSet.empty;
       let result =
         lazy
-          (let (props, _, unresolved_params, _) =
+          (let (props, _, unresolved_params, (children_loc, _)) =
              Statement.jsx_mk_props
                cx
                reason
@@ -305,6 +305,7 @@ let resolve_hint cx loc hint =
                  | Type.UnresolvedArg (TupleElement { t; _ }, _) -> t
                  | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
                unresolved_params
+             |> TypeUtil.normalize_jsx_children_prop children_loc
            in
            (props, children)
           )

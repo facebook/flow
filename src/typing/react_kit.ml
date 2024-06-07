@@ -343,46 +343,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.error reason)
     in
     let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
-    let coerce_children_args children =
-      match children with
-      (* If we have no children then React will not pass in any value for children. *)
-      | [] -> None
-      (* If we know that we have exactly one argument then React will pass in that single value.
-       * Notable we do not wrap the type in an array as React returns the single value. *)
-      | [t] -> Some t
-      (* If we have two or more known arguments then we want to create a tuple array type for our children. *)
-      | t :: ts ->
-        (* Create a reason where the location is between our first and last known
-         * argument. *)
-        let r =
-          mk_reason
-            RReactChildren
-            (match use_op with
-            | Op (ReactCreateElementCall { children; _ }) -> children
-            | _ -> loc_of_reason reason_op)
-        in
-        let ts = t :: ts in
-        let arity = Base.List.length ts in
-        let elements = Base.List.map ~f:(fun t -> mk_tuple_element (reason_of_t t) t) ts in
-        Some
-          (DefT
-             ( r,
-               ArrT
-                 (ArrayAT
-                    {
-                      elem_t = union_of_ts r ts;
-                      tuple_view =
-                        Some (TupleView { elements; arity = (arity, arity); inexact = false });
-                      react_dro = None;
-                    }
-                 )
-             )
-          )
-    in
-    let config_check use_op jsx_props children_args =
-      (* Create the optional children input type from the children arguments. *)
-      let jsx_children = coerce_children_args children_args in
-
+    let config_check use_op ~jsx_props ~jsx_children =
       (* Create a type variable for our props. *)
       let (component_props, component_default_props) =
         match drop_generic l with
@@ -432,7 +393,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let create_element
         component
         jsx_props
-        jsx_children_args
+        jsx_children
         record_monomorphized_result
         inferred_targs
         specialized_component
@@ -450,7 +411,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         unwrap use_op
       in
-      config_check use_op jsx_props jsx_children_args;
+      config_check use_op ~jsx_props ~jsx_children;
 
       (* If our jsx props is void or null then we want to replace it with an
        * empty object.
@@ -716,7 +677,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         inferred_targs
         specialized_component
         tout
-    | ConfigCheck config -> config_check use_op config []
+    | ConfigCheck jsx_props -> config_check use_op ~jsx_props ~jsx_children:None
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout
