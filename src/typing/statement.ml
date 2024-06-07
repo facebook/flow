@@ -5411,7 +5411,7 @@ module Make
 
   and jsx_title cx opening_element children closing_element locs =
     let open Ast.JSX in
-    let (loc_element, _, _) = locs in
+    let (loc_element, _, loc_children) = locs in
     let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
     let targs_with_tast_opt =
       Base.Option.map targs ~f:(fun (targts_loc, args) ->
@@ -5519,7 +5519,9 @@ module Make
             attributes
             children
         in
-        let (t, _) = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
+        let (t, _) =
+          react_jsx_desugar cx ~loc_element ~loc_children name c targs_opt o unresolved_params
+        in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
