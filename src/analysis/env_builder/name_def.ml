@@ -632,7 +632,7 @@ let func_own_props = SSet.of_list ["toString"; "arguments"; "caller"; "length"; 
 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
-class def_finder ~autocomplete_hooks env_info toplevel_scope =
+class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
   let fail loc str = raise Env_api.(Env_invariant (Some loc, ASTStructureOverride str)) in
 
   object (this)
@@ -2498,48 +2498,53 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         expr
       in
       let hints =
-        match opening_name with
-        | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
-          if name = "fbs" || name = "fbt" then
-            []
-          else if name = String.capitalize_ascii name then
-            [
-              Hint_t
-                ( ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })),
-                  ExpectedTypeHint
-                );
-            ]
-          else
-            [Hint_t (StringLiteralType name, ExpectedTypeHint)]
-        | Ast.JSX.NamespacedName _ -> []
-        | Ast.JSX.MemberExpression member ->
-          let rec jsx_title_member_to_expression member =
-            let (mloc, member) = member in
-            let _object =
-              match member.Ast.JSX.MemberExpression._object with
-              | Ast.JSX.MemberExpression.MemberExpression member ->
-                jsx_title_member_to_expression member
-              | Ast.JSX.MemberExpression.Identifier
-                  (loc, { Ast.JSX.Identifier.name = "this"; comments }) ->
-                (loc, Ast.Expression.This { Ast.Expression.This.comments })
-              | Ast.JSX.MemberExpression.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
-                (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments }))
+        if react_jsx then
+          match opening_name with
+          | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
+            if name = "fbs" || name = "fbt" then
+              []
+            else if name = String.capitalize_ascii name then
+              [
+                Hint_t
+                  ( ValueHint
+                      (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })),
+                    ExpectedTypeHint
+                  );
+              ]
+            else
+              [Hint_t (StringLiteralType name, ExpectedTypeHint)]
+          | Ast.JSX.NamespacedName _ -> []
+          | Ast.JSX.MemberExpression member ->
+            let rec jsx_title_member_to_expression member =
+              let (mloc, member) = member in
+              let _object =
+                match member.Ast.JSX.MemberExpression._object with
+                | Ast.JSX.MemberExpression.MemberExpression member ->
+                  jsx_title_member_to_expression member
+                | Ast.JSX.MemberExpression.Identifier
+                    (loc, { Ast.JSX.Identifier.name = "this"; comments }) ->
+                  (loc, Ast.Expression.This { Ast.Expression.This.comments })
+                | Ast.JSX.MemberExpression.Identifier (loc, { Ast.JSX.Identifier.name; comments })
+                  ->
+                  (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments }))
+              in
+              let property =
+                let open Ast.JSX.MemberExpression in
+                let (loc, { Ast.JSX.Identifier.name; comments }) = member.property in
+                (loc, { Ast.Identifier.name; comments })
+              in
+              ( mloc,
+                Ast.Expression.Member
+                  {
+                    Ast.Expression.Member._object;
+                    property = Ast.Expression.Member.PropertyIdentifier property;
+                    comments = None;
+                  }
+              )
             in
-            let property =
-              let open Ast.JSX.MemberExpression in
-              let (loc, { Ast.JSX.Identifier.name; comments }) = member.property in
-              (loc, { Ast.Identifier.name; comments })
-            in
-            ( mloc,
-              Ast.Expression.Member
-                {
-                  Ast.Expression.Member._object;
-                  property = Ast.Expression.Member.PropertyIdentifier property;
-                  comments = None;
-                }
-            )
-          in
-          [Hint_t (ValueHint (jsx_title_member_to_expression member), ExpectedTypeHint)]
+            [Hint_t (ValueHint (jsx_title_member_to_expression member), ExpectedTypeHint)]
+        else
+          []
       in
       let hints =
         let rec jsx_title_member_to_string (_, { Ast.JSX.MemberExpression._object; property; _ }) =
@@ -3015,6 +3020,6 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       res
   end
 
-let find_defs ~autocomplete_hooks env_info toplevel_scope_kind ast =
-  let finder = new def_finder ~autocomplete_hooks env_info toplevel_scope_kind in
+let find_defs ~autocomplete_hooks ~react_jsx env_info toplevel_scope_kind ast =
+  let finder = new def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope_kind in
   finder#eval finder#program ast

@@ -23,6 +23,7 @@ val expression_is_definitely_synthesizable :
 
 val find_defs :
   autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
+  react_jsx:bool ->
   Env_api.env_info ->
   scope_kind ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->

@@ -122,7 +122,7 @@ let file = Context.file ()
 let print_init_test contents =
   let ast = parse_with_alocs contents in
   let (_, env) = Name_resolver.program_with_scope () ast in
-  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env Name_def.Module ast in
+  let (inits, _) = Name_def.find_defs ~autocomplete_hooks ~react_jsx:true env Name_def.Module ast in
   print_values inits
 
 let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) contents =
@@ -135,7 +135,7 @@ let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) con
     jsx_mode := Options.Jsx_pragma (str, aloc_ast));
   let ast = parse_with_alocs contents in
   let (_, env) = Name_resolver.program_with_scope () ast in
-  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env Name_def.Module ast in
+  let (inits, _) = Name_def.find_defs ~autocomplete_hooks ~react_jsx:true env Name_def.Module ast in
   let order = Name_def_ordering.build_ordering ~autocomplete_hooks () env inits in
   print_order order;
   react_runtime := Options.ReactRuntimeClassic;
