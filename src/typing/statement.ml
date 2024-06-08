@@ -5389,7 +5389,9 @@ module Make
   and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
     let open Ast.JSX in
     let { frag_opening_element; frag_children; frag_closing_element; frag_comments } = fragment in
-    let (children_loc, _) = frag_children in
+    let (loc_children, _) = frag_children in
+    (* TODO: we could make it configurable like the jsx pragma, with the @jsxFrag directive.
+     * See https://babeljs.io/docs/babel-plugin-transform-react-jsx#fragments *)
     let fragment_t =
       match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
@@ -5402,9 +5404,16 @@ module Make
         get_prop ~cond:None cx reason ~use_op ~hint:hint_unavailable react (reason, "Fragment")
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
-    let locs = (expr_loc, frag_opening_element, children_loc) in
     let (t, _) =
-      jsx_desugar cx "React.Fragment" fragment_t None (NullT.at expr_loc) [] unresolved_params locs
+      react_jsx_desugar
+        cx
+        ~loc_element:expr_loc
+        ~loc_children
+        "React.Fragment"
+        fragment_t
+        None
+        (NullT.at expr_loc)
+        unresolved_params
     in
     Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
