@@ -5420,7 +5420,7 @@ module Make
 
   and jsx_title cx opening_element children closing_element locs =
     let open Ast.JSX in
-    let (loc_element, _, loc_children) = locs in
+    let (loc_element, loc_opening, loc_children) = locs in
     let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
     let targs_with_tast_opt =
       Base.Option.map targs ~f:(fun (targts_loc, args) ->
@@ -5505,7 +5505,24 @@ module Make
               attributes
               children
           in
-          let (t, c_opt) = jsx_desugar cx name c targs_opt o attributes unresolved_params locs in
+          let (t, c_opt) =
+            match Context.jsx cx with
+            | Options.Jsx_react ->
+              let (loc_element, _loc_opening, loc_children) = locs in
+              react_jsx_desugar cx name ~loc_element ~loc_children c targs_opt o unresolved_params
+            | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
+              non_react_jsx_desugar
+                cx
+                ~raw_jsx_expr
+                ~jsx_expr
+                ~loc_element
+                ~loc_opening
+                c
+                targs_opt
+                o
+                attributes
+                unresolved_params
+          in
           let c = Base.Option.value c_opt ~default:c in
           let name = Identifier ((loc, c), { Identifier.name; comments }) in
           (t, name, attributes', children)
@@ -5770,25 +5787,6 @@ module Make
         ~default_proto:proto
     in
     (t, attributes, unresolved_params, children)
-
-  and jsx_desugar cx name component_t targs_opt props attributes children locs =
-    match Context.jsx cx with
-    | Options.Jsx_react ->
-      let (loc_element, _loc_opening, loc_children) = locs in
-      react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children
-    | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
-      let (loc_element, loc_opening, _loc_children) = locs in
-      non_react_jsx_desugar
-        cx
-        ~raw_jsx_expr
-        ~jsx_expr
-        ~loc_element
-        ~loc_opening
-        component_t
-        targs_opt
-        props
-        attributes
-        children
 
   and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children =
     let return_hint = Type_env.get_hint cx loc_element in
