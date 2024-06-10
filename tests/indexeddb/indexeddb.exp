@@ -8,8 +8,8 @@ Cannot call `transaction.objectStore(...).getAll` because property `getAll` is m
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:83:30
-   83|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:85:30
+   85|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
@@ -23,8 +23,8 @@ Cannot call `transaction.objectStore(...).getAll` because property `getAll` is m
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:83:30
-   83|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:85:30
+   85|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
@@ -38,8 +38,8 @@ Cannot call `transaction.objectStore(...).getAll` because property `getAll` is m
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:83:30
-   83|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:85:30
+   85|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
@@ -53,8 +53,8 @@ Cannot call `transaction.objectStore(...).getAll` because property `getAll` is m
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:83:30
-   83|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:85:30
+   85|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
