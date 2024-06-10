@@ -279,21 +279,18 @@ module ESM = struct
       let acc = add_default_type acc opt_name def in
       Default opt_name :: acc
     | ExportFrom _ ->
-      (* TODO: ExportFrom defines aliases, which we don't handle yet. TS
-         keeps track of them and only suggests them if the re-exported thing
-         can't be imported. *)
-      acc
+      (* ExportFrom defines aliases. We decide to depend on autocomplete_ranked_by_usage to pick
+       * the right one in most cases. *)
+      (* TODO: We cannot resolve to the underlying definition here from another module, so we don't
+       * know whether the binding can also be used as a type. *)
+      Named name :: acc
 
   let fold_type acc name value =
     match value with
     | ExportTypeRef _
-    | ExportTypeBinding _ ->
-      NamedType name :: acc
+    | ExportTypeBinding _
     | ExportTypeFrom _ ->
-      (* TODO: ExportTypeFrom defines aliases, which we don't handle yet. TS
-         keeps track of them and only suggests them if the re-exported thing
-         can't be imported. *)
-      acc
+      NamedType name :: acc
 
   let exports type_sig type_exports exports info =
     (* TODO: re-exports *)
