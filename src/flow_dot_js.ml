@@ -413,8 +413,8 @@ let autocomplete filename content line col js_config_object :
           {
             imports = false;
             imports_min_characters = 0;
-            imports_ranked_usage = false;
-            imports_ranked_usage_boost_exact_match_min_length = None;
+            imports_ranked_usage = true;
+            imports_ranked_usage_boost_exact_match_min_length = 5;
             show_ranking_info = false;
           }
           None

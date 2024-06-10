@@ -46,8 +46,8 @@ module Opts = struct
     all: bool option;
     autoimports: bool option;
     autoimports_min_characters: int option;
-    autoimports_ranked_by_usage: bool option;
-    autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
+    autoimports_ranked_by_usage: bool;
+    autoimports_ranked_by_usage_boost_exact_match_min_length: int;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
     casting_syntax: Options.CastingSyntax.t option;
@@ -176,8 +176,8 @@ module Opts = struct
       all = None;
       autoimports = None;
       autoimports_min_characters = None;
-      autoimports_ranked_by_usage = None;
-      autoimports_ranked_by_usage_boost_exact_match_min_length = None;
+      autoimports_ranked_by_usage = true;
+      autoimports_ranked_by_usage_boost_exact_match_min_length = 5;
       automatic_require_default = None;
       babel_loose_array_spread = None;
       channel_mode = None;
@@ -859,14 +859,14 @@ module Opts = struct
         )
       );
       ( "autoimports_ranked_by_usage",
-        boolean (fun opts v -> Ok { opts with autoimports_ranked_by_usage = Some v })
+        boolean (fun opts v -> Ok { opts with autoimports_ranked_by_usage = v })
       );
       ( "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length",
         uint (fun opts v ->
             if opts.autoimports = Some false then
               Error "Cannot be configured unless autoimport is enabled."
             else
-              Ok { opts with autoimports_ranked_by_usage_boost_exact_match_min_length = Some v }
+              Ok { opts with autoimports_ranked_by_usage_boost_exact_match_min_length = v }
         )
       );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);

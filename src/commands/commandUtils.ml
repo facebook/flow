@@ -1466,8 +1466,7 @@ let make_options
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_autoimports_min_characters =
       Base.Option.value (FlowConfig.autoimports_min_characters flowconfig) ~default:0;
-    opt_autoimports_ranked_by_usage =
-      Base.Option.value (FlowConfig.autoimports_ranked_by_usage flowconfig) ~default:false;
+    opt_autoimports_ranked_by_usage = FlowConfig.autoimports_ranked_by_usage flowconfig;
     opt_autoimports_ranked_by_usage_boost_exact_match_min_length =
       FlowConfig.autoimports_ranked_by_usage_boost_exact_match_min_length flowconfig;
     opt_flowconfig_hash = flowconfig_hash;

@@ -70,7 +70,7 @@ type t = {
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
-  opt_autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
+  opt_autoimports_ranked_by_usage_boost_exact_match_min_length: int;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_casting_syntax: CastingSyntax.t;

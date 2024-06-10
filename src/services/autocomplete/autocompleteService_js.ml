@@ -94,7 +94,7 @@ type ac_options = {
   imports: bool;
   imports_min_characters: int;
   imports_ranked_usage: bool;
-  imports_ranked_usage_boost_exact_match_min_length: int option;
+  imports_ranked_usage_boost_exact_match_min_length: int;
   show_ranking_info: bool;
 }
 
@@ -820,28 +820,26 @@ let append_completion_items_of_autoimports
       auto_imports
   in
   if ac_options.imports_ranked_usage then
-    match ac_options.imports_ranked_usage_boost_exact_match_min_length with
-    | Some min_length ->
-      let (exact_match_auto_imports_rev, other_auto_imports_rev) =
-        Base.List.partition_map auto_imports_items_rev ~f:(fun item ->
-            let open AcCompletion in
-            (* We boost exact match auto-imports so that they are sorted together with locals
-             * rather than always after locals. We only do this for auto-imports with long-enough
-             * names, so that we don't end up boosting auto-imports like `a`. *)
-            if item.name = before && Base.String.length item.name >= min_length then
-              Base.Either.First { item with sort_text = sort_text_of_rank locals_rank }
-            else
-              Base.Either.Second item
-        )
-      in
-      let items_rev = Base.List.append exact_match_auto_imports_rev items_rev in
-      Base.List.append
-        other_auto_imports_rev
-        (filter_by_token_and_sort_rev ~penalize_auto_import:true token items_rev)
-    | None ->
-      (* to maintain the order of the autoimports, we sort the non-imports
-         here, and then don't sort the whole list later. *)
-      Base.List.append auto_imports_items_rev (filter_by_token_and_sort_rev token items_rev)
+    let (exact_match_auto_imports_rev, other_auto_imports_rev) =
+      Base.List.partition_map auto_imports_items_rev ~f:(fun item ->
+          let open AcCompletion in
+          (* We boost exact match auto-imports so that they are sorted together with locals
+           * rather than always after locals. We only do this for auto-imports with long-enough
+           * names, so that we don't end up boosting auto-imports like `a`. *)
+          if
+            item.name = before
+            && Base.String.length item.name
+               >= ac_options.imports_ranked_usage_boost_exact_match_min_length
+          then
+            Base.Either.First { item with sort_text = sort_text_of_rank locals_rank }
+          else
+            Base.Either.Second item
+      )
+    in
+    let items_rev = Base.List.append exact_match_auto_imports_rev items_rev in
+    Base.List.append
+      other_auto_imports_rev
+      (filter_by_token_and_sort_rev ~penalize_auto_import:true token items_rev)
   else
     filter_by_token_and_sort_rev token (Base.List.append auto_imports_items_rev items_rev)
 

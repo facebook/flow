@@ -157,61 +157,10 @@
         }
       },
       {
-        "label": "Foo",
-        "kind": 6,
-        "detail": "Import from ./foo",
-        "sortText": "00000000000000000003",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 3
-            }
-          },
-          "newText": "Foo"
-        },
-        "additionalTextEdits": [
-          {
-            "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
-              "end": {
-                "line": 2,
-                "character": 0
-              }
-            },
-            "newText": "import { Foo } from \"./foo\";\n\n"
-          }
-        ],
-        "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-          "arguments": [
-            "textDocument/completion",
-            "autoimport",
-            {
-              "token": "fooAUTO332",
-              "index": 3,
-              "session_requests": 1,
-              "typed_length": 3,
-              "completion": "Foo",
-              "ac_type": "Acid"
-            }
-          ]
-        }
-      },
-      {
         "label": "foobar",
         "kind": 6,
         "detail": "Import default from ./foobar",
-        "sortText": "00000000000000000004",
+        "sortText": "00000000000000000003",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -249,10 +198,61 @@
             "autoimport",
             {
               "token": "fooAUTO332",
-              "index": 4,
+              "index": 3,
               "session_requests": 1,
               "typed_length": 3,
               "completion": "foobar",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Foo",
+        "kind": 6,
+        "detail": "Import from ./foo",
+        "sortText": "00000000000000000004",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 3
+            }
+          },
+          "newText": "Foo"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import { Foo } from \"./foo\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "fooAUTO332",
+              "index": 4,
+              "session_requests": 1,
+              "typed_length": 3,
+              "completion": "Foo",
               "ac_type": "Acid"
             }
           ]
