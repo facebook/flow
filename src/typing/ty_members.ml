@@ -114,13 +114,13 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                     }
                 ) ->
                 (* We say that a member formed by unioning other members should be treated:
-                 * - as inherited if any of its constituent members are.
+                 * - as inherited if all of its constituent members are.
                  * - as from a nullable object if any of its constituent members are.
                  * - as defined at the definition locations of any of its constituent members. *)
                 Some
                   {
                     ty = Nel.cons ty tys;
-                    inherited = id || ids;
+                    inherited = id && ids;
                     source = merge_sources src srcs;
                     from_nullable = fn || fns;
                     def_locs = Base.List.unordered_append dl dls;
@@ -149,13 +149,13 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                     }
                 ) ->
                 (* We say that a member formed by intersecting other members should be treated:
-                 * - as inherited if any of its constituent members are.
+                 * - as inherited if all of its constituent members are.
                  * - as from a nullable object only if all its constituent members are.
                  * - as defined at the definition locations of any of its constituent members. *)
                 Some
                   {
                     ty = Nel.cons ty tys;
-                    inherited = id || ids;
+                    inherited = id && ids;
                     source = merge_sources src srcs;
                     from_nullable = fn && fns;
                     def_locs = Base.List.unordered_append dl dls;

@@ -10,21 +10,21 @@ function test1() {
 function test2() {
   type Foo = { x: number };
   type Bar = { foo?: Foo };
-  const _: Bar = { foo: {   } }; // TODO
+  const _: Bar = { foo: {   } };
 //                        ^
 }
 
 function test3() {
   type Foo = { x: number };
   type Bar = { foo: ?Foo };
-  const _: Bar = { foo: {   } }; // TODO
+  const _: Bar = { foo: {   } };
 //                        ^
 }
 
 function test4() {
   type Foo = { x: number };
   type Bar = { foo?: ?Foo };
-  const _: Bar = { foo: {   } }; // TODO
+  const _: Bar = { foo: {   } };
 //                        ^
 }
 
@@ -44,7 +44,7 @@ function test6() {
 
 function test7() {
   type Foo = { x: number };
-  type Bar = { foo: Foo | void | null }; // TODO
+  type Bar = { foo: Foo | void | null };
   const _: Bar = { foo: {   } };
 //                        ^
 }
@@ -97,13 +97,13 @@ function test12() {
   const _: Bar = {
     foo: {   },
 //         ^
-    foo1: {   }, // TODO
+    foo1: {   },
 //          ^
-    foo2: {   }, // TODO
+    foo2: {   },
 //          ^
-    foo3: {   }, // TODO
+    foo3: {   },
 //          ^
-    partial: { foo: {   } } }; // TODO
+    partial: { foo: {   } } };
 //                    ^
 }
 

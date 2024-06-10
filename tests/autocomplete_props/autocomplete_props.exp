@@ -4,15 +4,15 @@ Flags: --pretty
 
 file_1.js:13:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:20:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:27:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:34:27
 Flags: --pretty
@@ -24,7 +24,7 @@ Flags: --pretty
 
 file_1.js:48:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:56:27
 Flags: --pretty
@@ -48,19 +48,19 @@ Flags: --pretty
 
 file_1.js:100:13
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:102:13
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:104:13
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:106:23
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:114:27
 Flags: --pretty
