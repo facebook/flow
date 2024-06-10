@@ -1,0 +1,96 @@
+file_1.js:6:27
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+file_1.js:13:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:20:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:27:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:34:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:41:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:48:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:56:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:64:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:72:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:80:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:98:12
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+file_1.js:100:13
+Flags: --pretty
+{"result":[]}
+
+file_1.js:102:13
+Flags: --pretty
+{"result":[]}
+
+file_1.js:104:13
+Flags: --pretty
+{"result":[]}
+
+file_1.js:106:23
+Flags: --pretty
+{"result":[]}
+
+file_1.js:114:27
+Flags: --pretty
+{"result":[]}
+
+file_1.js:122:38
+Flags: --pretty
+{"result":[]}
+
+file_1.js:130:38
+Flags: --pretty
+{"result":[]}
+
+file_1.js:132:38
+Flags: --pretty
+{"result":[]}
+
+file_1.js:142:38
+Flags: --pretty
+{"result":[]}
+
+file_1.js:144:38
+Flags: --pretty
+{"result":[]}
+
+file_1.js:152:38
+Flags: --pretty
+{"result":[]}
+
+file_1.js:154:38
+Flags: --pretty
+{"result":[]}
+
