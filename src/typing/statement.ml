@@ -657,7 +657,6 @@ module Make
   (**********)
 
   let identifier_ cx name loc =
-    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
     let get_checking_mode_type () =
       let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
       (* We want to make sure that the reason description for the type we return
@@ -675,6 +674,7 @@ module Make
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (Flow.unify cx t)
     in
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
+      let reason = mk_reason RAutocompleteToken loc in
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> EmptyT.at loc)
     else

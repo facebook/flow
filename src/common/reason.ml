@@ -241,6 +241,7 @@ type 'loc virtual_reason_desc =
   | RRenderMaybeType of 'loc virtual_reason_desc
   | RRenderStarType of 'loc virtual_reason_desc
   | RRendersNothing
+  | RAutocompleteToken
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -281,8 +282,8 @@ let rec map_desc_locs f = function
     | RUndefinedProperty _ | RSomeProperty | RUntypedModule _ | RNamedImportedType _
     | RImportStarType _ | RImportStarTypeOf _ | RImportStar _ | RDefaultImportedType _
     | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
-    | RObjectMapi | RObjectKeyMirror | RObjectMapConst | RIndexedAccess _ | RConditionalType ) as r
-    ->
+    | RObjectMapi | RObjectKeyMirror | RObjectMapConst | RIndexedAccess _ | RConditionalType
+    | RRendersNothing | RAutocompleteToken ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -335,7 +336,6 @@ let rec map_desc_locs f = function
   | RRenderType desc -> RRenderType (map_desc_locs f desc)
   | RRenderMaybeType desc -> RRenderMaybeType (map_desc_locs f desc)
   | RRenderStarType desc -> RRenderStarType (map_desc_locs f desc)
-  | RRendersNothing -> RRendersNothing
 
 type 'loc virtual_reason = {
   desc: 'loc virtual_reason_desc;
@@ -765,6 +765,7 @@ let rec string_of_desc = function
   | RInferredUnionElemArray _ ->
     "inferred union of array element types "
     ^ "(alternatively, provide an annotation to summarize the array element type)"
+  | RAutocompleteToken -> "autocomplete token"
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (loc_of_reason r) in
@@ -1497,7 +1498,8 @@ let classification_of_reason_desc desc =
   | REnum _
   | RUnannotatedNext
   | RTypeGuard
-  | RTypeGuardParam _ ->
+  | RTypeGuardParam _
+  | RAutocompleteToken ->
     `Unclassified
 
 let is_nullish_reason r = classification_of_reason_desc r.desc = `Nullish

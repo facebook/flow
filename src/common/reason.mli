@@ -200,6 +200,7 @@ type 'loc virtual_reason_desc =
   | RRenderMaybeType of 'loc virtual_reason_desc
   | RRenderStarType of 'loc virtual_reason_desc
   | RRendersNothing
+  | RAutocompleteToken
 
 and reason_desc_function =
   | RAsync

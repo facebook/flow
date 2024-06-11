@@ -16,11 +16,11 @@ Flags: --pretty
 
 file_1.js:34:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:41:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:48:27
 Flags: --pretty
@@ -36,11 +36,11 @@ Flags: --pretty
 
 file_1.js:72:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number | string"}]}
 
 file_1.js:80:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"string & number"}]}
 
 file_1.js:98:12
 Flags: --pretty
@@ -64,27 +64,27 @@ Flags: --pretty
 
 file_1.js:114:27
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"number"}]}
 
 file_1.js:122:38
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:130:38
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number | string"}]}
 
 file_1.js:132:38
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number | string"}]}
 
 file_1.js:142:38
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"number"}]}
 
 file_1.js:144:38
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"x","type":"string"}]}
 
 file_1.js:152:38
 Flags: --pretty
@@ -93,4 +93,12 @@ Flags: --pretty
 file_1.js:154:38
 Flags: --pretty
 {"result":[]}
+
+file_1.js:161:28
+Flags: --pretty
+{"result":[{"name":"a1","type":"number"},{"name":"a2","type":"number"}]}
+
+file_1.js:168:28
+Flags: --pretty
+{"result":[{"name":"a1","type":"number"},{"name":"a2","type":"number"}]}
 
