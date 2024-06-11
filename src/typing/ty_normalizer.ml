@@ -583,9 +583,8 @@ module Make (I : INPUT) : S = struct
     let module_symbol_opt env reason =
       match desc_of_reason reason with
       | RModule name ->
-        let symbol = symbol_from_reason env reason name in
+        let symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
         return (Some symbol)
-      | RCommonJSExports name
       | RUntypedModule name ->
         let symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
         return (Some symbol)
@@ -598,7 +597,6 @@ module Make (I : INPUT) : S = struct
     let is_module_reason r =
       match desc_of_reason r with
       | RModule _
-      | RCommonJSExports _
       | RUntypedModule _
       | RExports ->
         true

@@ -1024,7 +1024,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 reconstruct_ast
                   (Type_operation_utils.Import_export.cjs_require_type
                      cx
-                     (mk_annot_reason (RCommonJSExports value) loc)
+                     (mk_annot_reason (RModule value) loc)
                      ~legacy_interop:false
                      remote_module_t
                   )

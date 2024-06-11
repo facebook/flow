@@ -166,8 +166,7 @@ type 'loc virtual_reason_desc =
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
-  | RCommonJSExports of string
-  | RModule of name
+  | RModule of string
   | RNamespace of string
   | ROptionalChain
   | RReactProps

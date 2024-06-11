@@ -148,7 +148,7 @@ module Import_export = struct
       let bind_reason = repos_reason local_loc import_reason in
       Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
     | ImportDeclaration.ImportValue ->
-      let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
+      let reason = mk_reason (RModule module_name) local_loc in
       get_module_namespace_type cx reason source_module_t
 
   let import_default_specifier_type

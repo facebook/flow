@@ -68,7 +68,7 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
     acc
 
 let add_require_bindings_from_exports_map cx loc source_name binding acc =
-  let reason = Reason.(mk_reason (RCommonJSExports source_name) loc) in
+  let reason = Reason.(mk_reason (RModule source_name) loc) in
   let module_t =
     Import_export.get_module_t cx ~perform_platform_validation:false (loc, source_name)
   in

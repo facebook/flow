@@ -741,11 +741,7 @@ module Make
     let mref = Base.String.drop_prefix value prefix_len in
     let module_t = Import_export.get_module_t cx (loc, mref) in
     let require_t =
-      Import_export.cjs_require_type
-        cx
-        (mk_reason (RCommonJSExports mref) loc)
-        ~legacy_interop
-        module_t
+      Import_export.cjs_require_type cx (mk_reason (RModule mref) loc) ~legacy_interop module_t
     in
     let reason = mk_reason (RCustom "module reference") loc in
     let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
@@ -909,7 +905,7 @@ module Make
         match source with
         | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
           let source_ns_t =
-            let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
+            let reason = mk_reason (RModule module_name) source_loc in
             Import_export.get_module_namespace_type cx reason module_t
           in
           export_from source_ns_t
@@ -1598,7 +1594,7 @@ module Make
       let reason =
         let filename = Context.file cx in
         mk_reason
-          (RModule (OrdinaryName (File_key.to_string filename)))
+          (RModule (File_key.to_string filename))
           (Loc.{ none with source = Some filename } |> ALoc.of_loc)
       in
       Flow.flow_t cx (t, Type.Unsoundness.exports_any reason);
@@ -1965,7 +1961,7 @@ module Make
                )
             )
     );
-    let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
+    let reason = mk_reason (RModule name) id_loc in
     let module_t =
       ModuleT
         {
@@ -3073,7 +3069,7 @@ module Make
           else
             Import_export.cjs_require_type
               cx
-              (mk_reason (RCommonJSExports module_name) loc)
+              (mk_reason (RModule module_name) loc)
               ~legacy_interop:false
               module_t
         | Error err ->
@@ -3289,7 +3285,7 @@ module Make
     | Import { Import.argument = (source_loc, argument); comments } ->
       let t module_name =
         let ns_t =
-          let reason = mk_reason (RModule (OrdinaryName module_name)) loc in
+          let reason = mk_reason (RModule module_name) loc in
           Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation:true
           |> Import_export.get_module_namespace_type cx reason
         in
@@ -3429,7 +3425,7 @@ module Make
                 ~perform_platform_validation:true
               |> Import_export.cjs_require_type
                    cx
-                   (mk_reason (RCommonJSExports module_name) loc)
+                   (mk_reason (RModule module_name) loc)
                    ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
@@ -3469,7 +3465,7 @@ module Make
                 ~perform_platform_validation:true
               |> Import_export.cjs_require_type
                    cx
-                   (mk_reason (RCommonJSExports module_name) loc)
+                   (mk_reason (RModule module_name) loc)
                    ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))

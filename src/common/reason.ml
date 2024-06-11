@@ -206,8 +206,7 @@ type 'loc virtual_reason_desc =
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
-  | RCommonJSExports of string
-  | RModule of name
+  | RModule of string
   | RNamespace of string
   | ROptionalChain
   | RReactProps
@@ -315,9 +314,9 @@ let rec map_desc_locs f = function
   | RRequiredOf desc -> RRequiredOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
   | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
-  | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _ | RNamespace _
-    | ROptionalChain | RReactProps | RReactElement _ | RReactDefaultProps | RReactChildren
-    | RReactRef | RReactConfig ) as r ->
+  | ( RObjectPatternRestProp | RArrayPatternRestProp | RModule _ | RNamespace _ | ROptionalChain
+    | RReactProps | RReactElement _ | RReactDefaultProps | RReactChildren | RReactRef | RReactConfig
+      ) as r ->
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
@@ -711,8 +710,7 @@ let rec string_of_desc = function
   | RRequiredOf d -> spf "required of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
-  | RCommonJSExports x -> spf "module `%s`" x
-  | RModule x -> spf "module `%s`" (display_string_of_name x)
+  | RModule x -> spf "module `%s`" x
   | RNamespace x -> spf "namespace %s" x
   | ROptionalChain -> "optional chain"
   | RReactProps -> "props"
@@ -1483,7 +1481,6 @@ let classification_of_reason_desc desc =
   | RPartialOf _
   | RRequiredOf _
   | RObjectPatternRestProp
-  | RCommonJSExports _
   | RModule _
   | RNamespace _
   | ROptionalChain

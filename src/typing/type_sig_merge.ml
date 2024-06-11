@@ -208,7 +208,7 @@ let get_module_t loc = function
 let require file loc index ~legacy_interop =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t loc resolved_require in
-  let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
+  let reason = Reason.(mk_reason (RModule mref) loc) in
   ConsGen.cjs_require file.cx module_t reason false legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
@@ -503,7 +503,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) env file = function
   | Pack.Require { loc; index } -> require file loc index ~legacy_interop:false
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
-    let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
+    let ns_reason = Reason.(mk_reason (RModule mref) loc) in
     let ns_t = import_ns file ns_reason loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
@@ -764,7 +764,7 @@ and merge_annot env file = function
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
     let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
-    let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
+    let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     ConsGen.cjs_require file.cx module_t reason false false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
@@ -1226,7 +1226,7 @@ and merge_value ?(as_const = false) env file = function
   | AsConst value -> merge_value ~as_const:true env file value
 
 and merge_declare_module_implicitly_exported_object env file (loc, module_name, props) =
-  let reason = Reason.(mk_reason (RModule (OrdinaryName module_name)) loc) in
+  let reason = Reason.(mk_reason (RModule module_name) loc) in
   let proto = Type.ObjProtoT reason in
   let props =
     SMap.mapi (merge_obj_value_prop ~for_export:true ~as_const:false env file) props
