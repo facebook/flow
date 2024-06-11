@@ -1,0 +1,8 @@
+[include]
+foo.js
+baz/
+
+[options]
+all=true
+casting_syntax=both
+files.implicitly_include_root=false

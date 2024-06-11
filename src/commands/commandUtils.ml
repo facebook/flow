@@ -635,7 +635,7 @@ let file_options =
         (s, reg))
       patterns
   in
-  let includes_of_arg ~root ~lib_paths paths =
+  let includes_of_arg ~implicitly_include_root ~root ~lib_paths paths =
     (* Explicitly included paths are always added to the path_matcher *)
     let path_matcher =
       Base.List.fold_left
@@ -646,7 +646,13 @@ let file_options =
     (* Implicitly included paths are added only if they're not already being watched *)
     let path_len path = path |> File_path.to_string |> String.length in
     let implicitly_included_paths_sorted =
-      Base.List.sort ~compare:(fun a b -> path_len a - path_len b) (root :: lib_paths)
+      let implicitly_included =
+        if implicitly_include_root then
+          root :: lib_paths
+        else
+          lib_paths
+      in
+      Base.List.sort ~compare:(fun a b -> path_len a - path_len b) implicitly_included
       (* Shortest path first *)
     in
     Base.List.fold_left
@@ -704,7 +710,10 @@ let file_options =
     let includes =
       includes
       |> Base.List.rev_append (FlowConfig.includes flowconfig)
-      |> includes_of_arg ~root ~lib_paths
+      |> includes_of_arg
+           ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
+           ~root
+           ~lib_paths
     in
     let module_file_exts = FlowConfig.module_file_exts flowconfig in
     let module_resource_exts = FlowConfig.module_resource_exts flowconfig in
@@ -1286,6 +1295,7 @@ let make_options
       ~root
       ~no_flowlib
       ~temp_dir
+      ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
       ~includes
       ~ignores
       ~libs

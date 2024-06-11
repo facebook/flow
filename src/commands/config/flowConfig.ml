@@ -71,6 +71,7 @@ module Opts = struct
     file_watcher_mergebase_with_git: string option;
     file_watcher_mergebase_with_hg: string option;
     file_watcher_timeout: int option;
+    files_implicitly_include_root: bool;
     format_bracket_spacing: bool option;  (** print spaces between brackets in object literals *)
     format_single_quotes: bool option;  (** prefer single-quoted strings *)
     gc_worker_custom_major_ratio: int option;  (** Gc.control's custom_major_ratio *)
@@ -201,6 +202,7 @@ module Opts = struct
       file_watcher_mergebase_with_git = None;
       file_watcher_mergebase_with_hg = None;
       file_watcher_timeout = None;
+      files_implicitly_include_root = true;
       format_bracket_spacing = None;
       format_single_quotes = None;
       gc_worker_custom_major_ratio = None;
@@ -925,6 +927,9 @@ module Opts = struct
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
+      ( "files.implicitly_include_root",
+        boolean (fun opts v -> Ok { opts with files_implicitly_include_root = v })
+      );
       ("format.bracket_spacing", format_bracket_spacing_parser);
       ("format.single_quotes", format_single_quotes_parser);
       ("gc.worker.custom_major_ratio", gc_worker_custom_major_ratio_parser);
@@ -1582,6 +1587,8 @@ let file_watcher_mergebase_with_git c = c.options.Opts.file_watcher_mergebase_wi
 let file_watcher_mergebase_with_hg c = c.options.Opts.file_watcher_mergebase_with_hg
 
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
+
+let files_implicitly_include_root c = c.options.Opts.files_implicitly_include_root
 
 let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
 

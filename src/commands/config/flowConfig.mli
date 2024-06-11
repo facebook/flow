@@ -120,6 +120,8 @@ val file_watcher_mergebase_with_hg : config -> string option
 
 val file_watcher_timeout : config -> int option
 
+val files_implicitly_include_root : config -> bool
+
 val format_bracket_spacing : config -> bool option
 
 val format_single_quotes : config -> bool option

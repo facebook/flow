@@ -16,6 +16,7 @@ type options = {
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
+  implicitly_include_root: bool;
   includes: Path_matcher.t;
   lib_paths: File_path.t list;
   module_file_exts: string list;
@@ -31,6 +32,7 @@ let mk_options
     ~ignores
     ~untyped
     ~declarations
+    ~implicitly_include_root
     ~includes
     ~lib_paths
     ~module_file_exts
@@ -44,6 +46,7 @@ let mk_options
     ignores;
     untyped;
     declarations;
+    implicitly_include_root;
     includes;
     lib_paths;
     module_file_exts;
@@ -60,6 +63,7 @@ let default_options =
     ignores = [];
     untyped = [];
     declarations = [];
+    implicitly_include_root = true;
     includes = Path_matcher.empty;
     lib_paths = [];
     module_file_exts = [];
@@ -602,8 +606,8 @@ let watched_paths options =
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
- * given FlowConfig root. This means all the files under the root and all the
- * included files, minus the ignored files and the libs.
+ * given FlowConfig root. This means all the files under the root (if the implicit
+ * behavior is enabled) and all the included files, minus the ignored files and the libs.
  *
  * If `all` is true, ignored files and libs are also returned.
  * If `include_libdef` is true, libdef files are also included.
@@ -648,7 +652,7 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
     match subdir with
     | None ->
       fun path ->
-        (String.starts_with ~prefix:root_str path
+        ((options.implicitly_include_root && String.starts_with ~prefix:root_str path)
         || is_included options path
         || is_libdef_filter path
         )
@@ -660,7 +664,7 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
       let subdir_str = File_path.to_string subdir in
       fun path ->
         String.starts_with ~prefix:subdir_str path
-        && (String.starts_with ~prefix:root_str path
+        && ((options.implicitly_include_root && String.starts_with ~prefix:root_str path)
            || is_included options path
            || is_libdef_filter path
            )

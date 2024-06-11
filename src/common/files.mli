@@ -18,6 +18,7 @@ val mk_options :
   ignores:(string * Str.regexp) list ->
   untyped:(string * Str.regexp) list ->
   declarations:(string * Str.regexp) list ->
+  implicitly_include_root:bool ->
   includes:Path_matcher.t ->
   lib_paths:File_path.t list ->
   module_file_exts:string list ->

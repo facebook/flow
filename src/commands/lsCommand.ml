@@ -129,6 +129,7 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
     ~no_flowlib:true
     ~temp_dir:(CommandUtils.get_temp_dir None |> File_path.make)
     ~ignores
+    ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
     ~includes
     ~libs
     ~untyped
