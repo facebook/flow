@@ -28,3 +28,8 @@ function test_function_implicit_call(
 ) {
   const dataArr: mixed = typeof data === 'function' ? functor(data)() : data; // okay
 }
+
+function test_optional(obj: {a?: number}) {
+  obj.a as $NonMaybeType<mixed>; // error undefined ~> MixedT (non-maybe)
+  obj.a as number; // error
+}

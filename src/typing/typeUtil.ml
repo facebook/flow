@@ -630,6 +630,7 @@ let is_concrete = function
 let is_mixed_subtype l mixed_flavor =
   match (l, mixed_flavor) with
   | (DefT (_, MixedT flavor), _) when flavor = mixed_flavor -> true
+  | (OptionalT _, (Mixed_non_maybe | Mixed_non_void))
   | (MaybeT _, (Mixed_non_maybe | Mixed_non_void | Mixed_non_null))
   | (DefT (_, NullT), (Mixed_non_maybe | Mixed_non_null))
   | (DefT (_, VoidT), (Mixed_non_maybe | Mixed_non_void)) ->
