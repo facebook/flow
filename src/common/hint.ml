@@ -19,20 +19,19 @@ type hint_kind =
  * then we can check the value of property `f` with the hint `(number) => number`
  * and, further, use `number` as the type of `x`. *)
 
-type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
+type ('t, 'targs, 'args, 'props_and_children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
+  return_hints: ('t, 'targs, 'args, 'props_and_children) hint list Lazy.t;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
 }
 
-and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
+and ('t, 'targs, 'args, 'props_and_children) jsx_implicit_instantiation_hints = {
   jsx_reason: Reason.t;
   jsx_name: string;
-  jsx_props: 'props;
-  jsx_children: 'children;
-  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
+  jsx_props_and_children: 'props_and_children;
+  jsx_hints: ('t, 'targs, 'args, 'props_and_children) hint list Lazy.t;
 }
 
 and sentinel_refinement =
@@ -46,7 +45,7 @@ and predicate_kind =
   | PredKind
   | TypeGuardKind of ALoc.t * string
 
-and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
+and ('t, 'targs, 'args, 'props_and_children) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
   | Decomp_ObjProp of string
   (* Hint on `{ [k]: e }` becomes hint on `e` *)
@@ -95,17 +94,18 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
   | Instantiate_Callee of
-      ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints
+      ('t, 'targs, 'args, 'props_and_children) fun_call_implicit_instantiation_hints
   (* Type of Comp in <Comp ... /> is instantiated with props and children.
      Returns Comp if the type of Comp is not polymorphic. *)
-  | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints
+  | Instantiate_Component of
+      ('t, 'targs, 'args, 'props_and_children) jsx_implicit_instantiation_hints
   (* T of Promise<T> becomes hint on return in async scope *)
   | Decomp_Promise
 
-and ('t, 'targs, 'args, 'props, 'children) hint =
+and ('t, 'targs, 'args, 'props_and_children) hint =
   | Hint_t of 't * hint_kind
   | Hint_Decomp of
-      (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't * hint_kind
+      (int * ('t, 'targs, 'args, 'props_and_children) hint_decomposition) Nel.t * 't * hint_kind
   (* The hint placeholder used in env_resolution to pass to expression type checkers.
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
@@ -207,12 +207,12 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
         arg_list = Lazy.map map_arg_list arg_list;
         arg_index;
       }
-  | Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hints } ->
-    let (jsx_props, jsx_children) = map_jsx jsx_reason jsx_name jsx_props jsx_children in
+  | Instantiate_Component { jsx_reason; jsx_name; jsx_props_and_children; jsx_hints } ->
+    let jsx_props_and_children = map_jsx jsx_reason jsx_name jsx_props_and_children in
     let jsx_hints =
       Lazy.map (List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx)) jsx_hints
     in
-    Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hints }
+    Instantiate_Component { jsx_reason; jsx_name; jsx_props_and_children; jsx_hints }
   | Decomp_Promise -> Decomp_Promise
 
 and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function

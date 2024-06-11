@@ -269,7 +269,7 @@ let resolve_hint cx loc hint =
       cache_ref := ALocMap.add l result !cache_ref;
       result
   in
-  let map_jsx reason name props children =
+  let map_jsx reason name (props, children) =
     let cache = Context.hint_map_jsx_cache cx in
     let key =
       ( reason,
@@ -287,9 +287,9 @@ let resolve_hint cx loc hint =
     | None ->
       let original_errors = Context.errors cx in
       Context.reset_errors cx Flow_error.ErrorSet.empty;
-      let result =
+      let props =
         lazy
-          (let (props, _, unresolved_params, (children_loc, _)) =
+          (let (props, _, _, _) =
              Statement.jsx_mk_props
                cx
                reason
@@ -299,23 +299,12 @@ let resolve_hint cx loc hint =
                props
                children
            in
-           let children =
-             Base.List.map
-               ~f:(function
-                 | Type.UnresolvedArg (TupleElement { t; _ }, _) -> t
-                 | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
-               unresolved_params
-             |> TypeUtil.normalize_jsx_children_prop children_loc
-           in
-           (props, children)
+           props
           )
       in
-      let props = Lazy.map fst result in
-      let children = Lazy.map snd result in
       Context.reset_errors cx original_errors;
-      let result = (props, children) in
-      Hashtbl.add cache key result;
-      result
+      Hashtbl.add cache key props;
+      props
   in
   Hint.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
 

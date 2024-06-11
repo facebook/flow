@@ -810,7 +810,8 @@ struct
                     | _ -> acc)
                   checks
                   acc
-              | Hint.Instantiate_Component { Hint.jsx_props; jsx_children; _ } ->
+              | Hint.Instantiate_Component
+                  { Hint.jsx_props_and_children = (jsx_props, jsx_children); _ } ->
                 depends_on_synthesizable_toplevel_expressions acc ~collect:(fun collector ->
                     Base.List.iter jsx_props ~f:(fun prop ->
                         ignore @@ collector#jsx_opening_attribute prop

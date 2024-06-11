@@ -59,8 +59,7 @@ type ast_hints =
   ( hint_node,
     (ALoc.t, ALoc.t) Ast.Expression.CallTypeArgs.t option,
     (ALoc.t, ALoc.t) Ast.Expression.ArgList.t,
-    (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list,
-    ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list
+    (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list * (ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list)
   )
   hint
   list

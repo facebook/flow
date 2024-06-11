@@ -9,20 +9,19 @@ type hint_kind =
   | ExpectedTypeHint
   | BestEffortHint
 
-type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
+type ('t, 'targs, 'args, 'props_and_children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
+  return_hints: ('t, 'targs, 'args, 'props_and_children) hint list Lazy.t;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
 }
 
-and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
+and ('t, 'targs, 'args, 'props_and_children) jsx_implicit_instantiation_hints = {
   jsx_reason: Reason.t;
   jsx_name: string;
-  jsx_props: 'props;
-  jsx_children: 'children;
-  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
+  jsx_props_and_children: 'props_and_children;
+  jsx_hints: ('t, 'targs, 'args, 'props_and_children) hint list Lazy.t;
 }
 
 and sentinel_refinement =
@@ -36,7 +35,7 @@ and predicate_kind =
   | PredKind
   | TypeGuardKind of ALoc.t * string
 
-and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
+and ('t, 'targs, 'args, 'props_and_children) hint_decomposition =
   | Decomp_ObjProp of string
   | Decomp_ObjComputed of Reason.t
   | Decomp_ObjSpread
@@ -60,31 +59,32 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   | Simplify_Callee of Reason.t
   | Instantiate_Callee of
-      ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints
-  | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints
+      ('t, 'targs, 'args, 'props_and_children) fun_call_implicit_instantiation_hints
+  | Instantiate_Component of
+      ('t, 'targs, 'args, 'props_and_children) jsx_implicit_instantiation_hints
   | Decomp_Promise
 
-and ('t, 'targs, 'args, 'props, 'children) hint =
+and ('t, 'targs, 'args, 'props_and_children) hint =
   | Hint_t of 't * hint_kind
   | Hint_Decomp of
-      (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't * hint_kind
+      (int * ('t, 'targs, 'args, 'props_and_children) hint_decomposition) Nel.t * 't * hint_kind
   | Hint_Placeholder
 
 val string_of_hint_unknown_kind :
-  ('t, 'targs, 'args, 'props, 'children) hint_decomposition -> string
+  ('t, 'targs, 'args, 'props_and_children) hint_decomposition -> string
 
 val string_of_hints :
-  on_hint:('t -> string) -> ('t, 'targs, 'args, 'props, 'children) hint list -> string
+  on_hint:('t -> string) -> ('t, 'targs, 'args, 'props_and_children) hint list -> string
 
 val decompose_hints :
-  ('t, 'targs, 'args, 'props, 'children) hint_decomposition ->
-  ('t, 'targs, 'args, 'props, 'children) hint list ->
-  ('t, 'targs, 'args, 'props, 'children) hint list
+  ('t, 'targs, 'args, 'props_and_children) hint_decomposition ->
+  ('t, 'targs, 'args, 'props_and_children) hint list ->
+  ('t, 'targs, 'args, 'props_and_children) hint list
 
 val map :
   map_base_hint:('a -> 'b) ->
   map_targs:('c -> 'd) ->
   map_arg_list:('e -> 'f) ->
-  map_jsx:(Reason.t -> string -> 'g -> 'h -> 'i * 'j) ->
-  ('a, 'c, 'e, 'g, 'h) hint ->
-  ('b, 'd, 'f, 'i, 'j) hint
+  map_jsx:(Reason.t -> string -> 'g -> 'h) ->
+  ('a, 'c, 'e, 'g) hint ->
+  ('b, 'd, 'f, 'h) hint
