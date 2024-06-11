@@ -807,7 +807,6 @@ module rec TypeTerm : sig
           t_out
     | CopyNamedExportsT of reason * t * t_out
     | CopyTypeExportsT of reason * t * t_out
-    | CheckUntypedImportT of reason * import_kind
     | ExportNamedT of {
         reason: reason;
         value_exports_tmap: named_symbol NameUtils.Map.t;
@@ -4173,7 +4172,6 @@ let string_of_use_ctor = function
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | CopyTypeExportsT _ -> "CopyTypeExportsT"
-  | CheckUntypedImportT _ -> "CheckUntypedImportT"
   | DebugPrintT _ -> "DebugPrintT"
   | DebugSleepT _ -> "DebugSleepT"
   | ElemT _ -> "ElemT"

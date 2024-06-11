@@ -345,7 +345,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | CJSExtractNamedExportsT _
     | CopyNamedExportsT _
     | CopyTypeExportsT _
-    | CheckUntypedImportT _
     | ExportNamedT _
     | ExportTypeT _
     | AssertExportIsTypeT _

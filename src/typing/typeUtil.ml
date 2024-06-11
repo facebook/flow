@@ -70,7 +70,6 @@ and reason_of_use_t = function
   | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
-  | CheckUntypedImportT (reason, _) -> reason
   | DebugPrintT reason -> reason
   | DebugSleepT reason -> reason
   | ElemT (_, reason, _, _) -> reason
@@ -330,7 +329,6 @@ let rec util_use_op_of_use_t :
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)
-  | CheckUntypedImportT (_, _)
   | ExportNamedT
       { reason = _; value_exports_tmap = _; type_exports_tmap = _; export_kind = _; tout = _ }
   | ExportTypeT

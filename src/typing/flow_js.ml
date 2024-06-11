@@ -827,10 +827,6 @@ struct
         (*****************)
         (* Import checks *)
         (*****************)
-        (* Raise an error if an untyped module is imported. *)
-        | ((ModuleT _ | DefT (_, ObjT _)), CheckUntypedImportT _) -> ()
-        | (AnyT (lreason, _), CheckUntypedImportT (reason, import_kind)) ->
-          Flow_js_utils.check_untyped_import cx import_kind lreason reason
         | (_, AssertImportIsValueT (reason, name)) ->
           let test = function
             | TypeT _
@@ -6765,7 +6761,6 @@ struct
     | ConstructorT _
     | CopyNamedExportsT _
     | CopyTypeExportsT _
-    | CheckUntypedImportT _
     | DestructuringT _
     | ElemT _
     | EnumExhaustiveCheckT _

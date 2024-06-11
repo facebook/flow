@@ -174,7 +174,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | CopyNamedExportsT (_, _, t)
   | CopyTypeExportsT (_, _, t) ->
     resolve t
-  | CheckUntypedImportT _ -> ()
   | ExportNamedT { tout = t; _ }
   | ExportTypeT { tout = t; _ }
   | AssertExportIsTypeT (_, _, t)

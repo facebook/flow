@@ -923,7 +923,9 @@ module Make
     | E.ExportBatchSpecifier (specifier_loc, None) ->
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RCustom "batch export") loc in
-      Flow.flow cx (module_t, CheckUntypedImportT (reason, ImportValue));
+      (match Flow.singleton_concrete_type_for_inspection cx reason module_t with
+      | AnyT (r, _) -> Flow_js_utils.check_untyped_import cx ImportValue r reason
+      | _ -> ());
       E.ExportBatchSpecifier (specifier_loc, None)
 
   let hook_check cx effect (loc, { Ast.Identifier.name; _ }) =

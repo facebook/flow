@@ -718,7 +718,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | ConstructorT _ -> p t
     | CopyNamedExportsT _ -> p t
     | CopyTypeExportsT _ -> p t
-    | CheckUntypedImportT _ -> p t
     | DebugPrintT _ -> p t
     | DebugSleepT _ -> p t
     | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
