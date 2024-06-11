@@ -34,7 +34,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -82,7 +82,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -131,7 +131,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -178,7 +178,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -393,7 +393,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -427,7 +427,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
