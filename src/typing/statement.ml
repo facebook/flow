@@ -5404,6 +5404,31 @@ module Make
         get_prop ~cond:None cx reason ~use_op ~hint:hint_unavailable react (reason, "Fragment")
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
+    let props =
+      match react_jsx_normalize_children_prop cx loc_children unresolved_params with
+      | None -> NullT.at expr_loc
+      | Some fragment_children_prop ->
+        let reason_props = mk_reason RReactProps loc_children in
+        let props =
+          NameUtils.Map.singleton
+            (OrdinaryName "children")
+            (Type.Field
+               {
+                 preferred_def_locs = None;
+                 key_loc = None;
+                 type_ = fragment_children_prop;
+                 polarity = Polarity.Neutral;
+               }
+            )
+        in
+        Obj_type.mk_with_proto
+          cx
+          reason_props
+          ~obj_kind:Exact
+          ~frozen:false
+          ~props
+          (ObjProtoT reason_props)
+    in
     let (t, _) =
       react_jsx_desugar
         cx
@@ -5412,8 +5437,7 @@ module Make
         "React.Fragment"
         fragment_t
         None
-        (NullT.at expr_loc)
-        unresolved_params
+        props
     in
     Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
@@ -5509,7 +5533,7 @@ module Make
             match Context.jsx cx with
             | Options.Jsx_react ->
               let (loc_element, _loc_opening, loc_children) = locs in
-              react_jsx_desugar cx name ~loc_element ~loc_children c targs_opt o unresolved_params
+              react_jsx_desugar cx name ~loc_element ~loc_children c targs_opt o
             | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
               non_react_jsx_desugar
                 cx
@@ -5535,7 +5559,7 @@ module Make
         let m_expr = jsx_title_member_to_expression member in
         let ((m_loc, t), m_expr') = expression cx m_expr in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName name))) t in
-        let (o, attributes', unresolved_params, children) =
+        let (o, attributes', _unresolved_params, children) =
           jsx_mk_props
             cx
             reason
@@ -5545,9 +5569,7 @@ module Make
             attributes
             children
         in
-        let (t, _) =
-          react_jsx_desugar cx ~loc_element ~loc_children name c targs_opt o unresolved_params
-        in
+        let (t, _) = react_jsx_desugar cx ~loc_element ~loc_children name c targs_opt o in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
@@ -5748,13 +5770,24 @@ module Make
         attributes
     in
     let attributes = List.rev atts in
-    let (unresolved_params, children) = collapse_children cx children in
+    let (unresolved_params, ((loc_children, _) as children)) = collapse_children cx children in
     let acc =
       match unresolved_params with
       | [] -> acc
       (* We add children to the React.createElement() call for React. Not to the
        * props as other JSX users may support. *)
-      | _ when is_react -> acc
+      | _ when is_react ->
+        (match react_jsx_normalize_children_prop cx loc_children unresolved_params with
+        | None -> acc
+        | Some children_prop ->
+          ObjectExpressionAcc.add_prop
+            (Properties.add_field
+               (OrdinaryName "children")
+               Polarity.Neutral
+               ~key_loc:None
+               children_prop
+            )
+            acc)
       | _ ->
         let arr =
           Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
@@ -5788,25 +5821,26 @@ module Make
     in
     (t, attributes, unresolved_params, children)
 
-  and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children =
+  and react_jsx_normalize_children_prop cx loc_children children =
+    children
+    |> Base.List.map ~f:(function
+           | UnresolvedArg (TupleElement { t; _ }, _) -> t
+           | UnresolvedSpreadArg a ->
+             Flow.add_output
+               cx
+               (Error_message.EUnsupportedSyntax
+                  (loc_children, Flow_intermediate_error_types.SpreadArgument)
+               );
+             reason_of_t a |> AnyT.error
+           )
+    |> TypeUtil.normalize_jsx_children_prop loc_children
+
+  and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props =
     let return_hint = Type_env.get_hint cx loc_element in
     let reason =
       mk_reason
         (RReactElement { name_opt = Some (OrdinaryName name); from_component_syntax = false })
         loc_element
-    in
-    let children =
-      Base.List.map
-        ~f:(function
-          | UnresolvedArg (TupleElement { t; _ }, _) -> t
-          | UnresolvedSpreadArg a ->
-            Flow.add_output
-              cx
-              (Error_message.EUnsupportedSyntax
-                 (loc_children, Flow_intermediate_error_types.SpreadArgument)
-              );
-            reason_of_t a |> AnyT.error)
-        children
     in
     let (tout, instantiated_component, use_op) =
       let reason_jsx = mk_reason (RFunction RNormal) loc_element in
@@ -5817,7 +5851,6 @@ module Make
       in
       let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
       let specialized_component = Context.new_specialized_callee cx in
-      let jsx_children = TypeUtil.normalize_jsx_children_prop loc_children children in
       Flow.flow
         cx
         ( component_t,
@@ -5828,7 +5861,7 @@ module Make
                 {
                   component = component_t;
                   jsx_props = props;
-                  jsx_children;
+                  jsx_children = None;
                   tout;
                   targs = targs_opt;
                   return_hint;
