@@ -1203,22 +1203,13 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           )
       )
     in
-    let speculative_subtyping_succeeds ~upper_unresolved use_op l u =
-      match
-        SpeculationKit.try_singleton_throw_on_failure
-          cx
-          trace
-          reason
-          ~upper_unresolved
-          l
-          (UseT (use_op, u))
-      with
+    let speculative_subtyping_succeeds use_op l u =
+      match SpeculationKit.try_singleton_throw_on_failure cx trace reason l (UseT (use_op, u)) with
       | exception Flow_js_utils.SpeculationSingletonError -> false
       | _ -> true
     in
     if
       speculative_subtyping_succeeds
-        ~upper_unresolved:true
         use_op
         check_t
         (Type_subst.subst cx ~use_op:unknown_use subst_map extends_t)
@@ -1247,7 +1238,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           let { inferred; _ } =
             pin_type cx ~use_op tparam polarity ~default_bound:(Some bound) reason targ
           in
-          if speculative_subtyping_succeeds ~upper_unresolved:false unknown_use inferred bound then
+          if speculative_subtyping_succeeds unknown_use inferred bound then
             Base.Continue_or_stop.Continue (Subst_name.Map.add name inferred map)
           else
             Base.Continue_or_stop.Stop None)
@@ -1712,7 +1703,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                  cx
                  trace
                  reason
-                 ~upper_unresolved:true
                  check_t
                  (UseT (use_op, extends_t))
              with

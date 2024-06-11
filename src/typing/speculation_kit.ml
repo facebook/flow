@@ -29,14 +29,15 @@ module type OUTPUT = sig
   val try_intersection :
     Context.t -> Type.DepthTrace.t -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
 
+  (**
+   * [try_singleton_throw_on_failure cx trace reason t u] runs the constraint
+   * between (t, u) in a speculative environment. If an error is raised then a
+   * SpeculationSingletonError exception is raised. This needs to be caught by
+   * the caller of this function. This function also assumes resolved inputs. It
+   * does not run concretization like `try_union` and `try_intersection`.
+   *)
   val try_singleton_throw_on_failure :
-    Context.t ->
-    Type.DepthTrace.t ->
-    Reason.reason ->
-    upper_unresolved:bool ->
-    Type.t ->
-    Type.use_t ->
-    unit
+    Context.t -> Type.DepthTrace.t -> Reason.reason -> Type.t -> Type.use_t -> unit
 
   val fully_resolve_type :
     Context.t -> Type.DepthTrace.t -> reason -> Graph_explorer.Tbl.key -> Type.t -> unit
@@ -228,24 +229,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
     @@ (* ...and then begin the choice-making process *)
     try_flow_continuation cx trace reason speculation_id (IntersectionCases (ts, u))
 
-  and try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u =
+  and try_singleton_throw_on_failure cx trace reason t u =
     let speculation_id = mk_id () in
     Speculation.init_speculation cx speculation_id;
-    let imap =
-      if upper_unresolved then
-        (* collect parts of the intersection type to be fully resolved *)
-        let imap = ResolvableTypeJob.collect_of_types cx IMap.empty [t] in
-        (* collect parts of the upper bound to be fully resolved, while logging
-           unresolved tvars *)
-        ResolvableTypeJob.collect_of_use ~log_unresolved:speculation_id cx imap u
-      else
-        let imap = ResolvableTypeJob.collect_of_use cx IMap.empty u in
-        ResolvableTypeJob.collect_of_type ~log_unresolved:speculation_id cx imap t
-    in
-    (* fully resolve the collected types *)
-    resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
-    @@ (* ...and then begin the choice-making process *)
-    try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
+    flow_t
+      cx
+      ( choice_kit reason Trigger,
+        try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
+      )
 
   (************************)
   (* Full type resolution *)

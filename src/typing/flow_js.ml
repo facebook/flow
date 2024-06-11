@@ -10830,7 +10830,6 @@ struct
         cx
         DepthTrace.dummy_trace
         (TypeUtil.reason_of_t l)
-        ~upper_unresolved:false
         l
         (UseT (unknown_use, u))
     with

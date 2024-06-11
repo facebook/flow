@@ -402,7 +402,6 @@ and type_of_hint_decomposition cx op reason t =
               SpeculationFlow.flow_t_unsafe
                 cx
                 reason
-                ~upper_unresolved:false
                 ( DefT
                     ( reason,
                       ArrT (ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None })
