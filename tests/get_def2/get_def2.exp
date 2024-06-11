@@ -86,6 +86,26 @@ react_jsx.js:24:12
 Flags:
 react_jsx.js:9:5,9:7
 
+react_jsx.js:28:4
+Flags:
+react_jsx.js:27:7,27:9
+
+react_jsx.js:30:7
+Flags:
+react_jsx.js:27:14,27:16
+
+react_jsx.js:33:4
+Flags:
+react_jsx.js:27:7,27:9
+
+react_jsx.js:35:7
+Flags:
+react_jsx.js:27:22,27:24
+
+react_jsx.js:37:11
+Flags:
+react_jsx.js:27:28,27:30
+
 override.js:8:19
 Flags:
 override.js:12:3,12:10

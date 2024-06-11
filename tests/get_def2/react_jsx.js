@@ -23,3 +23,16 @@ let msg = "hello";
 
 (<div id={msg}/>);
 //         ^
+
+const Foo = {Bar: C, Baz: {Bar: C}};
+<Foo.Bar x={msg} />;
+// ^
+<Foo.Bar x={msg} />;
+//    ^
+
+<Foo.Baz.Bar x={msg} />;
+// ^
+<Foo.Baz.Bar x={msg} />;
+//    ^
+<Foo.Baz.Bar x={msg} />;
+//        ^

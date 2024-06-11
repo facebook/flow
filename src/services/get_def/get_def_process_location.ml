@@ -286,10 +286,34 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
       if covers_target loc then this#found_empty "jsx element (namespaced)";
       super#jsx_element_name_namespaced ns
 
-    method! jsx_element_name_member_expression expr =
-      let (loc, _) = expr in
-      (* TODO: this should be supported *)
-      if covers_target loc then this#found_empty "jsx element (member)";
+    method! jsx_member_expression_identifier
+        ((annot, { Ast.JSX.Identifier.name; comments = _ }) as id) =
+      if this#annot_covers_target annot then begin
+        let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
+        this#request (Get_def_request.Identifier { name; loc = annot })
+      end;
+      super#jsx_member_expression_identifier id
+
+    method! jsx_member_expression expr =
+      let ( _,
+            {
+              Ast.JSX.MemberExpression._object;
+              property = (property_annot, { Ast.JSX.Identifier.name = prop_name; _ });
+            }
+          ) =
+        expr
+      in
+      ( if this#annot_covers_target property_annot then
+        match _object with
+        | Ast.JSX.MemberExpression.Identifier (obj_annot, _)
+        | Ast.JSX.MemberExpression.MemberExpression
+            (_, { Ast.JSX.MemberExpression.property = (obj_annot, _); _ }) ->
+          let obj_annot = (this#loc_of_annot obj_annot, this#type_from_enclosing_node obj_annot) in
+          let result =
+            Get_def_request.(Member { prop_name; object_type = obj_annot; force_instance = false })
+          in
+          this#request result
+      );
       super#jsx_member_expression expr
 
     method! pattern ?kind ((pat_annot, p) as pat) =
