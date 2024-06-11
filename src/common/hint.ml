@@ -30,6 +30,7 @@ type ('t, 'targs, 'args, 'props_and_children) fun_call_implicit_instantiation_hi
 and ('t, 'targs, 'args, 'props_and_children) jsx_implicit_instantiation_hints = {
   jsx_reason: Reason.t;
   jsx_name: string;
+  jsx_targs: 'targs Lazy.t;
   jsx_props_and_children: 'props_and_children;
   jsx_hints: ('t, 'targs, 'args, 'props_and_children) hint list Lazy.t;
 }
@@ -207,12 +208,13 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
         arg_list = Lazy.map map_arg_list arg_list;
         arg_index;
       }
-  | Instantiate_Component { jsx_reason; jsx_name; jsx_props_and_children; jsx_hints } ->
+  | Instantiate_Component { jsx_reason; jsx_name; jsx_targs; jsx_props_and_children; jsx_hints } ->
+    let jsx_targs = Lazy.map map_targs jsx_targs in
     let jsx_props_and_children = map_jsx jsx_reason jsx_name jsx_props_and_children in
     let jsx_hints =
       Lazy.map (List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx)) jsx_hints
     in
-    Instantiate_Component { jsx_reason; jsx_name; jsx_props_and_children; jsx_hints }
+    Instantiate_Component { jsx_reason; jsx_name; jsx_targs; jsx_props_and_children; jsx_hints }
   | Decomp_Promise -> Decomp_Promise
 
 and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function

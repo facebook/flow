@@ -2486,7 +2486,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ( _,
             {
               Opening.name = opening_name;
-              targs = _;
+              targs;
               self_closing = _;
               attributes = opening_attributes;
             }
@@ -2573,6 +2573,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
              {
                jsx_reason = mk_reason (RJSXElement (Some jsx_name)) loc_element;
                jsx_name;
+               jsx_targs = lazy targs;
                jsx_props_and_children = (opening_attributes, children);
                (* TODO: thread hint *)
                jsx_hints = lazy [];

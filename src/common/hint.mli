@@ -20,6 +20,7 @@ type ('t, 'targs, 'args, 'props_and_children) fun_call_implicit_instantiation_hi
 and ('t, 'targs, 'args, 'props_and_children) jsx_implicit_instantiation_hints = {
   jsx_reason: Reason.t;
   jsx_name: string;
+  jsx_targs: 'targs Lazy.t;
   jsx_props_and_children: 'props_and_children;
   jsx_hints: ('t, 'targs, 'args, 'props_and_children) hint list Lazy.t;
 }

@@ -20,3 +20,7 @@ function ComponentWithBound<T: number>(pprops: {a:T}): React$Node {}
 component ComponentSyntaxNoRenders() {
   return <Component />; // ok
 }
+
+declare component NeedsExplicitTargs<T>(f: (T) => void);
+
+<NeedsExplicitTargs<string> f={(v) => { v as string;}} />; // ok
