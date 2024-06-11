@@ -883,7 +883,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             }
         in
         (inferred_targ_list, lhs, constructor_t, Some new_tout)
-      | Check.ReactJSX { component; jsx_props; targs; jsx_children } ->
+      | Check.ReactJSX { component; jsx_props; targs } ->
         let new_tout = Tvar.mk cx reason_op in
         let (_, inferred_targ_list) = merge_targs targs in
         let react_kit_t =
@@ -894,7 +894,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                 {
                   component;
                   jsx_props;
-                  jsx_children;
                   targs = None;
                   tout = new_tout;
                   return_hint = Type.hint_unavailable;

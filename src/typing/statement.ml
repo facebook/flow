@@ -5861,7 +5861,6 @@ module Make
                 {
                   component = component_t;
                   jsx_props = props;
-                  jsx_children = None;
                   tout;
                   targs = targs_opt;
                   return_hint;

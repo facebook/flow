@@ -281,7 +281,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * add a positive variance annotation. We may consider marking that type as
          * constant in the future as well. *)
         let prop_polarity = Polarity.Neutral in
-        let finish cx trace reason config defaults children =
+        let finish cx trace reason config defaults =
           let {
             Object.reason = config_reason;
             props = config_props;
@@ -291,22 +291,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             reachable_targs = config_targs;
           } =
             config
-          in
-          (* If we have some type for children then we want to add a children prop
-           * to our config props. *)
-          let config_props =
-            Base.Option.value_map children ~default:config_props ~f:(fun children ->
-                NameUtils.Map.add
-                  (OrdinaryName "children")
-                  {
-                    Object.prop_t = children;
-                    is_own = true;
-                    is_method = false;
-                    polarity = prop_polarity;
-                    key_loc = None;
-                  }
-                  config_props
-            )
           in
           (* Remove the key and ref props from our config. We check key and ref
            * independently of our config. So we must remove them so the user can't
@@ -502,14 +486,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           match state with
           (* If we have some type for default props then we need to wait for that
            * type to resolve before finishing our props type. *)
-          | Config { component_default_props = Some t; jsx_children } ->
+          | Config { component_default_props = Some t } ->
             let tool = Resolve Next in
-            let state = Defaults { config = x; children = jsx_children } in
+            let state = Defaults { config = x } in
             rec_flow cx trace (t, ObjKitT (use_op, reason, tool, ReactConfig state, tout))
           (* If we have no default props then finish our object and flow it to our
            * tout type. *)
-          | Config { component_default_props = None; jsx_children } ->
-            let ts = Nel.map (fun x -> finish cx trace reason x None jsx_children) x in
+          | Config { component_default_props = None } ->
+            let ts = Nel.map (fun x -> finish cx trace reason x None) x in
             let t =
               match ts with
               | (t, []) -> t
@@ -518,10 +502,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             rec_flow cx trace (t, UseT (use_op, tout))
           (* If we had default props and those defaults resolved then finish our
            * props object with those default props. *)
-          | Defaults { config; children } ->
+          | Defaults { config } ->
             let ts =
               Nel.map_concat
-                (fun c -> Nel.map (fun d -> finish cx trace reason c (Some d) children) x)
+                (fun c -> Nel.map (fun d -> finish cx trace reason c (Some d)) x)
                 config
             in
             let t =

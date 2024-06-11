@@ -240,7 +240,7 @@ and instantiate_component cx component instantiation_hint =
   match get_t cx component with
   | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) when Context.jsx cx = Options.Jsx_react
     ->
-    let { Hint.jsx_reason = reason; jsx_name = _; jsx_props; jsx_children = children; jsx_hints } =
+    let { Hint.jsx_reason = reason; jsx_name = _; jsx_props; jsx_children = _; jsx_hints } =
       instantiation_hint
     in
     let return_hint =
@@ -257,7 +257,6 @@ and instantiate_component cx component instantiation_hint =
         ~component
         ~jsx_props:(Lazy.force jsx_props)
         ~targs:None
-        (Lazy.force children)
     in
     let subst_map =
       Context.run_in_implicit_instantiation_mode cx (fun () ->

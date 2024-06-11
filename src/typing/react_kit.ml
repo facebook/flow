@@ -343,7 +343,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.error reason)
     in
     let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
-    let config_check use_op ~jsx_props ~jsx_children =
+    let config_check use_op ~jsx_props =
       (* Create a type variable for our props. *)
       let (component_props, component_default_props) =
         match drop_generic l with
@@ -383,7 +383,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 ( use_op,
                   reason,
                   Resolve Next,
-                  ReactConfig (Config { component_default_props; jsx_children }),
+                  ReactConfig (Config { component_default_props }),
                   component_props
                 )
             )
@@ -391,13 +391,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       )
     in
     let create_element
-        component
-        jsx_props
-        jsx_children
-        record_monomorphized_result
-        inferred_targs
-        specialized_component
-        tout =
+        component jsx_props record_monomorphized_result inferred_targs specialized_component tout =
       let use_op =
         (* Why do we try to remove the OpaqueTypeBound frame here?
          * The frame will be added when we unwrap the opaque type bound of `React$CreateElement`.
@@ -411,7 +405,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         unwrap use_op
       in
-      config_check use_op ~jsx_props ~jsx_children;
+      config_check use_op ~jsx_props;
 
       (* If our jsx props is void or null then we want to replace it with an
        * empty object.
@@ -661,7 +655,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         {
           component;
           jsx_props;
-          jsx_children;
           tout;
           targs = _;
           return_hint = _;
@@ -672,12 +665,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       create_element
         component
         jsx_props
-        jsx_children
         record_monomorphized_result
         inferred_targs
         specialized_component
         tout
-    | ConfigCheck jsx_props -> config_check use_op ~jsx_props ~jsx_children:None
+    | ConfigCheck jsx_props -> config_check use_op ~jsx_props
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout

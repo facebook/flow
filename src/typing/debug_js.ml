@@ -466,7 +466,6 @@ and dump_use_t_ (depth, tvars) cx t =
           {
             component = _;
             jsx_props;
-            jsx_children;
             tout;
             targs = _;
             return_hint = _;
@@ -474,15 +473,7 @@ and dump_use_t_ (depth, tvars) cx t =
             inferred_targs = _;
             specialized_component = _;
           } ->
-        p
-          ~extra:
-            (spf
-               "CreateElement (%s; %s) => %s"
-               (kid jsx_props)
-               (Base.Option.value_map ~default:"None" ~f:kid jsx_children)
-               (kid tout)
-            )
-          t
+        p ~extra:(spf "CreateElement (%s) => %s" (kid jsx_props) (kid tout)) t
       | ConfigCheck config -> spf "ConfigCheck (%s)" (kid config)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
       | GetConfig tout -> spf "GetConfig (%s)" (kid tout)

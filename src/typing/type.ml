@@ -3039,14 +3039,8 @@ and Object : sig
 
   module ReactConfig : sig
     type state =
-      | Config of {
-          component_default_props: TypeTerm.t option;
-          jsx_children: TypeTerm.t option;
-        }
-      | Defaults of {
-          config: resolved;
-          children: TypeTerm.t option;
-        }
+      | Config of { component_default_props: TypeTerm.t option }
+      | Defaults of { config: resolved }
   end
 
   type tool =
@@ -3082,7 +3076,6 @@ and React : sig
     | CreateElement of {
         component: TypeTerm.t;
         jsx_props: TypeTerm.t;
-        jsx_children: TypeTerm.t option;
         tout: TypeTerm.t_out;
         targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;
