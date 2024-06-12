@@ -1,3 +1,37 @@
+### 0.238.0
+
+Likely to cause new Flow errors:
+* In v0.237.2, we shipped the flag `react.disable_function_components_default_props` that will make Flow ignore `defaultProps` on function components for React component typing purposes. This flag is now on by default. If this is too disruptive for your codebase, you can turn this off for now. Note that we do not intend to keep this flag forever, so you should try to turn this flag on as soon as possible.
+* We made `React.createElement` have an opaque type, which means calling this function directly will be an error. This will be helpful to prepare for [React 19 changes](https://react.dev/blog/2024/04/25/react-19-upgrade-guide#new-jsx-transform-is-now-required). Note that JSX typing is unaffected. If you are not ready for this change, you can override your library definition like [this](https://github.com/facebook/flow/blob/194f63ebb7829f404d9c445c12921ae7a258b0f8/tests/react_create_element/lib.js#L1-L38) to approximate the previous behavior as much as possible.
+* When there is an `invalid-component-prop` error, Flow will no longer make the entire props to be any type. Instead, Flow will create a Props type as if these invalid props do not exist. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SUgIkY0AsAAIAMIAChgxGQXPspigCF4XKs0vwwuAgogwuEIhu9IAlFzgAAdKBcvVclgSISUKAAbh19J1OoAPDyuQqALzAKQyelcgD0AD5TR73VyoBAAO5ckyUCD43IgBomEhwaBJBoABisACYAMwAdlTIHpQA)
+* We are making the typing of the exported object of a module more strict. If you see errors when casting the exported type of a module to a writable object, try either casting it to a readonly version instead, or casting the exported object to the writable object type.
+* We now infer the type for `Object.freeze({ A: "a", B: "b" })` as `{+A: "a", +B: "b"}`, ie we use readonly properties and singleton types for literal initializers. Casts like [this example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SVs9gABBA0AArdkAXnZAHkeXMYjAWNgAF7YAAUwHZAB0QABBJXIRUqpXs+kASgA3AqoFzeRgSOz5cr1fZTFAENqDVBciAGiYSHBoEkGgAGKwAJgAzAB2P0gelAA) will now be an error.
+* We now error more consistently when a property is missing from an intersection of objects (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABIDOTBiMhOcB6ZyAGSC+kAbgAOrBiFY0BLOQB6JWckyUCCUTkYEicgDuXJItQg2jYMr5ECsACFFSr9Vy2HA2JyoBAJGrqJrObUTNgZbkQA0TCQ4NAkg0AAxWABMAGYAOwxkD0oA))
+* `untyped-import` errors are now on the import source rather than imported names.
+
+New Features:
+* Under `files.implictly_include_root=false` (default is true, which is the current behavior), Flow will no longer include everything under the directory where the flowconfig is in by default.
+
+Notable bug fixes:
+* Fixed a category of spurious errors when using `Array.reduce` and returning a union type (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABIDOQ84NBkJyAILUOgAHnspigCAAfJyAD7C0W0MXCEQ3GUAbgAOlA2bgOZzbPZOVRKIKRTQVZKKrKdVBdcaJJyWCRtBIAIycgC8puosVKQkhAApg0owBblRKpLaZbxOfJBTbpQBKH1y4CcgD0Wc5AHdoAByZ04U1QTkmSgQShl2giavYXWc5su3ZCSjlvnQe2MzkAbQAuin7Y7oCbXe6AEw+v2UANsIPYUPhyNW6NS2XxxOc5MINPejPZ3MFqDFzml4EV6jV2v1lhNltwGCc4MABk5Ys5HrTwAfLZbLASO25Z9lYYHhgO9r-vSf6tkBHb9mBVjhlukG6r2g4prquQgA0JgkPyUBJA0r5WJOADMADsZEgPSQA))
+* Explicit type arguments in JSX are now considered for contextual typing. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABDAHso4NBOQAxYgAHgAKgA+AAUwBgyE5UrFAEpOQBeCWchoQOBselK+VanUAbgAOlAzSLhRARfZTFAEBqYKrgFKGir1ZzgPT6ZyAPQa32+zkmSgQSicnAwMOyTkAdzDWxInKgEFjZtyIAaJhI-KgSQaAAYrAAmADMAHYSyB6UA)
+* Fixed spread of empty array when calculating tuple elements, e.g. `[...[]] as []` now works.
+* `nested-component` errors can now be suppressed.
+
+IDE:
+* Flow now suggests properties of objects that are contextually typed with optional types. For example, in `({ foo: { |  } } as ?{ foo: { x: number }})` it will populate `x`, when calling autocomplete at the point of the cursor `|`. ([try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhJWT5VgACABixG5AF5ucBufJkNzhCIbtz6QBuTmclbGbkAISoQu5AH5RTBiBL+RBZQqoJzbPZufgJerKJrdfqRdynfTjZyAPRup1e70+31OgB6fKIAHducG4MdJRBQyQhAgcRaAAbyRPc2omRL8BomEhwaBJBoABisACYAMwAdlLIHpQA))
+* We now provide autocomplete for types in the global `React` type-only namespace.
+* We now support go-to-definition for JSX member expression like `<Foo.Bar />`.
+* Re-exported values from `export {Foo} from 'bar'` statements will now appear in autoimport results.
+* `autoimports_ranked_by_usage` is now enabled by default.
+* Flow will now show the type of the constructor of a class (instantiated if it is generic) when hovering over the "new" keyword in `new C(e)`
+* Hover types will now show the specialized version of a polymorphic component used at a JSX expression
+* Hover types won't add unnecessary parentheses around union types.
+
+Library Definitions:
+* Add React 19 `useOptimistic` and `useActionState` API definitions
+* Add libdef for `TextDecoderStream`
+
 ### 0.237.2
 
 New Features:
