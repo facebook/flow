@@ -3331,7 +3331,7 @@ let to_printable_error :
       ]
     | MessageReadonlyArraysCannotBeWrittenTo -> [text "read-only arrays cannot be written to"]
     | MessageRecursionLimitExceeded -> [text "*** Recursion limit exceeded ***"]
-    | MessageRedeclareComponentProp { first; second_loc; spread_loc } ->
+    | MessageRedeclareComponentProp { duplicates = ((first, second_loc), []); spread_loc } ->
       [
         text "Component property ";
         ref first;
@@ -3339,8 +3339,29 @@ let to_printable_error :
         hardcoded_string_desc_ref "re-declared" second_loc;
         text " within a ";
         hardcoded_string_desc_ref "spread" spread_loc;
-        text ". Property names may only be have one definition within a component";
+        text ". Property names may only be have one definition within a component.";
       ]
+    | MessageRedeclareComponentProp { duplicates; spread_loc } ->
+      let individual_redeclares_msgs =
+        duplicates
+        |> Nel.to_list
+        |> Base.List.concat_map ~f:(fun (first, second_loc) ->
+               [
+                 text " - ";
+                 ref first;
+                 text " is re-declared ";
+                 hardcoded_string_desc_ref "here" second_loc;
+                 text "\n";
+               ]
+           )
+      in
+      [
+        text "Multiple component properties are re-declared within a ";
+        hardcoded_string_desc_ref "spread" spread_loc;
+        text ".\n";
+      ]
+      @ individual_redeclares_msgs
+      @ [text "Property names may only be have one definition within a component."]
     | MessageShouldAnnotateVariableOnlyInitializedInGenericContext
         { reason; possible_generic_escape_locs } ->
       [

@@ -676,44 +676,31 @@ exception InvalidConfig of Error_message.t
 let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _; reachable_targs }
     =
   let dict = Obj_type.get_dict_opt flags.obj_kind in
-  let props =
-    try
-      Ok
-        (NameUtils.Map.merge
-           (fun x p1 p2 ->
-             match (x, p1, p2) with
-             | (Reason.OrdinaryName "ref", Some _, _) ->
-               failwith "Ref should have been extracted elsewhere"
-             | (_, Some p1, Some { Object.key_loc = key_loc2; prop_t; _ }) ->
-               let first =
-                 Type.Property.first_loc p1
-                 |> Base.Option.value ~default:(loc_of_reason reason)
-                 |> mk_reason (RIdentifier x)
-               in
-               let second =
-                 Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc2
-               in
-               raise
-                 (InvalidConfig
-                    (Error_message.EDuplicateComponentProp
-                       { spread = loc_of_reason reason; first; second }
-                    )
-                 )
-             | (Reason.OrdinaryName "ref", None, Some { Object.key_loc; prop_t; _ }) ->
-               let loc = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc in
-               raise
-                 (InvalidConfig
-                    (Error_message.ERefComponentProp { spread = loc_of_reason reason; loc })
-                 )
-             | (_, Some p1, None) ->
-               let p1 = read_prop reason flags x p1 in
-               Some p1
-             | (_, None, p2) -> p2)
-           pmap
-           props
-        )
-    with
-    | InvalidConfig e -> Error e
+  let ((duplicate_props_in_spread, ref_prop_in_spread), props) =
+    NameUtils.Map.merge_env
+      ~combine:(fun (duplicate_props_in_spread, ref_prop_in_spread) x p1 p2 ->
+        match (x, p1, p2) with
+        | (Reason.OrdinaryName "ref", Some _, _) ->
+          failwith "Ref should have been extracted elsewhere"
+        | (_, Some p1, Some { Object.key_loc = key_loc2; prop_t; _ }) ->
+          let first =
+            Type.Property.first_loc p1
+            |> Base.Option.value ~default:(loc_of_reason reason)
+            |> mk_reason (RIdentifier x)
+          in
+          let second = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc2 in
+          let p1 = read_prop reason flags x p1 in
+          (((first, second) :: duplicate_props_in_spread, ref_prop_in_spread), Some p1)
+        | (Reason.OrdinaryName "ref", None, Some { Object.key_loc; prop_t; _ }) ->
+          let loc = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc in
+          ((duplicate_props_in_spread, Some loc), None)
+        | (_, Some p1, None) ->
+          let p1 = read_prop reason flags x p1 in
+          ((duplicate_props_in_spread, ref_prop_in_spread), Some p1)
+        | (_, None, p2) -> ((duplicate_props_in_spread, ref_prop_in_spread), p2))
+      ([], None)
+      pmap
+      props
   in
   let obj_kind =
     match dict with
@@ -725,46 +712,49 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
         Inexact
   in
   let flags = { frozen = flags.frozen; obj_kind; react_dro = flags.react_dro } in
-  match props with
-  | Ok props ->
-    let props =
-      NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
-          if is_method then
-            Method { key_loc; type_ = prop_t }
-          else
-            Field
-              { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Positive })
-        props
-    in
-    let id = Context.generate_property_map cx props in
-    let proto = ObjProtoT reason in
-    let call = None in
-    Ok
-      (mk_object_type
-         ~reason
-         ~invalidate_aliases:true
-         ~interface:None
-         ~reachable_targs
-         ~kind:Subst_name.CheckConfig
-         flags
-         call
-         id
-         proto
-         generics
-      )
-  | Error e -> Error e
+  let props =
+    NameUtils.Map.map
+      (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
+        if is_method then
+          Method { key_loc; type_ = prop_t }
+        else
+          Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Positive })
+      props
+  in
+  let id = Context.generate_property_map cx props in
+  let proto = ObjProtoT reason in
+  let call = None in
+  let t =
+    mk_object_type
+      ~reason
+      ~invalidate_aliases:true
+      ~interface:None
+      ~reachable_targs
+      ~kind:Subst_name.CheckConfig
+      flags
+      call
+      id
+      proto
+      generics
+  in
+  (t, duplicate_props_in_spread, ref_prop_in_spread)
 
 let check_component_config
     (type a) ~add_output ~(return : _ -> _ -> Type.t -> a) pmap cx use_op reason x =
   let xs =
     Nel.map
       (fun xelt ->
-        match check_config2 cx pmap xelt with
-        | Ok o -> o
-        | Error e ->
-          add_output cx e;
-          AnyT.error reason)
+        let (o, duplicate_props_in_spread, ref_prop_in_spread) = check_config2 cx pmap xelt in
+        let { Object.reason; _ } = xelt in
+        Base.Option.iter (Nel.of_list duplicate_props_in_spread) ~f:(fun duplicates ->
+            add_output
+              cx
+              (Error_message.EDuplicateComponentProp { spread = loc_of_reason reason; duplicates })
+        );
+        Base.Option.iter ref_prop_in_spread ~f:(fun loc ->
+            add_output cx (Error_message.ERefComponentProp { spread = loc_of_reason reason; loc })
+        );
+        o)
       x
   in
   let t =

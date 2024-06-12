@@ -139,7 +139,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- annotation.js:45:48
 
 Component property `x` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
-a component [invalid-component-prop]
+a component. [invalid-component-prop]
 
    annotation.js:45:48
    45| declare var Duplicate: component(x: number, ...{x: number}); // error
@@ -749,7 +749,7 @@ References:
 Error --------------------------------------------------------------------------------- component_type_checking.js:22:12
 
 Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
-within a component [invalid-component-prop]
+within a component. [invalid-component-prop]
 
    component_type_checking.js:22:12
    22|   ...rest: {foo: number}
@@ -1111,7 +1111,7 @@ Component identifiers must begin with an upper-case character [component-case]
 Error ------------------------------------------------------------------------------------------------ declared.js:47:43
 
 Component property `x` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
-a component [invalid-component-prop]
+a component. [invalid-component-prop]
 
    declared.js:47:43
    47| declare component Duplicate(x: number, ...{x: number}); // error
@@ -1208,7 +1208,7 @@ References:
 Error ------------------------------------------------------------------------------------ eager_config_checking.js:1:38
 
 Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
-within a component [invalid-component-prop]
+within a component. [invalid-component-prop]
 
    eager_config_checking.js:1:38
    1| component Foo(foo: number, ...props: {foo: number}) {
@@ -1958,25 +1958,39 @@ References:
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
-a component [invalid-component-prop]
+a component. [invalid-component-prop]
 
    names.js:4:36
-   4| component Foo(a: number, ...props: {a: number}) { return <div /> } // Error
-                                         ^^^^^^^^^^^ [3]
+   4| component Foo(a: number, ...props: {a: boolean}) { return <div /> } // Error
+                                         ^^^^^^^^^^^^ [3]
 
 References:
    names.js:4:15
-   4| component Foo(a: number, ...props: {a: number}) { return <div /> } // Error
+   4| component Foo(a: number, ...props: {a: boolean}) { return <div /> } // Error
                     ^ [1]
    names.js:4:37
-   4| component Foo(a: number, ...props: {a: number}) { return <div /> } // Error
+   4| component Foo(a: number, ...props: {a: boolean}) { return <div /> } // Error
                                           ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- names.js:5:9
+
+Cannot create `Foo` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+
+   names.js:5:9
+   5| <Foo a={false} /> // Error: first param wins, so a must be number
+              ^^^^^ [1]
+
+References:
+   names.js:4:18
+   4| component Foo(a: number, ...props: {a: boolean}) { return <div /> } // Error
+                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:8:36
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
-a component [invalid-component-prop]
+a component. [invalid-component-prop]
 
    names.js:8:36
    8| component Bar(a: number, ...props: BarT) { return <div /> }; // Error
@@ -1989,6 +2003,23 @@ References:
    names.js:7:14
    7| type BarT = {a: string} | {b: string}
                    ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- names.js:9:2
+
+Cannot create `Bar` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+
+   names.js:9:2
+   9| <Bar a={false} /> // Error: first param wins, so a must be number
+       ^^^
+
+References:
+   names.js:9:9
+   9| <Bar a={false} /> // Error: first param wins, so a must be number
+              ^^^^^ [1]
+   names.js:8:18
+   8| component Bar(a: number, ...props: BarT) { return <div /> }; // Error
+                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:12:9
@@ -2008,7 +2039,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- names.js:15:36
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
-a component [invalid-component-prop]
+a component. [invalid-component-prop]
 
    names.js:15:36
    15| component Qux(a: number, ...props: {[string]: boolean, a: number}) { return <div /> }; // Error
@@ -2023,10 +2054,24 @@ References:
                                                               ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- names.js:16:9
+
+Cannot create `Qux` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+
+   names.js:16:9
+   16| <Qux a={false} /> // Error: first param wins, so a must be number
+               ^^^^^ [1]
+
+References:
+   names.js:15:18
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) { return <div /> }; // Error
+                        ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- names.js:19:67
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
-a component [invalid-component-prop]
+a component. [invalid-component-prop]
 
    names.js:19:67
    19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
@@ -2037,8 +2082,23 @@ References:
    19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
                                                     ^ [1]
    names.js:18:19
-   18| type ROMSVType = {a: number}
+   18| type ROMSVType = {a: boolean}
                          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:20:40
+
+Cannot create `RunningOutOfMetasyntaxticVariables` element because boolean [1] is incompatible with number [2] in
+property `a`. [incompatible-type]
+
+   names.js:20:40
+   20| <RunningOutOfMetasyntaxticVariables a={false} /> // Error: first param wins, so a must be number
+                                              ^^^^^ [1]
+
+References:
+   names.js:19:49
+   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
+                                                       ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- names.js:22:24
@@ -2077,6 +2137,46 @@ References:
    names.js:25:36
    25| component NoRefInSpread(...props: {ref: string}) { return <div /> }; // Error
                                           ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:28:82
+
+Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
+
+   names.js:28:82
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   names.js:28:109
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                                                                   ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:28:82
+
+Multiple component properties are re-declared within a spread [1].
+ - `foo` [2] is re-declared here [3]
+ - `bar` [4] is re-declared here [5]
+Property names may only be have one definition within a component. [invalid-component-prop]
+
+   names.js:28:82
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   names.js:28:46
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                    ^^^ [2]
+   names.js:28:83
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                                         ^^^ [3]
+   names.js:28:59
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                 ^^^ [4]
+   names.js:28:96
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                                                      ^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------- nested_with_function.js:5:27
@@ -3301,7 +3401,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 219 errors
+Found 225 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
