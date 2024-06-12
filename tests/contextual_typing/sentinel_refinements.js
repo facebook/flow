@@ -44,11 +44,12 @@ const f8: F = { f: (v) => (v: number), __type__: Enum.B }; // ok
 <CompFProp __type__={Enum.B} f={(v) => (v: number)} />; // ok
 <CompFProp f={(v) => (v: number)} __type__={Enum.B} />; // ok
 
-// Errors
 declare function a(): 'a';
-const e1: A = { __type__: a(), arr: [] }; // // err
-const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
-<CompAProp __type__={a()} arr={[]} />; // // err
+const b1: A = { __type__: a(), arr: [] };
+<CompAProp __type__={a()} arr={[]} />;
+
+// Errors
+const e1: F = { __type__: a(), f: (v) => (v: string) }; // error
 <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
 
 function numeric_sentinel() {
