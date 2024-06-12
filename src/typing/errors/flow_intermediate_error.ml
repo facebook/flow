@@ -3427,32 +3427,6 @@ let to_printable_error :
         ref (mk_reason RNullOrVoid null_loc);
         text "?";
       ]
-    | MesssageSpeculationAmbiguous
-        { prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
-      let prev_case_ref =
-        hardcoded_string_desc_ref ("case " ^ string_of_int (prev_i + 1)) (loc_of_reason prev_case)
-      in
-      let case_ref =
-        hardcoded_string_desc_ref ("case " ^ string_of_int (i + 1)) (loc_of_reason case)
-      in
-      [
-        text "Could not decide which case to select, since ";
-        prev_case_ref;
-        text " ";
-        text "may work but if it doesn't ";
-        case_ref;
-        text " looks promising ";
-        text "too. To fix add a type annotation ";
-      ]
-      @ Flow_errors_utils.Friendly.conjunction_concat
-          ~conjunction:"or"
-          (Base.List.map
-             ~f:(fun case_r ->
-               let text = "to " ^ string_of_desc (desc_of_reason case_r) in
-               [hardcoded_string_desc_ref text (loc_of_reason case_r)])
-             case_rs
-          )
-      @ [text "."]
     | MessageSuppressionMalformedCode ->
       [
         text "Suppression contains a malformed error code. Suppressions with error codes ";

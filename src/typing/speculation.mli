@@ -30,5 +30,3 @@ val speculating : Context.t -> bool
 (* decide whether an action should be deferred.
    when speculating, actions that involve unresolved tvars are deferred. *)
 val defer_action : Context.t -> action -> bool
-
-val case_diff : Context.t -> case -> case -> (Type.ident * Reason.reason) list

@@ -182,12 +182,6 @@ and 'loc t' =
       op_reasons: 'loc virtual_reason Nel.t;
       branches: ('loc virtual_reason * 'loc t') list;
     }
-  | ESpeculationAmbiguous of {
-      reason: 'loc virtual_reason;
-      prev_case: int * 'loc virtual_reason;
-      case: int * 'loc virtual_reason;
-      cases: 'loc virtual_reason list;
-    }
   | EIncompatibleWithExact of
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op * exactness_error_kind
   | EFunctionIncompatibleWithIndexer of
@@ -967,15 +961,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
   | ENonStrictEqualityComparison (r1, r2) ->
     ENonStrictEqualityComparison (map_reason r1, map_reason r2)
-  | ESpeculationAmbiguous
-      { reason; prev_case = (prev_i, prev_case_reason); case = (i, case_reason); cases } ->
-    ESpeculationAmbiguous
-      {
-        reason = map_reason reason;
-        prev_case = (prev_i, map_reason prev_case_reason);
-        case = (i, map_reason case_reason);
-        cases = Base.List.map ~f:map_reason cases;
-      }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
   | EUnexpectedThisType loc -> EUnexpectedThisType (f loc)
   | ETypeParamArity (loc, i) -> ETypeParamArity (f loc, i)
@@ -1498,7 +1483,6 @@ let util_use_op_of_msg nope util = function
   | EPlatformSpecificImplementationModuleLookupFailed _
   | EComparison (_, _)
   | ENonStrictEqualityComparison _
-  | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
   | EUnexpectedThisType _
   | ETypeParamArity (_, _)
@@ -1837,7 +1821,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBindingError (_, loc, _, _) -> Some loc
   | EEnumModification { loc; _ } -> Some loc
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
-  | ESpeculationAmbiguous { reason; _ } -> Some (loc_of_reason reason)
   | EBuiltinNameLookupFailed { loc; _ } -> Some loc
   | EBuiltinModuleLookupFailed { loc; _ } -> Some loc
   | ECannotCallReactComponent { reason } -> Some (loc_of_reason reason)
@@ -2321,8 +2304,6 @@ let friendly_message_of_msg = function
       }
   | EUnionSpeculationFailed { use_op; reason; op_reasons = _; branches } ->
     Speculation { loc = loc_of_reason reason; use_op; branches }
-  | ESpeculationAmbiguous { reason = _; prev_case; case; cases } ->
-    Normal (MesssageSpeculationAmbiguous { prev_case; case; cases })
   | EIncompatibleWithExact ((lower, upper), use_op, kind) ->
     UseOp
       {
@@ -3044,7 +3025,6 @@ let error_code_of_message err : error_code option =
   | ERecursionLimit (_, _) -> None
   | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite
   | ESignatureVerification _ -> Some SignatureVerificationFailure
-  | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
   | EExportRenamedDefault _ -> Some ExportRenamedDefault
   | ETooFewTypeArgs _ -> Some MissingTypeArg

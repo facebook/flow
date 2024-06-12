@@ -1455,8 +1455,6 @@ let dump_error_message =
         (string_of_use_op use_op)
         (dump_reason cx reason)
         (Nel.to_list op_reasons |> List.map (dump_reason cx) |> String.concat ",")
-    | ESpeculationAmbiguous { reason; _ } ->
-      spf "ESpeculationAmbiguous { reason = %s; _ }" (dump_reason cx reason)
     | EIncompatibleWithExact ((reason1, reason2), use_op, _) ->
       spf
         "EIncompatibleWithExact ((%s, %s), %s)"
