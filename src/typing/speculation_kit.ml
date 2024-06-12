@@ -154,20 +154,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
      these types as unresolved, and deferring the execution of constraints that
      involved such marked types until a choice can be made. The details of this
      process is described in Speculation.
-
-     There is a necessary trade-off in the approach. In particular, it means that
-     sometimes choices cannot be made: it is ambiguous which constraints should be
-     executed when trying different alternatives. We detect such ambiguities
-     (conservatively, but only when a best-effort choice-making strategy doesn't
-     work), and ask for additional annotations to disambiguate the relevant
-     alternatives. A particularly nice property of this approach is that it is
-     complete: with enough annotations it is always possible to make a
-     choice. Another "meta-feature" of this approach is that it leaves room for
-     incremental improvement: e.g., we would need fewer additional annotations as
-     we improve our inference algorithm to detect cases where more unresolved
-     tvars can be fully resolved ahead of time (in other words, detect when they
-     have the "0->1" property, discussed elsewhere, roughly meaning they are
-     determined by annotations).
   *)
 
   (* Every choice-making process on a union or intersection type is assigned a
@@ -245,12 +231,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
      later alternatives would have failed too. So the chosen alternative had the
      best chance of succeeding.
 
-     (5) But sometimes, multiple alternatives look promising and we really can't
-     decide which is best. This happens when the set of deferred actions emitted
-     by them are incomparable, or later trials have more chances of succeeding
-     than previous trials. Such scenarios typically point to real ambiguities, and
-     so we ask for additional annotations on unresolved tvars to disambiguate.
-
      See Speculation for more details on terminology and low-level mechanisms used
      here, including what bits of information are carried by match_state and case,
      how actions are deferred and diff'd, etc.
@@ -283,7 +263,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *)
     let rec loop match_state = function
       | [] -> return match_state
-      | (case_id, case_r, l, u) :: trials ->
+      | (case_id, _, l, u) :: trials ->
         let case =
           {
             case_id;
@@ -313,21 +293,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             (* Otherwise, record that we've found a promising alternative. *)
             else
               loop (ConditionalMatch case) trials
-          | ConditionalMatch prev_case ->
-            (* umm, there's another previously found promising alternative *)
-            (* so compute the difference in side effects between that alternative
-             * and this *)
-            let ts = Speculation.case_diff cx prev_case case in
-            (* if the side effects of the previously found promising alternative
-             * are fewer, then keep holding on to that alternative *)
-            if ts = [] then
-              loop match_state trials
-            (* otherwise, we have an ambiguity; blame the unresolved tvars and
-             * short-cut *)
-            else
-              let prev_case_id = prev_case.case_id in
-              let cases : Type.t list = choices_of_spec spec in
-              blame_unresolved cx prev_case_id case_id cases case_r ts
+          | ConditionalMatch _ -> loop match_state trials
         end
         | Some err -> begin
           (* if an error is found, then throw away this alternative... *)
@@ -391,30 +357,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         end
     in
     loop (NoMatch []) trials
-
-  (* Make an informative error message that points out the ambiguity, and where
-     additional annotations can help disambiguate. Recall that an ambiguity
-     arises precisely when:
-
-     (1) one alternative looks promising, but has some chance of failing
-
-     (2) a later alternative also looks promising, and has some chance of not
-     failing even if the first alternative fails
-
-     ...with the caveat that "looks promising" and "some chance of failing" are
-     euphemisms for some pretty conservative approximations made by Flow when it
-     encounters potentially side-effectful constraints involving unresolved tvars
-     during a trial.
-  *)
-  and blame_unresolved cx prev_i i cases case_r tvars =
-    let rs = tvars |> Base.List.map ~f:(fun (_, r) -> r) |> List.sort compare in
-    let prev_case = reason_of_t (List.nth cases prev_i) in
-    let case = reason_of_t (List.nth cases i) in
-    add_output
-      cx
-      (Error_message.ESpeculationAmbiguous
-         { reason = case_r; prev_case = (prev_i, prev_case); case = (i, case); cases = rs }
-      )
 
   and trials_of_spec = function
     | UnionCases (use_op, l, _rep, us) ->

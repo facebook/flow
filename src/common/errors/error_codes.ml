@@ -143,7 +143,6 @@ type error_code =
   | SketchyNullBigInt
   | SketchyNumberAnd
   | Speculation
-  | SpeculationAmbiguous
   | TSSyntax
   | ThisInExportedFunction
   | TupleInvalidTypeSpread
@@ -356,7 +355,6 @@ let string_of_code : error_code -> string = function
   | SketchyNullString -> "sketchy-null-string"
   | SketchyNumberAnd -> "sketchy-number-and"
   | Speculation -> "speculation"
-  | SpeculationAmbiguous -> "speculation-ambiguous"
   | TSSyntax -> "ts-syntax"
   | ThisInExportedFunction -> "this-in-exported-function"
   | TupleInvalidTypeSpread -> "tuple-invalid-type-spread"
