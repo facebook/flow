@@ -906,7 +906,18 @@ let resolve_opaque_type cx loc opaque =
   t
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import =
-  let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
+  let source_module_t =
+    let import_kind_for_untyped_import_validation =
+      match import_kind with
+      | Ast.Statement.ImportDeclaration.ImportType -> Some Type.ImportType
+      | Ast.Statement.ImportDeclaration.ImportTypeof -> Some Type.ImportTypeof
+      | Ast.Statement.ImportDeclaration.ImportValue -> Some Type.ImportValue
+    in
+    Import_export.get_module_t
+      cx
+      ~import_kind_for_untyped_import_validation
+      (source_loc, module_name)
+  in
   match import with
   | Name_def.Named { kind; remote; local } ->
     let import_kind = Base.Option.value ~default:import_kind kind in

@@ -1,10 +1,10 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:3:14
+Error ----------------------------------------------------------------------------------------------------- test.js:3:22
 
 Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./import`? [untyped-type-import]
 
    3| import type {T} from './import'; // Error: untyped-type-import
-                   ^
+                           ^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:4:14

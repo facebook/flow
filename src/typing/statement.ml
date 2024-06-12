@@ -739,7 +739,12 @@ module Make
   let module_ref_literal cx loc lit =
     let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
     let mref = Base.String.drop_prefix value prefix_len in
-    let module_t = Import_export.get_module_t cx (loc, mref) in
+    let module_t =
+      Import_export.get_module_t
+        cx
+        ~import_kind_for_untyped_import_validation:(Some ImportValue)
+        (loc, mref)
+    in
     let require_t =
       Import_export.cjs_require_type cx (mk_reason (RModule mref) loc) ~legacy_interop module_t
     in
@@ -842,7 +847,7 @@ module Make
   (* Import/Export *)
   (*****************)
 
-  let export_specifiers cx loc source export_kind =
+  let export_specifiers cx source export_kind =
     let open Ast.Statement in
     let module E = ExportNamedDeclaration in
     let lookup_mode =
@@ -920,13 +925,7 @@ module Make
       let ns_t = Import_export.get_module_namespace_type cx reason module_t in
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
-    | E.ExportBatchSpecifier (specifier_loc, None) ->
-      let ((_, module_t), _) = Base.Option.value_exn source in
-      let reason = mk_reason (RCustom "batch export") loc in
-      (match Flow.singleton_concrete_type_for_inspection cx reason module_t with
-      | AnyT (r, _) -> Flow_js_utils.check_untyped_import cx ImportValue r reason
-      | _ -> ());
-      E.ExportBatchSpecifier (specifier_loc, None)
+    | E.ExportBatchSpecifier (specifier_loc, None) -> E.ExportBatchSpecifier (specifier_loc, None)
 
   let hook_check cx effect (loc, { Ast.Identifier.name; _ }) =
     if effect = Ast.Function.Hook && not (Flow_ast_utils.hook_name name) then
@@ -1582,12 +1581,17 @@ module Make
         match source with
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
+          let source_module_t =
+            Import_export.get_module_t
+              cx
+              ~import_kind_for_untyped_import_validation:(Some ImportValue)
+              (source_loc, module_name)
+          in
           Some ((source_loc, source_module_t), source_literal)
       in
       let specifiers =
         let export_kind = Ast.Statement.ExportValue in
-        Option.map (export_specifiers cx loc source export_kind) specifiers
+        Option.map (export_specifiers cx source export_kind) specifiers
       in
       (loc, DeclareExportDeclaration { decl with D.declaration; specifiers; source })
     | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
@@ -1620,17 +1624,21 @@ module Make
         match source with
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let perform_platform_validation =
+          let (perform_platform_validation, import_kind_for_untyped_import_validation) =
             match export_kind with
-            | Ast.Statement.ExportType -> false
-            | Ast.Statement.ExportValue -> true
+            | Ast.Statement.ExportType -> (false, Some ImportType)
+            | Ast.Statement.ExportValue -> (true, Some ImportValue)
           in
           let source_module_t =
-            Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation
+            Import_export.get_module_t
+              cx
+              ~import_kind_for_untyped_import_validation
+              (source_loc, module_name)
+              ~perform_platform_validation
           in
           Some ((source_loc, source_module_t), source_literal)
       in
-      let specifiers = Option.map (export_specifiers cx loc source export_kind) specifiers in
+      let specifiers = Option.map (export_specifiers cx source export_kind) specifiers in
       ( loc,
         ExportNamedDeclaration
           { export_decl with ExportNamedDeclaration.declaration; specifiers; source }
@@ -1673,15 +1681,18 @@ module Make
     | (import_loc, ImportDeclaration import_decl) ->
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
-      let perform_platform_validation =
+      let (perform_platform_validation, import_kind_for_untyped_import_validation) =
         match import_kind with
-        | ImportDeclaration.ImportType
-        | ImportDeclaration.ImportTypeof ->
-          false
-        | ImportDeclaration.ImportValue -> true
+        | ImportDeclaration.ImportType -> (false, Some ImportType)
+        | ImportDeclaration.ImportTypeof -> (false, Some ImportTypeof)
+        | ImportDeclaration.ImportValue -> (true, Some ImportValue)
       in
       let source_module_t =
-        Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation
+        Import_export.get_module_t
+          cx
+          ~import_kind_for_untyped_import_validation
+          (source_loc, module_name)
+          ~perform_platform_validation
       in
       let source_ast = ((source_loc, source_module_t), source_literal) in
 
@@ -3057,7 +3068,12 @@ module Make
       let t =
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
-          let module_t = Import_export.get_module_t cx (loc, module_name) in
+          let module_t =
+            Import_export.get_module_t
+              cx
+              ~import_kind_for_untyped_import_validation:(Some ImportValue)
+              (loc, module_name)
+          in
           if Context.relay_integration_esmodules cx then
             let import_reason = mk_reason (RDefaultImportedType (module_name, module_name)) loc in
             Import_export.import_default_specifier_type
@@ -3288,7 +3304,11 @@ module Make
       let t module_name =
         let ns_t =
           let reason = mk_reason (RModule module_name) loc in
-          Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation:true
+          Import_export.get_module_t
+            cx
+            (source_loc, module_name)
+            ~perform_platform_validation:true
+            ~import_kind_for_untyped_import_validation:(Some ImportValue)
           |> Import_export.get_module_namespace_type cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
@@ -3425,6 +3445,7 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
+                ~import_kind_for_untyped_import_validation:(Some ImportValue)
               |> Import_export.cjs_require_type
                    cx
                    (mk_reason (RModule module_name) loc)
@@ -3465,6 +3486,7 @@ module Make
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
+                ~import_kind_for_untyped_import_validation:(Some ImportValue)
               |> Import_export.cjs_require_type
                    cx
                    (mk_reason (RModule module_name) loc)
@@ -3845,6 +3867,7 @@ module Make
                cx
                (source_loc, module_name)
                ~perform_platform_validation:false
+               ~import_kind_for_untyped_import_validation:None
         | _ -> ());
         None
       | _ -> None

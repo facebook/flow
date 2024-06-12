@@ -676,6 +676,7 @@ class on_demand_searcher cx ~is_legit_require ~covers_target ~purpose =
         cx
         (loc, module_name)
         ~perform_platform_validation:false
+        ~import_kind_for_untyped_import_validation:None
 
     method private component_name_of_jsx_element loc expr =
       let open Ast.JSX in

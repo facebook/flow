@@ -48,7 +48,11 @@ module Import_export = struct
         in
         Flow_js_utils.add_output cx message
 
-  let get_module_t cx ?(perform_platform_validation = false) (loc, mref) =
+  let get_module_t
+      cx
+      ?(perform_platform_validation = false)
+      ~import_kind_for_untyped_import_validation
+      (loc, mref) =
     if Context.in_declare_module cx then
       Flow_js_utils.get_builtin_module cx mref loc
     else
@@ -57,12 +61,31 @@ module Import_export = struct
         | Ok t -> t
         | Error m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name loc
       in
-      ( if perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
-      then
-        let reason = Reason.(mk_reason (RCustom mref) loc) in
-        match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
-        | [ModuleT m] -> check_platform_availability cx reason m.module_available_platforms
-        | _ -> ()
+      let reason = Reason.(mk_reason (RCustom mref) loc) in
+      let need_platform_validation =
+        perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
+      in
+      let need_untyped_import_validation =
+        Base.Option.is_some import_kind_for_untyped_import_validation
+      in
+      ( if need_platform_validation || need_untyped_import_validation then
+        match concretize_module_type cx reason module_t with
+        | Ok m ->
+          if need_platform_validation then
+            check_platform_availability cx reason m.module_available_platforms
+        | Error (any_reason, _any_src) ->
+          Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
+              match (import_kind, desc_of_reason any_reason) with
+              (* Use a special reason so we can tell the difference between an any-typed type import
+               * from an untyped module and an any-typed type import from a nonexistent module. *)
+              | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
+                let message = Error_message.EUntypedTypeImport (loc, module_name) in
+                Flow_js_utils.add_output cx message
+              | (ImportValue, RUntypedModule module_name) ->
+                let message = Error_message.EUntypedImport (loc, module_name) in
+                Flow_js_utils.add_output cx message
+              | _ -> ()
+          )
       );
       module_t
 
@@ -106,9 +129,7 @@ module Import_export = struct
         in
         name_def_loc_ref := name_loc_opt;
         t
-      | Error (lreason, any_source) ->
-        Flow_js_utils.check_untyped_import cx import_kind lreason import_reason;
-        AnyT (lreason, any_source)
+      | Error (lreason, any_source) -> AnyT (lreason, any_source)
     in
     let name_def_loc = !name_def_loc_ref in
     (name_def_loc, t)
@@ -134,9 +155,7 @@ module Import_export = struct
     let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
     | Ok m -> Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
-    | Error (lreason, any_source) ->
-      Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-      AnyT (lreason, any_source)
+    | Error (lreason, any_source) -> AnyT (lreason, any_source)
 
   let import_namespace_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
@@ -172,9 +191,7 @@ module Import_export = struct
         ~reposition:Flow.reposition
         (reason, is_strict, legacy_interop)
         m
-    | Error (lreason, any_source) ->
-      Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-      AnyT (lreason, any_source)
+    | Error (lreason, any_source) -> AnyT (lreason, any_source)
 end
 
 module ImplicitInstantiation =

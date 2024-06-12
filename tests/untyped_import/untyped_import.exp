@@ -1,64 +1,64 @@
-Error ----------------------------------------------------------------------------------------------- export_star.js:6:1
+Error ---------------------------------------------------------------------------------------------- export_star.js:6:15
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports`? [untyped-import]
 
    6| export * from './untyped_exports' // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    ^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- export_star.js:7:1
+Error ---------------------------------------------------------------------------------------------- export_star.js:7:20
 
-Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
-`./untyped_exports`? [untyped-import]
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports`? [untyped-type-import]
 
    7| export type * from './untyped_exports' // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         ^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- imports.js:4:9
+Error -------------------------------------------------------------------------------------------------- imports.js:4:22
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports.js`? [untyped-import]
 
    4| import {FooObj} from './untyped_exports.js'; //Error
-              ^^^^^^
+                           ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- imports.js:5:13
+Error -------------------------------------------------------------------------------------------------- imports.js:5:22
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports.js`? [untyped-import]
 
    5| import * as All from './untyped_exports.js'; //Error
-                  ^^^
+                           ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- imports.js:8:8
+Error -------------------------------------------------------------------------------------------------- imports.js:8:20
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports.js`? [untyped-import]
 
    8| import BarObj from './untyped_exports.js'; //Error
-             ^^^^^^
+                         ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- imports.js:11:9
+Error ------------------------------------------------------------------------------------------------- imports.js:11:22
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports.js`? [untyped-import]
 
    11| import {BazObj} from './untyped_exports.js'; //Error
-               ^^^^^^
+                            ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- imports.js:14:17
+Error ------------------------------------------------------------------------------------------------- imports.js:14:25
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
 `./untyped_exports`? [untyped-import]
 
    14| const BarObj2 = require("./untyped_exports"); //Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                               ^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- imports.js:22:23

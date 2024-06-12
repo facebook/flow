@@ -818,10 +818,10 @@ struct
             (reason, name_loc, preferred_def_locs, export_name, target_module_t)
             l
             tout
-        | (AnyT (lreason, _), CopyNamedExportsT (reason, target_module, t)) ->
-          CopyNamedExportsTKit.on_AnyT cx lreason (reason, target_module) t
-        | (AnyT (lreason, _), CopyTypeExportsT (reason, target_module, t)) ->
-          CopyTypeExportsTKit.on_AnyT cx lreason (reason, target_module) t
+        | (AnyT (_, _), CopyNamedExportsT (_, target_module, t)) ->
+          CopyNamedExportsTKit.on_AnyT cx target_module t
+        | (AnyT (_, _), CopyTypeExportsT (_, target_module, t)) ->
+          CopyTypeExportsTKit.on_AnyT cx target_module t
         | (_, CJSExtractNamedExportsT (reason, local_module, t_out)) ->
           CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) l t_out
         (*****************)

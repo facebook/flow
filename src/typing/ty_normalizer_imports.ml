@@ -40,7 +40,14 @@ let add_bind_ident_from_imports cx local_name import_mode local_loc source remot
 let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
   let (source_loc, module_name) = source in
   let source_loc = ALoc.of_loc source_loc in
-  let source_module_t = lazy (Import_export.get_module_t cx (source_loc, module_name)) in
+  let source_module_t =
+    lazy
+      (Import_export.get_module_t
+         cx
+         ~import_kind_for_untyped_import_validation:None
+         (source_loc, module_name)
+      )
+  in
   SMap.fold
     (fun remote_name remote_map acc ->
       SMap.fold
@@ -70,7 +77,11 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
 let add_require_bindings_from_exports_map cx loc source_name binding acc =
   let reason = Reason.(mk_reason (RModule source_name) loc) in
   let module_t =
-    Import_export.get_module_t cx ~perform_platform_validation:false (loc, source_name)
+    Import_export.get_module_t
+      cx
+      ~perform_platform_validation:false
+      ~import_kind_for_untyped_import_validation:None
+      (loc, source_name)
   in
   let t = Import_export.cjs_require_type cx reason ~legacy_interop:false module_t in
   match binding with

@@ -820,20 +820,6 @@ let namespace_type cx reason values types =
   in
   NamespaceT { values_type; types_tmap }
 
-let check_untyped_import cx import_kind lreason ureason =
-  match (import_kind, desc_of_reason lreason) with
-  (* Use a special reason so we can tell the difference between an any-typed type import
-   * from an untyped module and an any-typed type import from a nonexistent module. *)
-  | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
-    let loc = Reason.loc_of_reason ureason in
-    let message = Error_message.EUntypedTypeImport (loc, module_name) in
-    add_output cx message
-  | (ImportValue, RUntypedModule module_name) ->
-    let loc = Reason.loc_of_reason ureason in
-    let message = Error_message.EUntypedImport (loc, module_name) in
-    add_output cx message
-  | _ -> ()
-
 let obj_is_readonlyish { Type.react_dro; frozen; _ } = Base.Option.is_some react_dro || frozen
 
 let is_exception_to_react_dro = function
@@ -1703,9 +1689,7 @@ module CopyNamedExportsT_kit (F : Import_export_helper_sig) = struct
       target_module_t
 
   (* There is nothing to copy from a module exporting `any` or `Object`. *)
-  let on_AnyT cx lreason (reason, target_module) =
-    check_untyped_import cx ImportValue lreason reason;
-    F.return cx target_module
+  let on_AnyT cx target_module = F.return cx target_module
 end
 
 (* Copy only the type exports from a source module into a target module.
@@ -1737,9 +1721,7 @@ module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
     F.return cx target_module_t
 
   (* There is nothing to copy from a module exporting `any` or `Object`. *)
-  let on_AnyT cx lreason (reason, target_module) =
-    check_untyped_import cx ImportValue lreason reason;
-    F.return cx target_module
+  let on_AnyT cx target_module = F.return cx target_module
 end
 
 (* Export a type from a given ModuleT, but only if the type is compatible

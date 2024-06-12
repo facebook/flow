@@ -615,10 +615,10 @@ module rec ConsGen : S = struct
         cx
         (reason, name_loc, preferred_def_locs, export_name, target_module_t)
         t
-    | (AnyT (lreason, _), Annot_CopyNamedExportsT (reason, target_module)) ->
-      CopyNamedExportsTKit.on_AnyT cx lreason (reason, target_module)
-    | (AnyT (lreason, _), Annot_CopyTypeExportsT (reason, target_module)) ->
-      CopyTypeExportsTKit.on_AnyT cx lreason (reason, target_module)
+    | (AnyT (_, _), Annot_CopyNamedExportsT (_, target_module)) ->
+      CopyNamedExportsTKit.on_AnyT cx target_module
+    | (AnyT (_, _), Annot_CopyTypeExportsT (_, target_module)) ->
+      CopyTypeExportsTKit.on_AnyT cx target_module
     | (_, Annot_CJSExtractNamedExportsT (reason, local_module)) ->
       CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) t
     (******************)
@@ -652,16 +652,10 @@ module rec ConsGen : S = struct
           m
       in
       t
-    | (AnyT (lreason, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _)))
-      ->
-      Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
+    | (AnyT (_, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _))) ->
       AnyT.why src reason
-    | (AnyT (lreason, src), Annot_ImportDefaultT (reason, import_kind, _, _)) ->
-      Flow_js_utils.check_untyped_import cx import_kind lreason reason;
-      AnyT.why src reason
-    | (AnyT (lreason, src), Annot_ImportNamedT (reason, import_kind, _, _, _)) ->
-      Flow_js_utils.check_untyped_import cx import_kind lreason reason;
-      AnyT.why src reason
+    | (AnyT (_, src), Annot_ImportDefaultT (reason, _, _, _)) -> AnyT.why src reason
+    | (AnyT (_, src), Annot_ImportNamedT (reason, _, _, _, _)) -> AnyT.why src reason
     (************************************)
     (* Wildcards (idx, maybe, optional) *)
     (************************************)
