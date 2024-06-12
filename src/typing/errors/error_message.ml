@@ -571,8 +571,7 @@ and 'loc t' =
     }
   | EDuplicateComponentProp of {
       spread: 'loc;
-      first: 'loc virtual_reason;
-      second: 'loc;
+      duplicates: ('loc virtual_reason * 'loc) Nel.t;
     }
   | ERefComponentProp of {
       spread: 'loc;
@@ -1320,8 +1319,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         kind;
       }
   | EInvalidMappedType { loc; kind } -> EInvalidMappedType { loc = f loc; kind }
-  | EDuplicateComponentProp { spread; first; second } ->
-    EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
+  | EDuplicateComponentProp { spread; duplicates } ->
+    EDuplicateComponentProp
+      {
+        spread = f spread;
+        duplicates = Nel.map (fun (first, second) -> (map_reason first, f second)) duplicates;
+      }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
   | EInvalidRendersTypeArgument
       { loc; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
@@ -2780,8 +2783,8 @@ let friendly_message_of_msg = function
       | RemoveOptionality -> MessageInvalidMappedTypeWithOptionalityRemoval
     in
     Normal msg
-  | EDuplicateComponentProp { spread; first; second } ->
-    Normal (MessageRedeclareComponentProp { first; second_loc = second; spread_loc = spread })
+  | EDuplicateComponentProp { spread; duplicates } ->
+    Normal (MessageRedeclareComponentProp { duplicates; spread_loc = spread })
   | ERefComponentProp { spread = spread_loc; loc = ref_loc } ->
     Normal (MessageInvalidRefPropertyInSpread { ref_loc; spread_loc })
   | EInvalidRendersTypeArgument
