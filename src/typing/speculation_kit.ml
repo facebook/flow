@@ -197,22 +197,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let ts = UnionRep.members rep in
     let speculation_id = mk_id () in
     Speculation.init_speculation cx speculation_id;
-
-    (* collect parts of the union type to be fully resolved *)
-    let imap =
-      (* since any final optimization must have happened after full resolution *)
-      if UnionRep.is_optimized_finally rep then
-        IMap.empty
-      else
-        ResolvableTypeJob.collect_of_types cx IMap.empty ts
-    in
-    (* collect parts of the lower bound to be fully resolved, while logging
-       unresolved tvars *)
-    let imap = ResolvableTypeJob.collect_of_type ~log_unresolved:speculation_id cx imap l in
-    (* fully resolve the collected types *)
-    resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
-    @@ (* ...and then begin the choice-making process *)
-    try_flow_continuation cx trace reason speculation_id (UnionCases (use_op, l, rep, ts))
+    flow_t
+      cx
+      ( choice_kit reason Trigger,
+        try_flow_continuation cx trace reason speculation_id (UnionCases (use_op, l, rep, ts))
+      )
 
   and try_intersection cx trace u reason rep =
     let ts = InterRep.members rep in
@@ -276,18 +265,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       jobs
       []
-
-  (* Entry point into full type resolution. Create an identifier for the goal
-     tvar, and call the general full type resolution function below. *)
-  and resolve_bindings_init cx trace reason bindings done_tvar =
-    let id = create_goal cx done_tvar in
-    resolve_bindings cx trace reason id bindings
-
-  and create_goal cx tvar =
-    let i = mk_id () in
-    Graph_explorer.node (Context.type_graph cx) i;
-    Context.set_goals cx (IMap.add i tvar (Context.goals cx));
-    i
 
   (* Let id be the identifier associated with a tvar that is not yet
      resolved. (Here, resolved/unresolved refer to the state of the tvar in the

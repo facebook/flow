@@ -969,71 +969,37 @@ References:
                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:49:37
-
-Cannot assign object literal to `e1` because string [1] is incompatible with unknown element of empty array [2] in array
-element of property `arr`. Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
-
-   sentinel_refinements.js:49:37
-   49| const e1: A = { __type__: a(), arr: [] }; // // err
-                                           ^^ [2]
-
-References:
-   sentinel_refinements.js:5:38
-    5| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                                            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:50:43
+Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:43
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   sentinel_refinements.js:50:43
-   50| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
+   sentinel_refinements.js:52:43
+   52| const e1: F = { __type__: a(), f: (v) => (v: string) }; // error
                                                  ^
 
 References:
    sentinel_refinements.js:6:80
     6| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
                                                                                       ^^^^^^ [1]
-   sentinel_refinements.js:50:46
-   50| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
+   sentinel_refinements.js:52:46
+   52| const e1: F = { __type__: a(), f: (v) => (v: string) }; // error
                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:51:32
-
-Cannot create `CompAProp` element because string [1] is incompatible with unknown element of empty array [2] in array
-element of property `arr`. Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
-
-   sentinel_refinements.js:51:32
-   51| <CompAProp __type__={a()} arr={[]} />; // // err
-                                      ^^ [2]
-
-References:
-   sentinel_refinements.js:5:38
-    5| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                                            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:38
+Error ------------------------------------------------------------------------------------ sentinel_refinements.js:53:38
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   sentinel_refinements.js:52:38
-   52| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
+   sentinel_refinements.js:53:38
+   53| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
                                             ^
 
 References:
    sentinel_refinements.js:6:80
     6| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
                                                                                       ^^^^^^ [1]
-   sentinel_refinements.js:52:41
-   52| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
+   sentinel_refinements.js:53:41
+   53| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
                                                ^^^^^^ [2]
 
 
@@ -1263,4 +1229,4 @@ References:
 
 
 
-Found 90 errors
+Found 88 errors

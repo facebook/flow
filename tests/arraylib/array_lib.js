@@ -137,3 +137,13 @@ function flatMap_test() {
     });
   }
 }
+
+function reduce_with_union_test() {
+  declare const arr: Array<string>;
+  const result = arr.reduce((acc: Array<string>, x: string) => {
+    if (0 < 1) {
+        return [...acc];
+    }
+    return [...acc, x];
+  }, []);
+}
