@@ -8,6 +8,7 @@
 open Name_def
 open Type
 open Reason
+open Symbol
 open Loc_collections
 open Utils_js
 open Type_operation_utils
@@ -942,6 +943,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         import_reason
         import_kind
         ~module_name
+        ~namespace_symbol:(mk_namespace_symbol ~name ~def_loc:id_loc)
         ~source_module_t
         ~local_loc:id_loc
     in

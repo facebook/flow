@@ -409,10 +409,10 @@ let module_exports_sig_loc { Module_info.kind; type_named; _ } =
 let mk_module_t =
   let open Module_info in
   let open Type in
-  let mk_esm_module_t cx reason =
+  let mk_esm_module_t cx module_reason =
     ModuleT
       {
-        module_reason = reason;
+        module_reason;
         module_export_types =
           {
             value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
@@ -527,7 +527,7 @@ let mk_module_t =
       |> export_named cx self_reason DirectExport named info.type_named
       |> copy_star_exports cx self_reason (star, info.type_star)
 
-let mk_namespace_t cx info reason =
+let mk_namespace_t cx info namespace_symbol reason =
   let open Module_info in
   if not (Base.List.is_empty info.type_star) then failwith "namespace should not have star exports";
   let named =
@@ -537,7 +537,7 @@ let mk_namespace_t cx info reason =
     | ES { named = _; star = _ :: _ } -> failwith "namespace should not have star exports"
     | ES { named; star = [] } -> named
   in
-  Flow_js_utils.namespace_type cx reason named info.type_named
+  Flow_js_utils.namespace_type cx reason (Some namespace_symbol) named info.type_named
 
 let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   let info =
@@ -553,7 +553,7 @@ let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   in
   (module_sig_loc, module_t)
 
-let analyze_declare_namespace cx reason statements =
+let analyze_declare_namespace cx namespace_symbol reason statements =
   let info =
     { Module_info.kind = Module_info.Unknown; type_named = NameUtils.Map.empty; type_star = [] }
   in
@@ -574,4 +574,4 @@ let analyze_declare_namespace cx reason statements =
           );
         ()
   );
-  mk_namespace_t cx info reason
+  mk_namespace_t cx info namespace_symbol reason

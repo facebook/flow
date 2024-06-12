@@ -518,7 +518,7 @@ let check_multiplatform_conformance cx ast tast =
             Flow_js_utils.ImportModuleNsTKit.on_ModuleT
               cx
               ~is_common_interface_module
-              (reason, false)
+              (reason, None, false)
               m
         | _ -> AnyT.make Untyped reason
       in

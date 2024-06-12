@@ -725,7 +725,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
          )
     in
     SuccessModule (named_exports, cjs_export)
-  | SuccessNamespace (NamespaceT { values_type; types_tmap }) ->
+  | SuccessNamespace (NamespaceT { namespace_symbol = _; values_type; types_tmap }) ->
     let members =
       SMap.fold
         (fun x p acc ->

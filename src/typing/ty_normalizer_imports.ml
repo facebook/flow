@@ -83,7 +83,14 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
       ~import_kind_for_untyped_import_validation:None
       (loc, source_name)
   in
-  let t = Import_export.cjs_require_type cx reason ~legacy_interop:false module_t in
+  let t =
+    Import_export.cjs_require_type
+      cx
+      reason
+      ~namespace_symbol:(Symbol.mk_module_symbol ~name:source_name ~def_loc:loc)
+      ~legacy_interop:false
+      module_t
+  in
   match binding with
   | BindIdent (loc, name) ->
     let loc = ALoc.of_loc loc in

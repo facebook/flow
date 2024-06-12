@@ -7,6 +7,7 @@
 
 open Polarity
 open Reason
+open Symbol
 open Utils_js
 
 (******************************************************************************)
@@ -1387,6 +1388,7 @@ module rec TypeTerm : sig
     | ObjSpreadAssign
 
   and namespace_type = {
+    namespace_symbol: symbol option;
     values_type: t;
     types_tmap: Properties.id;
   }
@@ -3301,7 +3303,7 @@ module AConstraint = struct
     | Annot_ConcretizeForImportsExports of Reason.t * (TypeTerm.t -> TypeTerm.t)
     (* Imports *)
     | Annot_ImportNamedT of Reason.t * TypeTerm.import_kind * string * string * bool
-    | Annot_ImportModuleNsT of Reason.t * bool
+    | Annot_ImportModuleNsT of Reason.t * symbol option * bool
     | Annot_ImportTypeofT of Reason.reason * string
     | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
     (*
@@ -3313,6 +3315,7 @@ module AConstraint = struct
      *)
     | Annot_CJSRequireT of {
         reason: Reason.t;
+        namespace_symbol: Symbol.symbol;
         is_strict: bool;
         legacy_interop: bool;
       }
@@ -3474,7 +3477,7 @@ module AConstraint = struct
     | Annot_ImportTypeofT (r, _)
     | Annot_ImportNamedT (r, _, _, _, _)
     | Annot_ImportDefaultT (r, _, _, _)
-    | Annot_ImportModuleNsT (r, _)
+    | Annot_ImportModuleNsT (r, _, _)
     | Annot_CJSExtractNamedExportsT (r, _)
     | Annot_ExportNamedT { reason = r; _ }
     | Annot_ExportTypeT { reason = r; _ }

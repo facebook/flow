@@ -6,6 +6,7 @@
  *)
 
 open Reason
+open Symbol
 open Type
 open TypeUtil
 open Utils_js
@@ -386,8 +387,16 @@ let rec dump_t_ (depth, tvars) cx t =
              (exports_tmap_to_string value_exports_tmap)
              (exports_tmap_to_string type_exports_tmap)
           )
-    | NamespaceT { values_type; types_tmap } ->
-      p t ~extra:(spf "values=%s, types=%s" (kid values_type) (Properties.string_of_id types_tmap))
+    | NamespaceT { namespace_symbol; values_type; types_tmap } ->
+      p
+        t
+        ~extra:
+          (spf
+             "name=%s, values=%s, types=%s"
+             (dump_symbol_opt namespace_symbol)
+             (kid values_type)
+             (Properties.string_of_id types_tmap)
+          )
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (EnforceUnionOptimized _) -> p t

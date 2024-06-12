@@ -827,13 +827,13 @@ class virtual ['a] t =
         }
 
     method namespace_type cx map_cx t =
-      let { values_type; types_tmap } = t in
+      let { namespace_symbol; values_type; types_tmap } = t in
       let values_type' = self#type_ cx map_cx values_type in
       let types_tmap' = self#props cx map_cx types_tmap in
       if values_type' == values_type && types_tmap' == types_tmap then
         t
       else
-        { values_type = values_type'; types_tmap = types_tmap' }
+        { namespace_symbol; values_type = values_type'; types_tmap = types_tmap' }
 
     method virtual call_prop : Context.t -> 'a -> int -> int
 
