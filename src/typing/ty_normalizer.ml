@@ -329,6 +329,12 @@ module Make (I : INPUT) : S = struct
     let sym_anonymous = sym_name = OrdinaryName "<<anonymous class>>" in
     { Ty.sym_provenance; sym_name; sym_anonymous; sym_def_loc }
 
+  let ty_symbol_from_symbol env symbol =
+    symbol_from_loc
+      env
+      (Symbol.def_loc_of_symbol symbol)
+      (OrdinaryName (Symbol.name_of_symbol symbol))
+
   (* NOTE Due to repositioning, `reason_loc` may not point to the actual location
      where `name` was defined. *)
   let symbol_from_reason env reason name =
@@ -590,13 +596,6 @@ module Make (I : INPUT) : S = struct
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract module name from reason: " ^ desc in
         terr ~kind:UnsupportedTypeCtor ~msg None
-
-    let is_module_reason r =
-      match desc_of_reason r with
-      | RModule _
-      | RExports ->
-        true
-      | _ -> false
   end
 
   module TypeConverter : sig
@@ -1980,10 +1979,20 @@ module Make (I : INPUT) : S = struct
             } ->
           let%map m = module_t ~env reason exports in
           Ty.Decl m
-        | NamespaceT { namespace_symbol = _; values_type = DefT (r, ObjT o); types_tmap }
-          when Reason_utils.is_module_reason r ->
-          let%map (name, exports, default) = module_of_namespace ~env r o types_tmap in
-          Ty.Decl (Ty.ModuleDecl { name; exports; default })
+        | NamespaceT
+            { namespace_symbol = Some namespace_symbol; values_type = DefT (_, ObjT o); types_tmap }
+          ->
+          let%bind (exports, default) = namespace_t ~env o types_tmap in
+          (match Symbol.kind_of_symbol namespace_symbol with
+          | Symbol.SymbolModule ->
+            let name = ty_symbol_from_symbol env namespace_symbol in
+            return (Ty.Decl (Ty.ModuleDecl { name = Some name; exports; default }))
+          | Symbol.SymbolNamespace ->
+            let name = ty_symbol_from_symbol env namespace_symbol in
+            return (Ty.Decl (Ty.NamespaceDecl { name = Some name; exports }))
+          | _ ->
+            let%map t = TypeConverter.convert_t ~env orig_t in
+            Ty.Type t)
         (* Monomorphic Classes/Interfaces *)
         | DefT (_, ClassT (ThisInstanceT (r, { super; inst; _ }, _, _)))
         | DefT (_, ClassT (DefT (r, InstanceT { super; inst; _ })))
@@ -2031,8 +2040,8 @@ module Make (I : INPUT) : S = struct
         | None -> return None
         | Some exports ->
           (match Lookahead.peek (Env.get_cx env) exports with
-          | Lookahead.LowerBounds [DefT (r, ObjT o)] ->
-            let%map (_, _, default) = module_of_object ~env r o in
+          | Lookahead.LowerBounds [DefT (_, ObjT o)] ->
+            let%map (_, default) = module_of_object ~env o in
             default
           | Lookahead.Recursive
           | Lookahead.LowerBounds _ ->
@@ -2080,12 +2089,9 @@ module Make (I : INPUT) : S = struct
         let props = NameUtils.Map.bindings (Context.find_props cx props_id) in
         loop ([], None) props
       in
-      fun ~env reason o ->
-        let%bind name = Reason_utils.module_symbol_opt env reason in
-        let%map (exports, default) = obj_module_props ~env o.T.props_tmap in
-        (name, exports, default)
+      (fun ~env o -> obj_module_props ~env o.T.props_tmap)
 
-    and module_of_namespace =
+    and namespace_t =
       let step ~env decls (x, t, _pol) =
         match%map toplevel ~env t with
         | Ty.Type t -> Ty.VariableDecl (x, t) :: decls
@@ -2099,15 +2105,15 @@ module Make (I : INPUT) : S = struct
           loop ~env acc' tl
         | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"namespace-prop" None
       in
-      fun ~env reason values_type types_tmap ->
-        let%bind (name, exports, default) = module_of_object ~env reason values_type in
+      fun ~env values_type types_tmap ->
+        let%bind (exports, default) = module_of_object ~env values_type in
         let%map exports =
           types_tmap
           |> Context.find_props (Env.get_cx env)
           |> NameUtils.Map.bindings
           |> loop ~env exports
         in
-        (name, exports, default)
+        (exports, default)
 
     let convert_toplevel = toplevel
   end
@@ -2158,7 +2164,8 @@ module Make (I : INPUT) : S = struct
       | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t
       | TypeAliasDecl _
       | VariableDecl _
-      | ModuleDecl _ ->
+      | ModuleDecl _
+      | NamespaceDecl _ ->
         None
     in
     let def_loc_of_elt = function

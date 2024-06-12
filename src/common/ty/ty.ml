@@ -326,6 +326,10 @@ and decl =
       targs: t list option;
       is_type: bool;
     }
+  | NamespaceDecl of {
+      name: symbol option;
+      exports: decl list;
+    }
   | ModuleDecl of {
       name: symbol option;
       exports: decl list;
@@ -589,7 +593,8 @@ class ['A] comparator_ty =
       | InterfaceDecl _ -> 3
       | EnumDecl _ -> 4
       | NominalComponentDecl _ -> 5
-      | ModuleDecl _ -> 6
+      | NamespaceDecl _ -> 6
+      | ModuleDecl _ -> 7
 
     method tag_of_elt _ =
       function

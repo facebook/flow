@@ -50,6 +50,7 @@ let string_of_ctor_decl = function
   | ClassDecl _ -> "ClassDecl"
   | InterfaceDecl _ -> "InterfaceDecl"
   | ModuleDecl _ -> "Module"
+  | NamespaceDecl _ -> "NamespaceDecl"
   | VariableDecl _ -> "VariableDecl"
   | NominalComponentDecl _ -> "NominalComponentDecl"
   | EnumDecl _ -> "EnumDecl"
@@ -406,6 +407,15 @@ struct
     let exports = dump_list (dump_decl ~depth) ~sep:", " exports in
     spf "Module(%s, %s)" name exports
 
+  and dump_namespace ~depth name exports =
+    let name =
+      match name with
+      | Some name -> dump_symbol name
+      | None -> "<no name>"
+    in
+    let exports = dump_list (dump_decl ~depth) ~sep:", " exports in
+    spf "Namespace(%s, %s)" name exports
+
   and dump_decl ~depth = function
     | VariableDecl (name, t) ->
       spf "VariableDecl (%s, %s)" (Reason.display_string_of_name name) (dump_t ~depth t)
@@ -426,6 +436,7 @@ struct
         (dump_symbol name)
         (dump_type_params ~depth tparams)
         is_type
+    | NamespaceDecl { name; exports } -> dump_namespace ~depth name exports
     | ModuleDecl { name; exports; default } -> dump_module ~depth name exports default
 
   and dump_elt ~depth = function
@@ -774,6 +785,9 @@ struct
         ("isType", Hh_json.JSON_Bool is_type);
       ]
     in
+    let json_of_namespace name _ =
+      Hh_json.[("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
+    in
     let json_of_module name _ _ =
       Hh_json.[("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
     in
@@ -793,6 +807,7 @@ struct
       | EnumDecl name -> [("name", json_of_symbol name)]
       | NominalComponentDecl { name; tparams; targs = _; is_type } ->
         json_of_nominal_component_decl (name, tparams, is_type)
+      | NamespaceDecl { name; exports } -> json_of_namespace name exports
       | ModuleDecl { name; exports; default } -> json_of_module name exports default
     in
     fun elt ->
