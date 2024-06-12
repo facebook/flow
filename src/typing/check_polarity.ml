@@ -137,7 +137,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       Base.Option.iter dict ~f:(check_polarity_dict cx ?trace seen tparams polarity);
       check_polarity cx ?trace seen tparams polarity proto_t;
       Base.Option.iter call_t ~f:(check_polarity_call cx ?trace seen tparams polarity)
-    | NamespaceT { values_type; types_tmap } ->
+    | NamespaceT { namespace_symbol = _; values_type; types_tmap } ->
       check_polarity cx ?trace seen tparams polarity values_type;
       check_polarity_propmap cx ?trace seen tparams polarity types_tmap
     | UnionT (_, rep) ->

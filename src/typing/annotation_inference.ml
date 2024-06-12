@@ -96,7 +96,7 @@ module type S = sig
 
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
+  val cjs_require : Context.t -> Type.t -> Reason.t -> Symbol.symbol -> bool -> bool -> Type.t
 
   val export_named :
     Context.t ->
@@ -115,7 +115,7 @@ module type S = sig
   val import_named :
     Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
 
-  val import_ns : Context.t -> Reason.t -> bool -> Type.t -> Type.t
+  val import_ns : Context.t -> Reason.t -> Symbol.symbol -> bool -> Type.t -> Type.t
 
   val import_typeof : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
@@ -624,14 +624,14 @@ module rec ConsGen : S = struct
     (******************)
     (* Module imports *)
     (******************)
-    | (ModuleT m, Annot_CJSRequireT { reason; is_strict; legacy_interop }) ->
+    | (ModuleT m, Annot_CJSRequireT { reason; namespace_symbol; is_strict; legacy_interop }) ->
       CJSRequireTKit.on_ModuleT
         cx
         ~reposition:(fun _ _ t -> t)
-        (reason, is_strict, legacy_interop)
+        (reason, namespace_symbol, is_strict, legacy_interop)
         m
-    | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
-      ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
+    | (ModuleT m, Annot_ImportModuleNsT (reason, namespace_symbol, is_strict)) ->
+      ImportModuleNsTKit.on_ModuleT cx (reason, namespace_symbol, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
       let (_name_loc_opt, t) =
         ImportDefaultTKit.on_ModuleT
@@ -652,7 +652,7 @@ module rec ConsGen : S = struct
           m
       in
       t
-    | (AnyT (_, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _))) ->
+    | (AnyT (_, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _, _))) ->
       AnyT.why src reason
     | (AnyT (_, src), Annot_ImportDefaultT (reason, _, _, _)) -> AnyT.why src reason
     | (AnyT (_, src), Annot_ImportNamedT (reason, _, _, _, _)) -> AnyT.why src reason
@@ -994,7 +994,7 @@ module rec ConsGen : S = struct
     (************************************)
     (* Namespace and type qualification *)
     (************************************)
-    | ( NamespaceT { values_type; types_tmap },
+    | ( NamespaceT { namespace_symbol = _; values_type; types_tmap },
         Annot_GetTypeFromNamespaceT
           { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name) }
       ) ->
@@ -1014,7 +1014,8 @@ module rec ConsGen : S = struct
                Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
              )
           ))
-    | (NamespaceT { values_type; types_tmap = _ }, _) -> elab_t cx ~seen values_type op
+    | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
+      elab_t cx ~seen values_type op
     | ( _,
         Annot_GetTypeFromNamespaceT
           { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name) }
@@ -1289,8 +1290,8 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require cx t reason is_strict legacy_interop =
-    elab_t cx t (Annot_CJSRequireT { reason; is_strict; legacy_interop })
+  and cjs_require cx t reason namespace_symbol is_strict legacy_interop =
+    elab_t cx t (Annot_CJSRequireT { reason; namespace_symbol; is_strict; legacy_interop })
 
   and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =
     elab_t cx t (Annot_ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind })
@@ -1306,7 +1307,8 @@ module rec ConsGen : S = struct
   and import_named cx reason import_kind export_name module_name is_strict t =
     elab_t cx t (Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict))
 
-  and import_ns cx reason is_strict t = elab_t cx t (Annot_ImportModuleNsT (reason, is_strict))
+  and import_ns cx reason namespace_symbol is_strict t =
+    elab_t cx t (Annot_ImportModuleNsT (reason, Some namespace_symbol, is_strict))
 
   and copy_named_exports cx ~from_ns reason ~module_t =
     elab_t cx from_ns (Annot_CopyNamedExportsT (reason, module_t))

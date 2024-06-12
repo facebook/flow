@@ -805,7 +805,7 @@ let obj_map_const cx o reason_op target =
   let map_field _ t = map_t target t in
   map_obj cx o reason_op ~map_t ~map_field
 
-let namespace_type cx reason values types =
+let namespace_type cx reason namespace_symbol values types =
   let add name { preferred_def_locs; name_loc; type_ } acc =
     NameUtils.Map.add
       name
@@ -818,7 +818,7 @@ let namespace_type cx reason values types =
   let types_tmap =
     Context.generate_property_map cx (NameUtils.Map.fold add types NameUtils.Map.empty)
   in
-  NamespaceT { values_type; types_tmap }
+  NamespaceT { namespace_symbol; values_type; types_tmap }
 
 let obj_is_readonlyish { Type.react_dro; frozen; _ } = Base.Option.is_some react_dro || frozen
 
@@ -1268,7 +1268,7 @@ end
 
 module CJSRequireTKit = struct
   (* require('SomeModule') *)
-  let on_ModuleT cx ~reposition (reason, is_strict, legacy_interop) module_ =
+  let on_ModuleT cx ~reposition (reason, module_symbol, is_strict, legacy_interop) module_ =
     let {
       module_reason;
       module_export_types = exports;
@@ -1303,7 +1303,8 @@ module CJSRequireTKit = struct
           Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props:value_props proto
         in
         let types_tmap = Context.generate_property_map cx type_props in
-        NamespaceT { values_type; types_tmap }
+        let namespace_symbol = Some module_symbol in
+        NamespaceT { namespace_symbol; values_type; types_tmap }
       in
       if automatic_require_default then
         match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
@@ -1315,7 +1316,8 @@ end
 
 module ImportModuleNsTKit = struct
   (* import * as X from 'SomeModule'; *)
-  let on_ModuleT cx ?(is_common_interface_module = false) (reason_op, is_strict) module_ =
+  let on_ModuleT
+      cx ?(is_common_interface_module = false) (reason_op, namespace_symbol, is_strict) module_ =
     let {
       module_reason;
       module_export_types = exports;
@@ -1370,7 +1372,7 @@ module ImportModuleNsTKit = struct
       Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props:value_props proto
     in
     let types_tmap = Context.generate_property_map cx type_props in
-    NamespaceT { values_type; types_tmap }
+    NamespaceT { namespace_symbol; values_type; types_tmap }
 end
 
 module ImportDefaultTKit = struct
@@ -1747,7 +1749,7 @@ end
 
 module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
   let on_concrete_type cx (reason, local_module) = function
-    | NamespaceT { values_type; types_tmap } ->
+    | NamespaceT { namespace_symbol = _; values_type; types_tmap } ->
       (* Copy props from the values part *)
       let module_t = F.cjs_extract_named_exports cx (reason, local_module) values_type in
       (* Copy type exports *)

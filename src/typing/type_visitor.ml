@@ -379,7 +379,7 @@ class ['a] t =
       acc
 
     method private namespace_type cx pole acc ns =
-      let { values_type; types_tmap } = ns in
+      let { namespace_symbol = _; values_type; types_tmap } = ns in
       let acc = self#type_ cx pole acc values_type in
       let acc = self#props cx pole acc types_tmap in
       acc

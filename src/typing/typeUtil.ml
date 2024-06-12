@@ -188,8 +188,8 @@ let rec mod_reason_of_t f = function
         module_is_strict;
         module_available_platforms;
       }
-  | NamespaceT { values_type; types_tmap } ->
-    NamespaceT { values_type = mod_reason_of_t f values_type; types_tmap }
+  | NamespaceT { namespace_symbol; values_type; types_tmap } ->
+    NamespaceT { namespace_symbol; values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)

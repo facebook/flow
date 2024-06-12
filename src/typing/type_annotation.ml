@@ -1025,6 +1025,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   (Type_operation_utils.Import_export.cjs_require_type
                      cx
                      (mk_annot_reason (RModule value) loc)
+                     ~namespace_symbol:(Symbol.mk_module_symbol ~name:value ~def_loc:loc)
                      ~legacy_interop:false
                      remote_module_t
                   )

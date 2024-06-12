@@ -148,24 +148,28 @@ module Import_export = struct
       ~remote_name
       ~local_name
 
-  let get_module_namespace_type cx reason source_module_t =
+  let get_module_namespace_type cx reason ~namespace_symbol source_module_t =
     let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
-    | Ok m -> Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
+    | Ok m ->
+      Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, Some namespace_symbol, is_strict) m
     | Error (lreason, any_source) -> AnyT (lreason, any_source)
 
   let import_namespace_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
+      cx import_reason import_kind ~module_name ~namespace_symbol ~source_module_t ~local_loc =
     let open Ast.Statement in
     match import_kind with
     | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
     | ImportDeclaration.ImportTypeof ->
-      let module_ns_t = get_module_namespace_type cx import_reason source_module_t in
+      let module_ns_t =
+        get_module_namespace_type cx import_reason ~namespace_symbol source_module_t
+      in
       let bind_reason = repos_reason local_loc import_reason in
       Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule module_name) local_loc in
-      get_module_namespace_type cx reason source_module_t
+      let namespace_symbol = Symbol.mk_module_symbol ~name:module_name ~def_loc:local_loc in
+      get_module_namespace_type cx reason ~namespace_symbol source_module_t
 
   let import_default_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_name =
@@ -179,14 +183,14 @@ module Import_export = struct
       ~remote_name:"default"
       ~local_name
 
-  let cjs_require_type cx reason ~legacy_interop source_module_t =
+  let cjs_require_type cx reason ~namespace_symbol ~legacy_interop source_module_t =
     let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
     | Ok m ->
       Flow_js_utils.CJSRequireTKit.on_ModuleT
         cx
         ~reposition:Flow.reposition
-        (reason, is_strict, legacy_interop)
+        (reason, namespace_symbol, is_strict, legacy_interop)
         m
     | Error (lreason, any_source) -> AnyT (lreason, any_source)
 end

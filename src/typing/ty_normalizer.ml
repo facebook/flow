@@ -710,7 +710,8 @@ module Make (I : INPUT) : S = struct
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
-      | NamespaceT { values_type; types_tmap = _ } -> cont ~env ?id values_type
+      | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
+        cont ~env ?id values_type
       | DefT (_, MixedT _) -> return Ty.Top
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, VoidT) -> return Ty.Void
@@ -1979,7 +1980,7 @@ module Make (I : INPUT) : S = struct
             } ->
           let%map m = module_t ~env reason exports in
           Ty.Decl m
-        | NamespaceT { values_type = DefT (r, ObjT o); types_tmap }
+        | NamespaceT { namespace_symbol = _; values_type = DefT (r, ObjT o); types_tmap }
           when Reason_utils.is_module_reason r ->
           let%map (name, exports, default) = module_of_namespace ~env r o types_tmap in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })

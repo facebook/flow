@@ -212,7 +212,8 @@ let require file loc index ~legacy_interop =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t loc resolved_require in
   let reason = Reason.(mk_reason (RModule mref) loc) in
-  ConsGen.cjs_require file.cx module_t reason false legacy_interop
+  let symbol = Symbol.mk_module_symbol ~name:mref ~def_loc:loc in
+  ConsGen.cjs_require file.cx module_t reason symbol false legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
@@ -222,15 +223,17 @@ let import file reason id_loc index kind ~remote ~local =
   else
     ConsGen.import_named file.cx reason kind remote mref false module_t
 
-let import_ns file reason id_loc index =
+let import_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t id_loc resolved_require in
-  ConsGen.import_ns file.cx reason false module_t
+  let namespace_symbol = Symbol.mk_module_symbol ~name ~def_loc:id_loc in
+  ConsGen.import_ns file.cx reason namespace_symbol false module_t
 
-let import_typeof_ns file reason id_loc index =
+let import_typeof_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t id_loc resolved_require in
-  let ns_t = ConsGen.import_ns file.cx reason false module_t in
+  let namespace_symbol = Symbol.mk_namespace_symbol ~name ~def_loc:id_loc in
+  let ns_t = ConsGen.import_ns file.cx reason namespace_symbol false module_t in
   ConsGen.import_typeof file.cx reason "*" ns_t
 
 let merge_enum file reason id_loc enum_name rep members has_unknown_members =
@@ -318,8 +321,8 @@ let merge_remote_ref file reason = function
     import file reason id_loc index Type.ImportType ~remote ~local:name
   | Pack.ImportTypeof { id_loc; name; index; remote } ->
     import file reason id_loc index Type.ImportTypeof ~remote ~local:name
-  | Pack.ImportNs { id_loc; name = _; index } -> import_ns file reason id_loc index
-  | Pack.ImportTypeofNs { id_loc; name = _; index } -> import_typeof_ns file reason id_loc index
+  | Pack.ImportNs { id_loc; name; index } -> import_ns file reason name id_loc index
+  | Pack.ImportTypeofNs { id_loc; name; index } -> import_typeof_ns file reason name id_loc index
 
 let merge_ref : 'a. _ -> (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -> 'a) -> _ -> 'a =
  fun file f ref ->
@@ -507,7 +510,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) env file = function
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
     let ns_reason = Reason.(mk_reason (RModule mref) loc) in
-    let ns_t = import_ns file ns_reason loc index in
+    let ns_t = import_ns file ns_reason mref loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
     make_hooklike file hooklike t
@@ -768,7 +771,8 @@ and merge_annot env file = function
   | ExportsT (loc, ref) ->
     let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
-    ConsGen.cjs_require file.cx module_t reason false false
+    let symbol = Symbol.mk_module_symbol ~name:ref ~def_loc:loc in
+    ConsGen.cjs_require file.cx module_t reason symbol false false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
     ->
@@ -2116,7 +2120,7 @@ let merge_def file reason = function
     Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members
-  | NamespaceBinding { id_loc = _; name = _; values; types } ->
+  | NamespaceBinding { id_loc; name; values; types } ->
     let f smap =
       SMap.fold
         (fun name (loc, packed) ->
@@ -2130,7 +2134,8 @@ let merge_def file reason = function
         smap
         NameUtils.Map.empty
     in
-    Flow_js_utils.namespace_type file.cx reason (f values) (f types)
+    let namespace_symbol = Symbol.mk_namespace_symbol ~name ~def_loc:id_loc in
+    Flow_js_utils.namespace_type file.cx reason (Some namespace_symbol) (f values) (f types)
 
 let merge_export file = function
   | Pack.ExportRef ref
@@ -2320,7 +2325,7 @@ let merge_builtins
     lazy
       (let dependencies_map =
          SMap.fold
-           (fun s { Packed_type_sig.Builtins.loc; module_kind } acc ->
+           (fun module_name { Packed_type_sig.Builtins.loc; module_kind } acc ->
              let lazy_t =
                lazy
                  (map_module
@@ -2329,7 +2334,7 @@ let merge_builtins
                     module_kind
                  )
              in
-             SMap.add s lazy_t acc)
+             SMap.add module_name lazy_t acc)
            global_modules
            SMap.empty
        in

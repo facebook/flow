@@ -15,6 +15,7 @@ module Tast_utils = Typed_ast_utils
 module Flow = Flow_js
 open Utils_js
 open Reason
+open Symbol
 open Type
 open TypeUtil
 open Func_class_sig_types
@@ -746,7 +747,12 @@ module Make
         (loc, mref)
     in
     let require_t =
-      Import_export.cjs_require_type cx (mk_reason (RModule mref) loc) ~legacy_interop module_t
+      Import_export.cjs_require_type
+        cx
+        (mk_reason (RModule mref) loc)
+        ~namespace_symbol:(mk_module_symbol ~name:mref ~def_loc:loc)
+        ~legacy_interop
+        module_t
     in
     let reason = mk_reason (RCustom "module reference") loc in
     let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
@@ -911,7 +917,8 @@ module Make
         | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
           let source_ns_t =
             let reason = mk_reason (RModule module_name) source_loc in
-            Import_export.get_module_namespace_type cx reason module_t
+            let namespace_symbol = mk_module_symbol ~name:module_name ~def_loc:source_loc in
+            Import_export.get_module_namespace_type cx reason ~namespace_symbol module_t
           in
           export_from source_ns_t
         | None -> export_ref
@@ -922,7 +929,13 @@ module Make
     | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let ns_t = Import_export.get_module_namespace_type cx reason module_t in
+      let ns_t =
+        Import_export.get_module_namespace_type
+          cx
+          reason
+          ~namespace_symbol:(mk_constant_symbol ~name ~def_loc:id_loc)
+          module_t
+      in
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) -> E.ExportBatchSpecifier (specifier_loc, None)
@@ -1769,6 +1782,7 @@ module Make
                 import_reason
                 import_kind
                 ~module_name
+                ~namespace_symbol:(mk_namespace_symbol ~name:local_name ~def_loc:local_loc)
                 ~source_module_t
                 ~local_loc
             in
@@ -2028,7 +2042,10 @@ module Make
       let (t, id) =
         let (name_loc, { Ast.Identifier.name; comments }) = id in
         let reason = mk_reason (RNamespace name) name_loc in
-        let t = Module_info_analyzer.analyze_declare_namespace cx reason body_statements in
+        let namespace_symbol = mk_namespace_symbol ~name ~def_loc:name_loc in
+        let t =
+          Module_info_analyzer.analyze_declare_namespace cx namespace_symbol reason body_statements
+        in
         if not (File_key.is_lib_file (Context.file cx) || Context.namespaces cx) then
           Flow_js_utils.add_output
             cx
@@ -3088,6 +3105,7 @@ module Make
             Import_export.cjs_require_type
               cx
               (mk_reason (RModule module_name) loc)
+              ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
               ~legacy_interop:false
               module_t
         | Error err ->
@@ -3309,7 +3327,10 @@ module Make
             (source_loc, module_name)
             ~perform_platform_validation:true
             ~import_kind_for_untyped_import_validation:(Some ImportValue)
-          |> Import_export.get_module_namespace_type cx reason
+          |> Import_export.get_module_namespace_type
+               cx
+               reason
+               ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
         in
         let reason = mk_annot_reason RAsyncImport loc in
         Flow.get_builtin_typeapp cx reason "Promise" [ns_t]
@@ -3449,6 +3470,7 @@ module Make
               |> Import_export.cjs_require_type
                    cx
                    (mk_reason (RModule module_name) loc)
+                   ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
                    ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
@@ -3490,6 +3512,7 @@ module Make
               |> Import_export.cjs_require_type
                    cx
                    (mk_reason (RModule module_name) loc)
+                   ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
                    ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))

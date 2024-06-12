@@ -1385,7 +1385,7 @@ struct
         | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForImportsExports tvar))) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (* Namespace and type qualification *)
-        | ( NamespaceT { values_type; types_tmap },
+        | ( NamespaceT { namespace_symbol = _; values_type; types_tmap },
             GetTypeFromNamespaceT
               { reason = reason_op; use_op; prop_ref = (prop_ref_reason, prop_name); tout }
           ) ->
@@ -1436,7 +1436,8 @@ struct
                 }
             )
         (* unwrap namespace type into object type, drop all information about types in the namespace *)
-        | (NamespaceT { values_type; types_tmap = _ }, _) -> rec_flow cx trace (values_type, u)
+        | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
+          rec_flow cx trace (values_type, u)
         (***************************************)
         (* transform values to type references *)
         (***************************************)
