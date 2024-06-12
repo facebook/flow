@@ -82,23 +82,6 @@ let case_diff cx case1 case2 =
 
 type speculation_id = int
 
-let init_speculation cx speculation_id =
-  Context.set_all_unresolved cx (IMap.add speculation_id ISet.empty (Context.all_unresolved cx))
-
-let add_unresolved_to_speculation cx speculation_id id =
-  let root_id = Context.find_root_id cx id in
-  Context.all_unresolved cx
-  |> IMap.add speculation_id (ISet.singleton root_id) ~combine:ISet.union
-  |> Context.set_all_unresolved cx
-
-let ignore_type cx ignore id r =
-  match ignore with
-  | Some ignore_id ->
-    let root_ignore_id = Context.find_root_id cx ignore_id in
-    let root_id = Context.find_root_id cx id in
-    root_ignore_id = root_id || Reason.is_instantiable_reason r
-  | None -> Reason.is_instantiable_reason r
-
 let set_speculative cx branch =
   let state = Context.speculation_state cx in
   state := branch :: !state
@@ -113,37 +96,21 @@ let speculating cx =
 
 (* Decide, for a flow or unify action encountered during a speculative match,
    whether that action should be deferred. Only a relevant action is deferred.
-   A relevant action is not benign, and it must involve a tvar that was marked
-   unresolved during full type resolution of the lower/upper bound of the
-   union/intersection type being processed.
 
    As a side effect, whenever we decide to defer an action, we record the
    deferred action and the unresolved tvars involved in it in the current
    case.
 *)
-let defer_if_relevant cx branch action =
-  let { ignore; speculation_id; case } = branch in
+let defer_if_relevant branch action =
+  let { case; _ } = branch in
   match action with
   | ErrorAction _ ->
     case.actions <- case.actions @ [(true, action)];
     true
-  | _ ->
-    let action_tvars = action_tvars cx action in
-    let all_unresolved = IMap.find speculation_id (Context.all_unresolved cx) in
-    let all_unresolved = ISet.map (fun id -> Context.find_root_id cx id) all_unresolved in
-    let relevant_action_tvars = IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
-    let defer = not (IMap.is_empty relevant_action_tvars) in
-    if defer then (
-      let is_benign = IMap.exists (ignore_type cx ignore) action_tvars in
-      if not is_benign then
-        case.unresolved <-
-          IMap.fold (fun id _ acc -> ISet.add id acc) relevant_action_tvars case.unresolved;
-      case.actions <- case.actions @ [(is_benign, action)]
-    );
-    defer
+  | _ -> false
 
 let defer_action cx action =
   let state = Context.speculation_state cx in
   match !state with
   | [] -> false
-  | branch :: _ -> defer_if_relevant cx branch action
+  | branch :: _ -> defer_if_relevant branch action

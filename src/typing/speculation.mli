@@ -12,10 +12,6 @@ open Speculation_state
 
 type speculation_id = int
 
-val init_speculation : Context.t -> speculation_id -> unit
-
-val add_unresolved_to_speculation : Context.t -> speculation_id -> Type.ident -> unit
-
 (* Maintain a stack of speculative branches. See Speculation for the contents
    of the "branch" data structure.
 

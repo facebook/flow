@@ -565,40 +565,6 @@ struct
            * to not having created the PredicateT constraint at all. We forward the
            * lower-bound as is. *)
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT u)
-        (************************)
-        (* Full type resolution *)
-        (************************)
-
-        (* Full resolution of a type involves (1) walking the type to collect a
-           bunch of unresolved tvars (2) emitting constraints that, once those tvars
-           are resolved, recursively trigger the process for the resolved types (3)
-           finishing when no unresolved tvars remain.
-
-           (1) is covered in ResolvableTypeJob. Below, we cover (2) and (3).
-
-           For (2), we emit a FullyResolveType constraint on any unresolved tvar
-           found by (1). These unresolved tvars are chosen so that they have the
-           following nice property, called '0->1': they remain unresolved until, at
-           some point, they are unified with a concrete type. Moreover, the act of
-           resolution coincides with the appearance of one (the first and the last)
-           upper bound. (In general, unresolved tvars can accumulate an arbitrary
-           number of lower and upper bounds over its lifetime.) More details can be
-           found in bindings_of_jobs.
-
-           For (3), we create a special "goal" tvar that acts like a promise for
-           fully resolving the original type, and emit a Trigger constraint on the
-           goal when no more work remains.
-
-           The main client of full type resolution is checking union and
-           intersection types. The check itself is modeled by a TryFlow constraint,
-           which is guarded by a goal tvar that corresponds to some full type
-           resolution requirement. Eventually, this goal is "triggered," which in
-           turn triggers the check. (The name "TryFlow" refers to the technique used
-           in the check, which literally tries each branch of the union or
-           intersection in turn, maintaining some matching state as it goes: see
-           speculative_matches for details). *)
-        | (t, ChoiceKitUseT (reason, FullyResolveType id)) ->
-          SpeculationKit.fully_resolve_type cx trace reason id t
         | (InternalT (ChoiceKitT (_, Trigger)), ChoiceKitUseT (reason, TryFlow (i, spec))) ->
           SpeculationKit.speculative_matches cx trace reason i spec
         | (UnionT (_, urep), PreprocessKitT (_, ConcretizeTypes _)) ->
