@@ -218,16 +218,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let ts = InterRep.members rep in
     let speculation_id = mk_id () in
     Speculation.init_speculation cx speculation_id;
-
-    (* collect parts of the intersection type to be fully resolved *)
-    let imap = ResolvableTypeJob.collect_of_types cx IMap.empty ts in
-    (* collect parts of the upper bound to be fully resolved, while logging
-       unresolved tvars *)
-    let imap = ResolvableTypeJob.collect_of_use ~log_unresolved:speculation_id cx imap u in
-    (* fully resolve the collected types *)
-    resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
-    @@ (* ...and then begin the choice-making process *)
-    try_flow_continuation cx trace reason speculation_id (IntersectionCases (ts, u))
+    flow_t
+      cx
+      ( choice_kit reason Trigger,
+        try_flow_continuation cx trace reason speculation_id (IntersectionCases (ts, u))
+      )
 
   and try_singleton_throw_on_failure cx trace reason t u =
     let speculation_id = mk_id () in
