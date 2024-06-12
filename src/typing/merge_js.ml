@@ -495,11 +495,12 @@ let check_multiplatform_conformance cx ast tast =
   | Some imported_interface_module_name ->
     let open Type in
     (match Context.find_require cx imported_interface_module_name with
-    | Error _ ->
+    | Context.MissingModule _
+    | Context.UncheckedModule _ ->
       (* It's ok if a platform speicific implementation file doesn't have an interface.
        * It just makes the module non-importable without platform extension. *)
       ()
-    | Ok interface_module_t ->
+    | Context.TypedModule interface_module_t ->
       let get_exports_t ~is_common_interface_module reason module_t =
         match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
         | [ModuleT m] ->
@@ -546,7 +547,13 @@ let check_multiplatform_conformance cx ast tast =
      with
     | None -> ()
     | Some impl_mrefs ->
-      let module_exists mref = Base.Result.is_ok @@ Context.find_require cx mref in
+      let module_exists mref =
+        match Context.find_require cx mref with
+        | Context.TypedModule _
+        | Context.UncheckedModule _ ->
+          true
+        | Context.MissingModule _ -> false
+      in
       let mrefs_with_existence_status =
         List.map (fun mref -> (mref, module_exists mref)) impl_mrefs
       in
@@ -731,7 +738,7 @@ let mk_builtins metadata master_cx =
         { metadata with Context.checked = false }
         builtin_leader_file_key
         (lazy (ALoc.empty_table builtin_leader_file_key))
-        (fun mref -> Error mref)
+        (fun mref -> Context.MissingModule mref)
         (fun _ -> !builtins_ref)
     in
     let (values, types, modules) =

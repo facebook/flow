@@ -58,34 +58,31 @@ module Import_export = struct
     else
       let module_t =
         match Context.find_require cx mref with
-        | Ok t -> t
-        | Error m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name loc
+        | Context.TypedModule t -> t
+        | Context.UncheckedModule (module_def_loc, mref) ->
+          Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
+              match import_kind with
+              | ImportType
+              | ImportTypeof ->
+                let message = Error_message.EUntypedTypeImport (loc, mref) in
+                Flow_js_utils.add_output cx message
+              | ImportValue ->
+                let message = Error_message.EUntypedImport (loc, mref) in
+                Flow_js_utils.add_output cx message
+          );
+          AnyT.why Untyped (mk_reason (RModule mref) module_def_loc)
+        | Context.MissingModule m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name loc
       in
       let reason = Reason.(mk_reason (RCustom mref) loc) in
       let need_platform_validation =
         perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
       in
-      let need_untyped_import_validation =
-        Base.Option.is_some import_kind_for_untyped_import_validation
-      in
-      ( if need_platform_validation || need_untyped_import_validation then
+      ( if need_platform_validation then
         match concretize_module_type cx reason module_t with
         | Ok m ->
           if need_platform_validation then
             check_platform_availability cx reason m.module_available_platforms
-        | Error (any_reason, _any_src) ->
-          Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
-              match (import_kind, desc_of_reason any_reason) with
-              (* Use a special reason so we can tell the difference between an any-typed type import
-               * from an untyped module and an any-typed type import from a nonexistent module. *)
-              | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
-                let message = Error_message.EUntypedTypeImport (loc, module_name) in
-                Flow_js_utils.add_output cx message
-              | (ImportValue, RUntypedModule module_name) ->
-                let message = Error_message.EUntypedImport (loc, module_name) in
-                Flow_js_utils.add_output cx message
-              | _ -> ()
-          )
+        | Error _ -> ()
       );
       module_t
 

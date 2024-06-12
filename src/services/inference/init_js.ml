@@ -62,7 +62,7 @@ let load_lib_files ~ccx ~options ~reader files =
             metadata
             builtin_leader_file_key
             (lazy (ALoc.empty_table builtin_leader_file_key))
-            (fun mref -> Error mref)
+            (fun mref -> Context.MissingModule mref)
             mk_builtins
         in
         Some cx

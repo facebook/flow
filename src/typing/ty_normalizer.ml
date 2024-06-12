@@ -585,9 +585,6 @@ module Make (I : INPUT) : S = struct
       | RModule name ->
         let symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
         return (Some symbol)
-      | RUntypedModule name ->
-        let symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
-        return (Some symbol)
       | RExports -> return None
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
@@ -597,7 +594,6 @@ module Make (I : INPUT) : S = struct
     let is_module_reason r =
       match desc_of_reason r with
       | RModule _
-      | RUntypedModule _
       | RExports ->
         true
       | _ -> false
