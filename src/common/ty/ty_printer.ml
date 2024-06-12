@@ -557,6 +557,14 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     fuse
       [Atom "declare"; space; Atom "var"; space; identifier name; Atom ":"; space; type_ ~depth t]
   in
+  let namespace name =
+    let name =
+      match name with
+      | Some name -> fuse [space; Atom (Reason.display_string_of_name name.Ty.sym_name)]
+      | None -> Empty
+    in
+    fuse [Atom "namespace"; name]
+  in
   let module_ ~depth:_ name =
     let name =
       match name with
@@ -575,6 +583,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | EnumDecl n -> enum_decl n
     | NominalComponentDecl { name; tparams; targs; is_type } ->
       nominal_component_decl ~depth name tparams targs is_type
+    | NamespaceDecl { name; exports = _ } -> namespace name
     | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in
   match elt with

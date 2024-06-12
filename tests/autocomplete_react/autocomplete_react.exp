@@ -381,3 +381,65 @@ components.js:19:16
 Flags: --pretty
 {"result":[{"name":"xaaa","type":"number"},{"name":"xbbb","type":"string"}]}
 
+react_type_namespace.js:3:18
+Flags: --pretty
+{
+  "result":[
+    {
+      "name":"AbstractComponent",
+      "type":"type AbstractComponent<-Config, +Instance = mixed, +Renders: React$Node = React$Node> = React$AbstractComponent<Config, Instance, Renders>"
+    },
+    {
+      "name":"ChildrenArray",
+      "type":"type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T"
+    },
+    {
+      "name":"ComponentType",
+      "type":"type ComponentType<-P> = React$ComponentType<P>"
+    },
+    {
+      "name":"Config",
+      "type":"type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>"
+    },
+    {"name":"Context","type":"type Context<T> = React$Context<T>"},
+    {
+      "name":"Element",
+      "type":"type Element<+C, +P = React$ElementProps<C>> = React$Element<C, P>"
+    },
+    {
+      "name":"ElementConfig",
+      "type":"type ElementConfig<C> = React$ElementConfig<C>"
+    },
+    {"name":"ElementProps","type":"type ElementProps<C> = React$ElementProps<C>"},
+    {"name":"ElementRef","type":"type ElementRef<C> = React$ElementRef<C>"},
+    {"name":"ElementType","type":"type ElementType = React$ElementType"},
+    {
+      "name":"Interaction",
+      "type":"type Interaction = {name: string, timestamp: number, ...}"
+    },
+    {"name":"Key","type":"type Key = React$Key"},
+    {"name":"MixedElement","type":"type MixedElement = React$MixedElement"},
+    {"name":"Node","type":"type Node = React$Node"},
+    {"name":"Portal","type":"type Portal = React$Portal"},
+    {
+      "name":"PropOf",
+      "type":"type PropOf<E: string | React$MixedElement, K: string> = PropsOf<E>[K]"
+    },
+    {
+      "name":"PropsOf",
+      "type":"type PropsOf<E: string | React$MixedElement> = E extends React$Element<infer C> ? React$ElementConfig<C> : E extends string ? $JSXIntrinsics[E][\"props\"] : empty"
+    },
+    {
+      "name":"ReactSetStateFunction",
+      "type":"type ReactSetStateFunction<S> = (((S) => S) | S) => void"
+    },
+    {"name":"Ref","type":"type Ref<C> = React$Ref<C>"},
+    {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
+    {
+      "name":"RefOf",
+      "type":"type RefOf<E: string | React$MixedElement> = E extends React$Element<infer C> ? React$ElementRef<C> : E extends string ? $JSXIntrinsics[E][\"instance\"] : empty"
+    },
+    {"name":"RefSetter","type":"type RefSetter<-T> = React$RefSetter<T>"}
+  ]
+}
+

@@ -145,6 +145,7 @@ let lsp_completion_of_decl =
   | InterfaceDecl _ -> Lsp.Completion.Interface
   | EnumDecl _ -> Lsp.Completion.Enum
   | NominalComponentDecl _ -> Lsp.Completion.Variable
+  | NamespaceDecl _ -> Lsp.Completion.Module
   | ModuleDecl _ -> Lsp.Completion.Module
 
 let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
@@ -171,6 +172,7 @@ let detail_of_ty_decl ~exact_by_default d =
     | Ty.EnumDecl _ -> None
     | Ty.InterfaceDecl _ -> None
     | Ty.NominalComponentDecl _ -> None
+    | Ty.NamespaceDecl _ -> None
     | Ty.ModuleDecl _ -> None
     | Ty.TypeAliasDecl _ ->
       (* TODO: the "signature" of a type alias arguably includes type params,
@@ -1006,7 +1008,8 @@ let exports_of_module_ty
   in
   let is_ok export_kind name = is_kind export_kind && filter_name name in
   function
-  | Decl (ModuleDecl { exports; _ }) ->
+  | Decl (ModuleDecl { exports; _ })
+  | Decl (NamespaceDecl { exports; _ }) ->
     Base.List.filter_map
       ~f:(function
         | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; _ } as d when is_ok `Type sym_name
