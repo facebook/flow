@@ -232,13 +232,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
      best chance of succeeding.
 
      See Speculation for more details on terminology and low-level mechanisms used
-     here, including what bits of information are carried by match_state and case,
-     how actions are deferred and diff'd, etc.
+     here, including what bits of information are carried by match_state and case.
 
      Because this process is common to checking union and intersection types, we
      abstract the latter into a so-called "spec." The spec is used to customize
-     error messages and to ignore unresolved tvars that are deemed irrelevant to
-     choice-making.
+     error messages.
   *)
   and speculative_matches cx trace r spec =
     (* explore optimization opportunities *)
@@ -251,7 +249,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let open Speculation_state in
     let speculation_id = mk_id () in
     (* extract stuff to ignore while considering actions *)
-    let ignore = ignore_of_spec spec in
     (* split spec into a list of pairs of types to try speculative matching on *)
     let trials = trials_of_spec spec in
     (* Here match_state can take on various values:
@@ -267,8 +264,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let case =
           {
             case_id;
-            unresolved = ISet.empty;
-            actions = [];
+            errors = [];
             implicit_instantiation_post_inference_checks = [];
             implicit_instantiation_results = ALocFuzzyMap.empty;
             lhs_t = l;
@@ -276,23 +272,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           }
         in
         (* speculatively match the pair of types in this trial *)
-        let error = speculative_match cx trace { ignore; speculation_id; case } l u in
+        let error = speculative_match cx trace { speculation_id; case } l u in
         (match error with
         | None -> begin
           (* no error, looking great so far... *)
           match match_state with
-          | NoMatch _ ->
-            (* everything had failed up to this point. so no ambiguity yet... *)
-            if
-              ISet.is_empty case.unresolved
-              (* ...and no unresolved tvars encountered during the speculative
-               * match! This is great news. It means that this alternative will
-               * definitely succeed. Fire any deferred actions and short-cut. *)
-            then
-              fire_actions cx trace spec case speculation_id
-            (* Otherwise, record that we've found a promising alternative. *)
-            else
-              loop (ConditionalMatch case) trials
+          | NoMatch _ -> fire_actions cx trace spec case speculation_id
           | ConditionalMatch _ -> loop match_state trials
         end
         | Some err -> begin
@@ -377,57 +362,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | IntersectionCases (ts, _) ->
       ts
     | SingletonCase (t, _) -> [t]
-
-  and ignore_of_spec = function
-    | IntersectionCases
-        ( _,
-          CallT
-            {
-              use_op = _;
-              reason = _;
-              call_action = Funcalltype { call_tout = (_, id); _ };
-              return_hint = _;
-            }
-        )
-    | SingletonCase
-        ( _,
-          CallT
-            {
-              use_op = _;
-              reason = _;
-              call_action = Funcalltype { call_tout = (_, id); _ };
-              return_hint = _;
-            }
-        ) ->
-      Some id
-    | IntersectionCases
-        ( _,
-          GetPropT
-            {
-              use_op = _;
-              reason = _;
-              id = _;
-              from_annot = _;
-              propref = _;
-              tout = (_, id);
-              hint = _;
-            }
-        )
-    | SingletonCase
-        ( _,
-          GetPropT
-            {
-              use_op = _;
-              reason = _;
-              id = _;
-              from_annot = _;
-              propref = _;
-              tout = (_, id);
-              hint = _;
-            }
-        ) ->
-      Some id
-    | _ -> None
 
   (* spec optimization *)
   (* Currently, the only optimizations we do are for enums and for disjoint unions.
@@ -552,40 +486,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* membership check was inconclusive *)
       false
 
-  (* When we fire_actions we also need to reconstruct the use_op for each action
-   * since before beginning speculation we replaced each use_op with
-   * an UnknownUse. *)
   and fire_actions cx trace spec case speculation_id =
     log_synthesis_result cx trace case speculation_id;
     log_specialized_callee cx spec case speculation_id;
-
-    case.Speculation_state.actions
-    |> List.iter (function
-           | (_, Speculation_state.FlowAction (l, u)) ->
-             (match spec with
-             | IntersectionCases (_, u')
-             | SingletonCase (_, u') ->
-               let use_op = use_op_of_use_t u' in
-               (match use_op with
-               | None -> rec_flow cx trace (l, u)
-               | Some use_op ->
-                 rec_flow
-                   cx
-                   trace
-                   (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
-             | UnionCases (use_op, _, _, _) ->
-               rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
-           | (_, Speculation_state.UnifyAction (use_op, t1, t2)) ->
-             (match spec with
-             | IntersectionCases (_, u')
-             | SingletonCase (_, u') ->
-               let use_op' = use_op_of_use_t u' in
-               (match use_op' with
-               | None -> rec_unify cx trace t1 t2 ~use_op
-               | Some use_op' ->
-                 rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-             | UnionCases (use_op', _, _, _) ->
-               rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
-           | (_, Speculation_state.ErrorAction msg) -> add_output cx msg
-           )
+    List.iter (add_output cx) case.Speculation_state.errors
 end

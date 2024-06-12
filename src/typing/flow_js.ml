@@ -428,13 +428,7 @@ struct
          should not appear as use types. *)
       expect_proper_def_use u;
 
-      (* Before processing the flow action, check that it is not deferred. If it
-         is, then when speculation is complete, the action either fires or is
-         discarded depending on whether the case that created the action is
-         selected or not. *)
-      if Speculation.defer_action cx (Speculation_state.FlowAction (l, u)) then
-        print_if_verbose cx ~trace ~indent:1 ["deferred during speculation"]
-      else if
+      if
         match l with
         | AnyT _ ->
           (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
@@ -9254,256 +9248,245 @@ struct
          is, then when speculation is complete, the action either fires or is
          discarded depending on whether the case that created the action is
          selected or not. *)
-      if not (Speculation.defer_action cx (Speculation_state.UnifyAction (use_op, t1, t2))) then
-        match (t1, t2) with
-        | (OpenT (_, id1), OpenT (_, id2)) -> merge_ids cx trace ~use_op id1 id2
-        | (OpenT (_, id), t) when ok_unify ~unify_any t -> resolve_id cx trace ~use_op id t
-        | (t, OpenT (_, id)) when ok_unify ~unify_any t ->
-          resolve_id cx trace ~use_op:(unify_flip use_op) id t
-        | (DefT (_, PolyT { id = id1; _ }), DefT (_, PolyT { id = id2; _ })) when id1 = id2 -> ()
-        | ( DefT (_, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1; react_dro = _ })),
-            DefT (_, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2; react_dro = _ }))
-          ) ->
-          let ts1 =
-            Base.Option.value_map
-              ~default:[]
-              ~f:(fun (TupleView { elements; arity = _; inexact = _ }) ->
-                tuple_ts_of_elements elements)
-              tv1
-          in
-          let ts2 =
-            Base.Option.value_map
-              ~default:[]
-              ~f:(fun (TupleView { elements; arity = _; inexact = _ }) ->
-                tuple_ts_of_elements elements)
-              tv2
-          in
-          array_unify cx trace ~use_op (ts1, t1, ts2, t2)
-        | ( DefT
-              ( r1,
-                ArrT
-                  (TupleAT
-                    {
-                      elem_t = _;
-                      elements = elements1;
-                      arity = lower_arity;
-                      inexact = lower_inexact;
-                      react_dro = _;
-                    }
-                    )
-              ),
-            DefT
-              ( r2,
-                ArrT
-                  (TupleAT
-                    {
-                      elem_t = _;
-                      elements = elements2;
-                      arity = upper_arity;
-                      inexact = upper_inexact;
-                      react_dro = _;
-                    }
-                    )
-              )
-          ) ->
-          let (num_req1, num_total1) = lower_arity in
-          let (num_req2, num_total2) = upper_arity in
-          if lower_inexact <> upper_inexact || num_req1 <> num_req2 || num_total1 <> num_total2 then
-            add_output
+      match (t1, t2) with
+      | (OpenT (_, id1), OpenT (_, id2)) -> merge_ids cx trace ~use_op id1 id2
+      | (OpenT (_, id), t) when ok_unify ~unify_any t -> resolve_id cx trace ~use_op id t
+      | (t, OpenT (_, id)) when ok_unify ~unify_any t ->
+        resolve_id cx trace ~use_op:(unify_flip use_op) id t
+      | (DefT (_, PolyT { id = id1; _ }), DefT (_, PolyT { id = id2; _ })) when id1 = id2 -> ()
+      | ( DefT (_, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1; react_dro = _ })),
+          DefT (_, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2; react_dro = _ }))
+        ) ->
+        let ts1 =
+          Base.Option.value_map
+            ~default:[]
+            ~f:(fun (TupleView { elements; arity = _; inexact = _ }) ->
+              tuple_ts_of_elements elements)
+            tv1
+        in
+        let ts2 =
+          Base.Option.value_map
+            ~default:[]
+            ~f:(fun (TupleView { elements; arity = _; inexact = _ }) ->
+              tuple_ts_of_elements elements)
+            tv2
+        in
+        array_unify cx trace ~use_op (ts1, t1, ts2, t2)
+      | ( DefT
+            ( r1,
+              ArrT
+                (TupleAT
+                  {
+                    elem_t = _;
+                    elements = elements1;
+                    arity = lower_arity;
+                    inexact = lower_inexact;
+                    react_dro = _;
+                  }
+                  )
+            ),
+          DefT
+            ( r2,
+              ArrT
+                (TupleAT
+                  {
+                    elem_t = _;
+                    elements = elements2;
+                    arity = upper_arity;
+                    inexact = upper_inexact;
+                    react_dro = _;
+                  }
+                  )
+            )
+        ) ->
+        let (num_req1, num_total1) = lower_arity in
+        let (num_req2, num_total2) = upper_arity in
+        if lower_inexact <> upper_inexact || num_req1 <> num_req2 || num_total1 <> num_total2 then
+          add_output
+            cx
+            (Error_message.ETupleArityMismatch
+               {
+                 use_op;
+                 lower_reason = r1;
+                 lower_arity;
+                 lower_inexact;
+                 upper_reason = r2;
+                 upper_arity;
+                 upper_inexact;
+                 unify = true;
+               }
+            );
+        let n = ref 0 in
+        iter2opt
+          (fun t1 t2 ->
+            match (t1, t2) with
+            | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _; reason = _ }),
+                Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
+              ) ->
+              if not @@ Polarity.equal (p1, p2) then
+                add_output
+                  cx
+                  (Error_message.ETupleElementPolarityMismatch
+                     {
+                       index = !n;
+                       reason_lower = r1;
+                       polarity_lower = p1;
+                       reason_upper = r2;
+                       polarity_upper = p2;
+                       use_op;
+                     }
+                  );
+              rec_unify cx trace ~use_op t1 t2;
+              n := !n + 1
+            | _ -> ())
+          (elements1, elements2)
+      | ( DefT (lreason, ObjT { props_tmap = lflds; flags = lflags; _ }),
+          DefT (ureason, ObjT { props_tmap = uflds; flags = uflags; _ })
+        ) ->
+        if
+          (not (Obj_type.is_exact lflags.obj_kind))
+          && (not (is_literal_object_reason ureason))
+          && Obj_type.is_exact uflags.obj_kind
+        then
+          exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason t1;
+        if
+          (not (Obj_type.is_exact uflags.obj_kind))
+          && (not (is_literal_object_reason lreason))
+          && Obj_type.is_exact lflags.obj_kind
+        then
+          exact_obj_error cx uflags.obj_kind ~use_op ~exact_reason:lreason t2;
+        (* ensure the keys and values are compatible with each other. *)
+        let ldict = Obj_type.get_dict_opt lflags.obj_kind in
+        let udict = Obj_type.get_dict_opt uflags.obj_kind in
+        begin
+          match (ldict, udict) with
+          | (Some { key = lk; value = lv; _ }, Some { key = uk; value = uv; _ }) ->
+            rec_unify
               cx
-              (Error_message.ETupleArityMismatch
-                 {
-                   use_op;
-                   lower_reason = r1;
-                   lower_arity;
-                   lower_inexact;
-                   upper_reason = r2;
-                   upper_arity;
-                   upper_inexact;
-                   unify = true;
-                 }
-              );
-          let n = ref 0 in
-          iter2opt
-            (fun t1 t2 ->
-              match (t1, t2) with
-              | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _; reason = _ }),
-                  Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
-                ) ->
-                if not @@ Polarity.equal (p1, p2) then
-                  add_output
-                    cx
-                    (Error_message.ETupleElementPolarityMismatch
-                       {
-                         index = !n;
-                         reason_lower = r1;
-                         polarity_lower = p1;
-                         reason_upper = r2;
-                         polarity_upper = p2;
-                         use_op;
-                       }
-                    );
-                rec_unify cx trace ~use_op t1 t2;
-                n := !n + 1
-              | _ -> ())
-            (elements1, elements2)
-        | ( DefT (lreason, ObjT { props_tmap = lflds; flags = lflags; _ }),
-            DefT (ureason, ObjT { props_tmap = uflds; flags = uflags; _ })
-          ) ->
-          if
-            (not (Obj_type.is_exact lflags.obj_kind))
-            && (not (is_literal_object_reason ureason))
-            && Obj_type.is_exact uflags.obj_kind
-          then
-            exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason t1;
-          if
-            (not (Obj_type.is_exact uflags.obj_kind))
-            && (not (is_literal_object_reason lreason))
-            && Obj_type.is_exact lflags.obj_kind
-          then
-            exact_obj_error cx uflags.obj_kind ~use_op ~exact_reason:lreason t2;
-          (* ensure the keys and values are compatible with each other. *)
-          let ldict = Obj_type.get_dict_opt lflags.obj_kind in
-          let udict = Obj_type.get_dict_opt uflags.obj_kind in
-          begin
-            match (ldict, udict) with
-            | (Some { key = lk; value = lv; _ }, Some { key = uk; value = uv; _ }) ->
-              rec_unify
-                cx
-                trace
-                lk
-                uk
-                ~use_op:
-                  (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op));
-              rec_unify
-                cx
-                trace
-                lv
-                uv
-                ~use_op:
-                  (Frame
-                     ( PropertyCompatibility { prop = None; lower = lreason; upper = ureason },
-                       use_op
-                     )
-                  )
-            | (Some _, None) ->
-              let use_op =
-                Frame
-                  (PropertyCompatibility { prop = None; lower = ureason; upper = lreason }, use_op)
-              in
-              let lreason = replace_desc_reason RSomeProperty lreason in
-              let err =
-                Error_message.EPropNotFound
-                  {
-                    prop_name = None;
-                    reason_prop = lreason;
-                    reason_obj = ureason;
-                    use_op;
-                    suggestion = None;
-                  }
-              in
-              add_output cx err
-            | (None, Some _) ->
-              let use_op =
-                Frame
-                  ( PropertyCompatibility { prop = None; lower = lreason; upper = ureason },
-                    Frame (UnifyFlip, use_op)
-                  )
-              in
-              let ureason = replace_desc_reason RSomeProperty ureason in
-              let err =
-                Error_message.EPropNotFound
-                  {
-                    prop_name = None;
-                    reason_prop = lreason;
-                    reason_obj = ureason;
-                    use_op;
-                    suggestion = None;
-                  }
-              in
-              add_output cx err
-            | (None, None) -> ()
-          end;
+              trace
+              lk
+              uk
+              ~use_op:(Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op));
+            rec_unify
+              cx
+              trace
+              lv
+              uv
+              ~use_op:
+                (Frame
+                   (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
+                )
+          | (Some _, None) ->
+            let use_op =
+              Frame (PropertyCompatibility { prop = None; lower = ureason; upper = lreason }, use_op)
+            in
+            let lreason = replace_desc_reason RSomeProperty lreason in
+            let err =
+              Error_message.EPropNotFound
+                {
+                  prop_name = None;
+                  reason_prop = lreason;
+                  reason_obj = ureason;
+                  use_op;
+                  suggestion = None;
+                }
+            in
+            add_output cx err
+          | (None, Some _) ->
+            let use_op =
+              Frame
+                ( PropertyCompatibility { prop = None; lower = lreason; upper = ureason },
+                  Frame (UnifyFlip, use_op)
+                )
+            in
+            let ureason = replace_desc_reason RSomeProperty ureason in
+            let err =
+              Error_message.EPropNotFound
+                {
+                  prop_name = None;
+                  reason_prop = lreason;
+                  reason_obj = ureason;
+                  use_op;
+                  suggestion = None;
+                }
+            in
+            add_output cx err
+          | (None, None) -> ()
+        end;
 
-          let lpmap = Context.find_props cx lflds in
-          let upmap = Context.find_props cx uflds in
-          NameUtils.Map.merge
-            (fun x lp up ->
-              ( if not (is_internal_name x || is_dictionary_exempt x) then
-                match (lp, up) with
-                | (Some p1, Some p2) -> unify_props cx trace ~use_op x lreason ureason p1 p2
-                | (Some p1, None) ->
-                  unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict
-                | (None, Some p2) ->
-                  unify_prop_with_dict cx trace ~use_op x p2 ureason lreason ldict
-                | (None, None) -> ()
-              );
-              None)
-            lpmap
-            upmap
-          |> ignore
-        | ( DefT (_, FunT (_, ({ predicate = None; _ } as funtype1))),
-            DefT (_, FunT (_, ({ predicate = None; _ } as funtype2)))
-          )
-          when List.length funtype1.params = List.length funtype2.params ->
-          rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
-          List.iter2
-            (fun (_, t1) (_, t2) -> rec_unify cx trace ~use_op t1 t2)
-            funtype1.params
-            funtype2.params;
-          rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
-        | ( TypeAppT
-              { reason = _; use_op = _; type_ = c1; targs = ts1; from_value = fv1; use_desc = _ },
-            TypeAppT
-              { reason = _; use_op = _; type_ = c2; targs = ts2; from_value = fv2; use_desc = _ }
-          )
-          when c1 = c2 && List.length ts1 = List.length ts2 && fv1 = fv2 ->
-          List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
-        | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) -> begin
-          (* It is tempting to unify the tvars here, but that would be problematic. These tvars should
-             eventually resolve to the type definitions that these annotations reference. By unifying
-             them, we might accidentally resolve one of the tvars to the type definition of the other,
-             which would lead to confusing behavior.
+        let lpmap = Context.find_props cx lflds in
+        let upmap = Context.find_props cx uflds in
+        NameUtils.Map.merge
+          (fun x lp up ->
+            ( if not (is_internal_name x || is_dictionary_exempt x) then
+              match (lp, up) with
+              | (Some p1, Some p2) -> unify_props cx trace ~use_op x lreason ureason p1 p2
+              | (Some p1, None) -> unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict
+              | (None, Some p2) -> unify_prop_with_dict cx trace ~use_op x p2 ureason lreason ldict
+              | (None, None) -> ()
+            );
+            None)
+          lpmap
+          upmap
+        |> ignore
+      | ( DefT (_, FunT (_, ({ predicate = None; _ } as funtype1))),
+          DefT (_, FunT (_, ({ predicate = None; _ } as funtype2)))
+        )
+        when List.length funtype1.params = List.length funtype2.params ->
+        rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
+        List.iter2
+          (fun (_, t1) (_, t2) -> rec_unify cx trace ~use_op t1 t2)
+          funtype1.params
+          funtype2.params;
+        rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
+      | ( TypeAppT
+            { reason = _; use_op = _; type_ = c1; targs = ts1; from_value = fv1; use_desc = _ },
+          TypeAppT
+            { reason = _; use_op = _; type_ = c2; targs = ts2; from_value = fv2; use_desc = _ }
+        )
+        when c1 = c2 && List.length ts1 = List.length ts2 && fv1 = fv2 ->
+        List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
+      | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) -> begin
+        (* It is tempting to unify the tvars here, but that would be problematic. These tvars should
+           eventually resolve to the type definitions that these annotations reference. By unifying
+           them, we might accidentally resolve one of the tvars to the type definition of the other,
+           which would lead to confusing behavior.
 
-             On the other hand, if the tvars are already resolved, then we can do something
-             interesting... *)
-          match (Context.find_graph cx id1, Context.find_graph cx id2) with
-          | (Resolved t1, Resolved t2)
-            when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
-            ->
-            naive_unify cx trace ~use_op t1 t2
-          | (Resolved t1, FullyResolved s2)
-            when let t2 = Context.force_fully_resolved_tvar cx s2 in
-                 Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
-            ->
-            naive_unify cx trace ~use_op t1 t2
-          | (FullyResolved s1, Resolved t2)
-            when let t1 = Context.force_fully_resolved_tvar cx s1 in
-                 Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
-            ->
-            naive_unify cx trace ~use_op t1 t2
-          | (FullyResolved s1, FullyResolved s2)
-          (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
-             definitions, and we might get into an infinite loop (which could perhaps be avoided by
-             a unification cache, but we'd rather not cache if we can get away with it).
+           On the other hand, if the tvars are already resolved, then we can do something
+           interesting... *)
+        match (Context.find_graph cx id1, Context.find_graph cx id2) with
+        | (Resolved t1, Resolved t2)
+          when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2) ->
+          naive_unify cx trace ~use_op t1 t2
+        | (Resolved t1, FullyResolved s2)
+          when let t2 = Context.force_fully_resolved_tvar cx s2 in
+               Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2) ->
+          naive_unify cx trace ~use_op t1 t2
+        | (FullyResolved s1, Resolved t2)
+          when let t1 = Context.force_fully_resolved_tvar cx s1 in
+               Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2) ->
+          naive_unify cx trace ~use_op t1 t2
+        | (FullyResolved s1, FullyResolved s2)
+        (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
+           definitions, and we might get into an infinite loop (which could perhaps be avoided by
+           a unification cache, but we'd rather not cache if we can get away with it).
 
-             The alternative is to do naive unification, but we must be careful. In particular, it
-             could cause confusing errors: recall that the naive unification of annotations goes
-             through repositioning over these types.
+           The alternative is to do naive unification, but we must be careful. In particular, it
+           could cause confusing errors: recall that the naive unification of annotations goes
+           through repositioning over these types.
 
-             But if we simulate the same repositioning here, we won't really save anything. For
-             example, these types could be essentially the same union, and repositioning them would
-             introduce differences in their representations that would kill other
-             optimizations. Thus, we focus on the special case where these types have the same
-             reason, and then do naive unification. *)
-            when let t1 = Context.force_fully_resolved_tvar cx s1 in
-                 let t2 = Context.force_fully_resolved_tvar cx s2 in
-                 Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
-            ->
-            naive_unify cx trace ~use_op t1 t2
-          | _ -> naive_unify cx trace ~use_op t1 t2
-        end
+           But if we simulate the same repositioning here, we won't really save anything. For
+           example, these types could be essentially the same union, and repositioning them would
+           introduce differences in their representations that would kill other
+           optimizations. Thus, we focus on the special case where these types have the same
+           reason, and then do naive unification. *)
+          when let t1 = Context.force_fully_resolved_tvar cx s1 in
+               let t2 = Context.force_fully_resolved_tvar cx s2 in
+               Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2) ->
+          naive_unify cx trace ~use_op t1 t2
         | _ -> naive_unify cx trace ~use_op t1 t2
+      end
+      | _ -> naive_unify cx trace ~use_op t1 t2
     )
 
   and unify_props cx trace ~use_op x r1 r2 p1 p2 =

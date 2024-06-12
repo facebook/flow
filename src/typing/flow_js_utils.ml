@@ -348,7 +348,7 @@ exception SpeculationSingletonError
 let add_output_generic ~src_cx:cx ~dst_cx msg =
   if Speculation.speculating cx then
     if Error_message.defered_in_speculation msg then
-      ignore @@ Speculation.defer_action cx (Speculation_state.ErrorAction msg)
+      Speculation.defer_error cx msg
     else (
       if Context.is_verbose cx then
         prerr_endlinef "\nspeculative_error: %s" (Debug_js.dump_error_message cx msg);

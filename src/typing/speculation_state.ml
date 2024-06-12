@@ -7,53 +7,25 @@
 
 module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 
-(* First up, a model for flow and unify actions that are deferred during
-   speculative matching (and possibly fired afterwards). *)
-type action =
-  | FlowAction of Type.t * Type.use_t
-  | UnifyAction of Type.use_op * Type.t * Type.t
-  | ErrorAction of Error_message.t
-
-(* Action extended with a bit that determines whether the action is "benign."
-   Roughly, actions that don't cause serious side effects are considered
-   benign. See ignore, ignore_type, and defer_if_relevant below for
-   details. *)
-type extended_action = bool * action
-
 (* Next, a model for "cases." A case serves as the context for a speculative
    match. In other words, while we're trying to execute a flow in speculation
    mode, we use this data structure to record stuff.
 
    A case carries a (local) index that identifies which type we're currently
    considering among the members of a union or intersection type. This is used
-   only for error reporting.
-
-   Other than that, a case carries the unresolved tvars encountered and the
-   actions deferred during a speculative match. These start out empty and grow
-   as the speculative match proceeds. At the end of the speculative match,
-   they are used to decide where the type under consideration should be
-   selected, or otherwise how the match state should be updated. See the
-   speculative_matches function in Flow_js. *)
+   only for error reporting. *)
 type case = {
   case_id: int;
-  mutable unresolved: ISet.t;
-  mutable actions: extended_action list;
+  mutable errors: Error_message.t list;
   mutable implicit_instantiation_post_inference_checks: Implicit_instantiation_check.t list;
   mutable implicit_instantiation_results: (Type.t * Subst_name.t) list ALocFuzzyMap.t;
   lhs_t: Type.t;
   use_t: Type.use_t;
 }
 
-(* Actions that involve some "ignored" unresolved tvars are considered
-   benign. Such tvars can be explicitly designated to be ignored. Also, tvars
-   that instantiate type parameters, this types, etc. are ignored. *)
-type ignore = Type.ident option
-
 (* A branch is a wrapper around a case, that also carries the speculation id of
-   the spec currently being processed, as well as any explicitly designated
-   ignored tvar. *)
+   the spec currently being processed. *)
 type branch = {
-  ignore: ignore;
   speculation_id: int;
   case: case;
 }
