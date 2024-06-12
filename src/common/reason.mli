@@ -268,8 +268,6 @@ val uninternal_name : name -> string
 
 val is_instantiable_reason : 'loc virtual_reason -> bool
 
-val is_constant_reason : 'loc virtual_reason -> bool
-
 val is_nullish_reason : 'loc virtual_reason -> bool
 
 val is_scalar_reason_desc : 'loc virtual_reason_desc -> bool

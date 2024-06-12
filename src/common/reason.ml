@@ -19,7 +19,6 @@ module Ast = Flow_ast
    how convoluted the flow between them is. *)
 
 open Utils_js
-open String_utils
 
 type name =
   | OrdinaryName of string
@@ -819,52 +818,6 @@ let is_instantiable_reason r =
     true
   | RImplicitInstantiation -> true
   | RInferredUnionElemArray { instantiable } -> instantiable
-  | _ -> false
-
-(* TODO: Property accesses create unresolved tvars to hold results, even when
-   the object(s) on which the property accesses happen may be resolved. This can
-   and should be fixed, for various benefits including but not limited to more
-   precise type inference. But meanwhile we need to consider results of property
-   accesses that might result in sentinel property values as constants to decide
-   membership in disjoint unions, instead of asking for unnecessary annotations
-   to make progress. According to Facebook's style guide, constant properties
-   should have names like CONSTANT_PROPERTY, so we bet that when properties with
-   such names are accessed, their types have the 0->1 property.
-
-   As an example, suppose that we have an object `Tags` that stores tags of a
-   disjoint union, e.g. { ACTION_FOO: 'foo', ACTION_BAR: 'bar' }.
-
-   Then the types of Tags.ACTION_FOO and Tags.ACTION_BAR are assumed to be 0->1.
-*)
-let is_constant_reason r =
-  (* TODO consider avoiding the use of display_string_of_name here. For now, leaving as-is to
-   * prevent a behavior change. *)
-  let helper x =
-    let len = String.length x in
-    if len = 0 then
-      false
-    else
-      is_not_lowercase x 0 (len - 1)
-  in
-  match desc_of_reason r with
-  | RIdentifier x ->
-    let x = display_string_of_name x in
-    (* A single-letter variable name which happens to be upper-case should not
-       be confused with a constant reason. This should really be further
-       restricted to `const`-declared identifiers in scope. Or, better yet,
-       removing this heuristic entirely. *)
-    let len = String.length x in
-    if len < 2 then
-      false
-    else
-      is_not_lowercase x 0 (len - 1)
-  | RProperty (Some x)
-  | RPropertyOf (x, _)
-  | RPropertyIsAString x ->
-    helper (display_string_of_name x)
-  | RPrivateProperty x
-  | RMember { object_ = _; property = x } ->
-    helper x
   | _ -> false
 
 let is_literal_object_reason r =

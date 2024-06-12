@@ -128,12 +128,6 @@ type component_t = {
   mutable builtins: Builtins.t lazy_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
-  (* map from goal ids to types *)
-  mutable goal_map: Type.t IMap.t;
-  (* graph tracking full resolution of types *)
-  mutable type_graph: Graph_explorer.graph;
-  (* map of speculation ids to sets of unresolved tvars *)
-  mutable all_unresolved: ISet.t IMap.t;
   mutable synthesis_produced_placeholders: bool;
   mutable errors: Flow_error.ErrorSet.t;
   mutable error_suppressions: Error_suppressions.t;
@@ -370,9 +364,6 @@ let make_ccx () =
     sig_cx = empty_sig_cx;
     builtins = lazy (Builtins.empty ());
     aloc_tables = Utils_js.FilenameMap.empty;
-    goal_map = IMap.empty;
-    type_graph = Graph_explorer.new_graph ();
-    all_unresolved = IMap.empty;
     synthesis_produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
@@ -444,8 +435,6 @@ let in_declare_namespace cx = cx.environment.Loc_env.scope_kind = Name_def.Decla
 
 (* accessors *)
 
-let all_unresolved cx = cx.ccx.all_unresolved
-
 let metadata cx = cx.metadata
 
 let max_literal_length cx = cx.metadata.max_literal_length
@@ -504,8 +493,6 @@ let errors cx = cx.ccx.errors
 let error_suppressions cx = cx.ccx.error_suppressions
 
 let evaluated cx = cx.ccx.sig_cx.evaluated
-
-let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
@@ -617,8 +604,6 @@ let env_cache_find_opt cx ~for_value id =
   IMap.find_opt id cache
 
 let missing_local_annot_lower_bounds cx = cx.ccx.missing_local_annot_lower_bounds
-
-let type_graph cx = cx.ccx.type_graph
 
 let matching_props cx = cx.ccx.matching_props
 
@@ -753,11 +738,7 @@ let add_missing_local_annot_lower_bound cx loc t =
   cx.ccx.missing_local_annot_lower_bounds <-
     ALocFuzzyMap.add loc bounds missing_local_annot_lower_bounds
 
-let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
-
 let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
-
-let set_goals cx goals = cx.ccx.goal_map <- goals
 
 let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
@@ -771,8 +752,6 @@ let set_property_maps cx property_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with p
 let set_call_props cx call_props = cx.ccx.sig_cx <- { cx.ccx.sig_cx with call_props }
 
 let set_export_maps cx export_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with export_maps }
-
-let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
 
 let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
 

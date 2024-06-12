@@ -1773,9 +1773,7 @@ module rec TypeTerm : sig
 
   and choice_tool = Trigger
 
-  and choice_use_tool =
-    | FullyResolveType of ident
-    | TryFlow of int * spec
+  and choice_use_tool = TryFlow of int * spec
 
   and concretization_target =
     | ConcretizeForImportsExports of ident
@@ -4164,7 +4162,6 @@ let string_of_use_ctor = function
       "ChoiceKitUseT %s"
       begin
         match tool with
-        | FullyResolveType _ -> "FullyResolveType"
         | TryFlow _ -> "TryFlow"
       end
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"

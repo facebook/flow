@@ -153,7 +153,6 @@ val docblock_overrides : Docblock.t -> File_key.t -> metadata -> metadata
 val sig_cx : t -> sig_t
 
 (* accessors *)
-val all_unresolved : t -> ISet.t IMap.t
 
 val metadata : t -> metadata
 
@@ -194,8 +193,6 @@ val errors : t -> Flow_error.ErrorSet.t
 val error_suppressions : t -> Error_suppressions.t
 
 val evaluated : t -> Type.t Type.Eval.Map.t
-
-val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
 
@@ -266,8 +263,6 @@ val should_strip_root : t -> bool
 val suppress_types : t -> SSet.t
 
 val ts_syntax : t -> bool
-
-val type_graph : t -> Graph_explorer.graph
 
 val matching_props : t -> (string * Type.t * Type.t) list
 
@@ -370,12 +365,6 @@ val add_monomorphized_component : t -> Type.Properties.id -> Type.t -> unit
 val add_reachable_dep : t -> File_key.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
-
-val set_goals : t -> Type.t IMap.t -> unit
-
-val set_type_graph : t -> Graph_explorer.graph -> unit
-
-val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
 val set_graph : t -> Type.Constraint.graph -> unit
 
