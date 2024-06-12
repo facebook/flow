@@ -390,9 +390,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ConvertEmptyPropsToMixedT _
     | ValueToTypeReferenceT _
     | TryRenderTypePromotionT _
-    | ExitRendersT _
-    (* When we have ChoiceKitUseT, we are already stuck. *)
-    | ChoiceKitUseT _ ->
+    | ExitRendersT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)
     | SpecializeT _
     | ThisSpecializeT _

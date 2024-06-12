@@ -37,9 +37,6 @@ module type OUTPUT = sig
    *)
   val try_singleton_throw_on_failure :
     Context.t -> Type.DepthTrace.t -> Reason.reason -> Type.t -> Type.use_t -> unit
-
-  val speculative_matches :
-    Context.t -> Type.DepthTrace.t -> ALoc.t Reason.virtual_reason -> int -> Type.spec -> unit
 end
 
 module Make (Flow : INPUT) : OUTPUT = struct
@@ -178,42 +175,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
      unresolved tvars encountered when trying to fully resolve types. *)
   let rec try_union cx trace use_op l reason rep =
     let ts = UnionRep.members rep in
-    let speculation_id = mk_id () in
-    flow_t
-      cx
-      ( choice_kit reason Trigger,
-        try_flow_continuation cx trace reason speculation_id (UnionCases (use_op, l, rep, ts))
-      )
+    speculative_matches cx trace reason (UnionCases (use_op, l, rep, ts))
 
   and try_intersection cx trace u reason rep =
     let ts = InterRep.members rep in
-    let speculation_id = mk_id () in
-    flow_t
-      cx
-      ( choice_kit reason Trigger,
-        try_flow_continuation cx trace reason speculation_id (IntersectionCases (ts, u))
-      )
+    speculative_matches cx trace reason (IntersectionCases (ts, u))
 
   and try_singleton_throw_on_failure cx trace reason t u =
-    let speculation_id = mk_id () in
-    flow_t
-      cx
-      ( choice_kit reason Trigger,
-        try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
-      )
-
-  (** utils for creating toolkit types **)
-
-  and choice_kit reason k = InternalT (ChoiceKitT (reason, k))
-
-  and choice_kit_use reason k = ChoiceKitUseT (reason, k)
-
-  (** utils for emitting toolkit constraints **)
-
-  and try_flow_continuation cx trace reason speculation_id spec =
-    let u = choice_kit_use reason (TryFlow (speculation_id, spec)) in
-    let reason = reason_of_use_t u in
-    Tvar.mk_where cx reason (fun tvar -> flow_opt cx ~trace (tvar, u))
+    speculative_matches cx trace reason (SingletonCase (t, u))
 
   (************************)
   (* Speculative matching *)
@@ -291,15 +260,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
      error messages and to ignore unresolved tvars that are deemed irrelevant to
      choice-making.
   *)
-  and speculative_matches cx trace r speculation_id spec =
+  and speculative_matches cx trace r spec =
     (* explore optimization opportunities *)
     if optimize_spec_try_shortcut cx trace r spec then
       ()
     else
-      long_path_speculative_matches cx trace r speculation_id spec
+      long_path_speculative_matches cx trace r spec
 
-  and long_path_speculative_matches cx trace r speculation_id spec =
+  and long_path_speculative_matches cx trace r spec =
     let open Speculation_state in
+    let speculation_id = mk_id () in
     (* extract stuff to ignore while considering actions *)
     let ignore = ignore_of_spec spec in
     (* split spec into a list of pairs of types to try speculative matching on *)

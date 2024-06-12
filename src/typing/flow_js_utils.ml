@@ -40,7 +40,7 @@ let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
 
-let possible_uses cx id = uses_of cx (Context.find_graph cx id) |> List.filter is_proper_use
+let possible_uses cx id = uses_of cx (Context.find_graph cx id)
 
 let rec collect_lowers ~filter_empty cx seen acc = function
   | [] -> Base.List.rev acc

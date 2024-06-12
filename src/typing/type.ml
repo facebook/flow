@@ -315,8 +315,6 @@ module rec TypeTerm : sig
     | AbstractEnum of { representation_t: t }
 
   and internal_t =
-    (* toolkit for making choices *)
-    | ChoiceKitT of reason * choice_tool
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
     (* $Flow$EnforceOptimized *)
@@ -827,7 +825,6 @@ module rec TypeTerm : sig
     | MapTypeT of use_op * reason * type_map * t_out
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
     | ReactKitT of use_op * reason * React.tool
-    | ChoiceKitUseT of reason * choice_use_tool
     (* tools for preprocessing types *)
     | PreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
@@ -1770,10 +1767,6 @@ module rec TypeTerm : sig
     | DebugPrint
     | DebugThrow
     | DebugSleep
-
-  and choice_tool = Trigger
-
-  and choice_use_tool = TryFlow of int * spec
 
   and concretization_target =
     | ConcretizeForImportsExports of ident
@@ -3890,15 +3883,6 @@ let is_proper_def = function
     false
   | _ -> true
 
-(* not all use types should appear in "merged" types *)
-let is_proper_use = function
-  (* Speculation should be completed by the end of merge. This does not hold
-     today because non-0->1 things are erroneously considered 0->1, specifically
-     type parameters and sometimes eval types. Until this situation is fixed, we
-     can at least avoid these things leaking into dependent merge steps. *)
-  | ChoiceKitUseT _ -> false
-  | _ -> true
-
 (* convenience *)
 let is_bot = function
   | DefT (_, EmptyT) -> true
@@ -4027,13 +4011,6 @@ let string_of_ctor = function
   | AnyT (_, Untyped) -> "AnyT (untyped)"
   | AnyT (_, Placeholder) -> "AnyT (placeholder)"
   | AnnotT _ -> "AnnotT"
-  | InternalT (ChoiceKitT (_, tool)) ->
-    spf
-      "ChoiceKitT %s"
-      begin
-        match tool with
-        | Trigger -> "Trigger"
-      end
   | CustomFunT _ -> "CustomFunT"
   | DefT (_, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
@@ -4157,13 +4134,6 @@ let string_of_use_ctor = function
   | CallElemT _ -> "CallElemT"
   | CallLatentPredT _ -> "CallLatentPredT"
   | CallT _ -> "CallT"
-  | ChoiceKitUseT (_, tool) ->
-    spf
-      "ChoiceKitUseT %s"
-      begin
-        match tool with
-        | TryFlow _ -> "TryFlow"
-      end
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | ComparatorT _ -> "ComparatorT"
   | ConstructorT _ -> "ConstructorT"
