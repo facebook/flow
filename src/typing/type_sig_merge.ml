@@ -200,8 +200,11 @@ let add_name_field reason =
   SMap.update "name" f
 
 let get_module_t loc = function
-  | Ok t -> t
-  | Error _ ->
+  | Context.TypedModule t -> t
+  | Context.UncheckedModule (loc, mref) ->
+    let reason = Reason.(mk_reason (RModule mref) loc) in
+    Type.(AnyT.why Untyped reason)
+  | Context.MissingModule _ ->
     let reason = Reason.(mk_reason RAnyImplicit loc) in
     Type.(AnyT.error_of_kind UnresolvedName reason)
 
@@ -2332,8 +2335,8 @@ let merge_builtins
        in
        let map_module_ref s : Context.resolved_require Lazy.t =
          match SMap.find_opt s dependencies_map with
-         | None -> lazy (Error s)
-         | Some lazy_t -> Lazy.map (fun t -> Ok t) lazy_t
+         | None -> lazy (Context.MissingModule s)
+         | Some lazy_t -> Lazy.map (fun t -> Context.TypedModule t) lazy_t
        in
        ( {
            cx;

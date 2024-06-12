@@ -175,7 +175,6 @@ type 'loc virtual_reason_desc =
   | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
-  | RUntypedModule of string
   | RNamedImportedType of string (* module *) * string (* local name *)
   | RImportStarType of string
   | RImportStarTypeOf of string
@@ -279,11 +278,11 @@ let rec map_desc_locs f = function
     | RType _ | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _
     | RPatternParameter _ | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
     | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
-    | RUndefinedProperty _ | RSomeProperty | RUntypedModule _ | RNamedImportedType _
-    | RImportStarType _ | RImportStarTypeOf _ | RImportStar _ | RDefaultImportedType _
-    | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _
-    | RObjectMapi | RObjectKeyMirror | RObjectMapConst | RIndexedAccess _ | RConditionalType
-    | RRendersNothing | RAutocompleteToken ) as r ->
+    | RUndefinedProperty _ | RSomeProperty | RNamedImportedType _ | RImportStarType _
+    | RImportStarTypeOf _ | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _
+    | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectMapi | RObjectKeyMirror
+    | RObjectMapConst | RIndexedAccess _ | RConditionalType | RRendersNothing | RAutocompleteToken
+      ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -673,7 +672,6 @@ let rec string_of_desc = function
   | RUndefinedProperty x -> spf "undefined property `%s`" (display_string_of_name x)
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
-  | RUntypedModule m -> spf "import from untyped module `%s`" m
   | RNamedImportedType (m, _) -> spf "Named import from module `%s`" m
   | RImportStarType n -> spf "import type * as %s" n
   | RImportStarTypeOf n -> spf "import typeof * as %s" n
@@ -1452,7 +1450,6 @@ let classification_of_reason_desc desc =
   | RUndefinedProperty _
   | RSomeProperty
   | RNameProperty _
-  | RUntypedModule _
   | RNamedImportedType _
   | RImportStarType _
   | RImportStarTypeOf _

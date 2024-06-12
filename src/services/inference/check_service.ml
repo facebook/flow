@@ -36,17 +36,15 @@ let unknown_module_t cx _mref m =
   let module_name = Modulename.to_string m in
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_module_opt builtins module_name with
-  | Some t -> Ok t
-  | None -> Error module_name
+  | Some t -> Context.TypedModule t
+  | None -> Context.MissingModule module_name
 
 let unchecked_module_t cx file_key mref =
-  let desc = Reason.RUntypedModule mref in
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
-  let reason = Reason.mk_reason desc loc in
   let builtins = Context.builtins cx in
-  Base.Option.value
-    ~default:Type.(AnyT (reason, Untyped))
-    (Builtins.get_builtin_module_opt builtins mref)
+  match Builtins.get_builtin_module_opt builtins mref with
+  | Some t -> Context.TypedModule t
+  | None -> Context.UncheckedModule (loc, mref)
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
@@ -88,11 +86,12 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       | None -> unknown_module_t cx mref (Parsing_heaps.read_dependency m)
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
-        | File_key.ResourceFile f as file_key -> Ok (Merge.merge_resource_module_t cx file_key f)
+        | File_key.ResourceFile f as file_key ->
+          Context.TypedModule (Merge.merge_resource_module_t cx file_key f)
         | dep_file ->
           (match Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader dep_addr with
-          | Some parse -> Ok (sig_module_t cx dep_file parse)
-          | None -> Ok (unchecked_module_t cx dep_file mref))))
+          | Some parse -> Context.TypedModule (sig_module_t cx dep_file parse)
+          | None -> unchecked_module_t cx dep_file mref)))
   and sig_module_t cx file_key parse =
     let create_file = dep_file file_key parse in
     Context.add_reachable_dep cx file_key;

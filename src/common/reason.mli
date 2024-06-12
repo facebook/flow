@@ -135,7 +135,6 @@ type 'loc virtual_reason_desc =
   | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
-  | RUntypedModule of string
   | RNamedImportedType of string * string
   | RImportStarType of string
   | RImportStarTypeOf of string

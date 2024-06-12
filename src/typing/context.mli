@@ -118,7 +118,10 @@ type typing_mode =
   | SynthesisMode
   | HintEvaluationMode
 
-type resolved_require = (Type.t, string) result
+type resolved_require =
+  | TypedModule of Type.t
+  | UncheckedModule of ALoc.t * string
+  | MissingModule of string
 
 type resolve_require = string -> resolved_require
 
