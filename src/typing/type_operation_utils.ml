@@ -152,7 +152,10 @@ module Import_export = struct
     let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
     | Ok m ->
-      Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, Some namespace_symbol, is_strict) m
+      let (values_type, types_tmap) =
+        Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
+      in
+      NamespaceT { namespace_symbol = Some namespace_symbol; values_type; types_tmap }
     | Error (lreason, any_source) -> AnyT (lreason, any_source)
 
   let import_namespace_specifier_type

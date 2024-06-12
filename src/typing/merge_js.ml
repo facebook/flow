@@ -515,11 +515,14 @@ let check_multiplatform_conformance cx ast tast =
              * any type to make conformance check always passing. *)
             AnyT.make Untyped reason
           else
-            Flow_js_utils.ImportModuleNsTKit.on_ModuleT
-              cx
-              ~is_common_interface_module
-              (reason, None, false)
-              m
+            let (values_type, types_tmap) =
+              Flow_js_utils.ImportModuleNsTKit.on_ModuleT
+                cx
+                ~is_common_interface_module
+                (reason, false)
+                m
+            in
+            NamespaceT { namespace_symbol = None; values_type; types_tmap }
         | _ -> AnyT.make Untyped reason
       in
       let interface_t =

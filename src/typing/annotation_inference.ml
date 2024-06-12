@@ -631,7 +631,8 @@ module rec ConsGen : S = struct
         (reason, namespace_symbol, is_strict, legacy_interop)
         m
     | (ModuleT m, Annot_ImportModuleNsT (reason, namespace_symbol, is_strict)) ->
-      ImportModuleNsTKit.on_ModuleT cx (reason, namespace_symbol, is_strict) m
+      let (values_type, types_tmap) = ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m in
+      NamespaceT { namespace_symbol; values_type; types_tmap }
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
       let (_name_loc_opt, t) =
         ImportDefaultTKit.on_ModuleT

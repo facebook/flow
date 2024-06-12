@@ -1314,10 +1314,9 @@ module CJSRequireTKit = struct
         mk_exports_namespace ()
 end
 
+(* import * as X from 'SomeModule'; *)
 module ImportModuleNsTKit = struct
-  (* import * as X from 'SomeModule'; *)
-  let on_ModuleT
-      cx ?(is_common_interface_module = false) (reason_op, namespace_symbol, is_strict) module_ =
+  let on_ModuleT cx ?(is_common_interface_module = false) (reason_op, is_strict) module_ =
     let {
       module_reason;
       module_export_types = exports;
@@ -1372,7 +1371,7 @@ module ImportModuleNsTKit = struct
       Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props:value_props proto
     in
     let types_tmap = Context.generate_property_map cx type_props in
-    NamespaceT { namespace_symbol; values_type; types_tmap }
+    (values_type, types_tmap)
 end
 
 module ImportDefaultTKit = struct
