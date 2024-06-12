@@ -2337,6 +2337,48 @@ References:
              ^ [3]
 
 
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:195:10
+
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
+[incompatible-type]
+
+   exhaustive-check.js:195:10
+   195|     case X.A: break;
+                 ^^^
+
+References:
+   exhaustive-check.js:194:11
+   194|   switch (x) {
+                  ^ [1]
+   exhaustive-check.js:193:20
+   193| function f9(x: E | F, X: typeof E & typeof F) {
+                           ^ [2]
+   exhaustive-check.js:3:6
+     3| enum E {
+             ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:196:10
+
+Invalid check of case test against switch discriminant [1] because `F` [2] is incompatible with `E` [3].
+[incompatible-type]
+
+   exhaustive-check.js:196:10
+   196|     case X.B: break;
+                 ^^^
+
+References:
+   exhaustive-check.js:194:11
+   194|   switch (x) {
+                  ^ [1]
+   exhaustive-check.js:193:20
+   193| function f9(x: E | F, X: typeof E & typeof F) {
+                           ^ [2]
+   exhaustive-check.js:3:6
+     3| enum E {
+             ^ [3]
+
+
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:209:11
 
 Incomplete exhaustive check: the members `A` and `B` of enum `E` [1] have not been considered in check of `x`.
@@ -4436,7 +4478,7 @@ References:
 
 
 
-Found 263 errors
+Found 265 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
