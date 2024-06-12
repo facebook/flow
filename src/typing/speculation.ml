@@ -26,23 +26,8 @@ let speculating cx =
   let state = Context.speculation_state cx in
   !state <> []
 
-(* Decide, for a flow or unify action encountered during a speculative match,
-   whether that action should be deferred. Only a relevant action is deferred.
-
-   As a side effect, whenever we decide to defer an action, we record the
-   deferred action and the unresolved tvars involved in it in the current
-   case.
-*)
-let defer_if_relevant branch action =
-  let { case; _ } = branch in
-  match action with
-  | ErrorAction _ ->
-    case.actions <- case.actions @ [(true, action)];
-    true
-  | _ -> false
-
-let defer_action cx action =
+let defer_error cx msg =
   let state = Context.speculation_state cx in
   match !state with
-  | [] -> false
-  | branch :: _ -> defer_if_relevant branch action
+  | [] -> ()
+  | { case; _ } :: _ -> case.errors <- case.errors @ [msg]

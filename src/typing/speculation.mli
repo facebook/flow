@@ -16,10 +16,7 @@ type speculation_id = int
    of the "branch" data structure.
 
    When speculating (i.e., when this stack is non-empty), some things are
-   handled differently:
-
-   (1) flow and unify actions on unresolved tvars are deferred
-   (2) any errors cause short-cutting
+   handled differently: any errors cause short-cutting
 *)
 val set_speculative : Context.t -> branch -> unit
 
@@ -27,6 +24,4 @@ val restore_speculative : Context.t -> unit
 
 val speculating : Context.t -> bool
 
-(* decide whether an action should be deferred.
-   when speculating, actions that involve unresolved tvars are deferred. *)
-val defer_action : Context.t -> action -> bool
+val defer_error : Context.t -> Error_message.t -> unit
