@@ -17,7 +17,6 @@ open Type
 let rec reason_of_t = function
   | OpenT (reason, _) -> reason
   | AnnotT (reason, _, _) -> reason
-  | InternalT (ChoiceKitT (reason, _)) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
@@ -64,7 +63,6 @@ and reason_of_use_t = function
   | CallElemT (_, reason, _, _, _) -> reason
   | CallLatentPredT { reason; _ } -> reason
   | CallT { reason; _ } -> reason
-  | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | ComparatorT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
@@ -165,7 +163,6 @@ let def_loc_of_t = reason_of_t %> def_loc_of_reason
 let rec mod_reason_of_t f = function
   | OpenT (reason, id) -> OpenT (f reason, id)
   | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
-  | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, t) -> DefT (f reason, t)
   | AnyT (reason, src) -> AnyT (f reason, src)
@@ -341,7 +338,6 @@ let rec util_use_op_of_use_t :
         tout = _;
       }
   | AssertExportIsTypeT (_, _, _)
-  | ChoiceKitUseT (_, _)
   | PreprocessKitT (_, _)
   | ExtractReactRefT _
   | DebugPrintT _

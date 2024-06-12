@@ -181,7 +181,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ObjKitT (_, _, _, _, t) ->
     resolve t
   | ReactKitT (_, _, tool) -> resolve_react_tool tool
-  | ChoiceKitUseT _ -> _TODO
   | PreprocessKitT _ -> _TODO
   | DebugPrintT _
   | DebugSleepT _ ->

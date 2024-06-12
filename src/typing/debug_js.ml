@@ -390,7 +390,6 @@ let rec dump_t_ (depth, tvars) cx t =
       p t ~extra:(spf "values=%s, types=%s" (kid values_type) (Properties.string_of_id types_tmap))
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
-    | InternalT (ChoiceKitT _) -> p t
     | InternalT (EnforceUnionOptimized _) -> p t
 
 and dump_use_t_ (depth, tvars) cx t =
@@ -447,17 +446,6 @@ and dump_use_t_ (depth, tvars) cx t =
       "Some cache"
     else
       "None"
-  in
-  let try_flow = function
-    | UnionCases (use_op, t, _rep, ts) ->
-      spf
-        "(%s, %s, [%s])"
-        (string_of_use_op use_op)
-        (kid t)
-        (String.concat "; " (Base.List.map ~f:kid ts))
-    | IntersectionCases (ts, use_t) ->
-      spf "([%s], %s)" (String.concat "; " (Base.List.map ~f:kid ts)) (use_kid use_t)
-    | SingletonCase (t, use_t) -> spf "(%s, %s)" (kid t) (use_kid use_t)
   in
   let react_kit =
     React.(
@@ -711,7 +699,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
     | CallLatentPredT { sense; _ } -> p t ~extra:(spf "sense=%b" sense)
-    | ChoiceKitUseT (_, TryFlow (_, spec)) -> p ~extra:(try_flow spec) t
     | CJSExtractNamedExportsT _ -> p t
     | ComparatorT { arg; _ } -> p ~extra:(kid arg) t
     | ConstructorT _ -> p t

@@ -173,7 +173,6 @@ class virtual ['a] t =
           t
         else
           InternalT (ExtendsT (r, t1', t2'))
-      | InternalT (ChoiceKitT _) -> t
       | InternalT (EnforceUnionOptimized _) -> t
       | CustomFunT
           ( _r,

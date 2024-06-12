@@ -24,7 +24,6 @@ class ['a] t =
       function
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, t) -> self#def_type cx pole acc t
-      | InternalT (ChoiceKitT (_, Trigger)) -> acc
       | InternalT (EnforceUnionOptimized _) -> acc
       | FunProtoT _
       | FunProtoApplyT _

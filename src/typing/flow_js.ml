@@ -565,8 +565,6 @@ struct
            * to not having created the PredicateT constraint at all. We forward the
            * lower-bound as is. *)
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT u)
-        | (InternalT (ChoiceKitT (_, Trigger)), ChoiceKitUseT (reason, TryFlow (i, spec))) ->
-          SpeculationKit.speculative_matches cx trace reason i spec
         | (UnionT (_, urep), PreprocessKitT (_, ConcretizeTypes _)) ->
           flow_all_in_union cx trace urep u
         | (MaybeT (lreason, t), PreprocessKitT (_, ConcretizeTypes _)) ->
@@ -6194,7 +6192,6 @@ struct
     | UseT (_, OpenT _)
     | EvalTypeDestructorT _
     | UseT (_, DefT (_, TypeT _))
-    | ChoiceKitUseT _
     | CondT _
     | ConditionalT _
     | DestructuringT _
@@ -6721,7 +6718,6 @@ struct
     | CallT _
     | CallElemT _
     | CallLatentPredT _
-    | ChoiceKitUseT _
     | CJSExtractNamedExportsT _
     | CondT _
     | ConstructorT _
@@ -6938,7 +6934,6 @@ struct
     | InternalT (EnforceUnionOptimized _) ->
       false
     (* Should never occur as the lower bound of any *)
-    | InternalT (ChoiceKitT _)
     | InternalT (ExtendsT _)
     | ModuleT _
     | NamespaceT _ ->
