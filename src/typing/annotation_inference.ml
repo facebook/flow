@@ -1309,7 +1309,7 @@ module rec ConsGen : S = struct
     elab_t cx t (Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict))
 
   and import_ns cx reason namespace_symbol is_strict t =
-    elab_t cx t (Annot_ImportModuleNsT (reason, Some namespace_symbol, is_strict))
+    elab_t cx t (Annot_ImportModuleNsT (reason, namespace_symbol, is_strict))
 
   and copy_named_exports cx ~from_ns reason ~module_t =
     elab_t cx from_ns (Annot_CopyNamedExportsT (reason, module_t))

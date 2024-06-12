@@ -537,7 +537,7 @@ let mk_namespace_t cx info namespace_symbol reason =
     | ES { named = _; star = _ :: _ } -> failwith "namespace should not have star exports"
     | ES { named; star = [] } -> named
   in
-  Flow_js_utils.namespace_type cx reason (Some namespace_symbol) named info.type_named
+  Flow_js_utils.namespace_type cx reason namespace_symbol named info.type_named
 
 let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
   let info =

@@ -1388,7 +1388,7 @@ module rec TypeTerm : sig
     | ObjSpreadAssign
 
   and namespace_type = {
-    namespace_symbol: symbol option;
+    namespace_symbol: symbol;
     values_type: t;
     types_tmap: Properties.id;
   }
@@ -3303,7 +3303,7 @@ module AConstraint = struct
     | Annot_ConcretizeForImportsExports of Reason.t * (TypeTerm.t -> TypeTerm.t)
     (* Imports *)
     | Annot_ImportNamedT of Reason.t * TypeTerm.import_kind * string * string * bool
-    | Annot_ImportModuleNsT of Reason.t * symbol option * bool
+    | Annot_ImportModuleNsT of Reason.t * symbol * bool
     | Annot_ImportTypeofT of Reason.reason * string
     | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
     (*

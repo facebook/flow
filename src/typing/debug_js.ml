@@ -393,7 +393,7 @@ let rec dump_t_ (depth, tvars) cx t =
         ~extra:
           (spf
              "name=%s, values=%s, types=%s"
-             (dump_symbol_opt namespace_symbol)
+             (dump_symbol namespace_symbol)
              (kid values_type)
              (Properties.string_of_id types_tmap)
           )

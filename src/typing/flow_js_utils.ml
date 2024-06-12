@@ -1303,8 +1303,7 @@ module CJSRequireTKit = struct
           Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props:value_props proto
         in
         let types_tmap = Context.generate_property_map cx type_props in
-        let namespace_symbol = Some module_symbol in
-        NamespaceT { namespace_symbol; values_type; types_tmap }
+        NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
       in
       if automatic_require_default then
         match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with

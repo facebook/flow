@@ -155,7 +155,7 @@ module Import_export = struct
       let (values_type, types_tmap) =
         Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
       in
-      NamespaceT { namespace_symbol = Some namespace_symbol; values_type; types_tmap }
+      NamespaceT { namespace_symbol; values_type; types_tmap }
     | Error (lreason, any_source) -> AnyT (lreason, any_source)
 
   let import_namespace_specifier_type

@@ -1979,9 +1979,7 @@ module Make (I : INPUT) : S = struct
             } ->
           let%map m = module_t ~env reason exports in
           Ty.Decl m
-        | NamespaceT
-            { namespace_symbol = Some namespace_symbol; values_type = DefT (_, ObjT o); types_tmap }
-          ->
+        | NamespaceT { namespace_symbol; values_type = DefT (_, ObjT o); types_tmap } ->
           let%bind (exports, default) = namespace_t ~env o types_tmap in
           (match Symbol.kind_of_symbol namespace_symbol with
           | Symbol.SymbolModule ->

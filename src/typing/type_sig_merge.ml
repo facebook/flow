@@ -2135,7 +2135,7 @@ let merge_def file reason = function
         NameUtils.Map.empty
     in
     let namespace_symbol = Symbol.mk_namespace_symbol ~name ~def_loc:id_loc in
-    Flow_js_utils.namespace_type file.cx reason (Some namespace_symbol) (f values) (f types)
+    Flow_js_utils.namespace_type file.cx reason namespace_symbol (f values) (f types)
 
 let merge_export file = function
   | Pack.ExportRef ref
