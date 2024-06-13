@@ -457,6 +457,25 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | Some false
     | None ->
       o
+  and intersperse_pretty_line ~depth ~sep ts =
+    let elts =
+      match counted_map (type_with_parens ~depth) ts with
+      | [] -> []
+      | [a] -> [a]
+      | hd :: tl -> hd :: Base.List.map ~f:(fun x -> fuse [Atom sep; space; x]) tl
+    in
+    let len = List.length elts in
+    Base.List.mapi elts ~f:(fun i t ->
+        fuse
+          [
+            t;
+            ( if i = len - 1 then
+              Empty
+            else
+              pretty_line
+            );
+          ]
+    )
   and type_union ~depth ts =
     let (prefix, ts) =
       if List.mem Null ts && List.mem Void ts && List.length ts > 2 then
@@ -470,11 +489,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       else
         (Empty, ts)
     in
-    let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "|") in
-    fuse [prefix; list ~inline:(false, true) elts]
-  and type_intersection ~depth ts =
-    let elts = Base.List.intersperse (counted_map (type_with_parens ~depth) ts) ~sep:(Atom "&") in
-    list ~inline:(false, true) elts
+    group [fuse (prefix :: intersperse_pretty_line ~depth ~sep:"|" ts)]
+  and type_intersection ~depth ts = group [fuse (intersperse_pretty_line ~depth ~sep:"&" ts)]
   and type_with_parens ~depth t =
     match t with
     | Fun _

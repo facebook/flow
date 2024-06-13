@@ -435,66 +435,53 @@ intersections.js:17:3,17:4
 
 intersections.js:26:4
 Flags:
-
-  LongLongLongLongLongLongLongLongName
-  &
-  AnotherLongLongLongLongLongLongLongLongName
+LongLongLongLongLongLongLongLongName
+& AnotherLongLongLongLongLongLongLongLongName
 intersections.js:26:3,26:4
 
 intersections.js:28:4
 Flags:
-
-  (?LongLongLongLongLongLongLongLongNameP<TValue>)
-  &
-  AnotherLongLongLongLongLongLongLongLongName
+(?LongLongLongLongLongLongLongLongNameP<TValue>)
+& AnotherLongLongLongLongLongLongLongLongName
 intersections.js:28:3,28:4
 
 intersections.js:30:4
 Flags:
 Poly<
-  
-    LongLongLongLongLongLongLongLongName
-    &
-    AnotherLongLongLongLongLongLongLongLongName,
+  LongLongLongLongLongLongLongLongName
+  & AnotherLongLongLongLongLongLongLongLongName,
 >
 intersections.js:30:3,30:4
 
 intersections.js:32:4
 Flags:
 Poly<
-  ?
-    ((
-      LongLongLongLongLongLongLongLongName,
-      AnotherLongLongLongLongLongLongLongLongName
-    ) => void),
+  ?((
+    LongLongLongLongLongLongLongLongName,
+    AnotherLongLongLongLongLongLongLongLongName
+  ) => void),
 >
 intersections.js:32:3,32:4
 
 intersections.js:34:4
 Flags:
 Poly<
-  ?
-    (
-      ((
-        LongLongLongLongLongLongLongLongName,
-        AnotherLongLongLongLongLongLongLongLongName
-      ) => void)
-      &
-      ((
-        AnotherLongLongLongLongLongLongLongLongName,
-        LongLongLongLongLongLongLongLongName
-      ) => void)),
+  ?(((
+    LongLongLongLongLongLongLongLongName,
+    AnotherLongLongLongLongLongLongLongLongName
+  ) => void)
+  & ((
+    AnotherLongLongLongLongLongLongLongLongName,
+    LongLongLongLongLongLongLongLongName
+  ) => void)),
 >
 intersections.js:34:3,34:5
 
 intersections.js:36:4
 Flags:
 Poly<
-  ?
-    (
-      LongLongLongLongLongLongLongLongName
-      &
-      AnotherLongLongLongLongLongLongLongLongName),
+  ?(LongLongLongLongLongLongLongLongName
+  & AnotherLongLongLongLongLongLongLongLongName),
 >
 intersections.js:36:3,36:4
 
@@ -1884,27 +1871,21 @@ unions.js:86:3,86:4
 
 unions.js:95:4
 Flags:
-
-  LongLongLongLongLongLongLongLongName
-  |
-  AnotherLongLongLongLongLongLongLongLongName
+LongLongLongLongLongLongLongLongName
+| AnotherLongLongLongLongLongLongLongLongName
 unions.js:95:3,95:4
 
 unions.js:97:4
 Flags:
-?
-  LongLongLongLongLongLongLongLongNameP<TValue>
-  |
-  AnotherLongLongLongLongLongLongLongLongName
+?LongLongLongLongLongLongLongLongNameP<TValue>
+| AnotherLongLongLongLongLongLongLongLongName
 unions.js:97:3,97:4
 
 unions.js:99:4
 Flags:
 Poly<
-  
-    LongLongLongLongLongLongLongLongName
-    |
-    AnotherLongLongLongLongLongLongLongLongName,
+  LongLongLongLongLongLongLongLongName
+  | AnotherLongLongLongLongLongLongLongLongName,
 >
 unions.js:99:3,99:4
 
@@ -1918,36 +1899,26 @@ unions.js:101:3,101:4
 unions.js:103:4
 Flags:
 Poly<
-  ?
-    LongLongLongLongLongLongLongLongName
-    |
-    AnotherLongLongLongLongLongLongLongLongName,
+  ?LongLongLongLongLongLongLongLongName
+  | AnotherLongLongLongLongLongLongLongLongName,
 >
 unions.js:103:3,103:4
 
 unions.js:112:6
 Flags:
-type LongUnion = 
-  LongLongLongLongLongLongLongLongName1
-  |
-  LongLongLongLongLongLongLongLongName2
-  |
-  LongLongLongLongLongLongLongLongName3
-  |
-  LongLongLongLongLongLongLongLongName4
+type LongUnion = LongLongLongLongLongLongLongLongName1
+| LongLongLongLongLongLongLongLongName2
+| LongLongLongLongLongLongLongLongName3
+| LongLongLongLongLongLongLongLongName4
 unions.js:112:6,112:14
 
 unions.js:115:6
 Flags:
 type LongUnionPoly = Poly<
-  
-    LongLongLongLongLongLongLongLongName1
-    |
-    LongLongLongLongLongLongLongLongName2
-    |
-    LongLongLongLongLongLongLongLongName3
-    |
-    LongLongLongLongLongLongLongLongName4,
+  LongLongLongLongLongLongLongLongName1
+  | LongLongLongLongLongLongLongLongName2
+  | LongLongLongLongLongLongLongLongName3
+  | LongLongLongLongLongLongLongLongName4,
 >
 unions.js:115:6,115:18
 
