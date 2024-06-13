@@ -90,6 +90,9 @@ assert_ok "$FLOW" type-at-pos interface.js 11 7 --strip-root
 printf "interface.js:12:7 = "
 assert_ok "$FLOW" type-at-pos interface.js 12 7 --strip-root
 
+# intersections.js
+queries_in_file "type-at-pos" "intersections.js"
+
 # mixed.js
 printf "mixed.js:18:17 = "
 assert_ok "$FLOW" type-at-pos mixed.js 18 17 --strip-root --pretty
@@ -208,24 +211,7 @@ assert_ok "$FLOW" type-at-pos type-destructor-trigger.js 11 7 --strip-root --pre
 queries_in_file "type-at-pos" "tuple.js" --pretty
 
 # unions.js
-printf "unions.js:9:3 = "
-assert_ok "$FLOW" type-at-pos unions.js 9 3 --strip-root --pretty
-printf "unions.js:15:2 = "
-assert_ok "$FLOW" type-at-pos unions.js 15 2 --strip-root --pretty
-printf "unions.js:24:3 = "
-assert_ok "$FLOW" type-at-pos unions.js 24 3 --strip-root --pretty
-printf "unions.js:43:3 = "
-assert_ok "$FLOW" type-at-pos unions.js 43 3 --strip-root --pretty
-printf "unions.js:44:3 = "
-assert_ok "$FLOW" type-at-pos unions.js 44 3 --strip-root --pretty
-printf "unions.js:49:1 = "
-assert_ok "$FLOW" type-at-pos unions.js 49 1 --strip-root --pretty
-printf "unions.js:52:1 = "
-assert_ok "$FLOW" type-at-pos unions.js 52 1 --strip-root --pretty
-printf "unions.js:57:5 = "
-assert_ok "$FLOW" type-at-pos unions.js 57 5 --strip-root --pretty
-printf "unions.js:59:18 = "
-assert_ok "$FLOW" type-at-pos unions.js 59 18 --strip-root --pretty
+queries_in_file "type-at-pos" "unions.js"
 
 # tparam_defaults.js
 printf "tparam_defaults.js:11:8:\n"
