@@ -287,3 +287,8 @@ const k = function(this
 const kk = function(this
 : string,
 a: string,) {}
+
+// `as` cast
+1 as number;
+1 as number as mixed;
+[1] as [1];

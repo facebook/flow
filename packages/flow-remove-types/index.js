@@ -165,6 +165,12 @@ var removeFlowVisitor = {
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,
 
+  AsExpression: function (context, node, ast) {
+    var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
+    removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
+    removeNode(context, node.typeAnnotation);
+  },
+
   Identifier: function (context, node, ast) {
     if (node[THIS_PARAM_MARKER] === true) {
       removeNode(context, node);

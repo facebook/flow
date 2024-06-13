@@ -287,3 +287,8 @@ const k = function(
 const kk = function(    
          
 a        ,) {}
+
+// `as` cast
+1          ;
+1                   ;
+[1]       ;
