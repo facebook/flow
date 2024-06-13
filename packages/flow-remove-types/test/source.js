@@ -292,3 +292,7 @@ a: string,) {}
 1 as number;
 1 as number as mixed;
 [1] as [1];
+
+// `as const`
+'s' as const;
+['s'] as const;

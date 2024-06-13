@@ -171,6 +171,12 @@ var removeFlowVisitor = {
     removeNode(context, node.typeAnnotation);
   },
 
+  AsConstExpression: function (context, node, ast) {
+    var idx = findTokenIndexAtEndOfNode(ast.tokens, node.expression);
+    removeNode(context, ast.tokens[idx + 1]); // `as` token
+    removeNode(context, ast.tokens[idx + 2]); // `const` token
+  },
+
   Identifier: function (context, node, ast) {
     if (node[THIS_PARAM_MARKER] === true) {
       removeNode(context, node);

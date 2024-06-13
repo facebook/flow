@@ -228,3 +228,7 @@ const kk = function(a,) {}
 1;
 1;
 [1];
+
+// `as const`
+'s';
+['s'];
