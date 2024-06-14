@@ -17,12 +17,9 @@ env:
 jobs:
   build_js:
     runs-on: ubuntu-latest
-    container:
-      image: flowtype/flow-ci:linux-x86_64
-      options: --user root
-      env:
-        TERM: dumb
-        OPAMYES: true
+    env:
+      TERM: dumb
+      OPAMYES: true
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Create cache breaker
@@ -65,12 +62,9 @@ jobs:
         path: packages/flow-parser/flow_parser.js
   build_linux:
     runs-on: ubuntu-latest
-    container:
-      image: flowtype/flow-ci:linux-x86_64
-      options: --user root
-      env:
-        TERM: dumb
-        OPAMYES: true
+    env:
+      TERM: dumb
+      OPAMYES: true
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Create cache breaker
@@ -288,8 +282,6 @@ jobs:
           dist/flow-win64.zip
   runtests_linux:
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     - build_linux
     env:
@@ -321,8 +313,6 @@ jobs:
       run: ./runtests.sh bin/macos/flow | cat
   tool_test_linux:
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     - build_linux
     steps:
@@ -376,12 +366,9 @@ jobs:
       run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
   ounit_test_linux:
     runs-on: ubuntu-latest
-    container:
-      image: flowtype/flow-ci:linux-x86_64
-      options: --user root
-      env:
-        TERM: dumb
-        OPAMYES: true
+    env:
+      TERM: dumb
+      OPAMYES: true
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Create cache breaker
@@ -462,8 +449,6 @@ jobs:
         }
   npm_pack:
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     - build_js
     - build_linux
@@ -537,9 +522,6 @@ jobs:
   # website_deploy:
   #   if: github.ref == 'refs/heads/main'
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: ghcr.io/facebook/flow-website:latest
-  #     options: --user root
   #   needs:
   #   - build_linux
   #   - build_js
@@ -568,8 +550,6 @@ jobs:
   # npm_deploy:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: node:12
   #   needs:
   #   - npm_pack
   #   steps:
@@ -582,8 +562,6 @@ jobs:
   # github_linux:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: appropriate/curl:latest
   #   needs:
   #   - build_linux
   #   steps:
@@ -598,8 +576,6 @@ jobs:
   # github_macos:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: appropriate/curl:latest
   #   needs:
   #   - build_macos
   #   steps:
@@ -614,8 +590,6 @@ jobs:
   # github_macos_arm64:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: appropriate/curl:latest
   #   needs:
   #   - build_macos_arm64
   #   steps:
@@ -630,8 +604,6 @@ jobs:
   github_win:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-latest
-    container:
-      image: appropriate/curl:latest
     needs:
     - build_win
     steps:
@@ -644,8 +616,6 @@ jobs:
   flow_bin_deploy:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     # - github_linux
     # - github_macos
@@ -660,8 +630,6 @@ jobs:
   # try_flow_deploy:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: node:12
   #   needs:
   #   - build_js
   #   steps:
