@@ -10482,16 +10482,6 @@ struct
       | Some d -> replace_desc_new_reason d reason
       | None -> reason
     in
-    let mk_cached_tvar_where reason t_open id f =
-      let repos_cache = Context.repos_cache cx in
-      match Repos_cache.find id reason !repos_cache with
-      | Some t -> t
-      | None ->
-        Tvar.mk_where cx reason (fun tvar ->
-            repos_cache := Repos_cache.add reason t_open tvar !repos_cache;
-            f tvar
-        )
-    in
     let rec recurse seen = function
       | OpenT (r, id) as t_open ->
         let reason = mod_reason r in
@@ -10543,7 +10533,7 @@ struct
             if is_instantiable_reason r && Context.in_implicit_instantiation cx then
               t_open
             else
-              mk_cached_tvar_where reason t_open id (fun tvar ->
+              Tvar.mk_where cx reason (fun tvar ->
                   flow_opt
                     cx
                     ?trace
