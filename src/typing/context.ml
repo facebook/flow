@@ -161,7 +161,6 @@ type component_t = {
   mutable maybe_unused_promises: (ALoc.t * Type.t * bool) list;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref;
-  repos_cache: Repos_cache.t ref;
   eval_id_cache: Type.t Type.EvalIdCacheMap.t ref * Type.Eval.id Type.IdCacheMap.t ref;
   eval_repos_cache: Type.t Type.EvalReposCacheMap.t ref;
   fix_cache: Type.t Type.FixCacheMap.t ref;
@@ -386,7 +385,6 @@ let make_ccx () =
     maybe_unused_promises = [];
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = ref Type.SubstCacheMap.empty;
-    repos_cache = ref Repos_cache.empty;
     eval_id_cache = (ref Type.EvalIdCacheMap.empty, ref Type.IdCacheMap.empty);
     eval_repos_cache = ref Type.EvalReposCacheMap.empty;
     fix_cache = ref Type.FixCacheMap.empty;
@@ -783,7 +781,6 @@ let set_environment cx env = cx.environment <- env
 type cache_snapshot = {
   snapshot_constraint_cache: Type.FlowSet.t;
   snapshot_subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t;
-  snapshot_repos_cache: Repos_cache.t;
   snapshot_eval_id_cache: Type.t Type.EvalIdCacheMap.t * Type.Eval.id Type.IdCacheMap.t;
   snapshot_eval_repos_cache: Type.t Type.EvalReposCacheMap.t;
   snapshot_fix_cache: Type.t Type.FixCacheMap.t;
@@ -798,7 +795,6 @@ let take_cache_snapshot cx =
   {
     snapshot_constraint_cache = !(cx.ccx.constraint_cache);
     snapshot_subst_cache = !(cx.ccx.subst_cache);
-    snapshot_repos_cache = !(cx.ccx.repos_cache);
     snapshot_eval_id_cache = (!eval_id_cache, !id_cache);
     snapshot_eval_repos_cache = !(cx.ccx.eval_repos_cache);
     snapshot_fix_cache = !(cx.ccx.fix_cache);
@@ -812,7 +808,6 @@ let restore_cache_snapshot cx snapshot =
   let {
     snapshot_constraint_cache;
     snapshot_subst_cache;
-    snapshot_repos_cache;
     snapshot_eval_id_cache = (snapshot_eval_id_cache, snapshot_id_cache);
     snapshot_eval_repos_cache;
     snapshot_fix_cache;
@@ -826,7 +821,6 @@ let restore_cache_snapshot cx snapshot =
   let (eval_id_cache, id_cache) = cx.ccx.eval_id_cache in
   cx.ccx.constraint_cache := snapshot_constraint_cache;
   cx.ccx.subst_cache := snapshot_subst_cache;
-  cx.ccx.repos_cache := snapshot_repos_cache;
   eval_id_cache := snapshot_eval_id_cache;
   id_cache := snapshot_id_cache;
   cx.ccx.eval_repos_cache := snapshot_eval_repos_cache;
@@ -1048,8 +1042,6 @@ let find_resolved =
 let constraint_cache cx = cx.ccx.constraint_cache
 
 let subst_cache cx = cx.ccx.subst_cache
-
-let repos_cache cx = cx.ccx.repos_cache
 
 let eval_id_cache cx = cx.ccx.eval_id_cache
 
