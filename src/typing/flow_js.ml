@@ -10507,7 +10507,7 @@ struct
             (match IMap.find_opt id seen with
             | Some t -> t
             | None ->
-              mk_cached_tvar_where reason t_open id (fun tvar ->
+              Tvar.mk_where cx reason (fun tvar ->
                   (* All `t` in `Resolved ( t)` are concrete. Because `t` is a concrete
                    * type, `t'` is also necessarily concrete (i.e., reposition preserves
                    * open -> open, concrete -> concrete). The unification below thus
