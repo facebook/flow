@@ -8193,7 +8193,9 @@ struct
     | CallElem (reason_call, ft) ->
       rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft))
 
-  and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t action =
+  and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =
+    let obj_t = DefT (reason_obj, ObjT o) in
+    let action = WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal; mode } in
     match GetPropTKit.get_obj_prop cx trace o propref reason_op with
     | Some (p, target_kind) ->
       perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
@@ -8239,15 +8241,10 @@ struct
               {
                 reason = TypeUtil.reason_of_t elem_t;
                 reason_key = None;
-                value_t = prop_t;
+                value_t = tin;
                 err_on_str_key = Some (use_op, reason_obj);
               }
           ))
-
-  and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =
-    let obj_t = DefT (reason_obj, ObjT o) in
-    let action = WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal; mode } in
-    writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin action
 
   (* filter out undefined from a type *)
   and filter_optional cx ?trace reason opt_t =
