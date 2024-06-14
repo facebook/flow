@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//Provides: unix_getpid const
-function unix_getpid() {
+//Provides: caml_unix_getpid const
+function caml_unix_getpid() {
   return 0;
 }
 
-//Provides: unix_sleep const
-function unix_sleep() {
+//Provides: caml_unix_sleep const
+function caml_unix_sleep() {
   return;
 }
