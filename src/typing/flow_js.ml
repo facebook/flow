@@ -10499,10 +10499,7 @@ struct
         let constraints = Context.find_graph cx id in
         begin
           match constraints with
-          (* TODO: In the FullyResolved case, repositioning will cause us to "lose"
-           * the fully resolved status. We should be able to preserve it. *)
-          | Resolved _
-          | FullyResolved _ ->
+          | Resolved t ->
             (* A tvar may be resolved to a type that has special repositioning logic,
              * like UnionT. We want to recurse to pick up that logic, but must be
              * careful as the union may refer back to the tvar itself, causing a loop.
@@ -10510,13 +10507,6 @@ struct
             (match IMap.find_opt id seen with
             | Some t -> t
             | None ->
-              (* The resulting tvar should be fully resolved if this one is *)
-              let (fully_resolved, t) =
-                match constraints with
-                | Resolved t -> (false, t)
-                | FullyResolved s -> (true, Context.force_fully_resolved_tvar cx s)
-                | Unresolved _ -> assert_false "handled below"
-              in
               mk_cached_tvar_where reason t_open id (fun tvar ->
                   (* All `t` in `Resolved ( t)` are concrete. Because `t` is a concrete
                    * type, `t'` is also necessarily concrete (i.e., reposition preserves
@@ -10532,8 +10522,23 @@ struct
                     | Some trace -> DepthTrace.rec_trace trace
                   in
                   let (_, id) = open_tvar tvar in
-                  resolve_id cx trace ~use_op ~fully_resolved id t'
+                  resolve_id cx trace ~use_op ~fully_resolved:false id t'
               ))
+          | FullyResolved s ->
+            (match IMap.find_opt id seen with
+            | Some t -> t
+            | None ->
+              let t = Context.force_fully_resolved_tvar cx s in
+              let rec lazy_t = lazy (Tvar.mk_fully_resolved_lazy cx reason lazy_thunk)
+              and lazy_thunk =
+                lazy
+                  (Context.run_in_signature_tvar_env cx (fun () ->
+                       recurse (IMap.add id (Lazy.force lazy_t) seen) t
+                   )
+                  )
+              in
+              ignore (Lazy.force lazy_thunk);
+              Lazy.force lazy_t)
           | Unresolved _ ->
             if is_instantiable_reason r && Context.in_implicit_instantiation cx then
               t_open
