@@ -2,8 +2,6 @@ name: build_and_test
 on:
   workflow_dispatch:
   pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
@@ -17,14 +15,15 @@ env:
 jobs:
   build_js:
     runs-on: ubuntu-latest
-    container:
-      image: flowtype/flow-ci:linux-x86_64
-      options: --user root
-      env:
-        TERM: dumb
-        OPAMYES: true
+    env:
+      TERM: dumb
+      OPAMYES: true
     steps:
     - uses: actions/checkout@v3.6.0
+    - name: Install OPAM
+      uses: ./.github/actions/install-opam-linux
+      with:
+        arch: x86_64
     - name: Create cache breaker
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
@@ -34,7 +33,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -65,14 +64,15 @@ jobs:
         path: packages/flow-parser/flow_parser.js
   build_linux:
     runs-on: ubuntu-latest
-    container:
-      image: flowtype/flow-ci:linux-x86_64
-      options: --user root
-      env:
-        TERM: dumb
-        OPAMYES: true
+    env:
+      TERM: dumb
+      OPAMYES: true
     steps:
     - uses: actions/checkout@v3.6.0
+    - name: Install OPAM
+      uses: ./.github/actions/install-opam-linux
+      with:
+        arch: x86_64
     - name: Create cache breaker
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
@@ -82,7 +82,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -131,7 +131,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -178,7 +178,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -243,7 +243,7 @@ jobs:
     - name: Cache
       uses: actions/cache@v3.3.2
       with:
-        key: opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashfiles('flowtype.opam', 'flow_parser.opam', '.circleci/config.yml') }}
+        key: opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flowtype.opam', 'flow_parser.opam', '.circleci/config.yml') }}
         path: |
           $Env:HOME/.opam
           _opam
@@ -288,8 +288,6 @@ jobs:
           dist/flow-win64.zip
   runtests_linux:
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     - build_linux
     env:
@@ -321,8 +319,6 @@ jobs:
       run: ./runtests.sh bin/macos/flow | cat
   tool_test_linux:
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     - build_linux
     steps:
@@ -376,14 +372,15 @@ jobs:
       run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
   ounit_test_linux:
     runs-on: ubuntu-latest
-    container:
-      image: flowtype/flow-ci:linux-x86_64
-      options: --user root
-      env:
-        TERM: dumb
-        OPAMYES: true
+    env:
+      TERM: dumb
+      OPAMYES: true
     steps:
     - uses: actions/checkout@v3.6.0
+    - name: Install OPAM
+      uses: ./.github/actions/install-opam-linux
+      with:
+        arch: x86_64
     - name: Create cache breaker
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
@@ -393,7 +390,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -427,7 +424,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-{{ hashfiles('.circleci/opamcachebreaker' }}
+        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -462,8 +459,6 @@ jobs:
         }
   npm_pack:
     runs-on: ubuntu-latest
-    container:
-      image: node:12
     needs:
     - build_js
     - build_linux
@@ -548,7 +543,7 @@ jobs:
   #   - name: Node cache
   #     uses: actions/cache@v3.3.2
   #     with:
-  #       key: v2-node-${{ runner.arch }}-${{ github.ref_name }}-${{ hashfiles('/etc/os-release', 'website/yarn.lock') }}
+  #       key: v2-node-${{ runner.arch }}-${{ github.ref_name }}-${{ hashFiles('/etc/os-release', 'website/yarn.lock') }}
   #       path: website/node_modules
   #   - name: Install yarn deps
   #     run: cd website && yarn install
@@ -557,7 +552,7 @@ jobs:
   #   - name: Gem cache
   #     uses: actions/cache@v3.3.2
   #     with:
-  #       key: v2-gem-${{ runner.arch }}-${{ github.ref_name }}-${{ hashfiles('/etc/os-release', 'website/Gemfile.lock') }}
+  #       key: v2-gem-${{ runner.arch }}-${{ github.ref_name }}-${{ hashFiles('/etc/os-release', 'website/Gemfile.lock') }}
   #       path: UPDATE_ME
   #   - name: Publish website to GitHub Pages
   #     run: |-
@@ -568,8 +563,6 @@ jobs:
   # npm_deploy:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: node:12
   #   needs:
   #   - npm_pack
   #   steps:
@@ -660,8 +653,6 @@ jobs:
   # try_flow_deploy:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
   #   runs-on: ubuntu-latest
-  #   container:
-  #     image: node:12
   #   needs:
   #   - build_js
   #   steps:
