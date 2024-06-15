@@ -1,3 +1,4 @@
 (library
  (name flow_third_party_vlq)
- (wrapped false))
+ (wrapped false)
+ (libraries camlp-streams))

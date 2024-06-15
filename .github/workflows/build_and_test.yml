@@ -232,6 +232,9 @@ jobs:
           git
           m4
           perl
+          gcc-core
+          gcc-g++
+          gcc-libs
           mingw64-x86_64-gcc-core
           mingw64-x86_64-gcc-g++
           mingw-w64-x86_64-gcc-libs
@@ -248,7 +251,7 @@ jobs:
           $Env:HOME/.opam
           _opam
     - name: Init opam
-      run: opam init default 'https://github.com/ocaml-opam/opam-repository-mingw.git#opam2' --bare --disable-sandboxing --no-setup
+      run: opam init default 'https://github.com/dra27/opam-repository.git' --bare --disable-sandboxing --no-setup
       shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
     - name: Create opam switch
       run: |-
