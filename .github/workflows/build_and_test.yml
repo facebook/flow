@@ -553,7 +553,7 @@ jobs:
     - name: Install yarn deps
       run: cd website && yarn install
     - name: Build website
-      run: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
+      run: PATH=~/flow/flow/bin/linux:$PATH .circleci/build_website.sh
     - name: Publish website to GitHub Pages
       run: |-
         cd website
