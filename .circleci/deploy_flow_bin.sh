@@ -8,10 +8,10 @@ set -e
 set +x # don't print the secrets!
 
 # only run on tags
-if [[ "$CIRCLE_TAG" = "" ]]; then exit 0; fi
+if [[ "$GITHUB_REF_NAME" = "" ]]; then exit 0; fi
 
 FLOW_BOT_NAME="flow-bot"
-VERSION="${CIRCLE_TAG#v}"
+VERSION="${GITHUB_REF_NAME#v}"
 
 BUILD_DIR=$(mktemp -d -t flow-bin-XXXXXXXXXX)
 trap 'rm -rf "$BUILD_DIR"' EXIT
