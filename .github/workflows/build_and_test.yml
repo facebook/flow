@@ -541,7 +541,7 @@ jobs:
       with:
         name: build_linux_bin
         path: bin/linux
-    - uses: actions/download-artifact@v3.0.2\
+    - uses: actions/download-artifact@v3.0.2
       with:
         name: build_js_bin
         path: dist
