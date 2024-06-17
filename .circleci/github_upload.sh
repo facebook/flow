@@ -6,7 +6,7 @@
 
 SRC="$1"
 DST="$2"
-REPO="$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+REPO="facebook/flow"
 
 auth="Authorization: token $FLOW_BOT_TOKEN"
 response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$CIRCLE_TAG")
