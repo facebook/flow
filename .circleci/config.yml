@@ -529,35 +529,6 @@ jobs:
         name: Deploy flow-bin
         command: .circleci/deploy_flow_bin.sh
 
-  website_deploy:
-    executor: flow-website
-    resource_class: large
-    steps:
-    - attach_workspace:
-        at: ~/flow
-    - restore_cache:
-        keys:
-          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
-    - run:
-        name: Install yarn deps
-        command: cd website && yarn install
-    - save_cache:
-        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
-        paths:
-          - website/node_modules
-    - run:
-        name: Build website
-        command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
-    - restore_cache:
-        keys:
-          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
-    - run:
-        name: Publish website to GitHub Pages
-        command: |
-          cd website
-          yarn add gh-pages
-          yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
-
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
     executor: linux-node
@@ -604,18 +575,6 @@ workflows:
             - build_linux
             - build_linux_arm64
             - build_macos
-
-      # only deploy the website from the main branch, so that it can include
-      # docs/blog posts about an upcoming release, and so the release branch
-      # doesn't revert those changes.
-      - website_deploy:
-          requires:
-            - build_linux
-            - build_js
-          filters:
-            branches:
-              only:
-                - main
 
   build_and_deploy:
     jobs:
