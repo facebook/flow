@@ -529,36 +529,37 @@ jobs:
           dist/npm-flow-parser-bin.tgz
           dist/npm-flow-node.tgz
           dist/npm-flow-remove-types.tgz
-  # website_deploy:
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: ghcr.io/facebook/flow-website:latest
-  #     options: --user root
-  #   needs:
-  #   - build_linux
-  #   - build_js
-  #   steps:
-  #   - uses: actions/checkout@v3.6.0
-  #   - name: Node cache
-  #     uses: actions/cache@v3.3.2
-  #     with:
-  #       key: v2-node-${{ runner.arch }}-${{ github.ref_name }}-${{ hashFiles('/etc/os-release', 'website/yarn.lock') }}
-  #       path: website/node_modules
-  #   - name: Install yarn deps
-  #     run: cd website && yarn install
-  #   - name: Build website
-  #     run: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
-  #   - name: Gem cache
-  #     uses: actions/cache@v3.3.2
-  #     with:
-  #       key: v2-gem-${{ runner.arch }}-${{ github.ref_name }}-${{ hashFiles('/etc/os-release', 'website/Gemfile.lock') }}
-  #       path: UPDATE_ME
-  #   - name: Publish website to GitHub Pages
-  #     run: |-
-  #       cd website
-  #       yarn add gh-pages
-  #       yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
+  website_deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+    - build_linux
+    - build_js
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_linux_bin
+        path: bin/linux
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_js_bin
+        path: dist
+    - run: chmod +x bin/linux/flow
+    - name: Node cache
+      uses: actions/cache@v3.3.2
+      with:
+        key: v2-website-${{ github.ref_name }}-${{ hashFiles('website/yarn.lock') }}
+        path: website/node_modules
+    - name: Install yarn deps
+      run: cd website && yarn install
+    - name: Build website
+      run: PATH=${{ github.workspace }}/bin/linux:$PATH .circleci/build_website.sh
+    - name: Publish website to GitHub Pages
+      run: |-
+        cd website
+        yarn add gh-pages
+        yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
   # Deploy jobs
   # npm_deploy:
   #   if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
