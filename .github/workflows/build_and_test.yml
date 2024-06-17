@@ -545,6 +545,7 @@ jobs:
       with:
         name: build_js_bin
         path: dist
+    - run: chmod +x bin/linux/flow
     - name: Node cache
       uses: actions/cache@v3.3.2
       with:
