@@ -10,7 +10,7 @@ aliases:
       tags:
         only: /^v.*/
       branches:
-        ignore: /.*/
+        ignore: /.*//
 
 orbs:
   win: circleci/windows@2.4.0
