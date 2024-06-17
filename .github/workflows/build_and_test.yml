@@ -530,7 +530,7 @@ jobs:
           dist/npm-flow-node.tgz
           dist/npm-flow-remove-types.tgz
   website_deploy:
-  #   if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs:
     - build_linux
