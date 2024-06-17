@@ -537,6 +537,14 @@ jobs:
     - build_js
     steps:
     - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_linux_bin
+        path: bin/linux
+    - uses: actions/download-artifact@v3.0.2\
+      with:
+        name: build_js_bin
+        path: dist
     - name: Node cache
       uses: actions/cache@v3.3.2
       with:

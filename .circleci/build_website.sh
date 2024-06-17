@@ -8,6 +8,6 @@ export BUNDLE_GEMFILE="$CIRCLE_WORKING_DIRECTORY/website/Gemfile"
 
 GEN_DIR=$([[ "$CIRCLE_TAG" = "" ]] && echo "master" || echo "$CIRCLE_TAG")
 mkdir -p "website/static/flow/$GEN_DIR"
-cp "bin/flow.js" "website/static/flow/${GEN_DIR}/flow.js"
+cp "dist/flow.js" "website/static/flow/${GEN_DIR}/flow.js"
 cp -r "lib" "website/static/flow/${GEN_DIR}/flowlib"
 cd website && INCLUDE_PAST_RELEASES=1 FLOW_MAX_WORKERS=2 DOCUSAURUS_SSR_CONCURRENCY=2 yarn build
