@@ -14,3 +14,15 @@ function caml_unix_getpid() {
 function caml_unix_sleep() {
   return;
 }
+
+// TODO: remove once we fully migrate to OCaml 5.2
+//Provides: unix_getpid const
+function unix_getpid() {
+  return;
+}
+
+// TODO: remove once we fully migrate to OCaml 5.2
+//Provides: unix_sleep const
+function unix_sleep() {
+  return;
+}
