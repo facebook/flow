@@ -1,10 +1,14 @@
 version: 2.1
 
 jobs:
-  checkout:
-    executor: linux-node
+  hello-job:
+    machine:
+      image: ubuntu-2204:2022.07.1
     steps:
-      - checkout
-      - persist_to_workspace:
-          root: .
-          paths: .
+      - checkout # check out the code in the project directory
+      - run: echo "hello world" # run the `echo` command
+
+workflows:
+  my-workflow:
+    jobs:
+      - hello-job
