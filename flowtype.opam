@@ -8,19 +8,20 @@ homepage: "https://flow.org"
 doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
-  "ocaml" {>= "4.14.0"}
-  "base" {>= "v0.14.1"}
+  "ocaml" {>= "5.2.0"}
+  "base" {>= "v0.16.3"}
   "base-unix"
   "base-bytes"
+  "camlp-streams" {>= "5.0.1"}
   "dtoa" {>= "0.3.2"}
-  "fileutils" {>= "0.6.3"}
+  "fileutils" {>= "0.6.4"}
   "flow_parser" {= "0.238.1"}
   "inotify" {os = "linux" & >= "2.4.1"}
   "ounit2" {with-test}
-  "lwt" {>= "5.4.0"}
+  "lwt" {>= "5.7.0"}
   "lwt_log" {>= "1.1.1"}
-  "lwt_ppx"
-  "ppxlib" {= "0.28.0"}
+  "lwt_ppx" {>= "2.1.0"}
+  "ppxlib" {>= "0.32.1"}
   "ppx_expect" {>= "0.17.0"}
   "ppx_let" {>= "0.14.0"}
   "ppx_deriving" {build}

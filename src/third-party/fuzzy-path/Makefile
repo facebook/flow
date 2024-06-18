@@ -1,5 +1,7 @@
 
 ifeq ($(OS), Windows_NT)
+  CC:=x86_64-w64-mingw32-gcc.exe
+  CPP:=x86_64-w64-mingw32-cpp.exe
   CXX:=x86_64-w64-mingw32-g++
   AR:=x86_64-w64-mingw32-gcc-ar
 endif
