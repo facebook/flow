@@ -9,7 +9,7 @@ DST="$2"
 REPO="facebook/flow"
 
 auth="Authorization: token $FLOW_BOT_TOKEN"
-response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$CIRCLE_TAG")
+response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME")
 id=$(echo "$response" | grep '^  "id": ' | sed 's/\s*"id":\s*\(\d*\),.*/\1/')
 
 curl -H "$auth" \
