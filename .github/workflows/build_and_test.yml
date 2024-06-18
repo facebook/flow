@@ -635,9 +635,9 @@ jobs:
         name: build_linux_arm64_dist
         path: dist
     - name: Upload Linux binary
-      run: .circleci/github_upload.sh dist/flow-linux64-arm64.zip "flow-linux64-arm64-${{ github.ref_name }}.zip"
+      run: .circleci/github_upload.sh dist/flow-linux64-arm64.zip "flow-linux-arm64-${{ github.ref_name }}.zip"
     - name: Upload Linux libflowparser
-      run: .circleci/github_upload.sh dist/libflowparser-linux64-arm64.zip "libflowparser-linux64-arm64-${{ github.ref_name }}.zip"
+      run: .circleci/github_upload.sh dist/libflowparser-linux64-arm64.zip "libflowparser-linux-arm64-${{ github.ref_name }}.zip"
   github_macos:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-latest
