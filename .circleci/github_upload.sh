@@ -11,8 +11,9 @@ REPO="facebook/flow"
 echo "Fetching from https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME"
 auth="Authorization: token $FLOW_BOT_TOKEN"
 response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME")
-id=$(echo "$response" | grep '^  "id": ' | sed 's/\s*"id":\s*\(\d*\),.*/\1/')
+id=$(echo "$response" | jq .id)
 
+echo "Uploading release to https://uploads.github.com/repos/$REPO/releases/$id/assets?name=$DST"
 curl -H "$auth" \
   -H "Accept: application/vnd.github.manifold-preview" \
   -H "Content-Type: application/zip" \
