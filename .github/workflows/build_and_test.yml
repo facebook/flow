@@ -703,10 +703,10 @@ jobs:
     - uses: actions/download-artifact@v3.0.2
       with:
         name: build_js_bin
-        path: bin/flow.js
+        path: dist
     - name: Assemble files
       run: |
-        cp bin/flow.js packages/try-flow-website-js/flow.js
+        cp dist/flow.js packages/try-flow-website-js/flow.js
         cp -r lib packages/try-flow-website-js/flowlib
         make dist/npm-try-flow-website-js.tgz
     - name: Deploy to NPM
