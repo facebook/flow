@@ -7,7 +7,6 @@
 SRC="$1"
 DST="$2"
 REPO="facebook/flow"
-GITHUB_REF_NAME="v0.238.1"
 
 echo "Fetching from https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME"
 auth="Authorization: token $FLOW_BOT_TOKEN"
