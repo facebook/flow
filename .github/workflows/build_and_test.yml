@@ -303,6 +303,7 @@ jobs:
     - name: Build flow.exe
       run: >-
         cd ${GITHUB_WORKSPACE} ;
+        echo $(opam env) ;
         eval $(opam env) ;
         make bin/flow.exe dist/flow.zip ;
         mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe ;
