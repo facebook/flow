@@ -1,0 +1,4 @@
+(library
+ (name flow_forked_core)
+ (wrapped false)
+ (libraries base))
