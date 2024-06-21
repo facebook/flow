@@ -206,12 +206,12 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1843:26
-   1843| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1843:41
-   1843| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:18:23
@@ -226,12 +226,12 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1843:26
-   1843| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1843:41
-   1843| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:19:23
@@ -246,12 +246,12 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1843:26
-   1843| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1843:41
-   1843| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:24
@@ -266,12 +266,12 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:1913:26
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1913:41
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:27
@@ -286,12 +286,12 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1913:26
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1913:41
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:30
@@ -306,12 +306,12 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:1913:26
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1913:41
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:34:15
@@ -329,12 +329,12 @@ References:
    weakset.js:27:31
      27| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:1913:26
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1913:41
-   1913| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1837:28
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                    ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1837:43
+   1837| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 
