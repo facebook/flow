@@ -9,14 +9,13 @@
 
 ifeq ($(OS), Windows_NT)
   EXE=.exe
-  SWITCH=ocaml-variants.4.14.0+mingw64c
 else
   EXE=
-  SWITCH=ocaml-base-compiler.4.14.0
 endif
 
-JS_OF_OCAML_VERSION=5.5.2
-OUNIT_VERSION=2.2.2.4
+SWITCH=ocaml-variants.5.2.0+options
+JS_OF_OCAML_VERSION=5.7.2
+OUNIT_VERSION=2.2.2.6
 
 # set FLOW_RELEASE=[1|true] or CI=true for an optimized build; otherwise,
 # defaults to dev mode that builds faster but is less efficient at runtime.

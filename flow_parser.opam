@@ -9,10 +9,10 @@ license: "MIT"
 
 build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
-  "ocaml" {>= "4.14.0"}
+  "ocaml" {>= "5.2.0"}
   "dune" {>= "3.2"}
-  "base" {>= "v0.14.1"}
-  "ppxlib" {>= "0.26.0"}
+  "base" {>= "v0.16.3"}
+  "ppxlib" {>= "0.32.1"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
   "wtf8"
