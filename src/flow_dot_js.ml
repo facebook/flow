@@ -81,7 +81,7 @@ let load_lib_files files =
       casting_syntax = Options.CastingSyntax.Both;
       for_builtins = true;
       locs_to_dirtify = [];
-      one_sided_type_guards = false;
+      one_sided_type_guards = true;
     }
   in
   Merge_js.merge_lib_files ~sig_opts asts |> snd

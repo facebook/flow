@@ -1,3 +1,3 @@
 [options]
 all=true
-; one_sided_type_guards flag not enabled
+one_sided_type_guards=false
