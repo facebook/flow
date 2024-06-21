@@ -96,7 +96,7 @@ module type S = sig
 
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> Symbol.symbol -> bool -> bool -> Type.t
+  val cjs_require : Context.t -> Type.t -> Reason.t -> FlowSymbol.symbol -> bool -> bool -> Type.t
 
   val export_named :
     Context.t ->
@@ -115,7 +115,7 @@ module type S = sig
   val import_named :
     Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
 
-  val import_ns : Context.t -> Reason.t -> Symbol.symbol -> bool -> Type.t -> Type.t
+  val import_ns : Context.t -> Reason.t -> FlowSymbol.symbol -> bool -> Type.t -> Type.t
 
   val import_typeof : Context.t -> Reason.t -> string -> Type.t -> Type.t
 

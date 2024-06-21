@@ -171,7 +171,7 @@ module Import_export = struct
       Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule module_name) local_loc in
-      let namespace_symbol = Symbol.mk_module_symbol ~name:module_name ~def_loc:local_loc in
+      let namespace_symbol = FlowSymbol.mk_module_symbol ~name:module_name ~def_loc:local_loc in
       get_module_namespace_type cx reason ~namespace_symbol source_module_t
 
   let import_default_specifier_type

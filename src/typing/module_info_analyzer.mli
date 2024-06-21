@@ -10,7 +10,7 @@ val analyze_program : Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t 
 
 val analyze_declare_namespace :
   Context.t ->
-  Symbol.symbol ->
+  FlowSymbol.symbol ->
   Reason.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list ->
   Type.t

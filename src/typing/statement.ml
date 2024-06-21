@@ -15,7 +15,7 @@ module Tast_utils = Typed_ast_utils
 module Flow = Flow_js
 open Utils_js
 open Reason
-open Symbol
+open FlowSymbol
 open Type
 open TypeUtil
 open Func_class_sig_types

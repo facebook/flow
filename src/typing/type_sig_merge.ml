@@ -212,7 +212,7 @@ let require file loc index ~legacy_interop =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t loc resolved_require in
   let reason = Reason.(mk_reason (RModule mref) loc) in
-  let symbol = Symbol.mk_module_symbol ~name:mref ~def_loc:loc in
+  let symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
   ConsGen.cjs_require file.cx module_t reason symbol false legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
@@ -226,13 +226,13 @@ let import file reason id_loc index kind ~remote ~local =
 let import_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t id_loc resolved_require in
-  let namespace_symbol = Symbol.mk_module_symbol ~name ~def_loc:id_loc in
+  let namespace_symbol = FlowSymbol.mk_module_symbol ~name ~def_loc:id_loc in
   ConsGen.import_ns file.cx reason namespace_symbol false module_t
 
 let import_typeof_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let module_t = get_module_t id_loc resolved_require in
-  let namespace_symbol = Symbol.mk_namespace_symbol ~name ~def_loc:id_loc in
+  let namespace_symbol = FlowSymbol.mk_namespace_symbol ~name ~def_loc:id_loc in
   let ns_t = ConsGen.import_ns file.cx reason namespace_symbol false module_t in
   ConsGen.import_typeof file.cx reason "*" ns_t
 
@@ -771,7 +771,7 @@ and merge_annot env file = function
   | ExportsT (loc, ref) ->
     let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
-    let symbol = Symbol.mk_module_symbol ~name:ref ~def_loc:loc in
+    let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in
     ConsGen.cjs_require file.cx module_t reason symbol false false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
@@ -2134,7 +2134,7 @@ let merge_def file reason = function
         smap
         NameUtils.Map.empty
     in
-    let namespace_symbol = Symbol.mk_namespace_symbol ~name ~def_loc:id_loc in
+    let namespace_symbol = FlowSymbol.mk_namespace_symbol ~name ~def_loc:id_loc in
     Flow_js_utils.namespace_type file.cx reason namespace_symbol (f values) (f types)
 
 let merge_export file = function

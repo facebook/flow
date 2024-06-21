@@ -8,7 +8,7 @@
 open Name_def
 open Type
 open Reason
-open Symbol
+open FlowSymbol
 open Loc_collections
 open Utils_js
 open Type_operation_utils

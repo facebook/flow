@@ -6,7 +6,7 @@
  *)
 
 open Reason
-open Symbol
+open FlowSymbol
 open Type
 open TypeUtil
 open Utils_js

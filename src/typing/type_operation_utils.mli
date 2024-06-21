@@ -10,7 +10,7 @@
 
 module Ast = Flow_ast
 open Reason
-open Symbol
+open FlowSymbol
 
 module Import_export : sig
   val concretize_module_type :

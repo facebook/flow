@@ -332,8 +332,8 @@ module Make (I : INPUT) : S = struct
   let ty_symbol_from_symbol env symbol =
     symbol_from_loc
       env
-      (Symbol.def_loc_of_symbol symbol)
-      (OrdinaryName (Symbol.name_of_symbol symbol))
+      (FlowSymbol.def_loc_of_symbol symbol)
+      (OrdinaryName (FlowSymbol.name_of_symbol symbol))
 
   (* NOTE Due to repositioning, `reason_loc` may not point to the actual location
      where `name` was defined. *)
@@ -1981,11 +1981,11 @@ module Make (I : INPUT) : S = struct
           Ty.Decl m
         | NamespaceT { namespace_symbol; values_type = DefT (_, ObjT o); types_tmap } ->
           let%bind (exports, default) = namespace_t ~env o types_tmap in
-          (match Symbol.kind_of_symbol namespace_symbol with
-          | Symbol.SymbolModule ->
+          (match FlowSymbol.kind_of_symbol namespace_symbol with
+          | FlowSymbol.SymbolModule ->
             let name = ty_symbol_from_symbol env namespace_symbol in
             return (Ty.Decl (Ty.ModuleDecl { name = Some name; exports; default }))
-          | Symbol.SymbolNamespace ->
+          | FlowSymbol.SymbolNamespace ->
             let name = ty_symbol_from_symbol env namespace_symbol in
             return (Ty.Decl (Ty.NamespaceDecl { name = Some name; exports }))
           | _ ->

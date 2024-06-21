@@ -7,7 +7,7 @@
 
 open Polarity
 open Reason
-open Symbol
+open FlowSymbol
 open Utils_js
 
 (******************************************************************************)
@@ -3315,7 +3315,7 @@ module AConstraint = struct
      *)
     | Annot_CJSRequireT of {
         reason: Reason.t;
-        namespace_symbol: Symbol.symbol;
+        namespace_symbol: FlowSymbol.symbol;
         is_strict: bool;
         legacy_interop: bool;
       }
