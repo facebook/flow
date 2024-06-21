@@ -43,6 +43,8 @@ jobs:
       run: make deps-js
     - name: Build flow.js
       run: opam exec -- make js
+    - name: Test flow.js
+      run: opam exec -- make do-test-js
     - name: Build flow_parser.js
       run: opam exec -- make -C src/parser js
     - name: Create artifacts
@@ -278,9 +280,11 @@ jobs:
           perl
           mingw64-x86_64-gcc-core
           mingw64-x86_64-gcc-g++
-          mingw-w64-x86_64-gcc-libs
+          mingw64-x86_64-gcc-libs
           coreutils
           moreutils
+    - name: Install winget
+      uses: Cyberboss/install-winget@v1
     - name: Install opam
       run: .\scripts\windows\install_opam.ps1
       shell: pwsh
@@ -292,24 +296,31 @@ jobs:
           $Env:HOME/.opam
           _opam
     - name: Init opam
-      run: opam init default 'https://github.com/ocaml-opam/opam-repository-mingw.git#opam2' --bare --disable-sandboxing --no-setup
-      shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
-    - name: Create opam switch
-      run: |-
-        make deps
+      run: opam init --bare --disable-sandboxing --no-setup --yes
       shell: C:\cygwin\bin\bash.exe '{0}'
       env:
-        PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+    - name: Git Safe Directory
+      run: git config --global --add safe.directory /cygdrive/d/a/flow/flow
+      shell: C:\cygwin\bin\bash.exe '{0}'
+      env:
+        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+    - name: Create opam switch
+      run: make deps
+      shell: C:\cygwin\bin\bash.exe '{0}'
+      env:
+        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build flow.exe
       run: >-
         cd ${GITHUB_WORKSPACE} ;
+        echo $(opam env) ;
         eval $(opam env) ;
         make bin/flow.exe dist/flow.zip ;
         mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe ;
         cp dist/flow.zip dist/flow-win64.zip
       shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
       env:
-        PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build parser test runner
       run: >-
         cd ${GITHUB_WORKSPACE} ;
@@ -318,7 +329,7 @@ jobs:
         cp _build/default/src/parser/test/run_tests.exe bin/win64/run_parser_tests.exe
       shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
       env:
-        PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
+        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: build_win_bin
