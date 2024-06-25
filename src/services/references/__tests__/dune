@@ -1,7 +1,0 @@
-(test
- (name find_refs_tests)
- (libraries
-  ounit2
-  flow_server_find_refs
-  flow_common_test_utils
-))

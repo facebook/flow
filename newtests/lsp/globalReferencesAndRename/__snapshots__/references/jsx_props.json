@@ -13,6 +13,32 @@
           "character": 17
         }
       }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-c.js",
+      "range": {
+        "start": {
+          "line": 5,
+          "character": 16
+        },
+        "end": {
+          "line": 5,
+          "character": 19
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-c.js",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 13
+        },
+        "end": {
+          "line": 6,
+          "character": 16
+        }
+      }
     }
   ]
 }

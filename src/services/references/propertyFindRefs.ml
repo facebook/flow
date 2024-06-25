@@ -251,25 +251,20 @@ let ordinary_property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
     |> add_ref_kind FindRefsTypes.PropertyDefinition
   in
-  let has_symbol = PropertyAccessSearcher.search name ast in
-  if not has_symbol then
-    Ok local_defs
-  else (
-    Potential_ordinary_refs_search.search cx ~target_name:name ~potential_refs typed_ast;
-    let literal_prop_refs_result =
-      (* Lazy to avoid this computation if there are no potentially-relevant object literals to
-       * examine *)
-      let prop_loc_map = lazy (LiteralToPropLoc.make ast ~prop_name:name) in
+  Potential_ordinary_refs_search.search cx ~target_name:name ~potential_refs typed_ast;
+  let literal_prop_refs_result =
+    (* Lazy to avoid this computation if there are no potentially-relevant object literals to
+     * examine *)
+    let prop_loc_map = lazy (LiteralToPropLoc.make ast ~prop_name:name) in
 
-      get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map props_info
-      |> List.filter_map (fun obj_loc -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map))
-      |> add_ref_kind FindRefsTypes.PropertyDefinition
-    in
+    get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map props_info
+    |> List.filter_map (fun obj_loc -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map))
+    |> add_ref_kind FindRefsTypes.PropertyDefinition
+  in
 
-    process_prop_refs ~loc_of_aloc cx !potential_refs file_key props_info name
-    >>| ( @ ) local_defs
-    >>| ( @ ) literal_prop_refs_result
-  )
+  process_prop_refs ~loc_of_aloc cx !potential_refs file_key props_info name
+  >>| ( @ ) local_defs
+  >>| ( @ ) literal_prop_refs_result
 
 let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key = function
   | OrdinaryProperty { props_info; name } ->
