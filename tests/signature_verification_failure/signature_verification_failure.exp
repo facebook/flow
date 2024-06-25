@@ -192,8 +192,8 @@ References:
    misc.js:9:18
       9| export const c = {['a' + 'b']: 42};
                           ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1748:11
-   1748| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1751:11
+   1751| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
