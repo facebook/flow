@@ -32,15 +32,8 @@ type 'loc result =
 
    for now, we only implement Go to Definition; if we want to do Go to Type
    Definition, it would ignore the annot loc. *)
-let rec process_type_request cx =
-  let open Type in
-  function
-  | OpenT _ as t ->
-    (match Flow_js_utils.possible_types_of_type cx t with
-    | [t'] -> process_type_request cx t'
-    | [] -> Error "No possible types"
-    | _ :: _ -> Error "More than one possible type")
-  | t ->
+let process_type_request =
+  let def_loc_of_t t =
     let r = TypeUtil.reason_of_t t in
     let aloc =
       match Reason.annot_loc_of_reason r with
@@ -48,6 +41,23 @@ let rec process_type_request cx =
       | None -> Reason.def_loc_of_reason r
     in
     Ok aloc
+  in
+  let rec loop cx seen =
+    let open Type in
+    function
+    | OpenT (_, id) as t ->
+      let root = Context.find_root_id cx id in
+      if ISet.mem root seen then
+        def_loc_of_t t
+      else (
+        match Flow_js_utils.possible_types_of_type cx t with
+        | [t'] -> loop cx (ISet.add root seen) t'
+        | [] -> Error "No possible types"
+        | _ :: _ -> Error "More than one possible type"
+      )
+    | t -> def_loc_of_t t
+  in
+  (fun cx t -> loop cx ISet.empty t)
 
 (** Determines if the given expression is a [require()] call, or a member expression
   containing one, like [require('foo').bar]. *)
