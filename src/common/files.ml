@@ -82,6 +82,8 @@ let ignores options = options.ignores
 
 let untyped options = options.untyped
 
+let implicitly_include_root options = options.implicitly_include_root
+
 let includes options = options.includes
 
 let lib_paths options = options.lib_paths
