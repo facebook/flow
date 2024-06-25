@@ -72,6 +72,11 @@ module.exports = (suite(
         findAllRefsSnapshot('use-prop-site-a.js', 5, 6, 'prop_defs_1.json'),
         findAllRefsSnapshot('use-prop-site-b.js', 5, 6, 'prop_defs_2.json'),
       ]),
+      test('Find all refs from component props', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        findAllRefsSnapshot('identifiers-def.js', 5, 17, 'jsx_props.json'),
+      ]),
       test('Find all refs and rename with unsaved changes', [
         addFiles(...fixtures),
         lspStartAndConnect(),
