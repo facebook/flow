@@ -154,7 +154,9 @@ let filter_wanted_updates ~file_options ~sroot ~want updates =
       if
         is_flow_file f
         (* note: is_included may be expensive. check in-root match first. *)
-        && (String.starts_with ~prefix:sroot f || Files.is_included file_options f)
+        && ((Files.implicitly_include_root file_options && String.starts_with ~prefix:sroot f)
+           || Files.is_included file_options f
+           )
         && (* removes excluded and lib files. the latter are already filtered *)
         want f
       then

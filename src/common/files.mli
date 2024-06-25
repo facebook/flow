@@ -39,6 +39,8 @@ val ignores : options -> (string * Str.regexp) list
 
 val untyped : options -> (string * Str.regexp) list
 
+val implicitly_include_root : options -> bool
+
 val includes : options -> Path_matcher.t
 
 val lib_paths : options -> File_path.t list
