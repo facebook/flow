@@ -1,3 +1,9 @@
+### 0.238.2
+
+Notable bug fixes:
+* Fixed a bug where a recheck triggered by `flow force-recheck` doesn't respect `files.implicitly_include_root=false` config.
+* Fixed a bug that causes missing results in find-ref and rename.
+
 ### 0.238.1
 
 This release is used to test the release automation powered by GitHub Actions. No changes are expected.
