@@ -12,8 +12,8 @@ echo "Fetching from https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF
 auth="Authorization: token $FLOW_BOT_TOKEN"
 response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME")
 echo "API Response:"
-echo "$response"
-id=$(echo "$response" | jq .id)
+printf "%s" "$response"
+id=$(printf "%s" "$response" | jq .id)
 
 echo "Uploading release to https://uploads.github.com/repos/$REPO/releases/$id/assets?name=$DST"
 curl -H "$auth" \
