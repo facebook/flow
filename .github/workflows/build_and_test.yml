@@ -608,73 +608,49 @@ jobs:
         yarn add gh-pages
         yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
   # Deploy jobs
-  github_linux:
+  github_upload:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-latest
     needs:
     - build_linux
+    - build_linux_arm64
+    - build_macos
+    - build_macos_arm64
+    - build_win
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v3.0.2
       with:
         name: build_linux_dist
         path: dist
-    - name: Upload Linux binary
+    - name: Upload Linux binary (x86_64)
       run: .circleci/github_upload.sh dist/flow-linux64.zip "flow-linux64-${{ github.ref_name }}.zip"
-    - name: Upload Linux libflowparser
+    - name: Upload Linux libflowparser (x86_64)
       run: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-${{ github.ref_name }}.zip"
-  github_linux_arm64:
-    if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
-    needs:
-    - build_linux
-    steps:
-    - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v3.0.2
       with:
         name: build_linux_arm64_dist
         path: dist
-    - name: Upload Linux binary
+    - name: Upload Linux binary (arm64)
       run: .circleci/github_upload.sh dist/flow-linux64-arm64.zip "flow-linux-arm64-${{ github.ref_name }}.zip"
-    - name: Upload Linux libflowparser
+    - name: Upload Linux libflowparser (arm64)
       run: .circleci/github_upload.sh dist/libflowparser-linux64-arm64.zip "libflowparser-linux-arm64-${{ github.ref_name }}.zip"
-  github_macos:
-    if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
-    needs:
-    - build_macos
-    steps:
-    - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v3.0.2
       with:
         name: build_macos_dist
         path: dist
-    - name: Upload Mac binary
+    - name: Upload Mac binary (x86_64)
       run: .circleci/github_upload.sh dist/flow-osx.zip "flow-osx-${{ github.ref_name }}.zip"
-    - name: Upload Mac libflowparser
+    - name: Upload Mac libflowparser (x86_64)
       run: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-${{ github.ref_name }}.zip"
-  github_macos_arm64:
-    if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
-    needs:
-    - build_macos_arm64
-    steps:
-    - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v3.0.2
       with:
         name: build_macos_arm64_dist
         path: dist
-    - name: Upload Mac binary
+    - name: Upload Mac binary (arm64)
       run: .circleci/github_upload.sh dist/flow-osx-arm64.zip "flow-osx-arm64-${{ github.ref_name }}.zip"
-    - name: Upload Mac libflowparser
+    - name: Upload Mac libflowparser (arm64)
       run: .circleci/github_upload.sh dist/libflowparser-osx-arm64.zip "libflowparser-osx-arm64-${{ github.ref_name }}.zip"
-  github_win:
-    if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
-    needs:
-    - build_win
-    steps:
-    - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v3.0.2
       with:
         name: build_win_dist
@@ -685,10 +661,7 @@ jobs:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-latest
     needs:
-    - github_linux
-    - github_linux_arm64
-    - github_macos
-    - github_win
+    - github_upload
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Deploy flow-bin

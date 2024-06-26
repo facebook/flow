@@ -11,6 +11,8 @@ REPO="facebook/flow"
 echo "Fetching from https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME"
 auth="Authorization: token $FLOW_BOT_TOKEN"
 response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME")
+echo "API Response:"
+echo "$response"
 id=$(echo "$response" | jq .id)
 
 echo "Uploading release to https://uploads.github.com/repos/$REPO/releases/$id/assets?name=$DST"
