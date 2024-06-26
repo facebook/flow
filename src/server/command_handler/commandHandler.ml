@@ -587,7 +587,7 @@ let check_file ~options ~env ~profiling ~force file_input =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def_of_check_result ~reader ~profiling ~check_result (file, line, col) =
+let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, line, col) =
   Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
       let loc = Loc.cursor (Some file) line col in
       let ( Parse_artifacts { ast; file_sig; parse_errors; _ },
@@ -601,7 +601,7 @@ let get_def_of_check_result ~reader ~profiling ~check_result (file, line, col) =
         ~file_sig
         ~ast
         ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
-        ~purpose:Get_def_types.Purpose.GoToDefinition
+        ~purpose
         loc
       |> fun result ->
       let open GetDef_js.Get_def_result in
@@ -743,7 +743,12 @@ let infer_type
       in
       let (getdef_loc_result, _) =
         try_with_json (fun () ->
-            get_def_of_check_result ~reader ~profiling ~check_result (file_key, line, column)
+            get_def_of_check_result
+              ~reader
+              ~profiling
+              ~check_result
+              ~purpose:Get_def_types.Purpose.JSDoc
+              (file_key, line, column)
         )
       in
       let get_def_documentation =
@@ -1112,7 +1117,12 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
       (Error msg, Some (Hh_json.JSON_Object json_props))
     | Ok check_result ->
       let (result, json_props) =
-        get_def_of_check_result ~reader ~profiling ~check_result (file_key, line, col)
+        get_def_of_check_result
+          ~reader
+          ~profiling
+          ~check_result
+          ~purpose:Get_def_types.Purpose.GoToDefinition
+          (file_key, line, col)
       in
       let json =
         let json_props = Base.Option.value ~default:[] json_props in

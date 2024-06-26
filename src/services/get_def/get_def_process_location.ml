@@ -200,7 +200,8 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
           | ImportNamespaceSpecifier (l, (name_annot, { Ast.Identifier.name; _ })) ->
             if covers_target l then (
               match purpose with
-              | Get_def_types.Purpose.GoToDefinition ->
+              | Get_def_types.Purpose.GoToDefinition
+              | Get_def_types.Purpose.JSDoc ->
                 let t = this#type_from_enclosing_node source_annot in
                 this#request
                   (Get_def_request.Type
@@ -516,7 +517,8 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
       let { Ast.Expression.New.callee = (_, callee); _ } = expr in
       begin
         match callee with
-        | Ast.Expression.Identifier (annot, _) when this#annot_covers_target annot ->
+        | Ast.Expression.Identifier (annot, _)
+          when this#annot_covers_target annot && purpose = Get_def_types.Purpose.JSDoc ->
           let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
           this#request
             Get_def_request.(

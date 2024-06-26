@@ -416,7 +416,7 @@ let jsdoc_of_loc ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~ast ~aloc_
       ~file_sig
       ~ast
       ~available_ast:(Typed_ast_utils.ALoc_ast aloc_ast)
-      ~purpose:Get_def_types.Purpose.GoToDefinition
+      ~purpose:Get_def_types.Purpose.JSDoc
       loc
   with
   | Def (locs, _)
