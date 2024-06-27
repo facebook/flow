@@ -54,6 +54,7 @@ class ['a] t =
       | ExactT (_, t) -> self#type_ cx pole acc t
       | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
+      | StrUtilT _ -> acc
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
       | OpaqueT (_, ot) ->
         let { opaque_id = _; underlying_t; super_t; opaque_type_args; opaque_name = _ } = ot in

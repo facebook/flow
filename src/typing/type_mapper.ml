@@ -119,6 +119,7 @@ class virtual ['a] t =
           t
         else
           KeysT (r, t'')
+      | StrUtilT _ -> t
       | AnnotT (r, t', use_desc) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

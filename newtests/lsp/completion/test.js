@@ -8253,6 +8253,42 @@ b.te
                     ],
                   },
                 },
+                {
+                  label: 'StringPrefix',
+                  kind: 3,
+                  detail: 'StringPrefix',
+                  sortText: '00000000000000000041',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'StringPrefix',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 41,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'StringPrefix',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -9763,6 +9799,42 @@ b.te
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Required',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'StringPrefix',
+                  kind: 3,
+                  detail: 'StringPrefix',
+                  sortText: '00000000000000000034',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'StringPrefix',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 34,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'StringPrefix',
                         ac_type: 'Acmem',
                       },
                     ],

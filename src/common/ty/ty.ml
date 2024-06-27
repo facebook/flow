@@ -283,6 +283,7 @@ and utility =
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
+  | StringPrefix of string
   (* React utils *)
   | ReactElementPropsType of t
   | ReactElementConfigType of t
@@ -692,6 +693,7 @@ class ['A] comparator_ty =
       | ObjMapConst _ -> 25
       | ReactCheckComponentRef _ -> 26
       | Enum _ -> 27
+      | StringPrefix _ -> 28
 
     method tag_of_polarity _ =
       function
@@ -856,6 +858,7 @@ let string_of_utility_ctor = function
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
   | Class _ -> "Class"
+  | StringPrefix _ -> "StringPrefix"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
   | ReactElementRefType _ -> "React$ElementRef"
@@ -881,6 +884,7 @@ let types_of_utility = function
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
+  | StringPrefix s -> Some [StrLit (Reason.OrdinaryName s)]
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]

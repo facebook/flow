@@ -30,6 +30,7 @@ type 'loc virtual_reason_desc =
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of name
+  | RStringPrefix of { prefix: string }
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool

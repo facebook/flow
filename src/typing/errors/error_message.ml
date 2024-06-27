@@ -210,6 +210,7 @@ and 'loc t' =
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
   | EPropertyTypeAnnot of 'loc
+  | EStrUtilTypeNonLiteralArg of 'loc
   | EExportsAnnot of 'loc
   | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObject of {
@@ -977,6 +978,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidInfer l -> EInvalidInfer (f l)
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
   | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
+  | EStrUtilTypeNonLiteralArg loc -> EStrUtilTypeNonLiteralArg (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
     EUnsupportedKeyInObject { loc = f loc; obj_kind; key_error_kind }
@@ -1495,6 +1497,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidExtends _
   | EInvalidReactCreateElement _
   | EPropertyTypeAnnot _
+  | EStrUtilTypeNonLiteralArg _
   | EExportsAnnot _
   | EUnsupportedKeyInObject _
   | EAmbiguousNumericKeyWithVariance _
@@ -1776,6 +1779,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EHookNaming loc
   | EExportsAnnot loc
   | EPropertyTypeAnnot loc
+  | EStrUtilTypeNonLiteralArg loc
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
   | EAssignConstLikeBinding { loc; _ }
@@ -2323,6 +2327,7 @@ let friendly_message_of_msg = function
   | EUnsupportedExact (_, lower) -> Normal (MessageCannotCreateExactType lower)
   | EUnexpectedThisType _ -> Normal MessageUnexpectedUseOfThisType
   | EPropertyTypeAnnot _ -> Normal MessageCannotUseDollarPropertyType
+  | EStrUtilTypeNonLiteralArg _ -> Normal MessageCannotUseStrUtilType
   | EExportsAnnot _ -> Normal MessageCannotUseDollarExports
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
     Normal (MessageUnsupportedKeyInObject { key_error_kind; obj_kind })
@@ -3015,6 +3020,7 @@ let error_code_of_message err : error_code option =
   | EPrimitiveAsInterface _ -> Some IncompatibleType
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
+  | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
   | EPropNotFound _ -> Some Error_codes.PropMissing
   | EPropNotReadable _ -> Some CannotRead
   | EPropNotWritable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotWrite

@@ -5211,6 +5211,19 @@ struct
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
           rec_flow cx trace (instance, GetStaticsT statics);
           rec_flow cx trace (OpenT statics, u)
+        (******************************)
+        (* String utils (e.g. prefix) *)
+        (******************************)
+        (* StrUtilT just becomes a StrT so we can access properties and methods. *)
+        | (StrUtilT { reason; prefix }, _) ->
+          let reason = replace_desc_reason RString reason in
+          let literal_kind =
+            if prefix = "" then
+              AnyLiteral
+            else
+              Truthy
+          in
+          rec_flow cx trace (DefT (reason, StrT literal_kind), u)
         (*********)
         (* enums *)
         (*********)
@@ -6939,6 +6952,7 @@ struct
     | CustomFunT (_, ObjectSetPrototypeOf)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
+    | StrUtilT _
     | DefT _
     | AnyT _ ->
       true

@@ -1239,6 +1239,7 @@ let utility_types =
     "$Rest";
     "$TupleMap";
     "$Values";
+    "StringPrefix";
   ]
 
 let make_type_param ~edit_locs name =

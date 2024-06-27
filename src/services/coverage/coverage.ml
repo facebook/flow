@@ -156,6 +156,7 @@ let visitor =
       | InternalT _
       | ThisInstanceT _
       | KeysT _
+      | StrUtilT _
       | MaybeT _
       | ModuleT _
       | NamespaceT _

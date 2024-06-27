@@ -1082,6 +1082,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (reason, SingletonBigIntT lit), _) ->
       rec_flow_t cx trace ~use_op (DefT (reason, BigIntT (Literal (None, lit))), u)
     | (NullProtoT reason, _) -> rec_flow_t cx trace ~use_op (DefT (reason, NullT), u)
+    (************)
+    (* StrUtilT *)
+    (************)
+    | (StrUtilT { reason = _; prefix = prefix1 }, StrUtilT { reason = _; prefix = prefix2 })
+      when String.starts_with ~prefix:prefix2 prefix1 ->
+      ()
+    | (DefT (_, StrT (Literal (None, OrdinaryName s))), StrUtilT { reason = _; prefix })
+      when String.starts_with ~prefix s ->
+      ()
+    | (StrUtilT { reason; prefix }, _) ->
+      let literal_kind =
+        if prefix = "" then
+          AnyLiteral
+        else
+          Truthy
+      in
+      rec_flow_t cx trace ~use_op (DefT (reason, StrT literal_kind), u)
     (************************************************************************)
     (* exact object types *)
     (************************************************************************)
