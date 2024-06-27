@@ -184,14 +184,12 @@ module Error = struct
     | Missing_annotation_or_normalizer_error
     | Validation_error of validation_error
     | Import_error of import_error
-    | Serializer_error of string
     | Unsupported_error_kind
 
   type counts = {
     missing_annotation_or_normalizer_error: int;
     validation_error: int;
     import_error: import_error_counts;
-    serializer_error: int;
     unsupported_error_kind: int;
   }
 
@@ -200,7 +198,6 @@ module Error = struct
       missing_annotation_or_normalizer_error = 0;
       validation_error = 0;
       import_error = { loc_source_none = 0; indeterminate_module_type = 0; no_matching_export = 0 };
-      serializer_error = 0;
       unsupported_error_kind = 0;
     }
 
@@ -217,7 +214,6 @@ module Error = struct
         c1.missing_annotation_or_normalizer_error + c2.missing_annotation_or_normalizer_error;
       validation_error = c1.validation_error + c2.validation_error;
       import_error = combine_import_errors c1.import_error c2.import_error;
-      serializer_error = c1.serializer_error + c2.serializer_error;
       unsupported_error_kind = c1.unsupported_error_kind + c2.unsupported_error_kind;
     }
 
@@ -230,7 +226,6 @@ module Error = struct
     | Missing_annotation_or_normalizer_error -> "Missing_annotation_or_normalizer_error"
     | Validation_error e -> "Validation_error " ^ serialize_validation_error e
     | Import_error e -> "Import_error " ^ serialize_import_error e
-    | Serializer_error x -> "Serializer_error " ^ x
     | Unsupported_error_kind -> "Unsupported_error_kind"
 
   let report c =
@@ -245,7 +240,6 @@ module Error = struct
         string_of_row ~indent:4 "Loc source none" c.import_error.loc_source_none;
         string_of_row ~indent:4 "Indeterminate module type" c.import_error.indeterminate_module_type;
         string_of_row ~indent:4 "No matching export" c.import_error.no_matching_export;
-        string_of_row ~indent:2 "Serializer error" c.serializer_error;
         string_of_row ~indent:2 "Unsupported error kind" c.unsupported_error_kind;
       ]
     in
@@ -265,7 +259,6 @@ module Error = struct
       }
     | Validation_error _ -> { c with validation_error = c.validation_error + 1 }
     | Import_error e -> { c with import_error = add_import_error c.import_error e }
-    | Serializer_error _ -> { c with serializer_error = c.serializer_error + 1 }
     | Unsupported_error_kind -> { c with unsupported_error_kind = c.unsupported_error_kind + 1 }
 end
 
@@ -451,7 +444,6 @@ module Builtins = struct
   let flowfixme_ast ~exact_by_default ~lint_severities ~suppress_types =
     flowfixme_ty lint_severities suppress_types
     |> Ty_serializer.type_ { Ty_serializer.exact_by_default }
-    |> Base.Result.ok_or_failwith
 
   let temporary_objectlit_symbol =
     {

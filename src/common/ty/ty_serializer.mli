@@ -7,4 +7,4 @@
 
 type options = { exact_by_default: bool }
 
-val type_ : options -> Ty.t -> ((Loc.t, Loc.t) Flow_ast.Type.t, string) result
+val type_ : options -> Ty.t -> (Loc.t, Loc.t) Flow_ast.Type.t

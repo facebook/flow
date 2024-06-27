@@ -219,10 +219,10 @@ let serialize
       ~add_warning:(fun _ _ -> ()
     )
   in
-  let ast_result = mapper#on_t loc ty |> simplify |> Ty_serializer.(type_ { exact_by_default }) in
-  match ast_result with
-  | Ok ast -> Utils.patch_up_type_ast ast
-  | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
+  mapper#on_t loc ty
+  |> simplify
+  |> Ty_serializer.(type_ { exact_by_default })
+  |> Utils.patch_up_type_ast
 
 let remove_ambiguous_types
     ~cx
