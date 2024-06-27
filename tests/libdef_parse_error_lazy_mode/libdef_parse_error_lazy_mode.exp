@@ -1,0 +1,13 @@
+Error ------------------------------------------------------------------------------------------------------- lib.js:1:7
+
+Unexpected token `;`, expected an identifier
+
+   1| const ;
+            ^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 0/12 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

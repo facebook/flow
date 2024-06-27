@@ -1,0 +1,6 @@
+[libs]
+lib.js
+
+[options]
+all=true
+lazy_mode=true
