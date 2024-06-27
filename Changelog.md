@@ -1,3 +1,8 @@
+### 0.238.3
+
+Misc:
+* In v0.238.1 and v0.238.2, we have bumped the required GLIBC version to v2.35 on Linux. We have now reduced the requirement to v2.31 for x86_64 build of Linux.
+
 ### 0.238.2
 
 Notable bug fixes:
