@@ -14,7 +14,7 @@ env:
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 jobs:
   build_js:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       TERM: dumb
       OPAMYES: true
@@ -63,7 +63,7 @@ jobs:
         name: build_js_packages
         path: packages/flow-parser/flow_parser.js
   build_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       TERM: dumb
       OPAMYES: true
@@ -249,7 +249,7 @@ jobs:
           dist/flow-osx-arm64.zip
           dist/libflowparser-osx-arm64.zip
   build_win:
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       FLOW_TMP_DIR: C:\tmp\flow
       OPAMDOWNLOADJOBS: 1
@@ -331,7 +331,7 @@ jobs:
         path: |
           dist/flow-win64.zip
   runtests_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - build_linux
     env:
@@ -346,7 +346,7 @@ jobs:
     - name: Run tests
       run: ./runtests.sh bin/linux/flow | cat
   runtests_macos:
-    runs-on: macos-latest
+    runs-on: macos-14
     needs:
     - build_macos
     steps:
@@ -362,7 +362,7 @@ jobs:
     - name: Run tests
       run: ./runtests.sh bin/macos/flow | cat
   tool_test_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - build_linux
     steps:
@@ -395,7 +395,7 @@ jobs:
     - name: Run tool tests
       run: ./tool test --bin bin/macos/flow | cat
   tool_test_win:
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs:
     - build_win
     steps:
@@ -415,7 +415,7 @@ jobs:
     - name: Run tool tests
       run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
   ounit_test_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       TERM: dumb
       OPAMYES: true
@@ -502,7 +502,7 @@ jobs:
           Throw "flow parser esprima ocaml tests exited with error code: $LASTEXITCODE"
         }
   npm_pack:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - build_js
     - build_linux
@@ -578,7 +578,7 @@ jobs:
       run: .circleci/deploy_npm.sh
   website_deploy:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - build_linux
     - build_js
@@ -610,7 +610,7 @@ jobs:
   # Deploy jobs
   github_upload:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - build_linux
     - build_linux_arm64
@@ -659,7 +659,7 @@ jobs:
       run: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-${{ github.ref_name }}.zip"
   flow_bin_deploy:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - github_upload
     steps:
@@ -668,7 +668,7 @@ jobs:
       run: .circleci/deploy_flow_bin.sh
   try_flow_deploy:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - build_js
     steps:
