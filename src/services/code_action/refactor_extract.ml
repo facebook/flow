@@ -55,13 +55,15 @@ let create_extracted_function
   let open Ast_builder in
   let open Base.Result.Let_syntax in
   let id = Some (Identifiers.identifier name) in
-  let%bind (params, used_tparam_set) =
-    Base.List.fold_result
+  let (params, used_tparam_set) =
+    Base.List.fold_left
       ~f:(fun (params, used_tparam_set) (v, loc) ->
-        let%map (annot, used_tparam_set) =
-          match%map type_synthesizer loc with
-          | None -> (Flow_ast.Type.Missing Loc.none, used_tparam_set)
-          | Some (tparams_rev, type_) ->
+        let (annot, used_tparam_set) =
+          match type_synthesizer loc with
+          | Error _
+          | Ok None ->
+            (Flow_ast.Type.Missing Loc.none, used_tparam_set)
+          | Ok (Some (tparams_rev, type_)) ->
             ( Flow_ast.Type.Available (Loc.none, type_),
               TypeParamSet.add_all tparams_rev used_tparam_set
             )
@@ -71,13 +73,16 @@ let create_extracted_function
       ~init:([], TypeParamSet.empty)
   in
   let params = Functions.params params in
-  let%bind (returned_variables, used_tparam_set) =
-    Base.List.fold_result
+  let (returned_variables, used_tparam_set) =
+    Base.List.fold_left
       ~f:(fun (returned_variables, used_tparam_set) (v, loc) ->
-        let%map (type_, used_tparam_set) =
-          match%map type_synthesizer loc with
-          | None -> ((Loc.none, Flow_ast.Type.Any None), used_tparam_set)
-          | Some (tparams_rev, type_) -> (type_, TypeParamSet.add_all tparams_rev used_tparam_set)
+        let (type_, used_tparam_set) =
+          match type_synthesizer loc with
+          | Error _
+          | Ok None ->
+            ((Loc.none, Flow_ast.Type.Any None), used_tparam_set)
+          | Ok (Some (tparams_rev, type_)) ->
+            (type_, TypeParamSet.add_all tparams_rev used_tparam_set)
         in
         ((v, type_) :: returned_variables, used_tparam_set))
       (Base.List.rev

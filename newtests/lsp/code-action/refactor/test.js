@@ -108,6 +108,39 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for extract function with large type', [
+      addFile(
+        'refactor-extract-function-large-type.js.ignored',
+        'refactor-extract-function-large-type.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-large-type.js',
+        },
+        range: {
+          start: {
+            line: 9,
+            character: 2,
+          },
+          end: {
+            line: 9,
+            character: 20,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'refactor-extract-function-large-type.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide codeAction for extract function with type imports', [
       addFile(
         'refactor-extract-function-type-provider.js.ignored',

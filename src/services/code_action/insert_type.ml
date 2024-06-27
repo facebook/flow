@@ -284,7 +284,16 @@ class mapper ~strict ~synth_type ~casting_syntax target =
   object (this)
     inherit Flow_ast_contains_mapper.mapper target as super
 
-    method private synth_type_annotation_hint loc = Flow_ast.Type.Available (synth_type loc)
+    method private synth_type_annotation_hint loc =
+      match synth_type loc with
+      | Ok t -> Flow_ast.Type.Available t
+      | Error _ -> Flow_ast.Type.Missing loc
+
+    method private synth_return_type_annotation_hint loc =
+      let open Flow_ast.Function.ReturnAnnot in
+      match synth_type loc with
+      | Ok t -> Available t
+      | Error _ -> Missing loc
 
     (* If a type is missing and in the range of target then add a type annotation hint *)
     method private update_type_annotation_hint ?type_loc ?(check_loc = false) annot =
@@ -306,7 +315,7 @@ class mapper ~strict ~synth_type ~casting_syntax target =
     method! function_return_annotation return =
       let open Flow_ast.Function.ReturnAnnot in
       match return with
-      | Missing loc when this#target_contained_by loc -> Available (synth_type loc)
+      | Missing loc when this#target_contained_by loc -> this#synth_return_type_annotation_hint loc
       | Available (location, type_ast) when this#target_contained_by location ->
         raise @@ expected @@ TypeAnnotationAtPoint { location; type_ast }
       | _ -> return
@@ -405,11 +414,12 @@ class mapper ~strict ~synth_type ~casting_syntax target =
       if this#target_contained_by l then
         if this#is_target l then
           let open Options.CastingSyntax in
-          match casting_syntax with
-          | Colon -> (l, TypeCast TypeCast.{ expression = e; annot = synth_type l; comments = None })
-          | As
-          | Both ->
-            (l, AsExpression AsExpression.{ expression = e; annot = synth_type l; comments = None })
+          match (synth_type l, casting_syntax) with
+          | (Error _, _) -> super#expression e
+          | (Ok annot, Colon) -> (l, TypeCast TypeCast.{ expression = e; annot; comments = None })
+          | (Ok annot, As)
+          | (Ok annot, Both) ->
+            (l, AsExpression AsExpression.{ expression = e; annot; comments = None })
         else
           super#expression e
       else
@@ -467,39 +477,37 @@ let synth_type
         ty
         type_loc
   in
-  let ty =
-    let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in
-    match Ty_utils.typify_elt elt with
-    | Some ty ->
-      (match process ty with
-      | Ok t -> t
-      | Error err -> raise (expected err))
-    | None ->
-      let err = FailedToNormalize (type_loc, "Non-type") in
-      raise (expected err)
-  in
-  (* If we can't fix the type annotation we insert the type anyway which will fail to typecheck
-     but might provide a hint as to what the type is. *)
-  let import_fixed_ty =
-    match remote_converter#type_ ty with
-    | Ok ty -> ty
-    | Error e ->
-      (* TODO: surface these errors to user *)
-      Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
-      ty
-  in
-  ( type_loc,
-    serialize
-      ~cx
-      ~loc_of_aloc
-      ~get_ast_from_shared_mem
-      ~file_sig
-      ~typed_ast
-      ~imports_react
-      ~exact_by_default
-      type_loc
-      import_fixed_ty
-  )
+  let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in
+  match Ty_utils.typify_elt elt with
+  | None -> Error (FailedToNormalize (type_loc, "Non-type"))
+  | Some ty -> begin
+    match process ty with
+    | Error err -> Error err
+    | Ok ty ->
+      (* If we can't fix the type annotation we insert the type anyway which will fail to typecheck
+         but might provide a hint as to what the type is. *)
+      let import_fixed_ty =
+        match remote_converter#type_ ty with
+        | Ok ty -> ty
+        | Error e ->
+          (* TODO: surface these errors to user *)
+          Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
+          ty
+      in
+      let ast =
+        serialize
+          ~cx
+          ~loc_of_aloc
+          ~get_ast_from_shared_mem
+          ~file_sig
+          ~typed_ast
+          ~imports_react
+          ~exact_by_default
+          type_loc
+          import_fixed_ty
+      in
+      Ok (type_loc, ast)
+  end
 
 let type_to_string t =
   Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts t

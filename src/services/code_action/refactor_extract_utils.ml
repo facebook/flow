@@ -1099,19 +1099,17 @@ module TypeSynthesizer = struct
     in
     let synth_type loc t =
       try
-        Ok
-          (Insert_type.synth_type
-             ~cx
-             ~loc_of_aloc
-             ~get_ast_from_shared_mem
-             ~file_sig
-             ~typed_ast
-             ~omit_targ_defaults:false
-             ~ambiguity_strategy:Autofix_options.Generalize
-             ~remote_converter
-             loc
-             t
-          )
+        Insert_type.synth_type
+          ~cx
+          ~loc_of_aloc
+          ~get_ast_from_shared_mem
+          ~file_sig
+          ~typed_ast
+          ~omit_targ_defaults:false
+          ~ambiguity_strategy:Autofix_options.Generalize
+          ~remote_converter
+          loc
+          t
       with
       | Insert_type.(FailedToInsertType (Expected expected)) -> Error expected
     in
