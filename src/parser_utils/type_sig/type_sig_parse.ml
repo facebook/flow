@@ -1018,61 +1018,65 @@ module Scope = struct
     | ConditionalTypeExtends _ ->
       failwith "expected DeclareModule to still be the scope"
 
+  let namespace_binding_of_values_and_types scope (values, types) =
+    let values =
+      SMap.fold
+        (fun name binding acc ->
+          match binding with
+          | LocalBinding node ->
+            let local_binding = Local_defs.value node in
+            (match local_binding with
+            | VarBinding { id_loc; _ }
+            | LetConstBinding { id_loc; _ }
+            | ConstRefBinding { id_loc; _ }
+            | ConstFunBinding { id_loc; _ }
+            | ClassBinding { id_loc; _ }
+            | DeclareClassBinding { id_loc; _ }
+            | FunBinding { id_loc; _ }
+            | ComponentBinding { id_loc; _ }
+            | EnumBinding { id_loc; _ }
+            | NamespaceBinding { id_loc; _ } ->
+              SMap.add name (id_loc, val_ref ~type_only:false scope id_loc name) acc
+            | DeclareFunBinding { defs_rev; _ } ->
+              let (id_loc, _, _) = Nel.last defs_rev in
+              SMap.add name (id_loc, val_ref ~type_only:false scope id_loc name) acc
+            | TypeBinding _ -> acc)
+          | RemoteBinding _ -> acc)
+        values
+        SMap.empty
+    in
+    let types =
+      SMap.fold
+        (fun name binding acc ->
+          match binding with
+          | LocalBinding node ->
+            let local_binding = Local_defs.value node in
+            (match local_binding with
+            | VarBinding _
+            | LetConstBinding _
+            | ConstRefBinding _
+            | ConstFunBinding _
+            | ClassBinding _
+            | DeclareClassBinding _
+            | FunBinding _
+            | ComponentBinding _
+            | EnumBinding _
+            | NamespaceBinding _
+            | DeclareFunBinding _ ->
+              acc
+            | TypeBinding { id_loc; _ } ->
+              SMap.add name (id_loc, val_ref ~type_only:true scope id_loc name) acc)
+          | RemoteBinding _ -> acc)
+        types
+        SMap.empty
+    in
+    (values, types)
+
   (* a `declare namespace` exports every binding. *)
   let finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name =
     match scope with
     | DeclareNamespace { values; types; parent; _ } ->
-      let values =
-        SMap.fold
-          (fun name binding acc ->
-            match binding with
-            | LocalBinding node ->
-              let local_binding = Local_defs.value node in
-              (match local_binding with
-              | VarBinding { id_loc; _ }
-              | LetConstBinding { id_loc; _ }
-              | ConstRefBinding { id_loc; _ }
-              | ConstFunBinding { id_loc; _ }
-              | ClassBinding { id_loc; _ }
-              | DeclareClassBinding { id_loc; _ }
-              | FunBinding { id_loc; _ }
-              | ComponentBinding { id_loc; _ }
-              | EnumBinding { id_loc; _ }
-              | NamespaceBinding { id_loc; _ } ->
-                SMap.add name (id_loc, val_ref ~type_only:false scope id_loc name) acc
-              | DeclareFunBinding { defs_rev; _ } ->
-                let (id_loc, _, _) = Nel.last defs_rev in
-                SMap.add name (id_loc, val_ref ~type_only:false scope id_loc name) acc
-              | TypeBinding _ -> acc)
-            | RemoteBinding _ -> acc)
-          values
-          SMap.empty
-      in
-      let types =
-        SMap.fold
-          (fun name binding acc ->
-            match binding with
-            | LocalBinding node ->
-              let local_binding = Local_defs.value node in
-              (match local_binding with
-              | VarBinding _
-              | LetConstBinding _
-              | ConstRefBinding _
-              | ConstFunBinding _
-              | ClassBinding _
-              | DeclareClassBinding _
-              | FunBinding _
-              | ComponentBinding _
-              | EnumBinding _
-              | NamespaceBinding _
-              | DeclareFunBinding _ ->
-                acc
-              | TypeBinding { id_loc; _ } ->
-                SMap.add name (id_loc, val_ref ~type_only:true scope id_loc name) acc)
-            | RemoteBinding _ -> acc)
-          types
-          SMap.empty
-      in
+      let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
       bind_local
         ~type_only:is_type_only
         parent
@@ -1080,6 +1084,27 @@ module Scope = struct
         name
         (NamespaceBinding { id_loc; name; values; types })
     | _ -> failwith "The scope must be lexical"
+
+  let bind_globalThis scope tbls ~global_this_loc =
+    match scope with
+    | Global global_scope ->
+      let name = "globalThis" in
+      let (values, types) =
+        namespace_binding_of_values_and_types scope (global_scope.values, global_scope.types)
+      in
+      let loc = push_loc tbls global_this_loc in
+      let values =
+        (* Patch in globalThis so that we can do globalThis.globalThis *)
+        SMap.add name (loc, val_ref ~type_only:false scope loc name) values
+      in
+      bind_local
+        ~type_only:false
+        scope
+        tbls
+        name
+        (NamespaceBinding { id_loc = loc; name; values; types })
+        ignore2
+    | _ -> failwith "finalize_globalThis must be called after parsing all lib files on global scope"
 end
 
 module ObjAnnotAcc = struct

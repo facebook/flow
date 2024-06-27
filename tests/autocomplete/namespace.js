@@ -5,5 +5,9 @@ declare namespace S {
   declare const s: typeof S;
 }
 
-         S.
+         S.    ;
+//         ^
+
+
+globalThis.  ;
 //         ^

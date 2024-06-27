@@ -23,3 +23,8 @@ Flags:
 namespace S
 test.js:13:5,13:5
 
+test.js:16:4
+Flags:
+namespace globalThis
+test.js:16:1,16:10
+
