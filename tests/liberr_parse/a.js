@@ -1,4 +1,5 @@
 /**
  * @flow
  */
-var x: string = 0; // error: number ~> string
+// error will not appear in output, because lib parse errors forego merge
+var x: string = 0;

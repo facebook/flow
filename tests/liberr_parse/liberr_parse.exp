@@ -6,19 +6,5 @@ Unexpected identifier, expected the token `,`
         ^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:4:17
 
-Cannot assign `0` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   a.js:4:17
-   4| var x: string = 0; // error: number ~> string
-                      ^ [1]
-
-References:
-   a.js:4:8
-   4| var x: string = 0; // error: number ~> string
-             ^^^^^^ [2]
-
-
-
-Found 2 errors
+Found 1 error
