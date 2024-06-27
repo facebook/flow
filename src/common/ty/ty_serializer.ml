@@ -53,6 +53,19 @@ let variance_ = function
   | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Plus; comments = None })
   | Negative -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Minus; comments = None })
 
+let qualified2 x1 x2 =
+  let open T.Typeof.Target in
+  let q = Unqualified (id_from_string x1) in
+  let q = Qualified (Loc.none, { qualification = q; id = id_from_string x2 }) in
+  T.Typeof { T.Typeof.argument = q; targs = None; comments = None }
+
+let qualified3 x1 x2 x3 =
+  let open T.Typeof.Target in
+  let q = Unqualified (id_from_string x1) in
+  let q = Qualified (Loc.none, { qualification = q; id = id_from_string x2 }) in
+  let q = Qualified (Loc.none, { qualification = q; id = id_from_string x3 }) in
+  T.Typeof { T.Typeof.argument = q; targs = None; comments = None }
+
 let type_ options =
   let rec type_ t =
     let just t = return (Loc.none, t) in
@@ -190,7 +203,11 @@ let type_ options =
       let%bind id = id_from_symbol name in
       let%map targs = opt type_arguments targs in
       just' (T.Typeof { T.Typeof.argument = mk_typeof_expr id; targs; comments = None })
-    | TypeOf _
+    | TypeOf (FunProto, _) -> just (qualified2 "Object" "prototype")
+    | TypeOf (ObjProto, _) -> just (qualified2 "Function" "prototype")
+    | TypeOf (FunProtoApply, _) -> just (qualified3 "Function" "prototype" "apply")
+    | TypeOf (FunProtoBind, _) -> just (qualified3 "Function" "prototype" "bind")
+    | TypeOf (FunProtoCall, _) -> just (qualified3 "Function" "prototype" "call")
     | Renders _ ->
       (* Renders AST representation is not yet committed *)
       Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
