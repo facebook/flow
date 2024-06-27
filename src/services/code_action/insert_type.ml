@@ -156,7 +156,7 @@ let specialize_temporary_types = (new specialize_temporary_types_mapper)#on_t ()
 
 class fixme_ambiguous_types_mapper =
   object
-    inherit fail_on_ambiguity_mapper as super
+    inherit use_upper_bound_mapper as super
 
     method! on_Num () t =
       function
