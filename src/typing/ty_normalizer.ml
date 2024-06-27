@@ -655,6 +655,9 @@ module Make (I : INPUT) : S = struct
       | OpenT _ -> type_ctor ~env ?id ~cont:type_with_alias_reason t
       | EvalT _ when should_eval_skip_aliases ~env () ->
         type_ctor ~env ~cont:type_with_alias_reason t
+      | NamespaceT { namespace_symbol; _ } when env.Env.keep_only_namespace_name ->
+        let symbol = ty_symbol_from_symbol env namespace_symbol in
+        return (Ty.TypeOf (Ty.TSymbol symbol, None))
       | _ -> begin
         match desc_of_reason ~unwrap:false (TypeUtil.reason_of_t t) with
         | RTypeAlias (name, Some loc, _) ->
@@ -710,6 +713,7 @@ module Make (I : INPUT) : S = struct
       | InternalT i -> internal_t t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
       | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
+        let env = { env with Env.keep_only_namespace_name = true } in
         cont ~env ?id values_type
       | DefT (_, MixedT _) -> return Ty.Top
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
@@ -1973,12 +1977,13 @@ module Make (I : INPUT) : S = struct
           let%map m = module_t ~env reason exports in
           Ty.Decl m
         | NamespaceT { namespace_symbol; values_type = DefT (_, ObjT o); types_tmap } ->
-          let%bind (exports, default) = namespace_t ~env o types_tmap in
           (match FlowSymbol.kind_of_symbol namespace_symbol with
-          | FlowSymbol.SymbolModule ->
+          | FlowSymbol.SymbolModule when not env.Env.keep_only_namespace_name ->
+            let%bind (exports, default) = namespace_t ~env o types_tmap in
             let name = ty_symbol_from_symbol env namespace_symbol in
             return (Ty.Decl (Ty.ModuleDecl { name = Some name; exports; default }))
-          | FlowSymbol.SymbolNamespace ->
+          | FlowSymbol.SymbolNamespace when not env.Env.keep_only_namespace_name ->
+            let%bind (exports, _) = namespace_t ~env o types_tmap in
             let name = ty_symbol_from_symbol env namespace_symbol in
             return (Ty.Decl (Ty.NamespaceDecl { name = Some name; exports }))
           | _ ->
@@ -2097,6 +2102,7 @@ module Make (I : INPUT) : S = struct
         | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"namespace-prop" None
       in
       fun ~env values_type types_tmap ->
+        let env = { env with Env.keep_only_namespace_name = true } in
         let%bind (exports, default) = module_of_object ~env values_type in
         let%map exports =
           types_tmap

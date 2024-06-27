@@ -1072,6 +1072,32 @@ let exports_of_module_ty
                (name, edit_locs)
                d
             )
+        | NominalComponentDecl { name; _ } as d when is_ok `Value name.Ty_symbol.sym_name ->
+          let documentation_and_tags =
+            documentation_and_tags_of_module_member name.Ty_symbol.sym_def_loc
+          in
+          Some
+            (autocomplete_create_result_decl
+               ~rank:0
+               ~documentation_and_tags
+               ~exact_by_default
+               ~log_info:"qualified component"
+               (Reason.display_string_of_name name.Ty_symbol.sym_name, edit_locs)
+               d
+            )
+        | NamespaceDecl { name = Some name; _ } as d when is_ok `Value name.Ty_symbol.sym_name ->
+          let documentation_and_tags =
+            documentation_and_tags_of_module_member name.Ty_symbol.sym_def_loc
+          in
+          Some
+            (autocomplete_create_result_decl
+               ~rank:0
+               ~documentation_and_tags
+               ~exact_by_default
+               ~log_info:"qualified namespace"
+               (Reason.display_string_of_name name.Ty_symbol.sym_name, edit_locs)
+               d
+            )
         | _ -> None)
       exports
     |> Base.List.sort ~compare:(fun { name = a; _ } { name = b; _ } -> String.compare a b)

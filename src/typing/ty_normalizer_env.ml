@@ -117,6 +117,7 @@ type t = {
   infer_tparams: Type.typeparam list;
   (* For debugging purposes mostly *)
   depth: int;
+  keep_only_namespace_name: bool;
   (* Detect recursive types *)
   seen_tvar_ids: ISet.t;
   seen_eval_ids: Type.EvalIdSet.t;
@@ -128,6 +129,7 @@ let init ~genv =
     genv;
     depth = 0;
     infer_tparams = [];
+    keep_only_namespace_name = false;
     seen_tvar_ids = ISet.empty;
     seen_eval_ids = Type.EvalIdSet.empty;
     omit_targ_defaults = genv.options.omit_targ_defaults_option;
