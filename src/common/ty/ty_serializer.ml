@@ -208,9 +208,15 @@ let type_ options =
     | TypeOf (FunProtoApply, _) -> just (qualified3 "Function" "prototype" "apply")
     | TypeOf (FunProtoBind, _) -> just (qualified3 "Function" "prototype" "bind")
     | TypeOf (FunProtoCall, _) -> just (qualified3 "Function" "prototype" "call")
-    | Renders _ ->
-      (* Renders AST representation is not yet committed *)
-      Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
+    | Renders (t, kind) ->
+      let%map argument = type_ t in
+      let variant =
+        match kind with
+        | RendersNormal -> T.Renders.Normal
+        | RendersMaybe -> T.Renders.Maybe
+        | RendersStar -> T.Renders.Star
+      in
+      just' (T.Renders { T.Renders.operator_loc = Loc.none; argument; comments = None; variant })
   and generic x targs =
     let%bind id = id_from_symbol x in
     let%map targs = opt type_arguments targs in
