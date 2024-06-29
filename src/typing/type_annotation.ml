@@ -967,7 +967,24 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                    (use_op reason)
                    reason
                    t
-                   (ReactDRO (loc, DROAnnot))
+                   (ReactDRO (loc, DebugAnnot))
+                   (mk_eval_id cx loc)
+                )
+                targs
+          )
+        (* React$Immutable<T> *)
+        | "React$Immutable" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let reason = mk_reason RReadOnlyType loc in
+              reconstruct_ast
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t
+                   (ReactDRO (loc, ImmutableAnnot))
                    (mk_eval_id cx loc)
                 )
                 targs

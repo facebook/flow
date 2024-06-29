@@ -978,7 +978,7 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | FilterMaybeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-    | DeepReadOnlyT ((_, tv), _, _) -> p ~extra:(tvar tv) t
+    | DeepReadOnlyT ((_, tv), _) -> p ~extra:(tvar tv) t
     | HooklikeT (_, tv) -> p ~extra:(tvar tv) t
     | ExtractReactRefT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | SealGenericT { name; cont = Lower (_, l); _ } ->

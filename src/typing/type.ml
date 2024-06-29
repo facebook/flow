@@ -909,7 +909,7 @@ module rec TypeTerm : sig
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
-    | DeepReadOnlyT of tvar * ALoc.t * dro_type
+    | DeepReadOnlyT of tvar * react_dro
     | HooklikeT of tvar
     | ImplicitVoidReturnT of {
         use_op: use_op;
@@ -1331,7 +1331,10 @@ module rec TypeTerm : sig
     | HookReturn
     | HookArg
     | Props
-    | DROAnnot
+    | ImmutableAnnot
+    | DebugAnnot
+
+  and react_dro = ALoc.t * dro_type
 
   and tuple_view =
     | TupleView of {
@@ -1342,7 +1345,7 @@ module rec TypeTerm : sig
 
   and arrtype =
     | ArrayAT of {
-        react_dro: (ALoc.t * dro_type) option;
+        react_dro: react_dro option;
             (* Should elements of this array be treated as propagating read-only, and if so, what location is responsible *)
         elem_t: t;
         tuple_view: tuple_view option;
@@ -1352,7 +1355,7 @@ module rec TypeTerm : sig
      * myTuple[expr]
      *)
     | TupleAT of {
-        react_dro: (ALoc.t * dro_type) option; (* As ArrayAT *)
+        react_dro: react_dro option; (* As ArrayAT *)
         elem_t: t;
         elements: tuple_element list;
         (* Arity represents the range of valid arities, considering optional elements.
@@ -1362,7 +1365,7 @@ module rec TypeTerm : sig
       }
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
-    | ROArrayAT of t * (* react_dro, as above *) (ALoc.t * dro_type) option
+    | ROArrayAT of t * (* react_dro, as above *) react_dro option
 
   and tuple_element =
     | TupleElement of {
@@ -1515,7 +1518,7 @@ module rec TypeTerm : sig
 
   and flags = {
     frozen: bool;
-    react_dro: (ALoc.t * dro_type) option;
+    react_dro: react_dro option;
     obj_kind: obj_kind;
   }
 
@@ -1593,7 +1596,7 @@ module rec TypeTerm : sig
     class_private_static_fields: Properties.id;
     class_private_methods: Properties.id;
     class_private_static_methods: Properties.id;
-    inst_react_dro: (ALoc.t * dro_type) option;
+    inst_react_dro: react_dro option;
   }
 
   and instance_kind =
@@ -1720,7 +1723,7 @@ module rec TypeTerm : sig
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
-    | ReactDRO of (ALoc.t * dro_type)
+    | ReactDRO of react_dro
     | MakeHooklike
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter

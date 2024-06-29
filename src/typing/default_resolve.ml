@@ -205,7 +205,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | EnumExhaustiveCheckT _ ->
     ()
   | HooklikeT tvar
-  | DeepReadOnlyT (tvar, _, _) ->
+  | DeepReadOnlyT (tvar, _) ->
     resolve_tvar tvar
   | ExtractReactRefT (_, t)
   | FilterOptionalT (_, t)

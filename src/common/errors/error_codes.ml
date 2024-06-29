@@ -7,7 +7,7 @@
 
 type error_code =
   | AmbiguousObjectType
-  | ReactRulePropsMutation
+  | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
   | ReactRuleHook
@@ -207,7 +207,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnusedPromise -> UnusedPromise
 
 let require_specific : error_code -> bool = function
-  | ReactRulePropsMutation
+  | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
   | ReactRuleHook
@@ -217,7 +217,7 @@ let require_specific : error_code -> bool = function
   | _ -> false
 
 let string_of_code : error_code -> string = function
-  | ReactRulePropsMutation -> "react-rule-unsafe-mutation"
+  | ReactRuleUnsafeMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
   | ReactRuleHook -> "react-rule-hook"

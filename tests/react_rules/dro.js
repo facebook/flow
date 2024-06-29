@@ -57,14 +57,14 @@ component UnionToElemTShortcut(
     return null;
 }
 
-declare const droset: $ReactDeepReadOnly<Set<Set<number>>>;
+declare const droset: React$Immutable<Set<Set<number>>>;
 droset.add(new Set()); // error
 droset.add((42: any)); // error
 droset.forEach(x => x.add(42)) // error
 
 droset as Set<Set<number>> as typeof droset // fine
 
-declare const dromap: $ReactDeepReadOnly<Map<{x: number}, Map<{y: number}, number>>>;
+declare const dromap: React$Immutable<Map<{x: number}, Map<{y: number}, number>>>;
 dromap.set({x: 42}, new Map()); // error
 dromap.set({x: 42}, (42: any)); // error
 dromap.forEach((val, key) => {
@@ -76,11 +76,11 @@ class CoolClass {
   prop: {x: number};
 }
 
-declare const drc: $ReactDeepReadOnly<CoolClass>;
+declare const drc: React$Immutable<CoolClass>;
 drc.prop.x = 42 // error;
 drc.prop = {x: 42}; // error;
 
-declare const droarr: $ReactDeepReadOnly<Array<Array<number>>>;
+declare const droarr: React$Immutable<Array<Array<number>>>;
 droarr.push([]); // error
 droarr[0].push(42); // error
 droarr.at(0)?.push(42) // error;
