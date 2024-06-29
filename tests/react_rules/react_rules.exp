@@ -109,22 +109,19 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- dro.js:37:14
+Error ------------------------------------------------------------------------------------------------------ dro.js:37:5
 
-Cannot call `rest.baz.push` because property `push` is missing in array type [1]. React component properties [2] and
-their nested props and elements cannot be written to. [react-rule-unsafe-mutation]
+Cannot call `rest.baz.push` because property `push` is not readable. React component properties [1] and their nested
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
-   dro.js:37:14
-   37|     rest.baz.push("hello"); // error
-                    ^^^^
-
-References:
    dro.js:37:5
    37|     rest.baz.push("hello"); // error
-           ^^^^^^^^ [1]
+           ^^^^^^^^^^^^^
+
+References:
    dro.js:35:19
    35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
@@ -142,22 +139,19 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- dro.js:39:17
+Error ------------------------------------------------------------------------------------------------------ dro.js:39:5
 
-Cannot call `rest.qux[1].pop` because property `pop` is missing in array type [1]. React component properties [2] and
-their nested props and elements cannot be written to. [react-rule-unsafe-mutation]
+Cannot call `rest.qux[1].pop` because property `pop` is not readable. React component properties [1] and their nested
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
-   dro.js:39:17
-   39|     rest.qux[1].pop(); // error
-                       ^^^
-
-References:
    dro.js:39:5
    39|     rest.qux[1].pop(); // error
-           ^^^^^^^^^^^ [1]
+           ^^^^^^^^^^^^^^^
+
+References:
    dro.js:35:19
    35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:56:9
@@ -180,74 +174,44 @@ References:
            ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ dro.js:61:8
+Error ------------------------------------------------------------------------------------------------------ dro.js:61:1
 
-Cannot call `droset.add` because property `add` is missing in `Set` [1]. [prop-missing]
+Cannot call `droset.add` because property `add` is not readable. [cannot-read]
 
-   dro.js:61:8
    61| droset.add(new Set()); // error
-              ^^^
-
-References:
-   dro.js:61:1
-   61| droset.add(new Set()); // error
-       ^^^^^^ [1]
+       ^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ dro.js:62:8
+Error ------------------------------------------------------------------------------------------------------ dro.js:62:1
 
-Cannot call `droset.add` because property `add` is missing in `Set` [1]. [prop-missing]
+Cannot call `droset.add` because property `add` is not readable. [cannot-read]
 
-   dro.js:62:8
    62| droset.add((42: any)); // error
-              ^^^
-
-References:
-   dro.js:62:1
-   62| droset.add((42: any)); // error
-       ^^^^^^ [1]
+       ^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- dro.js:63:23
+Error ----------------------------------------------------------------------------------------------------- dro.js:63:21
 
-Cannot call `x.add` because property `add` is missing in `Set` [1]. [prop-missing]
+Cannot call `x.add` because property `add` is not readable. [cannot-read]
 
-   dro.js:63:23
    63| droset.forEach(x => x.add(42)) // error
-                             ^^^
-
-References:
-   dro.js:63:21
-   63| droset.forEach(x => x.add(42)) // error
-                           ^ [1]
+                           ^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ dro.js:68:8
+Error ------------------------------------------------------------------------------------------------------ dro.js:68:1
 
-Cannot call `dromap.set` because property `set` (did you mean `get`?) is missing in `Map` [1]. [prop-missing]
+Cannot call `dromap.set` because property `set` is not readable. [cannot-read]
 
-   dro.js:68:8
    68| dromap.set({x: 42}, new Map()); // error
-              ^^^
-
-References:
-   dro.js:68:1
-   68| dromap.set({x: 42}, new Map()); // error
-       ^^^^^^ [1]
+       ^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ dro.js:69:8
+Error ------------------------------------------------------------------------------------------------------ dro.js:69:1
 
-Cannot call `dromap.set` because property `set` (did you mean `get`?) is missing in `Map` [1]. [prop-missing]
+Cannot call `dromap.set` because property `set` is not readable. [cannot-read]
 
-   dro.js:69:8
    69| dromap.set({x: 42}, (42: any)); // error
-              ^^^
-
-References:
-   dro.js:69:1
-   69| dromap.set({x: 42}, (42: any)); // error
-       ^^^^^^ [1]
+       ^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:71:7
@@ -258,18 +222,12 @@ Cannot assign `42` to `key.x` because property `x` is not writable. [cannot-writ
              ^
 
 
-Error ------------------------------------------------------------------------------------------------------ dro.js:72:7
+Error ------------------------------------------------------------------------------------------------------ dro.js:72:3
 
-Cannot call `val.set` because property `set` (did you mean `get`?) is missing in `Map` [1]. [prop-missing]
+Cannot call `val.set` because property `set` is not readable. [cannot-read]
 
-   dro.js:72:7
    72|   val.set({y: 420}, 42) // error
-             ^^^
-
-References:
-   dro.js:72:3
-   72|   val.set({y: 420}, 42) // error
-         ^^^ [1]
+         ^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:80:10
@@ -288,46 +246,28 @@ Cannot assign object literal to `drc.prop` because property `prop` is not writab
            ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ dro.js:84:8
+Error ------------------------------------------------------------------------------------------------------ dro.js:84:1
 
-Cannot call `droarr.push` because property `push` is missing in array type [1]. [prop-missing]
+Cannot call `droarr.push` because property `push` is not readable. [cannot-read]
 
-   dro.js:84:8
    84| droarr.push([]); // error
-              ^^^^
-
-References:
-   dro.js:84:1
-   84| droarr.push([]); // error
-       ^^^^^^ [1]
+       ^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- dro.js:85:11
+Error ------------------------------------------------------------------------------------------------------ dro.js:85:1
 
-Cannot call `droarr[0].push` because property `push` is missing in array type [1]. [prop-missing]
+Cannot call `droarr[0].push` because property `push` is not readable. [cannot-read]
 
-   dro.js:85:11
    85| droarr[0].push(42); // error
-                 ^^^^
-
-References:
-   dro.js:85:1
-   85| droarr[0].push(42); // error
-       ^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- dro.js:86:15
+Error ------------------------------------------------------------------------------------------------------ dro.js:86:1
 
-Cannot call `droarr.at(...)?.push` because property `push` is missing in array type [1]. [prop-missing]
+Cannot call `droarr.at(...)?.push` because property `push` is not readable. [cannot-read]
 
-   dro.js:86:15
    86| droarr.at(0)?.push(42) // error;
-                     ^^^^
-
-References:
-   dro.js:86:1
-   86| droarr.at(0)?.push(42) // error;
-       ^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17

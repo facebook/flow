@@ -1100,14 +1100,34 @@ struct
             | GetPropT _ | MethodT _ | ObjAssignFromT _ | ObjRestT _ | SetElemT _ | GetElemT _
             | CallElemT _ | BindT _ )
           )
-          when is_builtin_class_id "Map" class_id cx ->
-          let key_t = mk_react_dro cx unknown_use dro key_t in
-          let val_t = mk_react_dro cx unknown_use dro val_t in
-          let ro_map = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlyMap" [key_t; val_t] in
-          let u =
-            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
-          in
-          rec_flow cx trace (ro_map, u)
+          when is_builtin_class_id "Map" class_id cx -> begin
+          match u with
+          | MethodT (use_op, _, reason, Named { name = OrdinaryName name; _ }, _)
+          | GetPropT { propref = Named { name = OrdinaryName name; _ }; use_op; reason; _ }
+            when match name with
+                 | "clear"
+                 | "delete"
+                 | "set" ->
+                   true
+                 | _ -> false ->
+            add_output
+              cx
+              (Error_message.EPropNotReadable
+                 {
+                   reason_prop = reason;
+                   prop_name = Some (OrdinaryName name);
+                   use_op = Frame (ReactDeepReadOnly dro, use_op);
+                 }
+              )
+          | _ ->
+            let key_t = mk_react_dro cx unknown_use dro key_t in
+            let val_t = mk_react_dro cx unknown_use dro val_t in
+            let ro_map = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlyMap" [key_t; val_t] in
+            let u =
+              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+            in
+            rec_flow cx trace (ro_map, u)
+        end
         | ( DefT
               ( r,
                 InstanceT
@@ -1121,13 +1141,33 @@ struct
             | GetPropT _ | MethodT _ | ObjAssignFromT _ | ObjRestT _ | SetElemT _ | GetElemT _
             | CallElemT _ | BindT _ )
           )
-          when is_builtin_class_id "Set" class_id cx ->
-          let elem_t = mk_react_dro cx unknown_use dro elem_t in
-          let ro_set = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlySet" [elem_t] in
-          let u =
-            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
-          in
-          rec_flow cx trace (ro_set, u)
+          when is_builtin_class_id "Set" class_id cx -> begin
+          match u with
+          | MethodT (use_op, _, reason, Named { name = OrdinaryName name; _ }, _)
+          | GetPropT { propref = Named { name = OrdinaryName name; _ }; use_op; reason; _ }
+            when match name with
+                 | "add"
+                 | "clear"
+                 | "delete" ->
+                   true
+                 | _ -> false ->
+            add_output
+              cx
+              (Error_message.EPropNotReadable
+                 {
+                   reason_prop = reason;
+                   prop_name = Some (OrdinaryName name);
+                   use_op = Frame (ReactDeepReadOnly dro, use_op);
+                 }
+              )
+          | _ ->
+            let elem_t = mk_react_dro cx unknown_use dro elem_t in
+            let ro_set = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlySet" [elem_t] in
+            let u =
+              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+            in
+            rec_flow cx trace (ro_set, u)
+        end
         (***************)
         (* maybe types *)
         (***************)
@@ -5984,19 +6024,44 @@ struct
         (**********************)
         | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some dro; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
-          ) ->
-          let l =
-            get_builtin_typeapp
-              ~use_desc:true
+          ) -> begin
+          match u with
+          | MethodT (use_op, _, reason, Named { name = OrdinaryName name; _ }, _)
+          | GetPropT { propref = Named { name = OrdinaryName name; _ }; use_op; reason; _ }
+            when match name with
+                 | "fill"
+                 | "pop"
+                 | "push"
+                 | "reverse"
+                 | "shift"
+                 | "sort"
+                 | "splice"
+                 | "unshift" ->
+                   true
+                 | _ -> false ->
+            add_output
               cx
-              reason
-              "$ReadOnlyArray"
-              [mk_react_dro cx unknown_use dro elem_t]
-          in
-          let u =
-            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
-          in
-          rec_flow cx trace (l, u)
+              (Error_message.EPropNotReadable
+                 {
+                   reason_prop = reason;
+                   prop_name = Some (OrdinaryName name);
+                   use_op = Frame (ReactDeepReadOnly dro, use_op);
+                 }
+              )
+          | _ ->
+            let l =
+              get_builtin_typeapp
+                ~use_desc:true
+                cx
+                reason
+                "$ReadOnlyArray"
+                [mk_react_dro cx unknown_use dro elem_t]
+            in
+            let u =
+              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+            in
+            rec_flow cx trace (l, u)
+        end
         | ( DefT (reason, ArrT (ArrayAT { elem_t; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
