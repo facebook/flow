@@ -711,8 +711,8 @@ let builtin_promise_class_id cx =
     end
   | _ -> None
 
-let is_builtin_iterable_class_id class_id cx =
-  let t = lookup_builtin_type_opt cx "$Iterable" in
+let is_builtin_class_id class_ref class_id cx =
+  let t = lookup_builtin_type_opt cx class_ref in
   match t with
   | Some (OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -721,20 +721,27 @@ let is_builtin_iterable_class_id class_id cx =
       (match Context.force_fully_resolved_tvar cx s with
       | DefT
           ( _,
-            PolyT
-              {
-                t_out =
-                  DefT
-                    ( _,
-                      ClassT (DefT (_, InstanceT { inst = { class_id = iterable_class_id; _ }; _ }))
-                    );
-                _;
-              }
+            ( PolyT
+                {
+                  t_out =
+                    DefT
+                      ( _,
+                        ClassT
+                          ( DefT (_, InstanceT { inst = { class_id = ref_class_id; _ }; _ })
+                          | ThisInstanceT (_, { inst = { class_id = ref_class_id; _ }; _ }, _, _) )
+                      );
+                  _;
+                }
+            | ClassT
+                ( DefT (_, InstanceT { inst = { class_id = ref_class_id; _ }; _ })
+                | ThisInstanceT (_, { inst = { class_id = ref_class_id; _ }; _ }, _, _) ) )
           ) ->
-        ALoc.equal_id class_id iterable_class_id
+        ALoc.equal_id class_id ref_class_id
       | _ -> false)
     | _ -> false)
   | _ -> false
+
+let is_builtin_iterable_class_id class_id cx = is_builtin_class_id "$Iterable" class_id cx
 
 let builtin_react_element_opaque_id cx =
   let t_opt = lookup_builtin_type_opt cx "React$Element" in
@@ -2009,7 +2016,14 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some (p, _target_kind) ->
       let p = check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hint p in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
-      perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op None
+      perform_read_prop_action
+        cx
+        trace
+        use_op
+        propref
+        (Property.type_ p)
+        reason_op
+        inst.inst_react_dro
     | None ->
       let super =
         match name_of_propref propref with

@@ -1593,6 +1593,7 @@ module rec TypeTerm : sig
     class_private_static_fields: Properties.id;
     class_private_methods: Properties.id;
     class_private_static_methods: Properties.id;
+    inst_react_dro: (ALoc.t * dro_type) option;
   }
 
   and instance_kind =

@@ -1011,6 +1011,19 @@ struct
             cx
             trace
             (DefT (r, ArrT (ROArrayAT (t, Some (dro_loc, dro_type)))), OpenT tout)
+        | (DefT (r, InstanceT ({ inst; _ } as instance)), DeepReadOnlyT (tout, dro_loc, dro_type))
+          ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            ( DefT
+                ( r,
+                  InstanceT
+                    { instance with inst = { inst with inst_react_dro = Some (dro_loc, dro_type) } }
+                ),
+              OpenT tout
+            )
         | (DefT (r, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))), HooklikeT tout) ->
           rec_flow_t
             ~use_op:unknown_use
@@ -1069,6 +1082,46 @@ struct
             (DeepReadOnlyT (tout, _, _) | HooklikeT tout)
           ) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
+        | ( DefT
+              ( r,
+                InstanceT
+                  {
+                    inst =
+                      {
+                        inst_react_dro = Some dro;
+                        class_id;
+                        type_args = [(_, _, key_t, _); (_, _, val_t, _)];
+                        _;
+                      };
+                    _;
+                  }
+              ),
+            ( GetKeysT _ | GetValuesT _ | GetDictValuesT _ | CallT _ | LookupT _ | SetPropT _
+            | GetPropT _ | MethodT _ | ObjAssignFromT _ | ObjRestT _ | SetElemT _ | GetElemT _
+            | CallElemT _ | BindT _ )
+          )
+          when is_builtin_class_id "Map" class_id cx ->
+          let key_t = mk_react_dro cx unknown_use dro key_t in
+          let val_t = mk_react_dro cx unknown_use dro val_t in
+          let ro_map = get_builtin_typeapp cx r "$ReadOnlyMap" [key_t; val_t] in
+          rec_flow cx trace (ro_map, u)
+        | ( DefT
+              ( r,
+                InstanceT
+                  {
+                    inst =
+                      { inst_react_dro = Some dro; class_id; type_args = [(_, _, elem_t, _)]; _ };
+                    _;
+                  }
+              ),
+            ( GetKeysT _ | GetValuesT _ | GetDictValuesT _ | CallT _ | LookupT _ | SetPropT _
+            | GetPropT _ | MethodT _ | ObjAssignFromT _ | ObjRestT _ | SetElemT _ | GetElemT _
+            | CallElemT _ | BindT _ )
+          )
+          when is_builtin_class_id "Set" class_id cx ->
+          let elem_t = mk_react_dro cx unknown_use dro elem_t in
+          let ro_set = get_builtin_typeapp cx r "$ReadOnlySet" [elem_t] in
+          rec_flow cx trace (ro_set, u)
         (***************)
         (* maybe types *)
         (***************)
@@ -3758,6 +3811,14 @@ struct
         (********************************)
         (* ... and their fields written *)
         (********************************)
+        | ( DefT (_, InstanceT { inst = { inst_react_dro = Some dro; _ }; _ }),
+            SetPropT (use_op, _, propref, _, _, _, _)
+          )
+          when not (is_exception_to_react_dro propref) ->
+          let reason_prop = reason_of_propref propref in
+          let prop_name = name_of_propref propref in
+          let use_op = Frame (ReactDeepReadOnly dro, use_op) in
+          add_output cx (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
         | ( DefT (reason_instance, InstanceT _),
             SetPropT (use_op, reason_op, propref, mode, write_ctx, tin, prop_tout)
           ) ->
@@ -6644,6 +6705,7 @@ struct
       super
       implements
       {
+        inst_react_dro = _;
         class_id = _;
         class_name = _;
         type_args;

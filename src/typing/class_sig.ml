@@ -518,6 +518,7 @@ module Make
     in
     {
       Type.class_id = s.id;
+      inst_react_dro = None;
       class_name = s.class_name;
       type_args;
       own_props = Context.generate_property_map cx (NameUtils.namemap_of_smap fields);

@@ -689,6 +689,7 @@ let rec tag_of_def_t cx = function
 
 and tag_of_inst inst =
   let {
+    inst_react_dro = _;
     inst_call_t;
     inst_kind;
     class_id = _;
