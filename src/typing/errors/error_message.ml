@@ -3021,8 +3021,8 @@ let error_code_of_message err : error_code option =
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
   | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
-  | EPropNotFound _ -> Some Error_codes.PropMissing
-  | EPropNotReadable _ -> Some CannotRead
+  | EPropNotFound { use_op; _ } -> react_rule_of_use_op use_op ~default:Error_codes.PropMissing
+  | EPropNotReadable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotRead
   | EPropNotWritable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotWrite
   | EPropPolarityMismatch _ -> Some IncompatibleVariance
   | EReactElementFunArity (_, _, _) -> Some MissingArg
