@@ -109,6 +109,20 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- dro.js:37:14
+
+Cannot call `rest.baz.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   dro.js:37:14
+   37|     rest.baz.push("hello"); // error
+                    ^^^^
+
+References:
+   dro.js:35:44
+   35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
+                                                  ^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
 
 Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. React component properties [1] and
@@ -122,6 +136,20 @@ References:
    dro.js:35:19
    35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:39:17
+
+Cannot call `rest.qux[1].pop` because property `pop` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   dro.js:39:17
+   39|     rest.qux[1].pop(); // error
+                       ^^^
+
+References:
+   dro.js:35:72
+   35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
+                                                                              ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:56:9
@@ -250,6 +278,48 @@ Cannot assign object literal to `drc.prop` because property `prop` is not writab
 
    81| drc.prop = {x: 42}; // error;
            ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:84:8
+
+Cannot call `droarr.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   dro.js:84:8
+   84| droarr.push([]); // error
+              ^^^^
+
+References:
+   dro.js:83:42
+   83| declare const droarr: $ReactDeepReadOnly<Array<Array<number>>>;
+                                                ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:85:11
+
+Cannot call `droarr[0].push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   dro.js:85:11
+   85| droarr[0].push(42); // error
+                 ^^^^
+
+References:
+   dro.js:83:48
+   83| declare const droarr: $ReactDeepReadOnly<Array<Array<number>>>;
+                                                      ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:86:15
+
+Cannot call `droarr.at(...)?.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   dro.js:86:15
+   86| droarr.at(0)?.push(42) // error;
+                     ^^^^
+
+References:
+   dro.js:83:48
+   83| declare const droarr: $ReactDeepReadOnly<Array<Array<number>>>;
+                                                      ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17
@@ -406,4 +476,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 39 errors
+Found 44 errors
