@@ -110,3 +110,20 @@ component Foo() {
   useMyReducer((arr, act: any) => { return arr }, [0]); // ok
   return null;
 }
+
+droarr as $ReadOnlyArray<$ReadOnlyArray<number>> // fine
+droarr as $ReadOnlyArray<Array<number>> // error
+
+droset as $ReadOnlySet<$ReadOnlySet<number>> // fine
+droset as $ReadOnlySet<Set<number>> // error
+
+type T = $ReadOnlyArray<T>;
+declare const recarr: React$Immutable<T>;
+recarr as T;
+
+declare const droobj: React$Immutable<{x: Array<number>}>;
+droobj.x.push(42); // error
+droobj.x = []; // error
+
+droobj as {+x: Array<number>}; // error
+droobj as {+x: $ReadOnlyArray<number>}; // ok

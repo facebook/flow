@@ -386,6 +386,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ImplicitVoidReturnT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
+    | CheckReactImmutableT _
     | PromoteRendersRepresentationT _
     | ConvertEmptyPropsToMixedT _
     | ValueToTypeReferenceT _
