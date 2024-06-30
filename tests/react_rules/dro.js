@@ -62,7 +62,7 @@ droset.add(new Set()); // error
 droset.add((42: any)); // error
 droset.forEach(x => x.add(42)) // error
 
-droset as Set<Set<number>> as typeof droset // fine
+droset as Set<Set<number>> as typeof droset // error
 
 declare const dromap: React$Immutable<Map<{x: number}, Map<{y: number}, number>>>;
 dromap.set({x: 42}, new Map()); // error
@@ -84,3 +84,29 @@ declare const droarr: React$Immutable<Array<Array<number>>>;
 droarr.push([]); // error
 droarr[0].push(42); // error
 droarr.at(0)?.push(42) // error;
+
+declare hook useMyReducer<S, A>(
+  reducer: (React$Immutable<S>, A) => React$Immutable<S>,
+  initialState: S,
+): [S, Dispatch<A>];
+
+declare hook useMyReducerWithNoState<S, A>(
+  reducer: (React$Immutable<S>, A) => React$Immutable<S>,
+): [S, Dispatch<A>];
+
+declare type Dispatch<A> = (A) => void;
+declare function badReducer(state: Array<number>, action: any): Array<number>;
+declare function goodReducer(state: React$Immutable<Array<number>>, action: any): Array<number>
+
+component Foo() {
+  useMyReducer(badReducer, [1]); // error
+  useMyReducerWithNoState<Array<number>, _>(badReducer); // error
+  useMyReducerWithNoState(badReducer); // error
+  useMyReducer(goodReducer, [1]); // ok
+  useMyReducerWithNoState<Array<number>, _>(goodReducer); // ok
+  useMyReducerWithNoState(goodReducer); // ok
+
+  useMyReducer((arr, act: any) => { arr.push(42); return arr }, [0]); // error
+  useMyReducer((arr, act: any) => { return arr }, [0]); // ok
+  return null;
+}

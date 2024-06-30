@@ -970,6 +970,18 @@ struct
                 reason
             in
             rec_flow_t ~use_op:unknown_use cx trace (hook_union, OpenT tout)
+        | (IntersectionT (reason, rep), DeepReadOnlyT (tout, (dro_loc, dro_type))) ->
+          let dro_inter =
+            map_inter
+              ~f:(fun cx trace t tout ->
+                let tout = open_tvar tout in
+                rec_flow cx trace (t, DeepReadOnlyT (tout, (dro_loc, dro_type))))
+              cx
+              trace
+              rep
+              reason
+          in
+          rec_flow_t ~use_op:unknown_use cx trace (dro_inter, OpenT tout)
         | (DefT (r, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, (dro_loc, dro_type))) ->
           rec_flow_t
             ~use_op:unknown_use
@@ -1084,7 +1096,7 @@ struct
                   {
                     inst =
                       {
-                        inst_react_dro = Some dro;
+                        inst_react_dro = Some (dro_loc, dro_type);
                         class_id;
                         type_args = [(_, _, key_t, _); (_, _, val_t, _)];
                         _;
@@ -1112,15 +1124,17 @@ struct
                  {
                    reason_prop = reason;
                    prop_name = Some (OrdinaryName name);
-                   use_op = Frame (ReactDeepReadOnly dro, use_op);
+                   use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
                  }
               )
           | _ ->
-            let key_t = mk_react_dro cx unknown_use dro key_t in
-            let val_t = mk_react_dro cx unknown_use dro val_t in
+            let key_t = mk_react_dro cx unknown_use (dro_loc, dro_type) key_t in
+            let val_t = mk_react_dro cx unknown_use (dro_loc, dro_type) val_t in
             let ro_map = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlyMap" [key_t; val_t] in
             let u =
-              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+              TypeUtil.mod_use_op_of_use_t
+                (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
+                u
             in
             rec_flow cx trace (ro_map, u)
         end
@@ -1129,7 +1143,12 @@ struct
                 InstanceT
                   {
                     inst =
-                      { inst_react_dro = Some dro; class_id; type_args = [(_, _, elem_t, _)]; _ };
+                      {
+                        inst_react_dro = Some (dro_loc, dro_type);
+                        class_id;
+                        type_args = [(_, _, elem_t, _)];
+                        _;
+                      };
                     _;
                   }
               ),
@@ -1153,14 +1172,16 @@ struct
                  {
                    reason_prop = reason;
                    prop_name = Some (OrdinaryName name);
-                   use_op = Frame (ReactDeepReadOnly dro, use_op);
+                   use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
                  }
               )
           | _ ->
-            let elem_t = mk_react_dro cx unknown_use dro elem_t in
+            let elem_t = mk_react_dro cx unknown_use (dro_loc, dro_type) elem_t in
             let ro_set = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlySet" [elem_t] in
             let u =
-              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+              TypeUtil.mod_use_op_of_use_t
+                (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
+                u
             in
             rec_flow cx trace (ro_set, u)
         end
@@ -3853,13 +3874,13 @@ struct
         (********************************)
         (* ... and their fields written *)
         (********************************)
-        | ( DefT (_, InstanceT { inst = { inst_react_dro = Some dro; _ }; _ }),
+        | ( DefT (_, InstanceT { inst = { inst_react_dro = Some (dro_loc, dro_type); _ }; _ }),
             SetPropT (use_op, _, propref, _, _, _, _)
           )
           when not (is_exception_to_react_dro propref) ->
           let reason_prop = reason_of_propref propref in
           let prop_name = name_of_propref propref in
-          let use_op = Frame (ReactDeepReadOnly dro, use_op) in
+          let use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op) in
           add_output cx (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
         | ( DefT (reason_instance, InstanceT _),
             SetPropT (use_op, reason_op, propref, mode, write_ctx, tin, prop_tout)
@@ -6018,7 +6039,7 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
-        | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some dro; _ })),
+        | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some (dro_loc, dro_type); _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) -> begin
           match u with
@@ -6041,7 +6062,7 @@ struct
                  {
                    reason_prop = reason;
                    prop_name = Some (OrdinaryName name);
-                   use_op = Frame (ReactDeepReadOnly dro, use_op);
+                   use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
                  }
               )
           | _ ->
@@ -6051,10 +6072,12 @@ struct
                 cx
                 reason
                 "$ReadOnlyArray"
-                [mk_react_dro cx unknown_use dro elem_t]
+                [mk_react_dro cx unknown_use (dro_loc, dro_type) elem_t]
             in
             let u =
-              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+              TypeUtil.mod_use_op_of_use_t
+                (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
+                u
             in
             rec_flow cx trace (l, u)
         end
@@ -6085,7 +6108,10 @@ struct
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
           let u =
-            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+            let (dro_loc, dro_type) = dro in
+            TypeUtil.mod_use_op_of_use_t
+              (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
+              u
           in
           rec_flow
             cx

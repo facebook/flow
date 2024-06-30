@@ -978,6 +978,17 @@ let mk_renders_type reason renders_variant t =
   in
   EvalT (t, destructor, Eval.generate_id ())
 
+let dro_of_type t =
+  match t with
+  | DefT
+      ( _,
+        ( ObjT { flags = { react_dro; _ }; _ }
+        | InstanceT { inst = { inst_react_dro = react_dro; _ }; _ }
+        | ArrT (ArrayAT { react_dro; _ } | TupleAT { react_dro; _ } | ROArrayAT (_, react_dro)) )
+      ) ->
+    react_dro
+  | _ -> None
+
 (* Create the optional children input type from the children arguments. *)
 let normalize_jsx_children_prop loc_children jsx_children =
   match jsx_children with

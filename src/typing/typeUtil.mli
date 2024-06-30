@@ -131,3 +131,5 @@ val mk_renders_type : reason -> Type.renders_variant -> Type.t -> Type.t
 val normalize_jsx_children_prop : ALoc.t -> Type.t list -> Type.t option
 
 val dro_strict : Type.react_dro -> bool
+
+val dro_of_type : Type.t -> Type.react_dro option

@@ -187,6 +187,7 @@ type 'loc explanation =
   | ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly of 'loc
   | ExplanationReactImmutable of 'loc
+  | ExplanationIncompatibleReactDeepReadOnly
   | ExplanationRenderTypeRequirement
   | ExplanationTypeGuardCompatibility
   | ExplanationTypeGuardPositiveConsistency of {
@@ -634,6 +635,11 @@ type 'loc message =
   | MessageIncompatibleNonPredicateToPredicate of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleReactDeepReadOnly of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+      dro_loc: 'loc;
     }
   | MessageIncompatibleReactHooksDueToUniqueness of {
       lower: 'loc virtual_reason;

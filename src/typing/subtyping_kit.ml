@@ -566,7 +566,26 @@ module Make (Flow : INPUT) : OUTPUT = struct
       flow_to_mutable_child cx trace use_op lit1 t1 t2;
       array_flow cx trace use_op lit1 r1 ~index:(index + 1) (ts1, e1, ts2, e2)
 
+  let check_dro_subtyping cx use_op l u =
+    match (l, u) with
+    | (AnyT _, _)
+    | (_, AnyT _) ->
+      ()
+    | (l, u) -> begin
+      match TypeUtil.(dro_of_type l, dro_of_type u |> Base.Option.map ~f:dro_strict) with
+      | (Some dro, _) when not (dro_strict dro) -> ()
+      | (None, _) -> ()
+      | (Some _, Some true) -> ()
+      | (Some (dro_loc, _), (None | Some false)) ->
+        add_output
+          cx
+          (Error_message.EIncompatibleReactDeepReadOnly
+             { lower = reason_of_t l; upper = reason_of_t u; dro_loc; use_op }
+          )
+    end
+
   let rec_sub_t cx use_op l u trace =
+    check_dro_subtyping cx use_op l u;
     match (l, u) with
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
