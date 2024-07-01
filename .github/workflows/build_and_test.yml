@@ -206,12 +206,12 @@ jobs:
           dist/flow-osx.zip
           dist/libflowparser-osx.zip
   build_macos_arm64:
-    runs-on: macos-13-xlarge
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '14.3.1'
+        xcode-version: '15.4.0'
     - name: Update curl cacerts
       run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
     - uses: ./.github/actions/install-opam-mac
