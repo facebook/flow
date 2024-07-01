@@ -1,10 +1,11 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:4:2
 
-Cannot cast `a` to interface type because number [1] is incompatible with boolean [2] in the return value of property
-`pop`. [incompatible-cast]
+Cannot cast `a` to interface type because in the return value of property `pop`: [incompatible-cast]
+ - Either number [1] is incompatible with boolean [2].
+ - Or number [1] is incompatible with undefined [3].
 
    array.js:4:2
-   4| (a: interface {pop(): boolean}); // ERROR
+   4| (a: interface {pop(): boolean | void}); // ERROR
        ^
 
 References:
@@ -12,8 +13,11 @@ References:
    1| declare var a: Array<number>;
                            ^^^^^^ [1]
    array.js:4:23
-   4| (a: interface {pop(): boolean}); // ERROR
+   4| (a: interface {pop(): boolean | void}); // ERROR
                             ^^^^^^^ [2]
+   array.js:4:33
+   4| (a: interface {pop(): boolean | void}); // ERROR
+                                      ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:5:19

@@ -671,7 +671,7 @@ Flags: --pretty
       "name":"?.map",
       "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>)"
     },
-    {"name":"?.pop","type":"void | (() => T)"},
+    {"name":"?.pop","type":"void | (() => T | void)"},
     {"name":"?.push","type":"void | ((...items: Array<T>) => number)"},
     {
       "name":"?.reduce",
@@ -682,7 +682,7 @@ Flags: --pretty
       "type":"void | (<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)"
     },
     {"name":"?.reverse","type":"void | (() => Array<T>)"},
-    {"name":"?.shift","type":"void | (() => T)"},
+    {"name":"?.shift","type":"void | (() => T | void)"},
     {"name":"?.slice","type":"void | ((start?: number, end?: number) => Array<T>)"},
     {
       "name":"?.some",
@@ -780,7 +780,7 @@ Flags: --pretty
       "name":"map",
       "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>"
     },
-    {"name":"pop","type":"() => T"},
+    {"name":"pop","type":"() => T | void"},
     {"name":"push","type":"(...items: Array<T>) => number"},
     {
       "name":"reduce",
@@ -791,7 +791,7 @@ Flags: --pretty
       "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U"
     },
     {"name":"reverse","type":"() => Array<T>"},
-    {"name":"shift","type":"() => T"},
+    {"name":"shift","type":"() => T | void"},
     {"name":"slice","type":"(start?: number, end?: number) => Array<T>"},
     {
       "name":"some",

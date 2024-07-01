@@ -47,12 +47,12 @@ References:
                        ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:13:17
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:16:17
 
 Cannot access object with computed property using string [1]. [invalid-computed-prop]
 
-   sanity-ordering.js:13:17
-     13|     head = head[key] || create && (head[key] = {}); // error: no indexed type
+   sanity-ordering.js:16:17
+     16|     head = head[key] || create && (head[key] = {}); // error: no indexed type
                          ^^^
 
 References:
@@ -61,13 +61,13 @@ References:
                                                                        ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:13:41
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:16:41
 
 Cannot assign object literal to `head[key]` because an index signature declaring the expected key / value type is
 missing in object type [1]. [prop-missing]
 
-   sanity-ordering.js:13:41
-   13|     head = head[key] || create && (head[key] = {}); // error: no indexed type
+   sanity-ordering.js:16:41
+   16|     head = head[key] || create && (head[key] = {}); // error: no indexed type
                                                ^^^
 
 References:

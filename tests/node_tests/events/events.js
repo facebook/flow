@@ -16,7 +16,9 @@ emitter.emit({});                         // err: `event` must be a string
 emitter.eventNames().pop();               // ok: returns string[]
 emitter.eventNames('foo')                 // err: does not process args
 
-emitter.listeners('foo').pop()();         // ok: returns Function[]
+emitter.listeners('foo').pop();           // ok: returns Function[]
+emitter.listeners('foo').pop()();         // err: Function | void
+emitter.listeners('foo').pop()?.();       // ok: optional chaining of Function | void
 emitter.listeners();                      // err: requires `event`
 
 emitter.listenerCount('foo').toFixed();   // ok: returns a number
@@ -61,7 +63,9 @@ emitter.setMaxListeners('foo');           // err: numeric arg is required
 emitter.getMaxListeners().toFixed();      // ok
 emitter.getMaxListeners('foo');           // err: does not process args
 
-emitter.rawListeners('foo').pop()();      // ok: returns Function[]
+emitter.rawListeners('foo').pop();        // ok: returns Function[]
+emitter.rawListeners('foo').pop()();      // err: Function | void
+emitter.rawListeners('foo').pop()?.();    // ok: optional chaining of Function | void
 emitter.rawListeners();                   // err: requires `event`
 
 EventEmitter.defaultMaxListeners.toFixed() // ok
