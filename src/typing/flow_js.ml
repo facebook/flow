@@ -3959,7 +3959,12 @@ struct
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
-        | ( DefT (r, InstanceT _),
+        | _ -> mega cx ~trace (l, u)
+        )
+
+  and mega cx ~trace (l, u) =
+    match l, u with
+    | ( DefT (r, InstanceT _),
             GetPropT { propref = Named { name = OrdinaryName "constructor"; _ }; tout; hint = _; _ }
           ) ->
           let t = TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l in
@@ -6344,7 +6349,6 @@ struct
             (reason_of_t l |> loc_of_reason)
             u
       (* END OF PATTERN MATCH *)
-    )
 
   (**
    * Binary arithmetic operations
