@@ -160,6 +160,8 @@ jobs:
           dist/flow-linux64-arm64.zip
   build_macos:
     runs-on: macos-13
+    env:
+      MACOSX_DEPLOYMENT_TARGET: 11.0
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
@@ -187,7 +189,7 @@ jobs:
       shell: bash
     - name: Build flow
       run: |-
-        opam exec -- make bin/flow dist/flow.zip
+        make bin/flow dist/flow.zip
         mkdir -p bin/macos && cp bin/flow bin/macos/flow
     - name: Build libflowparser
       run: opam exec -- make -C src/parser dist/libflowparser.zip
@@ -207,6 +209,8 @@ jobs:
           dist/libflowparser-osx.zip
   build_macos_arm64:
     runs-on: macos-14
+    env:
+      MACOSX_DEPLOYMENT_TARGET: 11.0
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
@@ -234,7 +238,7 @@ jobs:
       shell: bash
     - name: Build flow
       run: |-
-        arch -arm64 opam exec -- make bin/flow dist/flow.zip
+        make bin/flow dist/flow.zip
         mkdir -p bin/macos-arm64 && cp bin/flow bin/macos-arm64/flow
     - name: Build libflowparser
       run: opam exec -- make -C src/parser dist/libflowparser.zip
