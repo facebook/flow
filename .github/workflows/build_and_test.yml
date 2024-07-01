@@ -189,7 +189,7 @@ jobs:
       shell: bash
     - name: Build flow
       run: |-
-        make bin/flow dist/flow.zip
+        opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/macos && cp bin/flow bin/macos/flow
     - name: Build libflowparser
       run: opam exec -- make -C src/parser dist/libflowparser.zip
@@ -238,7 +238,7 @@ jobs:
       shell: bash
     - name: Build flow
       run: |-
-        make bin/flow dist/flow.zip
+        opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/macos-arm64 && cp bin/flow bin/macos-arm64/flow
     - name: Build libflowparser
       run: opam exec -- make -C src/parser dist/libflowparser.zip
