@@ -160,14 +160,14 @@ function MyComponent({bar, foo = 3}: Props): React.Node {}
 export const MyEnhancedComponent = trivialHOC(MyComponent); // ERROR
 ```
 
-You can add an annotation to your exported component using `React.AbstractComponent`:
+You can add an annotation to your exported component using `React.ComponentType`:
 
 ```js flow-check
 import * as React from 'react';
 
 function trivialHOC<Config: {...}>(
-  Component: React.AbstractComponent<Config>,
-): React.AbstractComponent<Config> {
+  Component: React.ComponentType<Config>,
+): React.ComponentType<Config> {
   return Component;
 }
 
@@ -175,5 +175,5 @@ type Props = $ReadOnly<{bar: number, foo?: number}>;
 
 function MyComponent({bar, foo = 3}: Props): React.Node {}
 
-export const MyEnhancedComponent: React.AbstractComponent<Props> = trivialHOC(MyComponent); // OK
+export const MyEnhancedComponent: React.ComponentType<Props> = trivialHOC(MyComponent); // OK
 ```
