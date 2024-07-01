@@ -970,18 +970,6 @@ struct
                 reason
             in
             rec_flow_t ~use_op:unknown_use cx trace (hook_union, OpenT tout)
-        | (IntersectionT (reason, rep), DeepReadOnlyT (tout, (dro_loc, dro_type))) ->
-          let dro_inter =
-            map_inter
-              ~f:(fun cx trace t tout ->
-                let tout = open_tvar tout in
-                rec_flow cx trace (t, DeepReadOnlyT (tout, (dro_loc, dro_type))))
-              cx
-              trace
-              rep
-              reason
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (dro_inter, OpenT tout)
         | (DefT (r, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, (dro_loc, dro_type))) ->
           rec_flow_t
             ~use_op:unknown_use
@@ -1096,7 +1084,7 @@ struct
                   {
                     inst =
                       {
-                        inst_react_dro = Some (dro_loc, dro_type);
+                        inst_react_dro = Some dro;
                         class_id;
                         type_args = [(_, _, key_t, _); (_, _, val_t, _)];
                         _;
@@ -1124,17 +1112,15 @@ struct
                  {
                    reason_prop = reason;
                    prop_name = Some (OrdinaryName name);
-                   use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
+                   use_op = Frame (ReactDeepReadOnly dro, use_op);
                  }
               )
           | _ ->
-            let key_t = mk_react_dro cx unknown_use (dro_loc, dro_type) key_t in
-            let val_t = mk_react_dro cx unknown_use (dro_loc, dro_type) val_t in
+            let key_t = mk_react_dro cx unknown_use dro key_t in
+            let val_t = mk_react_dro cx unknown_use dro val_t in
             let ro_map = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlyMap" [key_t; val_t] in
             let u =
-              TypeUtil.mod_use_op_of_use_t
-                (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
-                u
+              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
             in
             rec_flow cx trace (ro_map, u)
         end
@@ -1143,12 +1129,7 @@ struct
                 InstanceT
                   {
                     inst =
-                      {
-                        inst_react_dro = Some (dro_loc, dro_type);
-                        class_id;
-                        type_args = [(_, _, elem_t, _)];
-                        _;
-                      };
+                      { inst_react_dro = Some dro; class_id; type_args = [(_, _, elem_t, _)]; _ };
                     _;
                   }
               ),
@@ -1172,16 +1153,14 @@ struct
                  {
                    reason_prop = reason;
                    prop_name = Some (OrdinaryName name);
-                   use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
+                   use_op = Frame (ReactDeepReadOnly dro, use_op);
                  }
               )
           | _ ->
-            let elem_t = mk_react_dro cx unknown_use (dro_loc, dro_type) elem_t in
+            let elem_t = mk_react_dro cx unknown_use dro elem_t in
             let ro_set = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlySet" [elem_t] in
             let u =
-              TypeUtil.mod_use_op_of_use_t
-                (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
-                u
+              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
             in
             rec_flow cx trace (ro_set, u)
         end
@@ -3874,13 +3853,13 @@ struct
         (********************************)
         (* ... and their fields written *)
         (********************************)
-        | ( DefT (_, InstanceT { inst = { inst_react_dro = Some (dro_loc, dro_type); _ }; _ }),
+        | ( DefT (_, InstanceT { inst = { inst_react_dro = Some dro; _ }; _ }),
             SetPropT (use_op, _, propref, _, _, _, _)
           )
           when not (is_exception_to_react_dro propref) ->
           let reason_prop = reason_of_propref propref in
           let prop_name = name_of_propref propref in
-          let use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op) in
+          let use_op = Frame (ReactDeepReadOnly dro, use_op) in
           add_output cx (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
         | ( DefT (reason_instance, InstanceT _),
             SetPropT (use_op, reason_op, propref, mode, write_ctx, tin, prop_tout)
@@ -6010,7 +5989,6 @@ struct
         (***********************)
         (* Object library call *)
         (***********************)
-        | ((ObjProtoT _ | FunProtoT _), CheckReactImmutableT _) -> ()
         | (ObjProtoT reason, _) ->
           let use_desc = true in
           let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
@@ -6040,7 +6018,7 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
-        | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some (dro_loc, dro_type); _ })),
+        | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some dro; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) -> begin
           match u with
@@ -6063,7 +6041,7 @@ struct
                  {
                    reason_prop = reason;
                    prop_name = Some (OrdinaryName name);
-                   use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
+                   use_op = Frame (ReactDeepReadOnly dro, use_op);
                  }
               )
           | _ ->
@@ -6073,12 +6051,10 @@ struct
                 cx
                 reason
                 "$ReadOnlyArray"
-                [mk_react_dro cx unknown_use (dro_loc, dro_type) elem_t]
+                [mk_react_dro cx unknown_use dro elem_t]
             in
             let u =
-              TypeUtil.mod_use_op_of_use_t
-                (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
-                u
+              TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
             in
             rec_flow cx trace (l, u)
         end
@@ -6109,10 +6085,7 @@ struct
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
           let u =
-            let (dro_loc, dro_type) = dro in
-            TypeUtil.mod_use_op_of_use_t
-              (fun use_op -> Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op))
-              u
+            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
           in
           rec_flow
             cx
@@ -6262,65 +6235,6 @@ struct
             (Error_message.EObjectComputedPropertyAssign
                (reason, reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
             )
-        | ( DefT (_, ObjT { flags = { frozen; obj_kind; _ }; props_tmap; proto_t; call_t; _ }),
-            CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
-          ) ->
-          let props_safe =
-            Context.fold_real_props
-              cx
-              props_tmap
-              (fun _ prop acc ->
-                match prop with
-                | Field { type_; polarity = Polarity.Positive; _ } ->
-                  rec_flow cx trace (type_, u);
-                  acc
-                | _ -> false)
-              true
-          in
-          let dict_safe =
-            match Obj_type.get_dict_opt obj_kind with
-            | Some { dict_polarity = Polarity.Positive; value; _ } ->
-              rec_flow cx trace (value, u);
-              true
-            | None -> true
-            | _ -> false
-          in
-          let locally_safe = Base.Option.is_none call_t && (frozen || (props_safe && dict_safe)) in
-          if locally_safe then
-            rec_flow cx trace (proto_t, u)
-          else
-            add_output
-              cx
-              (Error_message.EIncompatibleReactDeepReadOnly
-                 { lower = lower_reason; upper = upper_reason; dro_loc; use_op }
-              )
-        | ( DefT (_, InstanceT { inst = { class_id; type_args; _ }; _ }),
-            CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
-          ) -> begin
-          match type_args with
-          | [(_, _, elem_t, _)] when is_builtin_class_id "$ReadOnlySet" class_id cx ->
-            rec_flow cx trace (elem_t, u)
-          | [(_, _, key_t, _); (_, _, val_t, _)] when is_builtin_class_id "$ReadOnlyMap" class_id cx
-            ->
-            rec_flow cx trace (key_t, u);
-            rec_flow cx trace (val_t, u)
-          | _ ->
-            add_output
-              cx
-              (Error_message.EIncompatibleReactDeepReadOnly
-                 { lower = lower_reason; upper = upper_reason; dro_loc; use_op }
-              )
-        end
-        | ( DefT (_, ArrT (ArrayAT _)),
-            CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
-          ) ->
-          add_output
-            cx
-            (Error_message.EIncompatibleReactDeepReadOnly
-               { lower = lower_reason; upper = upper_reason; dro_loc; use_op }
-            )
-        | (DefT (_, ArrT arr), CheckReactImmutableT _) -> rec_flow cx trace (elemt_of_arrtype arr, u)
-        | (_, CheckReactImmutableT _) -> ()
         | _ ->
           add_output
             cx
@@ -7103,8 +7017,7 @@ struct
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
-    | WriteComputedObjPropCheckT _
-    | CheckReactImmutableT _ ->
+    | WriteComputedObjPropCheckT _ ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ObjectAssign))

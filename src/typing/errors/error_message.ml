@@ -514,12 +514,6 @@ and 'loc t' =
       call_loc: 'loc;
     }
   | EHookNaming of 'loc
-  | EIncompatibleReactDeepReadOnly of {
-      use_op: 'loc virtual_use_op;
-      dro_loc: 'loc;
-      lower: 'loc virtual_reason;
-      upper: 'loc virtual_reason;
-    }
   | EObjectThisReference of 'loc * 'loc virtual_reason
   | EComponentThisReference of {
       component_loc: 'loc;
@@ -1231,14 +1225,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EHookUniqueIncompatible { use_op; lower; upper } ->
     EHookUniqueIncompatible
       { use_op = map_use_op use_op; lower = map_reason lower; upper = map_reason upper }
-  | EIncompatibleReactDeepReadOnly { use_op; lower; upper; dro_loc } ->
-    EIncompatibleReactDeepReadOnly
-      {
-        use_op = map_use_op use_op;
-        lower = map_reason lower;
-        upper = map_reason upper;
-        dro_loc = f dro_loc;
-      }
   | EHookRuleViolation { callee_loc; call_loc; hook_rule } ->
     let hook_rule =
       match hook_rule with
@@ -1482,8 +1468,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
         EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
     )
-  | EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc } ->
-    util use_op (fun use_op -> EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc })
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1884,7 +1868,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatible _
   | EMethodUnbinding _
   | EHookIncompatible _
-  | EIncompatibleReactDeepReadOnly _
   | EHookUniqueIncompatible _
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
@@ -2715,14 +2698,6 @@ let friendly_message_of_msg = function
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithNormalFunctions;
       }
-  | EIncompatibleReactDeepReadOnly { use_op; lower; upper; dro_loc } ->
-    UseOp
-      {
-        loc = loc_of_reason lower;
-        message = MessageIncompatibleReactDeepReadOnly { lower; upper; dro_loc };
-        use_op;
-        explanation = Some ExplanationIncompatibleReactDeepReadOnly;
-      }
   | EHookUniqueIncompatible { use_op; lower; upper } ->
     UseOp
       {
@@ -3109,7 +3084,6 @@ let error_code_of_message err : error_code option =
   | EHookIncompatible _
   | EHookUniqueIncompatible _ ->
     Some ReactRuleHookIncompatible
-  | EIncompatibleReactDeepReadOnly _ -> Some ReactRuleImmutableIncompatible
   | EHookRuleViolation _ -> Some ReactRuleHook
   | EHookNaming _ -> Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL

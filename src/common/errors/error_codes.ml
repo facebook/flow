@@ -10,7 +10,6 @@ type error_code =
   | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
-  | ReactRuleImmutableIncompatible
   | ReactRuleHook
   | ReactRuleRef
   | ReactRuleCallComponent
@@ -211,7 +210,6 @@ let require_specific : error_code -> bool = function
   | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
-  | ReactRuleImmutableIncompatible
   | ReactRuleHook
   | ReactRuleRef
   | ReactRuleCallComponent ->
@@ -222,7 +220,6 @@ let string_of_code : error_code -> string = function
   | ReactRuleUnsafeMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
-  | ReactRuleImmutableIncompatible -> "react-rule-immutable-incompatible"
   | ReactRuleHook -> "react-rule-hook"
   | ReactRuleRef -> "react-rule-unsafe-ref"
   | ReactRuleCallComponent -> "react-rule-call-component"

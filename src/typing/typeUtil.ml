@@ -148,7 +148,6 @@ and reason_of_use_t = function
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
-  | CheckReactImmutableT { lower_reason = reason; _ } -> reason
   | PromoteRendersRepresentationT { reason; _ } -> reason
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | TryRenderTypePromotionT { reason; _ } -> reason
@@ -294,8 +293,6 @@ let rec util_use_op_of_use_t :
   | ValueToTypeReferenceT (use_op, reason, kind, t) ->
     util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
   | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })
-  | CheckReactImmutableT ({ use_op; _ } as x) ->
-    util use_op (fun use_op -> CheckReactImmutableT { x with use_op })
   | MakeExactT (_, _)
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)
@@ -980,17 +977,6 @@ let mk_renders_type reason renders_variant t =
       )
   in
   EvalT (t, destructor, Eval.generate_id ())
-
-let dro_of_type t =
-  match t with
-  | DefT
-      ( _,
-        ( ObjT { flags = { react_dro; _ }; _ }
-        | InstanceT { inst = { inst_react_dro = react_dro; _ }; _ }
-        | ArrT (ArrayAT { react_dro; _ } | TupleAT { react_dro; _ } | ROArrayAT (_, react_dro)) )
-      ) ->
-    react_dro
-  | _ -> None
 
 (* Create the optional children input type from the children arguments. *)
 let normalize_jsx_children_prop loc_children jsx_children =
