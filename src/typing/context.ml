@@ -858,10 +858,10 @@ let run_in_signature_tvar_env cx f =
   let saved_typing_mode = cx.typing_mode in
   cx.ccx.speculation_state := [];
   cx.typing_mode <- CheckingMode;
-  let result = f () in
-  cx.typing_mode <- saved_typing_mode;
-  cx.ccx.speculation_state := saved_speculation_state;
-  result
+  Exception.protect ~f ~finally:(fun () ->
+      cx.typing_mode <- saved_typing_mode;
+      cx.ccx.speculation_state := saved_speculation_state
+  )
 
 let run_in_hint_eval_mode cx f =
   let old_typing_mode = cx.typing_mode in
