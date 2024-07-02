@@ -227,19 +227,11 @@ let function_like_op = function
     true
   | t -> object_like_op t
 
+(* If we allow `==` on these two types. *)
 let equatable = function
-  | (DefT (_, NumT _), DefT (_, NumT _))
-  | (DefT (_, SingletonNumT _), DefT (_, SingletonNumT _))
-  | (DefT (_, SingletonNumT _), DefT (_, NumT _))
-  | (DefT (_, NumT _), DefT (_, SingletonNumT _))
-  | (DefT (_, StrT _), DefT (_, StrT _))
-  | (DefT (_, StrT _), DefT (_, SingletonStrT _))
-  | (DefT (_, SingletonStrT _), DefT (_, StrT _))
-  | (DefT (_, SingletonStrT _), DefT (_, SingletonStrT _))
-  | (DefT (_, BoolT _), DefT (_, BoolT _))
-  | (DefT (_, BoolT _), DefT (_, SingletonBoolT _))
-  | (DefT (_, SingletonBoolT _), DefT (_, BoolT _))
-  | (DefT (_, SingletonBoolT _), DefT (_, SingletonBoolT _))
+  | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, (NumT _ | SingletonNumT _)))
+  | (DefT (_, (StrT _ | SingletonStrT _)), DefT (_, (StrT _ | SingletonStrT _)))
+  | (DefT (_, (BoolT _ | SingletonBoolT _)), DefT (_, (BoolT _ | SingletonBoolT _)))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
   | (DefT (_, EmptyT), _)
   | (_, DefT (_, EmptyT))
