@@ -395,54 +395,109 @@ implicit-instantiation.js:10:21{
   "end":41
 }
 interface.js:6:7 = type I1 = interface {}
+
+'I1' defined at interface.js:6:5
+
 interface.js:6:6,6:7
 interface.js:7:7 = type I2 = interface {(): number}
+
+'I2' defined at interface.js:7:5
+
 interface.js:7:6,7:7
 interface.js:8:7 = type I3 = interface {+[my_key: string]: number}
+
+'I3' defined at interface.js:8:5
+
 interface.js:8:6,8:7
 interface.js:9:7 = type I4 = interface {-[my_key: string]: number}
+
+'I4' defined at interface.js:9:5
+
 interface.js:9:6,9:7
 interface.js:10:7 = type I5 = interface {[my_key: string]: number}
+
+'I5' defined at interface.js:10:5
+
 interface.js:10:6,10:7
 interface.js:11:7 = type I6 = interface extends C, D {}
+
+'C' defined at interface.js:3:6
+'D' defined at interface.js:4:6
+'I6' defined at interface.js:11:5
+
 interface.js:11:6,11:7
 interface.js:12:7 = type I7 = interface extends C {(): number}
+
+'C' defined at interface.js:3:6
+'I7' defined at interface.js:12:5
+
 interface.js:12:6,12:7
 intersections.js:9:4
 Flags:
 K & L
+
+'K' defined at intersections.js:4:20
+'L' defined at intersections.js:5:20
+
 intersections.js:9:3,9:4
 
 intersections.js:11:4
 Flags:
 (?P<TValue>) & L
+
+'L' defined at intersections.js:5:20
+'P' defined at intersections.js:6:20
+
 intersections.js:11:3,11:4
 
 intersections.js:13:4
 Flags:
 Poly<K & L>
+
+'K' defined at intersections.js:4:20
+'L' defined at intersections.js:5:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:13:3,13:4
 
 intersections.js:15:4
 Flags:
 Poly<?(((K, L) => void) & ((L, K) => void))>
+
+'K' defined at intersections.js:4:20
+'L' defined at intersections.js:5:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:15:3,15:4
 
 intersections.js:17:4
 Flags:
 Poly<?(K & L)>
+
+'K' defined at intersections.js:4:20
+'L' defined at intersections.js:5:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:17:3,17:4
 
 intersections.js:26:4
 Flags:
 LongLongLongLongLongLongLongLongName
 & AnotherLongLongLongLongLongLongLongLongName
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20
+'LongLongLongLongLongLongLongLongName' defined at intersections.js:21:20
+
 intersections.js:26:3,26:4
 
 intersections.js:28:4
 Flags:
 (?LongLongLongLongLongLongLongLongNameP<TValue>)
 & AnotherLongLongLongLongLongLongLongLongName
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20
+'LongLongLongLongLongLongLongLongNameP' defined at intersections.js:23:20
+
 intersections.js:28:3,28:4
 
 intersections.js:30:4
@@ -451,6 +506,11 @@ Poly<
   LongLongLongLongLongLongLongLongName
   & AnotherLongLongLongLongLongLongLongLongName,
 >
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20
+'LongLongLongLongLongLongLongLongName' defined at intersections.js:21:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:30:3,30:4
 
 intersections.js:32:4
@@ -461,6 +521,11 @@ Poly<
     AnotherLongLongLongLongLongLongLongLongName
   ) => void),
 >
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20
+'LongLongLongLongLongLongLongLongName' defined at intersections.js:21:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:32:3,32:4
 
 intersections.js:34:4
@@ -475,6 +540,11 @@ Poly<
     LongLongLongLongLongLongLongLongName
   ) => void)),
 >
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20
+'LongLongLongLongLongLongLongLongName' defined at intersections.js:21:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:34:3,34:5
 
 intersections.js:36:4
@@ -483,6 +553,11 @@ Poly<
   ?(LongLongLongLongLongLongLongLongName
   & AnotherLongLongLongLongLongLongLongLongName),
 >
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20
+'LongLongLongLongLongLongLongLongName' defined at intersections.js:21:20
+'Poly' defined at intersections.js:3:20
+
 intersections.js:36:3,36:4
 
 mixed.js:18:17 = {
@@ -1847,38 +1922,69 @@ unions.js:69:13,69:23
 unions.js:78:4
 Flags:
 K | L
+
+'K' defined at unions.js:73:20
+'L' defined at unions.js:74:20
+
 unions.js:78:3,78:4
 
 unions.js:80:4
 Flags:
 ?P<TValue> | L
+
+'L' defined at unions.js:74:20
+'P' defined at unions.js:75:20
+
 unions.js:80:3,80:4
 
 unions.js:82:4
 Flags:
 Poly<K | L>
+
+'K' defined at unions.js:73:20
+'L' defined at unions.js:74:20
+'Poly' defined at unions.js:72:20
+
 unions.js:82:3,82:4
 
 unions.js:84:4
 Flags:
 Poly<(K, L) => void>
+
+'K' defined at unions.js:73:20
+'L' defined at unions.js:74:20
+'Poly' defined at unions.js:72:20
+
 unions.js:84:3,84:4
 
 unions.js:86:4
 Flags:
 Poly<?K | L>
+
+'K' defined at unions.js:73:20
+'L' defined at unions.js:74:20
+'Poly' defined at unions.js:72:20
+
 unions.js:86:3,86:4
 
 unions.js:95:4
 Flags:
 LongLongLongLongLongLongLongLongName
 | AnotherLongLongLongLongLongLongLongLongName
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at unions.js:91:20
+'LongLongLongLongLongLongLongLongName' defined at unions.js:90:20
+
 unions.js:95:3,95:4
 
 unions.js:97:4
 Flags:
 ?LongLongLongLongLongLongLongLongNameP<TValue>
 | AnotherLongLongLongLongLongLongLongLongName
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at unions.js:91:20
+'LongLongLongLongLongLongLongLongNameP' defined at unions.js:92:20
+
 unions.js:97:3,97:4
 
 unions.js:99:4
@@ -1887,6 +1993,11 @@ Poly<
   LongLongLongLongLongLongLongLongName
   | AnotherLongLongLongLongLongLongLongLongName,
 >
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at unions.js:91:20
+'LongLongLongLongLongLongLongLongName' defined at unions.js:90:20
+'Poly' defined at unions.js:72:20
+
 unions.js:99:3,99:4
 
 unions.js:101:4
@@ -1894,6 +2005,10 @@ Flags:
 Poly<
   (LongLongLongLongLongLongLongLongName, LongLongLongLongLongLongLongLongName) => void,
 >
+
+'LongLongLongLongLongLongLongLongName' defined at unions.js:90:20
+'Poly' defined at unions.js:72:20
+
 unions.js:101:3,101:4
 
 unions.js:103:4
@@ -1902,6 +2017,11 @@ Poly<
   ?LongLongLongLongLongLongLongLongName
   | AnotherLongLongLongLongLongLongLongLongName,
 >
+
+'AnotherLongLongLongLongLongLongLongLongName' defined at unions.js:91:20
+'LongLongLongLongLongLongLongLongName' defined at unions.js:90:20
+'Poly' defined at unions.js:72:20
+
 unions.js:103:3,103:4
 
 unions.js:112:6
@@ -1910,6 +2030,13 @@ type LongUnion = LongLongLongLongLongLongLongLongName1
 | LongLongLongLongLongLongLongLongName2
 | LongLongLongLongLongLongLongLongName3
 | LongLongLongLongLongLongLongLongName4
+
+'LongLongLongLongLongLongLongLongName1' defined at unions.js:107:20
+'LongLongLongLongLongLongLongLongName2' defined at unions.js:108:20
+'LongLongLongLongLongLongLongLongName3' defined at unions.js:109:20
+'LongLongLongLongLongLongLongLongName4' defined at unions.js:110:20
+'LongUnion' defined at unions.js:112:5
+
 unions.js:112:6,112:14
 
 unions.js:115:6
@@ -1920,44 +2047,95 @@ type LongUnionPoly = Poly<
   | LongLongLongLongLongLongLongLongName3
   | LongLongLongLongLongLongLongLongName4,
 >
+
+'LongLongLongLongLongLongLongLongName1' defined at unions.js:107:20
+'LongLongLongLongLongLongLongLongName2' defined at unions.js:108:20
+'LongLongLongLongLongLongLongLongName3' defined at unions.js:109:20
+'LongLongLongLongLongLongLongLongName4' defined at unions.js:110:20
+'LongUnionPoly' defined at unions.js:115:5
+'Poly' defined at unions.js:72:20
+
 unions.js:115:6,115:18
 
 tparam_defaults.js:11:8:
 One<string>
+
+'One' defined at tparam_defaults.js:5:5
+
 tparam_defaults.js:11:7,11:10
 tparam_defaults.js:12:8:
 One<>
+
+'One' defined at tparam_defaults.js:5:5
+
 tparam_defaults.js:12:7,12:10
 tparam_defaults.js:14:8:
 Two<string>
+
+'Two' defined at tparam_defaults.js:7:5
+
 tparam_defaults.js:14:7,14:10
 tparam_defaults.js:15:8:
 Two<>
+
+'Two' defined at tparam_defaults.js:7:5
+
 tparam_defaults.js:15:7,15:10
 tparam_defaults.js:16:8:
 Two<Bar, string>
+
+'Bar' defined at tparam_defaults.js:3:6
+'Two' defined at tparam_defaults.js:7:5
+
 tparam_defaults.js:16:7,16:10
 tparam_defaults.js:18:8:
 Three<>
+
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:18:7,18:12
 tparam_defaults.js:19:8:
 Three<Bar, string>
+
+'Bar' defined at tparam_defaults.js:3:6
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:19:7,19:12
 tparam_defaults.js:20:8:
 Three<string>
+
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:20:7,20:12
 tparam_defaults.js:21:8:
 Three<Bar, number, string>
+
+'Bar' defined at tparam_defaults.js:3:6
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:21:7,21:12
 tparam_defaults.js:22:8:
 Three<>
+
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:22:7,22:12
 tparam_defaults.js:24:8:
 Three<Bar, number, Bar, Bar>
+
+'Bar' defined at tparam_defaults.js:3:6
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:24:7,24:12
 tparam_defaults.js:25:8:
 Three<>
+
+'Three' defined at tparam_defaults.js:9:5
+
 tparam_defaults.js:25:7,25:12
 tparam_defaults.js:29:5:
 C<C<any>>
+
+'C' defined at tparam_defaults.js:28:6
+
 tparam_defaults.js:29:5,29:5

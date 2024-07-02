@@ -74,10 +74,10 @@ let handle_response ~file_contents ~pretty ~strip_root response =
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
   | ServerProt.Response.Infer_type_string tys ->
-    let ty =
+    let (ty, refs) =
       match tys with
       | Some result -> result
-      | _ -> "(unknown)"
+      | _ -> ("(unknown)", None)
     in
     let doc =
       match documentation with
@@ -90,7 +90,12 @@ let handle_response ~file_contents ~pretty ~strip_root response =
       else
         spf "\n%s" (Reason.range_string_of_loc ~strip_root loc)
     in
-    print_endline (doc ^ ty ^ range)
+    let refs =
+      match refs with
+      | Some refs when not (List.is_empty refs) -> "\n\n" ^ String.concat "\n" refs ^ "\n"
+      | _ -> ""
+    in
+    print_endline (doc ^ ty ^ refs ^ range)
 
 let handle_error err ~json ~pretty =
   if json then
@@ -144,6 +149,7 @@ let main
       strip_root;
       expanded;
       no_typed_ast_for_imports;
+      client = Some `CLI;
     }
   in
   let request = ServerProt.Request.INFER_TYPE options in

@@ -1179,6 +1179,9 @@ Flags: --pretty --expand-json-output
 import-hooklike-regression.js:5:16
 Flags:
 type useA = {}
+
+'useA' defined at exports-hooklike-regresssion.js:3:12
+
 import-hooklike-regression.js:5:16,5:19
 
 exports-class-cjs.js:3:23
@@ -2362,5 +2365,8 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 import-hooklike-regression.js:5:16
 Flags: --do_not_use_typed_AST_for_imports
 type useA = {}
+
+'useA' defined at exports-hooklike-regresssion.js:3:12
+
 import-hooklike-regression.js:5:16,5:19
 

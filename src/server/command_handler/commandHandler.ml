@@ -636,7 +636,7 @@ let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, lin
   )
 
 let infer_type_to_response
-    ~reader ~json ~expanded ~exact_by_default ~strip_root loc documentation tys =
+    ~reader ~json ~expanded ~exact_by_default ~strip_root ~client loc documentation tys =
   let module Ty_debug = Ty_debug.Make (struct
     let aloc_to_loc = Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
   end) in
@@ -665,7 +665,7 @@ let infer_type_to_response
       ServerProt.Response.Infer_type_JSON json
     else
       ServerProt.Response.Infer_type_string
-        (Base.Option.map tys ~f:(Ty_printer.string_of_type_at_pos_result ~exact_by_default))
+        (Base.Option.map tys ~f:(Ty_printer.string_of_type_at_pos_result ~exact_by_default ~client))
   in
   ServerProt.Response.Infer_type_response { loc; tys; documentation }
 
@@ -689,6 +689,7 @@ let infer_type
     strip_root;
     expanded;
     no_typed_ast_for_imports;
+    client;
   } =
     input
   in
@@ -787,6 +788,7 @@ let infer_type
           ~expanded
           ~exact_by_default
           ~strip_root
+          ~client
           loc
           documentation
           tys
@@ -2288,6 +2290,7 @@ let handle_persistent_infer_type
       strip_root = None;
       expanded = false;
       no_typed_ast_for_imports = false;
+      client = Some `LSP;
     }
   in
   let (result, extra_data) =
@@ -2307,13 +2310,19 @@ let handle_persistent_infer_type
         Some location.Lsp.Location.range
     in
     let contents =
-      let types =
+      let (types, refs) =
         match tys with
-        | ServerProt.Response.Infer_type_string (Some result) -> [MarkedCode ("flow", result)]
-        | _ -> []
+        | ServerProt.Response.Infer_type_string (Some (result, refs)) ->
+          ( [MarkedCode ("flow", result)],
+            Base.Option.value_map
+              refs
+              ~default:[]
+              ~f:(Base.List.map ~f:(fun ref -> [MarkedString ref]))
+          )
+        | _ -> ([], [])
       in
       let docs = Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc) in
-      match Base.List.concat [types; docs] with
+      match Base.List.concat ([types] @ refs @ [docs]) with
       | [] -> [MarkedString "?"]
       | _ :: _ as contents -> contents
     in

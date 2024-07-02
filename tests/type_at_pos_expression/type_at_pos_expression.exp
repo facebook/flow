@@ -1025,6 +1025,9 @@ identifier.js:14:4,14:9
 reduce_recursive.js:16:25
 Flags:
 Obj
+
+'Obj' defined at reduce_recursive.js:6:12
+
 reduce_recursive.js:16:25,16:27
 
 spread.js:4:11

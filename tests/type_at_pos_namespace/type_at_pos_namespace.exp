@@ -1,11 +1,17 @@
 test.js:1:19
 Flags:
 namespace S
+
+'S' defined at test.js:1:18
+
 test.js:1:19,1:19
 
 test.js:7:4
 Flags:
 namespace S
+
+'S' defined at test.js:1:18
+
 test.js:7:4,7:4
 
 test.js:9:4
@@ -16,11 +22,17 @@ test.js:9:4,9:4
 test.js:11:4
 Flags:
 namespace S
+
+'S' defined at test.js:1:18
+
 test.js:11:4,11:4
 
 test.js:13:5
 Flags:
 namespace S
+
+'S' defined at test.js:1:18
+
 test.js:13:5,13:5
 
 test.js:16:4

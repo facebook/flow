@@ -1,6 +1,9 @@
 decls.js:1:6
 Flags:
 type G = (x: mixed) => x is number
+
+'G' defined at decls.js:1:5
+
 decls.js:1:6,1:6
 
 decls.js:3:10
@@ -35,6 +38,9 @@ Flags:
   in_08: T01,
   in_09: empty
 }
+
+'T01' defined at test.js:4:5
+
 test.js:27:11,27:13
 
 test.js:35:11
@@ -50,6 +56,9 @@ Flags:
   in_08: empty,
   in_09: empty
 }
+
+'T02' defined at test.js:5:5
+
 test.js:35:11,35:13
 
 test.js:43:11
@@ -65,6 +74,9 @@ Flags:
   in_08: T03,
   in_09: empty
 }
+
+'T03' defined at test.js:6:5
+
 test.js:43:11,43:13
 
 test.js:51:11
@@ -80,6 +92,9 @@ Flags:
   in_08: T04,
   in_09: empty
 }
+
+'T04' defined at test.js:7:5
+
 test.js:51:11,51:13
 
 test.js:59:11
@@ -95,6 +110,10 @@ Flags:
   in_08: T05,
   in_09: empty
 }
+
+'C' defined at test.js:1:6
+'T05' defined at test.js:8:5
+
 test.js:59:11,59:13
 
 test.js:67:11
@@ -125,6 +144,10 @@ Flags:
   in_08: T07,
   in_09: empty
 }
+
+'T01' defined at test.js:4:5
+'T07' defined at test.js:10:5
+
 test.js:75:11,75:13
 
 test.js:83:11
@@ -140,6 +163,13 @@ Flags:
   in_08: T08,
   in_09: empty
 }
+
+'C' defined at test.js:1:6
+'T01' defined at test.js:4:5
+'T03' defined at test.js:6:5
+'T04' defined at test.js:7:5
+'T08' defined at test.js:11:5
+
 test.js:83:11,83:13
 
 test.js:91:11
@@ -155,5 +185,8 @@ Flags:
   in_08: empty,
   in_09: E
 }
+
+'E' defined at test.js:2:5
+
 test.js:91:11,91:13
 

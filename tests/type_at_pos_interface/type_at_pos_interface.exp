@@ -1,16 +1,25 @@
 interface.js:3:11
 Flags:
 interface IA
+
+'IA' defined at interface.js:3:10
+
 interface.js:3:11,3:12
 
 interface.js:10:13
 Flags:
 IA
+
+'IA' defined at interface.js:3:10
+
 interface.js:10:13,10:15
 
 interface.js:12:5
 Flags:
 interface IA
+
+'IA' defined at interface.js:3:10
+
 interface.js:12:5,12:6
 
 interface.js:15:5
@@ -41,10 +50,16 @@ interface.js:27:7,27:7
 interface.js:31:11
 Flags:
 () => Generator<number, void, number>
+
+'Generator' defined at (lib) prelude.js:56:10
+
 interface.js:31:11,31:13
 
 interface.js:43:13
 Flags:
 PolyAnonAlias<number>
+
+'PolyAnonAlias' defined at interface.js:39:5
+
 interface.js:43:13,43:25
 
