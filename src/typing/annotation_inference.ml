@@ -267,8 +267,6 @@ module rec ConsGen : S = struct
       ConsGen.cjs_extract_named_exports cx reason local_module t
   end
 
-  let assert_import_is_value _cx _reason _name _export_t = ()
-
   let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
   module CJSRequireTKit = Flow_js_utils.CJSRequireTKit
@@ -637,7 +635,6 @@ module rec ConsGen : S = struct
       let (_name_loc_opt, t) =
         ImportDefaultTKit.on_ModuleT
           cx
-          ~assert_import_is_value
           ~with_concretized_type
           (reason, import_kind, local, is_strict)
           m
@@ -647,7 +644,6 @@ module rec ConsGen : S = struct
       let (_name_loc_opt, t) =
         ImportNamedTKit.on_ModuleT
           cx
-          ~assert_import_is_value
           ~with_concretized_type
           (reason, import_kind, export_name, module_name, is_strict)
           m

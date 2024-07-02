@@ -782,23 +782,6 @@ struct
           CopyTypeExportsTKit.on_AnyT cx target_module t
         | (_, CJSExtractNamedExportsT (reason, local_module, t_out)) ->
           CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) l t_out
-        (*****************)
-        (* Import checks *)
-        (*****************)
-        | (_, AssertImportIsValueT (reason, name)) ->
-          let test = function
-            | TypeT _
-            | ClassT (DefT (_, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })) ->
-              add_output cx (Error_message.EImportTypeAsValue (reason, name))
-            | _ -> ()
-          in
-          (* Imported polymorphic types will always have a concrete def_t, so
-           * unwrapping here without concretizing is safe. *)
-          (match l with
-          | DefT (_, PolyT { t_out = DefT (_, def_t); _ })
-          | DefT (_, def_t) ->
-            test def_t
-          | _ -> ())
         (******************************)
         (* optional chaining - part A *)
         (******************************)
@@ -7083,7 +7066,6 @@ struct
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
     | AssertForInRHST _
-    | AssertImportIsValueT _
     | AssertInstanceofRHST _
     | AssertNonComponentLikeT _
     | ComparatorT _

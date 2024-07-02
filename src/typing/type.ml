@@ -800,7 +800,6 @@ module rec TypeTerm : sig
     | ElemT of use_op * reason * t * elem_action
     (* exact ops *)
     | MakeExactT of reason * cont
-    | AssertImportIsValueT of reason * string
     (* Module export handling *)
     | CJSExtractNamedExportsT of
         reason
@@ -4148,7 +4147,6 @@ let string_of_use_ctor = function
   | AssertInstanceofRHST _ -> "AssertInstanceofRHST"
   | AssertNonComponentLikeT _ -> "AssertNonComponentLikeT"
   | AssertIterableT _ -> "AssertIterableT"
-  | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
   | CallLatentPredT _ -> "CallLatentPredT"
