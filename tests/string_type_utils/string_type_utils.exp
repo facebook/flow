@@ -1,0 +1,151 @@
+Error --------------------------------------------------------------------------------------------- import-prefix.js:6:1
+
+Cannot cast `data` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string
+literal `data-` [2]. [incompatible-cast]
+
+   import-prefix.js:6:1
+    6| data as 'data-'; // ERROR
+       ^^^^
+
+References:
+   prefix.js:67:28
+   67| declare export const data: DataProp;
+                                  ^^^^^^^^ [1]
+   import-prefix.js:6:9
+    6| data as 'data-'; // ERROR
+               ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- prefix.js:6:1
+
+Cannot cast `'data'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
+[incompatible-cast]
+
+   prefix.js:6:1
+   6| 'data' as DataProp; // ERROR
+      ^^^^^^ [1]
+
+References:
+   prefix.js:6:11
+   6| 'data' as DataProp; // ERROR
+                ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- prefix.js:7:1
+
+Cannot cast `'x-data-x'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
+[incompatible-cast]
+
+   prefix.js:7:1
+   7| 'x-data-x' as DataProp; // ERROR
+      ^^^^^^^^^^ [1]
+
+References:
+   prefix.js:7:15
+   7| 'x-data-x' as DataProp; // ERROR
+                    ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:12:3
+
+Cannot cast `x` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
+[incompatible-cast]
+
+   prefix.js:12:3
+   12|   x as DataProp; // ERROR
+         ^
+
+References:
+   prefix.js:11:20
+   11|   declare const x: string;
+                          ^^^^^^ [1]
+   prefix.js:12:8
+   12|   x as DataProp; // ERROR
+              ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:20:3
+
+Cannot cast `x` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string literal
+`data-` [2]. [incompatible-cast]
+
+   prefix.js:20:3
+   20|   x as 'data-'; // ERROR
+         ^
+
+References:
+   prefix.js:18:20
+   18|   declare const x: DataProp;
+                          ^^^^^^^^ [1]
+   prefix.js:20:8
+   20|   x as 'data-'; // ERROR
+              ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:31:3
+
+property `123` [1] is incompatible with string prefixed with `data-` [2]. [incompatible-type]
+
+   prefix.js:31:3
+   31|   d[123]; // ERROR
+         ^^^^^^ [1]
+
+References:
+   prefix.js:29:21
+   29|   const d = x as {+[DataProp]: mixed}; // OK
+                           ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:42:12
+
+Cannot use `StringPrefix` because the type argument must be a string literal. [invalid-type-arg]
+
+   42| type Err = StringPrefix<string>; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:43:33
+
+Cannot use `StringPrefix` because the type argument must be a string literal. [invalid-type-arg]
+
+   43| declare function err<T: string>(StringPrefix<T>): void; // ERROR
+                                       ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:50:5
+
+Cannot cast `x` to empty because string prefixed with `data-` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   prefix.js:50:5
+   50|     x as empty; // ERROR
+           ^
+
+References:
+   prefix.js:47:20
+   47|   declare const x: DataProp | number;
+                          ^^^^^^^^ [1]
+   prefix.js:50:10
+   50|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:63:3
+
+Cannot cast `dataProp` to `DataFooProp` because string prefixed with `data-` [1] is incompatible with string prefixed
+with `data-foo-` [2]. [incompatible-cast]
+
+   prefix.js:63:3
+   63|   dataProp as DataFooProp; // ERROR
+         ^^^^^^^^
+
+References:
+   prefix.js:59:27
+   59|   declare const dataProp: DataProp;
+                                 ^^^^^^^^ [1]
+   prefix.js:63:15
+   63|   dataProp as DataFooProp; // ERROR
+                     ^^^^^^^^^^^ [2]
+
+
+
+Found 10 errors

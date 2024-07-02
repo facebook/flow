@@ -64,6 +64,7 @@ type 'loc virtual_reason_desc =
   | RLongStringLit of int (* Max length *)
   (* TODO String literals should not be able to include internal names *)
   | RStringLit of name
+  | RStringPrefix of { prefix: string }
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool
@@ -254,15 +255,15 @@ type reason_desc = ALoc.t virtual_reason_desc
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
-    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
-    | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit | REmptyArrayLit
-    | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType | RTupleElement _
-    | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact | RFunction _
-    | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument | RJSXChild
-    | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
-    | RTypeGuard | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ )
-    as r ->
+    | RStringPrefix _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit
+    | RObjectLit | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit
+    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType
+    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _
+    | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
+    | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _ | RComponent _
+    | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -540,6 +541,7 @@ let rec string_of_desc = function
   | RExports -> "exports"
   | RStringLit (OrdinaryName "") -> "empty string"
   | RStringLit x -> spf "string literal `%s`" (display_string_of_name x)
+  | RStringPrefix { prefix } -> spf "string prefixed with `%s`" prefix
   | RNumberLit x -> spf "number literal `%s`" x
   | RBigIntLit x -> spf "bigint literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
@@ -1278,6 +1280,7 @@ let classification_of_reason_desc desc =
   | RBoolean
   | RLongStringLit _
   | RStringLit _
+  | RStringPrefix _
   | RNumberLit _
   | RBigIntLit _
   | RBooleanLit _

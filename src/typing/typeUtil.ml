@@ -29,6 +29,7 @@ let rec reason_of_t = function
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
   | KeysT (reason, _) -> reason
+  | StrUtilT { reason; _ } -> reason
   | ModuleT { module_reason = reason; _ } -> reason
   | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
@@ -180,6 +181,7 @@ let rec mod_reason_of_t f = function
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | FunProtoCallT reason -> FunProtoCallT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
+  | StrUtilT { reason; prefix } -> StrUtilT { reason = f reason; prefix }
   | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms } ->
     ModuleT
       {
@@ -653,6 +655,14 @@ let quick_subtype t1 t2 =
   | (DefT (_, EmptyT), DefT (_, _))
   | (DefT (_, EmptyT), _) ->
     true
+  | (StrUtilT { reason = _; prefix = prefix1 }, StrUtilT { reason = _; prefix = prefix2 })
+    when String.starts_with ~prefix:prefix2 prefix1 ->
+    true
+  | (DefT (_, StrT (Literal (None, OrdinaryName s))), StrUtilT { reason = _; prefix })
+    when String.starts_with ~prefix s ->
+    true
+  | (StrUtilT { reason = _; prefix }, DefT (_, StrT Truthy)) when prefix <> "" -> true
+  | (StrUtilT _, DefT (_, StrT AnyLiteral)) -> true
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
   | (DefT (_, StrT actual), DefT (_, SingletonStrT expected)) -> literal_eq expected actual
   | (DefT (_, NumT actual), DefT (_, SingletonNumT expected)) -> number_literal_eq expected actual

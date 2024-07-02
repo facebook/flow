@@ -121,6 +121,11 @@ module rec TypeTerm : sig
       }
     (* collects the keys of an object *)
     | KeysT of reason * t
+    (* advanced string types *)
+    | StrUtilT of {
+        reason: reason;
+        prefix: string;
+      }
     (* annotations *)
     (* A type that annotates a storage location performs two functions:
 
@@ -4026,6 +4031,7 @@ let string_of_ctor = function
   | FunProtoCallT _ -> "FunProtoCallT"
   | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
+  | StrUtilT _ -> "StrUtilT"
   | ModuleT _ -> "ModuleT"
   | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"

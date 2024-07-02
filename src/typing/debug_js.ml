@@ -359,6 +359,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, RendersT _) -> p t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
+    | StrUtilT { reason = _; prefix } -> p ~extra:(spf "prefix:%S" prefix) t
     | DefT (_, NumericStrKeyT (_, s)) -> p ~extra:s t
     | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" (display_string_of_name s)) t
     | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
@@ -1509,6 +1510,7 @@ let dump_error_message =
     | EInvalidInfer loc -> spf "EInvalidInfer (%s)" (string_of_aloc loc)
     | EInvalidExtends reason -> spf "EInvalidExtends (%s)" (dump_reason cx reason)
     | EPropertyTypeAnnot loc -> spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
+    | EStrUtilTypeNonLiteralArg loc -> spf "EStrUtilTypeNonLiteralArg (%s)" (string_of_aloc loc)
     | EExportsAnnot loc -> spf "EExportsAnnot (%s)" (string_of_aloc loc)
     | EInvalidRendersTypeArgument
         { loc; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->

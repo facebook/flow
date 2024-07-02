@@ -512,6 +512,10 @@ type ('loc, 'a) annot =
   | SingletonNumber of 'loc * float * string
   | SingletonBigInt of 'loc * int64 option * string
   | SingletonBoolean of 'loc * bool
+  | StringPrefix of {
+      loc: 'loc;
+      prefix: string;
+    }
   | Typeof of {
       loc: 'loc;
       qname: string list;

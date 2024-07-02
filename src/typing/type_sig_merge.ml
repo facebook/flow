@@ -595,6 +595,9 @@ and merge_annot env file = function
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
     Type.(DefT (reason, SingletonBoolT b))
+  | StringPrefix { loc; prefix } ->
+    let reason = Reason.(mk_reason (RStringPrefix { prefix }) loc) in
+    Type.(StrUtilT { reason; prefix })
   | Typeof { loc; qname; t; targs } ->
     let qname = String.concat "." qname in
     let reason = Reason.(mk_reason (RTypeof qname) loc) in

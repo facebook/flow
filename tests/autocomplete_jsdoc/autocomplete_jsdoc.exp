@@ -4443,6 +4443,33 @@ Flags: --lsp
     ]
   }
 }
+{
+  "label":"StringPrefix",
+  "kind":3,
+  "detail":"StringPrefix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"StringPrefix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":41,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringPrefix",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
 
 qualified-types-jsdoc.js:5:12
 Flags: --lsp

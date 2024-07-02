@@ -60,7 +60,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | FunProtoCallT _
     | FunProtoT _
     | NullProtoT _
-    | ObjProtoT _ ->
+    | ObjProtoT _
+    | StrUtilT _ ->
       ()
     | OptionalT { type_ = t; _ }
     | ExactT (_, t)

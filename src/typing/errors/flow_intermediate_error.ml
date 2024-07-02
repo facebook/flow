@@ -2105,6 +2105,12 @@ let to_printable_error :
         code (spf "new %s(...))" kind_str);
         text " to turn it into an object and attempt to use it as a subtype of an interface";
       ]
+    | MessageCannotUseStrUtilType ->
+      [
+        text "Cannot use ";
+        code "StringPrefix";
+        text " because the type argument must be a string literal.";
+      ]
     | MessageCannotUseTypeDueToPolarityMismatch { reason_targ; expected_polarity; actual_polarity }
       ->
       let polarity_string = function

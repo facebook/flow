@@ -1,0 +1,67 @@
+// Basic usage
+type DataProp = StringPrefix<'data-'>;
+
+'data-' as DataProp; // OK
+'data-x' as DataProp; // OK
+'data' as DataProp; // ERROR
+'x-data-x' as DataProp; // ERROR
+
+// General `string` is not a prefixed string
+{
+  declare const x: string;
+  x as DataProp; // ERROR
+}
+
+// All prefixed strings are `string`s
+// But not some specific string.
+{
+  declare const x: DataProp;
+  x as string; // OK
+  x as 'data-'; // ERROR
+}
+
+// Use in a dictionary
+{
+  const x = {
+    'data-foo': 1,
+    'data-bar': true,
+  };
+  const d = x as {+[DataProp]: mixed}; // OK
+  d['data-baz']; // OK
+  d[123]; // ERROR
+}
+
+// Can use string properties and methods
+{
+  declare const x: DataProp;
+  x.length; // OK
+  x.at(0); // OK
+}
+
+// Only string literal prefixes are allowed
+type Err = StringPrefix<string>; // ERROR
+declare function err<T: string>(StringPrefix<T>): void; // ERROR
+
+// Refinements works
+{
+  declare const x: DataProp | number;
+  if (typeof x === 'string') {
+    x as DataProp; // OK
+    x as empty; // ERROR
+  } else {
+    x as number; // OK
+  }
+}
+
+// Prefix `data-foo-` is a subtype of prefix `data-`
+type DataFooProp = StringPrefix<'data-foo-'>;
+{
+  declare const dataProp: DataProp;
+  declare const dataFooProp: DataFooProp;
+
+  dataFooProp as DataProp; // OK
+  dataProp as DataFooProp; // ERROR
+}
+
+// Test type sig
+declare export const data: DataProp;

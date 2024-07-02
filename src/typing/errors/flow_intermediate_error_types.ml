@@ -487,6 +487,7 @@ type 'loc message =
       interface_reason: 'loc virtual_reason;
       kind: [ `Boolean | `Number | `String ];
     }
+  | MessageCannotUseStrUtilType
   | MessageCannotUseTypeDueToPolarityMismatch of {
       reason_targ: 'loc virtual_reason;
       expected_polarity: Polarity.t;

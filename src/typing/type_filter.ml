@@ -354,6 +354,7 @@ let string loc t =
   | AnyT _
   | DefT (_, MixedT _) ->
     DefT (mk_reason RString loc, StrT AnyLiteral)
+  | StrUtilT _
   | DefT (_, StrT _)
   | DefT
       ( _,
@@ -367,6 +368,7 @@ let string loc t =
 
 let not_string t =
   match t with
+  | StrUtilT _
   | DefT
       ( _,
         EnumValueT
@@ -753,6 +755,7 @@ and tag_of_t cx t =
   | MaybeT (_, _)
   | OptionalT _
   | KeysT (_, _)
+  | StrUtilT _
   | OpaqueT (_, _)
   | ModuleT _
   | InternalT _

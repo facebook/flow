@@ -809,6 +809,15 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 )
                 targs
           )
+        | "StringPrefix" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              match List.hd ts with
+              | DefT (_, SingletonStrT (OrdinaryName prefix)) ->
+                let reason = mk_reason (RStringPrefix { prefix }) loc in
+                reconstruct_ast (StrUtilT { reason; prefix }) targs
+              | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
+          )
         (* Array<T> *)
         | "Array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
