@@ -148,6 +148,7 @@ and reason_of_use_t = function
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
+  | CheckReactImmutableT { lower_reason = reason; _ } -> reason
   | PromoteRendersRepresentationT { reason; _ } -> reason
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | TryRenderTypePromotionT { reason; _ } -> reason
@@ -293,6 +294,8 @@ let rec util_use_op_of_use_t :
   | ValueToTypeReferenceT (use_op, reason, kind, t) ->
     util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
   | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })
+  | CheckReactImmutableT ({ use_op; _ } as x) ->
+    util use_op (fun use_op -> CheckReactImmutableT { x with use_op })
   | MakeExactT (_, _)
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)

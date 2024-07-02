@@ -940,6 +940,12 @@ module rec TypeTerm : sig
         value_t: t;
         err_on_str_key: (use_op * reason) option;
       }
+    | CheckReactImmutableT of {
+        lower_reason: reason;
+        upper_reason: reason;
+        use_op: use_op;
+        dro_loc: ALoc.t;
+      }
     | PromoteRendersRepresentationT of {
         use_op: use_op;
         reason: reason;
@@ -4257,6 +4263,7 @@ let string_of_use_ctor = function
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
+  | CheckReactImmutableT _ -> "CheckReactImmutableT"
   | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"

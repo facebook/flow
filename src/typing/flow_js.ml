@@ -6010,6 +6010,7 @@ struct
         (***********************)
         (* Object library call *)
         (***********************)
+        | ((ObjProtoT _ | FunProtoT _), CheckReactImmutableT _) -> ()
         | (ObjProtoT reason, _) ->
           let use_desc = true in
           let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
@@ -6261,6 +6262,65 @@ struct
             (Error_message.EObjectComputedPropertyAssign
                (reason, reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
             )
+        | ( DefT (_, ObjT { flags = { frozen; obj_kind; _ }; props_tmap; proto_t; call_t; _ }),
+            CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
+          ) ->
+          let props_safe =
+            Context.fold_real_props
+              cx
+              props_tmap
+              (fun _ prop acc ->
+                match prop with
+                | Field { type_; polarity = Polarity.Positive; _ } ->
+                  rec_flow cx trace (type_, u);
+                  acc
+                | _ -> false)
+              true
+          in
+          let dict_safe =
+            match Obj_type.get_dict_opt obj_kind with
+            | Some { dict_polarity = Polarity.Positive; value; _ } ->
+              rec_flow cx trace (value, u);
+              true
+            | None -> true
+            | _ -> false
+          in
+          let locally_safe = Base.Option.is_none call_t && (frozen || (props_safe && dict_safe)) in
+          if locally_safe then
+            rec_flow cx trace (proto_t, u)
+          else
+            add_output
+              cx
+              (Error_message.EIncompatibleReactDeepReadOnly
+                 { lower = lower_reason; upper = upper_reason; dro_loc; use_op }
+              )
+        | ( DefT (_, InstanceT { inst = { class_id; type_args; _ }; _ }),
+            CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
+          ) -> begin
+          match type_args with
+          | [(_, _, elem_t, _)] when is_builtin_class_id "$ReadOnlySet" class_id cx ->
+            rec_flow cx trace (elem_t, u)
+          | [(_, _, key_t, _); (_, _, val_t, _)] when is_builtin_class_id "$ReadOnlyMap" class_id cx
+            ->
+            rec_flow cx trace (key_t, u);
+            rec_flow cx trace (val_t, u)
+          | _ ->
+            add_output
+              cx
+              (Error_message.EIncompatibleReactDeepReadOnly
+                 { lower = lower_reason; upper = upper_reason; dro_loc; use_op }
+              )
+        end
+        | ( DefT (_, ArrT (ArrayAT _)),
+            CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
+          ) ->
+          add_output
+            cx
+            (Error_message.EIncompatibleReactDeepReadOnly
+               { lower = lower_reason; upper = upper_reason; dro_loc; use_op }
+            )
+        | (DefT (_, ArrT arr), CheckReactImmutableT _) -> rec_flow cx trace (elemt_of_arrtype arr, u)
+        | (_, CheckReactImmutableT _) -> ()
         | _ ->
           add_output
             cx
@@ -7043,7 +7103,8 @@ struct
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
-    | WriteComputedObjPropCheckT _ ->
+    | WriteComputedObjPropCheckT _
+    | CheckReactImmutableT _ ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ObjectAssign))
