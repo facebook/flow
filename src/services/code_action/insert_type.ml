@@ -238,11 +238,10 @@ let remove_ambiguous_types
   match ambiguity_strategy with
   | Fail -> begin
     match fail_on_ambiguity ty with
-    | Some t -> t
+    | Some t -> Ok t
     | None ->
-      raise
-      @@ expected
-      @@ MulipleTypesPossibleAtPoint
+      Error
+        (MulipleTypesPossibleAtPoint
            {
              specialized =
                specialize_temporary_types ty
@@ -265,11 +264,12 @@ let remove_ambiguous_types
                     ~exact_by_default
                     loc;
            }
+        )
   end
-  | Generalize -> generalize_temporary_types ty
-  | Specialize -> specialize_temporary_types ty
-  | Fixme -> fixme_ambiguous_types ty
-  | Suppress -> Utils.Builtins.flowfixme_ty_default
+  | Generalize -> Ok (generalize_temporary_types ty)
+  | Specialize -> Ok (specialize_temporary_types ty)
+  | Fixme -> Ok (fixme_ambiguous_types ty)
+  | Suppress -> Ok Utils.Builtins.flowfixme_ty_default
 
 let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string, string) result =
   match Loc.source loc with
@@ -449,30 +449,31 @@ let synth_type
   let exact_by_default = Context.exact_by_default cx in
   let imports_react = ImportsHelper.imports_react file_sig in
   let process ty =
-    let () =
-      match Utils.Validator.validate_type ~size_limit ~loc_of_aloc:ALoc.to_loc_exn ty with
-      | (_, error :: _) ->
-        (* TODO surface all errors *)
-        let error_message = Utils.Error.serialize_validation_error error in
-        let err = FailedToValidateType { error; error_message } in
-        raise (expected err)
-      | (_, []) -> ()
-    in
-    remove_ambiguous_types
-      ~cx
-      ~loc_of_aloc
-      ~get_ast_from_shared_mem
-      ~file_sig
-      ~typed_ast
-      ~ambiguity_strategy
-      ~exact_by_default
-      ty
-      type_loc
+    match Utils.Validator.validate_type ~size_limit ~loc_of_aloc:ALoc.to_loc_exn ty with
+    | (_, error :: _) ->
+      (* TODO surface all errors *)
+      let error_message = Utils.Error.serialize_validation_error error in
+      let err = FailedToValidateType { error; error_message } in
+      Error err
+    | (_, []) ->
+      remove_ambiguous_types
+        ~cx
+        ~loc_of_aloc
+        ~get_ast_from_shared_mem
+        ~file_sig
+        ~typed_ast
+        ~ambiguity_strategy
+        ~exact_by_default
+        ty
+        type_loc
   in
   let ty =
     let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in
     match Ty_utils.typify_elt elt with
-    | Some ty -> process ty
+    | Some ty ->
+      (match process ty with
+      | Ok t -> t
+      | Error err -> raise (expected err))
     | None ->
       let err = FailedToNormalize (type_loc, "Non-type") in
       raise (expected err)
