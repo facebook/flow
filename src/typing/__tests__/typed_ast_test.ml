@@ -22,7 +22,6 @@ let metadata =
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
-    any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
     casting_syntax = Options.CastingSyntax.Colon;

@@ -24,7 +24,6 @@ let metadata =
     verbose =
       Some Verbose.{ indent = 2; depth = 10; enabled_during_flowlib = false; focused_files = None };
     slow_to_check_logging = Slow_to_check_logging.default;
-    any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
     casting_syntax = Options.CastingSyntax.Colon;

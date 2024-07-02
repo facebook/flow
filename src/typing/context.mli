@@ -70,7 +70,6 @@ type metadata = {
   verbose: Verbose.t option;
   slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
-  any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
@@ -309,8 +308,6 @@ val node_cache : t -> Node_cache.t
 val pid_prefix : t -> string
 
 val copy_of_context : t -> t
-
-val any_propagation : t -> bool
 
 val automatic_require_default : t -> bool
 
