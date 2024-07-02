@@ -163,10 +163,7 @@ module Make (Extra : BASE_STATS) = struct
 
       method private get_remote_converter = Base.Option.value_exn remote_converter
 
-      method private serialize t =
-        match Ty_serializer.(type_ { exact_by_default } t) with
-        | Error e -> Error (Error.Serializer_error e)
-        | Ok t -> Ok t
+      method private serialize t = Ty_serializer.(type_ { exact_by_default } t)
 
       method private replace_type_node_with_ty =
         let run loc ty =
@@ -190,7 +187,7 @@ module Make (Extra : BASE_STATS) = struct
               ty
           in
           this#set_acc acc';
-          let%bind ty = this#get_remote_converter#type_ ty in
+          let%map ty = this#get_remote_converter#type_ ty in
           this#serialize ty
         in
         fun loc ty ->
@@ -233,7 +230,7 @@ module Make (Extra : BASE_STATS) = struct
               ty
           in
           this#set_acc acc';
-          let%bind ty = this#get_remote_converter#type_ ty in
+          let%map ty = this#get_remote_converter#type_ ty in
           this#serialize ty
         in
         fun loc ty_or_type_ast f ->
