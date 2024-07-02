@@ -136,7 +136,7 @@ and reason_of_use_t = function
   | FilterOptionalT (_, t) -> reason_of_t t
   | ExtractReactRefT (reason, _) -> reason
   | FilterMaybeT (_, t) -> reason_of_t t
-  | DeepReadOnlyT ((r, _), _, _) -> r
+  | DeepReadOnlyT ((r, _), _) -> r
   | HooklikeT (r, _) -> r
   | ConcretizeTypeAppsT (_, _, (_, _, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
@@ -910,6 +910,15 @@ let all_explicit_targ_ts = function
         | (ExplicitArg t, Some acc) -> Some (t :: acc)
         | _ -> None
     )
+
+let dro_strict (_, dro_t) =
+  match dro_t with
+  | HookArg
+  | HookReturn
+  | Props
+  | DebugAnnot ->
+    false
+  | ImmutableAnnot -> true
 
 let tuple_length reason ~inexact (num_req, num_total) =
   if inexact then

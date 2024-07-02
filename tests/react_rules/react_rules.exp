@@ -176,98 +176,182 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:61:1
 
-Cannot call `droset.add` because property `add` is not readable. [cannot-read]
+Cannot call `droset.add` because property `add` is not readable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:61:1
    61| droset.add(new Set()); // error
        ^^^^^^^^^^
+
+References:
+   dro.js:60:23
+   60| declare const droset: React$Immutable<Set<Set<number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:62:1
 
-Cannot call `droset.add` because property `add` is not readable. [cannot-read]
+Cannot call `droset.add` because property `add` is not readable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:62:1
    62| droset.add((42: any)); // error
        ^^^^^^^^^^
+
+References:
+   dro.js:60:23
+   60| declare const droset: React$Immutable<Set<Set<number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:63:21
 
-Cannot call `x.add` because property `add` is not readable. [cannot-read]
+Cannot call `x.add` because property `add` is not readable. Values annotated using `React.Immutable` [1] are managed by
+the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:63:21
    63| droset.forEach(x => x.add(42)) // error
                            ^^^^^
+
+References:
+   dro.js:60:23
+   60| declare const droset: React$Immutable<Set<Set<number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:68:1
 
-Cannot call `dromap.set` because property `set` is not readable. [cannot-read]
+Cannot call `dromap.set` because property `set` is not readable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:68:1
    68| dromap.set({x: 42}, new Map()); // error
        ^^^^^^^^^^
+
+References:
+   dro.js:67:23
+   67| declare const dromap: React$Immutable<Map<{x: number}, Map<{y: number}, number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:69:1
 
-Cannot call `dromap.set` because property `set` is not readable. [cannot-read]
+Cannot call `dromap.set` because property `set` is not readable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:69:1
    69| dromap.set({x: 42}, (42: any)); // error
        ^^^^^^^^^^
+
+References:
+   dro.js:67:23
+   67| declare const dromap: React$Immutable<Map<{x: number}, Map<{y: number}, number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:71:7
 
-Cannot assign `42` to `key.x` because property `x` is not writable. [cannot-write]
+Cannot assign `42` to `key.x` because property `x` is not writable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:71:7
    71|   key.x = 42; // error
              ^
+
+References:
+   dro.js:67:23
+   67| declare const dromap: React$Immutable<Map<{x: number}, Map<{y: number}, number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:72:3
 
-Cannot call `val.set` because property `set` is not readable. [cannot-read]
+Cannot call `val.set` because property `set` is not readable. Values annotated using `React.Immutable` [1] are managed
+by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:72:3
    72|   val.set({y: 420}, 42) // error
          ^^^^^^^
+
+References:
+   dro.js:67:23
+   67| declare const dromap: React$Immutable<Map<{x: number}, Map<{y: number}, number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:80:10
 
-Cannot assign `42` to `drc.prop.x` because property `x` is not writable. [cannot-write]
+Cannot assign `42` to `drc.prop.x` because property `x` is not writable. Values annotated using `React.Immutable` [1]
+are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:80:10
    80| drc.prop.x = 42 // error;
                 ^
+
+References:
+   dro.js:79:20
+   79| declare const drc: React$Immutable<CoolClass>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:81:5
 
-Cannot assign object literal to `drc.prop` because property `prop` is not writable. [cannot-write]
+Cannot assign object literal to `drc.prop` because property `prop` is not writable. Values annotated using
+`React.Immutable` [1] are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:81:5
    81| drc.prop = {x: 42}; // error;
            ^^^^
+
+References:
+   dro.js:79:20
+   79| declare const drc: React$Immutable<CoolClass>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:84:1
 
-Cannot call `droarr.push` because property `push` is not readable. [cannot-read]
+Cannot call `droarr.push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:84:1
    84| droarr.push([]); // error
        ^^^^^^^^^^^
+
+References:
+   dro.js:83:23
+   83| declare const droarr: React$Immutable<Array<Array<number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:85:1
 
-Cannot call `droarr[0].push` because property `push` is not readable. [cannot-read]
+Cannot call `droarr[0].push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are
+managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:85:1
    85| droarr[0].push(42); // error
        ^^^^^^^^^^^^^^
+
+References:
+   dro.js:83:23
+   83| declare const droarr: React$Immutable<Array<Array<number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:86:1
 
-Cannot call `droarr.at(...)?.push` because property `push` is not readable. [cannot-read]
+Cannot call `droarr.at(...)?.push` because property `push` is not readable. Values annotated using `React.Immutable` [1]
+are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
 
+   dro.js:86:1
    86| droarr.at(0)?.push(42) // error;
        ^^^^^^^^^^^^^^^^^^
+
+References:
+   dro.js:83:23
+   83| declare const droarr: React$Immutable<Array<Array<number>>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17

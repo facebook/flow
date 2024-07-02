@@ -2544,6 +2544,13 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       let loc = push_loc tbls loc in
       Annot (StringPrefix { loc; prefix = s })
     | _ -> Err (loc, CheckError))
+  | "React$Immutable" -> begin
+    match targs with
+    | Some (_, { arguments = [t]; _ }) ->
+      let t = annot opts scope tbls xs t in
+      Annot (ReactImmutable (loc, t))
+    | _ -> Err (loc, CheckError)
+  end
   | "$Flow$DebugPrint" -> begin
     match targs with
     | None -> Annot (FlowDebugPrint loc)

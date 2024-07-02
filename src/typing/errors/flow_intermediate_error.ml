@@ -610,6 +610,8 @@ let rec make_intermediate_error :
         explanation loc frames use_op (ExplanationReactHookArgsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (hook_loc, HookReturn), use_op) ->
         explanation loc frames use_op (ExplanationReactHookReturnDeepReadOnly hook_loc)
+      | Frame (ReactDeepReadOnly (hook_loc, ImmutableAnnot), use_op) ->
+        explanation loc frames use_op (ExplanationReactImmutable hook_loc)
       | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
         explanation loc frames use_op (ExplanationConstrainedAssign { name; declaration; providers })
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
@@ -702,7 +704,7 @@ let rec make_intermediate_error :
       | Frame (ObjMapiFunCompatibility _, use_op)
       | Frame (MappedTypeKeyCompatibility _, use_op)
       | Frame (TupleAssignment _, use_op)
-      | Frame (ReactDeepReadOnly (_, DROAnnot), use_op)
+      | Frame (ReactDeepReadOnly (_, DebugAnnot), use_op)
       | Frame (RendersCompatibility, use_op) ->
         loop loc frames use_op
     and next_with_loc loc frames frame_reason use_op =
@@ -1203,6 +1205,12 @@ let to_printable_error :
         text "The return value of a ";
         hardcoded_string_desc_ref "React hook" hook_loc;
         text " cannot be written to";
+      ]
+    | ExplanationReactImmutable annot_loc ->
+      [
+        text "Values annotated using ";
+        hardcoded_string_desc_ref "`React.Immutable`" annot_loc;
+        text " are managed by the React runtime and cannot be mutated";
       ]
   in
   let frame_to_friendly_msgs = function
