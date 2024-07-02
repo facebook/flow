@@ -13,6 +13,7 @@ val type_at_pos :
   max_depth:int ->
   verbose_normalizer:bool ->
   no_typed_ast_for_imports:bool ->
+  include_refs:(ALoc.t -> Loc.t) option ->
   File_key.t ->
   int ->
   int ->

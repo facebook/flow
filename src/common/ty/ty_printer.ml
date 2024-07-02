@@ -607,7 +607,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   | Decl d -> decl ~depth:0 d
 
 let layout_of_type_at_pos_result
-    ~prefer_single_quotes ?size ?with_comments ~exact_by_default { Ty.unevaluated; evaluated } =
+    ~prefer_single_quotes ?size ?with_comments ~exact_by_default { Ty.unevaluated; evaluated; _ } =
   let layout_unevaluated =
     layout_of_elt ~prefer_single_quotes ?size ?with_comments ~exact_by_default unevaluated
   in

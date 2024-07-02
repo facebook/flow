@@ -27,6 +27,7 @@ let type_at_pos
     ~max_depth
     ~verbose_normalizer
     ~no_typed_ast_for_imports
+    ~include_refs
     file
     line
     col =
@@ -42,6 +43,7 @@ let type_at_pos
         ~max_depth
         ~typed_ast
         ~no_typed_ast_for_imports
+        ~include_refs
         loc
     in
     match result with
@@ -55,7 +57,7 @@ let type_at_pos
         |> json_data_of_type "type" (Type.string_of_ctor gt)
       in
       (json_data, loc, None)
-    | Success (loc, ({ Ty.unevaluated; evaluated } as tys)) ->
+    | Success (loc, ({ Ty.unevaluated; evaluated; refs = _ } as tys)) ->
       let json_data =
         []
         |> json_data_of_result "SUCCESS"
