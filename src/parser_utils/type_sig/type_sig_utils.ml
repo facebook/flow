@@ -25,6 +25,7 @@ let parse_libs opts ordered_asts =
   let scope = Scope.create_global () in
   let tbls = create_tables () in
   List.iter (parse_lib opts scope tbls) ordered_asts;
+  Scope.bind_globalThis scope tbls ~global_this_loc:Loc.none;
   (tbls, Scope.builtins_exn scope)
 
 let pack_builtins (tbls, (global_values, global_types, global_modules)) =

@@ -744,7 +744,7 @@ let%expect_test "lib_class" =
     declare class Foo {}
   |};
   [%expect {|
-    [(Named "Foo"); (NamedType "Foo")]
+    [(Named "globalThis"); (Named "Foo"); (NamedType "Foo")]
   |}]
 
 let%expect_test "lib_type" =
@@ -752,7 +752,7 @@ let%expect_test "lib_type" =
     declare type T = string;
   |};
   [%expect {|
-    [(NamedType "T")]
+    [(NamedType "T"); (Named "globalThis")]
   |}]
 
 let%expect_test "lib_value" =
@@ -760,7 +760,7 @@ let%expect_test "lib_value" =
     declare var foo : string;
   |};
   [%expect {|
-    [(Named "foo")]
+    [(Named "globalThis"); (Named "foo")]
   |}]
 
 let%expect_test "react_dollar_ac" =

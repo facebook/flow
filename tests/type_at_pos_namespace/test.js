@@ -12,3 +12,6 @@ declare namespace S {
 // ^
 S.s.s;
 //  ^
+
+globalThis;
+// ^

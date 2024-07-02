@@ -5493,7 +5493,14 @@ let%expect_test "builtins" =
     0. Variable {id_loc = [1:12-13];
          name = "x"; def = (TyRef (Unqualified LocalRef {ref_loc = [1:15-16]; index = 1}))}
     1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2}));
+           "x" -> ([1:12-13], (Ref LocalRef {ref_loc = [1:12-13]; index = 0})) };
+         types = { "T" -> ([2:5-6], (Ref LocalRef {ref_loc = [2:5-6]; index = 1})) }}
 
+    Builtin global value globalThis
     Builtin global value x
     Builtin global type T |}]
 
@@ -5537,8 +5544,18 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
     3. TypeAlias {id_loc = [4:5-14];
          name = "$ReadOnly"; tparams = Mono;
          body = (Annot (Number [4:17-23]))}
+    4. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "Array" -> ([3:14-19], (Ref LocalRef {ref_loc = [3:14-19]; index = 2}));
+           "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 4})) };
+         types =
+         { "$ReadOnly" -> ([4:5-14], (Ref LocalRef {ref_loc = [4:5-14]; index = 3}));
+           "T1" -> ([1:5-7], (Ref LocalRef {ref_loc = [1:5-7]; index = 0}));
+           "T2" -> ([2:5-7], (Ref LocalRef {ref_loc = [2:5-7]; index = 1})) }}
 
     Builtin global value Array
+    Builtin global value globalThis
     Builtin global type $ReadOnly
     Builtin global type T1
     Builtin global type T2 |}]
@@ -5553,7 +5570,12 @@ let%expect_test "builtin_cjs_module" =
   [%expect {|
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "T" -> ([1:5-6], (Ref LocalRef {ref_loc = [1:5-6]; index = 0})) }}
 
+    Builtin global value globalThis
     Builtin global type T
     Builtin module foo:
     [2:15-18] CJSModule {type_exports = [||];
@@ -5576,7 +5598,12 @@ let%expect_test "builtin_cjs_ignore_later" =
   [%expect {|
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "T" -> ([1:5-6], (Ref LocalRef {ref_loc = [1:5-6]; index = 0})) }}
 
+    Builtin global value globalThis
     Builtin global type T
     Builtin module foo:
     [2:15-18] CJSModule {type_exports = [||];
@@ -5603,7 +5630,12 @@ let%expect_test "builtin_cjs_module_auto_export_type" =
     1. TypeAlias {id_loc = [3:14-16];
          name = "T2"; tparams = Mono;
          body = (Annot (String [3:19-25]))}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1)|];
                 exports = (Some (Annot (String [4:26-32])));
@@ -5623,7 +5655,12 @@ let%expect_test "builtin_cjs_module_unused_type_exported" =
   [%expect {|
     Local defs:
     0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (Annot (String [3:26-32])));
@@ -5644,7 +5681,12 @@ let%expect_test "builtin_cjs_module_used_type" =
   [%expect {|
     Local defs:
     0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
@@ -5664,7 +5706,12 @@ let%expect_test "builtin_cjs_module_used_type_exported" =
   [%expect {|
     Local defs:
     0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
@@ -5745,7 +5792,12 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
     8. TypeAlias {id_loc = [12:22-23];
          name = "U"; tparams = Mono;
          body = (Annot (String [12:26-32]))}
+    9. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 9})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 7); (ExportTypeBinding 8)|];
                 exports =
@@ -5794,6 +5846,13 @@ let%expect_test "builtin_es_module_default" =
     }
   |}];
   [%expect {|
+    Local defs:
+    0. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 0})) };
+         types = {}}
+
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-18] ESModule {type_exports = [||];
                 exports =
@@ -5822,10 +5881,15 @@ let%expect_test "builtin_module_import_typeof" =
     0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
     1. Variable {id_loc = [6:21-22];
          name = "y"; def = (TyRef (Unqualified RemoteRef {ref_loc = [6:24-25]; index = 0}))}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2})) };
+         types = {}}
 
     Remote refs:
     0. ImportTypeof {id_loc = [5:17-18]; name = "x"; index = 0; remote = "x"}
 
+    Builtin global value globalThis
     Builtin module bar:
     [4:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 1)|];
@@ -5861,7 +5925,12 @@ let%expect_test "builtin_toplevel_import" =
     1. Variable {id_loc = [6:21-22];
          name = "y";
          def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; type_ref = true; name = "x"}))}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module bar:
     [5:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 1)|];
@@ -5891,7 +5960,12 @@ let%expect_test "builtin_module_export_specifiers" =
     Local defs:
     0. Variable {id_loc = [2:14-15]; name = "x"; def = (Annot (String [2:18-24]))}
     1. Variable {id_loc = [3:14-15]; name = "y"; def = (Annot (String [3:18-24]))}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin module foo:
     [1:15-20] ESModule {type_exports = [||];
                 exports =
@@ -5964,7 +6038,14 @@ let%expect_test "builtin_declare_namespace" =
          types =
          { "Baz" -> ([7:15-18], (Ref LocalRef {ref_loc = [7:15-18]; index = 4}));
            "Boz" -> ([8:14-17], (Ref LocalRef {ref_loc = [8:14-17]; index = 5})) }}
+    8. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 8}));
+           "ns" -> ([1:18-20], (Ref LocalRef {ref_loc = [1:18-20]; index = 7})) };
+         types = {}}
 
+    Builtin global value globalThis
     Builtin global value ns |}]
 
 let%expect_test "builtin_pattern" =
@@ -5984,6 +6065,13 @@ let%expect_test "builtin_pattern" =
                 (ObjValueField ([1:12-13], (
                    Value (NumberLit ([1:15-16], 0., "0"))), Polarity.Neutral)) }})}
     1. Variable {id_loc = [2:7-8]; name = "p"; def = (Pattern 1)}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2}));
+           "o" -> ([1:6-7], (Ref LocalRef {ref_loc = [1:6-7]; index = 0}));
+           "p" -> ([2:7-8], (Ref LocalRef {ref_loc = [2:7-8]; index = 1})) };
+         types = {}}
 
     Pattern defs:
     0. (Ref LocalRef {ref_loc = [2:12-13]; index = 0})
@@ -5992,6 +6080,7 @@ let%expect_test "builtin_pattern" =
     0. (PDef 0)
     1. PropP {id_loc = [2:7-8]; name = "p"; def = 0}
 
+    Builtin global value globalThis
     Builtin global value o
     Builtin global value p |}]
 
