@@ -117,24 +117,6 @@ type t = {
   infer_tparams: Type.typeparam list;
   (* For debugging purposes mostly *)
   depth: int;
-  (* The default behavior with type aliases is to return the name of the alias
-     instead of the expansion of the type. When normalizing type aliases `TypeT t`,
-     however, we proceed by recovering the name of the alias (say A) and then
-     normalizing the body `T` to recover the type "type A = T". So for this case
-     only it is useful to allow a one-off expansion of the contents of TypeT.
-     We do this by setting this property to `Some A`.
-
-     The reason we need the alias name (instead of just the fact that we're expanding
-     an alias) is that the RTypeAlias reason (used to discover aliases) may be
-     repeated across nested types (ExactT and MaybeT -- see statement.ml) and so we
-     need to skip over duplicates until we either encounter another type constructor
-     or a different type alias.
-
-     NOTE: The use of the name might not be robust against aliases with the same name
-     (coming from different scopes for example). Ideally we would use the location
-     or a unique ID of the type alias to make this distinction, but at the moment
-     keeping this information around introduces a small space regression. *)
-  under_type_alias: SymbolSet.t;
   (* Detect recursive types *)
   seen_tvar_ids: ISet.t;
   seen_eval_ids: Type.EvalIdSet.t;
@@ -146,7 +128,6 @@ let init ~genv =
     genv;
     depth = 0;
     infer_tparams = [];
-    under_type_alias = SymbolSet.empty;
     seen_tvar_ids = ISet.empty;
     seen_eval_ids = Type.EvalIdSet.empty;
     omit_targ_defaults = genv.options.omit_targ_defaults_option;
@@ -171,10 +152,6 @@ let optimize_types e = e.genv.options.optimize_types
 let max_depth e = e.genv.options.max_depth
 
 let merge_bot_and_any_kinds e = e.genv.options.merge_bot_and_any_kinds
-
-let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
-
-let seen_type_alias name e = SymbolSet.mem name e.under_type_alias
 
 let verbose e = e.genv.options.verbose_normalizer
 

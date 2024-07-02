@@ -1763,12 +1763,7 @@ module Make (I : INPUT) : S = struct
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 
     let reset_env env =
-      {
-        env with
-        Env.under_type_alias = Env.SymbolSet.empty;
-        seen_tvar_ids = ISet.empty;
-        seen_eval_ids = Type.EvalIdSet.empty;
-      }
+      { env with Env.seen_tvar_ids = ISet.empty; seen_eval_ids = Type.EvalIdSet.empty }
 
     let convert_t ?(skip_reason = false) ~env =
       if skip_reason then
@@ -1825,13 +1820,11 @@ module Make (I : INPUT) : S = struct
       let open Type in
       let local env reason t tparams =
         let%bind name = Reason_utils.local_type_alias_symbol env reason in
-        let env = Env.set_type_alias name env in
         let%map t = TypeConverter.convert_t ~skip_reason:true ~env t in
         Ty.Decl (Ty.TypeAliasDecl { import = false; name; tparams; type_ = Some t })
       in
       let import env reason t tparams =
         let%bind name = Reason_utils.imported_type_alias_symbol env reason in
-        let env = Env.set_type_alias name env in
         let%map t = TypeConverter.convert_t ~env t in
         Ty.Decl (Ty.TypeAliasDecl { name; import = true; tparams; type_ = Some t })
       in
