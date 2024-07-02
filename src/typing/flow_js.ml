@@ -1103,7 +1103,10 @@ struct
           when is_builtin_class_id "Map" class_id cx ->
           let key_t = mk_react_dro cx unknown_use dro key_t in
           let val_t = mk_react_dro cx unknown_use dro val_t in
-          let ro_map = get_builtin_typeapp cx r "$ReadOnlyMap" [key_t; val_t] in
+          let ro_map = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlyMap" [key_t; val_t] in
+          let u =
+            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+          in
           rec_flow cx trace (ro_map, u)
         | ( DefT
               ( r,
@@ -1120,7 +1123,10 @@ struct
           )
           when is_builtin_class_id "Set" class_id cx ->
           let elem_t = mk_react_dro cx unknown_use dro elem_t in
-          let ro_set = get_builtin_typeapp cx r "$ReadOnlySet" [elem_t] in
+          let ro_set = get_builtin_typeapp ~use_desc:true cx r "$ReadOnlySet" [elem_t] in
+          let u =
+            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+          in
           rec_flow cx trace (ro_set, u)
         (***************)
         (* maybe types *)
@@ -5979,12 +5985,18 @@ struct
         | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some dro; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
-          rec_flow
-            cx
-            trace
-            ( get_builtin_typeapp cx reason "$ReadOnlyArray" [mk_react_dro cx unknown_use dro elem_t],
-              u
-            )
+          let l =
+            get_builtin_typeapp
+              ~use_desc:true
+              cx
+              reason
+              "$ReadOnlyArray"
+              [mk_react_dro cx unknown_use dro elem_t]
+          in
+          let u =
+            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+          in
+          rec_flow cx trace (l, u)
         | ( DefT (reason, ArrT (ArrayAT { elem_t; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
@@ -6011,10 +6023,18 @@ struct
               ),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
+          let u =
+            TypeUtil.mod_use_op_of_use_t (fun use_op -> Frame (ReactDeepReadOnly dro, use_op)) u
+          in
           rec_flow
             cx
             trace
-            ( get_builtin_typeapp cx reason "$ReadOnlyArray" [mk_react_dro cx unknown_use dro elem_t],
+            ( get_builtin_typeapp
+                ~use_desc:true
+                cx
+                reason
+                "$ReadOnlyArray"
+                [mk_react_dro cx unknown_use dro elem_t],
               u
             )
         | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
