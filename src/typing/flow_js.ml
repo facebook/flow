@@ -5976,6 +5976,15 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
+        | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some dro; _ })),
+            (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
+          ) ->
+          rec_flow
+            cx
+            trace
+            ( get_builtin_typeapp cx reason "$ReadOnlyArray" [mk_react_dro cx unknown_use dro elem_t],
+              u
+            )
         | ( DefT (reason, ArrT (ArrayAT { elem_t; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
@@ -5996,6 +6005,18 @@ struct
               }
           ) ->
           GetPropTKit.on_array_length cx trace reason ~inexact arity (reason_of_use_t u) tout
+        | ( DefT
+              ( reason,
+                ArrT (TupleAT { elem_t; react_dro = Some dro; _ } | ROArrayAT (elem_t, Some dro))
+              ),
+            (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
+          ) ->
+          rec_flow
+            cx
+            trace
+            ( get_builtin_typeapp cx reason "$ReadOnlyArray" [mk_react_dro cx unknown_use dro elem_t],
+              u
+            )
         | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->

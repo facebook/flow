@@ -34,7 +34,7 @@ component Foo1(x: { y: number}) {
 }
 component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
     rest.bar = 42; // error;
-    rest.baz.push("hello"); // TODO
+    rest.baz.push("hello"); // error
     rest.qux[0] = 42; // error
     rest.qux[1].pop(); // error
     return null;
@@ -79,3 +79,8 @@ class CoolClass {
 declare const drc: $ReactDeepReadOnly<CoolClass>;
 drc.prop.x = 42 // error;
 drc.prop = {x: 42}; // error;
+
+declare const droarr: $ReactDeepReadOnly<Array<Array<number>>>;
+droarr.push([]); // error
+droarr[0].push(42); // error
+droarr.at(0)?.push(42) // error;
