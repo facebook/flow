@@ -48,6 +48,7 @@ queries_in_file autocomplete "identifier_type.js" --pretty
 queries_in_file autocomplete "super.js" --pretty
 queries_in_file autocomplete "this-2.js" --pretty
 queries_in_file autocomplete "pattern.js" --pretty
+queries_in_file autocomplete "namespace.js" --pretty
 queries_in_file autocomplete "normalize-1.js" --pretty
 queries_in_file autocomplete "normalize-2.js" --pretty
 queries_in_file autocomplete "unqualified-type-annotation.js" --lsp

@@ -990,6 +990,10 @@ pattern.js:12:14
 Flags: --pretty
 {"result":[]}
 
+namespace.js:8:12
+Flags: --pretty
+{"result":[{"name":"a","type":"number"},{"name":"s","type":"typeof S"}]}
+
 normalize-1.js:4:12
 Flags: --pretty
 {"result":[{"name":"b","type":"T"}]}
