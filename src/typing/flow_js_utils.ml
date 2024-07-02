@@ -491,6 +491,19 @@ let map_union ~f cx trace rep reason =
   |> Base.List.map ~f:(fun t -> Tvar.mk_where cx (reason_of_t t) (fun tout -> f cx trace t tout))
   |> union_of_ts reason
 
+let map_inter ~f cx trace rep reason =
+  let ts =
+    InterRep.members rep
+    |> Base.List.map ~f:(fun t -> Tvar.mk_where cx (reason_of_t t) (fun tout -> f cx trace t tout))
+  in
+  match ts with
+  (* If we have no types then this is an error. *)
+  | [] -> DefT (reason, EmptyT)
+  (* If we only have one type then only that should be used. *)
+  | [t0] -> t0
+  (* If we have more than one type then we make a union type. *)
+  | t0 :: t1 :: ts -> IntersectionT (reason, InterRep.make t0 t1 ts)
+
 let iter_resolve_union ~f cx trace reason rep upper =
   (* We can't guarantee that tvars or typeapps get resolved, even though we'd like
    * to believe they will. Instead, we separate out all the resolvable types from

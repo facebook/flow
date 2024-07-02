@@ -37,10 +37,22 @@ let recurse_into_union cx filter_fn ((r, ts) : reason * Type.t list) =
   | [t] -> t
   | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
 
-let recurse_into_intersection =
+let recurse_into_intersection cx =
   let rec helper filter_fn r acc = function
     | [] -> List.rev acc
     | t :: ts -> begin
+      let t =
+        match t with
+        | OpenT (_, id) ->
+          let (_, constraints) = Context.find_constraints cx id in
+          begin
+            match constraints with
+            | Constraint.FullyResolved s -> Context.force_fully_resolved_tvar cx s
+            | Constraint.Resolved t -> t
+            | _ -> t
+          end
+        | _ -> t
+      in
       match filter_fn t with
       | DefT (_, EmptyT) -> []
       | filtered_type -> helper filter_fn r (filtered_type :: acc) ts
@@ -91,7 +103,7 @@ let rec exists cx t =
     | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
     | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
     (* an intersection passes through iff all of its members pass through *)
-    | IntersectionT (r, rep) -> recurse_into_intersection (exists cx) (r, InterRep.members rep)
+    | IntersectionT (r, rep) -> recurse_into_intersection cx (exists cx) (r, InterRep.members rep)
     (* truthy things pass through *)
     | t -> t
 
@@ -139,7 +151,8 @@ let rec not_exists cx t =
     | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
     | ExactT (_, t) -> not_exists cx t
     (* an intersection passes through iff all of its members pass through *)
-    | IntersectionT (r, rep) -> recurse_into_intersection (not_exists cx) (r, InterRep.members rep)
+    | IntersectionT (r, rep) ->
+      recurse_into_intersection cx (not_exists cx) (r, InterRep.members rep)
     (* things that don't track truthiness pass through *)
     | t -> t
 

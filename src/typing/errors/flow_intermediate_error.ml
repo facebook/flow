@@ -1119,6 +1119,7 @@ let to_printable_error :
         code "React.Node";
         text " or a reference to a component-syntax component";
       ]
+    | ExplanationIncompatibleReactDeepReadOnly -> [text "Consider using "; code "React.Immutable<>"]
     | ExplanationTypeGuardCompatibility ->
       [text "A user defined type guard needs to be compatible with its parameter's type"]
     | ExplanationTypeGuardPositiveConsistency
@@ -2802,6 +2803,22 @@ let to_printable_error :
         text ", a non-predicate function, is incompatible with ";
         ref upper;
         text ", which is a predicate function";
+      ]
+    | MessageIncompatibleReactDeepReadOnly { lower; upper; dro_loc } ->
+      let react_runtime_str = "React runtime" in
+      let (lower, react_runtime) =
+        if Loc.equal (loc_of_reason lower |> loc_of_aloc) (loc_of_reason upper |> loc_of_aloc) then
+          (mk_reason (desc_of_reason lower) dro_loc, text react_runtime_str)
+        else
+          (lower, hardcoded_string_desc_ref react_runtime_str dro_loc)
+      in
+      [
+        ref lower;
+        text " is managed by the ";
+        react_runtime;
+        text " and cannot be mutated, while ";
+        ref upper;
+        text " may allow mutations (possibly in nested values)";
       ]
     | MessageIncompatibleReactHooksDueToUniqueness { lower; upper } ->
       [ref lower; text " and "; ref upper; text " are different React hooks"]
