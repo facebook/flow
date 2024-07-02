@@ -67,11 +67,17 @@ let init ~profiling ?focus_targets genv =
 
   extract_flowlibs_or_exit options;
 
-  let%lwt env = Types_js.init ~profiling ~workers options in
-  (* If we're in lazy mode, we forego typechecking until later,
+  let%lwt (libs_ok, env) = Types_js.init ~profiling ~workers options in
+  (* If any libs errored, skip typechecking and just show lib errors. Note
+   * that `init` above has done all parsing, not just lib parsing, resolved
+   * and committed modules, etc.
+   *
+   * Furthermore, if we're in lazy mode, we forego typechecking until later,
    * when it proceeds on an as-needed basis. *)
   let%lwt (env, first_internal_error) =
-    if Options.lazy_mode options then
+    if not libs_ok then
+      Lwt.return (env, None)
+    else if Options.lazy_mode options then
       Types_js.libdef_check_for_lazy_init ~profiling ~workers ~options env
     else
       Types_js.full_check_for_init ~profiling ~workers ?focus_targets ~options env

@@ -627,7 +627,8 @@ let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files 
 let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
       let%lwt {
-            Init_js.errors = lib_errors;
+            Init_js.ok;
+            errors = lib_errors;
             warnings = lib_warnings;
             suppressions = lib_suppressions;
             exports;
@@ -636,7 +637,8 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
         Init_js.init ~options ~reader ordered_libs
       in
       Lwt.return
-        ( FilenameMap.union lib_errors local_errors,
+        ( ok,
+          FilenameMap.union lib_errors local_errors,
           FilenameMap.union lib_warnings warnings,
           Error_suppressions.update_suppressions lib_suppressions suppressions,
           exports,
@@ -1982,7 +1984,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
           Bucket.of_list []
     )
   in
-  let%lwt (local_errors, warnings, suppressions, lib_exports, master_cx) =
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     let warnings = FilenameMap.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
@@ -2075,14 +2077,15 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       ~connections
       ~master_cx
   in
-  Lwt.return env
+  Lwt.return (env, libs_ok)
 
-let handle_updates_since_saved_state ~profiling ~workers ~options updates env =
+let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updates env =
   let should_force_recheck = Options.saved_state_force_recheck options in
   (* We know that all the files in updates have changed since the saved state was generated. We
      * have two ways to deal with them: *)
   if (not (Options.lazy_mode options)) || should_force_recheck then begin
-    if CheckedSet.is_empty updates then
+    if CheckedSet.is_empty updates || not libs_ok then
+      (* Don't recheck if the libs are not ok *)
       Lwt.return env
     else
       (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
@@ -2189,7 +2192,7 @@ let init_from_scratch ~profiling ~workers options =
 
   Hh_logger.info "Loading libraries";
   MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
-  let%lwt (local_errors, warnings, suppressions, lib_exports, master_cx) =
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
@@ -2244,7 +2247,7 @@ let init_from_scratch ~profiling ~workers options =
       ~connections:Persistent_connection.empty
       ~master_cx
   in
-  Lwt.return env
+  Lwt.return (env, libs_ok)
 
 let exit_if_no_fallback ?msg options =
   if Options.saved_state_no_fallback options then Exit.(exit ?msg Invalid_saved_state)
@@ -2308,7 +2311,7 @@ let load_saved_state ~profiling ~workers options =
 
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
-  let%lwt env =
+  let%lwt (env, libs_ok) =
     match%lwt load_saved_state ~profiling ~workers options with
     | Error msg ->
       (* Either there is no saved state or we failed to load it for some reason *)
@@ -2316,15 +2319,19 @@ let init ~profiling ~workers options =
       init_from_scratch ~profiling ~workers options
     | Ok (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
-      let%lwt env = init_from_saved_state ~profiling ~workers ~saved_state ~updates options in
-      let%lwt env = handle_updates_since_saved_state ~profiling ~workers ~options updates env in
-      Lwt.return env
+      let%lwt (env, libs_ok) =
+        init_from_saved_state ~profiling ~workers ~saved_state ~updates options
+      in
+      let%lwt env =
+        handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updates env
+      in
+      Lwt.return (env, libs_ok)
   in
   let init_time = Unix.gettimeofday () -. start_time in
   let%lwt () =
     Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal env.ServerEnv.files)
   in
-  Lwt.return env
+  Lwt.return (libs_ok, env)
 
 let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env =
   match%lwt
@@ -2346,7 +2353,7 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
   | Ok (saved_state, updates_since_saved_state) ->
     (* We loaded a saved state successfully! We are awesome! *)
     Hh_logger.info "Reinitializing from saved state";
-    let%lwt env =
+    let%lwt (env, libs_ok) =
       init_from_saved_state
         ~profiling
         ~workers
@@ -2355,6 +2362,8 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
         ~env
         options
     in
+    (* TODO: what do we do if they're not? exit? *)
+    ignore libs_ok;
 
     let updates_since_saved_state =
       (* In lazy mode, we just want to merge the upstream changes since saved
