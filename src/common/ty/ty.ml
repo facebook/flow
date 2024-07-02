@@ -391,11 +391,6 @@ and elt =
       },
     show]
 
-type type_at_pos_result = {
-  unevaluated: elt;
-  evaluated: elt option; (* Evaluation may not be possible *)
-}
-
 let assert0 i =
   if i == 0 then
     ()
@@ -895,3 +890,70 @@ let string_of_prop_source = function
   | Interface -> "interface"
   | PrimitiveProto s -> s ^ ".prototype"
   | Other -> "other"
+
+module LocSymbolSet : Flow_set.S with type elt = Loc.t symbol_ = struct
+  module M = Flow_set.Make (struct
+    type t = Loc.t symbol_
+
+    let compare = Stdlib.compare
+  end)
+
+  include M
+end
+
+type type_at_pos_result = {
+  unevaluated: elt;
+  evaluated: elt option; (* Evaluation may not be possible *)
+  refs: LocSymbolSet.t option; (* Use concrete locs for easier printing *)
+}
+
+let map_loc_remote_info ~f ri =
+  let { imported_as } = ri in
+  let imported_as =
+    match imported_as with
+    | Some (loc, name, mode) -> Some (f loc, name, mode)
+    | None -> None
+  in
+  { imported_as }
+
+let map_loc_provenance ~f sym_provenance =
+  match sym_provenance with
+  | Local -> Local
+  | Builtin -> Builtin
+  | Remote ri -> Remote (map_loc_remote_info ~f ri)
+  | Library ri -> Library (map_loc_remote_info ~f ri)
+
+let map_loc_symbol ~f (s : ALoc.t symbol_) : Loc.t symbol_ =
+  let { sym_provenance; sym_def_loc; sym_name; sym_anonymous } = s in
+  {
+    sym_provenance = map_loc_provenance ~f sym_provenance;
+    sym_def_loc = f sym_def_loc;
+    sym_name;
+    sym_anonymous;
+  }
+
+let symbols_of_elt ~loc_of_aloc =
+  let singleton s = LocSymbolSet.singleton (map_loc_symbol ~f:loc_of_aloc s) in
+  let o =
+    object (_self)
+      inherit [_] reduce_ty as _super
+
+      method zero = LocSymbolSet.empty
+
+      method plus = LocSymbolSet.union
+
+      method! on_symbol _env s = singleton s
+    end
+  in
+  function
+  | Type t -> o#on_t () t
+  | Decl (VariableDecl _ as d)
+  | Decl (TypeAliasDecl _ as d)
+  | Decl (ClassDecl _ as d)
+  | Decl (InterfaceDecl _ as d)
+  | Decl (EnumDecl _ as d)
+  | Decl (NominalComponentDecl _ as d) ->
+    o#on_decl () d
+  | Decl (NamespaceDecl { name; exports = _ })
+  | Decl (ModuleDecl { name; exports = _; default = _ }) ->
+    Base.Option.value_map name ~default:LocSymbolSet.empty ~f:singleton

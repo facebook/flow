@@ -53,22 +53,6 @@ let size_of_elt ?(max = max_size) elt =
   | Size.GreaterThan _ -> None
   | Size.Exactly s -> Some s
 
-let symbols_of_type =
-  Ty.(
-    let o =
-      object (_self)
-        inherit [_] reduce_ty as _super
-
-        method zero = []
-
-        method plus = List.rev_append
-
-        method! on_symbol _env s = [s]
-      end
-    in
-    (fun t -> o#on_t () t)
-  )
-
 module Simplify = struct
   type config = {
     is_bot: Ty.t -> bool;

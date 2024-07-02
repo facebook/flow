@@ -657,7 +657,7 @@ let infer_type_to_response
       in
       let json =
         match tys with
-        | Some { Ty.unevaluated; evaluated } ->
+        | Some { Ty.unevaluated; evaluated; refs = _ } ->
           let evaluated = Base.Option.value_map evaluated ~default:JSON_Null ~f:type_json in
           JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", evaluated)]
         | None -> JSON_Null
@@ -737,6 +737,7 @@ let infer_type
           ~max_depth
           ~verbose_normalizer
           ~no_typed_ast_for_imports
+          ~include_refs:(Some (Parsing_heaps.Reader.loc_of_aloc ~reader))
           file_key
           line
           column

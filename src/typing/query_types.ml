@@ -37,6 +37,7 @@ let type_at_pos_type
     ~max_depth
     ~typed_ast
     ~no_typed_ast_for_imports
+    ~include_refs
     loc : Ty.type_at_pos_result result =
   match find_type_at_pos_annotation cx typed_ast loc with
   | None -> FailureNoMatch
@@ -85,15 +86,34 @@ let type_at_pos_type
       else
         None
     in
-    begin
-      match (unevaluated, evaluated) with
-      | (Ok unevaluated, Some (Ok evaluated)) ->
-        (match Ty_utils.size_of_elt ~max:max_size_of_evaluated_type evaluated with
-        | Some _ -> Success (loc, { Ty.unevaluated; evaluated = Some evaluated })
-        | None -> Success (loc, { Ty.unevaluated; evaluated = None }))
-      | (Ok unevaluated, _) -> Success (loc, { Ty.unevaluated; evaluated = None })
-      | (Error err, _) -> result_of_normalizer_error loc t err
-    end
+    let refs (unevaluated, evaluated) =
+      let open Ty in
+      match include_refs with
+      | None -> None
+      | Some loc_of_aloc ->
+        let syms = Ty.symbols_of_elt ~loc_of_aloc unevaluated in
+        Some
+          (Base.Option.value_map evaluated ~default:syms ~f:(fun e ->
+               LocSymbolSet.union syms (symbols_of_elt ~loc_of_aloc e)
+           )
+          )
+    in
+    let tys =
+      begin
+        match (unevaluated, evaluated) with
+        | (Ok unevaluated, Some (Ok evaluated)) ->
+          (match Ty_utils.size_of_elt ~max:max_size_of_evaluated_type evaluated with
+          | Some _ -> Ok (unevaluated, Some evaluated)
+          | None -> Ok (unevaluated, None))
+        | (Ok unevaluated, _) -> Ok (unevaluated, None)
+        | (Error err, _) -> Error err
+      end
+    in
+    (match tys with
+    | Ok (unevaluated, evaluated) ->
+      let refs = refs (unevaluated, evaluated) in
+      Success (loc, { Ty.unevaluated; evaluated; refs })
+    | Error err -> result_of_normalizer_error loc t err)
 
 let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
