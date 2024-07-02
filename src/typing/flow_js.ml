@@ -1255,10 +1255,10 @@ struct
           instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Upper u)
         | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc = _ },
+        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc },
             MethodT (_, _, _, _, _)
           )
-        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc = _ },
+        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc },
             PrivateMethodT (_, _, _, _, _, _, _)
           ) ->
           let reason_op = reason_of_use_t u in
@@ -1270,6 +1270,7 @@ struct
               ~reason_op
               ~reason_tapp
               ~from_value
+              ~use_desc
               ~cache:true
               type_
               targs
@@ -10402,13 +10403,22 @@ struct
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
   and mk_typeapp_instance_annot
-      cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value ?(cache = false) c ts =
+      cx
+      ?trace
+      ~use_op
+      ~reason_op
+      ~reason_tapp
+      ~from_value
+      ?(use_desc = false)
+      ?(cache = false)
+      c
+      ts =
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
     if from_value then
-      reposition_reason cx ?trace reason_tapp ~use_desc:false t
+      reposition_reason cx ?trace reason_tapp ~use_desc t
     else
-      mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
+      mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) ~use_desc t
 
   and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value c ts =
     let t = Tvar.mk cx reason_tapp in
