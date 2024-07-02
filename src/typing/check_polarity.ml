@@ -70,6 +70,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | DefT (_, ClassT t) -> check_polarity cx ?trace seen tparams polarity t
     | DefT (_, InstanceT { static; super; implements; inst }) ->
       let {
+        inst_react_dro = _;
         class_id = _;
         class_name = _;
         type_args = _;

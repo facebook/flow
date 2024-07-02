@@ -1508,6 +1508,7 @@ and merge_interface ~inline env file reason class_name id def =
     let inst =
       {
         class_id = id;
+        inst_react_dro = None;
         class_name;
         type_args = targs;
         own_props = Context.generate_property_map file.cx own_props;
@@ -1619,6 +1620,7 @@ and merge_class env file reason class_name id def =
     let inst =
       {
         Type.class_id = id;
+        inst_react_dro = None;
         class_name;
         type_args = targs;
         own_props;
@@ -2042,6 +2044,7 @@ let merge_declare_class file reason class_name id def =
     let inst =
       {
         Type.class_id = id;
+        inst_react_dro = None;
         class_name = Some class_name;
         type_args = targs;
         own_props;

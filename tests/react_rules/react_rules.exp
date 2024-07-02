@@ -144,6 +144,114 @@ References:
            ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ dro.js:61:8
+
+Cannot call `droset.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+
+   dro.js:61:8
+   61| droset.add(new Set()); // error
+              ^^^
+
+References:
+   dro.js:60:42
+   60| declare const droset: $ReactDeepReadOnly<Set<Set<number>>>;
+                                                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:62:8
+
+Cannot call `droset.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+
+   dro.js:62:8
+   62| droset.add((42: any)); // error
+              ^^^
+
+References:
+   dro.js:60:42
+   60| declare const droset: $ReactDeepReadOnly<Set<Set<number>>>;
+                                                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:63:23
+
+Cannot call `x.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+
+   dro.js:63:23
+   63| droset.forEach(x => x.add(42)) // error
+                             ^^^
+
+References:
+   dro.js:60:46
+   60| declare const droset: $ReactDeepReadOnly<Set<Set<number>>>;
+                                                    ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:68:8
+
+Cannot call `dromap.set` because property `set` (did you mean `get`?) is missing in `$ReadOnlyMap` [1]. [prop-missing]
+
+   dro.js:68:8
+   68| dromap.set({x: 42}, new Map()); // error
+              ^^^
+
+References:
+   dro.js:67:42
+   67| declare const dromap: $ReactDeepReadOnly<Map<{x: number}, Map<{y: number}, number>>>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:69:8
+
+Cannot call `dromap.set` because property `set` (did you mean `get`?) is missing in `$ReadOnlyMap` [1]. [prop-missing]
+
+   dro.js:69:8
+   69| dromap.set({x: 42}, (42: any)); // error
+              ^^^
+
+References:
+   dro.js:67:42
+   67| declare const dromap: $ReactDeepReadOnly<Map<{x: number}, Map<{y: number}, number>>>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:71:7
+
+Cannot assign `42` to `key.x` because property `x` is not writable. [cannot-write]
+
+   71|   key.x = 42; // error
+             ^
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:72:7
+
+Cannot call `val.set` because property `set` (did you mean `get`?) is missing in `$ReadOnlyMap` [1]. [prop-missing]
+
+   dro.js:72:7
+   72|   val.set({y: 420}, 42) // error
+             ^^^
+
+References:
+   dro.js:67:59
+   67| declare const dromap: $ReactDeepReadOnly<Map<{x: number}, Map<{y: number}, number>>>;
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:80:10
+
+Cannot assign `42` to `drc.prop.x` because property `x` is not writable. [cannot-write]
+
+   80| drc.prop.x = 42 // error;
+                ^
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:81:5
+
+Cannot assign object literal to `drc.prop` because property `prop` is not writable. [cannot-write]
+
+   81| drc.prop = {x: 42}; // error;
+           ^^^^
+
+
 Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17
 
 Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
@@ -298,4 +406,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 30 errors
+Found 39 errors

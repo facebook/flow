@@ -308,6 +308,7 @@ let mk_private_method_eval_hint_test
             implements = [];
             inst =
               {
+                inst_react_dro = None;
                 class_id = ALoc.id_none;
                 class_name = None;
                 type_args = [];

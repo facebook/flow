@@ -56,3 +56,26 @@ component UnionToElemTShortcut(
     obj.prop = 0; // error
     return null;
 }
+
+declare const droset: $ReactDeepReadOnly<Set<Set<number>>>;
+droset.add(new Set()); // error
+droset.add((42: any)); // error
+droset.forEach(x => x.add(42)) // error
+
+droset as Set<Set<number>> as typeof droset // fine
+
+declare const dromap: $ReactDeepReadOnly<Map<{x: number}, Map<{y: number}, number>>>;
+dromap.set({x: 42}, new Map()); // error
+dromap.set({x: 42}, (42: any)); // error
+dromap.forEach((val, key) => {
+  key.x = 42; // error
+  val.set({y: 420}, 42) // error
+});
+
+class CoolClass {
+  prop: {x: number};
+}
+
+declare const drc: $ReactDeepReadOnly<CoolClass>;
+drc.prop.x = 42 // error;
+drc.prop = {x: 42}; // error;

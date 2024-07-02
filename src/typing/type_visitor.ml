@@ -420,6 +420,7 @@ class ['a] t =
         class_private_static_fields;
         class_private_methods;
         class_private_static_methods;
+        inst_react_dro = _;
       } =
         i
       in
