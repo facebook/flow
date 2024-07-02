@@ -678,11 +678,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid rhs_t) (kid result_t)) t
     | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
-    | AssertBinaryInLHST _ -> p t
-    | AssertBinaryInRHST _ -> p t
-    | AssertForInRHST _ -> p t
-    | AssertInstanceofRHST _ -> p t
-    | AssertNonComponentLikeT _ -> p t
     | AssertIterableT _ -> p t
     | BindT (use_op, _, _) -> p t ~extra:(string_of_use_op use_op)
     | CallElemT (_, _, _, _, _) -> p t
@@ -893,6 +888,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _ ->
         p ~extra:(string_of_use_op use_op) t)
+    | RunTypeAssertion _ -> p t
     | SentinelPropTestT (_, l, sense, sentinel, result) ->
       p
         ~reason:false

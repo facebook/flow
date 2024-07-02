@@ -687,17 +687,16 @@ module rec TypeTerm : sig
         result_t: t;
         kind: UnaryArithKind.t;
       }
-    | AssertBinaryInLHST of reason
-    | AssertBinaryInRHST of reason
-    | AssertForInRHST of reason
-    | AssertInstanceofRHST of reason
     | AssertIterableT of {
         use_op: use_op;
         reason: reason;
         async: bool;
         targs: t list;
       }
-    | AssertNonComponentLikeT of ALoc.t * reason
+    | RunTypeAssertion of {
+        reason: reason;
+        type_assertion_kind: type_assertion_kind;
+      }
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
@@ -1141,6 +1140,13 @@ module rec TypeTerm : sig
        and argument types of the call, to enable polymorphic calls. *)
     | LatentP of pred_funcall_info Lazy.t * index
     | NoP
+
+  and type_assertion_kind =
+    | TypeAssertionBinaryInLHS
+    | TypeAssertionBinaryInRHS
+    | TypeAssertionForInRHS
+    | TypeAssertionInstanceofRHS
+    | TypeAssertionNonComponentLike of ALoc.t
 
   and substitution = Key.t SMap.t
 
@@ -4141,11 +4147,6 @@ let string_of_use_ctor = function
   | ArithT _ -> "ArithT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
-  | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
-  | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
-  | AssertForInRHST _ -> "AssertForInRHST"
-  | AssertInstanceofRHST _ -> "AssertInstanceofRHST"
-  | AssertNonComponentLikeT _ -> "AssertNonComponentLikeT"
   | AssertIterableT _ -> "AssertIterableT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
@@ -4230,6 +4231,16 @@ let string_of_use_ctor = function
         | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
         | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
       end
+  | RunTypeAssertion { reason = _; type_assertion_kind = TypeAssertionBinaryInLHS } ->
+    "RunTypeAssertion (TypeAssertionBinaryInLHS)"
+  | RunTypeAssertion { reason = _; type_assertion_kind = TypeAssertionBinaryInRHS } ->
+    "RunTypeAssertion (TypeAssertionBinaryInRHS)"
+  | RunTypeAssertion { reason = _; type_assertion_kind = TypeAssertionForInRHS } ->
+    "RunTypeAssertion (TypeAssertionForInRHS)"
+  | RunTypeAssertion { reason = _; type_assertion_kind = TypeAssertionInstanceofRHS } ->
+    "RunTypeAssertion (TypeAssertionInstanceofRHS)"
+  | RunTypeAssertion { reason = _; type_assertion_kind = TypeAssertionNonComponentLike _ } ->
+    "RunTypeAssertion (TypeAssertionNonComponentLike)"
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"

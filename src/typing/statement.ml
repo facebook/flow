@@ -1341,7 +1341,9 @@ module Make
           (Tast_utils.error_mapper#for_in_statement_lhs left, right_ast)
       in
       let ((_, right_t), _) = right_ast in
-      Flow.flow cx (right_t, AssertForInRHST reason);
+      Flow.flow
+        cx
+        (right_t, RunTypeAssertion { reason; type_assertion_kind = TypeAssertionForInRHS });
 
       let body_ast = statement cx body in
       (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments })
@@ -4803,8 +4805,16 @@ module Make
       let (((_, t2), _) as right) = expression cx right in
       let reason_lhs = mk_reason (RCustom "LHS of `in` operator") loc1 in
       let reason_rhs = mk_reason (RCustom "RHS of `in` operator") loc2 in
-      Flow.flow cx (t1, AssertBinaryInLHST reason_lhs);
-      Flow.flow cx (t2, AssertBinaryInRHST reason_rhs);
+      Flow.flow
+        cx
+        ( t1,
+          RunTypeAssertion { reason = reason_lhs; type_assertion_kind = TypeAssertionBinaryInLHS }
+        );
+      Flow.flow
+        cx
+        ( t2,
+          RunTypeAssertion { reason = reason_rhs; type_assertion_kind = TypeAssertionBinaryInRHS }
+        );
       (BoolT.at loc, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
@@ -4834,7 +4844,11 @@ module Make
       let left = expression cx left in
       let (((right_loc, right_t), _) as right) = expression cx right in
       let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
-      Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
+      Flow.flow
+        cx
+        ( right_t,
+          RunTypeAssertion { reason = reason_rhs; type_assertion_kind = TypeAssertionInstanceofRHS }
+        );
       (BoolT.at loc, { operator; left; right; comments })
     | LessThan
     | LessThanEqual
@@ -5554,8 +5568,11 @@ module Make
                      Flow.flow
                        cx
                        ( t,
-                         AssertNonComponentLikeT
-                           (def_loc, mk_reason (RIdentifier (OrdinaryName name)) loc)
+                         RunTypeAssertion
+                           {
+                             reason = mk_reason (RIdentifier (OrdinaryName name)) loc;
+                             type_assertion_kind = TypeAssertionNonComponentLike def_loc;
+                           }
                        )
                  );
               let strt = SingletonStrT (OrdinaryName name) in

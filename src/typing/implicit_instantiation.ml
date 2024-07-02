@@ -339,7 +339,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetKeysT _
     | GetValuesT _
     | GetDictValuesT _
-    | AssertNonComponentLikeT _
     (* Import-export related upper bounds won't appear during implicit instantiation. *)
     | CJSExtractNamedExportsT _
     | CopyNamedExportsT _
@@ -363,11 +362,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | OrT _
     | NullishCoalesceT _
     | NotT _
-    | AssertBinaryInLHST _
-    | AssertBinaryInRHST _
-    | AssertForInRHST _
-    | AssertInstanceofRHST _
     | AssertIterableT _
+    | RunTypeAssertion _
     | ObjAssignToT _
     | ObjAssignFromT _
     | ObjTestT _
