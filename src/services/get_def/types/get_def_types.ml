@@ -31,5 +31,6 @@ type def_info =
 module Purpose = struct
   type t =
     | GoToDefinition
+    | JSDoc
     | FindReferences
 end

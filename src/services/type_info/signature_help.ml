@@ -315,7 +315,7 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
           ~file_sig
           ~ast
           ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
-          ~purpose:Get_def_types.Purpose.GoToDefinition
+          ~purpose:Get_def_types.Purpose.JSDoc
           callee_loc
       with
       | GetDef_js.Get_def_result.Def (locs, _)
