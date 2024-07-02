@@ -2515,7 +2515,6 @@ module Make
                   name_loc
               )
             in
-            Flow.flow cx (t, AssertImportIsValueT (reason, name));
             Base.Option.iter default ~f:(fun d ->
                 let default_t = Flow.mk_default cx reason d in
                 Flow.flow cx (default_t, UseT (use_op, t))

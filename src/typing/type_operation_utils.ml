@@ -97,12 +97,6 @@ module Import_export = struct
     let is_strict = Context.is_strict cx in
     let name_def_loc_ref = ref None in
     let t =
-      let assert_import_is_value cx reason name export_t =
-        Flow.FlowJs.flow_opt
-          cx
-          ~trace:DepthTrace.dummy_trace
-          (export_t, AssertImportIsValueT (reason, name))
-      in
       let with_concretized_type cx r f t =
         f (singleton_concretize_type_for_imports_exports cx r t)
       in
@@ -112,14 +106,12 @@ module Import_export = struct
           if remote_name = "default" then
             Flow_js_utils.ImportDefaultTKit.on_ModuleT
               cx
-              ~assert_import_is_value
               ~with_concretized_type
               (import_reason, import_kind, (local_name, module_name), is_strict)
               m
           else
             Flow_js_utils.ImportNamedTKit.on_ModuleT
               cx
-              ~assert_import_is_value
               ~with_concretized_type
               (import_reason, import_kind, remote_name, module_name, is_strict)
               m

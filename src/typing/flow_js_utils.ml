@@ -1398,11 +1398,8 @@ end
 module ImportDefaultTKit = struct
   (* import [type] X from 'SomeModule'; *)
   let on_ModuleT
-      cx
-      ~assert_import_is_value
-      ~with_concretized_type
-      (reason, import_kind, (local_name, module_name), is_strict)
-      module_ =
+      cx ~with_concretized_type (reason, import_kind, (local_name, module_name), is_strict) module_
+      =
     let {
       module_reason;
       module_export_types = exports;
@@ -1458,19 +1455,13 @@ module ImportDefaultTKit = struct
           (ImportTypeofTKit.on_concrete_type cx reason "default")
           export_t
       )
-    | ImportValue ->
-      assert_import_is_value cx reason "default" export_t;
-      (loc_opt, export_t)
+    | ImportValue -> (loc_opt, export_t)
 end
 
 module ImportNamedTKit = struct
   (* import {X} from 'SomeModule'; *)
   let on_ModuleT
-      cx
-      ~assert_import_is_value
-      ~with_concretized_type
-      (reason, import_kind, export_name, module_name, is_strict)
-      module_ =
+      cx ~with_concretized_type (reason, import_kind, export_name, module_name, is_strict) module_ =
     let {
       module_reason = _;
       module_export_types = exports;
@@ -1539,12 +1530,9 @@ module ImportNamedTKit = struct
           (ImportTypeofTKit.on_concrete_type cx reason export_name)
           (AnyT.untyped reason)
       )
-    | (ImportValue, Some { preferred_def_locs = _; name_loc; type_ }) ->
-      assert_import_is_value cx reason export_name type_;
-      (name_loc, type_)
+    | (ImportValue, Some { preferred_def_locs = _; name_loc; type_ }) -> (name_loc, type_)
     | (ImportValue, None) when has_every_named_export ->
       let t = AnyT.untyped reason in
-      assert_import_is_value cx reason export_name t;
       (None, t)
     | (ImportValue, None) when NameUtils.Map.mem (OrdinaryName export_name) type_exports_tmap ->
       add_output cx (Error_message.EImportTypeAsValue (reason, export_name));

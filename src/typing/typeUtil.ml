@@ -59,7 +59,6 @@ and reason_of_use_t = function
   | AssertInstanceofRHST reason -> reason
   | AssertNonComponentLikeT (_, reason) -> reason
   | AssertIterableT { reason; _ } -> reason
-  | AssertImportIsValueT (reason, _) -> reason
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
   | CallLatentPredT { reason; _ } -> reason
@@ -327,7 +326,6 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
-  | AssertImportIsValueT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)

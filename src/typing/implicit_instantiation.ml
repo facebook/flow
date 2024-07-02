@@ -339,9 +339,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetKeysT _
     | GetValuesT _
     | GetDictValuesT _
-    (* Import-export related upper bounds won't appear during implicit instantiation. *)
-    | AssertImportIsValueT _
     | AssertNonComponentLikeT _
+    (* Import-export related upper bounds won't appear during implicit instantiation. *)
     | CJSExtractNamedExportsT _
     | CopyNamedExportsT _
     | CopyTypeExportsT _
