@@ -29,11 +29,13 @@ let id_from_string x = Flow_ast_utils.ident_of_source (Loc.none, x)
 
 let id_from_symbol x =
   let { sym_name; sym_anonymous; _ } = x in
-  if sym_anonymous then
-    Error (Utils_js.spf "Cannot output anonymous elements.")
-  else
-    (* TODO consider issuing an error when we encounter an internal name *)
-    Ok (id_from_string (Reason.display_string_of_name sym_name))
+  let name =
+    if sym_anonymous then
+      Reason.OrdinaryName "__Anonymous__"
+    else
+      sym_name
+  in
+  Ok (id_from_string (Reason.display_string_of_name name))
 
 let mk_generic x targs =
   { T.Generic.id = T.Generic.Identifier.Unqualified x; targs; comments = None }
