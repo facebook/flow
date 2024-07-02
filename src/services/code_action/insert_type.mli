@@ -42,8 +42,6 @@ type errors =
 
 exception FailedToInsertType of errors
 
-exception FoundAmbiguousType
-
 val simplify : Ty.t -> Ty.t
 
 val path_of_loc : ?error:(string, string) result -> Loc.t -> (string, string) result

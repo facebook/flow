@@ -50,8 +50,6 @@ let expected err = FailedToInsertType (Expected err)
 
 let unexpected err = FailedToInsertType (Unexpected err)
 
-exception FoundAmbiguousType
-
 class use_upper_bound_mapper =
   object (this)
     inherit [_] Ty.endo_ty as super
@@ -64,37 +62,42 @@ class use_upper_bound_mapper =
       )
   end
 
-class fail_on_ambiguity_mapper =
-  object
-    inherit use_upper_bound_mapper as super
+let fail_on_ambiguity =
+  let exception FoundAmbiguousType in
+  let visitor =
+    object
+      inherit use_upper_bound_mapper as super
 
-    method! on_Num () t =
-      function
-      | Some _lit -> raise FoundAmbiguousType
-      | n -> super#on_Num () t n
+      method! on_Num () t =
+        function
+        | Some _lit -> raise FoundAmbiguousType
+        | n -> super#on_Num () t n
 
-    method! on_Bool () t =
-      function
-      | Some _lit -> raise FoundAmbiguousType
-      | n -> super#on_Bool () t n
+      method! on_Bool () t =
+        function
+        | Some _lit -> raise FoundAmbiguousType
+        | n -> super#on_Bool () t n
 
-    method! on_Str () t =
-      function
-      | Some _lit -> raise FoundAmbiguousType
-      | n -> super#on_Str () t n
+      method! on_Str () t =
+        function
+        | Some _lit -> raise FoundAmbiguousType
+        | n -> super#on_Str () t n
 
-    method! on_Arr () t =
-      function
-      | Ty.{ arr_literal = Some true; _ } -> raise FoundAmbiguousType
-      | arr -> super#on_Arr () t arr
+      method! on_Arr () t =
+        function
+        | Ty.{ arr_literal = Some true; _ } -> raise FoundAmbiguousType
+        | arr -> super#on_Arr () t arr
 
-    method! on_Obj () t =
-      function
-      | Ty.{ obj_literal = Some true; _ } -> raise FoundAmbiguousType
-      | obj -> super#on_Obj () t obj
-  end
-
-let fail_on_ambiguity = (new fail_on_ambiguity_mapper)#on_t ()
+      method! on_Obj () t =
+        function
+        | Ty.{ obj_literal = Some true; _ } -> raise FoundAmbiguousType
+        | obj -> super#on_Obj () t obj
+    end
+  in
+  fun t ->
+    match visitor#on_t () t with
+    | exception FoundAmbiguousType -> None
+    | t -> Some t
 
 class generalize_temporary_types_mapper =
   object
@@ -154,37 +157,38 @@ class specialize_temporary_types_mapper =
 
 let specialize_temporary_types = (new specialize_temporary_types_mapper)#on_t ()
 
-class fixme_ambiguous_types_mapper =
-  object
-    inherit use_upper_bound_mapper as super
+let fixme_ambiguous_types =
+  let visitor =
+    object
+      inherit use_upper_bound_mapper as super
 
-    method! on_Num () t =
-      function
-      | Some _ -> Utils.Builtins.flowfixme_ty_default
-      | n -> super#on_Num () t n
+      method! on_Num () t =
+        function
+        | Some _ -> Utils.Builtins.flowfixme_ty_default
+        | n -> super#on_Num () t n
 
-    method! on_Bool () t =
-      function
-      | Some _ -> Utils.Builtins.flowfixme_ty_default
-      | n -> super#on_Bool () t n
+      method! on_Bool () t =
+        function
+        | Some _ -> Utils.Builtins.flowfixme_ty_default
+        | n -> super#on_Bool () t n
 
-    method! on_Str () t =
-      function
-      | Some _ -> Utils.Builtins.flowfixme_ty_default
-      | n -> super#on_Str () t n
+      method! on_Str () t =
+        function
+        | Some _ -> Utils.Builtins.flowfixme_ty_default
+        | n -> super#on_Str () t n
 
-    method! on_Arr () t =
-      function
-      | Ty.{ arr_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
-      | arr -> super#on_Arr () t arr
+      method! on_Arr () t =
+        function
+        | Ty.{ arr_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
+        | arr -> super#on_Arr () t arr
 
-    method! on_Obj () t =
-      function
-      | Ty.{ obj_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
-      | obj -> super#on_Obj () t obj
-  end
-
-let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
+      method! on_Obj () t =
+        function
+        | Ty.{ obj_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
+        | obj -> super#on_Obj () t obj
+    end
+  in
+  visitor#on_t ()
 
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
@@ -233,8 +237,9 @@ let remove_ambiguous_types
   let open Autofix_options in
   match ambiguity_strategy with
   | Fail -> begin
-    try fail_on_ambiguity ty with
-    | FoundAmbiguousType ->
+    match fail_on_ambiguity ty with
+    | Some t -> t
+    | None ->
       raise
       @@ expected
       @@ MulipleTypesPossibleAtPoint
