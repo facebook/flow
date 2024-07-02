@@ -606,8 +606,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   | Type t -> type_ ~depth:0 t
   | Decl d -> decl ~depth:0 d
 
-let layout_of_type_at_pos_result
-    ~prefer_single_quotes ?size ?with_comments ~exact_by_default { Ty.unevaluated; evaluated; _ } =
+let layout_of_type_at_pos_types
+    ~prefer_single_quotes ?size ?with_comments ~exact_by_default (unevaluated, evaluated) =
   let layout_unevaluated =
     layout_of_elt ~prefer_single_quotes ?size ?with_comments ~exact_by_default unevaluated
   in
@@ -674,8 +674,53 @@ let string_of_decl_single_line
     =
   string_of_elt_single_line ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Decl d)
 
+let symbol_line ~client name lib filename line col path =
+  match client with
+  | `LSP ->
+    spf "`%s` defined at [`%s%s:%d:%d`](file://%s#L%d,%d)" name lib filename line col path line col
+  | `CLI -> spf "'%s' defined at %s%s:%d:%d" name lib filename line col
+
+let string_of_symbol_set ~client syms =
+  match client with
+  | None -> []
+  | Some client ->
+    LocSymbolSet.elements syms
+    |> Base.List.sort ~compare:(fun s1 s2 ->
+           String.compare
+             (Reason.display_string_of_name s1.sym_name)
+             (Reason.display_string_of_name s2.sym_name)
+       )
+    |> Base.List.concat_map ~f:(fun sym ->
+           let open Ty_symbol in
+           let { sym_name; sym_def_loc = { Loc.source; start; _ }; _ } = sym in
+           let name = Reason.display_string_of_name sym_name in
+           match source with
+           | None -> []
+           | Some source ->
+             let path = File_key.to_string source in
+             (match Base.List.last (Files.split_path path) with
+             | Some filename ->
+               let lib =
+                 if File_key.is_lib_file source then
+                   "(lib) "
+                 else
+                   ""
+               in
+               [symbol_line ~client name lib filename start.Loc.line start.Loc.column path]
+             | None -> [])
+       )
+
 let string_of_type_at_pos_result
-    ?(prefer_single_quotes = false) ?(with_comments = true) ?(exact_by_default = true) result =
-  layout_of_type_at_pos_result ~prefer_single_quotes ~with_comments ~exact_by_default result
-  |> print_pretty ~source_maps:None
-  |> Source.contents
+    ?(prefer_single_quotes = false)
+    ?(with_comments = true)
+    ?(exact_by_default = true)
+    ~client
+    { Ty.unevaluated; evaluated; refs } =
+  let type_str =
+    (unevaluated, evaluated)
+    |> layout_of_type_at_pos_types ~prefer_single_quotes ~with_comments ~exact_by_default
+    |> print_pretty ~source_maps:None
+    |> Source.contents
+  in
+  let refs = Base.Option.map ~f:(string_of_symbol_set ~client) refs in
+  (type_str, refs)

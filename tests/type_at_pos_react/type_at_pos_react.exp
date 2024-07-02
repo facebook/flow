@@ -1,8 +1,17 @@
 lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}, null>}
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{+default: (x: Props) => Element<(x: Props) => Node>}>
+
+'Element' defined at (lib) react.js:357:22
+'Node' defined at (lib) react.js:369:22
+'Promise' defined at (lib) core.js:1972:14
+'Props' defined at exports-component.js:5:5
+
 lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react"
+
+'react' defined at react_component.js:3:14
+
 react_component.js:3:7,3:11
 react_component.js:13:33 = `Component` lets you define a React component as a JavaScript class.
 
@@ -11,8 +20,14 @@ We recommend defining components as functions instead of classes.
 
 **@see** https://react.dev/reference/react/Component
 class React$Component<Props, State = void>
+
+'React$Component' defined at (lib) react.js:30:14
+
 react_component.js:13:29,13:37
 react_component.js:18:17 = State
+
+'State' defined at react_component.js:9:5
+
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
   "documentation":"`<Fragment>`, often used via `<>...</>` syntax,\nlets you group elements without a wrapper node.\n\n**@see** https://react.dev/reference/react/Fragment",
@@ -131,6 +146,9 @@ It serves as an alternative to writing JSX.
 
 **@see** https://react.dev/reference/react/createElement
 React$CreateElement
+
+'React$CreateElement' defined at (lib) react.js:251:20
+
 react.js:4:7,4:19
 
 react_abstract_component.js:3:15 = React$AbstractComponent<any, any, any>

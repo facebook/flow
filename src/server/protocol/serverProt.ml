@@ -19,6 +19,7 @@ module Infer_type_options = struct
     strip_root: File_path.t option;
     expanded: bool;
     no_typed_ast_for_imports: bool;
+    client: [ `LSP | `CLI ] option;
   }
 end
 
@@ -247,7 +248,7 @@ module Response = struct
   type get_def_response = (Loc.t list, string) result
 
   type infer_type_response_payload =
-    | Infer_type_string of string option
+    | Infer_type_string of (string * string list option) option
     | Infer_type_JSON of Hh_json.json
 
   type infer_type_response_ok =

@@ -1,86 +1,148 @@
 file.js:20:14
 Flags:
 F1
+
+'F1' defined at file.js:6:5
+
 file.js:20:14,20:16
 
 file.js:22:14
 Flags:
 (x: Array<string>) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:22:14,22:16
 
 file.js:24:14
 Flags:
 F3
+
+'F3' defined at file.js:8:5
+
 file.js:24:14,24:16
 
 file.js:26:17
 Flags:
 F1 & F2 & F3
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'F3' defined at file.js:8:5
+
 file.js:26:17,26:19
 
 file.js:33:14
 Flags:
 F1
+
+'F1' defined at file.js:6:5
+
 file.js:33:14,33:16
 
 file.js:35:14
 Flags:
 (x: Array<string>) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:35:14,35:16
 
 file.js:37:14
 Flags:
 F3
+
+'F3' defined at file.js:8:5
+
 file.js:37:14,37:16
 
 file.js:39:17
 Flags:
 F1 & F2 & F3
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'F3' defined at file.js:8:5
+
 file.js:39:17,39:19
 
 file.js:46:14
 Flags:
 F1
+
+'F1' defined at file.js:6:5
+
 file.js:46:14,46:16
 
 file.js:48:14
 Flags:
 (x: Array<string>) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:48:14,48:16
 
 file.js:50:14
 Flags:
 F3
+
+'F3' defined at file.js:8:5
+
 file.js:50:14,50:16
 
 file.js:52:17
 Flags:
 F1 & F2 & F3
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'F3' defined at file.js:8:5
+
 file.js:52:17,52:19
 
 file.js:58:13
 Flags:
 G1 | F1
+
+'F1' defined at file.js:6:5
+'G1' defined at file.js:10:5
+
 file.js:58:13,58:15
 
 file.js:65:14
 Flags:
 G1
+
+'G1' defined at file.js:10:5
+
 file.js:65:14,65:16
 
 file.js:67:14
 Flags:
 (x: Array<string>) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:67:14,67:16
 
 file.js:69:14
 Flags:
 (F1 | G1) & F2
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'G1' defined at file.js:10:5
+
 file.js:69:14,69:16
 
 file.js:71:17
 Flags:
 (F1 | G1) & F2
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'G1' defined at file.js:10:5
+
 file.js:71:17,71:19
 
 file.js:77:13
@@ -96,61 +158,107 @@ file.js:83:13,83:15
 file.js:92:14
 Flags:
 G1 | F1
+
+'F1' defined at file.js:6:5
+'G1' defined at file.js:10:5
+
 file.js:92:14,92:16
 
 file.js:94:14
 Flags:
 ((x: Array<string>) => P1) | ((x: Array<string>) => O1)
+
+'O1' defined at file.js:1:20
+'P1' defined at file.js:3:20
+
 file.js:94:14,94:16
 
 file.js:96:14
 Flags:
 G3 | F3
+
+'F3' defined at file.js:8:5
+'G3' defined at file.js:12:5
+
 file.js:96:14,96:16
 
 file.js:98:17
 Flags:
 (G1 & G2 & G3) | (F1 & F2 & F3)
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'F3' defined at file.js:8:5
+'G1' defined at file.js:10:5
+'G2' defined at file.js:11:5
+'G3' defined at file.js:12:5
+
 file.js:98:17,98:19
 
 file.js:110:16
 Flags:
 (x: number) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:110:16,110:18
 
 file.js:112:16
 Flags:
 (x: Array<string>) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:112:16,112:18
 
 file.js:114:16
 Flags:
 (x: string) => O2
+
+'O2' defined at file.js:2:20
+
 file.js:114:16,114:18
 
 file.js:116:19
 Flags:
 ((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+
+'O1' defined at file.js:1:20
+'O2' defined at file.js:2:20
+
 file.js:116:19,116:21
 
 file.js:127:16
 Flags:
 (x: number) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:127:16,127:18
 
 file.js:129:16
 Flags:
 (x: Array<string>) => O1
+
+'O1' defined at file.js:1:20
+
 file.js:129:16,129:18
 
 file.js:131:16
 Flags:
 (x: string) => O2
+
+'O2' defined at file.js:2:20
+
 file.js:131:16,131:18
 
 file.js:133:19
 Flags:
 ((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+
+'O1' defined at file.js:1:20
+'O2' defined at file.js:2:20
+
 file.js:133:19,133:21
 
 file.js:139:14
@@ -166,6 +274,11 @@ file.js:141:18,141:20
 file.js:149:13
 Flags:
 {foo?: F1 & F2 & F3}
+
+'F1' defined at file.js:6:5
+'F2' defined at file.js:7:5
+'F3' defined at file.js:8:5
+
 file.js:149:13,149:15
 
 file.js:156:18
@@ -231,6 +344,9 @@ file.js:229:18,229:18
 file.js:231:18
 Flags:
 class C<X>
+
+'C' defined at file.js:223:8
+
 file.js:231:18,231:18
 
 file.js:241:13
@@ -241,6 +357,9 @@ file.js:241:17,241:17
 file.js:250:13
 Flags:
 (x: number) => C<string>
+
+'C' defined at file.js:246:16
+
 file.js:250:17,250:17
 
 file.js:256:14

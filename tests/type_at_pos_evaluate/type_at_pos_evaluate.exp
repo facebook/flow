@@ -1,53 +1,87 @@
 test.js:11:6
 Flags:
 type T1 = Foo
+
+'Foo' defined at test.js:3:5
+'T1' defined at test.js:11:5
+
 test.js:11:6,11:7
 
 test.js:14:6
 Flags:
 type T2 = Foo["bar"]
 = {baz: ?{qux: $ReadOnlyArray<string>}}
+
+'Foo' defined at test.js:3:5
+'T2' defined at test.js:14:5
+
 test.js:14:6,14:7
 
 test.js:17:6
 Flags:
 type T3 = Foo["bar"]["baz"]
 = ?{qux: $ReadOnlyArray<string>}
+
+'Foo' defined at test.js:3:5
+'T3' defined at test.js:17:5
+
 test.js:17:6,17:7
 
 test.js:20:6
 Flags:
 type T4 = Foo["bar"]["baz"]?.["qux"]
 = $ReadOnlyArray<string> | void
+
+'Foo' defined at test.js:3:5
+'T4' defined at test.js:20:5
+
 test.js:20:6,20:7
 
 test.js:23:6
 Flags:
 type T5 = Foo["bar"]["baz"]?.["qux"][number]
 = string | void
+
+'Foo' defined at test.js:3:5
+'T5' defined at test.js:23:5
+
 test.js:23:6,23:7
 
 test.js:26:6
 Flags:
 type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>
 = string
+
+'Foo' defined at test.js:3:5
+'T6' defined at test.js:26:5
+
 test.js:26:6,26:7
 
 test.js:29:6
 Flags:
 type T7 = $Keys<Foo>
 = "bar"
+
+'Foo' defined at test.js:3:5
+'T7' defined at test.js:29:5
+
 test.js:29:6,29:7
 
 test.js:32:6
 Flags:
 type T8 = $Keys<{bar: number, baz: bigint, foo: string}>
 = "foo" | "baz" | "bar"
+
+'T8' defined at test.js:32:5
+
 test.js:32:6,32:7
 
 test.js:35:6
 Flags:
 type ValuesPoly<X> = $Values<X>
+
+'ValuesPoly' defined at test.js:35:5
+
 test.js:35:6,35:15
 
 test.js:38:22

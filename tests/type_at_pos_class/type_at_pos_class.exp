@@ -644,12 +644,24 @@ class-statics-poly.js:17:5 = {
   "end":5
 }
 declare_class.js:3:15 = class C
+
+'C' defined at declare_class.js:3:14
+
 declare_class.js:3:15,3:15
 declare_class.js:4:5 = {C: typeof C}
+
+'C' defined at declare_class.js:3:14
+
 declare_class.js:4:5,4:5
 declare_class.js:6:15 = class P<X>
+
+'P' defined at declare_class.js:6:14
+
 declare_class.js:6:15,6:15
 declare_class.js:7:5 = {P: typeof P}
+
+'P' defined at declare_class.js:6:14
+
 declare_class.js:7:5,7:5
 FluxStore.js:14:5 = {
   "types":{"unevaluated":{"type":"Class<FluxStore<any>>"},"evaluated":null},

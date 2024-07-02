@@ -14,5 +14,11 @@ type SurfaceEntryPoint<TRoute: Route<>> = $ReadOnly<
   +getRoute: () => Class<TRoute>,
   ...
 }
+
+'JSResourceReference' defined at JSResourceReference.js:3:17
+'Module' defined at main.js:5:5
+'Route' defined at Route.js:3:6
+'SurfaceEntryPoint' defined at main.js:7:12
+
 main.js:7:13,7:29
 

@@ -1,25 +1,41 @@
 main.js:14:5
 Flags:
 class CLocal
+
+'C' defined at exports.js:3:13
+
 main.js:14:5,14:10
 
 main.js:16:5
 Flags:
 type T = CLocal
+
+'C' defined at exports.js:3:13
+'T' defined at exports.js:5:12
+
 main.js:16:5,16:10
 
 main.js:18:5
 Flags:
 interface ILocal
+
+'I' defined at exports.js:7:17
+
 main.js:18:5,18:10
 
 main.js:20:5
 Flags:
 enum ELocal
+
+'E' defined at exports.js:9:12
+
 main.js:20:5,20:10
 
 main.js:22:5
 Flags:
 element of component CompLocal
+
+'Comp' defined at exports.js:11:15
+
 main.js:22:5,22:13
 

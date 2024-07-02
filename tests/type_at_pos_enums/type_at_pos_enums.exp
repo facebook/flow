@@ -1,95 +1,155 @@
 test.js:3:6
 Flags:
 enum E
+
+'E' defined at test.js:3:5
+
 test.js:3:6,3:6
 
 test.js:6:11
 Flags:
 enum E
+
+'E' defined at test.js:3:5
+
 test.js:6:11,6:11
 
 test.js:9:13
 Flags:
 E
+
+'E' defined at test.js:3:5
+
 test.js:9:13,9:13
 
 test.js:12:10
 Flags:
 enum E
+
+'E' defined at test.js:3:5
+
 test.js:12:10,12:10
 
 test.js:15:6
 Flags:
 type T = Class<E>
+
+'E' defined at test.js:3:5
+'T' defined at test.js:15:5
+
 test.js:15:6,15:6
 
 test.js:18:14
 Flags:
 enum F
+
+'F' defined at export.js:3:12
+
 test.js:18:14,18:14
 
 test.js:20:13
 Flags:
 F
+
+'F' defined at export.js:3:12
+
 test.js:20:13,20:13
 
 test.js:22:17
 Flags:
 enum F
+
+'F' defined at export.js:3:12
+
 test.js:22:17,22:17
 
 test.js:25:13
 Flags:
 enum G
+
+'G' defined at export.js:8:20
+
 test.js:25:13,25:13
 
 test.js:27:13
 Flags:
 G
+
+'G' defined at export.js:8:20
+
 test.js:27:13,27:13
 
 test.js:29:17
 Flags:
 enum G
+
+'G' defined at export.js:8:20
+
 test.js:29:17,29:17
 
 test.js:32:8
 Flags:
 enum G
+
+'G' defined at export.js:8:20
+
 test.js:32:8,32:8
 
 test.js:34:13
 Flags:
 G
+
+'G' defined at export.js:8:20
+
 test.js:34:13,34:13
 
 test.js:36:17
 Flags:
 enum G
+
+'G' defined at export.js:8:20
+
 test.js:36:17,36:17
 
 test.js:39:14
 Flags:
 type FType = F
+
+'F' defined at export.js:3:12
+'FType' defined at export.js:13:12
+
 test.js:39:14,39:18
 
 test.js:41:13
 Flags:
 FType
+
+'FType' defined at export.js:13:12
+
 test.js:41:13,41:13
 
 test.js:43:17
 Flags:
 type FType = F
+
+'F' defined at export.js:3:12
+'FType' defined at export.js:13:12
+
 test.js:43:17,43:21
 
 test.js:46:7
 Flags:
 E
+
+'E' defined at test.js:3:5
+
 test.js:46:7,46:7
 
 test.js:49:7
 Flags:
 typeof E | number
+
+'E' defined at test.js:3:5
+
 test.js:49:7,49:7
 

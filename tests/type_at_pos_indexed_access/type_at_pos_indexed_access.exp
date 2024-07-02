@@ -2,11 +2,19 @@ test.js:5:6
 Flags:
 type T = O["a"]
 = number
+
+'O' defined at test.js:3:5
+'T' defined at test.js:5:5
+
 test.js:5:6,5:6
 
 test.js:10:6
 Flags:
 type S = M?.["a"]
 = number | void
+
+'M' defined at test.js:8:5
+'S' defined at test.js:10:5
+
 test.js:10:6,10:6
 
