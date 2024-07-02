@@ -75,14 +75,34 @@ module.exports = (): {|
   elementConfig
 });
 
+>>> ./render-types.js
+// @flow
+
+declare component Foo();
+declare var rendersFoo: renders Foo;
+declare var rendersFooMaybe: renders? Foo;
+declare var rendersFooStar: renders* Foo;
+
+export function foo(): {|
+  rendersFoo: renders Foo,
+  rendersFooMaybe: renders? Foo,
+  rendersFooStar: renders* Foo,
+|} {
+    return {
+        rendersFoo,
+        rendersFooMaybe,
+        rendersFooStar,
+    }
+}
+
 >>> Launching report...
 
 Stats:
-  Files changed:                            6
-  Number of annotations added:              7
-  Total size of annotations:               23
-  Number of sig. ver. errors:               7
-  Number of annotations required:           7
+  Files changed:                            7
+  Number of annotations added:              8
+  Total size of annotations:               30
+  Number of sig. ver. errors:               8
+  Number of annotations required:           8
   Number of annotations skipped:            0
 
 Errors:
@@ -179,6 +199,27 @@ module.exports = (): {
   elementConfig
 });
 
+>>> ./render-types.js
+// @flow
+
+declare component Foo();
+declare var rendersFoo: renders Foo;
+declare var rendersFooMaybe: renders? Foo;
+declare var rendersFooStar: renders* Foo;
+
+export function foo(): {
+  rendersFoo: renders Foo,
+  rendersFooMaybe: renders? Foo,
+  rendersFooStar: renders* Foo,
+  ...
+} {
+    return {
+        rendersFoo,
+        rendersFooMaybe,
+        rendersFooStar,
+    }
+}
+
 
 === Diff between codemod-ed & autofix-ed ===
 >>> ./no-import.js
@@ -202,4 +243,15 @@ module.exports = (): {
 ---
 >   ...
 > } => ({
+
+>>> ./render-types.js
+8c8
+< export function foo(): {|
+---
+> export function foo(): {
+12c12,13
+< |} {
+---
+>   ...
+> } {
 
