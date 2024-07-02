@@ -315,7 +315,9 @@ let predicate_of_refinement cx =
           [spf "reading from location %s (in instanceof refinement)" (Reason.string_of_aloc loc)]
           );
       let t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
-      Flow_js.flow cx (t, AssertInstanceofRHST reason);
+      Flow_js.flow
+        cx
+        (t, RunTypeAssertion { reason; type_assertion_kind = TypeAssertionInstanceofRHS });
       LeftP (InstanceofTest, t)
     | IsArrayR -> ArrP
     | BoolR loc -> BoolP loc

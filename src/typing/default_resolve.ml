@@ -132,12 +132,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ArithT { result_t; _ } -> resolve result_t
   | ComparatorT _ -> ()
   | UnaryArithT { result_t; _ } -> resolve result_t
-  | AssertBinaryInLHST _
-  | AssertBinaryInRHST _
-  | AssertForInRHST _
-  | AssertInstanceofRHST _
-  | AssertNonComponentLikeT _ ->
-    ()
+  | RunTypeAssertion _ -> ()
   | AssertIterableT { targs; _ } -> Base.List.iter ~f:resolve targs
   | PredicateT (_, tvar)
   | GuardT (_, _, tvar) ->

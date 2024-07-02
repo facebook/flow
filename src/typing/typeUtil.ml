@@ -53,11 +53,6 @@ and reason_of_use_t = function
   | ArithT { reason; _ } -> reason
   | AndT (reason, _, _) -> reason
   | ArrRestT (_, reason, _, _) -> reason
-  | AssertBinaryInLHST reason -> reason
-  | AssertBinaryInRHST reason -> reason
-  | AssertForInRHST reason -> reason
-  | AssertInstanceofRHST reason -> reason
-  | AssertNonComponentLikeT (_, reason) -> reason
   | AssertIterableT { reason; _ } -> reason
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
@@ -116,6 +111,7 @@ and reason_of_use_t = function
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
+  | RunTypeAssertion { reason; _ } -> reason
   | SentinelPropTestT (_, _, _, _, (reason, _)) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
   | SetPropT (_, reason, _, _, _, _, _) -> reason
@@ -303,14 +299,10 @@ let rec util_use_op_of_use_t :
   | MixinT (_, _)
   | ComparatorT _
   | UnaryArithT _
-  | AssertBinaryInLHST _
   | ConvertEmptyPropsToMixedT _
-  | AssertBinaryInRHST _
   | DeepReadOnlyT _
   | HooklikeT _
-  | AssertForInRHST _
-  | AssertInstanceofRHST _
-  | AssertNonComponentLikeT _
+  | RunTypeAssertion _
   | PredicateT (_, _)
   | GuardT (_, _, _)
   | StrictEqT _

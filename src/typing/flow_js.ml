@@ -5107,6 +5107,11 @@ struct
                 u
             )
         (***********************************************************)
+        (* Run type assertions                                     *)
+        (***********************************************************)
+        | (t, RunTypeAssertion { reason; type_assertion_kind }) ->
+          TypeAssertions.run cx reason type_assertion_kind t
+        (***********************************************************)
         (* binary arithmetic operators                             *)
         (***********************************************************)
         | (l, ArithT { use_op; reason; flip; rhs_t; result_t; kind }) ->
@@ -5124,70 +5129,6 @@ struct
         | (l, UnaryArithT { reason; result_t; kind }) ->
           let t = flow_unary_arith cx l reason kind in
           rec_flow_t cx trace ~use_op:unknown_use (t, result_t)
-        (************************)
-        (* binary `in` operator *)
-        (************************)
-
-        (* the left-hand side of a `(x in y)` expression is a string or number
-           TODO: also, symbols *)
-        | (DefT (_, StrT _), AssertBinaryInLHST _) -> ()
-        | (DefT (_, NumT _), AssertBinaryInLHST _) -> ()
-        | (_, AssertBinaryInLHST _) -> add_output cx (Error_message.EBinaryInLHS (reason_of_t l))
-        (* the right-hand side of a `(x in y)` expression must be object-like *)
-        | (DefT (_, ArrT _), AssertBinaryInRHST _) -> ()
-        | (_, AssertBinaryInRHST _) when object_like l -> ()
-        | (_, AssertBinaryInRHST _) -> add_output cx (Error_message.EBinaryInRHS (reason_of_t l))
-        (************************)
-        (* Assert non component *)
-        (************************)
-        | (DefT (reason_type, MixedT _), AssertNonComponentLikeT (def_loc, use_reason)) ->
-          add_output
-            cx
-            Error_message.(
-              EReactIntrinsicOverlap
-                { use = use_reason; def = def_loc; type_ = loc_of_reason reason_type; mixed = true }
-            )
-        | ( DefT
-              ( reason_type,
-                (ObjT { call_t = Some _; _ } | FunT _ | ClassT _ | ReactAbstractComponentT _)
-              ),
-            AssertNonComponentLikeT (def_loc, use_reason)
-          ) ->
-          add_output
-            cx
-            Error_message.(
-              EReactIntrinsicOverlap
-                {
-                  use = use_reason;
-                  def = def_loc;
-                  type_ = loc_of_reason reason_type;
-                  mixed = false;
-                }
-            )
-        | (_, AssertNonComponentLikeT _) -> ()
-        (******************)
-        (* `for...in` RHS *)
-        (******************)
-
-        (* objects are allowed. arrays _could_ be, but are not because it's
-           generally safer to use a for or for...of loop instead. *)
-        | (_, AssertForInRHST _) when object_like l -> ()
-        | ((AnyT _ | ObjProtoT _), AssertForInRHST _) -> ()
-        (* null/undefined are allowed *)
-        | (DefT (_, (NullT | VoidT)), AssertForInRHST _) -> ()
-        | (DefT (enum_reason, EnumObjectT _), AssertForInRHST _) ->
-          add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = true })
-        | (_, AssertForInRHST _) -> add_output cx (Error_message.EForInRHS (reason_of_t l))
-        (********************)
-        (* `instanceof` RHS *)
-        (* right side of an `instanceof` binary expression must be an object *)
-        (********************)
-        | (_, AssertInstanceofRHST _) when object_like l -> ()
-        | (DefT (_, ArrT _), AssertInstanceofRHST _) ->
-          (* arrays are objects too, but not in `object_like` *)
-          ()
-        | (AnyT _, AssertInstanceofRHST _) -> ()
-        | (_, AssertInstanceofRHST _) -> add_output cx (Error_message.EInstanceofRHS (reason_of_t l))
         (***********************************)
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
@@ -6562,14 +6503,11 @@ struct
       | StrictEqT _
       | ComparatorT _
       | UnaryArithT _
-      | AssertForInRHST _
-      | AssertInstanceofRHST _
-      | AssertBinaryInLHST _
-      | AssertBinaryInRHST _
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
       | MapTypeT _
+      | RunTypeAssertion _
       (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
       | UseT (Op (Coercion _), DefT (_, StrT _)) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
@@ -7063,11 +7001,6 @@ struct
       true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
-    | AssertBinaryInLHST _
-    | AssertBinaryInRHST _
-    | AssertForInRHST _
-    | AssertInstanceofRHST _
-    | AssertNonComponentLikeT _
     | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _
@@ -7077,6 +7010,7 @@ struct
     | ExtractReactRefT _
     | ImplementsT _
     | InvariantT _
+    | RunTypeAssertion _
     | SetPrivatePropT _
     | SetProtoT _
     | SuperT _
