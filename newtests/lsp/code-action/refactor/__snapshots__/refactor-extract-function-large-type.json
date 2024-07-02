@@ -1,0 +1,97 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Extract to function in module scope",
+      "kind": "refactor.extract",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-large-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 9,
+                  "character": 2
+                },
+                "end": {
+                  "line": 9,
+                  "character": 19
+                }
+              },
+              "newText": "newFunction(x);"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 11,
+                  "character": 1
+                },
+                "end": {
+                  "line": 11,
+                  "character": 1
+                }
+              },
+              "newText": "\nfunction newFunction(x): void {\n  const  z = bar(x);\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to function in module scope"
+        ]
+      }
+    },
+    {
+      "title": "Extract to inner function in function 'Foo'",
+      "kind": "refactor.extract",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-large-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 9,
+                  "character": 2
+                },
+                "end": {
+                  "line": 9,
+                  "character": 19
+                }
+              },
+              "newText": "newFunction();"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 10,
+                  "character": 14
+                },
+                "end": {
+                  "line": 10,
+                  "character": 14
+                }
+              },
+              "newText": "function newFunction(): void {\n    const    z = bar(x);\n  }"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to inner function in function 'Foo'"
+        ]
+      }
+    }
+  ]
+}

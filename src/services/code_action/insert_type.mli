@@ -60,7 +60,7 @@ val synth_type :
   remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   Loc.t ->
   Type.t ->
-  (Loc.t, Loc.t) Flow_ast.Type.annotation
+  ((Loc.t, Loc.t) Flow_ast.Type.annotation, expected) result
 
 val add_statement_after_directive_and_type_imports :
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->
