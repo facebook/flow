@@ -1499,8 +1499,6 @@ let make_options
       Option.value
         options_flags.long_lived_workers
         ~default:(FlowConfig.long_lived_workers flowconfig);
-    (* Not user-configurable for now, but set to false for some codemods. *)
-    opt_any_propagation = true;
   }
 
 let make_env flowconfig flowconfig_name connect_flags root =

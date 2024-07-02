@@ -33,7 +33,6 @@ type metadata = {
   verbose: Verbose.t option;
   slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
-  any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
@@ -248,7 +247,6 @@ let metadata_of_options options =
     verbose = Options.verbose options;
     slow_to_check_logging = Options.slow_to_check_logging options;
     (* global *)
-    any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     casting_syntax = Options.casting_syntax options;
@@ -630,8 +628,6 @@ let reachable_deps cx = cx.reachable_deps
 let environment cx = cx.environment
 
 let typing_mode cx = cx.typing_mode
-
-let any_propagation cx = cx.metadata.any_propagation
 
 let node_cache cx = cx.node_cache
 

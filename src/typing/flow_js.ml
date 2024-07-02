@@ -6736,8 +6736,7 @@ struct
     in
     covariant ~use_op return_t
 
-  and invariant_any_propagation_flow cx trace ~use_op any t =
-    if Context.any_propagation cx then rec_unify cx trace ~use_op any t
+  and invariant_any_propagation_flow cx trace ~use_op any t = rec_unify cx trace ~use_op any t
 
   and any_prop_call_prop cx ~use_op ~covariant_flow = function
     | None -> ()
@@ -6848,16 +6847,11 @@ struct
      by propagating or by doing the trivial case. False if the usetype needs to be handled
      separately. *)
   and any_propagated cx trace any u =
-    let covariant_flow ~use_op t =
-      if Context.any_propagation cx then rec_flow_t cx trace ~use_op (any, t)
-    in
-    let contravariant_flow ~use_op t =
-      if Context.any_propagation cx then rec_flow_t cx trace ~use_op (t, any)
-    in
+    let covariant_flow ~use_op t = rec_flow_t cx trace ~use_op (any, t) in
+    let contravariant_flow ~use_op t = rec_flow_t cx trace ~use_op (t, any) in
     match u with
     | NotT (reason, t) ->
-      if Context.any_propagation cx then
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, OpenT t);
+      rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, OpenT t);
       true
     | TryRenderTypePromotionT { use_op; reason_obj; reason = _; upper_renders; tried_promotion = _ }
       ->
@@ -6881,11 +6875,10 @@ struct
     | UseT (use_op, (DefT (_, ArrT (ArrayAT _)) as t))
     | UseT (use_op, (DefT (_, ArrT (TupleAT _)) as t))
     | UseT (use_op, (OpaqueT _ as t)) ->
-      if Context.any_propagation cx then rec_flow_t cx trace ~use_op (expand_any cx any t, t);
+      rec_flow_t cx trace ~use_op (expand_any cx any t, t);
       true
     | UseT (use_op, DefT (_, FunT (_, funtype))) ->
-      if Context.any_propagation cx then
-        any_prop_to_function use_op funtype covariant_flow contravariant_flow;
+      any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
     | UseT (_, OpenT (_, id)) -> any_prop_tvar cx id
     (* AnnotTs are 0->1, so there's no need to propagate any inside them *)
@@ -7035,12 +7028,8 @@ struct
   (* Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
      all types in contravariant positions when t <: any. *)
   and any_propagated_use cx trace use_op any l =
-    let covariant_flow ~use_op t =
-      if Context.any_propagation cx then rec_flow_t cx trace ~use_op (t, any)
-    in
-    let contravariant_flow ~use_op t =
-      if Context.any_propagation cx then rec_flow_t cx trace ~use_op (any, t)
-    in
+    let covariant_flow ~use_op t = rec_flow_t cx trace ~use_op (t, any) in
+    let contravariant_flow ~use_op t = rec_flow_t cx trace ~use_op (any, t) in
     match l with
     | DefT (_, FunT (_, funtype)) ->
       (* function types are contravariant in the arguments *)
@@ -7050,7 +7039,7 @@ struct
     | (DefT (_, ArrT (ArrayAT _)) as t)
     | (DefT (_, ArrT (TupleAT _)) as t)
     | (OpaqueT _ as t) ->
-      if Context.any_propagation cx then rec_flow_t cx trace ~use_op (t, expand_any cx any t);
+      rec_flow_t cx trace ~use_op (t, expand_any cx any t);
       true
     | KeysT _ ->
       (* Keys cannot be tainted by any *)
