@@ -10,24 +10,30 @@ type import_mode =
   | TypeMode
   | TypeofMode
 
-and imported_ident =
-  (ALoc.t * string * import_mode[@printer (fun fmt (_, id, _) -> fprintf fmt "%s" id)])
+and 'loc imported_ident_ = 'loc * string * import_mode
 
-and remote_info = { imported_as: imported_ident option }
+and 'loc remote_info_ = { imported_as: 'loc imported_ident_ option }
 
-and provenance =
+and 'loc provenance_ =
   | Local
-  | Remote of remote_info
-  | Library of remote_info
+  | Remote of 'loc remote_info_
+  | Library of 'loc remote_info_
   | Builtin
 
-and symbol = {
-  sym_provenance: provenance;
-  sym_def_loc: ALoc.t; [@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))]
+and 'loc symbol_ = {
+  sym_provenance: 'loc provenance_;
+  sym_def_loc: 'loc;
   sym_name: Reason.name;
   sym_anonymous: bool;
 }
-[@@deriving show]
+
+and imported_ident = ALoc.t imported_ident_
+
+and remote_info = ALoc.t remote_info_
+
+and provenance = ALoc.t provenance_
+
+and symbol = ALoc.t symbol_ [@@deriving show]
 
 let builtin_symbol name =
   { sym_provenance = Builtin; sym_def_loc = ALoc.none; sym_name = name; sym_anonymous = false }
