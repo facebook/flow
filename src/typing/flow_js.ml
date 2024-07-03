@@ -9413,10 +9413,6 @@ struct
       expect_proper_def t1;
       expect_proper_def t2;
 
-      (* Before processing the unify action, check that it is not deferred. If it
-         is, then when speculation is complete, the action either fires or is
-         discarded depending on whether the case that created the action is
-         selected or not. *)
       match (t1, t2) with
       | (OpenT (_, id1), OpenT (_, id2)) -> merge_ids cx trace ~use_op id1 id2
       | (OpenT (_, id), t) when ok_unify ~unify_any t -> resolve_id cx trace ~use_op id t
