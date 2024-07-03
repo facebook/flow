@@ -501,9 +501,7 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
         | FailureNoMatch -> (Loc.none, Error "No match")
         | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
         | Success (loc, result) ->
-          let (result, _) =
-            Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~client:None result
-          in
+          let (result, _) = Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result in
           (loc, Ok result)
       end
 

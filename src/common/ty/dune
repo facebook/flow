@@ -2,7 +2,6 @@
  (name flow_typing_ty)
  (wrapped false)
  (libraries
-  file_url
   flow_common
   flow_parser_utils_aloc
   flow_parser_utils_output

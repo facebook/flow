@@ -28,8 +28,7 @@ val string_of_type_at_pos_result :
   ?prefer_single_quotes:bool ->
   ?with_comments:bool ->
   ?exact_by_default:bool ->
-  client:[ `LSP | `CLI ] option ->
   Ty.type_at_pos_result ->
-  string * string list option
+  string * (string * Loc.t) list option
 
 val utf8_escape : quote:string -> string -> string
