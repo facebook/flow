@@ -92,8 +92,23 @@ let handle_response ~file_contents ~pretty ~strip_root response =
     in
     let refs =
       match refs with
-      | Some refs when not (List.is_empty refs) -> "\n\n" ^ String.concat "\n" refs ^ "\n"
-      | _ -> ""
+      | None -> ""
+      | Some refs ->
+        let refs =
+          Base.List.concat_map refs ~f:(fun (name, loc) ->
+              let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
+              match source with
+              | Some file ->
+                let path = File_key.to_string file in
+                let basename = File_path.basename (File_path.make path) in
+                let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
+                [Utils_js.spf "'%s' defined at %s%s:%d:%d" name lib basename line column]
+              | None -> []
+          )
+        in
+        (match refs with
+        | [] -> ""
+        | _ -> "\n\n" ^ String.concat "\n" refs ^ "\n")
     in
     print_endline (doc ^ ty ^ refs ^ range)
 
@@ -149,7 +164,6 @@ let main
       strip_root;
       expanded;
       no_typed_ast_for_imports;
-      client = Some `CLI;
     }
   in
   let request = ServerProt.Request.INFER_TYPE options in

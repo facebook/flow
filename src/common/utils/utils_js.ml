@@ -63,6 +63,12 @@ let assert_false s =
     );
   failwith s
 
+let ite cond a b =
+  if cond then
+    a
+  else
+    b
+
 let map_pair f g (a, b) = (f a, g b)
 
 let map_fst f (a, b) = (f a, b)

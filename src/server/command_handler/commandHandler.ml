@@ -636,7 +636,7 @@ let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, lin
   )
 
 let infer_type_to_response
-    ~reader ~json ~expanded ~exact_by_default ~strip_root ~client loc documentation tys =
+    ~reader ~json ~expanded ~exact_by_default ~strip_root loc documentation tys =
   let module Ty_debug = Ty_debug.Make (struct
     let aloc_to_loc = Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
   end) in
@@ -665,7 +665,7 @@ let infer_type_to_response
       ServerProt.Response.Infer_type_JSON json
     else
       ServerProt.Response.Infer_type_string
-        (Base.Option.map tys ~f:(Ty_printer.string_of_type_at_pos_result ~exact_by_default ~client))
+        (Base.Option.map tys ~f:(Ty_printer.string_of_type_at_pos_result ~exact_by_default))
   in
   ServerProt.Response.Infer_type_response { loc; tys; documentation }
 
@@ -689,7 +689,6 @@ let infer_type
     strip_root;
     expanded;
     no_typed_ast_for_imports;
-    client;
   } =
     input
   in
@@ -788,7 +787,6 @@ let infer_type
           ~expanded
           ~exact_by_default
           ~strip_root
-          ~client
           loc
           documentation
           tys
@@ -2290,7 +2288,6 @@ let handle_persistent_infer_type
       strip_root = None;
       expanded = false;
       no_typed_ast_for_imports = false;
-      client = Some `LSP;
     }
   in
   let (result, extra_data) =
@@ -2314,10 +2311,35 @@ let handle_persistent_infer_type
         match tys with
         | ServerProt.Response.Infer_type_string (Some (result, refs)) ->
           ( [MarkedCode ("flow", result)],
-            Base.Option.value_map
-              refs
-              ~default:[]
-              ~f:(Base.List.map ~f:(fun ref -> [MarkedString ref]))
+            Base.Option.value_map refs ~default:[] ~f:(fun refs ->
+                Base.List.map refs ~f:(fun (name, loc) ->
+                    let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
+                    match source with
+                    | None -> []
+                    | Some file ->
+                      (* We'll use default_uri here as we don't expect this to fail *)
+                      let location =
+                        Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc
+                      in
+                      let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
+                      let basename =
+                        File_path.basename (File_path.make (File_key.to_string file))
+                      in
+                      let str =
+                        spf
+                          "`%s` defined at [`%s%s:%d:%d`](%s#L%d,%d)"
+                          name
+                          lib
+                          basename
+                          line
+                          column
+                          (DocumentUri.to_string location.Location.uri)
+                          line
+                          column
+                      in
+                      [MarkedString str]
+                )
+            )
           )
         | _ -> ([], [])
       in
