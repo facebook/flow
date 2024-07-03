@@ -677,7 +677,8 @@ let string_of_decl_single_line
 let symbol_line ~client name lib filename line col path =
   match client with
   | `LSP ->
-    spf "`%s` defined at [`%s%s:%d:%d`](file://%s#L%d,%d)" name lib filename line col path line col
+    let uri = File_url.create path in
+    spf "`%s` defined at [`%s%s:%d:%d`](%s#L%d,%d)" name lib filename line col uri line col
   | `CLI -> spf "'%s' defined at %s%s:%d:%d" name lib filename line col
 
 let string_of_symbol_set ~client syms =
