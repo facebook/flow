@@ -1,3 +1,30 @@
+### 0.239.0
+
+Likely to cause new Flow errors:
+* We now detect errors when props of React components using component syntax, or hook argument/return values of React hooks using hook syntax, contain arrays, sets, or maps that are mutated using their methods (`Array.push`, `Set.add`, `Map.set`, etc). These values are expected to be read-only, and we previously errored on directly setting their props; this release extends this enforcement to method calls as well.
+* We are adding more strict checking for type guard functions to account for the refinement happening in the else branch of conditionals that use them (see [docs](https://flow.org/en/docs/types/type-guards/#predicate-type-is-consistent-with-the-parameter-type) for more information).  You might see new errors appear in the declaration of type guards. One way to address these is by turning the type guard definition to [one-sided](https://flow.org/en/docs/types/type-guards/#one-sided-type-guards), by adding `implies` before the type guard (example [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRgD2UcGgAAJaQAFUhwLINbAACigyC5AH5hCIbgBKCVQHkkLkym5c4BcgD0Wq5AHc4MdVRA9VyTJQIJQADpKrksCRCShKpUAQgAvKrtLguQAyH2qrkAPi5AAYANw2+k2m1sx7wpV8gVC7AAMWKpTFEul1xMCp5IkYuDg7QDtM9spMGu1uvgJTYXPyFQQXIABmZC8WSC2bVy7btHc6ue7PUa-QHg+HI7kQML8ZyoEkGiGrAAmADMAA4rABGED0oA))
+
+New Features:
+* The `StringPrefix` type represents strings which being with the specified prefix. E.g. `StringPrefix<'data-'>` allows for `'data-floo'` and `'data-bar'`. The type argument for this type must be a string literal. [[example]](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABAARTIYAAKlFh7IAvOyAMpSCoIfmaYoAHgA5GweYt5QA+ADcAB0oNrFcr5PL2RgSFyefzYer2QB6K3sgDyAGldfJFkrLIsDUaTdzLObGJabeyAKIAJRDdpDuRADRMJDg0CSGXsJhA9KAA)
+* Flow now supports [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis).
+
+Notable bug fixes:
+* Fixed an issue since 0.232.0 that will cause failure to connect to Flow server if libdef has parse errors.
+* Made the "extract to function" refactoring more robust to errors during code synthesis.
+* Fixed a bug that can cause hover to hang forever for recursive namespaces. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABFBnO1HJDOQBlTnAAA6UE5nLZuA5nNs9k5JGQnJWxggMCFAG5xfTciAGiYSHBoEkMvYTCB6UA)
+* Go-to-definition on `new C()` will jump to definition of `C` instead of the constructor definition. Hovering on `C` will still show the jsdoc on the constructor.
+* Strip `as const` casts and `as` casts in `flow-remove-types`
+
+IDE:
+* Hover will show a list of all the symbols found in the inferred type and the locations where they are defined. VSCode LSP and CLI are supported. The LSP version includes a link to the definition. The CLI version only shows the name of the file (no path)
+
+Library Definitions:
+* Calling `shift()` and `pop()` on an `Array<T>` will now return `T | undefined`.
+* Add `cause` property on Error instance; Support error cause in error constructor options
+* Add type definition for `FinalizationRegistry`
+* Add type definition for `CSSSupportsRule`
+* Add `closeAllConnections`, `closeIdleConnections` to `https$Server`
+
 ### 0.238.3
 
 Misc:
