@@ -11079,9 +11079,6 @@ let mk_default cx reason =
 
 (* Export some functions without the trace parameter *)
 
-let resolve_id cx id t =
-  resolve_id cx DepthTrace.dummy_trace ~use_op:unknown_use ~fully_resolved:true id t
-
 let mk_instance cx ?type_t_kind instance_reason ?use_desc c =
   mk_instance ?type_t_kind cx instance_reason ?use_desc c
 

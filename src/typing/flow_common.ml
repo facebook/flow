@@ -83,15 +83,6 @@ module type BASE = sig
     Type.t list ->
     Type.t
 
-  val resolve_id :
-    Context.t ->
-    Type.DepthTrace.t ->
-    use_op:Type.use_op ->
-    ?fully_resolved:bool ->
-    Type.ident ->
-    Type.t ->
-    unit
-
   val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t
 end
 
