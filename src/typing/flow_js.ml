@@ -9359,17 +9359,11 @@ struct
 
   (** Resolve a type variable to a type. This involves finding its root, and
     resolving to that type. *)
-  and resolve_id cx trace ~use_op ?(fully_resolved = false) id t =
+  and resolve_id cx trace ~use_op id t =
     let (id, _, root) = Context.find_root cx id in
     match root.constraints with
     | Unresolved bounds ->
-      let constraints =
-        if fully_resolved then
-          FullyResolved (ForcingState.of_non_lazy_t t)
-        else
-          Resolved t
-      in
-      root.constraints <- constraints;
+      root.constraints <- Resolved t;
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t (id, bounds)
     | Resolved t_ -> rec_unify cx trace ~use_op t_ t
@@ -10685,7 +10679,7 @@ struct
                     | Some trace -> DepthTrace.rec_trace trace
                   in
                   let (_, id) = open_tvar tvar in
-                  resolve_id cx trace ~use_op ~fully_resolved:false id t'
+                  resolve_id cx trace ~use_op id t'
               ))
           | FullyResolved s ->
             (match IMap.find_opt id seen with
