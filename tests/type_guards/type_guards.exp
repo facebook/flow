@@ -2258,6 +2258,136 @@ References:
                       ^^^^^^^ [4]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:275:7
+
+Cannot cast `item` to `TypeA` because string literal `TypeB` [1] is incompatible with string literal `TypeA` [2] in
+property `type`. [incompatible-cast]
+
+   refinement.js:275:7
+   275|       item as TypeA; // error
+              ^^^^
+
+References:
+   refinement.js:262:34
+   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:261:34
+   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
+                                         ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:276:7
+
+Cannot cast `item` to `TypeB` because string literal `TypeA` [1] is incompatible with string literal `TypeB` [2] in
+property `type`. [incompatible-cast]
+
+   refinement.js:276:7
+   276|       item as TypeB; // error
+              ^^^^
+
+References:
+   refinement.js:261:34
+   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:262:34
+   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
+                                         ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
+
+Cannot cast `item` to `TypeC` because string literal `TypeA` [1] is incompatible with string literal `TypeC` [2] in
+property `type`. [incompatible-cast]
+
+   refinement.js:277:7
+   277|       item as TypeC; // error
+              ^^^^
+
+References:
+   refinement.js:261:34
+   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:263:34
+   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
+                                         ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
+
+Cannot cast `item` to `TypeC` because string literal `TypeB` [1] is incompatible with string literal `TypeC` [2] in
+property `type`. [incompatible-cast]
+
+   refinement.js:277:7
+   277|       item as TypeC; // error
+              ^^^^
+
+References:
+   refinement.js:262:34
+   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:263:34
+   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
+                                         ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:280:7
+
+Cannot cast `item` to `SpecialTypes` because: [incompatible-cast]
+ - Either string literal `TypeC` [1] is incompatible with string literal `TypeA` [2] in property `type`.
+ - Or string literal `TypeC` [1] is incompatible with string literal `TypeB` [3] in property `type`.
+
+   refinement.js:280:7
+   280|       item as SpecialTypes; // error TypeC ~> SpecialType
+              ^^^^
+
+References:
+   refinement.js:263:34
+   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:261:34
+   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
+                                         ^^^^^^^ [2]
+   refinement.js:262:34
+   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
+                                         ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:282:7
+
+Cannot cast `item` to `TypeA` because string literal `TypeC` [1] is incompatible with string literal `TypeA` [2] in
+property `type`. [incompatible-cast]
+
+   refinement.js:282:7
+   282|       item as TypeA; // error
+              ^^^^
+
+References:
+   refinement.js:263:34
+   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:261:34
+   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
+                                         ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:283:7
+
+Cannot cast `item` to `TypeB` because string literal `TypeC` [1] is incompatible with string literal `TypeB` [2] in
+property `type`. [incompatible-cast]
+
+   refinement.js:283:7
+   283|       item as TypeB; // error
+              ^^^^
+
+References:
+   refinement.js:263:34
+   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
+                                         ^^^^^^^ [1]
+   refinement.js:262:34
+   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
+                                         ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -2634,7 +2764,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 147 errors
+Found 154 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

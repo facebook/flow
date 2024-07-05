@@ -616,13 +616,9 @@ module TypeTag = struct
   (* Compare sentinel maps on their common keys. Keys that do not appear in both
    * objects are ignored as they cannot be used to determine non-overlapping values. *)
   let compare_sentinel_map (s1 : sentinel_val SMap.t) (s2 : sentinel_val SMap.t) =
-    let keyset1 = SMap.keys s1 |> SSet.of_list in
-    let keyset2 = SMap.keys s2 |> SSet.of_list in
-    let keyset = SSet.inter keyset1 keyset2 in
-    if SSet.for_all (fun k -> SMap.find k s1 = SMap.find k s2) keyset then
-      0
-    else
-      1
+    let s1' = SMap.filter (fun k _ -> SMap.mem k s2) s1 in
+    let s2' = SMap.filter (fun k _ -> SMap.mem k s1) s2 in
+    compare s1' s2'
 
   type t =
     | BoolTag

@@ -256,3 +256,32 @@ function one_sided(
   rw_arr.filter(fn) as Array<number>; // okay
   rw_arr.filter(fn) as Array<string>; // error number ~> string
 }
+
+function sentinel_refinement() {
+  type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
+  type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
+  type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
+
+  type AllTypes = TypeA | TypeB | TypeC;
+  type SpecialTypes = TypeA | TypeB;
+
+  declare function isSpecial(item: AllTypes): item is SpecialTypes;
+
+  function ManipulateOnlyIfSpecial(item: AllTypes) {
+    if (isSpecial(item)) {
+      // item is SpecialTypes = TypeA | TypeB
+      item as SpecialTypes; // okay
+      item as AllTypes; // okay
+      item as TypeA; // error
+      item as TypeB; // error
+      item as TypeC; // error
+    } else {
+      // item is TypeC
+      item as SpecialTypes; // error TypeC ~> SpecialType
+      item as AllTypes; // okay
+      item as TypeA; // error
+      item as TypeB; // error
+      item as TypeC; // okay
+    }
+  }
+}
