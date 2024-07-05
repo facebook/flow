@@ -357,7 +357,6 @@ let rec dump_t_ (depth, tvars) cx t =
         t
     | DefT (_, ReactAbstractComponentT _) -> p t
     | DefT (_, RendersT _) -> p t
-    | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
     | StrUtilT { reason = _; prefix } -> p ~extra:(spf "prefix:%S" prefix) t
     | DefT (_, NumericStrKeyT (_, s)) -> p ~extra:s t

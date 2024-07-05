@@ -34,7 +34,6 @@ let rec reason_of_t = function
   | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
-  | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
   | ThisInstanceT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
@@ -190,7 +189,6 @@ let rec mod_reason_of_t f = function
     NamespaceT { namespace_symbol; values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
-  | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | ThisInstanceT (reason, t, is_this, this_name) -> ThisInstanceT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)

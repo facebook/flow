@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
+
 let force_lazy_tvars cx =
   Context.post_component_tvar_forcing_states cx
   |> Base.List.iter ~f:(fun s -> ignore @@ Context.force_fully_resolved_tvar cx s)
@@ -286,9 +288,44 @@ let detect_matching_props_violations cx =
            }
         )
     in
+    let u =
+      LookupT
+        {
+          reason;
+          lookup_kind = NonstrictReturning (None, None);
+          try_ts_on_failure = [];
+          propref = TypeUtil.mk_named_prop ~reason (Reason.OrdinaryName key);
+          lookup_action = MatchProp { use_op; drop_generic = true; prop_t = sentinel };
+          method_accessible = true;
+          ids = Some Properties.Set.empty;
+          ignore_dicts = false;
+        }
+    in
+    let obj_reason = TypeUtil.reason_of_t obj in
     (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
        `sentinel` rather than the other way around. *)
-    Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
+    match
+      Flow_js.possible_concrete_types_for_inspection cx obj_reason obj
+      |> Base.List.map ~f:drop_generic
+      |> Base.List.bind ~f:(Flow_js.possible_concrete_types_for_inspection cx obj_reason)
+      |> Base.List.filter ~f:(function
+             | DefT (_, MixedT _)
+             | DefT (_, NullT)
+             | DefT (_, VoidT) ->
+               false
+             | _ -> true
+             )
+    with
+    | [] -> Flow_js.flow cx (EmptyT.make obj_reason, u)
+    | [obj] -> Flow_js.flow cx (obj, u)
+    | t0 :: t1 :: ts ->
+      (* When the object type is a union, as long as one of them has a matching prop, it should be
+       * good. (e.g. obj.type === 'a' when `typeof obj = {type: 'a'} | {type: 'b'}`). Therefore,
+       * we turn unions into intersections below.
+       *
+       * We have to invoke the speculation kit directly, so that we won't hit the logic of
+       * non-speculating IntersectionT ~> LookupT handler. *)
+      SpeculationKit.try_intersection cx DepthTrace.dummy_trace u obj_reason (InterRep.make t0 t1 ts)
   in
   Base.List.iter ~f:step matching_props_checks
 

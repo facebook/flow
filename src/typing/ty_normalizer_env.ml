@@ -29,8 +29,8 @@ type options = {
   expand_internal_types: bool;
   (* Consider all kinds of Bot and Any the same when simplifying types.
    *
-   * The normalized type Ty.Bot may correspond to either the `Empty` type, not have
-   * any lower-bounds or the internal type MatchingPropT. These types are not easy to
+   * The normalized type Ty.Bot may correspond to either the `Empty` type,
+   * or not have any lower-bounds. These types are not easy to
    * normalize, but may still encode some constraint. When using normalized types
    * for codemods we might want to know if there might be some constraints that we
    * missing in the normalized type.

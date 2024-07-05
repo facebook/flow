@@ -182,11 +182,7 @@ module BotAndTopSimplification = struct
                           name = Reason.OrdinaryName "f";
                           prop =
                             Ty.Field
-                              {
-                                t = Ty.Bot Ty.EmptyMatchingPropT;
-                                polarity = Ty.Neutral;
-                                optional = false;
-                              };
+                              { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
                           inherited = false;
                           source = Ty.Other;
                           def_locs = [];

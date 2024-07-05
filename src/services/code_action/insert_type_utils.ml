@@ -154,7 +154,6 @@ module Error = struct
     | Any_Unsound of Ty.unsoundness_kind
     | Recursive
     | ReactElementConfigFunArg
-    | Empty_MatchingPropT
     | Empty_TypeDestructorTriggerT of Loc.t
     | Empty_SomeUnknownUpper of string
 
@@ -164,7 +163,6 @@ module Error = struct
     | Any_Unsound kind -> Utils_js.spf "Any_Unsound %s" (Ty_debug.dump_any_unsoundness_kind kind)
     | Recursive -> "Recursive"
     | ReactElementConfigFunArg -> "ReactElementConfigFunArg"
-    | Empty_MatchingPropT -> "Empty_MatchingPropT"
     | Empty_TypeDestructorTriggerT loc ->
       Utils_js.spf "Empty_TypeDestructorTriggerT (def: %s)" (Loc.to_string_no_source loc)
     | Empty_SomeUnknownUpper u -> Utils_js.spf "Empty_SomeUnknownUpper (use: %s)" u
@@ -479,9 +477,6 @@ module Validator = struct
           Ty.explicit_any
         | Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper u)) ->
           env := Empty_SomeUnknownUpper u :: !env;
-          Ty.explicit_any
-        | Ty.Bot Ty.EmptyMatchingPropT ->
-          env := Empty_MatchingPropT :: !env;
           Ty.explicit_any
         | Ty.Any
             (Ty.Unsound

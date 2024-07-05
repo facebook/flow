@@ -2213,11 +2213,6 @@ struct
         | (_, NotT (reason, tout)) ->
           let reason = replace_desc_reason (RBooleanLit false) reason in
           rec_flow_t ~use_op:unknown_use cx trace (DefT (reason, BoolT (Some false)), OpenT tout)
-        (************)
-        (* matching *)
-        (************)
-        (* TODO get rid of this  *)
-        | (MatchingPropT _, _) when is_use u -> ()
         (*************************)
         (* Resolving rest params *)
         (*************************)
@@ -6963,7 +6958,6 @@ struct
     | ValueToTypeReferenceT _
     (* Should never occur, so we just defer to __flow to handle errors *)
     | UseT (_, InternalT _)
-    | UseT (_, MatchingPropT _)
     | UseT (_, ModuleT _)
     | ReactPropsToOut _
     | ReactInToProps _
@@ -7087,7 +7081,6 @@ struct
     | ExactT _
     | ThisInstanceT _
     | EvalT _
-    | MatchingPropT _
     | OptionalT _
     | MaybeT _
     | DefT (_, PolyT _)

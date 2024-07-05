@@ -125,8 +125,6 @@ and upper_bound_kind =
 and bot_kind =
   (* Type.Empty *)
   | EmptyType
-  (* Type.MatchingPropT *)
-  | EmptyMatchingPropT
   (* A tvar with no lower bounds *)
   | NoLowerWithUpper of upper_bound_kind
 
@@ -699,8 +697,7 @@ class ['A] comparator_ty =
     method tag_of_bot_kind _env =
       function
       | EmptyType -> 0
-      | EmptyMatchingPropT -> 1
-      | NoLowerWithUpper _ -> 2
+      | NoLowerWithUpper _ -> 1
 
     method tag_of_upper_bound_kind _env =
       function

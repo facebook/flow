@@ -190,7 +190,6 @@ let visitor =
         Kind.Checked
       (* Concrete uncovered constructors *)
       (* TODO: Rethink coverage for these types *)
-      | MatchingPropT _ -> Kind.Empty
       | DefT (_, EmptyT) -> Kind.Empty
       | AnyT _ -> Kind.Any
 

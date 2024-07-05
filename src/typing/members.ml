@@ -613,7 +613,6 @@ let rec extract_type cx this_t =
     extract_type cx result
   | DefT (_, ClassT _)
   | CustomFunT (_, _)
-  | MatchingPropT (_, _, _)
   | DefT (_, EmptyT)
   | InternalT (ExtendsT _)
   | InternalT (EnforceUnionOptimized _)

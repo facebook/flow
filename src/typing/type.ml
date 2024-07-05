@@ -106,7 +106,6 @@ module rec TypeTerm : sig
     | FunProtoApplyT of reason (* Function.prototype.apply *)
     | FunProtoBindT of reason (* Function.prototype.bind *)
     | FunProtoCallT of reason (* Function.prototype.call *)
-    | MatchingPropT of reason * string * t
     (* & types *)
     | IntersectionT of reason * InterRep.t
     (* | types *)
@@ -3901,9 +3900,7 @@ let is_use = function
 
 (* not all so-called def types can appear as use types *)
 let is_proper_def = function
-  | InternalT _
-  | MatchingPropT _ ->
-    false
+  | InternalT _ -> false
   | _ -> true
 
 (* convenience *)
@@ -4051,7 +4048,6 @@ let string_of_ctor = function
   | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
-  | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | ThisInstanceT _ -> "ThisInstanceT"
   | ThisTypeAppT _ -> "ThisTypeAppT"

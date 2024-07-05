@@ -402,8 +402,10 @@ References:
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
 Cannot compare number [1] with property `y` of `x` [2] because: [incompatible-type]
- - Either number [1] is incompatible with string literal `foo` [3].
- - Or number [1] is incompatible with string literal `bar` [4].
+ - Either cannot compare number [1] with property `y` of `x` [2] because number [1] is incompatible with string literal
+   `foo` [3].
+ - Or cannot compare number [1] with property `y` of `x` [2] because number [1] is incompatible with string literal
+   `bar` [4].
 
    eq.js:20:17
    20|     if (x.y === 123) {} // error

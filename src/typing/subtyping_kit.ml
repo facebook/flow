@@ -1069,31 +1069,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (IntersectionT (r, rep), _) ->
       SpeculationKit.try_intersection cx trace (UseT (use_op, u)) r rep
     (************)
-    (* matching *)
+    (* literals *)
     (************)
-    | (MatchingPropT _, GenericT { bound; _ }) -> rec_flow_t cx trace ~use_op (l, bound)
-    | (MatchingPropT (reason, name, t), l) ->
-      (* Things that can have properties are object-like (objects, instances,
-       * and their exact versions). Notably, "meta" types like union, annot,
-       * typeapp, eval, maybe, optional, and intersection should have boiled
-       * away by this point. Generics should have been "unsealed" as well. *)
-      let propref = mk_named_prop ~reason (OrdinaryName name) in
-      let lookup_kind = NonstrictReturning (None, None) in
-      let drop_generic = true in
-      let u =
-        LookupT
-          {
-            reason;
-            lookup_kind;
-            try_ts_on_failure = [];
-            propref;
-            lookup_action = MatchProp { use_op; drop_generic; prop_t = t };
-            method_accessible = true;
-            ids = Some Properties.Set.empty;
-            ignore_dicts = false;
-          }
-      in
-      rec_flow cx trace (l, u)
     | (DefT (reason, SingletonStrT key), _) ->
       rec_flow_t cx trace ~use_op (DefT (reason, StrT (Literal (None, key))), u)
     | (DefT (reason, SingletonNumT lit), _) ->

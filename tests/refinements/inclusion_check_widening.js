@@ -19,7 +19,7 @@ const [value, setter] = useState<string | null>(null);
 declare var Enum: {A: 'A', B: 'B'};
 
 // The conditional below may be seen as a refinement on `Enum`. In that case, we
-// make sure that `value` is a valid type for `Enum.A` (see MatchingPropT).
+// make sure that `value` is a valid type for `Enum.A` (see matching prop).
 // This check should not affect the inferred type of `value` or `setter`, and the
 // subsequent call.
 if (value === Enum.A) {}

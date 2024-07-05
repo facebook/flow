@@ -107,12 +107,6 @@ class virtual ['a] t =
           t
         else
           GenericT { generic with bound = bound' }
-      | MatchingPropT (r, x, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          MatchingPropT (r, x, t'')
       | KeysT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

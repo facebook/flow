@@ -1,8 +1,10 @@
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:8:22
 
 Cannot compare string [1] with property `type` of `shape` [2] because: [incompatible-type]
- - Either string [1] is incompatible with string literal `rectangle` [3].
- - Or string [1] is incompatible with string literal `circle` [4].
+ - Either cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
+   literal `rectangle` [3].
+ - Or cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
+   literal `circle` [4].
 
    disjoint_union.js:8:22
    8|   if (shape.type === 'square') { // error
@@ -23,8 +25,10 @@ References:
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:21:22
 
 Cannot compare string [1] with property `type` of `shape` [2] because: [incompatible-type]
- - Either string [1] is incompatible with string literal `rectangle` [3].
- - Or string [1] is incompatible with string literal `circle` [4].
+ - Either cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
+   literal `rectangle` [3].
+ - Or cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
+   literal `circle` [4].
 
    disjoint_union.js:21:22
    21|   if (shape.type === 'square') { // error
@@ -45,8 +49,10 @@ References:
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:34:22
 
 Cannot compare string [1] with property `type` of `shape` [2] because: [incompatible-type]
- - Either string [1] is incompatible with string literal `rectangle` [3].
- - Or string [1] is incompatible with string literal `circle` [4].
+ - Either cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
+   literal `rectangle` [3].
+ - Or cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
+   literal `circle` [4].
 
    disjoint_union.js:34:22
    34|   if (shape.type === 'square') { // error
@@ -100,8 +106,10 @@ References:
 Error ------------------------------------------------------------------------------------------------ generics.js:12:19
 
 Cannot compare string [1] with property `type` of `mm` [2] because: [incompatible-type]
- - Either string [1] is incompatible with string literal `s` [3].
- - Or string [1] is incompatible with string literal `p` [4].
+ - Either cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with string
+   literal `s` [3].
+ - Or cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with string literal
+   `p` [4].
 
    generics.js:12:19
    12|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'

@@ -52,7 +52,6 @@ class ['a] t =
         acc
       | GenericT { bound; _ } -> self#type_ cx pole acc bound
       | ExactT (_, t) -> self#type_ cx pole acc t
-      | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
       | StrUtilT _ -> acc
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t

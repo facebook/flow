@@ -329,6 +329,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
               | UseT (use_op, t) ->
                 Error_message.EIncompatibleDefs
                   { use_op; reason_lower; reason_upper = reason_of_t t; branches }
+              | LookupT { reason; lookup_action = MatchProp { use_op; _ }; _ } ->
+                Error_message.EUnionSpeculationFailed
+                  { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
               | _ ->
                 Error_message.EIncompatible
                   {

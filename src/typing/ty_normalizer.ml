@@ -261,12 +261,9 @@ module Make (I : INPUT) : S = struct
 
   let empty_type = Ty.Bot Ty.EmptyType
 
-  let empty_matching_prop_t = Ty.Bot Ty.EmptyMatchingPropT
-
   let mk_empty bot_kind =
     match bot_kind with
     | Ty.EmptyType -> empty_type
-    | Ty.EmptyMatchingPropT -> empty_matching_prop_t
     | Ty.NoLowerWithUpper _ -> Ty.Bot bot_kind
 
   (* This is intended to only be used by ty_normaizer_debug *)
@@ -709,7 +706,6 @@ module Make (I : INPUT) : S = struct
       | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
-      | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
       | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
         let env = { env with Env.keep_only_namespace_name = true } in
         cont ~env ?id values_type
