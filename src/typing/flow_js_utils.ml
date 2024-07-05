@@ -277,6 +277,94 @@ let is_union_resolvable = function
     true
   | _ -> false
 
+module TvarVisitors : sig
+  val has_placeholders : Context.t -> Type.t -> bool
+
+  val has_unresolved_tvars_or_placeholders : Context.t -> Type.t -> bool
+
+  val has_unresolved_tvars : Context.t -> Type.t -> bool
+
+  val has_unresolved_tvars_in_destructors : Context.t -> Type.destructor -> bool
+end = struct
+  exception EncounteredPlaceholderType
+
+  exception EncounteredUnresolvedTvar
+
+  let has_placeholders =
+    let visitor =
+      object (this)
+        inherit [ISet.t] Type_visitor.t as super
+
+        method! type_ cx pole seen t =
+          match t with
+          | AnyT (_, Placeholder) -> raise EncounteredPlaceholderType
+          | t -> super#type_ cx pole seen t
+
+        method! tvar cx pole seen _r id =
+          let module C = Type.Constraint in
+          let (root_id, constraints) = Context.find_constraints cx id in
+          if ISet.mem root_id seen then
+            seen
+          else
+            let seen = ISet.add root_id seen in
+            match constraints with
+            | C.FullyResolved _ -> seen
+            | C.Resolved t -> this#type_ cx pole seen t
+            | C.Unresolved bounds ->
+              TypeMap.fold (fun t _ seen -> this#type_ cx pole seen t) bounds.C.lower seen
+      end
+    in
+    fun cx t ->
+      match visitor#type_ cx Polarity.Positive ISet.empty t with
+      | exception EncounteredPlaceholderType -> true
+      | _ -> false
+
+  class has_unresolved_tvars_visitor =
+    object (this)
+      inherit [ISet.t] Type_visitor.t
+
+      method! tvar cx pole seen _r id =
+        let module C = Type.Constraint in
+        let (root_id, constraints) = Context.find_constraints cx id in
+        if ISet.mem root_id seen then
+          seen
+        else
+          let seen = ISet.add root_id seen in
+          match constraints with
+          | C.FullyResolved _ -> seen
+          | C.Resolved t -> this#type_ cx pole seen t
+          | C.Unresolved _ -> raise EncounteredUnresolvedTvar
+    end
+
+  let has_unresolved_tvars_or_placeholders_visitor =
+    object
+      inherit has_unresolved_tvars_visitor as super
+
+      method! type_ cx pole seen t =
+        match t with
+        | AnyT (_, Placeholder) -> raise EncounteredPlaceholderType
+        | t -> super#type_ cx pole seen t
+    end
+
+  let has_unresolved_tvars_visitor = new has_unresolved_tvars_visitor
+
+  let has_unresolved_tvars_or_placeholders cx t =
+    match has_unresolved_tvars_or_placeholders_visitor#type_ cx Polarity.Positive ISet.empty t with
+    | exception EncounteredUnresolvedTvar -> true
+    | exception EncounteredPlaceholderType -> true
+    | _ -> false
+
+  let has_unresolved_tvars cx t =
+    match has_unresolved_tvars_visitor#type_ cx Polarity.Positive ISet.empty t with
+    | exception EncounteredUnresolvedTvar -> true
+    | _ -> false
+
+  let has_unresolved_tvars_in_destructors cx d =
+    match has_unresolved_tvars_visitor#destructor cx ISet.empty d with
+    | exception EncounteredUnresolvedTvar -> true
+    | _ -> false
+end
+
 (** Errors *)
 
 let error_message_kind_of_lower = function

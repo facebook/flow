@@ -391,7 +391,7 @@ and type_of_hint_decomposition cx op reason t =
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )
       | Decomp_EmptyArrayElement ->
-        if Tvar_resolver.has_placeholders cx t then (
+        if Flow_js_utils.TvarVisitors.has_placeholders cx t then (
           Debug_js.Verbose.print_if_verbose_lazy
             cx
             (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
@@ -624,7 +624,7 @@ and type_of_hint_decomposition cx op reason t =
   )
 
 and fully_resolve_final_result cx t kind =
-  if Tvar_resolver.has_placeholders cx t then (
+  if Flow_js_utils.TvarVisitors.has_placeholders cx t then (
     Debug_js.Verbose.print_if_verbose_lazy
       cx
       (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);

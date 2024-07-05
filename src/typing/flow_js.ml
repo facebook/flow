@@ -7548,8 +7548,8 @@ struct
         )
     in
     if
-      (not (Tvar_resolver.has_unresolved_tvars cx t))
-      && not (Tvar_resolver.has_unresolved_tvars_in_destructors cx d)
+      (not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t))
+      && not (Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d)
     then
       Tvar_resolver.resolve cx result;
     result
@@ -7967,8 +7967,8 @@ struct
     if
       (not (Subst_name.Set.is_empty (Type_subst.free_var_finder cx t)))
       || (not (Subst_name.Set.is_empty (Type_subst.free_var_finder_in_destructor cx d)))
-      || Tvar_resolver.has_unresolved_tvars cx t
-      || Tvar_resolver.has_unresolved_tvars_in_destructors cx d
+      || Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t
+      || Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d
     then
       result
     else (
@@ -7992,8 +7992,8 @@ struct
       | None ->
         let trace = DepthTrace.dummy_trace in
         if
-          Tvar_resolver.has_unresolved_tvars cx t
-          || Tvar_resolver.has_unresolved_tvars_in_destructors cx d
+          Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t
+          || Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d
         then
           ignore
           @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
@@ -10724,7 +10724,8 @@ struct
             Tvar.mk_where cx reason (fun tvar ->
                 Cache.Eval.add_repos cx root defer_use_t id tvar;
                 flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)));
-                if not (Tvar_resolver.has_unresolved_tvars cx t) then Tvar_resolver.resolve cx tvar
+                if not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t) then
+                  Tvar_resolver.resolve cx tvar
             )
         end
       | MaybeT (r, t) ->

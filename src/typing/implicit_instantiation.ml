@@ -635,7 +635,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
 
   and merge_upper_bounds cx seen upper_r tvar =
     let filter_placeholder t =
-      if Tvar_resolver.has_placeholders cx t then
+      if Flow_js_utils.TvarVisitors.has_placeholders cx t then
         UpperEmpty
       else
         UpperT t
@@ -660,7 +660,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                  | (UpperNonT u, _) -> UpperNonT u
                  | (_, UpperNonT u) -> UpperNonT u
                  | (UpperEmpty, UpperT t) -> filter_placeholder t
-                 | (UpperT _, UpperT t) when Tvar_resolver.has_placeholders cx t -> acc
+                 | (UpperT _, UpperT t) when Flow_js_utils.TvarVisitors.has_placeholders cx t -> acc
                  | (UpperT t', UpperT t) ->
                    (match (t', t) with
                    | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
@@ -713,12 +713,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       (match constraints with
       | Constraint.FullyResolved s ->
         let t = Context.force_fully_resolved_tvar cx s in
-        if Tvar_resolver.has_placeholders cx t then
+        if Flow_js_utils.TvarVisitors.has_placeholders cx t then
           None
         else
           Some t
       | Constraint.Resolved t ->
-        if Tvar_resolver.has_placeholders cx t then
+        if Flow_js_utils.TvarVisitors.has_placeholders cx t then
           None
         else
           Some t
@@ -731,7 +731,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           |> List.filter is_proper_def
           |> Flow_js_utils.collect_lowers cx (ISet.singleton id) [] ~filter_empty:false
           |> union_flatten_list
-          |> Base.List.filter ~f:(fun t -> not @@ Tvar_resolver.has_placeholders cx t)
+          |> Base.List.filter ~f:(fun t -> not @@ Flow_js_utils.TvarVisitors.has_placeholders cx t)
           |> TypeUtil.union_of_ts_opt r)
     | t -> Some t
 
@@ -1480,7 +1480,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
          * placeholders. Soundness is guaranteed by the post instantiation check.
          * In the future, we can optimize this by doing more careful book-keeping in one pass. *)
         let ensure_resolved t =
-          if Tvar_resolver.has_unresolved_tvars cx t then
+          if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t then
             Context.mk_placeholder cx (TypeUtil.reason_of_t t)
           else
             t
@@ -1618,10 +1618,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
 
   let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
     if
-      Tvar_resolver.has_placeholders cx check_t
-      || Tvar_resolver.has_placeholders cx extends_t
-      || Tvar_resolver.has_placeholders cx true_t
-      || Tvar_resolver.has_placeholders cx false_t
+      Flow_js_utils.TvarVisitors.has_placeholders cx check_t
+      || Flow_js_utils.TvarVisitors.has_placeholders cx extends_t
+      || Flow_js_utils.TvarVisitors.has_placeholders cx true_t
+      || Flow_js_utils.TvarVisitors.has_placeholders cx false_t
     then (
       Debug_js.Verbose.print_if_verbose
         cx
@@ -1630,10 +1630,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       Context.mk_placeholder cx reason
     ) else if
         Context.in_implicit_instantiation cx
-        && (Tvar_resolver.has_unresolved_tvars cx check_t
-           || Tvar_resolver.has_unresolved_tvars cx extends_t
-           || Tvar_resolver.has_unresolved_tvars cx true_t
-           || Tvar_resolver.has_unresolved_tvars cx false_t
+        && (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx check_t
+           || Flow_js_utils.TvarVisitors.has_unresolved_tvars cx extends_t
+           || Flow_js_utils.TvarVisitors.has_unresolved_tvars cx true_t
+           || Flow_js_utils.TvarVisitors.has_unresolved_tvars cx false_t
            )
       then
       (* When we are in nested instantiation, we can't meaningfully decide which branch to take,
