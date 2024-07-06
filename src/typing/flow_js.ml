@@ -9330,25 +9330,16 @@ struct
   and merge_ids cx trace ~use_op id1 id2 =
     let ((id1, _, root1) as root_node1) = Context.find_root cx id1 in
     let ((id2, _, root2) as root_node2) = Context.find_root cx id2 in
-    match (root1.Constraint.constraints, root2.Constraint.constraints) with
-    | (FullyResolved s1, FullyResolved s2) ->
-      rec_unify
-        cx
-        trace
-        ~use_op
-        (Context.force_fully_resolved_tvar cx s1)
-        (Context.force_fully_resolved_tvar cx s2)
-    | _ ->
-      if id1 = id2 then
-        ()
-      else if root1.rank < root2.rank then
-        goto cx trace ~use_op root_node1 root_node2
-      else if root2.rank < root1.rank then
-        goto cx trace ~use_op:(unify_flip use_op) root_node2 root_node1
-      else (
-        root2.rank <- root1.rank + 1;
-        goto cx trace ~use_op root_node1 root_node2
-      )
+    if id1 = id2 then
+      ()
+    else if root1.rank < root2.rank then
+      goto cx trace ~use_op root_node1 root_node2
+    else if root2.rank < root1.rank then
+      goto cx trace ~use_op:(unify_flip use_op) root_node2 root_node1
+    else (
+      root2.rank <- root1.rank + 1;
+      goto cx trace ~use_op root_node1 root_node2
+    )
 
   (** Resolve a type variable to a type. This involves finding its root, and
     resolving to that type. *)
