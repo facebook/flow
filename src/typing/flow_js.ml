@@ -10708,8 +10708,10 @@ struct
             Tvar.mk_where cx reason (fun tvar ->
                 Cache.Eval.add_repos cx root defer_use_t id tvar;
                 flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)));
-                if not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t) then
+                if not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t) then (
+                  Tvar_resolver.resolve cx t;
                   Tvar_resolver.resolve cx tvar
+                )
             )
         end
       | MaybeT (r, t) ->
