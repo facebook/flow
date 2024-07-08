@@ -1,3 +1,8 @@
+### 0.239.1
+
+Notable bug fixes:
+* Fixed a bug where IDE services doesn't respect `files.implicitly_include_root=false` config.
+
 ### 0.239.0
 
 Likely to cause new Flow errors:
