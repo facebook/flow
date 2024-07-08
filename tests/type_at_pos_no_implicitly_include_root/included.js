@@ -1,0 +1,2 @@
+const fooBar = 3;
+//     ^

@@ -1,0 +1,6 @@
+[include]
+included.js
+
+[options]
+all=true
+files.implicitly_include_root=false

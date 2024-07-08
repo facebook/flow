@@ -180,7 +180,8 @@ let check_that_we_care_about_this_file =
   let check_file_included ~options ~file_options ~file_path () =
     let file_is_implicitly_included =
       let root_str = spf "%s%s" (File_path.to_string (Options.root options)) Filename.dir_sep in
-      String.starts_with ~prefix:root_str file_path
+      Files.implicitly_include_root (Options.file_options options)
+      && String.starts_with ~prefix:root_str file_path
     in
     if file_is_implicitly_included then
       Ok ()

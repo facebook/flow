@@ -1,0 +1,9 @@
+included.js:1:8
+Flags:
+number
+included.js:1:7,1:12
+
+excluded.js:1:8
+Flags:
+(unknown)
+
