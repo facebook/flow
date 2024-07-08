@@ -1452,7 +1452,9 @@ let resolve
   (* Resolve each member of a union. *)
   | UnionT (union_reason, rep) ->
     let union_loc = loc_of_reason union_reason in
-    let members_filtered = Type_mapper.union_flatten cx (UnionRep.members rep) in
+    let members_filtered =
+      Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx (UnionRep.members rep)
+    in
     let tool =
       match tool with
       | Spread (options, state) ->

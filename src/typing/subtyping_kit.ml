@@ -991,7 +991,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
            | _ -> false ->
       ()
     | (_, UnionT (_, rep))
-      when let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
+      when let ts =
+             Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx @@ UnionRep.members rep
+           in
            List.exists (TypeUtil.quick_subtype l) ts ->
       ()
     | (DefT (renders_r, RendersT _), UnionT (r, rep)) ->

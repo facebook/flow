@@ -921,7 +921,9 @@ struct
             )
         | (UnionT (reason, rep), DeepReadOnlyT (tout, (dro_loc, dro_type))) ->
           if not (UnionRep.is_optimized_finally rep) then
-            UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+            UnionRep.optimize_enum_only
+              ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+              rep;
           if Option.is_some (UnionRep.check_enum rep) then
             rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
           else
@@ -938,7 +940,9 @@ struct
             rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
         | (UnionT (reason, rep), HooklikeT tout) ->
           if not (UnionRep.is_optimized_finally rep) then
-            UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+            UnionRep.optimize_enum_only
+              ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+              rep;
           if Option.is_some (UnionRep.check_enum rep) then
             rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
           else
@@ -7633,7 +7637,9 @@ struct
           (match t with
           | UnionT (_, rep) ->
             if not (UnionRep.is_optimized_finally rep) then
-              UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+              UnionRep.optimize_enum_only
+                ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+                rep;
             Option.is_none (UnionRep.check_enum rep)
           | _ -> true)
         | _ -> true

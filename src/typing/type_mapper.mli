@@ -64,4 +64,5 @@ class virtual ['a] t :
     method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
   end
 
-val union_flatten : Context.t -> Type.t list -> Type.t list
+val union_flatten :
+  annot:(Reason.reason * Type.t * bool -> Type.t) -> Context.t -> Type.t list -> Type.t list

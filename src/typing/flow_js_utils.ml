@@ -485,8 +485,8 @@ let union_optimization_guard =
      be symmetric. *)
   let union_compare cx ~equiv comparator lts uts =
     if Context.is_verbose cx then prerr_endline "union_compare slow";
-    let ts2 = Type_mapper.union_flatten cx uts in
-    Type_mapper.union_flatten cx lts
+    let ts2 = Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx uts in
+    Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx lts
     |> Base.List.for_all ~f:(fun t1 ->
            if equiv then
              Base.List.for_all ~f:(comparator t1) ts2
@@ -512,9 +512,13 @@ let union_optimization_guard =
          * cause a `RecursionCheck.LimitExceeded` exception. (`tests/typeapp_termination`
          * is a sanity check against that.) *)
         if not (UnionRep.is_optimized_finally rep1) then
-          UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep1;
+          UnionRep.optimize_enum_only
+            ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+            rep1;
         if not (UnionRep.is_optimized_finally rep2) then
-          UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep2;
+          UnionRep.optimize_enum_only
+            ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+            rep2;
 
         match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
         | (Some enums1, Some enums2) -> UnionEnumSet.subset enums1 enums2
@@ -551,7 +555,7 @@ let union_optimization_guard =
  * are repositioned everywhere. *)
 let remove_predicate_from_union reason cx predicate =
   UnionRep.members
-  %> Type_mapper.union_flatten cx
+  %> Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx
   %> Base.List.rev_filter ~f:(predicate %> not)
   %> union_of_ts reason
 
@@ -2518,7 +2522,7 @@ let get_values_type_of_obj_t cx o reason =
     | _ -> ts
   in
   (* Create a union type from all our selected types. *)
-  Type_mapper.union_flatten cx ts |> union_of_ts reason
+  Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx ts |> union_of_ts reason
 
 let get_values_type_of_instance_t cx own_props dict reason =
   (* Find all of the props. *)
@@ -2542,7 +2546,7 @@ let get_values_type_of_instance_t cx own_props dict reason =
     | _ -> ts
   in
   (* Create a union type from all our selected types. *)
-  Type_mapper.union_flatten cx ts |> union_of_ts reason
+  Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx ts |> union_of_ts reason
 
 let any_mod_src_keep_placeholder new_src = function
   | Placeholder -> Placeholder
