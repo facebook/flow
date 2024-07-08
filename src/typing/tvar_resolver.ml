@@ -17,7 +17,7 @@ let default_no_lowers r =
   in
   EmptyT.make (replace_desc_reason desc r)
 
-class resolver ~no_lowers ~filter_empty =
+class resolver ~fully_resolve ~no_lowers ~filter_empty =
   object (this)
     inherit [ISet.t] Type_visitor.t as _super
 
@@ -34,18 +34,23 @@ class resolver ~no_lowers ~filter_empty =
           | None -> no_lowers r
         in
         let constraints =
-          if Context.typing_mode cx <> Context.CheckingMode then
-            C.Resolved t
-          else
+          if fully_resolve then
             C.FullyResolved (C.ForcingState.of_non_lazy_t t)
+          else
+            C.Resolved t
         in
         root.C.constraints <- constraints;
         let seen = ISet.add root_id seen in
         this#type_ cx pole seen t
   end
 
-let resolve ?(no_lowers = default_no_lowers) ?(filter_empty = true) cx t =
-  let resolver = new resolver ~no_lowers ~filter_empty in
+let resolve
+    cx
+    ?(fully_resolve = Context.typing_mode cx = Context.CheckingMode)
+    ?(no_lowers = default_no_lowers)
+    ?(filter_empty = true)
+    t =
+  let resolver = new resolver ~fully_resolve ~no_lowers ~filter_empty in
   let (_ : ISet.t) = resolver#type_ cx Polarity.Positive ISet.empty t in
   ()
 

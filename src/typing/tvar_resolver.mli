@@ -5,7 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val resolve : ?no_lowers:(Reason.t -> Type.t) -> ?filter_empty:bool -> Context.t -> Type.t -> unit
+val resolve :
+  Context.t ->
+  ?fully_resolve:bool ->
+  ?no_lowers:(Reason.t -> Type.t) ->
+  ?filter_empty:bool ->
+  Type.t ->
+  unit
 
 val resolved_t :
   ?no_lowers:(Reason.t -> Type.t) -> ?filter_empty:bool -> Context.t -> Type.t -> Type.t
