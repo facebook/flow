@@ -8683,6 +8683,32 @@ struct
            refactoring of property lookup lands to revisit. Tracked by
            #11301092. *)
         if orig_obj = obj then rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result))
+    | DefT (_, ArrT (TupleAT { elements; _ })) when is_str_intlike key ->
+      let i = int_of_string key in
+      (match Base.List.nth elements i with
+      | Some (TupleElement { t; polarity; name; _ }) ->
+        if Polarity.compat (polarity, Polarity.Positive) then
+          let pred =
+            if sense then
+              pred
+            else
+              not_pred
+          in
+          rec_flow cx trace (t, GuardT (pred, orig_obj, result))
+        else (
+          rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result);
+          add_output
+            cx
+            (Error_message.ETupleElementNotReadable
+               { use_op = unknown_use; reason; index = i; name }
+            )
+        )
+      | None ->
+        (* Element is absent from tuple type. *)
+        if sense then
+          ()
+        else
+          rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result))
     | IntersectionT (_, rep) ->
       (* For an intersection of object types, try the test for each object type in
          turn, while recording the original intersection so that we end up with
@@ -8848,7 +8874,7 @@ struct
        the predicate function and its callers to understand how the context is
        set up so that filtering ultimately only depends on what flows to
        result. **)
-    let flow_sentinel sense props_tmap obj sentinel =
+    let flow_sentinel_obj sense props_tmap obj sentinel =
       match Context.get_prop cx props_tmap (OrdinaryName key) with
       | Some p ->
         (match Property.read_t p with
@@ -8880,6 +8906,26 @@ struct
            lands to revisit. Tracked by #11301092. *)
         if orig_obj = obj then rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
     in
+    let flow_sentinel_tuple sense elements tuple sentinel =
+      let i = int_of_string key in
+      match Base.List.nth elements i with
+      | Some (TupleElement { t; polarity; name; _ }) ->
+        if Polarity.compat (polarity, Polarity.Positive) then
+          let reason =
+            let desc = RMatchingProp (key, desc_of_sentinel sentinel) in
+            replace_desc_reason desc (fst result)
+          in
+          let test = SentinelPropTestT (reason, orig_obj, sense, sentinel, result) in
+          rec_flow cx trace (t, test)
+        else
+          add_output
+            cx
+            (Error_message.ETupleElementNotReadable
+               { use_op = unknown_use; reason = reason_of_t tuple; index = i; name }
+            )
+      | None ->
+        if orig_obj = tuple then rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
+    in
     let sentinel_of_literal = function
       | DefT (_, StrT (Literal (_, value)))
       | DefT (_, SingletonStrT value) ->
@@ -8907,11 +8953,11 @@ struct
       | Some s -> begin
         match obj with
         (* obj.key ===/!== literal value *)
-        | DefT (_, ObjT { props_tmap; _ }) -> flow_sentinel sense props_tmap obj s
+        | DefT (_, ObjT { props_tmap; _ }) -> flow_sentinel_obj sense props_tmap obj s
         (* instance.key ===/!== literal value *)
         | DefT (_, InstanceT { inst = { own_props; _ }; _ }) ->
           (* TODO: add test for sentinel test on implements *)
-          flow_sentinel sense own_props obj s
+          flow_sentinel_obj sense own_props obj s
         (* tuple.length ===/!== literal value *)
         | DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; inexact; react_dro = _ }))
           when key = "length" ->
@@ -8921,6 +8967,8 @@ struct
             SentinelPropTestT (r, orig_obj, sense, s, result)
           in
           rec_flow cx trace (tuple_length reason ~inexact arity, test)
+        | DefT (_, ArrT (TupleAT { elements; _ })) when is_str_intlike key ->
+          flow_sentinel_tuple sense elements obj s
         | IntersectionT (_, rep) ->
           (* For an intersection of object types, try the test for each object
              type in turn, while recording the original intersection so that we

@@ -5942,6 +5942,202 @@ References:
                        ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- tuple_union.js:6:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple_union.js:6:5
+   6|     x[1] as empty; // ERROR
+          ^^^^
+
+References:
+   tuple_union.js:2:26
+   2|   declare const x: ['a', number] | ['b', string];
+                               ^^^^^^ [1]
+   tuple_union.js:6:13
+   6|     x[1] as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:17:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple_union.js:17:5
+   17|     x[1] as empty; // ERROR
+           ^^^^
+
+References:
+   tuple_union.js:13:26
+   13|   declare const x: ['a', number] | [null, string];
+                                ^^^^^^ [1]
+   tuple_union.js:17:13
+   17|     x[1] as empty; // ERROR
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:28:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple_union.js:28:5
+   28|     x[1] as empty; // ERROR
+           ^^^^
+
+References:
+   tuple_union.js:24:27
+   24|   declare const x: [true, number] | [false, string];
+                                 ^^^^^^ [1]
+   tuple_union.js:28:13
+   28|     x[1] as empty; // ERROR
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:44:1
+
+Cannot call `calc` because: [incompatible-call]
+ - Either string [1] is incompatible with string literal `add` [2] in index 0.
+ - Or rest array [3] has 3 elements but tuple type [4] has 2 elements.
+
+   tuple_union.js:44:1
+   44| calc('abs', -2, 1); // ERROR
+       ^^^^
+
+References:
+   tuple_union.js:44:6
+   44| calc('abs', -2, 1); // ERROR
+            ^^^^^ [1]
+   tuple_union.js:35:43
+   35| function calc(...args: ['abs', number] | ['add', number, number]): number {
+                                                 ^^^^^ [2]
+   tuple_union.js:44:1
+   44| calc('abs', -2, 1); // ERROR
+       ^^^^^^^^^^^^^^^^^^ [3]
+   tuple_union.js:35:24
+   35| function calc(...args: ['abs', number] | ['add', number, number]): number {
+                              ^^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:47:1
+
+Cannot call `calc` because: [incompatible-call]
+ - Either string [1] is incompatible with string literal `abs` [2] in index 0.
+ - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+
+   tuple_union.js:47:1
+   47| calc('add', 999); // ERROR
+       ^^^^
+
+References:
+   tuple_union.js:47:6
+   47| calc('add', 999); // ERROR
+            ^^^^^ [1]
+   tuple_union.js:35:25
+   35| function calc(...args: ['abs', number] | ['add', number, number]): number {
+                               ^^^^^ [2]
+   tuple_union.js:47:1
+   47| calc('add', 999); // ERROR
+       ^^^^^^^^^^^^^^^^ [3]
+   tuple_union.js:35:42
+   35| function calc(...args: ['abs', number] | ['add', number, number]): number {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:52:7
+
+Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+
+   tuple_union.js:52:7
+   52|   if (x[2]) { // Unlike for objects, we error here. We can consider not in the future.
+             ^^^^
+
+References:
+   tuple_union.js:51:20
+   51|   declare const x: [true, number] | [false, string, true];
+                          ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:53:5
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple_union.js:53:5
+   53|     x as empty; // ERROR
+           ^
+
+References:
+   tuple_union.js:51:37
+   51|   declare const x: [true, number] | [false, string, true];
+                                           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple_union.js:53:10
+   53|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:56:5
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple_union.js:56:5
+   56|     x as empty; // ERROR
+           ^
+
+References:
+   tuple_union.js:51:20
+   51|   declare const x: [true, number] | [false, string, true];
+                          ^^^^^^^^^^^^^^ [1]
+   tuple_union.js:56:10
+   56|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:64:7
+
+Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+
+   tuple_union.js:64:7
+   64|   if (x[2]) { // ERROR: element not readable
+             ^^^^
+
+References:
+   tuple_union.js:63:20
+   63|   declare const x: [true, number] | [false, string, -c: true];
+                          ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:64:7
+
+Cannot get `x[2]` because tuple element at index `2` [1] labeled `c` is not readable. [cannot-read]
+
+   64|   if (x[2]) { // ERROR: element not readable
+             ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:64:7
+
+Tuple element at index `2` [1] labeled `c` is not readable. [cannot-read]
+
+   64|   if (x[2]) { // ERROR: element not readable
+             ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- tuple_union.js:65:5
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple_union.js:65:5
+   65|     x as empty; // ERROR
+           ^
+
+References:
+   tuple_union.js:63:37
+   63|   declare const x: [true, number] | [false, string, -c: true];
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple_union.js:65:10
+   65|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- typeof.js:5:7
 
 Cannot get `x[0]` because property `0` is missing in `Boolean` [1]. [prop-missing]
@@ -6598,7 +6794,7 @@ References:
 
 
 
-Found 433 errors
+Found 445 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

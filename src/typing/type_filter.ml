@@ -631,7 +631,7 @@ module TypeTag = struct
     | FunTag
     | BigIntTag
     | ClassInstanceTag
-    | ArrTag
+    | ArrTag of { sentinel: sentinel_map }
     | EnumTag
   [@@deriving ord]
 end
@@ -640,6 +640,14 @@ open TypeTag
 
 module TypeTagSet : Flow_set.S with type elt = TypeTag.t = Flow_set.Make (TypeTag)
 
+let tag_of_value cx type_ =
+  match Context.find_resolved cx type_ with
+  | Some (DefT (_, NumericStrKeyT (_, s))) -> Some (TypeTag.Str (OrdinaryName s))
+  | Some (DefT (_, SingletonStrT name)) -> Some (TypeTag.Str name)
+  | Some (DefT (_, SingletonNumT num_lit)) -> Some (TypeTag.Num num_lit)
+  | Some (DefT (_, SingletonBoolT b)) -> Some (TypeTag.Bool b)
+  | _ -> None
+
 let sentinel_of_obj cx id =
   Context.fold_real_props
     cx
@@ -647,19 +655,20 @@ let sentinel_of_obj cx id =
     (fun name prop acc ->
       match prop with
       | Field { type_; _ } ->
-        let v_opt =
-          match Context.find_resolved cx type_ with
-          | Some (DefT (_, NumericStrKeyT (_, s))) -> Some (TypeTag.Str (OrdinaryName s))
-          | Some (DefT (_, SingletonStrT name)) -> Some (TypeTag.Str name)
-          | Some (DefT (_, SingletonNumT num_lit)) -> Some (TypeTag.Num num_lit)
-          | Some (DefT (_, SingletonBoolT b)) -> Some (TypeTag.Bool b)
-          | _ -> None
-        in
-        (match v_opt with
+        (match tag_of_value cx type_ with
         | Some v -> SMap.add (Reason.display_string_of_name name) v acc
         | None -> acc)
       | _ -> acc)
     SMap.empty
+
+let sentinel_of_tuple cx elements =
+  Base.List.foldi
+    ~init:SMap.empty
+    ~f:(fun i acc (TupleElement { t; _ }) ->
+      match tag_of_value cx t with
+      | Some v -> SMap.add (string_of_int i) v acc
+      | None -> acc)
+    elements
 
 let rec tag_of_def_t cx = function
   | NullT -> Some (TypeTagSet.singleton NullTag)
@@ -684,7 +693,9 @@ let rec tag_of_def_t cx = function
   | ObjT { props_tmap; _ } ->
     Some (TypeTagSet.singleton (ObjTag { sentinel = sentinel_of_obj cx props_tmap }))
   | InstanceT { inst; _ } -> tag_of_inst inst
-  | ArrT _ -> Some (TypeTagSet.singleton ArrTag)
+  | ArrT (ArrayAT _ | ROArrayAT _) -> Some (TypeTagSet.singleton (ArrTag { sentinel = SMap.empty }))
+  | ArrT (TupleAT { elements; _ }) ->
+    Some (TypeTagSet.singleton (ArrTag { sentinel = sentinel_of_tuple cx elements }))
   | PolyT { t_out; _ } -> tag_of_t cx t_out
   | EnumValueT _ -> Some (TypeTagSet.singleton EnumTag)
   | EmptyT -> Some TypeTagSet.empty
@@ -729,7 +740,7 @@ and tag_of_inst inst =
       tags
       |> TypeTagSet.add ClassInstanceTag
       |> TypeTagSet.add (ObjTag { sentinel = SMap.empty })
-      |> TypeTagSet.add ArrTag
+      |> TypeTagSet.add (ArrTag { sentinel = SMap.empty })
       |> TypeTagSet.add SymbolTag
       |> TypeTagSet.add FunTag
   in

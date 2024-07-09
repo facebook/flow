@@ -2639,6 +2639,111 @@ References:
                                                                        ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
+
+Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
+[incompatible-cast]
+
+   tuple_refinement.js:11:7
+   11|       x as B; // ERROR: A ~> B
+             ^
+
+References:
+   tuple_refinement.js:2:11
+    2| type A = ['A', number];
+                 ^^^ [1]
+   tuple_refinement.js:3:11
+    3| type B = ['B', string];
+                 ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
+
+Cannot cast `x` to `B` because number [1] is incompatible with string [2] in index 1. [incompatible-cast]
+
+   tuple_refinement.js:11:7
+   11|       x as B; // ERROR: A ~> B
+             ^
+
+References:
+   tuple_refinement.js:2:16
+    2| type A = ['A', number];
+                      ^^^^^^ [1]
+   tuple_refinement.js:3:16
+    3| type B = ['B', string];
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
+
+Cannot cast `x` to `ROB` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
+[incompatible-cast]
+
+   tuple_refinement.js:31:7
+   31|       x as ROB; // ERROR: A ~> B
+             ^
+
+References:
+   tuple_refinement.js:22:23
+   22| type ROA = $ReadOnly<['A', number]>;
+                             ^^^ [1]
+   tuple_refinement.js:23:23
+   23| type ROB = $ReadOnly<['B', string]>;
+                             ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
+
+Cannot cast `x` to `ROB` because number [1] is incompatible with string [2] in index 1. [incompatible-cast]
+
+   tuple_refinement.js:31:7
+   31|       x as ROB; // ERROR: A ~> B
+             ^
+
+References:
+   tuple_refinement.js:22:28
+   22| type ROA = $ReadOnly<['A', number]>;
+                                  ^^^^^^ [1]
+   tuple_refinement.js:23:28
+   23| type ROB = $ReadOnly<['B', string]>;
+                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
+
+Cannot cast `x` to `MTB` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
+[incompatible-cast]
+
+   tuple_refinement.js:51:7
+   51|       x as MTB; // ERROR: A ~> B
+             ^
+
+References:
+   tuple_refinement.js:42:23
+   42| type MTA = $ReadOnly<['A', 1, number]>;
+                             ^^^ [1]
+   tuple_refinement.js:43:23
+   43| type MTB = $ReadOnly<['B', 1, string]>;
+                             ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
+
+Cannot cast `x` to `MTB` because number [1] is incompatible with string [2] in index 2. [incompatible-cast]
+
+   tuple_refinement.js:51:7
+   51|       x as MTB; // ERROR: A ~> B
+             ^
+
+References:
+   tuple_refinement.js:42:31
+   42| type MTA = $ReadOnly<['A', 1, number]>;
+                                     ^^^^^^ [1]
+   tuple_refinement.js:43:31
+   43| type MTB = $ReadOnly<['B', 1, string]>;
+                                     ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
 
 Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2]. A user defined type
@@ -2764,7 +2869,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 154 errors
+Found 160 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
