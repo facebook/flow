@@ -670,6 +670,12 @@ jobs:
         path: dist
     - name: Upload Windows binary
       run: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-${{ github.ref_name }}.zip"
+    - uses: facebook/dotslash-publish-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        config: .github/dotslash-config.json
+        tag: ${{ github.ref_name }}
   flow_bin_deploy:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-22.04
