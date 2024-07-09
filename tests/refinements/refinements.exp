@@ -4044,6 +4044,107 @@ References:
                                ^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- object_prop_exists.js:4:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:4:5
+   4|     x as empty; // ERROR
+          ^
+
+References:
+   object_prop_exists.js:2:45
+   2|   declare const x: {|a: true, b: number|} | {|a: false, b: string, c: true|};
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:4:10
+   4|     x as empty; // ERROR
+               ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prop_exists.js:7:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:7:5
+   7|     x as empty; // ERROR
+          ^
+
+References:
+   object_prop_exists.js:2:20
+   2|   declare const x: {|a: true, b: number|} | {|a: false, b: string, c: true|};
+                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:7:10
+   7|     x as empty; // ERROR
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prop_exists.js:15:9
+
+Cannot get `x.c` because property `c` is not readable. [cannot-read]
+
+   15|   if (x.c) { // ERROR: prop not readable
+               ^
+
+
+Error --------------------------------------------------------------------------------------- object_prop_exists.js:15:7
+
+Property `c` is not readable. [cannot-read]
+
+   15|   if (x.c) { // ERROR: prop not readable
+             ^^^
+
+
+Error --------------------------------------------------------------------------------------- object_prop_exists.js:16:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:16:5
+   16|     x as empty; // ERROR
+           ^
+
+References:
+   object_prop_exists.js:14:45
+   14|   declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:16:10
+   16|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prop_exists.js:18:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:18:5
+   18|     x as empty; // ERROR
+           ^
+
+References:
+   object_prop_exists.js:14:20
+   14|   declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
+                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:18:10
+   18|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prop_exists.js:18:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:18:5
+   18|     x as empty; // ERROR
+           ^
+
+References:
+   object_prop_exists.js:14:45
+   14|   declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:18:10
+   18|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- object_union_number_keys.js:6:5
 
 Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -6497,7 +6598,7 @@ References:
 
 
 
-Found 426 errors
+Found 433 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

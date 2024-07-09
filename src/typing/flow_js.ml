@@ -8661,6 +8661,7 @@ struct
           rec_flow cx trace (t, GuardT (pred, orig_obj, result))
         | None ->
           (* prop cannot be read *)
+          rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result);
           add_output
             cx
             (Error_message.EPropNotReadable
