@@ -1,3 +1,31 @@
+Error --------------------------------------------------------------------------------------------------- assign.js:4:19
+
+Cannot assign `1` to `obj.constructor` because number [1] is incompatible with function [2]. [incompatible-type]
+
+   assign.js:4:19
+   4| obj.constructor = 1; // error number ~> function
+                        ^ [1]
+
+References:
+   assign.js:4:5
+   4| obj.constructor = 1; // error number ~> function
+          ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- assign.js:5:19
+
+Cannot assign `null` to `obj.constructor` because null [1] is incompatible with function [2]. [incompatible-type]
+
+   assign.js:5:19
+   5| obj.constructor = null; // error null ~> function
+                        ^^^^ [1]
+
+References:
+   assign.js:5:5
+   5| obj.constructor = null; // error null ~> function
+          ^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
@@ -87,4 +115,4 @@ Constructor can't be an async function.
 
 
 
-Found 7 errors
+Found 9 errors

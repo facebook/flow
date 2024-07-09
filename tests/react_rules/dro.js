@@ -127,3 +127,8 @@ droobj.x = []; // error
 
 droobj as {+x: Array<number>}; // error
 droobj as {+x: $ReadOnlyArray<number>}; // ok
+
+component WriteToComponentProperty(x: {}) {
+  x.constructor = () => {}; // error cannot write to constructor property
+  return null;
+}

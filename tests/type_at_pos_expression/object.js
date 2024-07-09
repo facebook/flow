@@ -39,3 +39,9 @@ const frozenObject1 = Object.freeze({ A: "a", B: "b" });
 
 const frozenObject2 = Object.freeze({ A: "a", B: { C: "c"} });
 //    ^
+
+obj.constructor = () => {};
+//  ^
+
+obj.constructor = <T>(x: T): T => x;
+//  ^

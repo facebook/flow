@@ -556,6 +556,21 @@ References:
                   ^^^^^^^^^^^^^^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- dro.js:132:5
+
+Cannot assign function to `x.constructor` because property `constructor` is not writable. React component properties [1]
+and their nested props and elements cannot be written to. [react-rule-unsafe-mutation]
+
+   dro.js:132:5
+   132|   x.constructor = () => {}; // error cannot write to constructor property
+            ^^^^^^^^^^^
+
+References:
+   dro.js:131:36
+   131| component WriteToComponentProperty(x: {}) {
+                                           ^^^^^ [1]
+
+
 Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17
 
 Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
@@ -710,4 +725,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 54 errors
+Found 55 errors

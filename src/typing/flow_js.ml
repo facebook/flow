@@ -4386,28 +4386,6 @@ struct
         (*****************************************)
         (* ... and their fields written *)
         (*****************************************)
-        | ( DefT (_, ObjT { flags; _ }),
-            SetPropT
-              ( use_op,
-                _,
-                Named { reason = reason_prop; name = OrdinaryName "constructor"; _ },
-                _,
-                _,
-                _,
-                _
-              )
-          ) ->
-          if obj_is_readonlyish flags then
-            let use_op =
-              match flags.react_dro with
-              | Some dro -> Frame (ReactDeepReadOnly dro, use_op)
-              | None -> use_op
-            in
-            add_output
-              cx
-              (Error_message.EPropNotWritable
-                 { reason_prop; prop_name = Some (OrdinaryName "constructor"); use_op }
-              )
         (* o.x = ... has the additional effect of o[_] = ... **)
         | (DefT (_, ObjT { flags; _ }), SetPropT (use_op, _, propref, _, _, _, _))
           when obj_is_readonlyish flags && not (is_exception_to_react_dro propref) ->
@@ -8365,6 +8343,23 @@ struct
       perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
     | None ->
       (match propref with
+      | Named { reason; name = OrdinaryName "constructor"; _ } ->
+        let reason = replace_desc_reason (RFunction RNormal) reason in
+        let rest_param =
+          Some (None, loc_of_reason reason, EmptyT.why (replace_desc_new_reason REmpty reason))
+        in
+        let funtype =
+          mk_boundfunctiontype
+            ~this:(global_this reason)
+            []
+            ~rest_param
+            ~def_reason:reason
+            ~predicate:None
+            (AnyT.untyped reason)
+        in
+        let fn = DefT (reason, FunT (dummy_static reason, funtype)) in
+        rec_flow_t cx trace ~use_op (tin, fn);
+        Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (fn, t)) prop_tout
       | Named { reason = reason_prop; name; _ } ->
         if Obj_type.is_exact o.flags.obj_kind then
           add_output
