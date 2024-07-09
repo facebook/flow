@@ -66,7 +66,7 @@ In the then-branch of the conditional `if (isA(x))`, `x` will have the type `A`.
 
 ### One-sided Type Guards
 
-**Note:** This feature is available as of v0.237.0 when option `one_sided_type_guards=true` is set in the flowconfig.
+**Note:** This feature is available as of v0.237.0 when option `one_sided_type_guards=true` is set in the flowconfig. It is enabled by default as of v0.239.0.
 
 In some cases we may want to declare that a type guard function only refines the then-branch of a conditional. Consider for example the function
 ```js flow-check
@@ -251,7 +251,7 @@ This is because the negation of the predicate of `isPosNum` is "`x` is not a num
 
 If you're seeing errors related to this check, consider using a one-sided type guard (write `implies x is T`). Ones-sided type guards do not require this check, since they do not refine the else-branch of conditionals.
 
-**Note:** This check only happens when `one_sided_type_guards=true` is set in the flowconfig.
+**Note:** This check only happens when `one_sided_type_guards=true` is set in the flowconfig. It happens by default as of v0.239.0.
 
 3. The parameter that is refined cannot be reassigned in the body of the type guard function. Therefore the following are errors:
 ```js flow-check
@@ -275,7 +275,7 @@ function isNumberError2(x: mixed): x is number {
 
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`. One-sided type guards are available as of version 0.237.0 with the option `one_sided_type_guards=true`.
+- `flow` and `flow-parser`: 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`. One-sided type guards are available as of version 0.237.0 with the option `one_sided_type_guards=true`, and are enabled by default as of v0.239.0.
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
