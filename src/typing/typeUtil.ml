@@ -953,22 +953,6 @@ let type_guard_of_funtype f =
   | Some p -> type_guard_of_predicate p
   | None -> None
 
-let mk_renders_type reason renders_variant t =
-  let destructor =
-    TypeDestructorT
-      ( unknown_use,
-        reason,
-        ReactPromoteRendersRepresentation
-          {
-            should_distribute = true;
-            promote_structural_components = false;
-            renders_variant;
-            resolved_elem = None;
-          }
-      )
-  in
-  EvalT (t, destructor, Eval.generate_id ())
-
 let dro_of_type t =
   match t with
   | DefT

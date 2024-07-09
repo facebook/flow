@@ -2730,6 +2730,22 @@ let mk_tuple_type cx ~id ~mk_type_destructor ~inexact reason elements =
     else
       AnyT.error reason
 
+let mk_renders_type cx reason renders_variant ~mk_type_destructor t =
+  mk_type_destructor
+    cx
+    unknown_use (* not used *)
+    reason
+    t
+    (ReactPromoteRendersRepresentation
+       {
+         should_distribute = true;
+         promote_structural_components = false;
+         renders_variant;
+         resolved_elem = None;
+       }
+    )
+    (Eval.generate_id ())
+
 module CalleeRecorder : sig
   type kind =
     | Tast

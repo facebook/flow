@@ -77,6 +77,7 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
 
   let mk_instance cx ?(type_t_kind = InstanceKind) instance_reason ?(use_desc = false) l =
     let f t =
+      Debug_js.Verbose.print_if_verbose cx ["hi"];
       t
       |> Flow.singleton_concrete_type_for_inspection cx instance_reason
       |> Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type

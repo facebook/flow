@@ -351,7 +351,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- poly_no_args.js:15:17
 
-Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `U` [2]. [incompatible-type]
+Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
    poly_no_args.js:15:17
    15| const bad1: U = <NotPoly />; // ERROR
@@ -412,7 +412,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- poly_no_args_import.js:14:18
 
-Cannot assign `<NotPoly />` to `bad2` because `NotPoly` element [1] does not render `U2` [2]. [incompatible-type]
+Cannot assign `<NotPoly />` to `bad2` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
    poly_no_args_import.js:14:18
    14| const bad2: U2 = <NotPoly />; // ERROR

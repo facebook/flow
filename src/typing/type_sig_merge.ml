@@ -981,7 +981,10 @@ and merge_annot env file = function
       | Flow_ast.Type.Renders.Maybe -> Type.RendersMaybe
       | Flow_ast.Type.Renders.Star -> Type.RendersStar
     in
-    TypeUtil.mk_renders_type reason variant t
+    let mk_type_destructor _cx use_op reason t destructor id =
+      Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
+    in
+    Flow_js_utils.mk_renders_type file.cx reason variant ~mk_type_destructor t
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     let statics = merge_fun_statics env file reason SMap.empty in

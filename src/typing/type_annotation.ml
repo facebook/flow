@@ -1900,7 +1900,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | Renders.Maybe -> RendersMaybe
       | Renders.Star -> RendersStar
     in
-    let renders_t = TypeUtil.mk_renders_type reason renders_variant t in
+    let renders_t =
+      Flow_js_utils.mk_renders_type env.cx reason renders_variant ~mk_type_destructor t
+    in
     (renders_t, { Ast.Type.Renders.operator_loc; comments; argument = t_ast; variant })
 
   and convert_object =
@@ -3120,7 +3122,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           | Ast.Type.MissingRenders loc ->
             let ren_reason = mk_reason RReturn loc in
             let t = ConsGen.get_builtin_type env.cx ren_reason "React$Node" in
-            let renders_t = TypeUtil.mk_renders_type ren_reason RendersNormal t in
+            let renders_t =
+              Flow_js_utils.mk_renders_type env.cx ren_reason RendersNormal ~mk_type_destructor t
+            in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
         let sig_ =
