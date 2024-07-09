@@ -1,0 +1,34 @@
+{
+    "exclude-github-release-provider": true,
+    "outputs": {
+      "flow": {
+        "platforms": {
+          "macos-aarch64": {
+            "regex": "^flow-osx-arm64-v.*.zip$",
+            "format": "zip",
+            "path": "flow/flow"
+          },
+          "linux-aarch64": {
+            "regex": "^flow-linux-arm64-v.*.zip$",
+            "format": "zip",
+            "path": "flow/flow"
+          },
+          "macos-x86_64": {
+            "regex": "^flow-osx-v.*.zip$",
+            "format": "zip",
+            "path": "flow/flow"
+          },
+          "windows-x86_64": {
+            "regex": "^flow-win64-v.*.zip$",
+            "format": "zip",
+            "path": "flow/flow.exe"
+          },
+          "linux-x86_64": {
+            "regex": "^flow-linux64-v.*.zip$",
+            "format": "zip",
+            "path": "flow/flow"
+          }
+        }
+      }
+    }
+  }
