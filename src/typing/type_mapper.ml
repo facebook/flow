@@ -9,8 +9,7 @@ open Type
 
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
-let union_flatten ~annot =
-  let open Reason in
+let union_flatten =
   let rec union_flatten cx seen ts = Base.List.(ts >>= flatten cx seen)
   and flatten cx seen t =
     match t with
@@ -26,13 +25,10 @@ let union_flatten ~annot =
           | Unresolved _ -> [t]
         )
       )
-    | AnnotT (r, t, use_desc) -> flatten cx seen (annot (r, t, use_desc))
+    | AnnotT (_, t, _) -> flatten cx seen t
     | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
-    | MaybeT (r, t) ->
-      let r = replace_desc_new_reason RNullOrVoid r in
-      DefT (r, NullT) :: DefT (r, VoidT) :: flatten cx seen t
+    | MaybeT (r, t) -> DefT (r, NullT) :: DefT (r, VoidT) :: flatten cx seen t
     | OptionalT { reason = r; type_ = t; use_desc } ->
-      let r = replace_desc_new_reason RVoid r in
       let void_t = VoidT.why_with_use_desc ~use_desc r in
       void_t :: flatten cx seen t
     | DefT (_, EmptyT) -> []

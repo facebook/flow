@@ -385,7 +385,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           rep
           ~reason_of_t:TypeUtil.reason_of_t
           ~reasonless_eq:(Concrete_type_eq.eq cx)
-          ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+          ~flatten:(Type_mapper.union_flatten cx)
           ~find_resolved:(Context.find_resolved cx)
           ~find_props:(Context.find_props cx)
       in
@@ -420,7 +420,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           rep
           ~reason_of_t:TypeUtil.reason_of_t
           ~reasonless_eq:(Concrete_type_eq.eq cx)
-          ~flatten:(Type_mapper.union_flatten ~annot:(fun (_, t, _) -> t) cx)
+          ~flatten:(Type_mapper.union_flatten cx)
           ~find_resolved:(Context.find_resolved cx)
           ~find_props:(Context.find_props cx);
       begin
