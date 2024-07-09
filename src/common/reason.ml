@@ -84,6 +84,7 @@ type 'loc virtual_reason_desc =
   | RArrayType
   | RArrayElement
   | RArrayNthElement of int
+  | RArrayHole
   | RInferredUnionElemArray of { instantiable: bool }
   | RROArrayType
   | RTupleType
@@ -257,13 +258,13 @@ let rec map_desc_locs f = function
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RStringPrefix _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit
     | RObjectLit | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit
-    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RROArrayType | RTupleType
-    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
-    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
-    | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _
-    | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
-    | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _ | RComponent _
-    | RComponentType | RInferredUnionElemArray _ ) as r ->
+    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType
+    | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
+    | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
+    | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
+    | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard
+    | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -565,6 +566,7 @@ let rec string_of_desc = function
   | RArrayType -> "array type"
   | RArrayElement -> "array element"
   | RArrayNthElement i -> spf "element %d" i
+  | RArrayHole -> "undefined (due to array hole)"
   | RROArrayType -> "read-only array type"
   | RTupleType -> "tuple type"
   | RTupleElement { name } ->
@@ -1316,6 +1318,7 @@ let classification_of_reason_desc desc =
   | RAnyImplicit
   | RArrayElement
   | RArrayNthElement _
+  | RArrayHole
   | RInferredUnionElemArray _
   | RIndexedAccess _
   | RConditionalType

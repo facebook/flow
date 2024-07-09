@@ -50,6 +50,7 @@ type 'loc virtual_reason_desc =
   | RArrayType
   | RArrayElement
   | RArrayNthElement of int
+  | RArrayHole
   | RInferredUnionElemArray of { instantiable: bool }
   | RROArrayType
   | RTupleType

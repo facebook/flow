@@ -207,6 +207,96 @@ References:
                            ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- holes.js:5:3
+
+Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with number [2] in index
+0. [incompatible-cast]
+
+   holes.js:5:3
+   5| [ , 'foobar', true] as Tuple; // ERROR
+        ^ [1]
+
+References:
+   holes.js:1:15
+   1| type Tuple = [number, string, boolean];
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- holes.js:6:5
+
+Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with string [2] in index
+1. [incompatible-cast]
+
+   holes.js:6:5
+   6| [1, , true] as Tuple; // ERROR
+          ^ [1]
+
+References:
+   holes.js:1:23
+   1| type Tuple = [number, string, boolean];
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- holes.js:7:15
+
+Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with boolean [2] in index
+2. [incompatible-cast]
+
+   holes.js:7:15
+   7| [1, 'foobar', , ] as Tuple;  // ERROR
+                    ^ [1]
+
+References:
+   holes.js:1:31
+   1| type Tuple = [number, string, boolean];
+                                    ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- holes.js:8:3
+
+Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with number [2] in index
+0. [incompatible-cast]
+
+   holes.js:8:3
+   8| [ , , , ] as Tuple;  // ERROR
+        ^ [1]
+
+References:
+   holes.js:1:15
+   1| type Tuple = [number, string, boolean];
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- holes.js:8:5
+
+Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with string [2] in index
+1. [incompatible-cast]
+
+   holes.js:8:5
+   8| [ , , , ] as Tuple;  // ERROR
+          ^ [1]
+
+References:
+   holes.js:1:23
+   1| type Tuple = [number, string, boolean];
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- holes.js:8:7
+
+Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with boolean [2] in index
+2. [incompatible-cast]
+
+   holes.js:8:7
+   8| [ , , , ] as Tuple;  // ERROR
+            ^ [1]
+
+References:
+   holes.js:1:31
+   1| type Tuple = [number, string, boolean];
+                                    ^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- import.js:7:9
 
 Cannot cast array literal to `T` because number [1] is incompatible with number literal `2` [2] in index 2.
@@ -2401,4 +2491,4 @@ References:
 
 
 
-Found 150 errors
+Found 156 errors

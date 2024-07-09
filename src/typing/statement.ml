@@ -2536,7 +2536,7 @@ module Make
       let (((_, t), _) as e') = expression cx argument in
       (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
-  and array_elements cx ~as_const undef_loc =
+  and array_elements cx ~as_const =
     let open Ast.Expression.Array in
     Base.Fn.compose
       List.split
@@ -2547,7 +2547,7 @@ module Make
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Expression e)
            | Hole loc ->
-             let t = EmptyT.at undef_loc in
+             let t = VoidT.make (mk_reason RArrayHole loc) in
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Hole loc)
            | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
@@ -2782,7 +2782,7 @@ module Make
           else
             mk_reason RArrayLit loc
         in
-        let (elem_spread_list, elements) = array_elements cx ~as_const loc elems in
+        let (elem_spread_list, elements) = array_elements cx ~as_const elems in
         ( ( loc,
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
                 let reason_op = reason in
