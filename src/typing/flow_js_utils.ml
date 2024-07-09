@@ -1100,9 +1100,25 @@ let mk_distributive_tparam_subst_fn cx ~use_op name distributed_t =
     | OpenT _ -> distributed_t
     | _ when not (Subst_name.Set.is_empty (free_var_finder cx distributed_t)) -> distributed_t
     | _ ->
-      (* This indirection is added for performance purposes, since it prevents
-       * unnecessary deep substitution traversals. *)
-      Tvar.mk_resolved cx (TypeUtil.reason_of_t distributed_t) distributed_t
+      if TvarVisitors.has_unresolved_tvars cx distributed_t then (
+        let r = TypeUtil.reason_of_t distributed_t in
+        let tvar_id = Reason.mk_id () in
+        Context.add_tvar
+          cx
+          tvar_id
+          (Type.Constraint.create_root
+             (Unresolved
+                {
+                  lower = TypeMap.singleton distributed_t (DepthTrace.dummy_trace, unknown_use);
+                  upper = UseTypeMap.empty;
+                  lowertvars = IMap.empty;
+                  uppertvars = IMap.empty;
+                }
+             )
+          );
+        OpenT (r, tvar_id)
+      ) else
+        Tvar.mk_fully_resolved cx (TypeUtil.reason_of_t distributed_t) distributed_t
   in
   subst cx ~use_op (Subst_name.Map.singleton name distributed_t)
 
