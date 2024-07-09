@@ -16,4 +16,3 @@ all=true
 
 component_syntax=true
 experimental.component_syntax.hook_compatibility=false
-one_sided_type_guards=true
