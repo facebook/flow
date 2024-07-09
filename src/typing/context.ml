@@ -71,7 +71,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
-  one_sided_type_guards: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -287,7 +286,6 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;
-    one_sided_type_guards = Options.one_sided_type_guards options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 
@@ -491,8 +489,6 @@ let error_suppressions cx = cx.ccx.error_suppressions
 let evaluated cx = cx.ccx.sig_cx.evaluated
 
 let exact_by_default cx = cx.metadata.exact_by_default
-
-let one_sided_type_guards cx = cx.metadata.one_sided_type_guards
 
 let aloc_tables cx = cx.ccx.aloc_tables
 

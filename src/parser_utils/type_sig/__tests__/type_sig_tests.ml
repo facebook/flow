@@ -219,7 +219,6 @@ let sig_options
     ?(hook_compatibility = true)
     ?(enable_relay_integration = false)
     ?(casting_syntax = Options.CastingSyntax.Colon)
-    ?(one_sided_type_guards = true)
     ?relay_integration_module_prefix
     ?(for_builtins = false)
     ?(locs_to_dirtify = [])
@@ -239,7 +238,6 @@ let sig_options
     enable_relay_integration;
     casting_syntax;
     relay_integration_module_prefix;
-    one_sided_type_guards;
     for_builtins;
     locs_to_dirtify;
   }

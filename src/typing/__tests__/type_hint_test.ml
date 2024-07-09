@@ -62,7 +62,6 @@ let metadata =
     strip_root = true;
     suppress_types = SSet.empty;
     ts_syntax = true;
-    one_sided_type_guards = true;
     use_mixed_in_catch_variables = false;
   }
 
@@ -177,7 +176,6 @@ end = struct
         casting_syntax = Options.CastingSyntax.Both;
         for_builtins = true;
         locs_to_dirtify = [];
-        one_sided_type_guards = true;
       }
     in
     Merge_js.merge_lib_files ~sig_opts asts |> snd

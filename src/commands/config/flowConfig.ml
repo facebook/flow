@@ -133,7 +133,6 @@ module Opts = struct
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     ts_syntax: bool;
-    one_sided_type_guards: bool;
     use_mixed_in_catch_variables: bool option;
     vscode_detailed_diagnostics: bool;
     wait_for_recheck: bool;
@@ -265,7 +264,6 @@ module Opts = struct
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       ts_syntax = false;
-      one_sided_type_guards = true;
       use_mixed_in_catch_variables = None;
       vscode_detailed_diagnostics = false;
       wait_for_recheck = false;
@@ -897,7 +895,6 @@ module Opts = struct
         hook_compatibility_excludes_parser
       );
       ("experimental.react_rule", react_rules_parser);
-      ("one_sided_type_guards", boolean (fun opts v -> Ok { opts with one_sided_type_guards = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
@@ -1719,8 +1716,6 @@ let strict_mode c = c.strict_mode
 let suppress_types c = c.options.Opts.suppress_types
 
 let ts_syntax c = c.options.Opts.ts_syntax
-
-let one_sided_type_guards c = c.options.Opts.one_sided_type_guards
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 

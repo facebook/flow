@@ -250,8 +250,6 @@ val suppress_types : config -> SSet.t
 
 val ts_syntax : config -> bool
 
-val one_sided_type_guards : config -> bool
-
 val use_mixed_in_catch_variables : config -> bool option
 
 val vscode_detailed_diagnostics : config -> bool

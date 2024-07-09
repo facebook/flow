@@ -7773,7 +7773,7 @@ module Make
               in
               Flow.flow cx (t, UseT (use_op, type_guard));
               (* Negative *)
-              if Context.one_sided_type_guards cx && not one_sided then
+              if not one_sided then
                 let type_guard_with_neg_pred =
                   Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx tg_reason (fun tout ->
                       Flow.flow cx (type_guard, PredicateT (neg_pred, tout))
@@ -7954,8 +7954,7 @@ module Make
                 (loc, (gloc, { Ast.Type.TypeGuard.guard = (id_name, Some t); kind; comments })),
               _
             )
-            when kind = Ast.Type.TypeGuard.Default
-                 || (kind = Ast.Type.TypeGuard.Implies && Context.one_sided_type_guards cx) ->
+            when kind = Ast.Type.TypeGuard.Default || kind = Ast.Type.TypeGuard.Implies ->
             let (bool_t, guard', predicate) =
               Anno.convert_type_guard
                 cx
