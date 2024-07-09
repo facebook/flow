@@ -4763,20 +4763,18 @@ module Make
       | (annot, OptionalMember { OptionalMember.member; _ }) -> (annot, Member member)
       | _ -> left
     in
+    let ((_, other_t), _) = right in
     match left with
-    | ( _,
-        Member
-          {
-            Member._object = ((_, obj_t), _);
-            property =
-              ( Member.PropertyIdentifier (_, { Ast.Identifier.name = pname; _ })
-              | Member.PropertyExpression (_, StringLiteral { Ast.StringLiteral.value = pname; _ })
-                );
-            _;
-          }
-      ) ->
-      let ((_, other_t), _) = right in
-      Context.add_matching_props cx (pname, other_t, obj_t)
+    | (_, Member { Member._object = ((_, obj_t), _); property; _ }) ->
+      (match property with
+      | Member.PropertyIdentifier (_, { Ast.Identifier.name = pname; _ })
+      | Member.PropertyExpression (_, StringLiteral { Ast.StringLiteral.value = pname; _ }) ->
+        Context.add_matching_props cx (pname, other_t, obj_t)
+      | Member.PropertyExpression (_, NumberLiteral { Ast.NumberLiteral.value; _ })
+        when Js_number.is_float_safe_integer value ->
+        let pname = Dtoa.ecma_string_of_float value in
+        Context.add_matching_props cx (pname, other_t, obj_t)
+      | _ -> ())
     | _ -> ()
 
   (* traverse a binary expression, return result type *)

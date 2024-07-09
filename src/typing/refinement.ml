@@ -45,13 +45,19 @@ module Keys = struct
     let open Ast.Expression.Member in
     match property with
     | PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
-    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ })
-    | PropertyExpression
-        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value = _; raw = name; comments = _ })
-      ->
+    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ }) ->
       (match key ~allow_optional _object with
       | Some (base, chain) -> Some (base, Key.Prop name :: chain)
       | None -> None)
+    | PropertyExpression
+        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw = _; comments = _ }) ->
+      if Js_number.is_float_safe_integer value then
+        let name = Dtoa.ecma_string_of_float value in
+        match key ~allow_optional _object with
+        | Some (base, chain) -> Some (base, Key.Prop name :: chain)
+        | None -> None
+      else
+        None
     | PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ }) ->
       (match key ~allow_optional _object with
       | Some (base, chain) -> Some (base, Key.PrivateField name :: chain)

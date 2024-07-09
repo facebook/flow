@@ -4044,6 +4044,122 @@ References:
                                ^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- object_union_number_keys.js:6:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_union_number_keys.js:6:5
+   6|     x[1] as empty; // ERROR
+          ^^^^
+
+References:
+   object_union_number_keys.js:2:32
+   2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                                     ^^^^^^ [1]
+   object_union_number_keys.js:6:13
+   6|     x[1] as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- object_union_number_keys.js:13:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_union_number_keys.js:13:5
+   13|     x[1] as empty; // ERROR
+           ^^^^
+
+References:
+   object_union_number_keys.js:2:32
+    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                                      ^^^^^^ [1]
+   object_union_number_keys.js:13:13
+   13|     x[1] as empty; // ERROR
+                   ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- object_union_number_keys.js:21:10
+
+Cannot compare string [1] with property `0` of `x` [2] because: [incompatible-type]
+ - Either cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
+   `a` [3].
+ - Or cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
+   `b` [4].
+
+   object_union_number_keys.js:21:10
+   21|     case 'xxx': break; // ERROR
+                ^^^^^ [1]
+
+References:
+   object_union_number_keys.js:2:17
+    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                       ^ [2]
+   object_union_number_keys.js:2:24
+    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                              ^^^ [3]
+   object_union_number_keys.js:2:46
+    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                                                    ^^^ [4]
+
+
+Error -------------------------------------------------------------------------------- object_union_number_keys.js:27:10
+
+Cannot compare string [1] with property `0` of `x` [2] because: [incompatible-type]
+ - Either cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
+   `a` [3].
+ - Or cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
+   `b` [4].
+
+   object_union_number_keys.js:27:10
+   27|     case 'xxx': break; // ERROR
+                ^^^^^ [1]
+
+References:
+   object_union_number_keys.js:24:11
+   24|   switch (x[0]) {
+                 ^ [2]
+   object_union_number_keys.js:2:24
+    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                              ^^^ [3]
+   object_union_number_keys.js:2:46
+    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+                                                    ^^^ [4]
+
+
+Error --------------------------------------------------------------------------------- object_union_number_keys.js:36:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_union_number_keys.js:36:5
+   36|     x[1] as empty; // ERROR
+           ^^^^
+
+References:
+   object_union_number_keys.js:32:32
+   32|   declare const x: {0: 'a', 1: number} | {0: null, 1: string};
+                                      ^^^^^^ [1]
+   object_union_number_keys.js:36:13
+   36|     x[1] as empty; // ERROR
+                   ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- object_union_number_keys.js:43:5
+
+Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_union_number_keys.js:43:5
+   43|     x[1] as empty; // ERROR
+           ^^^^
+
+References:
+   object_union_number_keys.js:32:32
+   32|   declare const x: {0: 'a', 1: number} | {0: null, 1: string};
+                                      ^^^^^^ [1]
+   object_union_number_keys.js:43:13
+   43|     x[1] as empty; // ERROR
+                   ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
 
 Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
@@ -6381,7 +6497,7 @@ References:
 
 
 
-Found 420 errors
+Found 426 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

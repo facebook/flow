@@ -4937,18 +4937,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               (loc, Expression.Member member)
             | _ -> expr
           in
-          match expr' with
-          | ( _,
-              Expression.Member
-                {
-                  Expression.Member._object;
-                  property =
-                    ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
-                    | Expression.Member.PropertyExpression
-                        (ploc, Expression.StringLiteral { StringLiteral.value = prop_name; _ }) );
-                  _;
-                }
-            ) ->
+          let get_refis ploc _object prop_name =
             let sentinel =
               match other with
               | Expression.NullLiteral _ ->
@@ -4960,7 +4949,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 Some (PropNullishR { propname = prop_name; loc = other_loc })
               | _ -> None
             in
-            (match (RefinementKey.of_expression _object, sentinel) with
+            match (RefinementKey.of_expression _object, sentinel) with
             | (Some refinement_key, Some sentinel) ->
               let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
               let write_entries =
@@ -4983,6 +4972,20 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   refinement
               in
               this#extend_refinement refinement_key (L.LSet.singleton loc, refinement) refis
+            | _ -> refis
+          in
+          match expr' with
+          | (_, Expression.Member { Expression.Member._object; property; _ }) ->
+            (match property with
+            | Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
+            | Expression.Member.PropertyExpression
+                (ploc, Expression.StringLiteral { StringLiteral.value = prop_name; _ }) ->
+              get_refis ploc _object prop_name
+            | Expression.Member.PropertyExpression
+                (ploc, Expression.NumberLiteral { NumberLiteral.value; _ })
+              when Js_number.is_float_safe_integer value ->
+              let prop_name = Dtoa.ecma_string_of_float value in
+              get_refis ploc _object prop_name
             | _ -> refis)
           | _ -> refis
         end
@@ -4995,40 +4998,40 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             (loc, Expression.Member member)
           | _ -> expr
         in
+        let get_refis ploc _object prop_name =
+          match RefinementKey.of_expression _object with
+          | Some refinement_key ->
+            let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
+            let write_entries =
+              EnvMap.add
+                (Env_api.ExpressionLoc, other_loc)
+                (Env_api.AssigningWrite reason)
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries };
+            let refinement =
+              if sense then
+                SentinelR (prop_name, other_loc)
+              else
+                NotR (SentinelR (prop_name, other_loc))
+            in
+            this#start_refinement refinement_key (L.LSet.singleton loc, refinement)
+          | None -> LookupMap.empty
+        in
         let refis =
           match (strict, expr') with
-          | ( true,
-              ( _,
-                Expression.Member
-                  {
-                    Expression.Member._object;
-                    property =
-                      ( Expression.Member.PropertyIdentifier
-                          (ploc, { Identifier.name = prop_name; _ })
-                      | Expression.Member.PropertyExpression
-                          (ploc, Expression.StringLiteral { StringLiteral.value = prop_name; _ }) );
-                    _;
-                  }
-              )
-            ) ->
-            (match RefinementKey.of_expression _object with
-            | Some refinement_key ->
-              let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
-              let write_entries =
-                EnvMap.add
-                  (Env_api.ExpressionLoc, other_loc)
-                  (Env_api.AssigningWrite reason)
-                  env_state.write_entries
-              in
-              env_state <- { env_state with write_entries };
-              let refinement =
-                if sense then
-                  SentinelR (prop_name, other_loc)
-                else
-                  NotR (SentinelR (prop_name, other_loc))
-              in
-              this#start_refinement refinement_key (L.LSet.singleton loc, refinement)
-            | None -> LookupMap.empty)
+          | (true, (_, Expression.Member { Expression.Member._object; property; _ })) ->
+            (match property with
+            | Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
+            | Expression.Member.PropertyExpression
+                (ploc, Expression.StringLiteral { StringLiteral.value = prop_name; _ }) ->
+              get_refis ploc _object prop_name
+            | Expression.Member.PropertyExpression
+                (ploc, Expression.NumberLiteral { NumberLiteral.value; _ })
+              when Js_number.is_float_safe_integer value ->
+              let prop_name = Dtoa.ecma_string_of_float value in
+              get_refis ploc _object prop_name
+            | _ -> LookupMap.empty)
           | _ -> LookupMap.empty
         in
         refis
