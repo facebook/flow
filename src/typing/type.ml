@@ -3228,6 +3228,7 @@ module Constraint = struct
       | Unforced
       | Forcing
       | Forced
+      | ForcedWithCyclicError of TypeTerm.t
 
     type t = {
       valid: TypeTerm.t Lazy.t;
@@ -3245,10 +3246,19 @@ module Constraint = struct
       | Unforced ->
         s.state <- Forcing;
         let t = Lazy.force_val s.valid in
-        s.state <- Forced;
-        t
+        (match s.state with
+        | Forcing ->
+          s.state <- Forced;
+          t
+        | ForcedWithCyclicError t -> t
+        | Unforced -> failwith "Invalid state Unforced"
+        | Forced -> failwith "Invalid state Forced")
       | Forced -> Lazy.force_val s.valid
-      | Forcing -> on_error (Base.Option.value_exn s.error_reason)
+      | ForcedWithCyclicError t -> t
+      | Forcing ->
+        let t = on_error (Base.Option.value_exn s.error_reason) in
+        s.state <- ForcedWithCyclicError t;
+        t
 
     let get_forced s =
       match s.state with
@@ -3256,6 +3266,7 @@ module Constraint = struct
       | Forcing ->
         None
       | Forced -> Some (Lazy.force_val s.valid)
+      | ForcedWithCyclicError t -> Some t
 
     let map ~on_error ~f s =
       { valid = lazy (f (force ~on_error s)); error_reason = s.error_reason; state = Unforced }

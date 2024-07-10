@@ -169,17 +169,12 @@ let unwrap_fully_resolved_open_t =
           failwith (spf "tvar (%s, %d) is unresolved" (dump_reason r) id)
     end
   in
-  let rec unwrap cx ~depth = function
-    | AnnotT (r, t, use_desc) as annot_t when depth >= 0 ->
-      let t' = unwrap cx ~depth:(depth - 1) t in
-      if t' == t then
-        annot_t
-      else
-        AnnotT (r, t', use_desc)
-    | OpenT (r, id) when depth >= 0 ->
+  fun cx t ->
+    let (_ : ISet.t) = tvar_deep_forcing_visitor#type_ cx Polarity.Positive ISet.empty t in
+    match t with
+    | OpenT (r, id) ->
       (match Context.find_graph cx id with
-      | Type.Constraint.FullyResolved s ->
-        Context.force_fully_resolved_tvar cx s |> unwrap cx ~depth:(depth - 1)
+      | Type.Constraint.FullyResolved s -> Context.force_fully_resolved_tvar cx s
       | Type.Constraint.Resolved t ->
         failwith
           (spf
@@ -191,12 +186,6 @@ let unwrap_fully_resolved_open_t =
       | Type.Constraint.Unresolved _ ->
         failwith (spf "tvar (%s, %d) is unresolved" (dump_reason r) id))
     | t -> t
-  in
-  fun cx t ->
-    let (_ : ISet.t) = tvar_deep_forcing_visitor#type_ cx Polarity.Positive ISet.empty t in
-    (* We choose a depth of 3 because it's sufficient to unwrap OpenT(AnnotT(OpenT)), which is the most
-       complicated case known. If we run into issues in the future, we can increase the depth limit. *)
-    unwrap cx t ~depth:3
 
 let map_on_resolved_type cx reason_op l f =
   Tvar.mk_fully_resolved_lazy

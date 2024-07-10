@@ -1,5 +1,5 @@
-declare const Ts: Array<T>; // errored below
-type T = (typeof Ts)[number]; // error: cyclic
+declare const Ts: Array<T>; // error: cyclic
+type T = (typeof Ts)[number]; // errored above
 
 function readT(t: T) {
   t // repositioning here shouldn't cause crashing

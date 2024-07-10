@@ -1405,7 +1405,7 @@ subst.js:22:7 = {
   "end":8
 }
 type-alias.js:3:6 = {
-  "types":{"unevaluated":{"type":"type A = A"},"evaluated":null},
+  "types":{"unevaluated":{"type":"type A = any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1420,7 +1420,7 @@ type-alias.js:3:6 = {
   "end":6
 }
 type-alias.js:4:6 = {
-  "types":{"unevaluated":{"type":"type B = B | null"},"evaluated":null},
+  "types":{"unevaluated":{"type":"type B = any | null"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1540,7 +1540,7 @@ type-alias.js:15:8 {
   "end":8
 }
 type-alias.js:16:8 {
-  "types":{"unevaluated":{"type":"type B = B | null"},"evaluated":null},
+  "types":{"unevaluated":{"type":"type B = any | null"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",

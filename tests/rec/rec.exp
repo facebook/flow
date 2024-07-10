@@ -368,12 +368,12 @@ References:
                             ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------- trivially_recursive_with_evalt.js:2:10
+Error --------------------------------------------------------------------------- trivially_recursive_with_evalt.js:1:25
 
-Invalid trivially recursive definition of indexed access.  [recursive-definition]
+Invalid trivially recursive definition of `T`.  [recursive-definition]
 
-   2| type T = (typeof Ts)[number]; // error: cyclic
-               ^^^^^^^^^^^^^^^^^^^
+   1| declare const Ts: Array<T>; // error: cyclic
+                              ^
 
 
 Error --------------------------------------------------------------------------- trivially_recursive_with_evalt.js:8:14
@@ -384,12 +384,12 @@ Invalid trivially recursive definition of object type.  [recursive-definition]
                    ^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------- trivially_recursive_with_evalt.js:14:10
+Error -------------------------------------------------------------------------- trivially_recursive_with_evalt.js:14:29
 
-Invalid trivially recursive definition of conditional type.  [recursive-definition]
+Invalid trivially recursive definition of `C`.  [recursive-definition]
 
    14| type C = 0 extends number ? C : C; // error: cyclic
-                ^^^^^^^^^^^^^^^^^^^^^^^^
+                                   ^
 
 
 Error ------------------------------------------------------------- trivially_recursive_with_union_intersections.js:1:12
