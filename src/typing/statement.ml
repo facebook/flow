@@ -3823,14 +3823,14 @@ module Make
               (* any will fail the test below, but it's not always truthy. *)
               | AnyT _ -> ()
               | _ ->
-                Context.mark_invariant
-                  cx
-                  loc
-                  (TypeUtil.reason_of_t concretized_cond_t)
-                  ~useful:
-                    (match Type_filter.not_exists cx concretized_cond_t with
-                    | DefT (_, EmptyT) -> false
-                    | _ -> true)
+                (match Type_filter.not_exists cx concretized_cond_t with
+                | DefT (_, EmptyT) ->
+                  Flow_js.add_output
+                    cx
+                    (Error_message.EUnnecessaryInvariant
+                       (loc, TypeUtil.reason_of_t concretized_cond_t)
+                    )
+                | _ -> ())
             in
             let t = VoidT.at loc in
             ( t,

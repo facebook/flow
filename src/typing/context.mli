@@ -431,10 +431,6 @@ val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_optional_chains : t -> (ALoc.t * Reason.t) list
 
-val mark_invariant : t -> ALoc.t -> Reason.t -> useful:bool -> unit
-
-val unnecessary_invariants : t -> (ALoc.t * Reason.t) list
-
 val mark_maybe_unused_promise : t -> ALoc.t -> Type.t -> async:bool -> unit
 
 val maybe_unused_promises : t -> (ALoc.t * Type.t * bool) list

@@ -912,24 +912,6 @@ let unnecessary_optional_chains cx =
     cx.ccx.optional_chains_useful
     []
 
-let mark_invariant cx loc reason ~useful =
-  cx.ccx.invariants_useful <-
-    ALocMap.add
-      loc
-      (reason, useful)
-      ~combine:(fun (r, u) (_, u') -> (r, u || u'))
-      cx.ccx.invariants_useful
-
-let unnecessary_invariants cx =
-  ALocMap.fold
-    (fun loc (r, useful) acc ->
-      if useful then
-        acc
-      else
-        (loc, r) :: acc)
-    cx.ccx.invariants_useful
-    []
-
 let mark_maybe_unused_promise cx loc t ~async =
   cx.ccx.maybe_unused_promises <- (loc, t, async) :: cx.ccx.maybe_unused_promises
 
