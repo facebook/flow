@@ -148,12 +148,6 @@ let detect_unnecessary_optional_chains cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryOptionalChain (loc, lhs_reason)))
     (Context.unnecessary_optional_chains cx)
 
-let detect_unnecessary_invariants cx =
-  Base.List.iter
-    ~f:(fun (loc, reason) ->
-      Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
-    (Context.unnecessary_invariants cx)
-
 let detect_unused_promises cx =
   Base.List.iter
     ~f:(fun (loc, t, async) ->
@@ -690,7 +684,6 @@ let post_merge_checks cx ast tast metadata =
   detect_non_voidable_properties cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
-  detect_unnecessary_invariants cx;
   detect_import_export_errors cx ast metadata;
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;
