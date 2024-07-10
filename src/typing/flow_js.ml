@@ -7949,14 +7949,19 @@ struct
       | Some _ -> ()
       | None ->
         let trace = DepthTrace.dummy_trace in
-        if
-          Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t
-          || Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d
-        then
+        let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
+        if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx eval_t then
           ignore
           @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
                  Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
                  evaluate_type_destructor cx ~trace use_op reason t d tvar
+             )
+        else if Flow_js_utils.TvarVisitors.has_placeholders cx eval_t then
+          ignore
+          @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                 Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
+                 evaluate_type_destructor cx ~trace use_op reason t d tvar;
+                 Tvar_resolver.resolve cx (OpenT tvar)
              )
         else
           let result =
