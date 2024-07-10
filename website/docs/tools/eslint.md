@@ -16,7 +16,7 @@ yarn add --dev eslint hermes-eslint eslint-plugin-ft-flow
 npm install --save-dev eslint hermes-eslint eslint-plugin-ft-flow
 ```
 
-Then create a `.eslintrc.js` file in your project root with the following:
+Then create a `eslint.config.(js|mjs|cjs)` or `.eslintrc.js` file in your project root with the following:
 
 ```js
 module.exports = {
