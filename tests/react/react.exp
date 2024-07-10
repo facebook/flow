@@ -1318,6 +1318,76 @@ References:
                                           ^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- key.js:21:10
+
+Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-prop]
+
+   key.js:21:10
+   21| <Foo {...{key: 42}} />; // error
+                ^^^^^^^^^ [1]
+
+References:
+   key.js:21:11
+   21| <Foo {...{key: 42}} />; // error
+                 ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- key.js:24:14
+
+Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-prop]
+
+   key.js:24:14
+   24|     <Foo {...keyProps} />; // error
+                    ^^^^^^^^ [1]
+
+References:
+   key.js:23:46
+   23|     declare const keyProps: {foo: number} | {key: string};
+                                                    ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- key.js:28:14
+
+Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-prop]
+
+   key.js:28:14
+   28|     <Foo {...keyProps} />; // error
+                    ^^^^^^^^ [1]
+
+References:
+   key.js:27:56
+   27|     declare const keyProps: $ReadOnly<{foo: number} | {key: string}>;
+                                                              ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- key.js:32:14
+
+Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-prop]
+
+   key.js:32:14
+   32|     <Foo {...keyProps.foo} />; // error
+                    ^^^^^^^^^^^^ [1]
+
+References:
+   key.js:31:63
+   31|     declare const keyProps: { foo: $ReadOnly<{foo: number} | {key: string}>};
+                                                                     ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- key.js:37:14
+
+Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-prop]
+
+   key.js:37:14
+   37|     <Foo {...keyProps} />; // error
+                    ^^^^^^^^ [1]
+
+References:
+   key.js:35:28
+   35|     type PropsWithKey = {| key: string |};
+                                  ^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- profiler.js:19:3
 
 Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag
@@ -2535,7 +2605,7 @@ References:
 
 
 
-Found 144 errors
+Found 149 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

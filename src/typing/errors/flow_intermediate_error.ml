@@ -3037,6 +3037,13 @@ let to_printable_error :
         text " within ";
         hardcoded_string_desc_ref "spreads" spread_loc;
       ]
+    | MessageInvalidKeyPropertyInSpread { key_loc; spread_loc } ->
+      [
+        text "Cannot ";
+        hardcoded_string_desc_ref "spread" spread_loc;
+        text " an object that contains a ";
+        hardcoded_string_desc_ref "`key` property" key_loc;
+      ]
     | MessageInvalidSelfReferencingTypeAnnotation { name; loc } ->
       [
         text "Invalid type annotation for ";

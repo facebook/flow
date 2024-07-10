@@ -72,6 +72,7 @@ type metadata = {
   suppress_types: SSet.t;
   ts_syntax: bool;
   use_mixed_in_catch_variables: bool;
+  ban_spread_key_props: bool;
 }
 
 type test_prop_hit_or_miss =
@@ -287,6 +288,7 @@ let metadata_of_options options =
     suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
+    ban_spread_key_props = Options.ban_spread_key_props options;
   }
 
 let docblock_overrides docblock_info file_key metadata =
@@ -600,6 +602,8 @@ let missing_local_annot_lower_bounds cx = cx.ccx.missing_local_annot_lower_bound
 let matching_props cx = cx.ccx.matching_props
 
 let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
+
+let ban_spread_key_props cx = cx.metadata.ban_spread_key_props
 
 let verbose cx = cx.metadata.verbose
 

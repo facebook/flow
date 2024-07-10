@@ -84,6 +84,7 @@ type error_code =
   | InvalidIdx
   | InvalidImportStarUse
   | InvalidImportType
+  | InvalidSpreadProp
   | InvalidInfer
   | InvalidInLhs
   | InvalidInRhs
@@ -297,6 +298,7 @@ let string_of_code : error_code -> string = function
   | InvalidIdx -> "invalid-idx"
   | InvalidImportStarUse -> "invalid-import-star-use"
   | InvalidImportType -> "invalid-import-type"
+  | InvalidSpreadProp -> "invalid-spread-prop"
   | InvalidInfer -> "invalid-infer"
   | InvalidInLhs -> "invalid-in-lhs"
   | InvalidInRhs -> "invalid-in-rhs"

@@ -578,6 +578,10 @@ and 'loc t' =
       spread: 'loc;
       loc: 'loc;
     }
+  | EKeySpreadProp of {
+      spread: 'loc;
+      loc: 'loc;
+    }
   | EReactIntrinsicOverlap of {
       use: 'loc virtual_reason;
       def: 'loc;
@@ -1327,6 +1331,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         duplicates = Nel.map (fun (first, second) -> (map_reason first, f second)) duplicates;
       }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
+  | EKeySpreadProp { spread; loc } -> EKeySpreadProp { spread = f spread; loc = f loc }
   | EInvalidRendersTypeArgument
       { loc; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     EInvalidRendersTypeArgument
@@ -1640,6 +1645,7 @@ let util_use_op_of_msg nope util = function
   | ENegativeTypeGuardConsistency _
   | EDuplicateComponentProp _
   | ERefComponentProp _
+  | EKeySpreadProp _
   | EInvalidRendersTypeArgument _
   | EInvalidTypeCastSyntax _
   | EMissingPlatformSupport _
@@ -1812,6 +1818,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EReferenceInAnnotation (loc, _, _)
   | EDuplicateComponentProp { spread = loc; _ }
   | ERefComponentProp { spread = loc; _ }
+  | EKeySpreadProp { spread = loc; _ }
   | ETypeGuardIncompatibleWithFunctionKind { loc; _ }
   | EMissingPlatformSupport { loc; _ }
   | EUnionPartialOptimizationNonUniqueKey { loc; _ }
@@ -2798,6 +2805,8 @@ let friendly_message_of_msg = function
     Normal (MessageRedeclareComponentProp { duplicates; spread_loc = spread })
   | ERefComponentProp { spread = spread_loc; loc = ref_loc } ->
     Normal (MessageInvalidRefPropertyInSpread { ref_loc; spread_loc })
+  | EKeySpreadProp { spread = spread_loc; loc = key_loc } ->
+    Normal (MessageInvalidKeyPropertyInSpread { spread_loc; key_loc })
   | EInvalidRendersTypeArgument
       { loc = _; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     Normal
@@ -3096,6 +3105,7 @@ let error_code_of_message err : error_code option =
   | EInvalidMappedType _ -> Some InvalidMappedType
   | EDuplicateComponentProp _ -> Some InvalidComponentProp
   | ERefComponentProp _ -> Some InvalidComponentProp
+  | EKeySpreadProp _ -> Some InvalidSpreadProp
   | EInvalidComponentRestParam _ -> Some InvalidComponentProp
   | EMalformedCode _
   | EUnusedSuppression _ ->

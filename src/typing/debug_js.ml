@@ -1958,6 +1958,7 @@ let dump_error_message =
     | EDuplicateComponentProp { spread; _ } ->
       spf "EDuplicateComponentProp (%s)" (string_of_aloc spread)
     | ERefComponentProp { loc; _ } -> spf "ERefComponentProp (%s)" (string_of_aloc loc)
+    | EKeySpreadProp { loc; _ } -> spf "EKeySpreadProp (%s)" (string_of_aloc loc)
     | EInvalidComponentRestParam loc -> spf "EInvalidComponentRestParam (%s)" (string_of_aloc loc)
     | EInvalidTypeCastSyntax { loc; _ } -> spf "EInvalidTypeCastSyntax (%s)" (string_of_aloc loc)
     | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->

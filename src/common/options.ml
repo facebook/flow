@@ -150,6 +150,7 @@ type t = {
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_use_mixed_in_catch_variables: bool;
+  opt_ban_spread_key_props: bool;
   opt_verbose: Verbose.t option;
   opt_vscode_detailed_diagnostics: bool;
   opt_wait_for_recheck: bool;
@@ -355,6 +356,8 @@ let temp_dir opts = opts.opt_temp_dir
 let ts_syntax opts = opts.opt_ts_syntax
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
+
+let ban_spread_key_props opts = opts.opt_ban_spread_key_props
 
 let verbose opts = opts.opt_verbose
 

@@ -17,3 +17,22 @@ class FooExact extends React.Component<{||}, void> {}
 <FooExact key={null} />; // OK
 <FooExact key={undefined} />; // OK
 <FooExact key={true} />; // Error
+
+<Foo {...{key: 42}} />; // error
+{
+    declare const keyProps: {foo: number} | {key: string};
+    <Foo {...keyProps} />; // error
+}
+{
+    declare const keyProps: $ReadOnly<{foo: number} | {key: string}>;
+    <Foo {...keyProps} />; // error
+}
+{
+    declare const keyProps: { foo: $ReadOnly<{foo: number} | {key: string}>};
+    <Foo {...keyProps.foo} />; // error
+}
+{
+    type PropsWithKey = {| key: string |};
+    declare const keyProps: { foo: number, ...PropsWithKey};
+    <Foo {...keyProps} />; // error
+}

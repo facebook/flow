@@ -134,6 +134,7 @@ module Opts = struct
     suppress_types: SSet.t;
     ts_syntax: bool;
     use_mixed_in_catch_variables: bool option;
+    ban_spread_key_props: bool option;
     vscode_detailed_diagnostics: bool;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -265,6 +266,7 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       ts_syntax = false;
       use_mixed_in_catch_variables = None;
+      ban_spread_key_props = None;
       vscode_detailed_diagnostics = false;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -838,6 +840,9 @@ module Opts = struct
   let use_mixed_in_catch_variables_parser =
     boolean (fun opts v -> Ok { opts with use_mixed_in_catch_variables = Some v })
 
+  let ban_spread_key_props_parser =
+    boolean (fun opts v -> Ok { opts with ban_spread_key_props = Some v })
+
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }
@@ -991,6 +996,7 @@ module Opts = struct
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
+      ("ban_spread_key_props", ban_spread_key_props_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
 
@@ -1718,6 +1724,8 @@ let suppress_types c = c.options.Opts.suppress_types
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
+
+let ban_spread_key_props c = c.options.Opts.ban_spread_key_props
 
 let vscode_detailed_diagnostics c = c.options.Opts.vscode_detailed_diagnostics
 

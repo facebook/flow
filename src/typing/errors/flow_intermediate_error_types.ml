@@ -693,6 +693,10 @@ type 'loc message =
       ref_loc: 'loc;
       spread_loc: 'loc;
     }
+  | MessageInvalidKeyPropertyInSpread of {
+      key_loc: 'loc;
+      spread_loc: 'loc;
+    }
   | MessageInvalidRendersTypeArgument of {
       renders_variant: Flow_ast.Type.Renders.variant;
       invalid_render_type_kind: 'loc invalid_render_type_kind;

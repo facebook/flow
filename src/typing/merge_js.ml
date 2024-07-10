@@ -6,6 +6,7 @@
  *)
 
 module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
+module Ast = Flow_ast
 
 let force_lazy_tvars cx =
   Context.post_component_tvar_forcing_states cx
@@ -617,6 +618,50 @@ let check_multiplatform_conformance cx ast tast =
                 )
         ))
 
+let check_spread_prop_keys cx tast =
+  let checker =
+    object
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_type_annot x = x
+
+      method on_loc_annot x = x
+
+      method! jsx_spread_attribute attr =
+        let { Ast.JSX.SpreadAttribute.argument = ((spread, ty), _); _ } = attr in
+        let rec find seen ty =
+          let open Type in
+          match ty with
+          | OpenT (_, id) when ISet.mem id seen -> ()
+          | OpenT (_, id) ->
+            Flow_js_utils.possible_types cx id |> Base.List.iter ~f:(find (ISet.add id seen))
+          | AnnotT (_, t, _) -> find seen t
+          | UnionT (_, rep) -> UnionRep.members rep |> Base.List.iter ~f:(find seen)
+          | IntersectionT (_, rep) -> InterRep.members rep |> Base.List.iter ~f:(find seen)
+          | OptionalT { type_; _ } -> find seen type_
+          | MaybeT (_, ty) -> find seen ty
+          | DefT (r, ObjT { props_tmap; _ }) ->
+            let prop = Context.get_prop cx props_tmap (Reason.OrdinaryName "key") in
+            begin
+              match prop with
+              | Some prop ->
+                let loc =
+                  Base.Option.value ~default:(Reason.loc_of_reason r) (Property.first_loc prop)
+                in
+                Flow_js.add_output cx Error_message.(EKeySpreadProp { spread; loc })
+              | _ -> ()
+            end
+          | _ -> ()
+        in
+        find ISet.empty ty;
+        super#jsx_spread_attribute attr
+    end
+  in
+  if Context.ban_spread_key_props cx then
+    let (_ : _ Ast.Program.t) = checker#program tast in
+    ()
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -650,7 +695,8 @@ let post_merge_checks cx ast tast metadata =
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;
   detect_unused_promises cx;
-  check_union_opt cx
+  check_union_opt cx;
+  check_spread_prop_keys cx tast
 
 (* Check will lazily create types for the checked file's dependencies. These
  * types are created in the dependency's context and need to be copied into the

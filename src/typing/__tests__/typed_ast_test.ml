@@ -61,6 +61,7 @@ let metadata =
     suppress_types = SSet.empty;
     ts_syntax = true;
     use_mixed_in_catch_variables = false;
+    ban_spread_key_props = false;
   }
 
 (* somewhat copied from Flow_dot_js *)

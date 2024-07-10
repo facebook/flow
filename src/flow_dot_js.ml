@@ -139,6 +139,7 @@ let stub_metadata ~root ~checked =
     suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
     ts_syntax = true;
     use_mixed_in_catch_variables = false;
+    ban_spread_key_props = false;
   }
 
 let master_cx_ref : (File_path.t * Context.master_context) option ref = ref None

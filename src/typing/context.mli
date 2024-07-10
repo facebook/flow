@@ -109,6 +109,7 @@ type metadata = {
   suppress_types: SSet.t;
   ts_syntax: bool;
   use_mixed_in_catch_variables: bool;
+  ban_spread_key_props: bool;
 }
 
 type typing_mode =
@@ -537,5 +538,7 @@ val take_cache_snapshot : t -> cache_snapshot
 val restore_cache_snapshot : t -> cache_snapshot -> unit
 
 val use_mixed_in_catch_variables : t -> bool
+
+val ban_spread_key_props : t -> bool
 
 val new_specialized_callee : t -> Type.specialized_callee
