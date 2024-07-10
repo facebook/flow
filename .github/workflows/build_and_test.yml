@@ -158,8 +158,8 @@ jobs:
         name: build_linux_arm64_dist
         path: |
           dist/flow-linux64-arm64.zip
-  build_macos:
-    runs-on: macos-13
+  build_macos_x86:
+    runs-on: macos-13-xlarge
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
@@ -169,9 +169,9 @@ jobs:
       run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
     - uses: ./.github/actions/install-opam-mac
       with:
-        arch: x86_64
+        arch: arm64
     - name: Create cache breaker
-      run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
+      run: arch --x86_64 .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
       uses: actions/cache@v3.3.2
@@ -181,16 +181,16 @@ jobs:
           _opam
         key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
-      run: .circleci/opam_init.sh
+      run: arch --x86_64 .circleci/opam_init.sh
     - name: Install deps from opam
-      run: make deps
+      run: arch --x86_64 make deps
       shell: bash
     - name: Build flow
       run: |-
-        opam exec -- make bin/flow dist/flow.zip
+        arch --x86_64 opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/macos && cp bin/flow bin/macos/flow
     - name: Build libflowparser
-      run: opam exec -- make -C src/parser dist/libflowparser.zip
+      run: arch --x86_64 opam exec -- make -C src/parser dist/libflowparser.zip
     - name: Create artifacts
       run: |-
         cp dist/flow.zip dist/flow-osx.zip
@@ -358,10 +358,26 @@ jobs:
     - run: chmod +x bin/linux/flow
     - name: Run tests
       run: ./runtests.sh bin/linux/flow | cat
-  runtests_macos:
+  runtests_macos_x86:
+    runs-on: macos-13
+    needs:
+    - build_macos_x86
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1.6.0
+      with:
+        xcode-version: '14.3.1'
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: build_macos_bin
+        path: bin/macos
+    - run: chmod +x bin/macos/flow
+    - name: Run tests
+      run: ./runtests.sh bin/macos/flow | cat
+  runtests_macos_arm:
     runs-on: macos-14
     needs:
-    - build_macos
+    - build_macos_arm64
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
@@ -461,7 +477,7 @@ jobs:
       with:
         path: test-results/ounit/
   ounit_test_macos:
-    runs-on: macos-13
+    runs-on: build_macos_x86
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
@@ -471,7 +487,7 @@ jobs:
       run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
     - uses: ./.github/actions/install-opam-mac
       with:
-        arch: x86_64
+        arch: arm64
     - name: Create cache breaker
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
@@ -519,7 +535,7 @@ jobs:
     needs:
     - build_js
     - build_linux
-    - build_macos
+    - build_macos_x86
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v3.0.2
@@ -627,7 +643,7 @@ jobs:
     needs:
     - build_linux
     - build_linux_arm64
-    - build_macos
+    - build_macos_x86
     - build_macos_arm64
     - build_win
     steps:
