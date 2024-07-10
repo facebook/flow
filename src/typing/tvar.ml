@@ -43,6 +43,12 @@ let mk_fully_resolved_lazy cx reason ?(force_post_component = true) lazy_t =
   let state = Type.Constraint.ForcingState.of_lazy_t ~error_reason:reason lazy_t in
   let id = mk_fully_resolved_helper cx state in
   if force_post_component then Context.add_post_component_tvar_forcing_state cx id state;
+  if Context.is_verbose cx then
+    Utils_js.prerr_endlinef
+      "Lazy TVAR %d (%d): %s"
+      id
+      (IMap.cardinal (Context.graph cx))
+      (Debug_js.string_of_reason cx reason);
   Type.OpenT (reason, id)
 
 let mk_fully_resolved cx reason t =
