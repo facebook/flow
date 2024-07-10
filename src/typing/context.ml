@@ -169,6 +169,7 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * Type.t * Type.t) list;
+  mutable delayed_forcing_tvars: ISet.t;
   mutable post_component_tvar_forcing_states: Type.Constraint.ForcingState.t list;
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
@@ -362,6 +363,7 @@ let make_ccx () =
     synthesis_produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
+    delayed_forcing_tvars = ISet.empty;
     post_component_tvar_forcing_states = [];
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
@@ -575,6 +577,8 @@ let ts_syntax cx = cx.metadata.ts_syntax
 
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
+let delayed_forcing_tvars cx = cx.ccx.delayed_forcing_tvars
+
 let post_component_tvar_forcing_states cx =
   let states = cx.ccx.post_component_tvar_forcing_states in
   cx.ccx.post_component_tvar_forcing_states <- [];
@@ -686,7 +690,8 @@ let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_prop
 
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 
-let add_post_component_tvar_forcing_state cx state =
+let add_post_component_tvar_forcing_state cx id state =
+  cx.ccx.delayed_forcing_tvars <- ISet.add id cx.ccx.delayed_forcing_tvars;
   cx.ccx.post_component_tvar_forcing_states <- state :: cx.ccx.post_component_tvar_forcing_states
 
 let add_post_inference_polarity_check cx tparams polarity t =

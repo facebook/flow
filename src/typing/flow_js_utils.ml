@@ -73,7 +73,102 @@ let merge_tvar ?(filter_empty = false) ~no_lowers cx r id =
   | Some t -> t
   | None -> no_lowers cx r
 
-let unwrap_fully_resolved_open_and_annot_t =
+let unwrap_fully_resolved_open_t =
+  let tvar_deep_forcing_visitor =
+    object (this)
+      inherit [ISet.t] Type_visitor.t as super
+
+      method! call_prop _cx _pole acc _id = acc
+
+      method! props _cx _pole acc _id = acc
+
+      method! exports _cx _pole acc _id = acc
+
+      method! type_ cx pole acc t =
+        match t with
+        (* composite types that allow self or cyclic reference *)
+        | DefT (_, FunT _)
+        | DefT (_, ObjT _)
+        | DefT (_, ArrT _)
+        | DefT (_, InstanceT _)
+        | DefT (_, ReactAbstractComponentT _)
+        | DefT (_, RendersT _)
+        | DefT (_, EnumValueT _)
+        | DefT (_, EnumObjectT _)
+        (* We give up on TypeApp, since it will defend against cyclic types separately. *)
+        | TypeAppT _ ->
+          acc
+        (* EvalT(t, d, _) behaves like TypeAppT, not everything there will be unconditionally
+         * evaluated, but if we do have the eval result, we should visit it, since at that point,
+         * the EvalT behaves like an OpenT. *)
+        | EvalT (_, _, id) ->
+          (match Eval.Map.find_opt id (Context.evaluated cx) with
+          | None -> acc
+          | Some t -> this#type_ cx pole acc t)
+        (* Base types *)
+        | DefT (_, NumT _)
+        | DefT (_, StrT _)
+        | DefT (_, BoolT _)
+        | DefT (_, BigIntT _)
+        | DefT (_, EmptyT)
+        | DefT (_, MixedT _)
+        | DefT (_, NullT)
+        | DefT (_, VoidT)
+        | DefT (_, SymbolT)
+        | DefT (_, SingletonStrT _)
+        | DefT (_, NumericStrKeyT _)
+        | DefT (_, SingletonNumT _)
+        | DefT (_, SingletonBoolT _)
+        | DefT (_, SingletonBigIntT _)
+        | GenericT _
+        | ModuleT _
+        | CustomFunT _
+        | AnyT _
+        | FunProtoT _
+        | ObjProtoT _
+        | NullProtoT _
+        | FunProtoApplyT _
+        | FunProtoBindT _
+        | FunProtoCallT _
+        | StrUtilT _
+        (* composite types that don't allow self or cyclic reference *)
+        | OpenT _
+        | DefT (_, (ClassT _ | TypeT (_, _) | PolyT _))
+        | ThisTypeAppT _
+        | ThisInstanceT _
+        | ExactT _
+        | IntersectionT _
+        | UnionT _
+        | MaybeT _
+        | OptionalT _
+        | KeysT _
+        | AnnotT _
+        | OpaqueT _
+        | NamespaceT _
+        | InternalT _ ->
+          super#type_ cx pole acc t
+
+      method! tvar cx pole acc r id =
+        let (root_id, constraints) = Context.find_constraints cx id in
+        match constraints with
+        | Type.Constraint.FullyResolved s ->
+          if (not (ISet.mem root_id acc)) && ISet.mem root_id (Context.delayed_forcing_tvars cx)
+          then
+            Context.force_fully_resolved_tvar cx s |> this#type_ cx pole (ISet.add root_id acc)
+          else
+            acc
+        | Type.Constraint.Resolved t ->
+          failwith
+            (spf
+               "tvar (%s, %d) = %s is resolved but not fully resolved"
+               (dump_reason r)
+               id
+               (Debug_js.dump_t cx ~depth:3 t)
+            )
+        | Type.Constraint.Unresolved _ ->
+          failwith (spf "tvar (%s, %d) is unresolved" (dump_reason r) id)
+    end
+  in
   let rec unwrap cx ~depth = function
     | AnnotT (r, t, use_desc) as annot_t when depth >= 0 ->
       let t' = unwrap cx ~depth:(depth - 1) t in
@@ -81,34 +176,33 @@ let unwrap_fully_resolved_open_and_annot_t =
         annot_t
       else
         AnnotT (r, t', use_desc)
-    | OpaqueT (r, opq) as t ->
-      let super_t = OptionUtils.ident_map (unwrap cx ~depth) opq.super_t in
-      let underlying_t = OptionUtils.ident_map (unwrap cx ~depth) opq.underlying_t in
-      if super_t == opq.super_t && underlying_t == opq.underlying_t then
-        t
-      else
-        OpaqueT (r, { opq with super_t; underlying_t })
     | OpenT (r, id) when depth >= 0 ->
       (match Context.find_graph cx id with
       | Type.Constraint.FullyResolved s ->
         Context.force_fully_resolved_tvar cx s |> unwrap cx ~depth:(depth - 1)
-      | _ -> failwith (spf "tvar (%s, %d) is not fully resolved" (dump_reason r) id))
+      | Type.Constraint.Resolved t ->
+        failwith
+          (spf
+             "tvar (%s, %d) = %s is resolved but not fully resolved"
+             (dump_reason r)
+             id
+             (Debug_js.dump_t cx ~depth:3 t)
+          )
+      | Type.Constraint.Unresolved _ ->
+        failwith (spf "tvar (%s, %d) is unresolved" (dump_reason r) id))
     | t -> t
   in
-  (* We choose a depth of 3 because it's sufficient to unwrap OpenT(AnnotT(OpenT)), which is the most
-     complicated case known. If we run into issues in the future, we can increase the depth limit. *)
-  (fun cx t -> unwrap cx t ~depth:3)
+  fun cx t ->
+    let (_ : ISet.t) = tvar_deep_forcing_visitor#type_ cx Polarity.Positive ISet.empty t in
+    (* We choose a depth of 3 because it's sufficient to unwrap OpenT(AnnotT(OpenT)), which is the most
+       complicated case known. If we run into issues in the future, we can increase the depth limit. *)
+    unwrap cx t ~depth:3
 
 let map_on_resolved_type cx reason_op l f =
   Tvar.mk_fully_resolved_lazy
     cx
     reason_op
-    ( lazy
-      (Context.run_in_signature_tvar_env cx (fun () ->
-           f l |> unwrap_fully_resolved_open_and_annot_t cx
-       )
-      )
-      )
+    (lazy (Context.run_in_signature_tvar_env cx (fun () -> f l |> unwrap_fully_resolved_open_t cx)))
 
 (** Type predicates *)
 
