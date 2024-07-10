@@ -839,7 +839,6 @@ module rec TypeTerm : sig
         t_out: use_t;
         voided_out: t_out;
       }
-    | InvariantT of reason (* Function predicate uses *)
     (* CallLatentPredT connects a predicate function with information available
      * at a call-site appearing in a conditional position (e.g. `if (pred(x))`).
      * [tin] is the incoming type of `x` and [tout] the refined result in the then-
@@ -4194,7 +4193,6 @@ let string_of_use_ctor = function
         | SentinelPropTest _ -> "SentinelPropTest"
         | PropExistsTest _ -> "PropExistsTest"
       end
-  | InvariantT _ -> "InvariantT"
   | LookupT _ -> "LookupT"
   | MakeExactT _ -> "MakeExactT"
   | MapTypeT _ -> "MapTypeT"

@@ -183,7 +183,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | OptionalChainT { t_out; voided_out; _ } ->
     resolve voided_out;
     default_resolve_touts ~flow cx loc t_out
-  | InvariantT _ -> ()
   | CallLatentPredT { tout; _ } -> resolve_tvar tout
   | ResolveSpreadT (_, _, { rrt_resolve_to; _ }) -> resolve_spread_resolve rrt_resolve_to
   | CondT (_, _, _, t) -> resolve t

@@ -1591,18 +1591,6 @@ struct
         | (KeysT (reason1, o1), _) ->
           (* flow all keys of o1 to u *)
           rec_flow cx trace (o1, GetKeysT (reason1, u))
-        (*************)
-        (* invariant *)
-        (*************)
-        | (_, InvariantT r') ->
-          Context.mark_invariant
-            cx
-            (loc_of_reason r')
-            (reason_of_t l)
-            ~useful:
-              (match Type_filter.not_exists cx l with
-              | DefT (_, EmptyT) -> false
-              | _ -> true)
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
         | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForInspection tvar))) ->
@@ -6974,7 +6962,6 @@ struct
     | HasOwnPropT _
     | ExtractReactRefT _
     | ImplementsT _
-    | InvariantT _
     | RunTypeAssertion _
     | SetPrivatePropT _
     | SetProtoT _
