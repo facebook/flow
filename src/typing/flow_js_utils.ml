@@ -95,7 +95,7 @@ let unwrap_fully_resolved_open_t =
         | DefT (_, RendersT _)
         | DefT (_, EnumValueT _)
         | DefT (_, EnumObjectT _)
-        (* We give up on TypeApp, since it will defend against cyclic types separately. *)
+        (* We give up on TypeApp, since it will defend against cyclic types separately. T110320325 *)
         | TypeAppT _ ->
           acc
         (* EvalT(t, d, _) behaves like TypeAppT, not everything there will be unconditionally
