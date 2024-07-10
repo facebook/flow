@@ -1,3 +1,71 @@
+Error ---------------------------------------------------------------------------------------------------- arrays.js:6:3
+
+Cannot cast `x` to empty because `$Values` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrays.js:6:3
+   6|   x as empty; // ERROR
+        ^
+
+References:
+   arrays.js:4:20
+   4|   declare const x: Arr;
+                         ^^^ [1]
+   arrays.js:6:8
+   6|   x as empty; // ERROR
+             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:14:3
+
+Cannot cast `x` to empty because `$Values` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrays.js:14:3
+   14|   x as empty; // ERROR
+         ^
+
+References:
+   arrays.js:12:20
+   12|   declare const x: ROArr;
+                          ^^^^^ [1]
+   arrays.js:14:8
+   14|   x as empty; // ERROR
+              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:23:3
+
+Cannot cast `x` to empty because string literal `a` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrays.js:23:3
+   23|   x as empty; // ERROR
+         ^
+
+References:
+   arrays.js:21:20
+   21|   declare const x: Tup;
+                          ^^^ [1]
+   arrays.js:23:8
+   23|   x as empty; // ERROR
+              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:23:3
+
+Cannot cast `x` to empty because string literal `b` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrays.js:23:3
+   23|   x as empty; // ERROR
+         ^
+
+References:
+   arrays.js:21:20
+   21|   declare const x: Tup;
+                          ^^^ [1]
+   arrays.js:23:8
+   23|   x as empty; // ERROR
+              ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- classes.js:24:2
 
 Cannot cast `'yo'` to `$Values` because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -670,4 +738,4 @@ References:
 
 
 
-Found 44 errors
+Found 48 errors
