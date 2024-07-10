@@ -497,7 +497,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
+        key: v1-opam-ounit-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
