@@ -368,5 +368,53 @@ References:
                             ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------- trivially_recursive_with_evalt.js:2:10
 
-Found 23 errors
+Invalid trivially recursive definition of indexed access.  [recursive-definition]
+
+   2| type T = (typeof Ts)[number]; // error: cyclic
+               ^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- trivially_recursive_with_evalt.js:8:14
+
+Invalid trivially recursive definition of object type.  [recursive-definition]
+
+   8| type Props = { ...Props }; // error: cyclic
+                   ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- trivially_recursive_with_evalt.js:14:10
+
+Invalid trivially recursive definition of conditional type.  [recursive-definition]
+
+   14| type C = 0 extends number ? C : C; // error: cyclic
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------- trivially_recursive_with_union_intersections.js:1:12
+
+Invalid trivially recursive definition of `T1`.  [recursive-definition]
+
+   1| type T1 = ?T1; // error: cyclic
+                 ^^
+
+
+Error ------------------------------------------------------------- trivially_recursive_with_union_intersections.js:2:20
+
+Invalid trivially recursive definition of `T2`.  [recursive-definition]
+
+   2| type T2 = string | T2; // error: cyclic
+                         ^^
+
+
+Error ------------------------------------------------------------- trivially_recursive_with_union_intersections.js:3:11
+
+Invalid trivially recursive definition of `T3`.  [recursive-definition]
+
+   3| type T3 = T3 & string; // error: cyclic
+                ^^
+
+
+
+Found 29 errors

@@ -1402,9 +1402,9 @@ let resolve_component cx graph component =
         |> Base.Option.iter ~f:(fun (Loc_env.TypeEntry { t; state = _ }) ->
                match t with
                | OpenT (_, id) ->
-                 (match Context.find_graph cx id with
-                 | Type.Constraint.FullyResolved s ->
-                   Context.add_post_component_tvar_forcing_state cx s
+                 (match Context.find_constraints cx id with
+                 | (root_id, Type.Constraint.FullyResolved s) ->
+                   Context.add_post_component_tvar_forcing_state cx root_id s
                  | _ -> ())
                | _ -> ()
            ))

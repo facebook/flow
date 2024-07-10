@@ -265,6 +265,8 @@ val matching_props : t -> (string * Type.t * Type.t) list
 
 val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
 
+val delayed_forcing_tvars : t -> ISet.t
+
 val post_component_tvar_forcing_states : t -> Type.Constraint.ForcingState.t list
 
 val post_inference_polarity_checks :
@@ -339,7 +341,8 @@ val add_matching_props : t -> string * Type.t * Type.t -> unit
 
 val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
-val add_post_component_tvar_forcing_state : t -> Type.Constraint.ForcingState.t -> unit
+val add_post_component_tvar_forcing_state :
+  t -> Type.ident -> Type.Constraint.ForcingState.t -> unit
 
 val add_post_inference_polarity_check :
   t -> Type.typeparam Subst_name.Map.t -> Polarity.t -> Type.t -> unit

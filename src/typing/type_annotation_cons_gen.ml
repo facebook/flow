@@ -84,6 +84,7 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
            ~use_op:unknown_use
            instance_reason
            type_t_kind
+      |> Tvar_resolver.resolved_t cx
     in
     AnnotT (instance_reason, map_on_resolved_type cx instance_reason l f, use_desc)
 end
