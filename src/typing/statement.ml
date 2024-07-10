@@ -3811,8 +3811,27 @@ module Make
               Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
             let (((_, cond_t), _) as cond) = condition ~cond:OtherTest cx cond in
-            let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
-            Flow.flow cx (cond_t, InvariantT reason);
+            let concretized_cond_t =
+              Flow.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t cond_t) cond_t
+            in
+            let () =
+              match concretized_cond_t with
+              (* If condition is empty, it means that the branch is unreachable. The invariant is
+               * still useless, but it's not useless because it's always truthy, which is what the
+               * code below tries to report. *)
+              | DefT (_, EmptyT) -> ()
+              (* any will fail the test below, but it's not always truthy. *)
+              | AnyT _ -> ()
+              | _ ->
+                Context.mark_invariant
+                  cx
+                  loc
+                  (TypeUtil.reason_of_t concretized_cond_t)
+                  ~useful:
+                    (match Type_filter.not_exists cx concretized_cond_t with
+                    | DefT (_, EmptyT) -> false
+                    | _ -> true)
+            in
             let t = VoidT.at loc in
             ( t,
               ( args_loc,

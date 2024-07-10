@@ -88,7 +88,6 @@ and reason_of_use_t = function
   | HasOwnPropT (_, reason, _) -> reason
   | ImplementsT (_, t) -> reason_of_t t
   | PreprocessKitT (reason, _) -> reason
-  | InvariantT reason -> reason
   | LookupT { reason; _ } -> reason
   | MakeExactT (reason, _) -> reason
   | MapTypeT (_, reason, _, _) -> reason
@@ -337,7 +336,6 @@ let rec util_use_op_of_use_t :
   | DebugSleepT _
   | SentinelPropTestT (_, _, _, _, _)
   | OptionalChainT _
-  | InvariantT _
   | CallLatentPredT _
   | CondT (_, _, _, _)
   | ReactPropsToOut _
