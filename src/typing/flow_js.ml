@@ -1709,6 +1709,9 @@ struct
             Flow_js_utils.get_values_type_of_instance_t cx own_props inst_dict reason
           in
           rec_flow_t ~use_op:unknown_use cx trace (values_l, values)
+        | (DefT (_, ArrT arr), GetValuesT (reason, t_out)) ->
+          let elem_t = elemt_of_arrtype arr in
+          rec_flow_t ~use_op:unknown_use cx trace (mod_reason_of_t (Fun.const reason) elem_t, t_out)
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, values)

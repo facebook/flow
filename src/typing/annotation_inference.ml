@@ -726,6 +726,9 @@ module rec ConsGen : S = struct
       Flow_js_utils.get_values_type_of_obj_t cx o reason
     | (DefT (_, InstanceT { inst = { own_props; inst_dict; _ }; _ }), Annot_GetValuesT reason) ->
       Flow_js_utils.get_values_type_of_instance_t cx own_props inst_dict reason
+    | (DefT (_, ArrT arr), Annot_GetValuesT reason) ->
+      let elem_t = elemt_of_arrtype arr in
+      mod_reason_of_t (Fun.const reason) elem_t
     (* Any will always be ok *)
     | (AnyT (_, src), Annot_GetValuesT reason) -> AnyT.why src reason
     (********************************)
