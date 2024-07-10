@@ -463,7 +463,7 @@ jobs:
         path: |-
           ~/.opam
           _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
+        key: v1-opam-ounit-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: .circleci/opam_init.sh
     - name: Install deps from opam
@@ -477,7 +477,7 @@ jobs:
       with:
         path: test-results/ounit/
   ounit_test_macos:
-    runs-on: build_macos_x86
+    runs-on: macos-13-xlarge
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
