@@ -631,19 +631,14 @@ let is_mixed_subtype l mixed_flavor =
 
 let quick_subtype t1 t2 =
   match (t1, t2) with
-  | (DefT (_, NumT _), DefT (_, NumT _))
-  | (DefT (_, SingletonNumT _), DefT (_, NumT _))
-  | (DefT (_, StrT _), DefT (_, StrT _))
-  | (DefT (_, SingletonStrT _), DefT (_, StrT _))
-  | (DefT (_, BoolT _), DefT (_, BoolT _))
-  | (DefT (_, SingletonBoolT _), DefT (_, BoolT _))
-  | (DefT (_, BigIntT _), DefT (_, BigIntT _))
-  | (DefT (_, SingletonBigIntT _), DefT (_, SingletonBigIntT _))
+  | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, NumT _))
+  | (DefT (_, (StrT _ | SingletonStrT _)), DefT (_, StrT _))
+  | (DefT (_, (BoolT _ | SingletonBoolT _)), DefT (_, BoolT _))
+  | (DefT (_, (BigIntT _ | SingletonBigIntT _)), DefT (_, BigIntT _))
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
   | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _)))
-  | (DefT (_, EmptyT), DefT (_, _))
   | (DefT (_, EmptyT), _) ->
     true
   | (StrUtilT { reason = _; prefix = prefix1 }, StrUtilT { reason = _; prefix = prefix2 })
@@ -657,6 +652,8 @@ let quick_subtype t1 t2 =
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
   | (DefT (_, StrT actual), DefT (_, SingletonStrT expected)) -> literal_eq expected actual
   | (DefT (_, NumT actual), DefT (_, SingletonNumT expected)) -> number_literal_eq expected actual
+  | (DefT (_, BigIntT actual), DefT (_, SingletonBigIntT expected)) ->
+    bigint_literal_eq expected actual
   | (DefT (_, BoolT actual), DefT (_, SingletonBoolT expected)) ->
     boolean_literal_eq expected actual
   | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT (expected, _))) ->
