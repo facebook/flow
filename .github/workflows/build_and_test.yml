@@ -169,7 +169,7 @@ jobs:
       run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
     - uses: ./.github/actions/install-opam-mac
       with:
-        arch: arm64
+        arch: x86_64
     - name: Create cache breaker
       run: arch --x86_64 .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
