@@ -251,15 +251,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* extract stuff to ignore while considering actions *)
     (* split spec into a list of pairs of types to try speculative matching on *)
     let trials = trials_of_spec spec in
-    (* Here match_state can take on various values:
-     * (a) (NoMatch errs) indicates that everything has failed up to this point,
-     *   with errors recorded in errs. Note that the initial value of acc is
-     *   Some (NoMatch []).
-     * (b) (ConditionalMatch case) indicates the a promising alternative has
-     *    been found, but not chosen yet.
-     *)
-    let rec loop match_state = function
-      | [] -> return match_state
+    (* Here errs records all errors we have seen up to this point. *)
+    let rec loop errs = function
+      | [] -> return errs
       | (case_id, _, l, u) :: trials ->
         let case =
           {
@@ -276,75 +270,66 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (match error with
         | None -> begin
           (* no error, looking great so far... *)
-          match match_state with
-          | NoMatch _ -> fire_actions cx trace spec case speculation_id
-          | ConditionalMatch _ -> loop match_state trials
+          fire_actions cx trace spec case speculation_id
         end
         | Some err -> begin
           (* if an error is found, then throw away this alternative... *)
-          match match_state with
-          | NoMatch errs ->
-            (* ...adding to the error list if no promising alternative has been
-             * found yet *)
-            loop (NoMatch (err :: errs)) trials
-          | _ -> loop match_state trials
+          (* ...adding to the error list if no promising alternative has been
+           * found yet *)
+          loop (err :: errs) trials
         end)
-    and return = function
-      | ConditionalMatch case ->
-        (* best choice that survived, congrats! fire deferred actions  *)
-        fire_actions cx trace spec case speculation_id
-      | NoMatch msgs ->
-        (* everything failed; make a really detailed error message listing out the
-         * error found for each alternative *)
-        let ts = choices_of_spec spec in
-        assert (List.length ts = List.length msgs);
-        let branches =
-          Base.List.mapi
-            ~f:(fun i msg ->
-              let reason = reason_of_t (List.nth ts i) in
-              (reason, msg))
-            msgs
-        in
-        (* Add the error. *)
-        begin
-          match spec with
-          | UnionCases (use_op, l, _rep, us) ->
-            let reason = reason_of_t l in
-            add_output
+    and return msgs =
+      (* everything failed; make a really detailed error message listing out the
+       * error found for each alternative *)
+      let ts = choices_of_spec spec in
+      assert (List.length ts = List.length msgs);
+      let branches =
+        Base.List.mapi
+          ~f:(fun i msg ->
+            let reason = reason_of_t (List.nth ts i) in
+            (reason, msg))
+          msgs
+      in
+      (* Add the error. *)
+      begin
+        match spec with
+        | UnionCases (use_op, l, _rep, us) ->
+          let reason = reason_of_t l in
+          add_output
+            cx
+            (Error_message.EUnionSpeculationFailed
+               { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
+            )
+        | SingletonCase _ -> raise SpeculationSingletonError
+        | IntersectionCases (ls, upper) ->
+          let err =
+            let reason_lower = mk_intersection_reason r ls in
+            Default_resolve.default_resolve_touts
+              ~flow:(flow_t cx)
+              ~resolve_callee:(r, ls)
               cx
-              (Error_message.EUnionSpeculationFailed
-                 { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
-              )
-          | SingletonCase _ -> raise SpeculationSingletonError
-          | IntersectionCases (ls, upper) ->
-            let err =
-              let reason_lower = mk_intersection_reason r ls in
-              Default_resolve.default_resolve_touts
-                ~flow:(flow_t cx)
-                ~resolve_callee:(r, ls)
-                cx
-                (loc_of_reason reason_lower)
-                upper;
-              match upper with
-              | UseT (use_op, t) ->
-                Error_message.EIncompatibleDefs
-                  { use_op; reason_lower; reason_upper = reason_of_t t; branches }
-              | LookupT { reason; lookup_action = MatchProp { use_op; _ }; _ } ->
-                Error_message.EUnionSpeculationFailed
-                  { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
-              | _ ->
-                Error_message.EIncompatible
-                  {
-                    use_op = use_op_of_use_t upper;
-                    lower = (reason_lower, Some Error_message.Incompatible_intersection);
-                    upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
-                    branches;
-                  }
-            in
-            add_output cx err
-        end
+              (loc_of_reason reason_lower)
+              upper;
+            match upper with
+            | UseT (use_op, t) ->
+              Error_message.EIncompatibleDefs
+                { use_op; reason_lower; reason_upper = reason_of_t t; branches }
+            | LookupT { reason; lookup_action = MatchProp { use_op; _ }; _ } ->
+              Error_message.EUnionSpeculationFailed
+                { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
+            | _ ->
+              Error_message.EIncompatible
+                {
+                  use_op = use_op_of_use_t upper;
+                  lower = (reason_lower, Some Error_message.Incompatible_intersection);
+                  upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
+                  branches;
+                }
+          in
+          add_output cx err
+      end
     in
-    loop (NoMatch []) trials
+    loop [] trials
 
   and trials_of_spec = function
     | UnionCases (use_op, l, _rep, us) ->

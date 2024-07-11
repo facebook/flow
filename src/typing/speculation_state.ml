@@ -31,9 +31,3 @@ type branch = {
 }
 
 type t = branch list ref
-
-(* The state maintained by speculative_matches when trying each case of a
-   union/intersection in turn. *)
-type match_state =
-  | NoMatch of Error_message.t list
-  | ConditionalMatch of case
