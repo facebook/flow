@@ -42,6 +42,11 @@ end
 module Make (Flow : INPUT) : OUTPUT = struct
   open Flow
 
+  type cases_spec =
+    | UnionCases of use_op * t * UnionRep.t * t list
+    | IntersectionCases of t list * use_t
+    | SingletonCase of t * use_t
+
   let mk_intersection_reason r _ls = replace_desc_reason RIntersection r
 
   let log_synthesis_result cx _trace case speculation_id =
