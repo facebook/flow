@@ -255,16 +255,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let rec loop errs = function
       | [] -> return errs
       | (case_id, _, l, u) :: trials ->
-        let case =
-          {
-            case_id;
-            errors = [];
-            implicit_instantiation_post_inference_checks = [];
-            implicit_instantiation_results = ALocFuzzyMap.empty;
-            lhs_t = l;
-            use_t = u;
-          }
-        in
+        let case = { case_id; errors = []; lhs_t = l; use_t = u } in
         (* speculatively match the pair of types in this trial *)
         let error = speculative_match cx trace { speculation_id; case } l u in
         (match error with

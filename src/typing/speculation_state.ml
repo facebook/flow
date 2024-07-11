@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
-
 (* Next, a model for "cases." A case serves as the context for a speculative
    match. In other words, while we're trying to execute a flow in speculation
    mode, we use this data structure to record stuff.
@@ -17,8 +15,6 @@ module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 type case = {
   case_id: int;
   mutable errors: Error_message.t list;
-  mutable implicit_instantiation_post_inference_checks: Implicit_instantiation_check.t list;
-  mutable implicit_instantiation_results: (Type.t * Subst_name.t) list ALocFuzzyMap.t;
   lhs_t: Type.t;
   use_t: Type.use_t;
 }
