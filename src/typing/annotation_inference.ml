@@ -1225,7 +1225,7 @@ module rec ConsGen : S = struct
       let lower = (reason_of_t t, Flow_js_utils.error_message_kind_of_lower t) in
       let upper = (reason_op, IncompatibleUnclassified (string_of_operation op)) in
       let use_op = use_op_of_operation op in
-      Flow_js_utils.add_output cx (EIncompatible { lower; upper; use_op; branches = [] });
+      Flow_js_utils.add_output cx (EIncompatible { lower; upper; use_op });
       AnyT.error reason_op
 
   and get_builtin_type cx reason ?(use_desc = false) name =

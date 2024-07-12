@@ -330,11 +330,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
             Error_message.EUnionSpeculationFailed
               { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
           | _ ->
-            Error_message.EIncompatible
+            Error_message.EIncompatibleSpeculation
               {
                 use_op = use_op_of_use_t upper;
-                lower = (reason_lower, Some Error_message.Incompatible_intersection);
-                upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
+                loc = upper |> reason_of_use_t |> loc_of_reason;
                 branches;
               }
         in

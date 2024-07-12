@@ -1221,17 +1221,19 @@ let dump_error_message =
   fun cx err ->
     match err with
     | EIncompatible
-        {
-          lower = (reason_lower, _lower_kind);
-          upper = (reason_upper, upper_kind);
-          use_op;
-          branches = _;
-        } ->
+        { lower = (reason_lower, _lower_kind); upper = (reason_upper, upper_kind); use_op } ->
       spf
         "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; branches = _ }"
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (dump_upper_kind upper_kind)
+        (match use_op with
+        | None -> "None"
+        | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))
+    | EIncompatibleSpeculation { loc; use_op; branches = _ } ->
+      spf
+        "EIncompatibleSpeculation { upper = %s; use_op = %s; branches = _ }"
+        (string_of_aloc loc)
         (match use_op with
         | None -> "None"
         | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))

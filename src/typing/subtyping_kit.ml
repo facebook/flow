@@ -2335,7 +2335,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
              lower = (lreason, None);
              upper = (ureason, Error_message.IncompatibleMixedCallT);
              use_op = Some use_op;
-             branches = [];
            }
         );
       rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) lreason, u)

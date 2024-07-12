@@ -21,6 +21,10 @@ and 'loc t' =
       lower: 'loc virtual_reason * lower_kind option;
       upper: 'loc virtual_reason * 'loc upper_kind;
       use_op: 'loc virtual_use_op option;
+    }
+  | EIncompatibleSpeculation of {
+      loc: 'loc;
+      use_op: 'loc virtual_use_op option;
       branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | EIncompatibleDefs of {
@@ -776,12 +780,18 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       u
   in
   function
-  | EIncompatible { use_op; lower = (lreason, lkind); upper = (ureason, ukind); branches } ->
+  | EIncompatible { use_op; lower = (lreason, lkind); upper = (ureason, ukind) } ->
     EIncompatible
       {
         use_op = Base.Option.map ~f:map_use_op use_op;
         lower = (map_reason lreason, lkind);
         upper = (map_reason ureason, map_upper_kind ukind);
+      }
+  | EIncompatibleSpeculation { use_op; loc; branches } ->
+    EIncompatibleSpeculation
+      {
+        use_op = Base.Option.map ~f:map_use_op use_op;
+        loc = f loc;
         branches = Base.List.map ~f:map_branch branches;
       }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
@@ -1370,9 +1380,13 @@ let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
 (* A utility function for getting and updating the use_op in error messages. *)
 let util_use_op_of_msg nope util = function
-  | EIncompatible { use_op; lower; upper; branches } ->
+  | EIncompatible { use_op; lower; upper } ->
     Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
-        util use_op (fun use_op -> EIncompatible { use_op = Some use_op; lower; upper; branches })
+        util use_op (fun use_op -> EIncompatible { use_op = Some use_op; lower; upper })
+    )
+  | EIncompatibleSpeculation { use_op; loc; branches } ->
+    Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
+        util use_op (fun use_op -> EIncompatibleSpeculation { use_op = Some use_op; loc; branches })
     )
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     util use_op (fun use_op -> EIncompatibleDefs { use_op; reason_lower; reason_upper; branches })
@@ -1889,6 +1903,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExpectedBigIntLit _
   | EIncompatibleProp _
   | EIncompatible _
+  | EIncompatibleSpeculation _
   | EMethodUnbinding _
   | EHookIncompatible _
   | EIncompatibleReactDeepReadOnly _
@@ -2093,24 +2108,17 @@ type 'loc friendly_message_recipe =
     }
 
 let friendly_message_of_msg = function
-  | EIncompatible
-      { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
-    if branches = [] then
-      IncompatibleUse
-        {
-          loc = loc_of_reason reason_upper;
-          upper_kind;
-          reason_lower;
-          reason_upper;
-          use_op = Base.Option.value ~default:unknown_use use_op;
-        }
-    else
-      Speculation
-        {
-          loc = loc_of_reason reason_upper;
-          use_op = Base.Option.value ~default:unknown_use use_op;
-          branches;
-        }
+  | EIncompatible { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op } ->
+    IncompatibleUse
+      {
+        loc = loc_of_reason reason_upper;
+        upper_kind;
+        reason_lower;
+        reason_upper;
+        use_op = Base.Option.value ~default:unknown_use use_op;
+      }
+  | EIncompatibleSpeculation { loc; use_op; branches } ->
+    Speculation { loc; use_op = Base.Option.value ~default:unknown_use use_op; branches }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     if branches = [] then
       Incompatible { reason_lower; reason_upper; use_op }
@@ -3001,11 +3009,10 @@ let error_code_of_message err : error_code option =
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
   | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
   | EImportValueAsType (_, _) -> Some ImportValueAsType
-  | EIncompatible { upper = (_, upper_kind); branches = []; _ } ->
-    error_code_of_upper_kind upper_kind
-  | EIncompatible { use_op = Some use_op; _ } ->
+  | EIncompatible { upper = (_, upper_kind); _ } -> error_code_of_upper_kind upper_kind
+  | EIncompatibleSpeculation { use_op = Some use_op; _ } ->
     error_code_of_use_op use_op ~default:Error_codes.IncompatibleUse
-  | EIncompatible _ -> Some Error_codes.IncompatibleUse
+  | EIncompatibleSpeculation _ -> Some Error_codes.IncompatibleUse
   | EIncompatibleDefs { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EIncompatibleProp { use_op = Some use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType

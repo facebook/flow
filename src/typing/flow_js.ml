@@ -6061,7 +6061,6 @@ struct
                  lower = (lreason, None);
                  upper = (ureason, Error_message.IncompatibleMixedCallT);
                  use_op = Some use_op;
-                 branches = [];
                }
             );
           rec_flow cx trace (AnyT.make (AnyError None) lreason, u)
@@ -6217,7 +6216,6 @@ struct
                  lower = (reason_of_t l, error_message_kind_of_lower l);
                  upper = (reason_of_use_t u, error_message_kind_of_upper u);
                  use_op = use_op_of_use_t u;
-                 branches = [];
                }
             );
           let resolve_callee =
