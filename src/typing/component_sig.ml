@@ -33,8 +33,9 @@ struct
       method visit statements = ignore @@ this#statement_list statements
 
       method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
-        Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
-            if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then Flow.flow_t cx (t, exhaustive_t)
+        Base.Option.iter exhaust ~f:(fun (exhaustive_ts, exhaust_locs) ->
+            if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then
+              exhaustive_ts := t :: !exhaustive_ts
         );
         super#switch switch
 
@@ -72,25 +73,20 @@ struct
     let statements_ast = Statement.statement_list cx statements in
 
     let exhaust =
-      let use_op = unknown_use in
       let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
       if undeclared then begin
         Flow_js_utils.add_output cx Error_message.(EComponentMissingReturn reason_cmp);
         None
       end else
-        Some
-          ( Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_cmp),
-            exhaustive,
-            ImplicitVoidReturnT
-              { use_op; reason = reason_of_t renders_t; action = NoImplicitReturns reason_cmp }
-          )
+        Some (ref [], exhaustive)
     in
 
     let body_ast = reconstruct_body statements_ast in
     let () = (new component_scope_visitor cx ~renders_t exhaust)#visit statements_ast in
 
-    Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked, _, implicit_return) ->
-        Flow.flow cx (maybe_exhaustively_checked, implicit_return)
+    Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked_ts, _) ->
+        if Type_operation_utils.TypeAssertions.non_exhaustive cx !maybe_exhaustively_checked_ts then
+          Flow.add_output cx Error_message.(EComponentMissingReturn reason_cmp)
     );
     (body_loc, body_ast)
 end

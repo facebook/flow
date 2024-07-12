@@ -453,4 +453,11 @@ module TypeAssertions = struct
       | AnyT _ -> ()
       | l -> add_output cx (Error_message.EInstanceofRHS (reason_of_t l))
     )
+
+  let non_exhaustive cx ts =
+    Base.List.exists ts ~f:(fun t ->
+        Flow.possible_concrete_types_for_inspection cx (reason_of_t t) t
+        |> Base.List.is_empty
+        |> not
+    )
 end

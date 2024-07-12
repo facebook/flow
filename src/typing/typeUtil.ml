@@ -70,7 +70,6 @@ and reason_of_use_t = function
   | ConditionalT { reason; _ } -> reason
   | ExportNamedT { reason; _ } -> reason
   | ExportTypeT { reason; _ } -> reason
-  | ImplicitVoidReturnT { reason; _ } -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT { reason; _ } -> reason
   | GetKeysT (reason, _) -> reason
@@ -251,8 +250,6 @@ let rec util_use_op_of_use_t :
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
   | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
   | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
-  | ImplicitVoidReturnT ({ use_op; _ } as contents) ->
-    util use_op (fun use_op -> ImplicitVoidReturnT { contents with use_op })
   | FilterOptionalT (op, t) -> util op (fun op -> FilterOptionalT (op, t))
   | FilterMaybeT (op, t) -> util op (fun op -> FilterMaybeT (op, t))
   | ConcretizeTypeAppsT (u, (ts1, b1, op, r1), x2, b2) ->

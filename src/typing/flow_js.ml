@@ -3350,10 +3350,6 @@ struct
           rec_flow_t cx ~use_op trace (call_this_t, any);
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           rec_flow_t cx ~use_op trace (AnyT.why src reason_op, OpenT call_tout)
-        | (_, ImplicitVoidReturnT { use_op; action = PropagateVoid { return; void_t }; _ }) ->
-          rec_flow cx trace (void_t, UseT (use_op, return))
-        | (_, ImplicitVoidReturnT { action = NoImplicitReturns r; _ }) ->
-          add_output cx Error_message.(EComponentMissingReturn r)
         (* Special handlers for builtin functions *)
         | ( CustomFunT
               ( _,
@@ -6788,7 +6784,6 @@ struct
     | ConditionalT _
     | ExportNamedT _
     | ExportTypeT _
-    | ImplicitVoidReturnT _
     | GetElemT _
     | GetEnumT _
     | GetKeysT _

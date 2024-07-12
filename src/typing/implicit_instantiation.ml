@@ -372,7 +372,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GuardT _
     | CondT _
     | SentinelPropTestT _
-    | ImplicitVoidReturnT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
     | CheckReactImmutableT _

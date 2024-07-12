@@ -83,4 +83,6 @@ module TypeAssertions : sig
     Context.t -> ALoc.t -> ALoc.t virtual_reason -> Type.t -> unit
 
   val assert_instanceof_rhs : Context.t -> Type.t -> unit
+
+  val non_exhaustive : Context.t -> Type.t list -> bool
 end

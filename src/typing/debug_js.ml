@@ -752,7 +752,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (tmap_to_string type_exports_tmap)
           )
     | ExportTypeT _ -> p t
-    | ImplicitVoidReturnT _ -> p t
     | GetElemT
         {
           use_op = _;

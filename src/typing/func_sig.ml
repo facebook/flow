@@ -44,8 +44,9 @@ class func_scope_visitor
       )
 
     method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
-      Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
-          if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then Flow.flow_t cx (t, exhaustive_t)
+      Base.Option.iter exhaust ~f:(fun (exhaustive_ts, exhaust_locs, _) ->
+          if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then
+            exhaustive_ts := t :: !exhaustive_ts
       );
       super#switch switch
 
@@ -487,18 +488,14 @@ struct
           | Some _ ->
             let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
             Some
-              ( Tvar.mk_where
-                  cx
-                  (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
-                  (fun t -> if undeclared then Flow.flow_t cx (VoidT.at body_loc, t)
-                ),
+              ( ref
+                  ( if undeclared then
+                    [VoidT.at body_loc]
+                  else
+                    []
+                  ),
                 exhaustive,
-                ImplicitVoidReturnT
-                  {
-                    use_op;
-                    reason = reason_of_t return_t;
-                    action = PropagateVoid { return = return_t; void_t };
-                  }
+                (void_t, UseT (use_op, return_t))
               )
         in
         (init_ast, exhaust)
@@ -522,8 +519,9 @@ struct
         statements_ast
     in
 
-    Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked, _, implicit_return) ->
-        Flow.flow cx (maybe_exhaustively_checked, implicit_return)
+    Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked_ts, _, flow_on_non_exhaustive) ->
+        if Type_operation_utils.TypeAssertions.non_exhaustive cx !maybe_exhaustively_checked_ts then
+          Flow.flow cx flow_on_non_exhaustive
     );
 
     ignore @@ Type_env.set_scope_kind cx prev_scope_kind;

@@ -875,11 +875,6 @@ module rec TypeTerm : sig
     | FilterMaybeT of use_op * t
     | DeepReadOnlyT of tvar * react_dro
     | HooklikeT of tvar
-    | ImplicitVoidReturnT of {
-        use_op: use_op;
-        reason: reason;
-        action: implicit_return_action;
-      }
     | SealGenericT of {
         reason: reason;
         id: Generic.id;
@@ -946,13 +941,6 @@ module rec TypeTerm : sig
         destructor: destructor;
         tout: tvar;
       }
-
-  and implicit_return_action =
-    | PropagateVoid of {
-        void_t: t;
-        return: t;
-      }
-    | NoImplicitReturns of reason
 
   and enum_check_t =
     | EnumCheck of {
@@ -4128,7 +4116,6 @@ let string_of_use_ctor = function
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
   | ExtendsUseT _ -> "ExtendsUseT"
-  | ImplicitVoidReturnT _ -> "ImplicitVoidReturnT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
