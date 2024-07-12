@@ -215,9 +215,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Exception.reraise exn
 
   (* Speculatively match several alternatives in turn, as presented when checking
-     a union or intersection type. This process maintains a so-called "match
-     state" that describes the best possible choice found so far, and can
-     terminate in various ways:
+     a union or intersection type. This process can terminate in various ways:
 
      (1) One of the alternatives definitely succeeds. This is straightforward: we
      can safely discard any later alternatives.
@@ -225,25 +223,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
      (2) All alternatives fail. This is also straightforward: we emit an
      appropriate error message.
 
-     (3) One of the alternatives looks promising (i.e., it doesn't immediately
-     fail, but it doesn't immediately succeed either: some potentially
-     side-effectful constraints, called actions, were emitted while trying the
-     alternative, whose execution has been deferred), and all the later
-     alternatives fail. In this scenario, we pick the promising alternative, and
-     then fire the deferred actions. This is fine, because the choice cannot cause
-     regret: the chosen alternative was the only one that had any chance of
-     succeeding.
-
-     (4) Multiple alternatives look promising, but the set of deferred actions
-     emitted while trying the first of those alternatives form a subset of those
-     emitted by later trials. Here we pick the first promising alternative (and
-     fire the deferred actions). The reason this is fine is similar to (3): once
-     again, the choice cannot cause any regret, because if it failed, then the
-     later alternatives would have failed too. So the chosen alternative had the
-     best chance of succeeding.
-
      See Speculation for more details on terminology and low-level mechanisms used
-     here, including what bits of information are carried by match_state and case.
+     here, including what bits of information are carried by case.
 
      Because this process is common to checking union and intersection types, we
      abstract the latter into a so-called "spec." The spec is used to customize
