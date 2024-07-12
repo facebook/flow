@@ -294,12 +294,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     and return msgs =
       (* everything failed; make a really detailed error message listing out the
        * error found for each alternative *)
-      let ts = choices_of_spec spec in
-      assert (List.length ts = List.length msgs);
       (* Add the error. *)
       match spec with
       | UnionCases { use_op; reason_op = r; l; union_rep = _; us } ->
         let reason = reason_of_t l in
+        assert (List.length us = List.length msgs);
         add_output
           cx
           (Error_message.EUnionSpeculationFailed
@@ -315,6 +314,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             (loc_of_reason reason_lower)
             upper;
+          assert (List.length ls = List.length msgs);
           match upper with
           | UseT (use_op, t) ->
             Error_message.EIncompatibleDefs
@@ -347,12 +347,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ls
     | SingletonCase (l, u) ->
       [(0, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u)]
-
-  and choices_of_spec = function
-    | UnionCases { us = ts; _ }
-    | IntersectionCases { ls = ts; _ } ->
-      ts
-    | SingletonCase (t, _) -> [t]
 
   (* spec optimization *)
   (* Currently, the only optimizations we do are for enums and for disjoint unions.
