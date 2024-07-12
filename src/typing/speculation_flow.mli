@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val try_custom :
+  Context.t -> ?use_op:Type.use_op -> no_match_error_loc:ALoc.t -> (unit -> unit) list -> unit
+
 val is_flow_successful : Context.t -> Type.t -> Type.use_t -> bool
 
 val get_method_type_opt : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t option

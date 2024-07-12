@@ -8,6 +8,8 @@
 open Type
 module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 
+let try_custom = SpeculationKit.try_custom
+
 let flow_t_unsafe cx (l, u) =
   SpeculationKit.try_singleton_throw_on_failure cx DepthTrace.dummy_trace l (UseT (unknown_use, u))
 

@@ -29,6 +29,9 @@ module type OUTPUT = sig
   val try_intersection :
     Context.t -> Type.DepthTrace.t -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
 
+  val try_custom :
+    Context.t -> ?use_op:use_op -> no_match_error_loc:ALoc.t -> (unit -> unit) list -> unit
+
   (**
    * [try_singleton_throw_on_failure cx trace reason t u] runs the constraint
    * between (t, u) in a speculative environment. If an error is raised then a
@@ -56,6 +59,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
         use_t: Type.use_t;
       }
     | SingletonCase of Type.t * Type.use_t
+    | CustomCases of {
+        use_op: use_op option;
+        no_match_error_loc: ALoc.t;
+        cases: (unit -> unit) list;
+      }
 
   let mk_intersection_reason r _ls = replace_desc_reason RIntersection r
 
@@ -110,7 +118,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | IntersectionCases { use_t; _ } -> log_specialized_use cx use_t case speculation_id
     | _ -> ()
 
-  type case_spec = FlowCase of Type.t * Type.use_t
+  type case_spec =
+    | CustomCase of (unit -> unit)
+    | FlowCase of Type.t * Type.use_t
 
   (** Entry points into the process of trying different branches of union and
       intersection types.
@@ -180,6 +190,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let ls = InterRep.members rep in
     speculative_matches cx trace (IntersectionCases { intersection_reason; ls; use_t })
 
+  and try_custom cx ?use_op ~no_match_error_loc cases =
+    speculative_matches cx DepthTrace.dummy_trace (CustomCases { use_op; no_match_error_loc; cases })
+
   and try_singleton_throw_on_failure cx trace t u =
     speculative_matches cx trace (SingletonCase (t, u))
 
@@ -193,7 +206,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      during the matching might be processed. See comments in Speculation for
      details on branches. See also speculative_matches, which calls this function
      iteratively and processes its results. *)
-  and speculative_match cx trace branch l u =
+  and speculative_match cx branch f =
     let typeapp_stack = TypeAppExpansion.get cx in
     let constraint_cache_ref = Context.constraint_cache cx in
     let constraint_cache = !constraint_cache_ref in
@@ -204,7 +217,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       TypeAppExpansion.set cx typeapp_stack
     in
     try
-      rec_flow cx trace (l, u);
+      f ();
       restore ();
       None
     with
@@ -261,13 +274,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   }
               ) ->
             CallInformationForSynthesisLogging { lhs_t; call_callee_hint_ref }
-          | FlowCase _ -> NoInformationForSynthesisLogging
+          | FlowCase _
+          | CustomCase _ ->
+            NoInformationForSynthesisLogging
         in
         let case = { case_id; errors = []; information_for_synthesis_logging } in
         (* speculatively match the pair of types in this trial *)
         let error =
-          let (FlowCase (l, u)) = case_spec in
-          speculative_match cx trace { speculation_id; case } l u
+          speculative_match cx { speculation_id; case } (fun () ->
+              match case_spec with
+              | FlowCase (l, u) -> rec_flow cx trace (l, u)
+              | CustomCase f -> f ()
+          )
         in
         (match error with
         | None -> begin
@@ -294,6 +312,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
              { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches = msgs }
           )
       | SingletonCase _ -> raise SpeculationSingletonError
+      | CustomCases { use_op; no_match_error_loc; cases } ->
+        assert (List.length cases = List.length msgs);
+        add_output
+          cx
+          (Error_message.EIncompatibleSpeculation
+             { use_op; loc = no_match_error_loc; branches = msgs }
+          )
       | IntersectionCases { intersection_reason = r; ls; use_t = upper } ->
         let err =
           let reason_lower = mk_intersection_reason r ls in
@@ -336,6 +361,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ls
     | SingletonCase (l, u) ->
       [(0, FlowCase (l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))]
+    | CustomCases { use_op = _; no_match_error_loc = _; cases } ->
+      Base.List.mapi cases ~f:(fun i f -> (i, CustomCase f))
 
   (* spec optimization *)
   (* Currently, the only optimizations we do are for enums and for disjoint unions.
@@ -433,6 +460,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> false
       end
     | IntersectionCases _ -> false
+    | CustomCases _ -> false
     | SingletonCase _ -> false
 
   and shortcut_enum cx trace reason_op use_op l rep =
