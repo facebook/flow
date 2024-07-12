@@ -98,4 +98,7 @@ val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.
 
 val possible_concrete_types_for_computed_props : Context.t -> Reason.reason -> Type.t -> Type.t list
 
+val possible_concrete_types_for_operators_checking :
+  Context.t -> Reason.reason -> Type.t -> Type.t list
+
 module FlowJs : Flow_common.S

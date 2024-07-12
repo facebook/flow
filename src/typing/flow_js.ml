@@ -2146,6 +2146,10 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
+        | ( IntersectionT _,
+            PreprocessKitT (reason, ConcretizeTypes (ConcretizeForOperatorsChecking tvar))
+          ) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         | (IntersectionT (r, rep), u) ->
           let u' =
             match u with
@@ -5070,6 +5074,10 @@ struct
                 (fun use_op -> Frame (OpaqueTypeBound { opaque_t_reason }, use_op))
                 u
             )
+        (* Concretize types for type operation purpose up to this point. The rest are
+           recorded as lower bound to the target tvar. *)
+        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForOperatorsChecking tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (***********************************************************)
         (* Run type assertions                                     *)
         (***********************************************************)
@@ -6460,6 +6468,7 @@ struct
       match u with
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
+      | PreprocessKitT (_, ConcretizeTypes (ConcretizeForOperatorsChecking _))
       | ArithT _
       | EqT _
       | StrictEqT _
@@ -11071,6 +11080,9 @@ module rec FlowJs : Flow_common.S = struct
 
   let possible_concrete_types_for_computed_props =
     possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)
+
+  let possible_concrete_types_for_operators_checking cx t =
+    possible_concrete_types (fun ident -> ConcretizeForOperatorsChecking ident) cx t
 end
 
 include FlowJs

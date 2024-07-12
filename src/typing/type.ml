@@ -1795,6 +1795,7 @@ module rec TypeTerm : sig
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
     | ConcretizeForInspection of ident
     | ConcretizeComputedPropsT of ident
+    | ConcretizeForOperatorsChecking of ident
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of concretization_target
@@ -4194,6 +4195,7 @@ let string_of_use_ctor = function
             | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
             | ConcretizeForInspection _ -> "ConcretizeForInspection"
             | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
+            | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking"
           in
           "ConcretizeTypes(" ^ s ^ ")"
         | SentinelPropTest _ -> "SentinelPropTest"
