@@ -354,6 +354,60 @@ let equatable = function
     false
   | _ -> true
 
+let strict_equatable_error cond_context (l, r) =
+  let comparison_error =
+    lazy
+      (match cond_context with
+      | Some (SwitchTest { case_test_loc; switch_discriminant_loc }) ->
+        let use_op =
+          Op (SwitchRefinementCheck { test = case_test_loc; discriminant = switch_discriminant_loc })
+        in
+        Error_message.EIncompatibleWithUseOp
+          { reason_lower = reason_of_t l; reason_upper = reason_of_t r; use_op }
+      | _ ->
+        let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
+        Error_message.EComparison reasons)
+  in
+  match (l, r) with
+  | (AnyT _, _)
+  | (_, AnyT _) ->
+    None
+  (* We allow comparison between enums and enum values with the same id. *)
+  | ( DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id1; _ }; _ }),
+      DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id2; _ }; _ })
+    )
+  | ( DefT (_, EnumValueT (ConcreteEnum { enum_id = id1; _ })),
+      DefT (_, EnumValueT (ConcreteEnum { enum_id = id2; _ }))
+    )
+    when ALoc.equal_id id1 id2 ->
+    None
+  (* We allow comparison between abstract and concrete enums and enum values. *)
+  | (DefT (_, EnumObjectT _), DefT (_, EnumObjectT { enum_info = AbstractEnum _; _ }))
+  | (DefT (_, EnumObjectT { enum_info = AbstractEnum _; _ }), DefT (_, EnumObjectT _))
+  | (DefT (_, EnumValueT _), DefT (_, EnumValueT (AbstractEnum _)))
+  | (DefT (_, EnumValueT (AbstractEnum _)), DefT (_, EnumValueT _)) ->
+    None
+  (* We allow the comparison of enums to null and void outside of switches. *)
+  | (DefT (_, EnumValueT _), DefT (_, (NullT | VoidT)))
+  | (DefT (_, (NullT | VoidT)), DefT (_, EnumValueT _)) -> begin
+    match cond_context with
+    | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
+    | None
+    | Some _ ->
+      None
+  end
+  (* We don't allow the comparison of enums and other types in general. *)
+  | (DefT (_, EnumValueT _), _)
+  | (_, DefT (_, EnumValueT _))
+  | (DefT (_, EnumObjectT _), _)
+  | (_, DefT (_, EnumObjectT _)) ->
+    Some (Lazy.force comparison_error)
+  (* We don't check other strict equality comparisons. *)
+  | _ -> None
+
+let strict_equatable cond_context args =
+  strict_equatable_error cond_context args |> Base.Option.is_none
+
 let is_union_resolvable = function
   | EvalT _
   | KeysT _ ->
