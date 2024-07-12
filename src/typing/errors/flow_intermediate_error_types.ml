@@ -220,10 +220,6 @@ type 'loc root_message =
       index: 'loc virtual_reason_desc;
       object_: 'loc virtual_reason_desc;
     }
-  | RootCannotAdd of {
-      left: 'loc virtual_reason_desc;
-      right: 'loc virtual_reason_desc;
-    }
   | RootCannotAssign of {
       init: 'loc virtual_reason_desc;
       target: 'loc virtual_reason_desc option;
@@ -735,7 +731,6 @@ type 'loc message =
   | MessageLowerIsNotFunctionType of 'loc virtual_reason
   | MessageLowerIsNotInheritable of 'loc virtual_reason
   | MessageLowerIsNotInstanceType of 'loc virtual_reason
-  | MessageLowerIsNotNumber of 'loc virtual_reason
   | MessageLowerIsNotObject of 'loc virtual_reason
   | MessageLowerIsNotPolymorphicType of 'loc virtual_reason
   | MessageLowerIsNotReactComponent of 'loc virtual_reason

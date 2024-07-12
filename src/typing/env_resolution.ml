@@ -843,7 +843,7 @@ let resolve_class cx id_loc reason class_loc class_ =
   Type_env.bind_class_self_type cx class_t_internal class_loc;
   class_t
 
-let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
+let resolve_op_assign cx ~exp_loc lhs op rhs =
   let open Ast.Expression in
   let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
   match op with
@@ -862,14 +862,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     (* lhs (op)= rhs *)
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
     let rhs_t = expression cx rhs in
-    Statement.arith_assign
-      cx
-      ~reason
-      ~lhs_reason:id_reason
-      ~rhs_reason:(mk_expression_reason rhs)
-      lhs_t
-      rhs_t
-      (ArithKind.arith_kind_of_assignment_operator op)
+    Operators.arith cx reason (ArithKind.arith_kind_of_assignment_operator op) lhs_t rhs_t
   | Assignment.AndAssign
   | Assignment.OrAssign
   | Assignment.NullishAssign ->
@@ -894,9 +887,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
 let resolve_update cx ~id_loc ~exp_loc id_reason =
   let reason = mk_reason (RCustom "update") exp_loc in
   let id_t = Type_env.ref_entry_exn ~lookup_mode:Type_env.LookupMode.ForValue cx id_loc id_reason in
-  Tvar.mk_where cx reason (fun result_t ->
-      Flow_js.flow cx (id_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
-  )
+  Operators.unary_arith cx reason UnaryArithKind.Update id_t
 
 let resolve_type_alias cx loc alias =
   let cache = Context.node_cache cx in
@@ -1116,7 +1107,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Class { class_; class_loc; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } -> expression cx rhs
-    | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc def_reason lhs op rhs
+    | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc lhs op rhs
     | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
     | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
     | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque

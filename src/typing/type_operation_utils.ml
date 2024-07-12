@@ -11,6 +11,85 @@ open Reason
 open Type
 open Utils_js
 
+module DistributeUnionIntersection = struct
+  (* For a type t, run the check defined by check_base.
+   * This function will break down the unions in t. When it encounters an intersection,
+   * the check can pass as long as the check can pass on one member of intersection *)
+  let rec distribute cx ?use_op ~break_up_union ~get_no_match_error_loc ~check_base t =
+    let ts = break_up_union cx (TypeUtil.reason_of_t t) t in
+    Base.List.iter ts ~f:(function
+        | IntersectionT (r, rep) ->
+          Base.List.map (InterRep.members rep) ~f:(fun t () ->
+              distribute cx ?use_op ~break_up_union ~get_no_match_error_loc ~check_base t
+          )
+          |> Speculation_flow.try_custom cx ?use_op ~no_match_error_loc:(get_no_match_error_loc r)
+        | t -> check_base cx t
+        )
+
+  (* For a pair of type (t1, t2), run the check defined by check_base.
+   * This function will break down the unions in t1 and t2. When it encounters an intersection,
+   * the check can pass as long as the check can pass on one member of intersection *)
+  let rec distribute_2 cx ?use_op ~break_up_union ~get_no_match_error_loc ~check_base (t1, t2) =
+    let t1s = break_up_union cx (TypeUtil.reason_of_t t1) t1 in
+    let t2s = break_up_union cx (TypeUtil.reason_of_t t2) t2 in
+    Base.List.cartesian_product t1s t2s
+    |> Base.List.iter ~f:(function
+           | (IntersectionT (r1, rep1), IntersectionT (r2, rep2)) ->
+             let cases =
+               Base.List.cartesian_product (InterRep.members rep1) (InterRep.members rep2)
+               |> Base.List.map ~f:(fun pair () ->
+                      distribute_2
+                        cx
+                        ?use_op
+                        ~break_up_union
+                        ~get_no_match_error_loc
+                        ~check_base
+                        pair
+                  )
+             in
+             Speculation_flow.try_custom
+               cx
+               ?use_op
+               ~no_match_error_loc:(get_no_match_error_loc r1 r2)
+               cases
+           | (IntersectionT (r1, rep1), t2) ->
+             let cases =
+               Base.List.map (InterRep.members rep1) ~f:(fun t1 () ->
+                   distribute_2
+                     cx
+                     ?use_op
+                     ~break_up_union
+                     ~get_no_match_error_loc
+                     ~check_base
+                     (t1, t2)
+               )
+             in
+             Speculation_flow.try_custom
+               cx
+               ?use_op
+               ~no_match_error_loc:(get_no_match_error_loc r1 (TypeUtil.reason_of_t t2))
+               cases
+           | (t1, IntersectionT (r2, rep2)) ->
+             let cases =
+               Base.List.map (InterRep.members rep2) ~f:(fun t2 () ->
+                   distribute_2
+                     cx
+                     ?use_op
+                     ~break_up_union
+                     ~get_no_match_error_loc
+                     ~check_base
+                     (t1, t2)
+               )
+             in
+             Speculation_flow.try_custom
+               cx
+               ?use_op
+               ~no_match_error_loc:(get_no_match_error_loc (TypeUtil.reason_of_t t1) r2)
+               cases
+           | (t1, t2) -> check_base cx (t1, t2)
+           )
+end
+
 module Import_export = struct
   let concretize_module_type cx get_reason module_t =
     match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
@@ -203,6 +282,54 @@ module ImplicitInstantiation =
 
       let reposition = Flow.FlowJs.reposition ?desc:None ?annot_loc:None
     end)
+
+module Operators = struct
+  let arith cx reason kind t1 t2 =
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+        DistributeUnionIntersection.distribute_2
+          cx
+          ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+          ~get_no_match_error_loc:(fun _ _ -> loc_of_reason reason)
+          ~check_base:(fun cx (t1, t2) ->
+            Flow.flow_t cx (Flow_js_utils.flow_arith cx reason t1 t2 kind, tout))
+          (t1, t2)
+    )
+
+  let check_comparator =
+    let check_base cx = function
+      | (DefT (_, StrT _), DefT (_, StrT _))
+      | (DefT (_, NumT _), DefT (_, NumT _))
+      | (DefT (_, BigIntT _), DefT (_, BigIntT _))
+      | (DefT (_, EmptyT), _)
+      | (_, DefT (_, EmptyT))
+      | (AnyT _, _)
+      | (_, AnyT _) ->
+        ()
+      | (l, r) when Flow_js_utils.is_date l && Flow_js_utils.is_date r -> ()
+      | (l, r) ->
+        let reasons = Flow_error.ordered_reasons (TypeUtil.reason_of_t l, TypeUtil.reason_of_t r) in
+        Flow_js_utils.add_output cx (Error_message.EComparison reasons)
+    in
+    fun cx t1 t2 ->
+      DistributeUnionIntersection.distribute_2
+        cx
+        ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+        ~get_no_match_error_loc:(fun r1 r2 ->
+          Flow_error.ordered_reasons (r1, r2) |> fst |> loc_of_reason)
+        ~check_base
+        (t1, t2)
+
+  let unary_arith cx reason kind t =
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+        DistributeUnionIntersection.distribute
+          cx
+          ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+          ~get_no_match_error_loc:loc_of_reason
+          ~check_base:(fun cx t ->
+            Flow.flow_t cx (Flow_js_utils.flow_unary_arith cx t reason kind, tout))
+          t
+    )
+end
 
 module Promise = struct
   let await cx reason t =

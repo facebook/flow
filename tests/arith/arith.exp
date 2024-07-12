@@ -669,17 +669,17 @@ References:
 Error ---------------------------------------------------------------------------------------------------- Arith.js:94:1
 
 All branches are incompatible: [incompatible-use]
- - Either cannot compare null or undefined [1] to number [2].
+ - Either cannot compare boolean [1] to number [2].
  - Or cannot compare string [3] to number [2].
 
    Arith.js:94:1
    94| aWeirdStringWithIntersection < 1; // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   Arith.js:92:46
+   Arith.js:92:47
    92| declare const aWeirdStringWithIntersection: (?boolean) & string;
-                                                    ^^^^^^^^ [1]
+                                                     ^^^^^^^ [1]
    Arith.js:94:32
    94| aWeirdStringWithIntersection < 1; // error
                                       ^ [2]
@@ -691,17 +691,17 @@ References:
 Error ---------------------------------------------------------------------------------------------------- Arith.js:97:1
 
 All branches are incompatible: [incompatible-use]
- - Either cannot compare null or undefined [1] to string [2].
+ - Either cannot compare boolean [1] to string [2].
  - Or cannot compare number [3] to string [2].
 
    Arith.js:97:1
    97| aWeirdNumberWithIntersection < '1'; // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   Arith.js:93:46
+   Arith.js:93:47
    93| declare const aWeirdNumberWithIntersection: (?boolean) & number;
-                                                    ^^^^^^^^ [1]
+                                                     ^^^^^^^ [1]
    Arith.js:97:32
    97| aWeirdNumberWithIntersection < '1'; // error
                                       ^^^ [2]

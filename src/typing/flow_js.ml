@@ -5083,24 +5083,12 @@ struct
         (***********************************************************)
         | (t, RunTypeAssertion { reason; type_assertion_kind }) ->
           TypeAssertions.run cx reason type_assertion_kind t
-        (***********************************************************)
-        (* binary arithmetic operators                             *)
-        (***********************************************************)
-        | (l, ArithT { use_op; reason; flip; rhs_t; result_t; kind }) ->
-          flow_arith cx trace use_op reason flip l rhs_t result_t kind
         (**************************)
         (* relational comparisons *)
         (**************************)
-        | (l, ComparatorT { reason; flip; arg = r }) -> flow_comparator cx trace reason flip l r
         | (l, EqT { reason; flip; arg = r }) -> flow_eq cx trace reason flip l r
         | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
           flow_strict_eq cx trace reason cond_context flip l r
-        (******************************)
-        (* unary arithmetic operators *)
-        (******************************)
-        | (l, UnaryArithT { reason; result_t; kind }) ->
-          let t = flow_unary_arith cx l reason kind in
-          rec_flow_t cx trace ~use_op:unknown_use (t, result_t)
         (***********************************)
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
@@ -6241,66 +6229,6 @@ struct
     )
 
   (**
-   * Binary arithmetic operations
-   *
-   * - number <> number = number
-   * - bigint <> bigint = bigint
-   * - string + string = string
-   * - If one of the operands is any/empty, then the result is any/empty.
-   *
-   * We are _much_ less permissive than the spec with regard to coercion:
-   * Numbers are allowed to coerce to strings for string concat (e.g., `num + '%'`)
-   **)
-  and flow_arith cx trace use_op reason flip l r u kind =
-    if needs_resolution r || is_generic r then
-      rec_flow
-        cx
-        trace
-        (r, ArithT { use_op; reason; flip = not flip; rhs_t = l; result_t = u; kind })
-    else
-      let (l, r) =
-        if flip then
-          (r, l)
-        else
-          (l, r)
-      in
-      let t = Flow_js_utils.flow_arith cx reason l r kind in
-      rec_flow_t cx trace ~use_op:unknown_use (t, u)
-
-  (**
-   * relational comparisons like <, >, <=, >=
-   *
-   * The following comparisons are allowed:
-   * - str <> str
-   * - num <> num
-   * - bigint <> bigint
-   * - date <> date
-   * - _ <> empty
-   * - empty <> _
-   **)
-  and flow_comparator cx trace reason flip l r =
-    if needs_resolution r || is_generic r then
-      rec_flow cx trace (r, ComparatorT { reason; flip = not flip; arg = l })
-    else
-      let (l, r) =
-        if flip then
-          (r, l)
-        else
-          (l, r)
-      in
-      match (l, r) with
-      | (DefT (_, StrT _), DefT (_, StrT _))
-      | (DefT (_, NumT _), DefT (_, NumT _))
-      | (DefT (_, BigIntT _), DefT (_, BigIntT _))
-      | (DefT (_, EmptyT), _)
-      | (_, DefT (_, EmptyT)) ->
-        ()
-      | (l, r) when is_date l && is_date r -> ()
-      | _ ->
-        let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx (Error_message.EComparison reasons)
-
-  (**
    * == equality
    *
    * typecheck iff they intersect (otherwise, unsafe coercions may happen).
@@ -6358,7 +6286,6 @@ struct
     | ResolveUnionT _
     | EnumCastT _
     | ConvertEmptyPropsToMixedT _
-    | ArithT _
     | HooklikeT _
     | SpecializeT _
     | ValueToTypeReferenceT _ ->
@@ -6469,11 +6396,8 @@ struct
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
       | PreprocessKitT (_, ConcretizeTypes (ConcretizeForOperatorsChecking _))
-      | ArithT _
       | EqT _
       | StrictEqT _
-      | ComparatorT _
-      | UnaryArithT _
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
@@ -6854,7 +6778,6 @@ struct
     | UseT (_, OpenT (_, id)) -> any_prop_tvar cx id
     (* AnnotTs are 0->1, so there's no need to propagate any inside them *)
     | UseT (_, AnnotT _) -> true
-    | ArithT _
     | AndT _
     | ArrRestT _
     | AssertIterableT _
@@ -6922,7 +6845,6 @@ struct
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
-    | UnaryArithT _
     | UseT (_, MaybeT _) (* used to filter maybe *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
@@ -6964,7 +6886,6 @@ struct
       true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
-    | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _
     | StrictEqT _
@@ -9023,7 +8944,6 @@ struct
               | FunCall { local; _ }
               | FunCallMethod { local; _ } ->
                 local
-              | Arith _
               | AssignVar _
               | Coercion _
               | DeleteVar _

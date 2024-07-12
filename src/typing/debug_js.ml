@@ -673,8 +673,6 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "UseT (%s, OpenT (%S, %d))" (string_of_use_op use_op) (dump_reason cx r) id
     | UseT (use_op, (DefT (_, _) as t)) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
-    | ArithT { use_op; rhs_t; result_t; _ } ->
-      p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid rhs_t) (kid result_t)) t
     | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
     | AssertIterableT _ -> p t
@@ -703,7 +701,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
     | CallLatentPredT { sense; _ } -> p t ~extra:(spf "sense=%b" sense)
     | CJSExtractNamedExportsT _ -> p t
-    | ComparatorT { arg; _ } -> p ~extra:(kid arg) t
     | ConstructorT _ -> p t
     | CopyNamedExportsT _ -> p t
     | CopyTypeExportsT _ -> p t
@@ -934,7 +931,6 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT { t_out; _ } -> p ~extra:(use_kid t_out) t
-    | UnaryArithT _ -> p t
     | ValueToTypeReferenceT (use_op, reason, kind, tout) ->
       p
         ~extra:
@@ -1212,7 +1208,6 @@ let dump_error_message =
     | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
     | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
     | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
-    | IncompatibleUnaryArithT -> "IncompatibleUnaryArithT"
     | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
     | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
     | IncompatibleBindT -> "IncompatibleBindT"

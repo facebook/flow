@@ -705,7 +705,6 @@ and 'loc upper_kind =
   | IncompatibleGetKeysT
   | IncompatibleHasOwnPropT of 'loc * name option
   | IncompatibleGetValuesT
-  | IncompatibleUnaryArithT
   | IncompatibleMapTypeTObject
   | IncompatibleGetStaticsT
   | IncompatibleBindT
@@ -775,8 +774,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | IncompatibleObjAssignFromT | IncompatibleObjRestT | IncompatibleArrRestT
       | IncompatibleSuperT | IncompatibleMixinT | IncompatibleSpecializeT
       | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT | IncompatibleGetKeysT
-      | IncompatibleGetValuesT | IncompatibleUnaryArithT | IncompatibleMapTypeTObject
-      | IncompatibleGetStaticsT | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
+      | IncompatibleGetValuesT | IncompatibleMapTypeTObject | IncompatibleGetStaticsT
+      | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
       u
   in
   function

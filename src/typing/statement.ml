@@ -4645,9 +4645,7 @@ module Make
     | { operator = Plus; argument; comments } ->
       let (((_, argt), _) as argument) = expression cx argument in
       let reason = mk_reason (desc_of_t argt) loc in
-      ( Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
-            Flow.flow cx (argt, UnaryArithT { reason; result_t; kind = UnaryArithKind.Plus })
-        ),
+      ( Operators.unary_arith cx reason UnaryArithKind.Plus argt,
         { operator = Plus; argument; comments }
       )
     | { operator = Minus; argument; comments } ->
@@ -4665,18 +4663,14 @@ module Make
             DefT (reason, NumT (Literal (sense, (value, raw))))
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
-            Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
-                Flow.flow cx (arg, UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus })
-            )
+            Operators.unary_arith cx reason UnaryArithKind.Minus arg
         end,
         { operator = Minus; argument; comments }
       )
     | { operator = BitNot; argument; comments } ->
       let (((_, argt), _) as argument) = expression cx argument in
       let reason = mk_reason (desc_of_t argt) loc in
-      ( Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
-            Flow.flow cx (argt, UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot })
-        ),
+      ( Operators.unary_arith cx reason UnaryArithKind.BitNot argt,
         { operator = BitNot; argument; comments }
       )
     | { operator = Typeof; argument; comments } ->
@@ -4701,11 +4695,7 @@ module Make
     let reason = mk_reason (RCustom "update") loc in
     let { argument; _ } = expr in
     let (((_, arg_t), _) as arg_ast) = expression cx argument in
-    let result_t =
-      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
-          Flow.flow cx (arg_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
-      )
-    in
+    let result_t = Operators.unary_arith cx reason UnaryArithKind.Update arg_t in
     let arg_ast =
       match argument with
       | (_, Ast.Expression.Identifier (id_loc, { Ast.Identifier.name; _ })) ->
@@ -4873,15 +4863,7 @@ module Make
     | GreaterThanEqual ->
       let (((_, t1), _) as left) = expression cx left in
       let (((_, t2), _) as right) = expression cx right in
-      let desc =
-        RBinaryOperator
-          ( Flow_ast_utils.string_of_binary_operator operator,
-            desc_of_reason (reason_of_t t1),
-            desc_of_reason (reason_of_t t2)
-          )
-      in
-      let reason = mk_reason desc loc in
-      Flow.flow cx (t1, ComparatorT { reason; flip = false; arg = t2 });
+      Operators.check_comparator cx t1 t2;
       (BoolT.at loc, { operator; left; right; comments })
     | Plus
     | LShift
@@ -4902,31 +4884,7 @@ module Make
           ("arithmetic operation", desc_of_reason (reason_of_t t1), desc_of_reason (reason_of_t t2))
       in
       let reason = mk_reason desc loc in
-      ( Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
-            let use_op =
-              Op
-                (Arith
-                   {
-                     op = reason;
-                     left = mk_expression_reason left;
-                     right = mk_expression_reason right;
-                   }
-                )
-            in
-            Flow.flow
-              cx
-              ( t1,
-                ArithT
-                  {
-                    use_op;
-                    reason;
-                    flip = false;
-                    rhs_t = t2;
-                    result_t = t;
-                    kind = ArithKind.arith_kind_of_binary_operator operator;
-                  }
-              )
-        ),
+      ( Operators.arith cx reason (ArithKind.arith_kind_of_binary_operator operator) t1 t2,
         { operator; left = left_ast; right = right_ast; comments }
       )
 
@@ -5223,12 +5181,6 @@ module Make
     in
     (t, lhs, typed_rhs)
 
-  and arith_assign cx ~reason ~lhs_reason ~rhs_reason lhs_t rhs_t kind =
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
-        let use_op = Op (Arith { op = reason; left = lhs_reason; right = rhs_reason }) in
-        Flow.flow cx (lhs_t, ArithT { use_op; reason; flip = false; rhs_t; result_t; kind })
-    )
-
   (* traverse assignment expressions with operators (`lhs += rhs`, `lhs *= rhs`, etc) *)
   and op_assignment cx loc lhs op rhs =
     let open Ast.Expression in
@@ -5283,14 +5235,7 @@ module Make
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
       let (((_, rhs_t), _) as rhs_ast) = expression cx rhs in
       let result_t =
-        arith_assign
-          cx
-          ~reason
-          ~lhs_reason:(mk_pattern_reason lhs)
-          ~rhs_reason
-          lhs_t
-          rhs_t
-          (ArithKind.arith_kind_of_assignment_operator op)
+        Operators.arith cx reason (ArithKind.arith_kind_of_assignment_operator op) lhs_t rhs_t
       in
       (* enforce state-based guards for binding update, e.g., const *)
       let () = update_env result_t in

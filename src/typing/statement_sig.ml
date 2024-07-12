@@ -168,16 +168,6 @@ module type S = sig
   val assignment_lhs :
     Context.t -> (ALoc.t, ALoc.t) Ast.Pattern.t -> (ALoc.t, ALoc.t * Type.t) Ast.Pattern.t
 
-  val arith_assign :
-    Context.t ->
-    reason:Reason.reason ->
-    lhs_reason:Reason.reason ->
-    rhs_reason:Reason.reason ->
-    Type.t ->
-    Type.t ->
-    Type.ArithKind.t ->
-    Type.t
-
   val mk_class :
     Context.t ->
     ALoc.t ->

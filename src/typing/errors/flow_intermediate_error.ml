@@ -443,8 +443,6 @@ let rec make_intermediate_error :
       | Op (ObjectSpread { op }) -> root loc frames op (RootCannotSpread (desc op))
       | Op (ObjectRest { op }) -> root loc frames op (RootCannotGetRest (desc op))
       | Op (ObjectChain { op }) -> root loc frames op (RootCannotCallObjectAssign (desc op))
-      | Op (Arith { op; left; right }) ->
-        root loc frames op (RootCannotAdd { left = desc left; right = desc right })
       | Op (AssignVar { var; init }) ->
         root loc frames init (RootCannotAssign { init = desc init; target = Option.map desc var })
       | Op (DeleteVar { var }) -> root loc frames var (RootCannotDelete (desc var))
@@ -946,7 +944,6 @@ let rec make_intermediate_error :
     | IncompatibleVarianceCheckT ->
       mk_use_op_error use_loc use_op (MessageLowerIsNotPolymorphicType lower)
     | IncompatibleSuperT -> mk_use_op_error use_loc use_op (MessageLowerIsNotInheritable lower)
-    | IncompatibleUnaryArithT -> mk_use_op_error use_loc use_op (MessageLowerIsNotNumber lower)
     | IncompatibleGetPropT (prop_loc, prop)
     | IncompatibleSetPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
@@ -1244,7 +1241,6 @@ let to_printable_error :
   let root_msg_to_friendly_msgs = function
     | RootCannotAccessIndex { index; object_ } ->
       [text "Cannot access "; desc index; text " on "; desc object_]
-    | RootCannotAdd { left; right } -> [text "Cannot add "; desc left; text " and "; desc right]
     | RootCannotAssign { init; target = None } ->
       [text "Cannot assign "; desc init; text " to variable"]
     | RootCannotAssign { init; target = Some target } ->
@@ -3186,7 +3182,6 @@ let to_printable_error :
     | MessageLowerIsNotFunctionType lower -> [ref lower; text " is not a function type"]
     | MessageLowerIsNotInheritable lower -> [ref lower; text " is not inheritable"]
     | MessageLowerIsNotInstanceType lower -> [ref lower; text " is not an instance type"]
-    | MessageLowerIsNotNumber lower -> [ref lower; text " is not a number"]
     | MessageLowerIsNotObject lower -> [ref lower; text " is not an object"]
     | MessageLowerIsNotPolymorphicType lower -> [ref lower; text " is not a polymorphic type"]
     | MessageLowerIsNotReactComponent lower -> [ref lower; text " is not a React component"]

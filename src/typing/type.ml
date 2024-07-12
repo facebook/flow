@@ -329,11 +329,6 @@ module rec TypeTerm : sig
     | ObjectSpread of { op: 'loc virtual_reason }
     | ObjectRest of { op: 'loc virtual_reason }
     | ObjectChain of { op: 'loc virtual_reason }
-    | Arith of {
-        op: 'loc virtual_reason;
-        left: 'loc virtual_reason;
-        right: 'loc virtual_reason;
-      }
     | AssignVar of {
         var: 'loc virtual_reason option;
         init: 'loc virtual_reason;
@@ -663,28 +658,6 @@ module rec TypeTerm : sig
         orig_t: t option;
         reason: reason;
         t_out: use_t;
-      }
-    (* overloaded arithmetic operators *)
-    | ArithT of {
-        use_op: use_op;
-        reason: reason;
-        flip: bool;
-        rhs_t: t;
-        result_t: t;
-        kind: ArithKind.t;
-      }
-    (* overloaded relational operator, could be subsumed by general
-       overloading *)
-    | ComparatorT of {
-        reason: reason;
-        flip: bool;
-        arg: t;
-      }
-    (* unary arithmetic operators on numbers *)
-    | UnaryArithT of {
-        reason: reason;
-        result_t: t;
-        kind: UnaryArithKind.t;
       }
     | AssertIterableT of {
         use_op: use_op;
@@ -4068,7 +4041,6 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ObjectSpread _ -> "ObjectSpread"
   | ObjectRest _ -> "ObjectRest"
   | ObjectChain _ -> "ObjectChain"
-  | Arith _ -> "Arith"
   | AssignVar _ -> "AssignVar"
   | Cast _ -> "Cast"
   | ClassExtendsCheck _ -> "ClassExtendsCheck"
@@ -4146,7 +4118,6 @@ let string_of_use_op_rec : use_op -> string =
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
-  | ArithT _ -> "ArithT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
   | AssertIterableT _ -> "AssertIterableT"
@@ -4155,7 +4126,6 @@ let string_of_use_ctor = function
   | CallLatentPredT _ -> "CallLatentPredT"
   | CallT _ -> "CallT"
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
-  | ComparatorT _ -> "ComparatorT"
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | CopyTypeExportsT _ -> "CopyTypeExportsT"
@@ -4255,7 +4225,6 @@ let string_of_use_ctor = function
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
-  | UnaryArithT _ -> "UnaryArithT"
   | ValueToTypeReferenceT _ -> "ValueToTypeReferenceT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeCastT _ -> "TypeCastT"

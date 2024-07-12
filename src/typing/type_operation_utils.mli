@@ -58,6 +58,14 @@ module Import_export : sig
     Context.t -> reason -> namespace_symbol:symbol -> legacy_interop:bool -> Type.t -> Type.t
 end
 
+module Operators : sig
+  val arith : Context.t -> reason -> Type.ArithKind.t -> Type.t -> Type.t -> Type.t
+
+  val check_comparator : Context.t -> Type.t -> Type.t -> unit
+
+  val unary_arith : Context.t -> reason -> Type.UnaryArithKind.t -> Type.t -> Type.t
+end
+
 module Promise : sig
   val await : Context.t -> reason -> Type.t -> Type.t
 end

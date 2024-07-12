@@ -49,7 +49,6 @@ and reason_of_defer_use_t = function
 
 and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
-  | ArithT { reason; _ } -> reason
   | AndT (reason, _, _) -> reason
   | ArrRestT (_, reason, _, _) -> reason
   | AssertIterableT { reason; _ } -> reason
@@ -58,7 +57,6 @@ and reason_of_use_t = function
   | CallLatentPredT { reason; _ } -> reason
   | CallT { reason; _ } -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
-  | ComparatorT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
@@ -122,7 +120,6 @@ and reason_of_use_t = function
   | TestPropT { reason; _ } -> reason
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT { reason; _ } -> reason
-  | UnaryArithT { reason; _ } -> reason
   | ValueToTypeReferenceT (_, reason, _, _) -> reason
   | VarianceCheckT (reason, _, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
@@ -250,8 +247,6 @@ let rec util_use_op_of_use_t :
         ConstructorT { use_op; reason; targs; args; tout; return_hint; specialized_ctor }
     )
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
-  | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
-    util use_op (fun use_op -> ArithT { use_op; reason; flip; rhs_t; result_t; kind })
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
   | ToStringT { orig_t; reason; t_out } ->
     nested_util t_out (fun t_out -> ToStringT { orig_t; reason; t_out })
@@ -294,8 +289,6 @@ let rec util_use_op_of_use_t :
   | GetProtoT (_, _)
   | SetProtoT (_, _)
   | MixinT (_, _)
-  | ComparatorT _
-  | UnaryArithT _
   | ConvertEmptyPropsToMixedT _
   | DeepReadOnlyT _
   | HooklikeT _
@@ -373,8 +366,6 @@ let rec mod_loc_of_virtual_use_op f =
     | ObjectSpread { op } -> ObjectSpread { op = mod_reason op }
     | ObjectRest { op } -> ObjectRest { op = mod_reason op }
     | ObjectChain { op } -> ObjectChain { op = mod_reason op }
-    | Arith { op; left; right } ->
-      Arith { op = mod_reason op; left = mod_reason left; right = mod_reason right }
     | AssignVar { var; init } ->
       AssignVar { var = Base.Option.map ~f:mod_reason var; init = mod_reason init }
     | Cast { lower; upper } -> Cast { lower = mod_reason lower; upper = mod_reason upper }
