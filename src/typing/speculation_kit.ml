@@ -51,13 +51,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let log_synthesis_result cx _trace case speculation_id =
     let open Speculation_state in
-    let { lhs_t; use_t; _ } = case in
-    match use_t with
-    | CallT
-        {
-          call_action = Funcalltype { call_speculation_hint_state = Some call_callee_hint_ref; _ };
-          _;
-        } ->
+    let { information_for_synthesis_logging; _ } = case in
+    match information_for_synthesis_logging with
+    | CallInformationForSynthesisLogging { lhs_t; call_callee_hint_ref; _ } ->
       let old_callee_hint = !call_callee_hint_ref in
       let new_callee_hint =
         match old_callee_hint with
@@ -79,7 +75,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             Speculation_hint_invalid
       in
       call_callee_hint_ref := new_callee_hint
-    | _ -> ()
+    | NoInformationForSynthesisLogging -> ()
 
   let rec log_specialized_use cx use case speculation_id =
     match use with
@@ -260,7 +256,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let rec loop errs = function
       | [] -> return errs
       | (case_id, _, l, u) :: trials ->
-        let case = { case_id; errors = []; lhs_t = l; use_t = u } in
+        let information_for_synthesis_logging =
+          match u with
+          | CallT
+              {
+                call_action =
+                  Funcalltype { call_speculation_hint_state = Some call_callee_hint_ref; _ };
+                _;
+              } ->
+            CallInformationForSynthesisLogging { lhs_t = l; call_callee_hint_ref }
+          | _ -> NoInformationForSynthesisLogging
+        in
+        let case = { case_id; errors = []; information_for_synthesis_logging } in
         (* speculatively match the pair of types in this trial *)
         let error = speculative_match cx trace { speculation_id; case } l u in
         (match error with

@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type information_for_synthesis_logging =
+  | CallInformationForSynthesisLogging of {
+      lhs_t: Type.t;
+      call_callee_hint_ref: Type.speculation_hint_state ref;
+    }
+  | NoInformationForSynthesisLogging
+
 (* Next, a model for "cases." A case serves as the context for a speculative
    match. In other words, while we're trying to execute a flow in speculation
    mode, we use this data structure to record stuff.
@@ -15,8 +22,7 @@
 type case = {
   case_id: int;
   mutable errors: Error_message.t list;
-  lhs_t: Type.t;
-  use_t: Type.use_t;
+  information_for_synthesis_logging: information_for_synthesis_logging;
 }
 
 (* A branch is a wrapper around a case, that also carries the speculation id of
