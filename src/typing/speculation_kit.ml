@@ -110,6 +110,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | IntersectionCases { use_t; _ } -> log_specialized_use cx use_t case speculation_id
     | _ -> ()
 
+  type case_spec = FlowCase of Type.t * Type.use_t
+
   (** Entry points into the process of trying different branches of union and
       intersection types.
 
@@ -246,21 +248,27 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* Here errs records all errors we have seen up to this point. *)
     let rec loop errs = function
       | [] -> return errs
-      | (case_id, _, l, u) :: trials ->
+      | (case_id, case_spec) :: trials ->
         let information_for_synthesis_logging =
-          match u with
-          | CallT
-              {
-                call_action =
-                  Funcalltype { call_speculation_hint_state = Some call_callee_hint_ref; _ };
-                _;
-              } ->
-            CallInformationForSynthesisLogging { lhs_t = l; call_callee_hint_ref }
-          | _ -> NoInformationForSynthesisLogging
+          match case_spec with
+          | FlowCase
+              ( lhs_t,
+                CallT
+                  {
+                    call_action =
+                      Funcalltype { call_speculation_hint_state = Some call_callee_hint_ref; _ };
+                    _;
+                  }
+              ) ->
+            CallInformationForSynthesisLogging { lhs_t; call_callee_hint_ref }
+          | FlowCase _ -> NoInformationForSynthesisLogging
         in
         let case = { case_id; errors = []; information_for_synthesis_logging } in
         (* speculatively match the pair of types in this trial *)
-        let error = speculative_match cx trace { speculation_id; case } l u in
+        let error =
+          let (FlowCase (l, u)) = case_spec in
+          speculative_match cx trace { speculation_id; case } l u
+        in
         (match error with
         | None -> begin
           (* no error, looking great so far... *)
@@ -320,14 +328,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* NB: Even though we know the use_op for the original constraint, don't
          embed it in the nested constraints to avoid unnecessary verbosity. We
          will unwrap the original use_op once in EUnionSpeculationFailed. *)
-      Base.List.mapi ~f:(fun i u -> (i, reason_of_t l, l, UseT (Op (Speculation use_op), u))) us
+      Base.List.mapi ~f:(fun i u -> (i, FlowCase (l, UseT (Op (Speculation use_op), u)))) us
     | IntersectionCases { intersection_reason = _; ls; use_t = u } ->
       Base.List.mapi
         ~f:(fun i l ->
-          (i, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))
+          (i, FlowCase (l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u)))
         ls
     | SingletonCase (l, u) ->
-      [(0, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u)]
+      [(0, FlowCase (l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))]
 
   (* spec optimization *)
   (* Currently, the only optimizations we do are for enums and for disjoint unions.
