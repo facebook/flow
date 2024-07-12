@@ -792,7 +792,6 @@ module rec TypeTerm : sig
         target_module_t: t;
         tout: t_out;
       }
-    | AssertExportIsTypeT of reason * name (* export name *) * t_out
     (* Map a FunT over a structure *)
     | MapTypeT of use_op * reason * type_map * t_out
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
@@ -4128,7 +4127,6 @@ let string_of_use_ctor = function
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
-  | AssertExportIsTypeT _ -> "AssertExportIsTypeT"
   | ExtendsUseT _ -> "ExtendsUseT"
   | ImplicitVoidReturnT _ -> "ImplicitVoidReturnT"
   | GetElemT _ -> "GetElemT"

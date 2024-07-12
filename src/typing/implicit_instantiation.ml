@@ -345,7 +345,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | CopyTypeExportsT _
     | ExportNamedT _
     | ExportTypeT _
-    | AssertExportIsTypeT _
     (* Class/interface related upper bounds won't occur during implicit instantiation *)
     | SuperT _
     | ImplementsT _

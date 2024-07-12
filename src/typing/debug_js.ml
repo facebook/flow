@@ -753,7 +753,6 @@ and dump_use_t_ (depth, tvars) cx t =
           )
     | ExportTypeT _ -> p t
     | ImplicitVoidReturnT _ -> p t
-    | AssertExportIsTypeT _ -> p t
     | GetElemT
         {
           use_op = _;

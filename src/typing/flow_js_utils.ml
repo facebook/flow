@@ -1842,7 +1842,9 @@ module ExportNamedTKit = struct
     |> Context.add_export_map cx type_exports_tmap
 end
 
-module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
+module AssertExportIsTypeTKit : sig
+  val on_concrete_type : cx -> name -> Type.t -> Type.t
+end = struct
   let rec is_type = function
     | DefT (_, ClassT _)
     | DefT (_, EnumObjectT _)
@@ -1855,11 +1857,11 @@ module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
 
   let on_concrete_type cx name l =
     if is_type l then
-      F.return cx l
+      l
     else
       let reason = reason_of_t l in
       add_output cx Error_message.(EExportValueAsType (reason, name));
-      F.return cx (AnyT.error reason)
+      AnyT.error reason
 end
 
 (* Copy the named exports from a source module into a target module. Used

@@ -71,7 +71,6 @@ and reason_of_use_t = function
   | ExportNamedT { reason; _ } -> reason
   | ExportTypeT { reason; _ } -> reason
   | ImplicitVoidReturnT { reason; _ } -> reason
-  | AssertExportIsTypeT (reason, _, _) -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT { reason; _ } -> reason
   | GetKeysT (reason, _) -> reason
@@ -320,7 +319,6 @@ let rec util_use_op_of_use_t :
         target_module_t = _;
         tout = _;
       }
-  | AssertExportIsTypeT (_, _, _)
   | PreprocessKitT (_, _)
   | ExtractReactRefT _
   | DebugPrintT _

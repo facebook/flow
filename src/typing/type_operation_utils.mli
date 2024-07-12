@@ -35,6 +35,8 @@ module Import_export : sig
 
   val get_module_namespace_type : Context.t -> reason -> namespace_symbol:symbol -> Type.t -> Type.t
 
+  val assert_export_is_type : Context.t -> Reason.name -> Type.t -> Type.t
+
   val import_namespace_specifier_type :
     Context.t ->
     reason ->

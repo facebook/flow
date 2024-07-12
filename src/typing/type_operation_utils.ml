@@ -171,6 +171,17 @@ module Import_export = struct
     | [t] -> t
     | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
 
+  let assert_export_is_type cx name t =
+    let reason = TypeUtil.reason_of_t t in
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+        let t =
+          t
+          |> singleton_concretize_type_for_imports_exports cx reason
+          |> Flow_js_utils.AssertExportIsTypeTKit.on_concrete_type cx name
+        in
+        Flow.flow_t cx (t, tout)
+    )
+
   let get_imported_t
       cx ~import_reason ~module_name ~source_module_t ~import_kind ~remote_name ~local_name =
     let is_strict = Context.is_strict cx in

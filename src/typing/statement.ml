@@ -865,11 +865,7 @@ module Make
     let export_ref loc local_name =
       let t = Type_env.var_ref ~lookup_mode cx local_name loc in
       match export_kind with
-      | Ast.Statement.ExportType ->
-        let reason = mk_reason (RType local_name) loc in
-        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-            Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
-        )
+      | Ast.Statement.ExportType -> Import_export.assert_export_is_type cx local_name t
       | Ast.Statement.ExportValue -> t
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)

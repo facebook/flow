@@ -284,7 +284,6 @@ struct
       )
   end
 
-  module AssertExportIsTypeTKit = AssertExportIsTypeT_kit (Import_export_helper)
   module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = CopyTypeExportsT_kit (Import_export_helper)
   module ExportTypeTKit = ExportTypeT_kit (Import_export_helper)
@@ -762,8 +761,6 @@ struct
           ) ->
           ExportNamedTKit.mod_ModuleT cx (value_exports_tmap, type_exports_tmap, export_kind) m;
           rec_flow_t cx ~use_op:unknown_use trace (l, tout)
-        | (_, AssertExportIsTypeT (_, name, t_out)) ->
-          AssertExportIsTypeTKit.on_concrete_type cx name l t_out
         | (ModuleT m, CopyNamedExportsT (reason, target_module_t, t_out)) ->
           CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
         | (ModuleT m, CopyTypeExportsT (reason, target_module_t, t_out)) ->
@@ -6791,7 +6788,6 @@ struct
     | ConditionalT _
     | ExportNamedT _
     | ExportTypeT _
-    | AssertExportIsTypeT _
     | ImplicitVoidReturnT _
     | GetElemT _
     | GetEnumT _
