@@ -666,6 +666,50 @@ References:
                       ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- Arith.js:94:1
+
+All branches are incompatible: [incompatible-use]
+ - Either cannot compare null or undefined [1] to number [2].
+ - Or cannot compare string [3] to number [2].
+
+   Arith.js:94:1
+   94| aWeirdStringWithIntersection < 1; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Arith.js:92:46
+   92| declare const aWeirdStringWithIntersection: (?boolean) & string;
+                                                    ^^^^^^^^ [1]
+   Arith.js:94:32
+   94| aWeirdStringWithIntersection < 1; // error
+                                      ^ [2]
+   Arith.js:92:58
+   92| declare const aWeirdStringWithIntersection: (?boolean) & string;
+                                                                ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:97:1
+
+All branches are incompatible: [incompatible-use]
+ - Either cannot compare null or undefined [1] to string [2].
+ - Or cannot compare number [3] to string [2].
+
+   Arith.js:97:1
+   97| aWeirdNumberWithIntersection < '1'; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Arith.js:93:46
+   93| declare const aWeirdNumberWithIntersection: (?boolean) & number;
+                                                    ^^^^^^^^ [1]
+   Arith.js:97:32
+   97| aWeirdNumberWithIntersection < '1'; // error
+                                      ^^^ [2]
+   Arith.js:93:58
+   93| declare const aWeirdNumberWithIntersection: (?boolean) & number;
+                                                                ^^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
 Cannot use operator `**=` with operands string [1] and number [2] [unsafe-arithmetic]
@@ -1002,4 +1046,4 @@ References:
 
 
 
-Found 62 errors
+Found 64 errors

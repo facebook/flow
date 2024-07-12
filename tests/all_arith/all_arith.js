@@ -1,21 +1,26 @@
 declare opaque type T;
 
-declare var aNumber: number;
-declare var aString: string;
-declare var aBigint: bigint;
-declare var aDate: Date;
-declare var aBoolean: boolean;
-declare var aT: T;
+declare const aNumber: number;
+declare const aString: string;
+declare const aBigint: bigint;
+declare const aDate: Date;
+declare const aBoolean: boolean;
+declare const aT: T;
+declare const aWeirdStringOrNumberWithIntersection: (?boolean) & (number | string);
 // null
-declare var anArray: Array<empty>
-declare var anObject: {}
-declare var aMixed: mixed;
-declare var anAny: any;
-declare var anEmpty: empty;
+declare const anArray: Array<empty>
+declare const anObject: {}
+declare const aMixed: mixed;
+declare const anAny: any;
+declare const anEmpty: empty;
 
 // aNumber + _
 (aNumber + aNumber : number); // ok
 (aNumber + aString : string); // ok
+(aWeirdStringOrNumberWithIntersection + aNumber : string | number); // ok
+(aNumber + aWeirdStringOrNumberWithIntersection : string | number); // ok
+(aString + aWeirdStringOrNumberWithIntersection : string | number); // ok
+(aWeirdStringOrNumberWithIntersection +  aString: string | number); // ok
 (aNumber + aBigint); // error
 (aNumber + aDate); // error
 (aNumber + aBoolean); // error

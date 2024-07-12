@@ -68,7 +68,12 @@ function x16(y: bigint): bigint {
   return ~y; // ok
 }
 
-function x17(y: any) {
+function x17(y: (?boolean) & (number | string)) {
+  +y as number; // ok, + coerces to number
+  +y as bigint; // error, bigint ~> number
+}
+
+function x18(y: any) {
   +y as number; // ok, + coerces to number
   +y as bigint; // error, bigint ~> number
   -y as number; // ok, any
@@ -77,7 +82,7 @@ function x17(y: any) {
   ~y as bigint; // ok, any
 }
 
-function x18(y: empty) {
+function x19(y: empty) {
   +y as empty;
   -y as empty;
   ~y as empty;

@@ -88,3 +88,10 @@ let tests = [
     (1 + 2).length; // error
   },
 ];
+
+declare const aWeirdStringWithIntersection: (?boolean) & string;
+declare const aWeirdNumberWithIntersection: (?boolean) & number;
+aWeirdStringWithIntersection < 1; // error
+aWeirdNumberWithIntersection < 1; // ok
+aWeirdStringWithIntersection < '1'; // ok
+aWeirdNumberWithIntersection < '1'; // error
