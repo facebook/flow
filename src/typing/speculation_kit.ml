@@ -304,43 +304,41 @@ module Make (Flow : INPUT) : OUTPUT = struct
           msgs
       in
       (* Add the error. *)
-      begin
-        match spec with
-        | UnionCases { use_op; reason_op = r; l; union_rep = _; us } ->
-          let reason = reason_of_t l in
-          add_output
+      match spec with
+      | UnionCases { use_op; reason_op = r; l; union_rep = _; us } ->
+        let reason = reason_of_t l in
+        add_output
+          cx
+          (Error_message.EUnionSpeculationFailed
+             { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
+          )
+      | SingletonCase _ -> raise SpeculationSingletonError
+      | IntersectionCases { intersection_reason = r; ls; use_t = upper } ->
+        let err =
+          let reason_lower = mk_intersection_reason r ls in
+          Default_resolve.default_resolve_touts
+            ~flow:(flow_t cx)
+            ~resolve_callee:(r, ls)
             cx
-            (Error_message.EUnionSpeculationFailed
-               { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
-            )
-        | SingletonCase _ -> raise SpeculationSingletonError
-        | IntersectionCases { intersection_reason = r; ls; use_t = upper } ->
-          let err =
-            let reason_lower = mk_intersection_reason r ls in
-            Default_resolve.default_resolve_touts
-              ~flow:(flow_t cx)
-              ~resolve_callee:(r, ls)
-              cx
-              (loc_of_reason reason_lower)
-              upper;
-            match upper with
-            | UseT (use_op, t) ->
-              Error_message.EIncompatibleDefs
-                { use_op; reason_lower; reason_upper = reason_of_t t; branches }
-            | LookupT { reason; lookup_action = MatchProp { use_op; _ }; _ } ->
-              Error_message.EUnionSpeculationFailed
-                { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
-            | _ ->
-              Error_message.EIncompatible
-                {
-                  use_op = use_op_of_use_t upper;
-                  lower = (reason_lower, Some Error_message.Incompatible_intersection);
-                  upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
-                  branches;
-                }
-          in
-          add_output cx err
-      end
+            (loc_of_reason reason_lower)
+            upper;
+          match upper with
+          | UseT (use_op, t) ->
+            Error_message.EIncompatibleDefs
+              { use_op; reason_lower; reason_upper = reason_of_t t; branches }
+          | LookupT { reason; lookup_action = MatchProp { use_op; _ }; _ } ->
+            Error_message.EUnionSpeculationFailed
+              { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
+          | _ ->
+            Error_message.EIncompatible
+              {
+                use_op = use_op_of_use_t upper;
+                lower = (reason_lower, Some Error_message.Incompatible_intersection);
+                upper = (reason_of_use_t upper, error_message_kind_of_upper upper);
+                branches;
+              }
+        in
+        add_output cx err
     in
     loop [] trials
 
