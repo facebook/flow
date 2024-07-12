@@ -883,7 +883,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _ ->
         p ~extra:(string_of_use_op use_op) t)
-    | RunTypeAssertion _ -> p t
     | SentinelPropTestT (_, l, sense, sentinel, result) ->
       p
         ~reason:false

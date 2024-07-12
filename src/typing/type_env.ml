@@ -308,16 +308,13 @@ let predicate_of_refinement cx =
     | MaybeR -> MaybeP
     | InstanceOfR (loc, _) ->
       (* Instanceof refinements store the loc they check against, which is a read in the env *)
-      let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
       Debug_js.Verbose.print_if_verbose_lazy
         cx
         ( lazy
           [spf "reading from location %s (in instanceof refinement)" (Reason.string_of_aloc loc)]
           );
       let t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
-      Flow_js.flow
-        cx
-        (t, RunTypeAssertion { reason; type_assertion_kind = TypeAssertionInstanceofRHS });
+      Type_operation_utils.TypeAssertions.assert_instanceof_rhs cx t;
       LeftP (InstanceofTest, t)
     | IsArrayR -> ArrP
     | BoolR loc -> BoolP loc

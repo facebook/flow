@@ -360,7 +360,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | NullishCoalesceT _
     | NotT _
     | AssertIterableT _
-    | RunTypeAssertion _
     | ObjAssignToT _
     | ObjAssignFromT _
     | ObjTestT _

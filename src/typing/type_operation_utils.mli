@@ -69,3 +69,16 @@ end
 module Promise : sig
   val await : Context.t -> reason -> Type.t -> Type.t
 end
+
+module TypeAssertions : sig
+  val assert_binary_in_lhs : Context.t -> Type.t -> unit
+
+  val assert_binary_in_rhs : Context.t -> Type.t -> unit
+
+  val assert_for_in_rhs : Context.t -> Type.t -> unit
+
+  val assert_non_component_like_base :
+    Context.t -> ALoc.t -> ALoc.t virtual_reason -> Type.t -> unit
+
+  val assert_instanceof_rhs : Context.t -> Type.t -> unit
+end

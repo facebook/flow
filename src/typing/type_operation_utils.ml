@@ -342,3 +342,104 @@ module Promise = struct
     | [t] -> t
     | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
 end
+
+module TypeAssertions = struct
+  open Flow_js_utils
+  open TypeUtil
+
+  let assert_binary_in_lhs cx t =
+    DistributeUnionIntersection.distribute
+      cx
+      t
+      ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+      ~get_no_match_error_loc:loc_of_reason
+      ~check_base:(fun cx -> function
+      | AnyT _ -> ()
+      (* the left-hand side of a `(x in y)` expression is a string or number
+         TODO: also, symbols *)
+      | DefT (_, StrT _) -> ()
+      | DefT (_, NumT _) -> ()
+      | l -> add_output cx (Error_message.EBinaryInLHS (reason_of_t l))
+    )
+
+  let assert_binary_in_rhs cx t =
+    DistributeUnionIntersection.distribute
+      cx
+      t
+      ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+      ~get_no_match_error_loc:loc_of_reason
+      ~check_base:(fun cx -> function
+      | AnyT _
+      (* the right-hand side of a `(x in y)` expression must be object-like *)
+      | DefT (_, ArrT _) ->
+        ()
+      | l when object_like l -> ()
+      | l -> add_output cx (Error_message.EBinaryInRHS (reason_of_t l))
+    )
+
+  let assert_for_in_rhs cx t =
+    DistributeUnionIntersection.distribute
+      cx
+      t
+      ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+      ~get_no_match_error_loc:loc_of_reason
+      ~check_base:(fun cx -> function
+      | l when object_like l -> ()
+      | AnyT _
+      | ObjProtoT _ ->
+        ()
+      (* null/undefined are allowed *)
+      | DefT (_, (NullT | VoidT)) -> ()
+      | DefT (enum_reason, EnumObjectT _) ->
+        add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = true })
+      | l -> add_output cx (Error_message.EForInRHS (TypeUtil.reason_of_t l))
+    )
+
+  let assert_non_component_like_base =
+    let check_base ~def_loc ~use_reason cx = function
+      | DefT (reason_type, MixedT _) ->
+        add_output
+          cx
+          Error_message.(
+            EReactIntrinsicOverlap
+              { use = use_reason; def = def_loc; type_ = loc_of_reason reason_type; mixed = true }
+          )
+      | DefT
+          ( reason_type,
+            (ObjT { call_t = Some _; _ } | FunT _ | ClassT _ | ReactAbstractComponentT _)
+          ) ->
+        add_output
+          cx
+          Error_message.(
+            EReactIntrinsicOverlap
+              { use = use_reason; def = def_loc; type_ = loc_of_reason reason_type; mixed = false }
+          )
+      | _ -> ()
+    in
+    fun cx def_loc use_reason t ->
+      DistributeUnionIntersection.distribute
+        cx
+        t
+        ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+        ~get_no_match_error_loc:(fun _ -> loc_of_reason use_reason)
+        ~check_base:(check_base ~def_loc ~use_reason)
+
+  let assert_instanceof_rhs cx t =
+    DistributeUnionIntersection.distribute
+      cx
+      t
+      ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+      ~get_no_match_error_loc:loc_of_reason
+      ~check_base:(fun cx -> function
+      (********************)
+      (* `instanceof` RHS *)
+      (* right side of an `instanceof` binary expression must be an object *)
+      (********************)
+      | l when object_like l -> ()
+      | DefT (_, ArrT _) ->
+        (* arrays are objects too, but not in `object_like` *)
+        ()
+      | AnyT _ -> ()
+      | l -> add_output cx (Error_message.EInstanceofRHS (reason_of_t l))
+    )
+end

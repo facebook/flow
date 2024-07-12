@@ -129,7 +129,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ImplementsT _ -> ()
   | MixinT (_, t) -> resolve t
   | ToStringT { t_out; _ } -> default_resolve_touts ~flow cx loc t_out
-  | RunTypeAssertion _ -> ()
   | AssertIterableT { targs; _ } -> Base.List.iter ~f:resolve targs
   | PredicateT (_, tvar)
   | GuardT (_, _, tvar) ->

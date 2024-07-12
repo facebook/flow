@@ -770,9 +770,7 @@ let rec resolve_binding cx reason loc b =
     let right_t = expression cx ~cond:OtherTest exp in
     (match kind with
     | In ->
-      Flow_js.flow
-        cx
-        (right_t, RunTypeAssertion { reason; type_assertion_kind = TypeAssertionForInRHS });
+      TypeAssertions.assert_for_in_rhs cx right_t;
       StrT.at loc
     | Of { await } -> Statement.for_of_elemt cx right_t reason await)
   | Hooklike binding ->

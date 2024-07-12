@@ -5078,11 +5078,6 @@ struct
            recorded as lower bound to the target tvar. *)
         | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForOperatorsChecking tvar))) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
-        (***********************************************************)
-        (* Run type assertions                                     *)
-        (***********************************************************)
-        | (t, RunTypeAssertion { reason; type_assertion_kind }) ->
-          TypeAssertions.run cx reason type_assertion_kind t
         (**************************)
         (* relational comparisons *)
         (**************************)
@@ -6402,7 +6397,6 @@ struct
       | OptionalChainT _
       | OptionalIndexedAccessT _
       | MapTypeT _
-      | RunTypeAssertion _
       (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
       | UseT (Op (Coercion _), DefT (_, StrT _)) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
@@ -6893,7 +6887,6 @@ struct
     | HasOwnPropT _
     | ExtractReactRefT _
     | ImplementsT _
-    | RunTypeAssertion _
     | SetPrivatePropT _
     | SetProtoT _
     | SuperT _

@@ -1270,7 +1270,6 @@ module Make
         For { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast; comments }
       )
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
-      let reason = mk_reason (RCustom "for-in") loc in
       let eval_right () =
         let (((_, _), _) as right_ast) = condition ~cond:OtherTest cx right in
         right_ast
@@ -1341,9 +1340,7 @@ module Make
           (Tast_utils.error_mapper#for_in_statement_lhs left, right_ast)
       in
       let ((_, right_t), _) = right_ast in
-      Flow.flow
-        cx
-        (right_t, RunTypeAssertion { reason; type_assertion_kind = TypeAssertionForInRHS });
+      TypeAssertions.assert_for_in_rhs cx right_t;
 
       let body_ast = statement cx body in
       (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments })
@@ -4806,22 +4803,10 @@ module Make
       Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 });
       (BoolT.at loc, { operator; left; right; comments })
     | In ->
-      let (loc1, _) = left in
-      let (loc2, _) = right in
       let (((_, t1), _) as left) = expression cx left in
       let (((_, t2), _) as right) = expression cx right in
-      let reason_lhs = mk_reason (RCustom "LHS of `in` operator") loc1 in
-      let reason_rhs = mk_reason (RCustom "RHS of `in` operator") loc2 in
-      Flow.flow
-        cx
-        ( t1,
-          RunTypeAssertion { reason = reason_lhs; type_assertion_kind = TypeAssertionBinaryInLHS }
-        );
-      Flow.flow
-        cx
-        ( t2,
-          RunTypeAssertion { reason = reason_rhs; type_assertion_kind = TypeAssertionBinaryInRHS }
-        );
+      TypeAssertions.assert_binary_in_lhs cx t1;
+      TypeAssertions.assert_binary_in_rhs cx t2;
       (BoolT.at loc, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
@@ -4849,13 +4834,8 @@ module Make
       (BoolT.at loc, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx left in
-      let (((right_loc, right_t), _) as right) = expression cx right in
-      let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
-      Flow.flow
-        cx
-        ( right_t,
-          RunTypeAssertion { reason = reason_rhs; type_assertion_kind = TypeAssertionInstanceofRHS }
-        );
+      let (((_, right_t), _) as right) = expression cx right in
+      TypeAssertions.assert_instanceof_rhs cx right_t;
       (BoolT.at loc, { operator; left; right; comments })
     | LessThan
     | LessThanEqual
@@ -5527,15 +5507,8 @@ module Make
             else begin
               Type_env.intrinsic_ref cx (OrdinaryName name) loc
               |> Base.Option.iter ~f:(fun (t, def_loc) ->
-                     Flow.flow
-                       cx
-                       ( t,
-                         RunTypeAssertion
-                           {
-                             reason = mk_reason (RIdentifier (OrdinaryName name)) loc;
-                             type_assertion_kind = TypeAssertionNonComponentLike def_loc;
-                           }
-                       )
+                     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+                     TypeAssertions.assert_non_component_like_base cx def_loc reason t
                  );
               let strt = SingletonStrT (OrdinaryName name) in
               DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, strt)
