@@ -812,7 +812,7 @@ let rec make_intermediate_error :
       let error_code = Flow_error.code_of_error error in
       let speculation_errors =
         Base.List.map
-          ~f:(fun (_, msg) ->
+          ~f:(fun msg ->
             let score = score_of_msg msg in
             let error =
               Flow_error.error_of_msg ~source_file msg

@@ -296,13 +296,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * error found for each alternative *)
       let ts = choices_of_spec spec in
       assert (List.length ts = List.length msgs);
-      let branches =
-        Base.List.mapi
-          ~f:(fun i msg ->
-            let reason = reason_of_t (List.nth ts i) in
-            (reason, msg))
-          msgs
-      in
       (* Add the error. *)
       match spec with
       | UnionCases { use_op; reason_op = r; l; union_rep = _; us } ->
@@ -310,7 +303,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output
           cx
           (Error_message.EUnionSpeculationFailed
-             { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
+             { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches = msgs }
           )
       | SingletonCase _ -> raise SpeculationSingletonError
       | IntersectionCases { intersection_reason = r; ls; use_t = upper } ->
@@ -325,16 +318,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
           match upper with
           | UseT (use_op, t) ->
             Error_message.EIncompatibleDefs
-              { use_op; reason_lower; reason_upper = reason_of_t t; branches }
+              { use_op; reason_lower; reason_upper = reason_of_t t; branches = msgs }
           | LookupT { reason; lookup_action = MatchProp { use_op; _ }; _ } ->
             Error_message.EUnionSpeculationFailed
-              { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches }
+              { use_op; reason; op_reasons = (r, List.map reason_of_t ls); branches = msgs }
           | _ ->
             Error_message.EIncompatibleSpeculation
               {
                 use_op = use_op_of_use_t upper;
                 loc = upper |> reason_of_use_t |> loc_of_reason;
-                branches;
+                branches = msgs;
               }
         in
         add_output cx err

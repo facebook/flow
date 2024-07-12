@@ -25,13 +25,13 @@ and 'loc t' =
   | EIncompatibleSpeculation of {
       loc: 'loc;
       use_op: 'loc virtual_use_op option;
-      branches: ('loc Reason.virtual_reason * 'loc t') list;
+      branches: 'loc t' list;
     }
   | EIncompatibleDefs of {
       use_op: 'loc virtual_use_op;
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
-      branches: ('loc Reason.virtual_reason * 'loc t') list;
+      branches: 'loc t' list;
     }
   | EIncompatibleProp of {
       prop: name option;
@@ -184,7 +184,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reason: 'loc virtual_reason;
       op_reasons: 'loc virtual_reason Nel.t;
-      branches: ('loc virtual_reason * 'loc t') list;
+      branches: 'loc t' list;
     }
   | EIncompatibleWithExact of
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op * exactness_error_kind
@@ -761,7 +761,7 @@ let map_loc_of_invalid_render_type_kind f = function
 let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
   let map_reason = Reason.map_reason_locs f in
-  let map_branch (r, e) = (map_reason r, map_loc_of_error_message f e) in
+  let map_branch e = map_loc_of_error_message f e in
   let map_upper_kind = function
     | IncompatibleGetPropT (loc, s) -> IncompatibleGetPropT (f loc, s)
     | IncompatibleSetPropT (loc, s) -> IncompatibleSetPropT (f loc, s)
@@ -2069,7 +2069,7 @@ type 'loc friendly_message_recipe =
   | Speculation of {
       loc: 'loc;
       use_op: 'loc Type.virtual_use_op;
-      branches: ('loc Reason.virtual_reason * 'loc t') list;
+      branches: 'loc t' list;
     }
   | Incompatible of {
       reason_lower: 'loc Reason.virtual_reason;
