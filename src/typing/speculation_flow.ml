@@ -8,16 +8,11 @@
 open Type
 module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 
-let flow_t_unsafe cx reason (l, u) =
-  SpeculationKit.try_singleton_throw_on_failure
-    cx
-    DepthTrace.dummy_trace
-    reason
-    l
-    (UseT (unknown_use, u))
+let flow_t_unsafe cx (l, u) =
+  SpeculationKit.try_singleton_throw_on_failure cx DepthTrace.dummy_trace l (UseT (unknown_use, u))
 
-let is_flow_successful cx reason t u =
-  match SpeculationKit.try_singleton_throw_on_failure cx DepthTrace.dummy_trace reason t u with
+let is_flow_successful cx t u =
+  match SpeculationKit.try_singleton_throw_on_failure cx DepthTrace.dummy_trace t u with
   | exception Flow_js_utils.SpeculationSingletonError -> false
   | () -> true
 
@@ -29,7 +24,7 @@ let resolved_lower_flow_unsafe cx r (l, u) =
     if
       not
         (Base.List.fold ls ~init:false ~f:(fun acc l ->
-             let r = is_flow_successful cx r l u in
+             let r = is_flow_successful cx l u in
              acc || r
          )
         )
@@ -47,7 +42,7 @@ let resolved_upper_flow_t_unsafe cx r (l, u) =
     if
       not
         (Base.List.fold us ~init:false ~f:(fun acc u ->
-             let r = is_flow_successful cx r l (UseT (unknown_use, u)) in
+             let r = is_flow_successful cx l (UseT (unknown_use, u)) in
              acc || r
          )
         )

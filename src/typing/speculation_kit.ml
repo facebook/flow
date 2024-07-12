@@ -36,16 +36,26 @@ module type OUTPUT = sig
    * the caller of this function.
    *)
   val try_singleton_throw_on_failure :
-    Context.t -> Type.DepthTrace.t -> Reason.reason -> Type.t -> Type.use_t -> unit
+    Context.t -> Type.DepthTrace.t -> Type.t -> Type.use_t -> unit
 end
 
 module Make (Flow : INPUT) : OUTPUT = struct
   open Flow
 
   type cases_spec =
-    | UnionCases of use_op * t * UnionRep.t * t list
-    | IntersectionCases of t list * use_t
-    | SingletonCase of t * use_t
+    | UnionCases of {
+        use_op: use_op;
+        reason_op: reason;
+        l: Type.t;
+        union_rep: UnionRep.t;
+        us: Type.t list;
+      }
+    | IntersectionCases of {
+        intersection_reason: reason;
+        ls: Type.t list;
+        use_t: Type.use_t;
+      }
+    | SingletonCase of Type.t * Type.use_t
 
   let mk_intersection_reason r _ls = replace_desc_reason RIntersection r
 
@@ -97,7 +107,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let log_specialized_callee cx spec case speculation_id =
     match spec with
-    | IntersectionCases (_, use) -> log_specialized_use cx use case speculation_id
+    | IntersectionCases { use_t; _ } -> log_specialized_use cx use_t case speculation_id
     | _ -> ()
 
   (** Entry points into the process of trying different branches of union and
@@ -160,16 +170,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
   (* Every choice-making process on a union or intersection type is assigned a
      unique identifier, called the speculation_id. This identifier keeps track of
      unresolved tvars encountered when trying to fully resolve types. *)
-  let rec try_union cx trace use_op l reason rep =
+  let rec try_union cx trace use_op l reason_op rep =
     let ts = UnionRep.members rep in
-    speculative_matches cx trace reason (UnionCases (use_op, l, rep, ts))
+    speculative_matches cx trace (UnionCases { use_op; reason_op; l; union_rep = rep; us = ts })
 
-  and try_intersection cx trace u reason rep =
-    let ts = InterRep.members rep in
-    speculative_matches cx trace reason (IntersectionCases (ts, u))
+  and try_intersection cx trace use_t intersection_reason rep =
+    let ls = InterRep.members rep in
+    speculative_matches cx trace (IntersectionCases { intersection_reason; ls; use_t })
 
-  and try_singleton_throw_on_failure cx trace reason t u =
-    speculative_matches cx trace reason (SingletonCase (t, u))
+  and try_singleton_throw_on_failure cx trace t u =
+    speculative_matches cx trace (SingletonCase (t, u))
 
   (************************)
   (* Speculative matching *)
@@ -239,14 +249,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
      abstract the latter into a so-called "spec." The spec is used to customize
      error messages.
   *)
-  and speculative_matches cx trace r spec =
+  and speculative_matches cx trace spec =
     (* explore optimization opportunities *)
-    if optimize_spec_try_shortcut cx trace r spec then
+    if optimize_spec_try_shortcut cx trace spec then
       ()
     else
-      long_path_speculative_matches cx trace r spec
+      long_path_speculative_matches cx trace spec
 
-  and long_path_speculative_matches cx trace r spec =
+  and long_path_speculative_matches cx trace spec =
     let open Speculation_state in
     let speculation_id = mk_id () in
     (* extract stuff to ignore while considering actions *)
@@ -296,7 +306,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* Add the error. *)
       begin
         match spec with
-        | UnionCases (use_op, l, _rep, us) ->
+        | UnionCases { use_op; reason_op = r; l; union_rep = _; us } ->
           let reason = reason_of_t l in
           add_output
             cx
@@ -304,7 +314,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches }
             )
         | SingletonCase _ -> raise SpeculationSingletonError
-        | IntersectionCases (ls, upper) ->
+        | IntersectionCases { intersection_reason = r; ls; use_t = upper } ->
           let err =
             let reason_lower = mk_intersection_reason r ls in
             Default_resolve.default_resolve_touts
@@ -335,12 +345,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     loop [] trials
 
   and trials_of_spec = function
-    | UnionCases (use_op, l, _rep, us) ->
+    | UnionCases { use_op; reason_op = _; l; union_rep = _; us } ->
       (* NB: Even though we know the use_op for the original constraint, don't
          embed it in the nested constraints to avoid unnecessary verbosity. We
          will unwrap the original use_op once in EUnionSpeculationFailed. *)
       Base.List.mapi ~f:(fun i u -> (i, reason_of_t l, l, UseT (Op (Speculation use_op), u))) us
-    | IntersectionCases (ls, u) ->
+    | IntersectionCases { intersection_reason = _; ls; use_t = u } ->
       Base.List.mapi
         ~f:(fun i l ->
           (i, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))
@@ -349,8 +359,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       [(0, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u)]
 
   and choices_of_spec = function
-    | UnionCases (_, _, _, ts)
-    | IntersectionCases (ts, _) ->
+    | UnionCases { us = ts; _ }
+    | IntersectionCases { ls = ts; _ } ->
       ts
     | SingletonCase (t, _) -> [t]
 
@@ -366,8 +376,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
      during speculative matching, by checking sentinel properties first we force immediate match
      failures in the vast majority of cases without having to do any useless additional work.
   *)
-  and optimize_spec_try_shortcut cx trace reason_op = function
-    | UnionCases (_use_op, InternalT (EnforceUnionOptimized reason), rep, _ts) ->
+  and optimize_spec_try_shortcut cx trace = function
+    | UnionCases
+        {
+          use_op = _;
+          reason_op = _;
+          l = InternalT (EnforceUnionOptimized reason);
+          union_rep = rep;
+          us = _;
+        } ->
       let specialization =
         UnionRep.optimize_
           rep
@@ -402,7 +419,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | Ok _ -> ()
       end;
       true
-    | UnionCases (use_op, l, rep, _ts) ->
+    | UnionCases { use_op; reason_op; l; union_rep = rep; us = _ } ->
       if not (UnionRep.is_optimized_finally rep) then
         UnionRep.optimize
           rep

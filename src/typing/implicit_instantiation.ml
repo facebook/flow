@@ -1195,7 +1195,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       )
     in
     let speculative_subtyping_succeeds use_op l u =
-      match SpeculationKit.try_singleton_throw_on_failure cx trace reason l (UseT (use_op, u)) with
+      match SpeculationKit.try_singleton_throw_on_failure cx trace l (UseT (use_op, u)) with
       | exception Flow_js_utils.SpeculationSingletonError -> false
       | _ -> true
     in
@@ -1693,7 +1693,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                SpeculationKit.try_singleton_throw_on_failure
                  cx
                  trace
-                 reason
                  check_t
                  (UseT (use_op, extends_t))
              with

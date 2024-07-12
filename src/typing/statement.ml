@@ -5979,7 +5979,6 @@ module Make
         not
           (Speculation_flow.is_flow_successful
              cx
-             reason
              create_element_t
              (UseT
                 (unknown_use, Flow.get_builtin_type cx reason ~use_desc:false "React$CreateElement")

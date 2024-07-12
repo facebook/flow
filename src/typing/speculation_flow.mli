@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val is_flow_successful : Context.t -> Reason.reason -> Type.t -> Type.use_t -> bool
+val is_flow_successful : Context.t -> Type.t -> Type.use_t -> bool
 
 val get_method_type_opt : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t option
 
 (* NOTE The unsafe functions below may throw SpeculationSingletonError exception *)
 
-val flow_t_unsafe : Context.t -> Reason.reason -> Type.t * Type.t -> unit
+val flow_t_unsafe : Context.t -> Type.t * Type.t -> unit
 
 val resolved_lower_flow_unsafe : Context.t -> Reason.t -> Type.t * Type.use_t -> unit
 

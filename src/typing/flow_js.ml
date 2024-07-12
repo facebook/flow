@@ -10957,7 +10957,6 @@ struct
       SpeculationKit.try_singleton_throw_on_failure
         cx
         DepthTrace.dummy_trace
-        (TypeUtil.reason_of_t l)
         l
         (UseT (unknown_use, u))
     with
