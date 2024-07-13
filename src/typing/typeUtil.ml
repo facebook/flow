@@ -118,7 +118,6 @@ and reason_of_use_t = function
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT { reason; _ } -> reason
   | ValueToTypeReferenceT (_, reason, _, _) -> reason
-  | VarianceCheckT (reason, _, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
   | FilterOptionalT (_, t) -> reason_of_t t
   | ExtractReactRefT (reason, _) -> reason
@@ -296,7 +295,6 @@ let rec util_use_op_of_use_t :
   | NullishCoalesceT (_, _, _)
   | NotT (_, _)
   | ThisSpecializeT (_, _, _)
-  | VarianceCheckT (_, _, _, _)
   | LookupT _
   | ObjRestT (_, _, _, _)
   | ObjTestProtoT (_, _)

@@ -705,8 +705,6 @@ module rec TypeTerm : sig
     | ThisSpecializeT of reason * t * cont
     (* Convert a value to a type inference (e.g. ClassT -> InstanceT) *)
     | ValueToTypeReferenceT of use_op * reason * type_t_kind * t_out
-    (* variance check on polymorphic types *)
-    | VarianceCheckT of reason * typeparam Subst_name.Map.t * t list * Polarity.t
     (* In TypeAppT (c, ts) ~> TypeAppT (c, ts) we need to check both cs against
      * each other which means that we must concretize them first. *)
     | ConcretizeTypeAppsT of
@@ -4190,7 +4188,6 @@ let string_of_use_ctor = function
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
   | ValueToTypeReferenceT _ -> "ValueToTypeReferenceT"
-  | VarianceCheckT _ -> "VarianceCheckT"
   | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"

@@ -10,7 +10,9 @@ open TypeUtil
 
 exception UnexpectedType of string
 
-module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
+module Kit (Flow : Flow_common.S) : sig
+  val check_polarity : Context.t -> Type.typeparam Subst_name.Map.t -> Polarity.t -> Type.t -> unit
+end = struct
   (* TODO: flesh this out *)
   (* [seen] is the set of visited EvalT ids *)
   let rec check_polarity cx ?trace seen tparams polarity t =
@@ -170,10 +172,36 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       (* Type arguments in a typeapp might contain a GenericT, but the root type
        * which defines the type parameters is not necessarily resolved at this
        * point. We need to know the polarity of the type parameters in order to
-       * know the position of any found GenericTs. This constraint will continue
+       * know the position of any found GenericTs. This call will continue
        * checking the type args once the root type is resolved. *)
-      let reason = reason_of_t type_ in
-      Flow.flow_opt cx ?trace (type_, VarianceCheckT (reason, tparams, targs, polarity))
+      Type_operation_utils.DistributeUnionIntersection.distribute
+        cx
+        type_
+        ~break_up_union:Flow.possible_concrete_types_for_inspection
+        ~get_no_match_error_loc:Reason.loc_of_reason
+        ~check_base:(fun cx -> function
+        | AnyT _ -> ()
+        | DefT (_, PolyT { tparams = tps; _ }) ->
+          variance_check cx ~trace tparams polarity (Nel.to_list tps, targs)
+        (* We will encounter this when walking an extends clause which does
+         * not have explicit type arguments. The class has an implicit this type
+         * parameter which needs to be specialized to the inheriting class, but
+         * that is uninteresting for the variance check machinery. *)
+        | ThisInstanceT _ when targs = [] -> ()
+        | l ->
+          Flow_js_utils.(
+            add_output
+              cx
+              Error_message.(
+                EIncompatible
+                  {
+                    lower = (reason_of_t l, error_message_kind_of_lower t);
+                    upper = (reason_of_t type_, IncompatibleVarianceCheckT);
+                    use_op = None;
+                  }
+              )
+          )
+      )
     | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
       check_polarity cx ?trace seen tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace seen tparams polarity instance;
@@ -242,6 +270,19 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     check_mult bound;
     Base.Option.iter ~f:check_mult default
 
-  let check_polarity cx ?trace tparams polarity t =
-    check_polarity cx ?trace Eval.Set.empty tparams polarity t
+  and variance_check cx ~trace tparams polarity = function
+    | ([], _)
+    | (_, []) ->
+      (* ignore typeapp arity mismatch, since it's handled elsewhere *)
+      ()
+    | (tp :: tps, t :: ts) ->
+      check_polarity cx ?trace Eval.Set.empty tparams (Polarity.mult (polarity, tp.polarity)) t;
+      variance_check cx ~trace tparams polarity (tps, ts)
+
+  let check_polarity cx tparams polarity t =
+    check_polarity cx ~trace:DepthTrace.unit_trace Eval.Set.empty tparams polarity t
 end
+
+module C = Kit (Flow_js.FlowJs)
+
+let check_polarity = C.check_polarity

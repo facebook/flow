@@ -12,6 +12,26 @@ module Ast = Flow_ast
 open Reason
 open FlowSymbol
 
+module DistributeUnionIntersection : sig
+  val distribute :
+    Context.t ->
+    ?use_op:Type.use_op ->
+    break_up_union:(Context.t -> reason -> Type.t -> Type.t list) ->
+    get_no_match_error_loc:(reason -> ALoc.t) ->
+    check_base:(Context.t -> Type.t -> unit) ->
+    Type.t ->
+    unit
+
+  val distribute_2 :
+    Context.t ->
+    ?use_op:Type.use_op ->
+    break_up_union:(Context.t -> reason -> Type.t -> Type.t list) ->
+    get_no_match_error_loc:(reason -> reason -> ALoc.t) ->
+    check_base:(Context.t -> Type.t * Type.t -> unit) ->
+    Type.t * Type.t ->
+    unit
+end
+
 module Import_export : sig
   val concretize_module_type :
     Context.t -> Reason.t -> Type.t -> (Type.moduletype, Reason.reason * Type.any_source) result

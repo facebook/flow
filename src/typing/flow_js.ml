@@ -162,7 +162,6 @@ let rec drop_resolved cx t =
 module M__flow
     (FlowJs : Flow_common.S)
     (ReactJs : React_kit.REACT)
-    (CheckPolarity : Flow_common.CHECK_POLARITY)
     (ObjectKit : Object_kit.OBJECT)
     (SpeculationKit : Speculation_kit.OUTPUT)
     (SubtypingKit : Subtyping_kit.OUTPUT) =
@@ -2661,14 +2660,6 @@ struct
               ts
           in
           rec_flow_t ~use_op:unknown_use cx trace (t_, tvar)
-        | (DefT (_, PolyT { tparams = tps; _ }), VarianceCheckT (_, tparams, targs, polarity)) ->
-          variance_check cx ~trace tparams polarity (Nel.to_list tps, targs)
-        | (ThisInstanceT _, VarianceCheckT (_, _, [], _)) ->
-          (* We will emit this constraint when walking an extends clause which does
-           * not have explicit type arguments. The class has an implicit this type
-           * parameter which needs to be specialized to the inheriting class, but
-           * that is uninteresting for the variance check machinery. *)
-          ()
         (* empty targs specialization of non-polymorphic classes is a no-op *)
         | (DefT (_, ClassT _), SpecializeT (_, _, _, _, None, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
@@ -6829,7 +6820,6 @@ struct
     | SuperT _
     | TypeCastT _
     | EnumCastT _
-    | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
     | WriteComputedObjPropCheckT _
@@ -7837,15 +7827,6 @@ struct
           Context.set_evaluated cx (Eval.Map.add id result evaluated)
     );
     eval_t
-
-  and variance_check cx ?trace tparams polarity = function
-    | ([], _)
-    | (_, []) ->
-      (* ignore typeapp arity mismatch, since it's handled elsewhere *)
-      ()
-    | (tp :: tps, t :: ts) ->
-      CheckPolarity.check_polarity cx ?trace tparams (Polarity.mult (polarity, tp.polarity)) t;
-      variance_check cx ?trace tparams polarity (tps, ts)
 
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or
    * New expression. *)
@@ -10912,17 +10893,14 @@ struct
     | ChainM { specialized_callee; _ } ->
       CalleeRecorder.add_callee cx CalleeRecorder.All l specialized_callee
     | NoMethodAction prop_t -> rec_flow_t cx ~use_op:unknown_use trace (l, prop_t)
-
-  include CheckPolarity
 end
 
 module rec FlowJs : Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
-  module CheckPolarity = Check_polarity.Kit (FlowJs)
   module ObjectKit = Object_kit.Kit (FlowJs)
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
-  include M__flow (FlowJs) (React) (CheckPolarity) (ObjectKit) (SpeculationKit) (SubtypingKit)
+  include M__flow (FlowJs) (React) (ObjectKit) (SpeculationKit) (SubtypingKit)
 
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
 
@@ -10979,7 +10957,5 @@ let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?ca
 
 let mk_type_destructor cx use_op reason t d id =
   mk_type_destructor cx ~trace:DepthTrace.dummy_trace use_op reason t d id
-
-let check_polarity cx tparams polarity t = check_polarity cx tparams polarity t
 
 let add_output cx msg = add_output cx msg

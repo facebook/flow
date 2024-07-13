@@ -539,7 +539,6 @@ let error_message_kind_of_upper = function
   | SpecializeT _ -> Error_message.IncompatibleSpecializeT
   | ConcretizeTypeAppsT _ -> Error_message.IncompatibleSpecializeT
   | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
-  | VarianceCheckT _ -> Error_message.IncompatibleVarianceCheckT
   | GetKeysT _ -> Error_message.IncompatibleGetKeysT
   | HasOwnPropT
       ( _,

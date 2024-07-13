@@ -383,7 +383,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       UpperEmpty (* Remaining unhandled upper bounds *)
     | SpecializeT _
     | ThisSpecializeT _
-    | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ObjRestT _
     | ElemT _

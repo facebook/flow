@@ -86,16 +86,6 @@ module type BASE = sig
   val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t
 end
 
-module type CHECK_POLARITY = sig
-  val check_polarity :
-    Context.t ->
-    ?trace:Type.DepthTrace.t ->
-    Type.typeparam Subst_name.Map.t ->
-    Polarity.t ->
-    Type.t ->
-    unit
-end
-
 module type BUILTINS = sig
   val get_builtin_type :
     Context.t -> ?trace:Type.DepthTrace.t -> Reason.reason -> ?use_desc:bool -> string -> Type.t
@@ -272,8 +262,6 @@ module type S = sig
   include REACT
 
   include SUBTYPING
-
-  include CHECK_POLARITY
 
   val resolve_spread_list :
     Context.t ->

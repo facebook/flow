@@ -62,8 +62,6 @@ val resolve_spread_list :
 val subst :
   Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t Subst_name.Map.t -> Type.t -> Type.t
 
-val check_polarity : Context.t -> Type.typeparam Subst_name.Map.t -> Polarity.t -> Type.t -> unit
-
 (* destructors *)
 
 val mk_type_destructor :

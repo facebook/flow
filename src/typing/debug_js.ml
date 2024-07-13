@@ -939,11 +939,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (kid tout)
           )
         t
-    | VarianceCheckT (_, _, args, pol) ->
-      p
-        ~extra:
-          (spf "[%s], %s" (String.concat "; " (Base.List.map ~f:kid args)) (Polarity.string pol))
-        t
     | ConcretizeTypeAppsT _ -> p t
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | EnumCastT { use_op = _; enum = (reason, enum_info) } ->

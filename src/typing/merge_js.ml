@@ -365,7 +365,7 @@ let detect_literal_subtypes =
 
 let check_polarity cx =
   Base.List.iter (Context.post_inference_polarity_checks cx) ~f:(fun (tparams, polarity, t) ->
-      Flow_js.check_polarity cx tparams polarity t
+      Check_polarity.check_polarity cx tparams polarity t
   )
 
 let check_general_post_inference_validations cx =
