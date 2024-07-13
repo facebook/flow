@@ -7796,13 +7796,14 @@ struct
                   ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
                 )
               )
-            | SpreadTupleType { reason_tuple; reason_spread = _; inexact; resolved; unresolved } ->
+            | SpreadTupleType { reason_tuple; reason_spread = _; inexact; resolved_rev; unresolved }
+              ->
               let elem_t = Tvar.mk cx reason_tuple in
               ResolveSpreadT
                 ( use_op,
                   reason_tuple,
                   {
-                    rrt_resolved = resolved;
+                    rrt_resolved = resolved_rev;
                     rrt_unresolved = unresolved;
                     rrt_resolve_to =
                       ResolveSpreadsToTupleType
@@ -9992,19 +9993,19 @@ struct
 
   (* This function goes through the unresolved elements to find the next rest
    * element to resolve *)
-  and resolve_spread_list_rec cx ?trace ~use_op ~reason_op (resolved, unresolved) resolve_to =
-    match (resolved, unresolved) with
-    | (resolved, []) ->
-      finish_resolve_spread_list cx ?trace ~use_op ~reason_op (List.rev resolved) resolve_to
-    | (resolved, UnresolvedArg (next, generic) :: unresolved) ->
+  and resolve_spread_list_rec cx ?trace ~use_op ~reason_op (resolved_rev, unresolved) resolve_to =
+    match (resolved_rev, unresolved) with
+    | (resolved_rev, []) ->
+      finish_resolve_spread_list cx ?trace ~use_op ~reason_op (List.rev resolved_rev) resolve_to
+    | (resolved_rev, UnresolvedArg (next, generic) :: unresolved) ->
       resolve_spread_list_rec
         cx
         ?trace
         ~use_op
         ~reason_op
-        (ResolvedArg (next, generic) :: resolved, unresolved)
+        (ResolvedArg (next, generic) :: resolved_rev, unresolved)
         resolve_to
-    | (resolved, UnresolvedSpreadArg next :: unresolved) ->
+    | (resolved_rev, UnresolvedSpreadArg next :: unresolved) ->
       flow_opt
         cx
         ?trace
@@ -10012,7 +10013,11 @@ struct
           ResolveSpreadT
             ( use_op,
               reason_op,
-              { rrt_resolved = resolved; rrt_unresolved = unresolved; rrt_resolve_to = resolve_to }
+              {
+                rrt_resolved = resolved_rev;
+                rrt_unresolved = unresolved;
+                rrt_resolve_to = resolve_to;
+              }
             )
         )
 

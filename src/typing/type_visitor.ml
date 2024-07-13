@@ -242,8 +242,8 @@ class ['a] t =
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
         self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
-      | SpreadTupleType { resolved; unresolved; inexact = _; reason_tuple = _; reason_spread = _ }
-        ->
+      | SpreadTupleType
+          { resolved_rev; unresolved; inexact = _; reason_tuple = _; reason_spread = _ } ->
         let acc =
           self#list
             (fun acc resolved_el ->
@@ -252,7 +252,7 @@ class ['a] t =
               | ResolvedSpreadArg (_, arr, _) -> self#arr_type cx pole_TODO acc arr
               | ResolvedAnySpreadArg _ -> acc)
             acc
-            resolved
+            resolved_rev
         in
         let acc =
           self#list

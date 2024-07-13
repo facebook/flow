@@ -2784,15 +2784,15 @@ let mk_tuple_type cx ~id ~mk_type_destructor ~inexact reason elements =
   match first_spread with
   | Some (reason_spread, spread_t) ->
     let unresolved = List.rev unresolved_rev in
-    let resolved =
-      Base.List.rev_map ~f:(fun (el, generic) -> ResolvedArg (el, generic)) resolved_rev
+    let resolved_rev =
+      Base.List.map ~f:(fun (el, generic) -> ResolvedArg (el, generic)) resolved_rev
     in
     mk_type_destructor
       cx
       unknown_use (* not used *)
       reason
       spread_t
-      (SpreadTupleType { reason_tuple = reason; reason_spread; inexact; resolved; unresolved })
+      (SpreadTupleType { reason_tuple = reason; reason_spread; inexact; resolved_rev; unresolved })
       id
   | None ->
     let elements = Base.List.rev_map ~f:fst resolved_rev in

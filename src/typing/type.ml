@@ -1703,7 +1703,7 @@ module rec TypeTerm : sig
         reason_tuple: reason;
         reason_spread: reason;
         inexact: bool;
-        resolved: resolved_param list;
+        resolved_rev: resolved_param list;
         unresolved: unresolved_param list;
       }
     | RestType of Object.Rest.merge_mode * t

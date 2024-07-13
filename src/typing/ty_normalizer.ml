@@ -207,6 +207,8 @@ module Make (I : INPUT) : S = struct
   (* Monadic helper functions *)
   let mapM f xs = all (Base.List.map ~f xs)
 
+  let rev_mapM f xs = all (Base.List.rev_map ~f xs)
+
   (* Each run of the monad gets assigned its own id. *)
   let run_id = ref 0
 
@@ -1584,9 +1586,9 @@ module Make (I : INPUT) : S = struct
         in
         mk_spread ty target prefix_tys head_slice
 
-    and tuple_spread ~env ~inexact ty resolved unresolved =
+    and tuple_spread ~env ~inexact ty resolved_rev unresolved =
       let%bind head =
-        mapM
+        rev_mapM
           (function
             | T.ResolvedArg (T.TupleElement { reason = _; name; t; polarity; optional }, _) ->
               let%map t = type__ ~env t in
@@ -1606,7 +1608,7 @@ module Make (I : INPUT) : S = struct
             | T.ResolvedAnySpreadArg (reason, src) ->
               let%map t = return (Ty.Any (any_t reason src)) in
               [Ty.TupleSpread { name = None; t }])
-          resolved
+          resolved_rev
         >>| Base.List.concat
       in
       let spread_ty = Ty.TupleSpread { name = None; t = ty } in
@@ -1727,8 +1729,8 @@ module Make (I : INPUT) : S = struct
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Diff (ty, ty'))
       | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
-      | T.SpreadTupleType { inexact; resolved; unresolved; _ } ->
-        tuple_spread ~env ~inexact ty resolved unresolved
+      | T.SpreadTupleType { inexact; resolved_rev; unresolved; _ } ->
+        tuple_spread ~env ~inexact ty resolved_rev unresolved
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))

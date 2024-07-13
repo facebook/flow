@@ -1874,6 +1874,27 @@ Flags: --pretty
   "end":8
 }
 
+tuple.js:23:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type Spread = [1, 2, ...[3, 4]]"},
+    "evaluated":{"type":"type Spread = [1, 2, 3, 4]"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":6,"offset":272},
+    "end":{"line":23,"column":11,"offset":278}
+  },
+  "path":"tuple.js",
+  "line":23,
+  "endline":23,
+  "start":6,
+  "end":11
+}
+
 unions.js:9:3
 Flags:
 () => number | string

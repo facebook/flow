@@ -584,7 +584,7 @@ class virtual ['a] t =
           t
         else
           SpreadType (options, tlist', acc')
-      | SpreadTupleType { reason_tuple; reason_spread; inexact; resolved; unresolved } ->
+      | SpreadTupleType { reason_tuple; reason_spread; inexact; resolved_rev; unresolved } ->
         let unresolved' =
           ListUtils.ident_map
             (fun unresolved_el ->
@@ -603,7 +603,7 @@ class virtual ['a] t =
                   UnresolvedSpreadArg t)
             unresolved
         in
-        let resolved' =
+        let resolved_rev' =
           ListUtils.ident_map
             (fun resolved_el ->
               match resolved_el with
@@ -620,13 +620,19 @@ class virtual ['a] t =
                 else
                   ResolvedSpreadArg (reason, arr', generic)
               | ResolvedAnySpreadArg _ -> resolved_el)
-            resolved
+            resolved_rev
         in
-        if resolved' == resolved && unresolved' == unresolved then
+        if resolved_rev' == resolved_rev && unresolved' == unresolved then
           t
         else
           SpreadTupleType
-            { reason_tuple; reason_spread; inexact; resolved = resolved'; unresolved = unresolved' }
+            {
+              reason_tuple;
+              reason_spread;
+              inexact;
+              resolved_rev = resolved_rev';
+              unresolved = unresolved';
+            }
       | RestType (options, x) ->
         let x' = self#type_ cx map_cx x in
         if x' == x then
