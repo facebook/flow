@@ -124,6 +124,7 @@ module rec TypeTerm : sig
     | StrUtilT of {
         reason: reason;
         prefix: string;
+        remainder: t option;
       }
     (* annotations *)
     (* A type that annotates a storage location performs two functions:

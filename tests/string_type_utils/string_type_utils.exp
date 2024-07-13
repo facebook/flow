@@ -98,7 +98,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:42:12
 
-Cannot use `StringPrefix` because the type argument must be a string literal. [invalid-type-arg]
+Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
 
    42| type Err = StringPrefix<string>; // ERROR
                   ^^^^^^^^^^^^^^^^^^^^
@@ -106,7 +106,7 @@ Cannot use `StringPrefix` because the type argument must be a string literal. [i
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:43:33
 
-Cannot use `StringPrefix` because the type argument must be a string literal. [invalid-type-arg]
+Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
 
    43| declare function err<T: string>(StringPrefix<T>): void; // ERROR
                                        ^^^^^^^^^^^^^^^
@@ -147,5 +147,166 @@ References:
                      ^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- prefix.js:70:15
 
-Found 10 errors
+Cannot use type without at least 1 type argument. [missing-type-arg]
+
+   70| type NoArgs = StringPrefix;
+                     ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:71:21
+
+Cannot use type without at least 1 type argument. [missing-type-arg]
+
+   71| type ZeroTypeArgs = StringPrefix<>;
+                           ^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:72:24
+
+Cannot use `StringPrefix` [1] with more than 2 type arguments. [extra-type-arg]
+
+   72| type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:77:1
+
+Cannot cast `'$'` to `Price` because string with prefix `$` removed [1] is incompatible with union type [2].
+[incompatible-cast]
+
+   prefix.js:77:1
+   77| '$' as Price; // ERROR
+       ^^^ [1]
+
+References:
+   prefix.js:75:32
+   75| type Price = StringPrefix<'$', '1' | '2'>;
+                                      ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:78:1
+
+Cannot cast `'1'` to `Price` because string [1] is incompatible with string prefixed with `$` [2]. [incompatible-cast]
+
+   prefix.js:78:1
+   78| '1' as Price; // ERROR
+       ^^^ [1]
+
+References:
+   prefix.js:78:8
+   78| '1' as Price; // ERROR
+              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:86:3
+
+Cannot cast `x` to union type because: [incompatible-cast]
+ - Either string prefixed with `$` [1] is incompatible with string literal `$1` [2].
+ - Or string prefixed with `$` [1] is incompatible with string literal `$2` [3].
+
+   prefix.js:86:3
+   86|   x as '$1' | '$2'; // ERROR: we don't support this
+         ^
+
+References:
+   prefix.js:84:20
+   84|   declare const x: Price;
+                          ^^^^^ [1]
+   prefix.js:86:8
+   86|   x as '$1' | '$2'; // ERROR: we don't support this
+              ^^^^ [2]
+   prefix.js:86:15
+   86|   x as '$1' | '$2'; // ERROR: we don't support this
+                     ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:91:3
+
+Cannot cast `x` to string prefixed with `foo` because string [1] is incompatible with string literal `xxx` [2].
+[incompatible-cast]
+
+   prefix.js:91:3
+   91|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+         ^
+
+References:
+   prefix.js:89:20
+   89|   declare const x: StringPrefix<'foo'>;
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+   prefix.js:91:28
+   91|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+                                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:99:3
+
+Cannot cast `x` to string prefixed with `foo` because string literal `bar` [1] is incompatible with string literal
+`xxx` [2]. [incompatible-cast]
+
+   prefix.js:99:3
+   99|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+         ^
+
+References:
+   prefix.js:94:40
+   94|   declare const x: StringPrefix<'foo', 'bar'>;
+                                              ^^^^^ [1]
+   prefix.js:99:28
+   99|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+                                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:102:3
+
+Cannot cast `x` to string prefixed with `f` because string prefixed with `foo` [1] is incompatible with string prefixed
+with `f` [2]. [incompatible-cast]
+
+   prefix.js:102:3
+   102|   x as StringPrefix<'f', 'bar'>; // ERROR
+          ^
+
+References:
+   prefix.js:94:20
+    94|   declare const x: StringPrefix<'foo', 'bar'>;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   prefix.js:102:8
+   102|   x as StringPrefix<'f', 'bar'>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- prefix.js:104:45
+
+Cannot instantiate `StringPrefix` because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+
+   prefix.js:104:45
+   104| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
+                                                    ^ [1]
+
+References:
+   prefix.js:104:25
+   104| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:109:3
+
+Cannot cast `x` to string literal `3` because string with prefix `$` removed [1] is incompatible with string literal
+`3` [2]. [incompatible-cast]
+
+   prefix.js:109:3
+   109|   x as "3"; // ERROR
+          ^
+
+References:
+   prefix.js:107:26
+   107|   const x =  stripDollar("$2");
+                                 ^^^^ [1]
+   prefix.js:109:8
+   109|   x as "3"; // ERROR
+               ^^^ [2]
+
+
+
+Found 21 errors

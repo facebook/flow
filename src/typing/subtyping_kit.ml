@@ -1083,13 +1083,28 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (************)
     (* StrUtilT *)
     (************)
-    | (StrUtilT { reason = _; prefix = prefix1 }, StrUtilT { reason = _; prefix = prefix2 })
+    | ( StrUtilT { reason = _; prefix = prefix1; remainder = _ },
+        StrUtilT { reason = _; prefix = prefix2; remainder = None }
+      )
       when String.starts_with ~prefix:prefix2 prefix1 ->
       ()
-    | (DefT (_, StrT (Literal (None, OrdinaryName s))), StrUtilT { reason = _; prefix })
+    | ( StrUtilT { reason; prefix = prefix1; remainder = remainder1 },
+        StrUtilT { reason = _; prefix = prefix2; remainder = Some remainder2 }
+      )
+      when prefix1 = prefix2 ->
+      let remainder1 = Option.value ~default:(StrT.why reason) remainder1 in
+      rec_flow_t cx trace ~use_op (remainder1, remainder2)
+    | ( DefT (reason, StrT (Literal (None, OrdinaryName s))),
+        StrUtilT { reason = _; prefix; remainder }
+      )
       when String.starts_with ~prefix s ->
-      ()
-    | (StrUtilT { reason; prefix }, _) ->
+      Base.Option.iter remainder ~f:(fun remainder ->
+          let chopped = Base.String.chop_prefix_exn ~prefix s in
+          let reason = replace_desc_reason (RStringWithoutPrefix { prefix }) reason in
+          let str_t = DefT (reason, StrT (Literal (None, OrdinaryName chopped))) in
+          rec_flow_t cx trace ~use_op (str_t, remainder)
+      )
+    | (StrUtilT { reason; prefix; remainder = _ }, _) ->
       let literal_kind =
         if prefix = "" then
           AnyLiteral

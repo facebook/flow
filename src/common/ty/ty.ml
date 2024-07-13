@@ -281,7 +281,10 @@ and utility =
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
-  | StringPrefix of string
+  | StringPrefix of {
+      prefix: string;
+      remainder: t option;
+    }
   (* React utils *)
   | ReactElementPropsType of t
   | ReactElementConfigType of t
@@ -876,7 +879,8 @@ let types_of_utility = function
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
-  | StringPrefix s -> Some [StrLit (Reason.OrdinaryName s)]
+  | StringPrefix { prefix; remainder = None } -> Some [StrLit (Reason.OrdinaryName prefix)]
+  | StringPrefix { prefix; remainder = Some t } -> Some [StrLit (Reason.OrdinaryName prefix); t]
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]

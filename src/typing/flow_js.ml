@@ -5149,7 +5149,7 @@ struct
         (* String utils (e.g. prefix) *)
         (******************************)
         (* StrUtilT just becomes a StrT so we can access properties and methods. *)
-        | (StrUtilT { reason; prefix }, _) ->
+        | (StrUtilT { reason; prefix; remainder = _ }, _) ->
           let reason = replace_desc_reason RString reason in
           let literal_kind =
             if prefix = "" then

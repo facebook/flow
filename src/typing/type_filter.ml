@@ -760,6 +760,7 @@ and tag_of_t cx t =
   | OpaqueT (_, { super_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)
   | NamespaceT { values_type; _ } -> tag_of_t cx values_type
+  | StrUtilT _ -> Some (TypeTagSet.singleton StringTag)
   | EvalT _
   | GenericT _
   | ThisTypeAppT _
@@ -775,7 +776,6 @@ and tag_of_t cx t =
   | MaybeT (_, _)
   | OptionalT _
   | KeysT (_, _)
-  | StrUtilT _
   | OpaqueT (_, _)
   | ModuleT _
   | InternalT _
