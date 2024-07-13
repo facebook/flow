@@ -120,3 +120,19 @@ noReversal2([1, 2, 3]); // ERROR
   declare const x: [];
   [...x] as []; // OK
 }
+
+//  Order
+{
+  declare const x: [0, 1, ...[]];
+  x[0] as empty; // ERROR
+  x[0] as 0; // OK
+  x[1] as 1; // OK
+}
+{
+  declare const x: [0, 1, ...[2, 3]];
+  x[0] as empty; // ERROR
+  x[0] as 0; // OK
+  x[1] as 1; // OK
+  x[2] as 2; // OK
+  x[3] as 3; // OK
+}
