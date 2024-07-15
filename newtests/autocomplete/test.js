@@ -104,7 +104,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "codePointAt",
-               "type": "(index: number) => number"
+               "type": "(index: number) => number | void"
              },
              {
                "name": "concat",
