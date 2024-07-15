@@ -672,6 +672,8 @@ struct
         | (UnionT _, TypeCastT (_, (UnionT _ as u)))
           when union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype l u ->
           ()
+        | (UnionT _, TypeCastT (use_op, AnnotT (r, t, use_desc))) ->
+          rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))
         | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) ->
           (match FlowJs.singleton_concrete_type_for_inspection cx (reason_of_t l) l with
