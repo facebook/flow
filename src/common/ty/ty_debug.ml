@@ -135,9 +135,7 @@ struct
   let builtin_value = function
     | FunProto -> "Function.prototype"
     | ObjProto -> "Object.prototype"
-    | FunProtoApply -> "Function.prototype.apply"
     | FunProtoBind -> "Function.prototype.bind"
-    | FunProtoCall -> "Function.prototype.call"
     | TSymbol s -> dump_symbol s
 
   let rec dump_opt (f : 'a -> string) (o : 'a option) =
@@ -466,9 +464,7 @@ struct
         function
         | FunProto -> JSON_String "Function.prototype"
         | ObjProto -> JSON_String "Object.prototype"
-        | FunProtoApply -> JSON_String "Function.prototype.apply"
         | FunProtoBind -> JSON_String "Function.prototype.bind"
-        | FunProtoCall -> JSON_String "Function.prototype.call"
         | TSymbol s -> json_of_symbol s
       )
     in

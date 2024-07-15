@@ -280,8 +280,6 @@ module Make (I : INPUT) : S = struct
   (* Construct built-ins *)
   (***********************)
 
-  let opt_param = Ty.{ prm_optional = true }
-
   let non_opt_param = Ty.{ prm_optional = false }
 
   let mk_fun
@@ -799,21 +797,6 @@ module Make (I : INPUT) : S = struct
       | OpaqueT (r, o) -> opaque_t ~env r o
       | ObjProtoT _ -> return Ty.(TypeOf (ObjProto, None))
       | FunProtoT _ -> return Ty.(TypeOf (FunProto, None))
-      | FunProtoApplyT _ ->
-        if Env.expand_internal_types env then
-          (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
-          return
-            Ty.(
-              mk_fun
-                ~params:
-                  [
-                    (Some "thisArg", explicit_any, non_opt_param);
-                    (Some "argArray", explicit_any, opt_param);
-                  ]
-                (ReturnType explicit_any)
-            )
-        else
-          return Ty.(TypeOf (FunProtoApply, None))
       | FunProtoBindT _ ->
         if Env.expand_internal_types env then
           (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
@@ -829,21 +812,6 @@ module Make (I : INPUT) : S = struct
             )
         else
           return Ty.(TypeOf (FunProtoBind, None))
-      | FunProtoCallT _ ->
-        if Env.expand_internal_types env then
-          (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
-          return
-            Ty.(
-              mk_fun
-                ~params:[(Some "thisArg", explicit_any, non_opt_param)]
-                ~rest:
-                  ( Some "argArray",
-                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
-                  )
-                (ReturnType explicit_any)
-            )
-        else
-          return Ty.(TypeOf (FunProtoCall, None))
       | NullProtoT _ -> return Ty.Null
       | DefT (reason, EnumObjectT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in

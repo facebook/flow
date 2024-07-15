@@ -57,9 +57,7 @@ end = struct
     | DefT (_, StrT _)
     | DefT (_, VoidT)
     | DefT (_, SymbolT)
-    | FunProtoApplyT _
     | FunProtoBindT _
-    | FunProtoCallT _
     | FunProtoT _
     | NullProtoT _
     | ObjProtoT _ ->

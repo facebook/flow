@@ -1,0 +1,131 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:1:14
+
+number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Number(...))` to turn
+it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   test.js:1:14
+      1| const arr = [1,2,3];  // badly-positioned error
+                      ^ [1]
+
+References:
+   <BUILTINS>/core.js:1751:11
+   1751| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:1:16
+
+number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Number(...))` to turn
+it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   test.js:1:16
+      1| const arr = [1,2,3];  // badly-positioned error
+                        ^ [1]
+
+References:
+   <BUILTINS>/core.js:1751:11
+   1751| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:45
+
+Cannot call `function () { ... }.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
+
+   test.js:7:45
+     7| (function (this: any) { return this.bar; }).apply(...arr); // error
+                                                    ^^^^^
+
+References:
+   <BUILTINS>/core.js:362:19
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:45
+
+Cannot call `function () { ... }.apply` because number [1], a primitive, cannot be used as a subtype of
+`$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
+an interface in type argument `A`. [incompatible-type]
+
+   test.js:7:45
+     7| (function (this: any) { return this.bar; }).apply(...arr); // error
+                                                    ^^^^^
+
+References:
+   test.js:1:16
+     1| const arr = [1,2,3];  // badly-positioned error
+                       ^ [1]
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:45
+
+Cannot call `function () { ... }.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
+
+   test.js:8:45
+     8| (function (this: any) { return this.bar; }).apply(({}: any), ...arr); // error
+                                                    ^^^^^
+
+References:
+   <BUILTINS>/core.js:362:19
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:45
+
+Cannot call `function () { ... }.apply` because number [1], a primitive, cannot be used as a subtype of
+`$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
+an interface in type argument `A`. [incompatible-type]
+
+   test.js:8:45
+     8| (function (this: any) { return this.bar; }).apply(({}: any), ...arr); // error
+                                                    ^^^^^
+
+References:
+   test.js:1:14
+     1| const arr = [1,2,3];  // badly-positioned error
+                     ^ [1]
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:45
+
+Cannot call `function () { ... }.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
+
+   test.js:9:45
+     9| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
+                                                    ^^^^^
+
+References:
+   <BUILTINS>/core.js:362:19
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:45
+
+Cannot call `function () { ... }.apply` because number [1], a primitive, cannot be used as a subtype of
+`$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
+an interface in type argument `A`. [incompatible-type]
+
+   test.js:9:45
+     9| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
+                                                    ^^^^^
+
+References:
+   test.js:1:16
+     1| const arr = [1,2,3];  // badly-positioned error
+                       ^ [1]
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 8 errors

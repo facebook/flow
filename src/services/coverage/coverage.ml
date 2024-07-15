@@ -150,9 +150,7 @@ let visitor =
       (* Concrete covered constructors *)
       | CustomFunT _
       | FunProtoT _
-      | FunProtoApplyT _
       | FunProtoBindT _
-      | FunProtoCallT _
       | InternalT _
       | ThisInstanceT _
       | KeysT _

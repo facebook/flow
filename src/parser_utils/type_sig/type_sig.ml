@@ -606,9 +606,7 @@ type ('loc, 'a) annot =
       t: 'a;
     }
   | ClassT of 'loc * 'a
-  | Function_apply of 'loc
   | Function_bind of 'loc
-  | Function_call of 'loc
   | Object_assign of 'loc
   | Object_getPrototypeOf of 'loc
   | Object_setPrototypeOf of 'loc

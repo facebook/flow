@@ -25,9 +25,7 @@ let rec reason_of_t = function
   | InternalT (ExtendsT (reason, _, _)) -> reason
   | InternalT (EnforceUnionOptimized reason) -> reason
   | FunProtoT reason -> reason
-  | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
-  | FunProtoCallT reason -> reason
   | KeysT (reason, _) -> reason
   | StrUtilT { reason; _ } -> reason
   | ModuleT { module_reason = reason; _ } -> reason
@@ -163,10 +161,8 @@ let rec mod_reason_of_t f = function
   | GenericT ({ reason; _ } as generic) -> GenericT { generic with reason = f reason }
   | InternalT (ExtendsT (reason, t1, t2)) -> InternalT (ExtendsT (f reason, t1, t2))
   | InternalT (EnforceUnionOptimized reason) -> InternalT (EnforceUnionOptimized (f reason))
-  | FunProtoApplyT reason -> FunProtoApplyT (f reason)
   | FunProtoT reason -> FunProtoT (f reason)
   | FunProtoBindT reason -> FunProtoBindT (f reason)
-  | FunProtoCallT reason -> FunProtoCallT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | StrUtilT { reason; prefix; remainder } -> StrUtilT { reason = f reason; prefix; remainder }
   | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms } ->

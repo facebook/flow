@@ -2342,10 +2342,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
            }
         );
       rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) lreason, u)
-    | (FunProtoApplyT reason, _)
-    | (FunProtoBindT reason, _)
-    | (FunProtoCallT reason, _) ->
-      rec_flow_t cx trace ~use_op (FunProtoT reason, u)
+    | (FunProtoBindT reason, _) -> rec_flow_t cx trace ~use_op (FunProtoT reason, u)
     | (InternalT (EnforceUnionOptimized reason), _) ->
       add_output
         cx

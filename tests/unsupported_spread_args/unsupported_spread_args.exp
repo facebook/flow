@@ -1,72 +1,32 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:7:67
+Error ----------------------------------------------------------------------------------------------------- test.js:7:26
 
 A spread argument is unsupported here. [unsupported-syntax]
 
-   7| (function (this: any, ...args: any) { return this.bar; }).call(...arr); // error
-                                                                        ^^^
+   7| Object.getPrototypeOf(...arr); // error
+                               ^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:10:54
-
-A spread argument is unsupported here. [unsupported-syntax]
-
-   10| (function (this: any) { return this.bar; }).apply(...arr); // error
-                                                            ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:11:65
+Error ---------------------------------------------------------------------------------------------------- test.js:11:29
 
 A spread argument is unsupported here. [unsupported-syntax]
 
-   11| (function (this: any) { return this.bar; }).apply(({}: any), ...arr); // error
-                                                                       ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:12:54
-
-A spread argument is unsupported here. [unsupported-syntax]
-
-   12| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
-                                                            ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:12:62
-
-A spread argument is unsupported here. [unsupported-syntax]
-
-   12| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
-                                                                    ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:15:26
-
-A spread argument is unsupported here. [unsupported-syntax]
-
-   15| Object.getPrototypeOf(...arr); // error
-                                ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:19:29
-
-A spread argument is unsupported here. [unsupported-syntax]
-
-   19| const o1 = Object.assign(...objArr); // error
+   11| const o1 = Object.assign(...objArr); // error
                                    ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:25:1
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
 
 Incorrect arguments passed to call of method `assign` because number [1] is not an object. [not-an-object]
 
-   test.js:25:1
-   25| Object.assign({}, ...[1]); // error
+   test.js:17:1
+   17| Object.assign({}, ...[1]); // error
        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:25:23
-   25| Object.assign({}, ...[1]); // error
+   test.js:17:23
+   17| Object.assign({}, ...[1]); // error
                              ^ [1]
 
 
 
-Found 8 errors
+Found 3 errors

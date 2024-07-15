@@ -27,15 +27,18 @@ References:
              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- primitives.js:13:18
+Error ----------------------------------------------------------------------------------------------- primitives.js:13:7
 
-Cannot call `icall.call` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `icall.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
 
+   primitives.js:13:7
+   13| icall.call(null, 0); // error, number ~> string
+             ^^^^
+
+References:
    primitives.js:13:18
    13| icall.call(null, 0); // error, number ~> string
                         ^ [1]
-
-References:
    primitives.js:9:7
     9|   (x: string): void;
              ^^^^^^ [2]
@@ -55,16 +58,19 @@ References:
              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- primitives.js:21:21
+Error ---------------------------------------------------------------------------------------------- primitives.js:21:10
 
-Cannot call `callable.call` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `callable.call` because number [1] is incompatible with string [2] in the first argument.
 [incompatible-call]
 
+   primitives.js:21:10
+   21| callable.call(null, 0); // error, number ~> string
+                ^^^^
+
+References:
    primitives.js:21:21
    21| callable.call(null, 0); // error, number ~> string
                            ^ [1]
-
-References:
    primitives.js:16:7
    16|   (x: string): void;
              ^^^^^^ [2]

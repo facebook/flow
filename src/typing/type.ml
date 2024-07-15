@@ -103,9 +103,7 @@ module rec TypeTerm : sig
     (* Signifies the end of the prototype chain. Distinct from NullT when it
        appears as an upper bound of an object type, otherwise the same. *)
     | NullProtoT of reason
-    | FunProtoApplyT of reason (* Function.prototype.apply *)
     | FunProtoBindT of reason (* Function.prototype.bind *)
-    | FunProtoCallT of reason (* Function.prototype.call *)
     (* & types *)
     | IntersectionT of reason * InterRep.t
     (* | types *)
@@ -3992,9 +3990,7 @@ let string_of_ctor = function
   | InternalT (ExtendsT _) -> "ExtendsT"
   | InternalT (EnforceUnionOptimized _) -> "EnforceUnionOptimizedT"
   | FunProtoT _ -> "FunProtoT"
-  | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
-  | FunProtoCallT _ -> "FunProtoCallT"
   | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | StrUtilT _ -> "StrUtilT"

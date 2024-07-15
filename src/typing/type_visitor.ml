@@ -26,9 +26,7 @@ class ['a] t =
       | DefT (_, t) -> self#def_type cx pole acc t
       | InternalT (EnforceUnionOptimized _) -> acc
       | FunProtoT _
-      | FunProtoApplyT _
       | FunProtoBindT _
-      | FunProtoCallT _
       | ObjProtoT _
       | NullProtoT _ ->
         acc

@@ -32,8 +32,8 @@ declare class Array<T> extends $ReadOnlyArray<T> {
 }
 
 type $ArrayLike<T> = {
-  [indexer: number]: T,
-  length: number,
+  +[indexer: number]: T,
+  +length: number,
   ...
 };
 

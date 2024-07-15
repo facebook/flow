@@ -1231,20 +1231,10 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 (mk_type_destructor cx (use_op reason) reason t EnumType (mk_eval_id cx loc))
                 targs
           )
-        | "Function$Prototype$Apply" ->
-          check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let reason = mk_annot_reason RFunctionType loc in
-              reconstruct_ast (FunProtoApplyT reason) None
-          )
         | "Function$Prototype$Bind" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let reason = mk_annot_reason RFunctionType loc in
               reconstruct_ast (FunProtoBindT reason) None
-          )
-        | "Function$Prototype$Call" ->
-          check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let reason = mk_annot_reason RFunctionType loc in
-              reconstruct_ast (FunProtoCallT reason) None
           )
         | "Object$Assign" -> mk_custom_fun cx loc t_ast targs ident ObjectAssign
         | "Object$GetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectGetPrototypeOf

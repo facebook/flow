@@ -4689,151 +4689,6 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx o reason_op, tout)
         | (DefT (_, ObjT o), MapTypeT (_, reason_op, ObjectMapConst target, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_map_const cx o reason_op target, tout)
-        (***************************************************************)
-        (* functions may be called by passing a receiver and arguments *)
-        (***************************************************************)
-        | ( FunProtoCallT _,
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action = Funcalltype ({ call_this_t = func; call_args_tlist; _ } as funtype);
-                return_hint;
-              }
-          ) ->
-          (* Drop the first argument in the use_op. *)
-          let use_op =
-            match use_op with
-            | Op (FunCall { op; fn; args = _ :: args; local }) ->
-              Op (FunCall { op; fn; args; local })
-            | Op (FunCallMethod { op; fn; prop; args = _ :: args; local }) ->
-              Op (FunCallMethod { op; fn; prop; args; local })
-            | _ -> use_op
-          in
-          begin
-            match call_args_tlist with
-            (* func.call() *)
-            | [] ->
-              let funtype =
-                { funtype with call_this_t = VoidT.why reason_op; call_args_tlist = [] }
-              in
-              rec_flow
-                cx
-                trace
-                ( func,
-                  CallT
-                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
-                )
-            (* func.call(this_t, ...call_args_tlist) *)
-            | Arg call_this_t :: call_args_tlist ->
-              let funtype = { funtype with call_this_t; call_args_tlist } in
-              rec_flow
-                cx
-                trace
-                ( func,
-                  CallT
-                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
-                )
-            (* func.call(...call_args_tlist) *)
-            | (SpreadArg _ as first_arg) :: _ ->
-              let call_this_t = extract_non_spread cx first_arg in
-              let funtype = { funtype with call_this_t } in
-              rec_flow
-                cx
-                trace
-                ( func,
-                  CallT
-                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
-                )
-          end
-        (*******************************************)
-        (* ... or a receiver and an argument array *)
-        (*******************************************)
-
-        (* resolves the arguments... *)
-        | ( FunProtoApplyT lreason,
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action = Funcalltype ({ call_this_t = func; call_args_tlist; _ } as funtype);
-                return_hint;
-              }
-          ) ->
-          (* Drop the specific AST derived argument reasons. Our new arguments come
-           * from arbitrary positions in the array. *)
-          let use_op =
-            match use_op with
-            | Op (FunCall { op; fn; args = _; local }) -> Op (FunCall { op; fn; args = []; local })
-            | Op (FunCallMethod { op; fn; prop; args = _; local }) ->
-              Op (FunCallMethod { op; fn; prop; args = []; local })
-            | _ -> use_op
-          in
-          begin
-            match call_args_tlist with
-            (* func.apply() *)
-            | [] ->
-              let funtype =
-                { funtype with call_this_t = VoidT.why reason_op; call_args_tlist = [] }
-              in
-              rec_flow
-                cx
-                trace
-                ( func,
-                  CallT
-                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
-                )
-            (* func.apply(this_arg) *)
-            | [Arg this_arg] ->
-              let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
-              rec_flow
-                cx
-                trace
-                ( func,
-                  CallT
-                    { use_op; reason = reason_op; call_action = Funcalltype funtype; return_hint }
-                )
-            (* func.apply(this_arg, ts) *)
-            | [first_arg; Arg ts] ->
-              let call_this_t = extract_non_spread cx first_arg in
-              let call_args_tlist = [SpreadArg ts] in
-              let funtype = { funtype with call_this_t; call_args_tlist } in
-              (* Ignoring `this_arg`, we're basically doing func(...ts). Normally
-               * spread arguments are resolved for the multiflow application, however
-               * there are a bunch of special-cased functions like bind(), call(),
-               * apply, etc which look at the arguments a little earlier. If we delay
-               * resolving the spread argument, then we sabotage them. So we resolve
-               * it early *)
-              let t =
-                Tvar.mk_where cx reason_op (fun t ->
-                    let resolve_to = ResolveSpreadsToCallT (funtype, t) in
-                    resolve_call_list cx ~trace ~use_op reason_op call_args_tlist resolve_to
-                )
-              in
-              rec_flow_t cx trace ~use_op:unknown_use (func, t)
-            | [SpreadArg t1; SpreadArg t2] ->
-              add_output
-                cx
-                (Error_message.EUnsupportedSyntax
-                   (loc_of_t t1, Flow_intermediate_error_types.SpreadArgument)
-                );
-              add_output
-                cx
-                (Error_message.EUnsupportedSyntax
-                   (loc_of_t t2, Flow_intermediate_error_types.SpreadArgument)
-                )
-            | [SpreadArg t]
-            | [Arg _; SpreadArg t] ->
-              add_output
-                cx
-                (Error_message.EUnsupportedSyntax
-                   (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
-                )
-            | _ :: _ :: _ :: _ ->
-              Error_message.EFunctionCallExtraArg
-                (mk_reason RFunctionUnusedArgument (loc_of_reason lreason), lreason, 2, use_op)
-              |> add_output cx
-          end
         (************************************************************************)
         (* functions may be bound by passing a receiver and (partial) arguments *)
         (************************************************************************)
@@ -5986,9 +5841,7 @@ struct
             );
           rec_flow cx trace (AnyT.make (AnyError None) lreason, u)
         (* Special cases of FunT *)
-        | (FunProtoApplyT reason, MethodT (use_op, call_r, lookup_r, propref, action))
-        | (FunProtoBindT reason, MethodT (use_op, call_r, lookup_r, propref, action))
-        | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action)) ->
+        | (FunProtoBindT reason, MethodT (use_op, call_r, lookup_r, propref, action)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u =
@@ -6007,10 +5860,7 @@ struct
             )
           in
           apply_method_action cx trace method_type use_op call_r l action
-        | (FunProtoApplyT reason, _)
-        | (FunProtoBindT reason, _)
-        | (FunProtoCallT reason, _) ->
-          rec_flow cx trace (FunProtoT reason, u)
+        | (FunProtoBindT reason, _) -> rec_flow cx trace (FunProtoT reason, u)
         | (_, LookupT { propref; lookup_action; _ }) ->
           Default_resolve.default_resolve_touts
             ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
@@ -6883,9 +6733,7 @@ struct
         inst;
       true
     (* These types have no negative positions in their lower bounds *)
-    | FunProtoApplyT _
     | FunProtoBindT _
-    | FunProtoCallT _
     | FunProtoT _
     | ObjProtoT _
     | NullProtoT _ ->
