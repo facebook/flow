@@ -13,8 +13,9 @@ open TypeUtil
 module Flow_js = struct end
 
 let mk_object_type
+    cx
     ~reason
-    ?(wrap_exact_t_on_exact_obj = false)
+    ?(wrap_on_exact_obj = false)
     ~invalidate_aliases
     ~interface
     ~reachable_targs
@@ -45,8 +46,11 @@ let mk_object_type
     | None ->
       let t = DefT (reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
-      if wrap_exact_t_on_exact_obj && Obj_type.is_exact flags.obj_kind then
-        ExactT (reason, t)
+      if wrap_on_exact_obj && Obj_type.is_exact flags.obj_kind then
+        if Flow_js_utils.TvarVisitors.has_unresolved_tvars_or_placeholders cx t then
+          t
+        else
+          Tvar.mk_fully_resolved cx (TypeUtil.reason_of_t t) t
       else
         t
   in
@@ -554,8 +558,9 @@ let spread_mk_object
   let proto = ObjProtoT reason in
   let call = None in
   mk_object_type
+    cx
     ~reason
-    ~wrap_exact_t_on_exact_obj:true
+    ~wrap_on_exact_obj:true
     ~invalidate_aliases:true
     ~interface:None
     ~reachable_targs
@@ -726,6 +731,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
   let call = None in
   let t =
     mk_object_type
+      cx
       ~reason
       ~invalidate_aliases:true
       ~interface:None
@@ -1094,6 +1100,7 @@ let object_rest
     let proto = ObjProtoT r1 in
     let call = None in
     mk_object_type
+      cx
       ~reason:r1
       ~invalidate_aliases:true
       ~interface:None
@@ -1155,6 +1162,7 @@ let object_read_only =
       | _ -> reason
     in
     mk_object_type
+      cx
       ~reason
       ~invalidate_aliases:true
       ~interface
@@ -1213,6 +1221,7 @@ let object_update_optionality kind =
       | `Required -> Subst_name.Required
     in
     mk_object_type
+      cx
       ~reason
       ~invalidate_aliases:true
       ~interface
@@ -1792,6 +1801,7 @@ let map_object
   let proto = ObjProtoT reason in
   let flags = { flags with obj_kind } in
   mk_object_type
+    cx
     ~reason
     ~invalidate_aliases:true
     ~interface
