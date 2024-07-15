@@ -2118,7 +2118,7 @@ let to_printable_error :
       [
         text "Cannot use ";
         code "StringPrefix";
-        text " because the type argument must be a string literal.";
+        text " because the first type argument must be a string literal.";
       ]
     | MessageCannotUseTypeDueToPolarityMismatch { reason_targ; expected_polarity; actual_polarity }
       ->

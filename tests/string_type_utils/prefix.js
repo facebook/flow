@@ -65,3 +65,46 @@ type DataFooProp = StringPrefix<'data-foo-'>;
 
 // Test type sig
 declare export const data: DataProp;
+
+// Type arg arity
+type NoArgs = StringPrefix;
+type ZeroTypeArgs = StringPrefix<>;
+type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>;
+
+// With remainder (second type arg)
+type Price = StringPrefix<'$', '1' | '2'>;
+'$1' as Price; // OK
+'$' as Price; // ERROR
+'1' as Price; // ERROR
+{
+  declare const x: '$1' | '$2';
+  x as Price; // OK
+}
+{
+  declare const x: Price;
+  x as string; // OK
+  x as '$1' | '$2'; // ERROR: we don't support this
+}
+{
+  declare const x: StringPrefix<'foo'>;
+  x as StringPrefix<'foo', string>; // OK
+  x as StringPrefix<'foo', 'xxx'>; // ERROR
+}
+{
+  declare const x: StringPrefix<'foo', 'bar'>;
+  x as string; // OK
+  x as StringPrefix<'foo'>; // OK
+  x as StringPrefix<'foo', string>; // OK
+  x as StringPrefix<'foo', 'bar'>; // OK
+  x as StringPrefix<'foo', 'xxx'>; // ERROR
+
+  x as StringPrefix<'f'>; // OK
+  x as StringPrefix<'f', 'bar'>; // ERROR
+}
+type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
+{
+  declare function stripDollar<X: string>(x: StringPrefix<'$', X>): X;
+  const x =  stripDollar("$2");
+  x as "2"; // OK
+  x as "3"; // ERROR
+}

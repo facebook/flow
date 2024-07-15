@@ -515,6 +515,7 @@ type ('loc, 'a) annot =
   | StringPrefix of {
       loc: 'loc;
       prefix: string;
+      remainder: 'a option;
     }
   | Typeof of {
       loc: 'loc;

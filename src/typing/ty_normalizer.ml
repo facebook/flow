@@ -734,7 +734,11 @@ module Make (I : INPUT) : S = struct
       | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)
       | DefT (_, SingletonBigIntT (_, lit)) -> return (Ty.BigIntLit lit)
-      | StrUtilT { reason = _; prefix } -> return (Ty.Utility (Ty.StringPrefix prefix))
+      | StrUtilT { reason = _; prefix; remainder = None } ->
+        return (Ty.Utility (Ty.StringPrefix { prefix; remainder = None }))
+      | StrUtilT { reason = _; prefix; remainder = Some remainder } ->
+        let%bind remainder = type__ ~env remainder in
+        return (Ty.Utility (Ty.StringPrefix { prefix; remainder = Some remainder }))
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, FunT (static, f)) ->

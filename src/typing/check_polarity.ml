@@ -60,13 +60,14 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | FunProtoCallT _
     | FunProtoT _
     | NullProtoT _
-    | ObjProtoT _
-    | StrUtilT _ ->
+    | ObjProtoT _ ->
       ()
     | OptionalT { type_ = t; _ }
     | ExactT (_, t)
-    | MaybeT (_, t) ->
+    | MaybeT (_, t)
+    | StrUtilT { remainder = Some t; _ } ->
       check_polarity cx ?trace seen tparams polarity t
+    | StrUtilT { remainder = None; _ } -> ()
     | DefT (_, ClassT t) -> check_polarity cx ?trace seen tparams polarity t
     | DefT (_, InstanceT { static; super; implements; inst }) ->
       let {

@@ -65,6 +65,7 @@ type 'loc virtual_reason_desc =
   (* TODO String literals should not be able to include internal names *)
   | RStringLit of name
   | RStringPrefix of { prefix: string }
+  | RStringWithoutPrefix of { prefix: string }
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool
@@ -256,10 +257,10 @@ type reason_desc = ALoc.t virtual_reason_desc
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
-    | RStringPrefix _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit
-    | RObjectLit | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit
-    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType
-    | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RStringPrefix _ | RStringWithoutPrefix _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _
+    | RObject | RConstObjectLit | RObjectLit | RObjectType | RInterfaceType | RArray | RArrayLit
+    | RConstArrayLit | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole
+    | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
     | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
     | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
     | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
@@ -543,6 +544,7 @@ let rec string_of_desc = function
   | RStringLit (OrdinaryName "") -> "empty string"
   | RStringLit x -> spf "string literal `%s`" (display_string_of_name x)
   | RStringPrefix { prefix } -> spf "string prefixed with `%s`" prefix
+  | RStringWithoutPrefix { prefix } -> spf "string with prefix `%s` removed" prefix
   | RNumberLit x -> spf "number literal `%s`" x
   | RBigIntLit x -> spf "bigint literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
@@ -1283,6 +1285,7 @@ let classification_of_reason_desc desc =
   | RLongStringLit _
   | RStringLit _
   | RStringPrefix _
+  | RStringWithoutPrefix _
   | RNumberLit _
   | RBigIntLit _
   | RBooleanLit _

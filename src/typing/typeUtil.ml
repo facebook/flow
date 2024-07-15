@@ -175,7 +175,7 @@ let rec mod_reason_of_t f = function
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | FunProtoCallT reason -> FunProtoCallT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | StrUtilT { reason; prefix } -> StrUtilT { reason = f reason; prefix }
+  | StrUtilT { reason; prefix; remainder } -> StrUtilT { reason = f reason; prefix; remainder }
   | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms } ->
     ModuleT
       {
@@ -639,13 +639,18 @@ let quick_subtype t1 t2 =
   | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _)))
   | (DefT (_, EmptyT), _) ->
     true
-  | (StrUtilT { reason = _; prefix = prefix1 }, StrUtilT { reason = _; prefix = prefix2 })
+  | ( StrUtilT { reason = _; prefix = prefix1; remainder = _ },
+      StrUtilT { reason = _; prefix = prefix2; remainder = None }
+    )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
-  | (DefT (_, StrT (Literal (None, OrdinaryName s))), StrUtilT { reason = _; prefix })
+  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+      StrUtilT { reason = _; prefix; remainder = None }
+    )
     when String.starts_with ~prefix s ->
     true
-  | (StrUtilT { reason = _; prefix }, DefT (_, StrT Truthy)) when prefix <> "" -> true
+  | (StrUtilT { reason = _; prefix; remainder = _ }, DefT (_, StrT Truthy)) when prefix <> "" ->
+    true
   | (StrUtilT _, DefT (_, StrT AnyLiteral)) -> true
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
   | (DefT (_, StrT actual), DefT (_, SingletonStrT expected)) -> literal_eq expected actual
