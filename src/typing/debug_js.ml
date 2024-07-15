@@ -850,7 +850,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | PrivateMethodT (_, _, _, prop, _, _, action) ->
       p ~extra:(spf "(%s), (%s)" prop (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
-    | NotT (_, arg) -> p ~extra:(tout arg) t
     | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))

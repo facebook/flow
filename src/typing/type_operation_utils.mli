@@ -86,6 +86,8 @@ module Operators : sig
   val check_comparator : Context.t -> Type.t -> Type.t -> unit
 
   val unary_arith : Context.t -> reason -> Type.UnaryArithKind.t -> Type.t -> Type.t
+
+  val unary_not : Context.t -> reason -> Type.t -> Type.t
 end
 
 module Promise : sig

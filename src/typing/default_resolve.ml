@@ -138,8 +138,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     ()
   | AndT (_, _, tvar)
   | OrT (_, _, tvar)
-  | NullishCoalesceT (_, _, tvar)
-  | NotT (_, tvar) ->
+  | NullishCoalesceT (_, _, tvar) ->
     resolve_tvar tvar
   | SpecializeT (_, _, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k

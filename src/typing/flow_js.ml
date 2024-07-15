@@ -2126,30 +2126,6 @@ struct
                 true
               | _ -> false);
           rec_flow cx trace (l, t_out)
-        (**************************)
-        (* logical types - part B *)
-        (**************************)
-
-        (* !x when x is of unknown truthiness *)
-        | (DefT (_, BoolT None), NotT (reason, tout))
-        | (DefT (_, StrT AnyLiteral), NotT (reason, tout))
-        | (DefT (_, NumT AnyLiteral), NotT (reason, tout)) ->
-          rec_flow_t ~use_op:unknown_use cx trace (BoolT.at (loc_of_reason reason), OpenT tout)
-        (* !x when x is falsy *)
-        | (DefT (_, BoolT (Some false)), NotT (reason, tout))
-        | (DefT (_, SingletonBoolT false), NotT (reason, tout))
-        | (DefT (_, StrT (Literal (_, OrdinaryName ""))), NotT (reason, tout))
-        | (DefT (_, SingletonStrT (OrdinaryName "")), NotT (reason, tout))
-        | (DefT (_, NumT (Literal (_, (0., _)))), NotT (reason, tout))
-        | (DefT (_, SingletonNumT (0., _)), NotT (reason, tout))
-        | (DefT (_, NullT), NotT (reason, tout))
-        | (DefT (_, VoidT), NotT (reason, tout)) ->
-          let reason = replace_desc_reason (RBooleanLit true) reason in
-          rec_flow_t ~use_op:unknown_use cx trace (DefT (reason, BoolT (Some true)), OpenT tout)
-        (* !x when x is truthy *)
-        | (_, NotT (reason, tout)) ->
-          let reason = replace_desc_reason (RBooleanLit false) reason in
-          rec_flow_t ~use_op:unknown_use cx trace (DefT (reason, BoolT (Some false)), OpenT tout)
         (*************************)
         (* Resolving rest params *)
         (*************************)
@@ -6519,9 +6495,6 @@ struct
     let covariant_flow ~use_op t = rec_flow_t cx trace ~use_op (any, t) in
     let contravariant_flow ~use_op t = rec_flow_t cx trace ~use_op (t, any) in
     match u with
-    | NotT (reason, t) ->
-      rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, OpenT t);
-      true
     | TryRenderTypePromotionT { use_op; reason_obj; reason = _; upper_renders; tried_promotion = _ }
       ->
       let renders = DefT (reason_obj, RendersT upper_renders) in

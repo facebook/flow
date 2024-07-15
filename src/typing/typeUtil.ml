@@ -87,7 +87,6 @@ and reason_of_use_t = function
   | MapTypeT (_, reason, _, _) -> reason
   | MethodT (_, reason, _, _, _) -> reason
   | MixinT (reason, _) -> reason
-  | NotT (reason, _) -> reason
   | NullishCoalesceT (reason, _, _) -> reason
   | ObjAssignToT (_, reason, _, _, _) -> reason
   | ObjAssignFromT (_, reason, _, _, _) -> reason
@@ -289,7 +288,6 @@ let rec util_use_op_of_use_t :
   | AndT (_, _, _)
   | OrT (_, _, _)
   | NullishCoalesceT (_, _, _)
-  | NotT (_, _)
   | ThisSpecializeT (_, _, _)
   | LookupT _
   | ObjRestT (_, _, _, _)

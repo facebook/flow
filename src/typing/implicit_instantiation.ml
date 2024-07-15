@@ -357,7 +357,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | AndT _
     | OrT _
     | NullishCoalesceT _
-    | NotT _
     | AssertIterableT _
     | ObjAssignToT _
     | ObjAssignFromT _

@@ -4635,14 +4635,12 @@ module Make
     function
     | { operator = Not; argument; comments } ->
       let (((_, arg), _) as argument) = expression cx ?cond argument in
-      let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
       let tout =
         match cond with
         | Some _ -> BoolT.at loc
         | None ->
-          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-              Flow.flow cx (arg, NotT (reason, t))
-          )
+          let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
+          Operators.unary_not cx reason arg
       in
       (tout, { operator = Not; argument; comments })
     | { operator = Plus; argument; comments } ->

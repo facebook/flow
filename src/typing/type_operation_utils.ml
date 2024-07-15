@@ -340,6 +340,40 @@ module Operators = struct
             Flow.flow_t cx (Flow_js_utils.flow_unary_arith cx t reason kind, tout))
           t
     )
+
+  let unary_not =
+    let f reason = function
+      | AnyT (_, src) -> AnyT.why src reason
+      | DefT (_, BoolT None)
+      | DefT (_, StrT AnyLiteral)
+      | DefT (_, NumT AnyLiteral) ->
+        BoolT.at (loc_of_reason reason)
+      (* !x when x is falsy *)
+      | DefT (_, BoolT (Some false))
+      | DefT (_, SingletonBoolT false)
+      | DefT (_, StrT (Literal (_, OrdinaryName "")))
+      | DefT (_, SingletonStrT (OrdinaryName ""))
+      | DefT (_, NumT (Literal (_, (0., _))))
+      | DefT (_, SingletonNumT (0., _))
+      | DefT (_, NullT)
+      | DefT (_, VoidT) ->
+        let reason = replace_desc_reason (RBooleanLit true) reason in
+        DefT (reason, BoolT (Some true))
+      (* !x when x is truthy *)
+      | _ ->
+        let reason = replace_desc_reason (RBooleanLit false) reason in
+        DefT (reason, BoolT (Some false))
+    in
+    fun cx reason t ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+          DistributeUnionIntersection.distribute
+            cx
+            t
+            ~break_up_union:Flow.possible_concrete_types_for_inspection
+            ~get_no_match_error_loc:loc_of_reason
+            ~check_base:(fun cx t -> Flow.flow_t cx (f reason t, tout)
+          )
+      )
 end
 
 module Promise = struct

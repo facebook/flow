@@ -688,7 +688,6 @@ module rec TypeTerm : sig
     | AndT of reason * t * tvar
     | OrT of reason * t * tvar
     | NullishCoalesceT of reason * t * tvar
-    | NotT of reason * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
           with type arguments targs, and flows the result into tresult. If cache
@@ -4146,7 +4145,6 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | PrivateMethodT _ -> "PrivateMethodT"
   | MixinT _ -> "MixinT"
-  | NotT _ -> "NotT"
   | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
