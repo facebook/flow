@@ -3172,20 +3172,30 @@ module Make
         | _ ->
           let t_out = StrT.at loc in
           let expressions =
-            Base.List.map
-              ~f:(fun expr ->
+            Base.List.map expressions ~f:(fun expr ->
                 let (((_, t), _) as e) = expression cx expr in
-                Flow.flow
-                  cx
-                  ( t,
-                    UseT
-                      ( Op
-                          (Coercion { from = mk_expression_reason expr; target = reason_of_t t_out }),
-                        t_out
-                      )
-                  );
-                e)
-              expressions
+                let reason = reason_of_t t in
+                Flow.possible_concrete_types_for_inspection cx reason t
+                |> Base.List.concat_map ~f:(function
+                       | GenericT { bound; _ } ->
+                         Flow.possible_concrete_types_for_inspection cx reason bound
+                       | t -> [t]
+                       )
+                |> Base.List.iter ~f:(function
+                       | DefT (_, NumT _)
+                       | DefT (_, SingletonNumT _) ->
+                         ()
+                       | t ->
+                         let use_op =
+                           Op
+                             (Coercion
+                                { from = mk_expression_reason expr; target = reason_of_t t_out }
+                             )
+                         in
+                         Flow.flow cx (t, UseT (use_op, t_out))
+                       );
+                e
+            )
           in
           (t_out, expressions)
       in

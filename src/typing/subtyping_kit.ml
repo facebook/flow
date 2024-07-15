@@ -2115,17 +2115,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
     | (OpaqueT (opaque_t_reason, { super_t = Some t; _ }), _) ->
       rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeBound { opaque_t_reason }, use_op)) (t, u)
-    (***********************************************************)
-    (* coercion                                                *)
-    (***********************************************************)
-
-    (* string and number can be coerced to strings *)
-    | (DefT (_, NumT _), DefT (_, StrT _))
-    (* TODO matching on the use_op seems wrong *)
-      when match use_op with
-           | Op (Coercion _) -> true
-           | _ -> false ->
-      ()
     (*********************)
     (* functions statics *)
     (*********************)
