@@ -305,9 +305,7 @@ and polarity =
 and builtin_or_symbol =
   | FunProto
   | ObjProto
-  | FunProtoApply
   | FunProtoBind
-  | FunProtoCall
   | TSymbol of symbol
 
 and decl =
@@ -712,10 +710,8 @@ class ['A] comparator_ty =
       function
       | FunProto -> 0
       | ObjProto -> 1
-      | FunProtoApply -> 2
-      | FunProtoBind -> 3
-      | FunProtoCall -> 4
-      | TSymbol _ -> 5
+      | FunProtoBind -> 2
+      | TSymbol _ -> 3
 
     method tag_of_return_t _ =
       function

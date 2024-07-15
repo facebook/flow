@@ -360,7 +360,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "apply",
-               "type": "(thisArg: any, argArray?: any) => any"
+               "type": "<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
              },
              {
                "name": "arguments",
@@ -372,7 +372,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "call",
-               "type": "(thisArg: any, ...argArray: Array<any>) => any"
+               "type": "<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
              },
              {
                "name": "caller",

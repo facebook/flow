@@ -126,33 +126,114 @@ References:
                                             ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:2:73
+Error ----------------------------------------------------------------------------------------------------- apply.js:1:2
 
-Incorrect arguments passed to call of method `apply` because number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot call `Object.assign.apply` because function type [1] is incompatible with function type [2]. [incompatible-call]
 
-   apply.js:2:73
-   2| (Object.assign.apply(null, [({}: {a?: number, b?: string}), {a: 1}, {b: 2}]): {a?: number, b?: string}); // error
-                                                                              ^ [1]
+   apply.js:1:2
+     1| (Object.assign.apply(null, [({}: {a?: number, b?: string}), {a: 1}, {b: 'foo'}]): {a?: number, b?: string});
+         ^^^^^^^^^^^^^
 
 References:
-   apply.js:2:51
-   2| (Object.assign.apply(null, [({}: {a?: number, b?: string}), {a: 1}, {b: 2}]): {a?: number, b?: string}); // error
-                                                        ^^^^^^ [2]
+   <BUILTINS>/core.js:108:20
+   108|     static assign: Object$Assign;
+                           ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:362:59
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- apply.js:2:2
+
+Cannot call `Object.assign.apply` because function type [1] is incompatible with function type [2]. [incompatible-call]
+
+   apply.js:2:2
+     2| (Object.assign.apply(null, [({}: {a?: number, b?: string}), {a: 1}, {b: 2}]): {a?: number, b?: string}); // error
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:108:20
+   108|     static assign: Object$Assign;
+                           ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:362:59
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:3:2
 
-Cannot call `Object.assign.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
+Cannot call `Object.assign.apply` because function type [1] is incompatible with function type [2]. [incompatible-call]
 
    apply.js:3:2
      3| (Object.assign.apply(({}: {a?: number, b?: string}), {a: 1}, {b: 'foo'}): {a?: number, b?: string}); // error
-         ^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:362:18
-   362|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
-                         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:108:20
+   108|     static assign: Object$Assign;
+                           ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:362:59
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:3:54
+
+Cannot call `Object.assign.apply` because property `@@iterator` is missing in object literal [1] but exists in
+`$ArrayLike` [2] in type argument `A`. [prop-missing]
+
+   apply.js:3:54
+     3| (Object.assign.apply(({}: {a?: number, b?: string}), {a: 1}, {b: 'foo'}): {a?: number, b?: string}); // error
+                                                             ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:3:54
+
+Cannot call `Object.assign.apply` because property `length` is missing in object literal [1] but exists in
+`$ArrayLike` [2] in type argument `A`. [prop-missing]
+
+   apply.js:3:54
+     3| (Object.assign.apply(({}: {a?: number, b?: string}), {a: 1}, {b: 'foo'}): {a?: number, b?: string}); // error
+                                                             ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:3:54
+
+Cannot call `Object.assign.apply` because string `a` [1] is incompatible with number [2] in the indexer property's key
+of type argument `A`. [incompatible-call]
+
+   apply.js:3:54
+      3| (Object.assign.apply(({}: {a?: number, b?: string}), {a: 1}, {b: 'foo'}): {a?: number, b?: string}); // error
+                                                              ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1148:14
+   1148|   +[indexer: number]: T;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:3:62
+
+Cannot call `Object.assign.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
+
+   apply.js:3:62
+     3| (Object.assign.apply(({}: {a?: number, b?: string}), {a: 1}, {b: 'foo'}): {a?: number, b?: string}); // error
+                                                                     ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:362:19
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:5:2
@@ -338,4 +419,4 @@ References:
 
 
 
-Found 22 errors
+Found 27 errors

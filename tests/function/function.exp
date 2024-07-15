@@ -1,14 +1,17 @@
-Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:12
+Error ------------------------------------------------------------------------------------------ apply-array-like.js:5:1
 
 Cannot call `test.apply` because string [1], a primitive, cannot be used as a subtype of interface type [2]. You can
-wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
-[incompatible-type]
+wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface in the `this`
+parameter. [incompatible-type]
 
+   apply-array-like.js:5:1
+   5| test.apply("", "foo"); // ERROR
+      ^^^^
+
+References:
    apply-array-like.js:5:12
    5| test.apply("", "foo"); // ERROR
                  ^^ [1]
-
-References:
    apply-array-like.js:1:21
    1| function test(this: interface {length: number}, a: string, b: string): number {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -16,7 +19,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
 
-string [1], a primitive, cannot be used as a subtype of `$ArrayLike` [2]. You can wrap it in `new String(...))` to turn
+Cannot call `test.apply` because string [1], a primitive, cannot be used as a subtype of `$ArrayLike` [2]. You can wrap
+it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface in type argument
+`A`. [incompatible-type]
+
+   apply-array-like.js:5:16
+     5| test.apply("", "foo"); // ERROR
+                       ^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
+
+string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
 it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply-array-like.js:5:16
@@ -24,23 +43,18 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1147:22
-                              v----------
-   1147| type $ArrayLike<T> = interface {
-   1148|   +[indexer: number]: T;
-   1149|   @@iterator(): Iterator<T>;
-   1150|   length: number;
-   1151| }
-         ^ [2]
+   <BUILTINS>/core.js:1751:11
+   1751| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:6
+Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:1
 
 Cannot call `test.apply` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   apply-array-like.js:14:6
+   apply-array-like.js:14:1
    14| test.apply("", y); // ERROR
-            ^^^^^
+       ^^^^
 
 References:
    apply-array-like.js:13:25
@@ -51,13 +65,13 @@ References:
                                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:6
+Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:1
 
 Cannot call `test.apply` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   apply-array-like.js:14:6
+   apply-array-like.js:14:1
    14| test.apply("", y); // ERROR
-            ^^^^^
+       ^^^^
 
 References:
    apply-array-like.js:13:25
@@ -68,17 +82,20 @@ References:
                                                                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- apply-array-like.js:14:12
+Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:1
 
 Cannot call `test.apply` because string [1], a primitive, cannot be used as a subtype of interface type [2]. You can
-wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
-[incompatible-type]
+wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface in the `this`
+parameter. [incompatible-type]
 
+   apply-array-like.js:14:1
+   14| test.apply("", y); // ERROR
+       ^^^^
+
+References:
    apply-array-like.js:14:12
    14| test.apply("", y); // ERROR
                   ^^ [1]
-
-References:
    apply-array-like.js:1:21
     1| function test(this: interface {length: number}, a: string, b: string): number {
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -86,7 +103,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
 
-Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. [prop-missing]
+Cannot call `test.apply` because property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2] in type
+argument `A`. [prop-missing]
 
    apply-array-like.js:21:16
      21| test.apply([], gen()); // error: iterable ~> array-like
@@ -96,36 +114,27 @@ References:
    <BUILTINS>/core.js:1756:11
    1756| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1147:22
-                              v----------
-   1147| type $ArrayLike<T> = interface {
-   1148|   +[indexer: number]: T;
-   1149|   @@iterator(): Iterator<T>;
-   1150|   length: number;
-   1151| }
-         ^ [2]
+   <BUILTINS>/core.js:362:29
+    362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                     ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
 
-Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. [prop-missing]
+Cannot call `test.apply` because property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2] in type
+argument `A`. [prop-missing]
 
    apply-array-like.js:21:16
-     21| test.apply([], gen()); // error: iterable ~> array-like
-                        ^^^^^
+    21| test.apply([], gen()); // error: iterable ~> array-like
+                       ^^^^^
 
 References:
    apply-array-like.js:16:17
-     16| function * gen() {
-                         ^ [1]
-   <BUILTINS>/core.js:1147:22
-                              v----------
-   1147| type $ArrayLike<T> = interface {
-   1148|   +[indexer: number]: T;
-   1149|   @@iterator(): Iterator<T>;
-   1150|   length: number;
-   1151| }
-         ^ [2]
+    16| function * gen() {
+                        ^ [1]
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
@@ -142,59 +151,66 @@ References:
                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- apply.js:6:1
+Error ---------------------------------------------------------------------------------------------------- apply.js:6:25
 
 Cannot call `test.apply` because no more than 2 arguments are expected by function type [1]. [extra-arg]
 
-   apply.js:6:1
+   apply.js:6:25
      6| test.apply("", ["", 0], 'error')
-        ^^^^^^^^^^
+                                ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:362:18
-   362|     proto apply: Function$Prototype$Apply; // (thisArg: any, argArray?: any) => any
-                         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:362:19
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- apply.js:15:6
+Error ---------------------------------------------------------------------------------------------------- apply.js:15:1
 
-Cannot call `test.apply` because function [1] requires another argument. [incompatible-call]
+Cannot call `test.apply` because function [1] requires another argument from function type [2]. [incompatible-call]
 
-   apply.js:15:6
-   15| test.apply("", [""]); // error: void ~> number
-            ^^^^^
+   apply.js:15:1
+    15| test.apply("", [""]); // error: void ~> number
+        ^^^^
 
 References:
    apply.js:1:1
-    1| function test(this: number | string, a: string, b: number): number {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+     1| function test(this: number | string, a: string, b: number): number {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:362:59
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:18:21
+Error ---------------------------------------------------------------------------------------------------- apply.js:18:1
 
-Cannot call `test.apply` with string bound to `b` because string [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `test.apply` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
 
+   apply.js:18:1
+   18| test.apply("", ["", ""]); // error: string ~> number (2nd arg)
+       ^^^^
+
+References:
    apply.js:18:21
    18| test.apply("", ["", ""]); // error: string ~> number (2nd arg)
                            ^^ [1]
-
-References:
    apply.js:1:52
     1| function test(this: number | string, a: string, b: number): number {
                                                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:19:17
+Error ---------------------------------------------------------------------------------------------------- apply.js:19:1
 
-Cannot call `test.apply` with number bound to `a` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `test.apply` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
 
+   apply.js:19:1
+   19| test.apply("", [0, 0]); // error: number ~> string (1st arg)
+       ^^^^
+
+References:
    apply.js:19:17
    19| test.apply("", [0, 0]); // error: number ~> string (1st arg)
                        ^ [1]
-
-References:
    apply.js:1:41
     1| function test(this: number | string, a: string, b: number): number {
                                                ^^^^^^ [2]
@@ -202,7 +218,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:22:16
 
-string [1], a primitive, cannot be used as a subtype of `$ArrayLike` [2]. You can wrap it in `new String(...))` to turn
+Cannot call `test.apply` because string [1], a primitive, cannot be used as a subtype of `$ArrayLike` [2]. You can wrap
+it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface in type argument
+`A`. [incompatible-type]
+
+   apply.js:22:16
+    22| test.apply("", "not array"); // error: string ~> object
+                       ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- apply.js:22:16
+
+string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
 it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply.js:22:16
@@ -210,14 +242,45 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1147:22
-                              v----------
-   1147| type $ArrayLike<T> = interface {
-   1148|   +[indexer: number]: T;
-   1149|   @@iterator(): Iterator<T>;
-   1150|   length: number;
-   1151| }
-         ^ [2]
+   <BUILTINS>/core.js:1751:11
+   1751| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:29:2
+
+Cannot call `test.call.apply` because number [1] is incompatible with string [2] in the first argument.
+[incompatible-call]
+
+   apply.js:29:2
+   29| (test.call.apply(test, [0, 123, 'foo']): void);
+        ^^^^^^^^^
+
+References:
+   apply.js:29:28
+   29| (test.call.apply(test, [0, 123, 'foo']): void);
+                                  ^^^ [1]
+   apply.js:1:41
+    1| function test(this: number | string, a: string, b: number): number {
+                                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:29:2
+
+Cannot call `test.call.apply` because string [1] is incompatible with number [2] in the second argument.
+[incompatible-call]
+
+   apply.js:29:2
+   29| (test.call.apply(test, [0, 123, 'foo']): void);
+        ^^^^^^^^^
+
+References:
+   apply.js:29:33
+   29| (test.call.apply(test, [0, 123, 'foo']): void);
+                                       ^^^^^ [1]
+   apply.js:1:52
+    1| function test(this: number | string, a: string, b: number): number {
+                                                          ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:29:2
@@ -238,60 +301,33 @@ References:
                                                 ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:29:28
+Error ---------------------------------------------------------------------------------------------------- apply.js:34:2
 
-Cannot call `test.call.apply` with number bound to `a` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `test.bind.apply` because a call signature declaring the expected parameter / return type is missing in
+function type [1] but exists in function type [2]. [prop-missing]
 
-   apply.js:29:28
-   29| (test.call.apply(test, [0, 123, 'foo']): void);
-                                  ^^^ [1]
-
-References:
-   apply.js:1:41
-    1| function test(this: number | string, a: string, b: number): number {
-                                               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- apply.js:29:33
-
-Cannot call `test.call.apply` with string bound to `b` because string [1] is incompatible with number [2].
-[incompatible-call]
-
-   apply.js:29:33
-   29| (test.call.apply(test, [0, 123, 'foo']): void);
-                                       ^^^^^ [1]
+   apply.js:34:2
+    34| (test.bind.apply(test, [0, 123]): (b: number) => number);
+         ^^^^^^^^^ [1]
 
 References:
-   apply.js:1:52
-    1| function test(this: number | string, a: string, b: number): number {
-                                                          ^^^^^^ [2]
+   <BUILTINS>/core.js:362:59
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:34:28
+Error ---------------------------------------------------------------------------------------------------- apply.js:44:5
 
-Cannot call `test.bind.apply` with number bound to `a` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `x.apply` because number [1] is incompatible with string [2] in the second argument. [incompatible-call]
 
-   apply.js:34:28
-   34| (test.bind.apply(test, [0, 123]): (b: number) => number);
-                                  ^^^ [1]
+   apply.js:44:5
+   44|   x.apply(x, ['foo', 123]); // error, number !~> string
+           ^^^^^
 
 References:
-   apply.js:1:41
-    1| function test(this: number | string, a: string, b: number): number {
-                                               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- apply.js:44:22
-
-Cannot call `x.apply` with number bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
-
    apply.js:44:22
    44|   x.apply(x, ['foo', 123]); // error, number !~> string
                             ^^^ [1]
-
-References:
    apply.js:42:36
    42| function test3(x: { (a: string, b: string): void }) {
                                           ^^^^^^ [2]
@@ -381,57 +417,64 @@ References:
                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:12:6
+Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
-Cannot call `test.call` because function [1] requires another argument. [incompatible-call]
+Cannot call `test.call` because function [1] requires another argument from function type [2]. [incompatible-call]
 
-   call.js:12:6
-   12| test.call("", ""); // error: void ~> number
-            ^^^^
+   call.js:12:1
+    12| test.call("", ""); // error: void ~> number
+        ^^^^
 
 References:
    call.js:1:1
-    1| function test(this: number | string, a: string, b: number): number {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+     1| function test(this: number | string, a: string, b: number): number {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:364:57
+   364|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:15:19
+Error ----------------------------------------------------------------------------------------------------- call.js:15:1
 
-Cannot call `test.call` with empty string bound to `b` because string [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `test.call` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
 
+   call.js:15:1
+   15| test.call("", "", ""); // error: string ~> number (2nd arg)
+       ^^^^
+
+References:
    call.js:15:19
    15| test.call("", "", ""); // error: string ~> number (2nd arg)
                          ^^ [1]
-
-References:
    call.js:1:52
     1| function test(this: number | string, a: string, b: number): number {
                                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:16:15
+Error ----------------------------------------------------------------------------------------------------- call.js:16:1
 
-Cannot call `test.call` with `0` bound to `a` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `test.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
 
+   call.js:16:1
+   16| test.call("", 0, 0); // error: number ~> string (1st arg)
+       ^^^^
+
+References:
    call.js:16:15
    16| test.call("", 0, 0); // error: number ~> string (1st arg)
                      ^ [1]
-
-References:
    call.js:1:41
     1| function test(this: number | string, a: string, b: number): number {
                                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:19:60
+Error ---------------------------------------------------------------------------------------------------- call.js:19:46
 
-Cannot call `test.call` with `args[0]` bound to `a` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `test.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
 
-   call.js:19:60
+   call.js:19:46
    19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
-                                                                  ^^^^^^^
+                                                    ^^^^
 
 References:
    call.js:19:25
@@ -442,14 +485,13 @@ References:
                                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:19:69
+Error ---------------------------------------------------------------------------------------------------- call.js:19:46
 
-Cannot call `test.call` with `args[1]` bound to `b` because string [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `test.call` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
 
-   call.js:19:69
+   call.js:19:46
    19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
-                                                                           ^^^^^^^
+                                                    ^^^^
 
 References:
    call.js:19:34
@@ -460,45 +502,54 @@ References:
                                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:28:28
+Error ----------------------------------------------------------------------------------------------------- call.js:28:2
 
-Cannot call `test.apply.call` with number bound to `a` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `test.apply.call` because number [1] is incompatible with string [2] in the first argument of the second
+argument. [incompatible-call]
 
+   call.js:28:2
+   28| (test.apply.call(test, 0, [0, 'foo']): number);
+        ^^^^^^^^^^
+
+References:
    call.js:28:28
    28| (test.apply.call(test, 0, [0, 'foo']): number);
                                   ^ [1]
-
-References:
    call.js:1:41
     1| function test(this: number | string, a: string, b: number): number {
                                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:28:31
+Error ----------------------------------------------------------------------------------------------------- call.js:28:2
 
-Cannot call `test.apply.call` with string bound to `b` because string [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `test.apply.call` because string [1] is incompatible with number [2] in the second argument of the second
+argument. [incompatible-call]
 
+   call.js:28:2
+   28| (test.apply.call(test, 0, [0, 'foo']): number);
+        ^^^^^^^^^^
+
+References:
    call.js:28:31
    28| (test.apply.call(test, 0, [0, 'foo']): number);
                                      ^^^^^ [1]
-
-References:
    call.js:1:52
     1| function test(this: number | string, a: string, b: number): number {
                                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:38:20
+Error ----------------------------------------------------------------------------------------------------- call.js:38:5
 
-Cannot call `x.call` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `x.call` because number [1] is incompatible with string [2] in the second argument. [incompatible-call]
 
+   call.js:38:5
+   38|   x.call(x, 'foo', 123); // error, number !~> string
+           ^^^^
+
+References:
    call.js:38:20
    38|   x.call(x, 'foo', 123); // error, number !~> string
                           ^^^ [1]
-
-References:
    call.js:36:36
    36| function test3(x: { (a: string, b: string): void }) {
                                           ^^^^^^ [2]
@@ -551,20 +602,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:63:24
 
-Cannot call `setError.call` because `T` [1] is underconstrained by call of method `call` [2]. Either add explicit type
+Cannot call `setError.call` because `R` [1] is underconstrained by call of method `call` [2]. Either add explicit type
 arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    call.js:63:24
-   63|   const err = setError.call(this, 1); // error under-constrained T
-                              ^^^^
+    63|   const err = setError.call(this, 1); // error under-constrained T
+                               ^^^^
 
 References:
-   call.js:62:29
-   62|   declare function setError<T>(error: any): T;
-                                   ^ [1]
+   <BUILTINS>/core.js:364:21
+   364|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+                            ^ [1]
    call.js:63:15
-   63|   const err = setError.call(this, 1); // error under-constrained T
-                     ^^^^^^^^^^^^^^^^^^^^^^ [2]
+    63|   const err = setError.call(this, 1); // error under-constrained T
+                      ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- call_error_generic.js:21:5
@@ -891,4 +942,4 @@ References:
 
 
 
-Found 59 errors
+Found 61 errors

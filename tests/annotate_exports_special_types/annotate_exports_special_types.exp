@@ -13,9 +13,15 @@ declare var funProtoCall: typeof Function.prototype.call;
 
 export function foo(): {
   funProto: typeof Object.prototype,
-  funProtoApply: typeof Function.prototype.apply,
+  funProtoApply: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+    thisArg: T,
+    args?: A
+  ) => R,
   funProtoBind: typeof Function.prototype.bind,
-  funProtoCall: typeof Function.prototype.call,
+  funProtoCall: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+    thisArg: T,
+    ...args: A
+  ) => R,
   objProto: typeof Object.prototype,
 } {
     return {
@@ -32,7 +38,7 @@ export function foo(): {
 Stats:
   Files changed:                            1
   Number of annotations added:              1
-  Total size of annotations:                6
+  Total size of annotations:               22
   Number of sig. ver. errors:               1
   Number of annotations required:           1
   Number of annotations skipped:            0
@@ -68,9 +74,15 @@ declare var funProtoCall: typeof Function.prototype.call;
 
 export function foo(): {
   funProto: typeof Object.prototype,
-  funProtoApply: typeof Function.prototype.apply,
+  funProtoApply: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+    thisArg: T,
+    args?: A
+  ) => R,
   funProtoBind: typeof Function.prototype.bind,
-  funProtoCall: typeof Function.prototype.call,
+  funProtoCall: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+    thisArg: T,
+    ...args: A
+  ) => R,
   objProto: typeof Object.prototype,
   ...
 } {
@@ -86,6 +98,6 @@ export function foo(): {
 
 === Diff between codemod-ed & autofix-ed ===
 >>> ./test.js
-15a16
+21a22
 >   ...
 

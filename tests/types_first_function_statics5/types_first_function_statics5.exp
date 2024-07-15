@@ -1,13 +1,15 @@
-Error -------------------------------------------------------------------------------------------------------- b.js:2:21
+Error --------------------------------------------------------------------------------------------------------- b.js:2:1
 
-Cannot call `foo.call` with empty string bound to `x` because string [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `foo.call` because string [1] is incompatible with number [2] in the first argument. [incompatible-call]
 
+   b.js:2:1
+   2| foo.call(undefined, "");
+      ^^^
+
+References:
    b.js:2:21
    2| foo.call(undefined, "");
                           ^^ [1]
-
-References:
    a.js:1:17
    1| function foo(x: number) {}
                       ^^^^^^ [2]

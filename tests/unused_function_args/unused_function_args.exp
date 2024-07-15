@@ -40,76 +40,6 @@ References:
       ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:11:16
-
-Cannot call `foo.call` because no arguments are expected by function [1]. [extra-arg]
-
-   test.js:11:16
-   11| foo.call(null, 1, 2); // error
-                      ^
-
-References:
-   test.js:1:1
-    1| function foo() {}
-       ^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:12:5
-
-Cannot call `foo.call` because no arguments are expected by function [1]. [extra-arg]
-
-   test.js:12:5
-   12| foo.call(null, ...args); // error
-           ^^^^
-
-References:
-   test.js:1:1
-    1| function foo() {}
-       ^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:13:16
-
-Cannot call `foo.call` because no arguments are expected by function [1]. [extra-arg]
-
-   test.js:13:16
-   13| foo.call(null, 1, 2, ...args); // error
-                      ^
-
-References:
-   test.js:1:1
-    1| function foo() {}
-       ^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:15:18
-
-Cannot call `foo.apply` because no arguments are expected by function [1]. [extra-arg]
-
-   test.js:15:18
-   15| foo.apply(null, [1, 2]); // error
-                        ^
-
-References:
-   test.js:1:1
-    1| function foo() {}
-       ^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:16:5
-
-Cannot call `foo.apply` because no arguments are expected by function [1]. [extra-arg]
-
-   test.js:16:5
-   16| foo.apply(null, args); // error
-           ^^^^^
-
-References:
-   test.js:1:1
-    1| function foo() {}
-       ^^^^^^^^^^^^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:18:16
 
 Cannot call `foo.bind` because no arguments are expected by function [1]. [extra-arg]
@@ -153,4 +83,4 @@ References:
 
 
 
-Found 11 errors
+Found 6 errors

@@ -71,9 +71,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   let builtin_value = function
     | FunProto -> Atom "Function.prototype"
     | ObjProto -> Atom "Object.prototype"
-    | FunProtoApply -> Atom "Function.prototype.apply"
     | FunProtoBind -> Atom "Function.prototype.bind"
-    | FunProtoCall -> Atom "Function.prototype.call"
     | TSymbol s -> Atom (Reason.display_string_of_name (local_name_of_symbol s))
   in
   (* The depth parameter is useful for formatting unions: Top-level does not

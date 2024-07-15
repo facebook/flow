@@ -872,15 +872,9 @@ and merge_annot env file = function
     let desc = TypeUtil.desc_of_t t in
     let reason = Reason.(mk_reason (RStatics desc) loc) in
     Type.DefT (reason, Type.ClassT t)
-  | Function_apply loc ->
-    let reason = Reason.(mk_annot_reason RFunctionType loc) in
-    Type.FunProtoApplyT reason
   | Function_bind loc ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     Type.FunProtoBindT reason
-  | Function_call loc ->
-    let reason = Reason.(mk_annot_reason RFunctionType loc) in
-    Type.FunProtoCallT reason
   | Object_assign loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.ObjectAssign)

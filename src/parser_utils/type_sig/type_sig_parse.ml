@@ -2258,19 +2258,9 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (Any loc)
     | _ -> Err (loc, CheckError)
   end
-  | "Function$Prototype$Apply" -> begin
-    match targs with
-    | None -> Annot (Function_apply loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "Function$Prototype$Bind" -> begin
     match targs with
     | None -> Annot (Function_bind loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "Function$Prototype$Call" -> begin
-    match targs with
-    | None -> Annot (Function_call loc)
     | _ -> Err (loc, CheckError)
   end
   | "Object$Assign" -> begin

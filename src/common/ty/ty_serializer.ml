@@ -181,9 +181,7 @@ let type_ options =
       just (T.Typeof { T.Typeof.argument = mk_typeof_expr id; targs; comments = None })
     | TypeOf (FunProto, _) -> just (qualified2 "Object" "prototype")
     | TypeOf (ObjProto, _) -> just (qualified2 "Function" "prototype")
-    | TypeOf (FunProtoApply, _) -> just (qualified3 "Function" "prototype" "apply")
     | TypeOf (FunProtoBind, _) -> just (qualified3 "Function" "prototype" "bind")
-    | TypeOf (FunProtoCall, _) -> just (qualified3 "Function" "prototype" "call")
     | Renders (t, kind) ->
       let argument = type_ t in
       let variant =

@@ -3,21 +3,15 @@
 // any ~> functionlike
 class C { }
 var C_any: any = C;
-declare var proto_apply: Function$Prototype$Apply;
 declare var proto_bind: Function$Prototype$Bind;
-declare var proto_call: Function$Prototype$Call;
-var proto_apply_any: any = proto_apply;
 var proto_bind_any: any = proto_bind;
-var proto_call_any: any = proto_call;
 function f() { }
 var f_any: any = f;
 
 // functionlike ~> any
 declare var a: any;
 var C_from_any: Class<C> = a;
-var proto_apply_from_any: Function$Prototype$Apply = a;
 var proto_bind_from_any: Function$Prototype$Bind = a;
-var proto_call_from_any: Function$Prototype$Call = a;
 var f_from_any: () => void = a;
 
 // any ~> objectlike

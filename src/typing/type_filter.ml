@@ -768,9 +768,7 @@ and tag_of_t cx t =
   | FunProtoT _
   | ObjProtoT _
   | NullProtoT _
-  | FunProtoApplyT _
   | FunProtoBindT _
-  | FunProtoCallT _
   | IntersectionT _
   | UnionT _
   | MaybeT (_, _)

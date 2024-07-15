@@ -127,9 +127,7 @@ let unwrap_fully_resolved_open_t =
         | FunProtoT _
         | ObjProtoT _
         | NullProtoT _
-        | FunProtoApplyT _
         | FunProtoBindT _
-        | FunProtoCallT _
         | StrUtilT _
         (* composite types that don't allow self or cyclic reference *)
         | OpenT _
@@ -280,9 +278,7 @@ let function_like = function
   | DefT (_, ClassT _)
   | DefT (_, FunT _)
   | CustomFunT _
-  | FunProtoApplyT _
-  | FunProtoBindT _
-  | FunProtoCallT _ ->
+  | FunProtoBindT _ ->
     true
   | _ -> false
 

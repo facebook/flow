@@ -1,23 +1,19 @@
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Property `length` is missing in `$Iterable` [1] but exists in `$ArrayLike` [2]. [prop-missing]
+Cannot call `f.apply` because property `length` is missing in `$Iterable` [1] but exists in `$ArrayLike` [2] in type
+argument `A`. [prop-missing]
 
    apply.js:11:15
-     11| f.apply(null, it); // Error
-                       ^^
+    11| f.apply(null, it); // Error
+                      ^^
 
 References:
    apply.js:3:11
-      3| const it: Iterable<number> = [7,8,9];
-                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1147:22
-                              v----------
-   1147| type $ArrayLike<T> = interface {
-   1148|   +[indexer: number]: T;
-   1149|   @@iterator(): Iterator<T>;
-   1150|   length: number;
-   1151| }
-         ^ [2]
+     3| const it: Iterable<number> = [7,8,9];
+                  ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:362:29
+   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- iterables.js:2:5

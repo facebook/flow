@@ -97,9 +97,7 @@ class virtual ['a] t =
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _
-      | FunProtoApplyT _
-      | FunProtoBindT _
-      | FunProtoCallT _ ->
+      | FunProtoBindT _ ->
         t
       | GenericT ({ bound; _ } as generic) ->
         let bound' = self#type_ cx map_cx bound in

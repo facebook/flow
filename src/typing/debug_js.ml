@@ -213,9 +213,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | NullProtoT _
     | ObjProtoT _
     | FunProtoT _
-    | FunProtoApplyT _
-    | FunProtoBindT _
-    | FunProtoCallT _ ->
+    | FunProtoBindT _ ->
       p t
     | DefT (_, PolyT { tparams = tps; t_out = c; id; _ }) ->
       p

@@ -1870,9 +1870,11 @@ Flags: --lsp
 }
 {
   "label":"apply",
-  "labelDetails":{"detail":": (thisArg: any, argArray?: any) => any"},
+  "labelDetails":{
+    "detail":": <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+  },
   "kind":3,
-  "detail":"(thisArg: any, argArray?: any) => any",
+  "detail":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1954,9 +1956,11 @@ Flags: --lsp
 }
 {
   "label":"call",
-  "labelDetails":{"detail":": (thisArg: any, ...argArray: Array<any>) => any"},
+  "labelDetails":{
+    "detail":": <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+  },
   "kind":3,
-  "detail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "detail":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{

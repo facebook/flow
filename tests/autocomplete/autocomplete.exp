@@ -136,10 +136,16 @@ fun.js:4:5
 Flags: --pretty
 {
   "result":[
-    {"name":"apply","type":"(thisArg: any, argArray?: any) => any"},
+    {
+      "name":"apply",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+    },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
-    {"name":"call","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"call",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+    },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
     {"name":"name","type":"string"},
@@ -468,10 +474,16 @@ Flags: --pretty
 {
   "result":[
     {"name":"bar","type":"string"},
-    {"name":"apply","type":"(thisArg: any, argArray?: any) => any"},
+    {
+      "name":"apply",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+    },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
-    {"name":"call","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"call",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+    },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
     {"name":"name","type":"string"},
@@ -2903,10 +2915,16 @@ Flags: --pretty
 {
   "result":[
     {"name":"bar","type":"string"},
-    {"name":"apply","type":"(thisArg: any, argArray?: any) => any"},
+    {
+      "name":"apply",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+    },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
-    {"name":"call","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"call",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+    },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
     {"name":"name","type":"string"},
