@@ -85,6 +85,111 @@ References:
                              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ short_enum_error.js:8:4
+
+Cannot call `t2` with `t1` bound to the first parameter because string literal `a1` [1] is incompatible with `T2` [2].
+[incompatible-call]
+
+   short_enum_error.js:8:4
+   8| t2(t1); // error (function)
+         ^^
+
+References:
+   short_enum_error.js:6:17
+   6| declare var t1: T1;
+                      ^^ [1]
+   short_enum_error.js:7:21
+   7| declare function t2(T2): void;
+                          ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ short_enum_error.js:8:4
+
+Cannot call `t2` with `t1` bound to the first parameter because string literal `b1` [1] is incompatible with `T2` [2].
+[incompatible-call]
+
+   short_enum_error.js:8:4
+   8| t2(t1); // error (function)
+         ^^
+
+References:
+   short_enum_error.js:6:17
+   6| declare var t1: T1;
+                      ^^ [1]
+   short_enum_error.js:7:21
+   7| declare function t2(T2): void;
+                          ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ short_enum_error.js:8:4
+
+Cannot call `t2` with `t1` bound to the first parameter because string literal `c1` [1] is incompatible with `T2` [2].
+[incompatible-call]
+
+   short_enum_error.js:8:4
+   8| t2(t1); // error (function)
+         ^^
+
+References:
+   short_enum_error.js:6:17
+   6| declare var t1: T1;
+                      ^^ [1]
+   short_enum_error.js:7:21
+   7| declare function t2(T2): void;
+                          ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ short_enum_error.js:9:1
+
+Cannot cast `t1` to `T2` because string literal `a1` [1] is incompatible with `T2` [2]. [incompatible-cast]
+
+   short_enum_error.js:9:1
+   9| t1 as T2; // error (cast)
+      ^^
+
+References:
+   short_enum_error.js:6:17
+   6| declare var t1: T1;
+                      ^^ [1]
+   short_enum_error.js:9:7
+   9| t1 as T2; // error (cast)
+            ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ short_enum_error.js:9:1
+
+Cannot cast `t1` to `T2` because string literal `b1` [1] is incompatible with `T2` [2]. [incompatible-cast]
+
+   short_enum_error.js:9:1
+   9| t1 as T2; // error (cast)
+      ^^
+
+References:
+   short_enum_error.js:6:17
+   6| declare var t1: T1;
+                      ^^ [1]
+   short_enum_error.js:9:7
+   9| t1 as T2; // error (cast)
+            ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ short_enum_error.js:9:1
+
+Cannot cast `t1` to `T2` because string literal `c1` [1] is incompatible with `T2` [2]. [incompatible-cast]
+
+   short_enum_error.js:9:1
+   9| t1 as T2; // error (cast)
+      ^^
+
+References:
+   short_enum_error.js:6:17
+   6| declare var t1: T1;
+                      ^^ [1]
+   short_enum_error.js:9:7
+   9| t1 as T2; // error (cast)
+            ^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- union.js:2:5
 
 Cannot call `bar` with `0` bound to `x` because: [incompatible-call]
@@ -128,7 +233,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 8 errors
+Found 14 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
