@@ -1,0 +1,50 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:5:4
+
+Cannot cast object literal to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:5:4
+   5|   ({...o}) as empty; // error
+         ^^^^^^ [1]
+
+References:
+   test.js:5:15
+   5|   ({...o}) as empty; // error
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:3
+
+Cannot cast `foo` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:12:3
+   12|   foo as empty; // error
+         ^^^
+
+References:
+   test.js:10:22
+   10|   declare const foo: React.ElementConfig<T2>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:12:10
+   12|   foo as empty; // error
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:3
+
+Cannot cast `foo[key]` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:20:3
+   20|   foo[key] as empty; // error
+         ^^^^^^^^
+
+References:
+   test.js:17:28
+   17|   declare const foo: {bar: string};
+                                  ^^^^^^ [1]
+   test.js:20:15
+   20|   foo[key] as empty; // error
+                     ^^^^^ [2]
+
+
+
+Found 3 errors
