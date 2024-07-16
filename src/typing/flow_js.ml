@@ -1249,69 +1249,6 @@ struct
           let void = VoidT.why_with_use_desc ~use_desc r in
           rec_flow cx trace (void, u);
           rec_flow cx trace (t, u)
-        (**************************)
-        (* logical types - part A *)
-        (**************************)
-        | (UnionT (_, rep), (AndT _ | OrT _ | NullishCoalesceT _))
-          when not (UnionRep.is_optimized_finally rep) ->
-          flow_all_in_union cx trace rep u
-        | (left, AndT (_, right, u)) ->
-          begin
-            match left with
-            | DefT (reason, NumT _) ->
-              add_output cx (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
-            | _ -> ()
-          end;
-
-          (* a falsy && b ~> a
-             a truthy && b ~> b
-             a && b ~> a falsy | b *)
-          (match Type_filter.exists cx left with
-          | DefT (_, EmptyT) ->
-            (* falsy *)
-            rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
-          | _ ->
-            (match Type_filter.not_exists cx left with
-            | DefT (_, EmptyT) ->
-              (* truthy *)
-              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
-            | _ ->
-              rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
-              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
-        | (left, OrT (_, right, u)) ->
-          (* a truthy || b ~> a
-             a falsy || b ~> b
-             a || b ~> a truthy | b *)
-          (match Type_filter.not_exists cx left with
-          | DefT (_, EmptyT) ->
-            (* truthy *)
-            rec_flow cx trace (left, PredicateT (ExistsP, u))
-          | _ ->
-            (match Type_filter.exists cx left with
-            | DefT (_, EmptyT) ->
-              (* falsy *)
-              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
-            | _ ->
-              rec_flow cx trace (left, PredicateT (ExistsP, u));
-              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
-        (* a not-nullish ?? b ~> a
-           a nullish ?? b ~> b
-           a ?? b ~> a not-nullish | b *)
-        | (left, NullishCoalesceT (_, right, u)) ->
-          (match Type_filter.maybe cx left with
-          | DefT (_, EmptyT)
-          (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
-          | AnyT _ ->
-            (* not-nullish *)
-            rec_flow cx trace (left, PredicateT (NotP MaybeP, u))
-          | _ ->
-            (match Type_filter.not_maybe cx left with
-            | DefT (_, EmptyT) ->
-              (* nullish *)
-              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
-            | _ ->
-              rec_flow cx trace (left, PredicateT (NotP MaybeP, u));
-              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
         | (_, ExtractReactRefT (reason, tout)) ->
           let t_ = ImplicitInstantiationKit.run_ref_extractor cx ~use_op:unknown_use ~reason l in
           rec_flow_t cx ~use_op:unknown_use trace (t_, tout)
@@ -1739,6 +1676,69 @@ struct
         (* Any will always be ok *)
         | (AnyT (_, src), GetDictValuesT (reason, result)) ->
           rec_flow cx trace (AnyT.why src reason, result)
+        (**************************)
+        (* logical types - part A *)
+        (**************************)
+        | (UnionT (_, rep), (AndT _ | OrT _ | NullishCoalesceT _))
+          when not (UnionRep.is_optimized_finally rep) ->
+          flow_all_in_union cx trace rep u
+        | (left, AndT (_, right, u)) ->
+          begin
+            match left with
+            | DefT (reason, NumT _) ->
+              add_output cx (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
+            | _ -> ()
+          end;
+
+          (* a falsy && b ~> a
+             a truthy && b ~> b
+             a && b ~> a falsy | b *)
+          (match Type_filter.exists cx left with
+          | DefT (_, EmptyT) ->
+            (* falsy *)
+            rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
+          | _ ->
+            (match Type_filter.not_exists cx left with
+            | DefT (_, EmptyT) ->
+              (* truthy *)
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
+            | _ ->
+              rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
+        | (left, OrT (_, right, u)) ->
+          (* a truthy || b ~> a
+             a falsy || b ~> b
+             a || b ~> a truthy | b *)
+          (match Type_filter.not_exists cx left with
+          | DefT (_, EmptyT) ->
+            (* truthy *)
+            rec_flow cx trace (left, PredicateT (ExistsP, u))
+          | _ ->
+            (match Type_filter.exists cx left with
+            | DefT (_, EmptyT) ->
+              (* falsy *)
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
+            | _ ->
+              rec_flow cx trace (left, PredicateT (ExistsP, u));
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
+        (* a not-nullish ?? b ~> a
+           a nullish ?? b ~> b
+           a ?? b ~> a not-nullish | b *)
+        | (left, NullishCoalesceT (_, right, u)) ->
+          (match Type_filter.maybe cx left with
+          | DefT (_, EmptyT)
+          (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
+          | AnyT _ ->
+            (* not-nullish *)
+            rec_flow cx trace (left, PredicateT (NotP MaybeP, u))
+          | _ ->
+            (match Type_filter.not_maybe cx left with
+            | DefT (_, EmptyT) ->
+              (* nullish *)
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))
+            | _ ->
+              rec_flow cx trace (left, PredicateT (NotP MaybeP, u));
+              rec_flow cx trace (right, UseT (unknown_use, OpenT u))))
         (********************************)
         (* union and intersection types *)
         (********************************)

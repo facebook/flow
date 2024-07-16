@@ -507,5 +507,22 @@ References:
                           ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- logical.js:615:3
 
-Found 32 errors
+Cannot cast `nullableStringOrNumber` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   logical.js:615:3
+   615|   nullableStringOrNumber as string; // error: number ~> string
+          ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   logical.js:614:46
+   614|   const nullableStringOrNumber = nullable ?? 0;
+                                                     ^ [1]
+   logical.js:615:29
+   615|   nullableStringOrNumber as string; // error: number ~> string
+                                    ^^^^^^ [2]
+
+
+
+Found 33 errors

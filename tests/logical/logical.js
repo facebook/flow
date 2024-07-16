@@ -607,3 +607,10 @@ type Rec = RecordOf<{f: number}>;
 function logical7f(a: ?Rec, b: Rec): Rec {
   return a || b; // okay
 }
+
+function logicalWithTypeApp() {
+  type Nullable<T> = T | null;
+  declare const nullable: Nullable<string>;
+  const nullableStringOrNumber = nullable ?? 0;
+  nullableStringOrNumber as string; // error: number ~> string
+}
