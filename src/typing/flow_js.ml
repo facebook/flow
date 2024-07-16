@@ -1552,6 +1552,11 @@ struct
         | (OpaqueT (r, { underlying_t = Some t; _ }), ToStringT { reason; t_out; _ })
           when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
+        (* Use the upper bound of OpaqueT if it's available, for operations that must be
+         * performed on some concretized types. *)
+        | (OpaqueT (_, { super_t = Some t; _ }), ObjKitT _)
+        | (OpaqueT (_, { super_t = Some t; _ }), ReactKitT _) ->
+          rec_flow cx trace (t, u)
         (* Store the opaque type when doing `ToStringT`, so we can use that
            rather than just `string` if the supertype is `string`. *)
         | (OpaqueT (_, { super_t = Some t; _ }), ToStringT { reason; t_out; _ }) ->

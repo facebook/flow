@@ -2516,10 +2516,12 @@ let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
   (value, is_tuple, use_op, react_dro)
 
 let propref_for_elem_t = function
+  | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT name)); _ })
   | GenericT { bound = DefT (_, StrT (Literal (_, name))); reason; _ }
   | DefT (reason, StrT (Literal (_, name))) ->
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
+  | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT (value, raw))); _ })
   | GenericT { bound = DefT (_, NumT (Literal (_, (value, raw)))); reason = reason_num; _ }
   | DefT (reason_num, NumT (Literal (_, (value, raw))))
     when Js_number.is_float_safe_integer value ->
