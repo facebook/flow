@@ -49,7 +49,6 @@ and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
   | AndT (reason, _, _) -> reason
   | ArrRestT (_, reason, _, _) -> reason
-  | AssertIterableT { reason; _ } -> reason
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
   | CallLatentPredT { reason; _ } -> reason
@@ -261,8 +260,6 @@ let rec util_use_op_of_use_t :
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
   | MakeExactT (r, Lower (op, t)) -> util op (fun op -> MakeExactT (r, Lower (op, t)))
-  | AssertIterableT ({ use_op; _ } as contents) ->
-    util use_op (fun use_op -> AssertIterableT { contents with use_op })
   | PromoteRendersRepresentationT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> PromoteRendersRepresentationT { contents with use_op })
   | TryRenderTypePromotionT ({ use_op; _ } as contents) ->

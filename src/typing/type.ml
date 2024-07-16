@@ -658,12 +658,6 @@ module rec TypeTerm : sig
         reason: reason;
         t_out: use_t;
       }
-    | AssertIterableT of {
-        use_op: use_op;
-        reason: reason;
-        async: bool;
-        targs: t list;
-      }
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
@@ -4090,7 +4084,6 @@ let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
-  | AssertIterableT _ -> "AssertIterableT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
   | CallLatentPredT _ -> "CallLatentPredT"

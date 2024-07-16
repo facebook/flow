@@ -488,6 +488,36 @@ module TypeAssertions = struct
       | l -> add_output cx (Error_message.EInstanceofRHS (reason_of_t l))
     )
 
+  let assert_iterable cx loc ~async ~use_op t targs_to_infer =
+    Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
+    |> Base.List.iter ~f:(function
+           | DefT (enum_reason, EnumObjectT _) ->
+             add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false });
+             let any = AnyT.at (AnyError None) loc in
+             Base.List.iter targs_to_infer ~f:(fun t -> Flow.unify cx ~use_op any t)
+           | AnyT (reason, src) ->
+             let src = any_mod_src_keep_placeholder (AnyError None) src in
+             Base.List.iter targs_to_infer ~f:(fun t ->
+                 Flow.unify cx ~use_op (AnyT.why src reason) t
+             )
+           | l ->
+             let iterable =
+               if async then
+                 Flow.get_builtin_typeapp
+                   cx
+                   (mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
+                   "$IterableOrAsyncIterableInternal"
+                   (l :: targs_to_infer)
+               else
+                 Flow.get_builtin_typeapp
+                   cx
+                   (mk_reason (RCustom "iteration expected on Iterable") loc)
+                   "$Iterable"
+                   targs_to_infer
+             in
+             Flow.flow cx (l, UseT (use_op, iterable))
+           )
+
   let non_exhaustive cx ts =
     Base.List.exists ts ~f:(fun t ->
         Flow.possible_concrete_types_for_inspection cx (reason_of_t t) t

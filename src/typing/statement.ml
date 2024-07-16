@@ -1832,15 +1832,7 @@ module Make
         (* Second and third args here are never relevant to the loop, but they should be as
            general as possible to allow iterating over arbitrary generators *)
         let targs = [elem_t; MixedT.why reason; EmptyT.why reason] in
-        let (async, iterable_reason) =
-          if await then
-            (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
-          else
-            (false, mk_reason (RCustom "iteration expected on Iterable") loc)
-        in
-        Flow.flow
-          cx
-          (right_t, AssertIterableT { use_op = unknown_use; reason = iterable_reason; async; targs })
+        TypeAssertions.assert_iterable cx loc ~async:await ~use_op:unknown_use right_t targs
     )
 
   and type_alias
@@ -3271,12 +3263,6 @@ module Make
       let yield = Tvar.mk cx reason in
       (* widen yield with the element type of the delegated-to iterable *)
       let targs = [yield; ret; next] in
-      let (async, iterable_reason) =
-        if Type_env.in_async_scope cx then
-          (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
-        else
-          (false, mk_reason (RCustom "iteration expected on Iterable") loc)
-      in
       let use_op =
         Op
           (GeneratorYield
@@ -3288,7 +3274,9 @@ module Make
              }
           )
       in
-      Flow.flow cx (t, AssertIterableT { use_op; reason = iterable_reason; async; targs });
+      TypeAssertions.assert_iterable cx loc ~async:(Type_env.in_async_scope cx) ~use_op t targs;
+      Tvar_resolver.resolve cx ret;
+      Tvar_resolver.resolve cx yield;
 
       ( (loc, ret),
         Yield

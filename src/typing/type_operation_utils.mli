@@ -106,5 +106,8 @@ module TypeAssertions : sig
 
   val assert_instanceof_rhs : Context.t -> Type.t -> unit
 
+  val assert_iterable :
+    Context.t -> ALoc.t -> async:bool -> use_op:Type.use_op -> Type.t -> Type.t list -> unit
+
   val non_exhaustive : Context.t -> Type.t list -> bool
 end

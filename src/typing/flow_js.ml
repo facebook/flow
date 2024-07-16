@@ -4852,29 +4852,6 @@ struct
         | (l, EqT { reason; flip; arg = r }) -> flow_eq cx trace reason flip l r
         | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
           flow_strict_eq cx trace reason cond_context flip l r
-        (***********************************)
-        (* iterable (e.g. RHS of `for..of` *)
-        (***********************************)
-        | (DefT (enum_reason, EnumObjectT _), AssertIterableT _) ->
-          Default_resolve.default_resolve_touts
-            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
-            cx
-            (reason_of_t l |> loc_of_reason)
-            u;
-          add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false })
-        | (AnyT (_, src), AssertIterableT { use_op; reason; async = _; targs }) ->
-          let src = any_mod_src_keep_placeholder (AnyError None) src in
-          Base.List.iter targs ~f:(fun t ->
-              rec_unify cx trace ~use_op ~unify_any:true t (AnyT.why src reason)
-          )
-        | (_, AssertIterableT { use_op; reason; async; targs }) ->
-          let iterable =
-            if async then
-              get_builtin_typeapp cx reason "$IterableOrAsyncIterableInternal" (l :: targs)
-            else
-              get_builtin_typeapp cx reason "$Iterable" targs
-          in
-          rec_flow_t cx trace ~use_op (l, iterable)
         (**************************************)
         (* types may be refined by predicates *)
         (**************************************)
@@ -6534,7 +6511,6 @@ struct
     | UseT (_, AnnotT _) -> true
     | AndT _
     | ArrRestT _
-    | AssertIterableT _
     | BindT _
     | CallT _
     | CallElemT _
