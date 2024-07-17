@@ -1034,7 +1034,7 @@ and dump_tvar_ (depth, tvars) cx id =
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = FullyResolved s; _ } ->
           let payload =
-            match ForcingState.get_forced s with
+            match ForcingState.get_forced_for_debugging s with
             | None -> "unevaluated"
             | Some t -> dump_t_ (depth - 1, stack) cx t
           in

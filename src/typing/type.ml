@@ -3155,7 +3155,7 @@ module Constraint = struct
 
     val force : on_error:(Reason.t -> TypeTerm.t) -> t -> TypeTerm.t
 
-    val get_forced : t -> TypeTerm.t option
+    val get_forced_for_debugging : t -> TypeTerm.t option
 
     val copy : on_error:(Reason.t -> TypeTerm.t) -> visit_for_copier:(TypeTerm.t -> unit) -> t -> t
   end = struct
@@ -3195,7 +3195,7 @@ module Constraint = struct
         s.state <- ForcedWithCyclicError t;
         t
 
-    let get_forced s =
+    let get_forced_for_debugging s =
       match s.state with
       | Unforced
       | Forcing ->
