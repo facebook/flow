@@ -815,7 +815,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             match prefix with
             | DefT (_, SingletonStrT (OrdinaryName prefix)) ->
               let reason = mk_reason (RStringPrefix { prefix }) loc in
-              reconstruct_ast (StrUtilT { reason; prefix; remainder }) targs
+              reconstruct_ast (StrUtilT { reason; op = StrPrefix prefix; remainder }) targs
             | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
           in
           let reason = mk_reason (RType (OrdinaryName "StringPrefix")) loc in
@@ -826,6 +826,31 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             let use_op = Op (TypeApplication { type_ = reason }) in
             Context.add_post_inference_subtyping_check cx remainder use_op (StrT.at loc);
             create_string_prefix_type ~prefix ~remainder:(Some remainder)
+          | _ ->
+            error_type
+              cx
+              loc
+              (Error_message.ETooManyTypeArgs
+                 { reason_tapp = reason; arity_loc = loc; maximum_arity = 2 }
+              )
+              t_ast)
+        | "StringSuffix" ->
+          let (ts, targs) = convert_type_params () in
+          let create_string_suffix_type ~suffix ~remainder =
+            match suffix with
+            | DefT (_, SingletonStrT (OrdinaryName suffix)) ->
+              let reason = mk_reason (RStringSuffix { suffix }) loc in
+              reconstruct_ast (StrUtilT { reason; op = StrSuffix suffix; remainder }) targs
+            | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
+          in
+          let reason = mk_reason (RType (OrdinaryName "StringSuffix")) loc in
+          (match ts with
+          | [] -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
+          | [suffix] -> create_string_suffix_type ~suffix ~remainder:None
+          | [suffix; remainder] ->
+            let use_op = Op (TypeApplication { type_ = reason }) in
+            Context.add_post_inference_subtyping_check cx remainder use_op (StrT.at loc);
+            create_string_suffix_type ~suffix ~remainder:(Some remainder)
           | _ ->
             error_type
               cx

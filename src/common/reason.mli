@@ -32,6 +32,8 @@ type 'loc virtual_reason_desc =
   | RStringLit of name
   | RStringPrefix of { prefix: string }
   | RStringWithoutPrefix of { prefix: string }
+  | RStringSuffix of { suffix: string }
+  | RStringWithoutSuffix of { suffix: string }
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool

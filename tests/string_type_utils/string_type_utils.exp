@@ -1,3 +1,63 @@
+Error ----------------------------------------------------------------------------------------------------- combo.js:3:1
+
+Cannot cast `'bar(--color)'` to `CSSVarInter` because string [1] is incompatible with string prefixed with `var(--` [2].
+[incompatible-cast]
+
+   combo.js:3:1
+   3| 'bar(--color)' as CSSVarInter; // ERROR
+      ^^^^^^^^^^^^^^ [1]
+
+References:
+   combo.js:1:20
+   1| type CSSVarInter = StringPrefix<'var(--'> & StringSuffix<')'>;
+                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- combo.js:4:1
+
+Cannot cast `'var(--color'` to `CSSVarInter` because string [1] is incompatible with string suffixed with `)` [2].
+[incompatible-cast]
+
+   combo.js:4:1
+   4| 'var(--color' as CSSVarInter; // ERROR
+      ^^^^^^^^^^^^^ [1]
+
+References:
+   combo.js:1:45
+   1| type CSSVarInter = StringPrefix<'var(--'> & StringSuffix<')'>;
+                                                  ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- combo.js:8:1
+
+Cannot cast `'bar(--color)'` to `CSSVarRemainder` because string [1] is incompatible with string prefixed with
+`var(--` [2]. [incompatible-cast]
+
+   combo.js:8:1
+   8| 'bar(--color)' as CSSVarRemainder; // ERROR
+      ^^^^^^^^^^^^^^ [1]
+
+References:
+   combo.js:8:19
+   8| 'bar(--color)' as CSSVarRemainder; // ERROR
+                        ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- combo.js:9:1
+
+Cannot cast `'var(--color'` to `CSSVarRemainder` because string with prefix `var(--` removed [1] is incompatible with
+string suffixed with `)` [2]. [incompatible-cast]
+
+   combo.js:9:1
+   9| 'var(--color' as CSSVarRemainder; // ERROR
+      ^^^^^^^^^^^^^ [1]
+
+References:
+   combo.js:6:47
+   6| type CSSVarRemainder = StringPrefix<'var(--', StringSuffix<')'>>;
+                                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- import-prefix.js:6:1
 
 Cannot cast `data` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string
@@ -14,6 +74,23 @@ References:
    import-prefix.js:6:9
     6| data as 'data-'; // ERROR
                ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import-suffix.js:6:1
+
+Cannot cast `percent` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import-suffix.js:6:1
+    6| percent as empty; // ERROR
+       ^^^^^^^
+
+References:
+   suffix.js:57:31
+   57| declare export const percent: Percent;
+                                     ^^^^^^^ [1]
+   import-suffix.js:6:12
+    6| percent as empty; // ERROR
+                  ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:6:1
@@ -308,5 +385,283 @@ References:
                ^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
 
-Found 21 errors
+Cannot cast empty string to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
+[incompatible-cast]
+
+   suffix.js:6:1
+   6| '' as Percent; // ERROR
+      ^^ [1]
+
+References:
+   suffix.js:6:7
+   6| '' as Percent; // ERROR
+            ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- suffix.js:7:1
+
+Cannot cast `'%6'` to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
+[incompatible-cast]
+
+   suffix.js:7:1
+   7| '%6' as Percent; // ERROR
+      ^^^^ [1]
+
+References:
+   suffix.js:7:9
+   7| '%6' as Percent; // ERROR
+              ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:12:3
+
+Cannot cast `x` to `Percent` because string [1] is incompatible with string suffixed with `%` [2]. [incompatible-cast]
+
+   suffix.js:12:3
+   12|   x as Percent; // ERROR
+         ^
+
+References:
+   suffix.js:11:20
+   11|   declare const x: string;
+                          ^^^^^^ [1]
+   suffix.js:12:8
+   12|   x as Percent; // ERROR
+              ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:20:3
+
+Cannot cast `x` to string literal `%` because string suffixed with `%` [1] is incompatible with string literal `%` [2].
+[incompatible-cast]
+
+   suffix.js:20:3
+   20|   x as '%'; // ERROR
+         ^
+
+References:
+   suffix.js:18:20
+   18|   declare const x: Percent;
+                          ^^^^^^^ [1]
+   suffix.js:20:8
+   20|   x as '%'; // ERROR
+              ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:31:12
+
+Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
+
+   31| type Err = StringSuffix<string>; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:32:33
+
+Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
+
+   32| declare function err<T: string>(StringSuffix<T>): void; // ERROR
+                                       ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:39:5
+
+Cannot cast `x` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   suffix.js:39:5
+   39|     x as empty; // ERROR
+           ^
+
+References:
+   suffix.js:36:20
+   36|   declare const x: Percent | number;
+                          ^^^^^^^ [1]
+   suffix.js:39:10
+   39|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:53:3
+
+Cannot cast `bar` to `FooBar` because string suffixed with `bar` [1] is incompatible with string suffixed with
+`foobar` [2]. [incompatible-cast]
+
+   suffix.js:53:3
+   53|   bar as FooBar; // ERROR
+         ^^^
+
+References:
+   suffix.js:50:22
+   50|   declare const bar: Bar;
+                            ^^^ [1]
+   suffix.js:53:10
+   53|   bar as FooBar; // ERROR
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:60:15
+
+Cannot use type without at least 1 type argument. [missing-type-arg]
+
+   60| type NoArgs = StringSuffix;
+                     ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:61:21
+
+Cannot use type without at least 1 type argument. [missing-type-arg]
+
+   61| type ZeroTypeArgs = StringSuffix<>;
+                           ^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:62:24
+
+Cannot use `StringSuffix` [1] with more than 2 type arguments. [extra-type-arg]
+
+   62| type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:67:1
+
+Cannot cast `'!'` to `Exclamation` because string with suffix `!` removed [1] is incompatible with union type [2].
+[incompatible-cast]
+
+   suffix.js:67:1
+   67| '!' as Exclamation; // ERROR
+       ^^^ [1]
+
+References:
+   suffix.js:65:38
+   65| type Exclamation = StringSuffix<'!', 'woo' | 'yay'>;
+                                            ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:68:1
+
+Cannot cast `'yay'` to `Exclamation` because string [1] is incompatible with string suffixed with `!` [2].
+[incompatible-cast]
+
+   suffix.js:68:1
+   68| 'yay' as Exclamation; // ERROR
+       ^^^^^ [1]
+
+References:
+   suffix.js:68:10
+   68| 'yay' as Exclamation; // ERROR
+                ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:76:3
+
+Cannot cast `x` to union type because: [incompatible-cast]
+ - Either string suffixed with `!` [1] is incompatible with string literal `woo!` [2].
+ - Or string suffixed with `!` [1] is incompatible with string literal `yay!` [3].
+
+   suffix.js:76:3
+   76|   x as 'woo!' | 'yay!'; // ERROR: we don't support this
+         ^
+
+References:
+   suffix.js:74:20
+   74|   declare const x: Exclamation;
+                          ^^^^^^^^^^^ [1]
+   suffix.js:76:8
+   76|   x as 'woo!' | 'yay!'; // ERROR: we don't support this
+              ^^^^^^ [2]
+   suffix.js:76:17
+   76|   x as 'woo!' | 'yay!'; // ERROR: we don't support this
+                       ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:81:3
+
+Cannot cast `x` to string suffixed with `!` because string [1] is incompatible with string literal `xxx` [2].
+[incompatible-cast]
+
+   suffix.js:81:3
+   81|   x as StringSuffix<'!', 'xxx'>; // ERROR
+         ^
+
+References:
+   suffix.js:79:20
+   79|   declare const x: StringSuffix<'!'>;
+                          ^^^^^^^^^^^^^^^^^ [1]
+   suffix.js:81:26
+   81|   x as StringSuffix<'!', 'xxx'>; // ERROR
+                                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:89:3
+
+Cannot cast `x` to string suffixed with `foo` because string literal `bar` [1] is incompatible with string literal
+`xxx` [2]. [incompatible-cast]
+
+   suffix.js:89:3
+   89|   x as StringSuffix<'foo', 'xxx'>; // ERROR
+         ^
+
+References:
+   suffix.js:84:40
+   84|   declare const x: StringSuffix<'foo', 'bar'>;
+                                              ^^^^^ [1]
+   suffix.js:89:28
+   89|   x as StringSuffix<'foo', 'xxx'>; // ERROR
+                                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:92:3
+
+Cannot cast `x` to string suffixed with `o` because string suffixed with `foo` [1] is incompatible with string suffixed
+with `o` [2]. [incompatible-cast]
+
+   suffix.js:92:3
+   92|   x as StringSuffix<'o', 'bar'>; // ERROR
+         ^
+
+References:
+   suffix.js:84:20
+   84|   declare const x: StringSuffix<'foo', 'bar'>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   suffix.js:92:8
+   92|   x as StringSuffix<'o', 'bar'>; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:94:45
+
+Cannot instantiate `StringSuffix` because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+
+   suffix.js:94:45
+   94| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
+                                                   ^ [1]
+
+References:
+   suffix.js:94:25
+   94| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
+                               ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:99:3
+
+Cannot cast `x` to string literal `yay!` because string with suffix `!` removed [1] is incompatible with string literal
+`yay!` [2]. [incompatible-cast]
+
+   suffix.js:99:3
+   99|   x as "yay!"; // ERROR
+         ^
+
+References:
+   suffix.js:97:23
+   97|   const x =  unexcite("yay!");
+                             ^^^^^^ [1]
+   suffix.js:99:8
+   99|   x as "yay!"; // ERROR
+              ^^^^^^ [2]
+
+
+
+Found 45 errors

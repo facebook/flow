@@ -517,6 +517,11 @@ type ('loc, 'a) annot =
       prefix: string;
       remainder: 'a option;
     }
+  | StringSuffix of {
+      loc: 'loc;
+      suffix: string;
+      remainder: 'a option;
+    }
   | Typeof of {
       loc: 'loc;
       qname: string list;

@@ -2541,6 +2541,19 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       let remainder = Some (annot opts scope tbls xs remainder) in
       Annot (StringPrefix { loc; prefix = s; remainder })
     | _ -> Err (loc, CheckError))
+  | "StringSuffix" ->
+    (match targs with
+    | Some (_, { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ })]; _ }) ->
+      let loc = push_loc tbls loc in
+      Annot (StringSuffix { loc; suffix = s; remainder = None })
+    | Some
+        ( _,
+          { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ }); remainder]; _ }
+        ) ->
+      let loc = push_loc tbls loc in
+      let remainder = Some (annot opts scope tbls xs remainder) in
+      Annot (StringSuffix { loc; suffix = s; remainder })
+    | _ -> Err (loc, CheckError))
   | "React$Immutable" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

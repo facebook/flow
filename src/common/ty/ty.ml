@@ -285,6 +285,10 @@ and utility =
       prefix: string;
       remainder: t option;
     }
+  | StringSuffix of {
+      suffix: string;
+      remainder: t option;
+    }
   (* React utils *)
   | ReactElementPropsType of t
   | ReactElementConfigType of t
@@ -688,6 +692,7 @@ class ['A] comparator_ty =
       | ReactCheckComponentRef _ -> 26
       | Enum _ -> 27
       | StringPrefix _ -> 28
+      | StringSuffix _ -> 29
 
     method tag_of_polarity _ =
       function
@@ -850,6 +855,7 @@ let string_of_utility_ctor = function
   | Call _ -> "$Call"
   | Class _ -> "Class"
   | StringPrefix _ -> "StringPrefix"
+  | StringSuffix _ -> "StringSuffix"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
   | ReactElementRefType _ -> "React$ElementRef"
@@ -875,8 +881,12 @@ let types_of_utility = function
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
-  | StringPrefix { prefix; remainder = None } -> Some [StrLit (Reason.OrdinaryName prefix)]
-  | StringPrefix { prefix; remainder = Some t } -> Some [StrLit (Reason.OrdinaryName prefix); t]
+  | StringPrefix { prefix = arg; remainder = None }
+  | StringSuffix { suffix = arg; remainder = None } ->
+    Some [StrLit (Reason.OrdinaryName arg)]
+  | StringPrefix { prefix = arg; remainder = Some t }
+  | StringSuffix { suffix = arg; remainder = Some t } ->
+    Some [StrLit (Reason.OrdinaryName arg); t]
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]

@@ -242,18 +242,30 @@ let ground_subtype = function
   | (DefT (_, NullT), UseT (_, DefT (_, NullT)))
   | (DefT (_, VoidT), UseT (_, DefT (_, VoidT))) ->
     true
-  | ( StrUtilT { reason = _; prefix = prefix1; remainder = _ },
-      UseT (_, StrUtilT { reason = _; prefix = prefix2; remainder = None })
+  | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
+      UseT (_, StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None })
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
   | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
-      UseT (_, StrUtilT { reason = _; prefix; remainder = None })
+      UseT (_, StrUtilT { reason = _; op = StrPrefix prefix; remainder = None })
     )
     when String.starts_with ~prefix s ->
     true
-  | (StrUtilT { reason = _; prefix; remainder = _ }, UseT (_, DefT (_, StrT Truthy)))
-    when prefix <> "" ->
+  | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
+      UseT (_, StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None })
+    )
+    when String.ends_with ~suffix:suffix2 suffix1 ->
+    true
+  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+      UseT (_, StrUtilT { reason = _; op = StrSuffix suffix; remainder = None })
+    )
+    when String.ends_with ~suffix s ->
+    true
+  | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
+      UseT (_, DefT (_, StrT Truthy))
+    )
+    when arg <> "" ->
     true
   | (StrUtilT _, UseT (_, DefT (_, StrT AnyLiteral))) -> true
   | (l, UseT (_, DefT (_, MixedT mixed_flavor))) -> TypeUtil.is_mixed_subtype l mixed_flavor

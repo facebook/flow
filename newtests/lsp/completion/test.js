@@ -8293,6 +8293,42 @@ b.te
                     ],
                   },
                 },
+                {
+                  label: 'StringSuffix',
+                  kind: 3,
+                  detail: 'StringSuffix',
+                  sortText: '00000000000000000042',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'StringSuffix',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 42,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'StringSuffix',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -9839,6 +9875,42 @@ b.te
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringPrefix',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'StringSuffix',
+                  kind: 3,
+                  detail: 'StringSuffix',
+                  sortText: '00000000000000000035',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'StringSuffix',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 35,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'StringSuffix',
                         ac_type: 'Acmem',
                       },
                     ],

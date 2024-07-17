@@ -2879,6 +2879,33 @@ Flags: --lsp
     ]
   }
 }
+{
+  "label":"StringSuffix",
+  "kind":3,
+  "detail":"StringSuffix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"StringSuffix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":42,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringSuffix",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
 
 qualified-type-annotation.js:5:23
 Flags: --pretty
@@ -4812,6 +4839,33 @@ Flags: --lsp
     ]
   }
 }
+{
+  "label":"StringSuffix",
+  "kind":3,
+  "detail":"StringSuffix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"StringSuffix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringSuffix",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
 
 indexed-access-2.js:4:13
 Flags: --lsp
@@ -5905,6 +5959,33 @@ Flags: --lsp
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"StringSuffix",
+  "kind":3,
+  "detail":"StringSuffix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"StringSuffix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringSuffix",
         "ac_type":"Acmem"
       }
     ]

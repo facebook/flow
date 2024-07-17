@@ -1083,19 +1083,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (************)
     (* StrUtilT *)
     (************)
-    | ( StrUtilT { reason = _; prefix = prefix1; remainder = _ },
-        StrUtilT { reason = _; prefix = prefix2; remainder = None }
+    (* prefix *)
+    | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
+        StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
       )
       when String.starts_with ~prefix:prefix2 prefix1 ->
       ()
-    | ( StrUtilT { reason; prefix = prefix1; remainder = remainder1 },
-        StrUtilT { reason = _; prefix = prefix2; remainder = Some remainder2 }
+    | ( StrUtilT { reason; op = StrPrefix prefix1; remainder = remainder1 },
+        StrUtilT { reason = _; op = StrPrefix prefix2; remainder = Some remainder2 }
       )
       when prefix1 = prefix2 ->
       let remainder1 = Option.value ~default:(StrT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
     | ( DefT (reason, StrT (Literal (None, OrdinaryName s))),
-        StrUtilT { reason = _; prefix; remainder }
+        StrUtilT { reason = _; op = StrPrefix prefix; remainder }
       )
       when String.starts_with ~prefix s ->
       Base.Option.iter remainder ~f:(fun remainder ->
@@ -1104,9 +1105,32 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let str_t = DefT (reason, StrT (Literal (None, OrdinaryName chopped))) in
           rec_flow_t cx trace ~use_op (str_t, remainder)
       )
-    | (StrUtilT { reason; prefix; remainder = _ }, _) ->
+    (* suffix *)
+    | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
+        StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
+      )
+      when String.ends_with ~suffix:suffix2 suffix1 ->
+      ()
+    | ( StrUtilT { reason; op = StrSuffix suffix1; remainder = remainder1 },
+        StrUtilT { reason = _; op = StrSuffix suffix2; remainder = Some remainder2 }
+      )
+      when suffix1 = suffix2 ->
+      let remainder1 = Option.value ~default:(StrT.why reason) remainder1 in
+      rec_flow_t cx trace ~use_op (remainder1, remainder2)
+    | ( DefT (reason, StrT (Literal (None, OrdinaryName s))),
+        StrUtilT { reason = _; op = StrSuffix suffix; remainder }
+      )
+      when String.ends_with ~suffix s ->
+      Base.Option.iter remainder ~f:(fun remainder ->
+          let chopped = Base.String.chop_suffix_exn ~suffix s in
+          let reason = replace_desc_reason (RStringWithoutSuffix { suffix }) reason in
+          let str_t = DefT (reason, StrT (Literal (None, OrdinaryName chopped))) in
+          rec_flow_t cx trace ~use_op (str_t, remainder)
+      )
+    (* both *)
+    | (StrUtilT { reason; op = StrPrefix arg | StrSuffix arg; remainder = _ }, _) ->
       let literal_kind =
-        if prefix = "" then
+        if arg = "" then
           AnyLiteral
         else
           Truthy

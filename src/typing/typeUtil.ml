@@ -162,7 +162,7 @@ let rec mod_reason_of_t f = function
   | FunProtoT reason -> FunProtoT (f reason)
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | StrUtilT { reason; prefix; remainder } -> StrUtilT { reason = f reason; prefix; remainder }
+  | StrUtilT { reason; op; remainder } -> StrUtilT { reason = f reason; op; remainder }
   | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms } ->
     ModuleT
       {
@@ -612,17 +612,30 @@ let quick_subtype t1 t2 =
   | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _)))
   | (DefT (_, EmptyT), _) ->
     true
-  | ( StrUtilT { reason = _; prefix = prefix1; remainder = _ },
-      StrUtilT { reason = _; prefix = prefix2; remainder = None }
+  | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
+      StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
   | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
-      StrUtilT { reason = _; prefix; remainder = None }
+      StrUtilT { reason = _; op = StrPrefix prefix; remainder = None }
     )
     when String.starts_with ~prefix s ->
     true
-  | (StrUtilT { reason = _; prefix; remainder = _ }, DefT (_, StrT Truthy)) when prefix <> "" ->
+  | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
+      StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
+    )
+    when String.ends_with ~suffix:suffix2 suffix1 ->
+    true
+  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+      StrUtilT { reason = _; op = StrSuffix suffix; remainder = None }
+    )
+    when String.ends_with ~suffix s ->
+    true
+  | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
+      DefT (_, StrT Truthy)
+    )
+    when arg <> "" ->
     true
   | (StrUtilT _, DefT (_, StrT AnyLiteral)) -> true
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true

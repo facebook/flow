@@ -66,6 +66,8 @@ type 'loc virtual_reason_desc =
   | RStringLit of name
   | RStringPrefix of { prefix: string }
   | RStringWithoutPrefix of { prefix: string }
+  | RStringSuffix of { suffix: string }
+  | RStringWithoutSuffix of { suffix: string }
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool
@@ -257,15 +259,16 @@ type reason_desc = ALoc.t virtual_reason_desc
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
-    | RStringPrefix _ | RStringWithoutPrefix _ | RNumberLit _ | RBigIntLit _ | RBooleanLit _
-    | RObject | RConstObjectLit | RObjectLit | RObjectType | RInterfaceType | RArray | RArrayLit
-    | RConstArrayLit | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole
-    | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
-    | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
-    | RFunctionCallType | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _
-    | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized
-    | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard
-    | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
+    | RStringPrefix _ | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _
+    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
+    | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit | REmptyArrayLit
+    | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType | RTupleType
+    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
+    | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _
+    | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
+    | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _ | RComponent _
+    | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -545,6 +548,8 @@ let rec string_of_desc = function
   | RStringLit x -> spf "string literal `%s`" (display_string_of_name x)
   | RStringPrefix { prefix } -> spf "string prefixed with `%s`" prefix
   | RStringWithoutPrefix { prefix } -> spf "string with prefix `%s` removed" prefix
+  | RStringSuffix { suffix } -> spf "string suffixed with `%s`" suffix
+  | RStringWithoutSuffix { suffix } -> spf "string with suffix `%s` removed" suffix
   | RNumberLit x -> spf "number literal `%s`" x
   | RBigIntLit x -> spf "bigint literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
@@ -1286,6 +1291,8 @@ let classification_of_reason_desc desc =
   | RStringLit _
   | RStringPrefix _
   | RStringWithoutPrefix _
+  | RStringSuffix _
+  | RStringWithoutSuffix _
   | RNumberLit _
   | RBigIntLit _
   | RBooleanLit _

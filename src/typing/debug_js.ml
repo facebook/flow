@@ -356,12 +356,18 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, ReactAbstractComponentT _) -> p t
     | DefT (_, RendersT _) -> p t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
-    | StrUtilT { reason = _; prefix; remainder } ->
+    | StrUtilT { reason = _; op; remainder } ->
+      let (op, arg) =
+        match op with
+        | StrPrefix prefix -> ("prefix", prefix)
+        | StrSuffix suffix -> ("suffix", suffix)
+      in
       p
         ~extra:
           (spf
-             "prefix:%S, remainder:%s"
-             prefix
+             "%s:%S, remainder:%s"
+             op
+             arg
              (Base.Option.value_map ~f:kid ~default:"<None>" remainder)
           )
         t

@@ -598,7 +598,11 @@ and merge_annot env file = function
   | StringPrefix { loc; prefix; remainder } ->
     let reason = Reason.(mk_reason (RStringPrefix { prefix }) loc) in
     let remainder = Base.Option.map ~f:(merge env file) remainder in
-    Type.(StrUtilT { reason; prefix; remainder })
+    Type.(StrUtilT { reason; op = StrPrefix prefix; remainder })
+  | StringSuffix { loc; suffix; remainder } ->
+    let reason = Reason.(mk_reason (RStringSuffix { suffix }) loc) in
+    let remainder = Base.Option.map ~f:(merge env file) remainder in
+    Type.(StrUtilT { reason; op = StrSuffix suffix; remainder })
   | Typeof { loc; qname; t; targs } ->
     let qname = String.concat "." qname in
     let reason = Reason.(mk_reason (RTypeof qname) loc) in

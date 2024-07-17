@@ -4964,10 +4964,10 @@ struct
         (* String utils (e.g. prefix) *)
         (******************************)
         (* StrUtilT just becomes a StrT so we can access properties and methods. *)
-        | (StrUtilT { reason; prefix; remainder = _ }, _) ->
+        | (StrUtilT { reason; op = StrPrefix arg | StrSuffix arg; remainder = _ }, _) ->
           let reason = replace_desc_reason RString reason in
           let literal_kind =
-            if prefix = "" then
+            if arg = "" then
               AnyLiteral
             else
               Truthy

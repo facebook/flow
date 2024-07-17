@@ -111,12 +111,12 @@ class virtual ['a] t =
           t
         else
           KeysT (r, t'')
-      | StrUtilT { reason; prefix; remainder } ->
+      | StrUtilT { reason; op; remainder } ->
         let remainder' = OptionUtils.ident_map (self#type_ cx map_cx) remainder in
         if remainder' == remainder then
           t
         else
-          StrUtilT { reason; prefix; remainder = remainder' }
+          StrUtilT { reason; op; remainder = remainder' }
       | AnnotT (r, t', use_desc) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

@@ -121,7 +121,7 @@ module rec TypeTerm : sig
     (* advanced string types *)
     | StrUtilT of {
         reason: reason;
-        prefix: string;
+        op: str_util_op;
         remainder: t option;
       }
     (* annotations *)
@@ -305,6 +305,10 @@ module rec TypeTerm : sig
   and defer_use_t =
     (* destructors that extract parts of various kinds of types *)
     | TypeDestructorT of use_op * reason * destructor
+
+  and str_util_op =
+    | StrPrefix of string
+    | StrSuffix of string
 
   and enum_concrete_info = {
     enum_name: string;

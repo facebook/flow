@@ -4474,6 +4474,33 @@ Flags: --lsp
     ]
   }
 }
+{
+  "label":"StringSuffix",
+  "kind":3,
+  "detail":"StringSuffix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"StringSuffix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":42,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringSuffix",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
 
 qualified-types-jsdoc.js:5:12
 Flags: --lsp
