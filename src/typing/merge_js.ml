@@ -734,11 +734,11 @@ let copier =
             | Resolved _ ->
               failwith "unexpected unresolved constraint"
             | FullyResolved s ->
-              ForcingState.map
+              ForcingState.copy
                 ~on_error:(Context.on_cyclic_tvar_error src_cx)
-                ~f:(fun t ->
+                ~visit_for_copier:(fun t ->
                   let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                  t)
+                  ())
                 s
           in
           let node = create_root (FullyResolved state) in

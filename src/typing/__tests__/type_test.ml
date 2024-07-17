@@ -54,7 +54,7 @@ let forcing_state_tests =
           )
       in
       let s = Lazy.force s_lazy in
-      let s' = Constraint.ForcingState.map ~on_error:AnyT.error ~f:Base.Fn.id s in
+      let s' = Constraint.ForcingState.copy ~on_error:AnyT.error ~visit_for_copier:ignore s in
       assert_forced_to_any s'
     );
     ( "invalid_self_recursive_force_twice" >:: fun _ ->
@@ -72,7 +72,7 @@ let forcing_state_tests =
           )
       in
       let s = Lazy.force s_lazy in
-      let s' = Constraint.ForcingState.map ~on_error:AnyT.error ~f:Base.Fn.id s in
+      let s' = Constraint.ForcingState.copy ~on_error:AnyT.error ~visit_for_copier:ignore s in
       assert_forced_to_any s'
     );
   ]

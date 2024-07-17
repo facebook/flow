@@ -3157,7 +3157,7 @@ module Constraint = struct
 
     val get_forced : t -> TypeTerm.t option
 
-    val map : on_error:(Reason.t -> TypeTerm.t) -> f:(TypeTerm.t -> TypeTerm.t) -> t -> t
+    val copy : on_error:(Reason.t -> TypeTerm.t) -> visit_for_copier:(TypeTerm.t -> unit) -> t -> t
   end = struct
     type state =
       | Unforced
@@ -3203,8 +3203,17 @@ module Constraint = struct
       | Forced -> Some (Lazy.force_val s.valid)
       | ForcedWithCyclicError t -> Some t
 
-    let map ~on_error ~f s =
-      { valid = lazy (f (force ~on_error s)); error_reason = s.error_reason; state = Unforced }
+    let copy ~on_error ~visit_for_copier s =
+      {
+        valid =
+          lazy
+            (let t = force ~on_error s in
+             visit_for_copier t;
+             t
+            );
+        error_reason = s.error_reason;
+        state = Unforced;
+      }
   end
 
   (** Constraints carry type information that narrows down the possible solutions
