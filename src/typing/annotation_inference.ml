@@ -62,13 +62,16 @@ let primitive_promoting_op = function
 
 let function_like_op op = object_like_op op
 
-let get_fully_resolved_type cx id =
+let get_fully_resolved_type_state cx id =
   let (_, constraints) = Context.find_constraints cx id in
   match constraints with
-  | Constraint.FullyResolved s -> Context.force_fully_resolved_tvar cx s
+  | Constraint.FullyResolved s -> s
   | Constraint.Resolved _
   | Constraint.Unresolved _ ->
     failwith "unexpected unresolved constraint in annotation inference"
+
+let get_fully_resolved_type cx id =
+  Context.force_fully_resolved_tvar cx (get_fully_resolved_type_state cx id)
 
 let get_builtin_typeapp cx reason x targs =
   let t = Flow_js_utils.lookup_builtin_type cx x reason in
@@ -395,10 +398,29 @@ module rec ConsGen : S = struct
         | _ -> t
       in
       Context.remove_avar cx id;
-      Context.add_tvar
-        cx
-        id
-        Type.Constraint.(create_root (FullyResolved (ForcingState.of_non_lazy_t t)));
+      let () =
+        if
+          IMap.mem id (Context.graph cx)
+          && not
+               (Constraint.ForcingState.already_forced_with_cyclic_error
+                  (get_fully_resolved_type_state cx id)
+               )
+        then
+          (* It is possible that this tvar is cyclic in a bad way, and at this point,
+           * the ensure_annot_resolved above has already discovered that and resolve the
+           * tvar to any. If we still unconditionally try to add the tvar here, it will
+           * undo the work of turning the bad tvar to any.
+           *
+           * e.g. Consider OpenT(id=1). 1=AnnotT(OpenT(id=1)).
+           * ensure_annot_resolved, while visiting the nested OpenT in Annot, will resolve
+           * the tvar to any and error, but if we unconditionally add the tvar with
+           * t = AnnotT(OpenT(id=1)), the work is undone.
+           *)
+          Context.add_tvar
+            cx
+            id
+            Type.Constraint.(create_root (FullyResolved (ForcingState.of_non_lazy_t t)))
+      in
       let dependents1 = deps_of_constraint constraints1 in
       resolve_dependent_set cx reason dependents1 t
 
