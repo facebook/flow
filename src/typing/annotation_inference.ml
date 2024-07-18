@@ -70,8 +70,10 @@ let get_fully_resolved_type_state cx id =
   | Constraint.Unresolved _ ->
     failwith "unexpected unresolved constraint in annotation inference"
 
-let get_fully_resolved_type cx id =
-  Context.force_fully_resolved_tvar cx (get_fully_resolved_type_state cx id)
+let get_fully_resolved_type_helper ~error_recursive cx id =
+  let t = Context.force_fully_resolved_tvar cx (get_fully_resolved_type_state cx id) in
+  Flow_js_utils.InvalidCyclicTypeValidation.validate_type_sig_type ~error_recursive cx t;
+  t
 
 let get_builtin_typeapp cx reason x targs =
   let t = Flow_js_utils.lookup_builtin_type cx x reason in
@@ -352,6 +354,8 @@ module rec ConsGen : S = struct
       let t = error_recursive cx reason in
       resolve_id cx reason id t;
       t
+
+  and get_fully_resolved_type = get_fully_resolved_type_helper ~error_recursive
 
   and mk_lazy_tvar cx reason f =
     let id = Reason.mk_id () in

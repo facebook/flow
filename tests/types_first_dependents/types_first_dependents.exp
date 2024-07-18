@@ -6,13 +6,31 @@ The Flow server is currently in lazy mode and is only checking 1/5 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Warm up cyclic dependencies
-No errors!
+Error ---------------------------------------------------------------------------------------------------- mixed.js:3:15
+
+Invalid trivially recursive definition of `Bar`.  [recursive-definition]
+
+   3| import type { Bar } from './types';
+                    ^^^
+
+
+
+Found 1 error
 
 The Flow server is currently in lazy mode and is only checking 5/5 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Editing a file should cause dependents to pull in dependencies in the same cycle
-No errors!
+Error ---------------------------------------------------------------------------------------------------- mixed.js:3:15
+
+Invalid trivially recursive definition of `Bar`.  [recursive-definition]
+
+   3| import type { Bar } from './types';
+                    ^^^
+
+
+
+Found 1 error
 
 The Flow server is currently in lazy mode and is only checking 5/5 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

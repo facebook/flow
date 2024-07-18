@@ -147,6 +147,30 @@ References:
                              ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ recursive_types.js:5:24
+
+Invalid trivially recursive definition of `z`.  [recursive-definition]
+
+   5| export const z: typeof z = 1; // error recursive
+                             ^
+
+
+Error ------------------------------------------------------------------------------------------ recursive_types.js:8:17
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   8| export type T = T.A | T.B;
+                      ^^^
+
+
+Error ------------------------------------------------------------------------------------------ recursive_types.js:8:23
+
+Invalid trivially recursive definition of `B`.  [recursive-definition]
+
+   8| export type T = T.A | T.B;
+                            ^^^
+
+
 Error ----------------------------------------------------------------------------------------- recursive_types.js:14:13
 
 Invalid trivially recursive definition of object type.  [recursive-definition]
@@ -156,7 +180,7 @@ Invalid trivially recursive definition of object type.  [recursive-definition]
 
 
 
-Found 13 errors
+Found 16 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
