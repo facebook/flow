@@ -702,10 +702,6 @@ let class_type ?(structural = false) ?annot_loc t =
   in
   DefT (reason, ClassT t)
 
-let extends_type r l u =
-  let reason = update_desc_reason (fun desc -> RExtends desc) r in
-  InternalT (ExtendsT (reason, l, u))
-
 let extends_use_type use_op l u =
   let reason = update_desc_new_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsUseT (use_op, reason, [], l, u)

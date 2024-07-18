@@ -8268,12 +8268,12 @@ struct
        first. *)
     | (true, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
-      let right = extends_type r arr a in
+      let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       rec_flow cx trace (arrt, PredicateT (LeftP (InstanceofTest, right), result))
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
-      let right = extends_type r arr a in
+      let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
       rec_flow cx trace (arrt, PredicateT (pred, result))
@@ -8287,7 +8287,12 @@ struct
        recursion; it is also used elsewhere for running similar recursive
        subclass decisions.) **)
     | (true, (DefT (_, InstanceT _) as c), DefT (r, ClassT a)) ->
-      predicate cx trace result (extends_type r c a) (RightP (InstanceofTest, c))
+      predicate
+        cx
+        trace
+        result
+        (InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
+        (RightP (InstanceofTest, c))
     (* If C is a subclass of A, then don't refine the type of x. Otherwise,
        refine the type of x to A. (In general, the type of x should be refined to
        C & A, but that's hard to compute.) **)
@@ -8331,7 +8336,12 @@ struct
        appropriate refinement for x should be, we need to decide whether C
        extends A, choosing either nothing or C based on the result. **)
     | (false, (DefT (_, InstanceT _) as c), DefT (r, ClassT (DefT (_, InstanceT _) as a))) ->
-      predicate cx trace result (extends_type r c a) (NotP (RightP (InstanceofTest, c)))
+      predicate
+        cx
+        trace
+        result
+        (InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
+        (NotP (RightP (InstanceofTest, c)))
     (* If C is a subclass of A, then do nothing, since this check cannot
        succeed. Otherwise, don't refine the type of x. **)
     | ( false,

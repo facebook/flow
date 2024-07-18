@@ -69,8 +69,6 @@ val make_exact_object : reason_obj:reason -> Type.objtype -> reason_op:reason ->
 
 val class_type : ?structural:bool -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
-val extends_type : reason -> Type.t -> Type.t -> Type.t
-
 val extends_use_type : Type.use_op -> Type.t -> Type.t -> Type.use_t
 
 val poly_type : Type.Poly.id -> ALoc.t -> Type.typeparam Nel.t -> Type.t -> Type.t
