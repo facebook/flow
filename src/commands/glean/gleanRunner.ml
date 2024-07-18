@@ -729,7 +729,8 @@ let all_schema_version = 7
 
 let flow_schema_version = 3
 
-let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps ~glean_log =
+let create_typed_runner_config
+    ~output_dir ~write_root ~include_direct_deps ~glean_log ~glean_timeout =
   (module struct
     type accumulator = {
       files_analyzed: int;
@@ -772,117 +773,126 @@ let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps ~gle
     let visit ~options ast ctx =
       let Codemod_context.Typed.{ typed_ast; cx; file; file_sig; type_sig; _ } = ctx in
       if glean_log then Utils_js.prerr_endlinef "visiting: %s" (File_key.to_string file);
-      let root = Options.root options in
-      let reader = State_reader.create () in
-      let resolved_modules =
-        Parsing_heaps.get_file_addr_unsafe file
-        |> Parsing_heaps.Reader.get_typed_parse_unsafe ~reader file
-        |> Parsing_heaps.Reader.get_resolved_modules_unsafe
-             ~reader
-             Parsing_heaps.read_dependency
-             file
-      in
-      let scope_info =
-        Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
-      in
-      let module_documentation = module_documentations ~root ~write_root ~ast ~file in
-      let (declaration_info, member_declaration_info, type_declaration_info) =
-        declaration_infos
-          ~scope_info
-          ~root
-          ~write_root
-          ~glean_log
-          ~file
-          ~file_sig
-          ~cx
-          ~reader
-          ~typed_ast
-          ~ast
-      in
-      let type_import_declaration =
-        type_import_declarations ~root ~write_root ~resolved_modules ~file_sig
-      in
-      let loc_source = fst ast |> Loc.source in
-      let source_of_export =
-        source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_modules ~reader
-      in
-      let source_of_type_export =
-        source_of_type_exports
-          ~root
-          ~write_root
-          ~file
-          ~reader
-          ~loc_source
-          ~type_sig
-          ~resolved_modules
-      in
-      let local_declaration_reference =
-        local_declaration_references ~root ~write_root ~scope_info
-      in
-      let import_declaration = import_declarations ~root ~write_root ~resolved_modules ~file_sig in
-      let member_declaration_reference =
-        member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
-      in
-      let type_declaration_reference =
-        type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast
-      in
-      let file_of_string_module = file_of_string_modules ~root ~write_root ~options ~file in
-      let file_lines = file_liness ~root ~write_root ~file in
-      let output_file =
-        let file_name = Printf.sprintf "%d.json" (Unix.getpid ()) in
-        Filename.concat output_dir file_name
-      in
-      let is_first_write_to_file = not (Sys.file_exists output_file) in
-      let out_channel =
-        open_out_gen [Open_wronly; Open_creat; Open_append; Open_text] 0o666 output_file
-      in
-      let output_facts predicate facts =
-        let open Hh_json in
-        json_to_output
-          out_channel
-          (JSON_Object [("predicate", JSON_String predicate); ("facts", JSON_Array facts)])
-      in
-      if is_first_write_to_file then
-        output_string out_channel "["
-      else
-        output_string out_channel ",";
-      let flow_pred pred = Printf.sprintf "flow.%s.%d" pred flow_schema_version in
-      output_facts (flow_pred "LocalDeclarationReference") local_declaration_reference;
-      output_string out_channel ",";
-      output_facts (flow_pred "DeclarationInfo") declaration_info;
-      output_string out_channel ",";
-      output_facts (flow_pred "SourceOfExport") source_of_export;
-      output_string out_channel ",";
-      output_facts (flow_pred "ImportDeclaration") import_declaration;
-      output_string out_channel ",";
-      output_facts (flow_pred "MemberDeclarationReference") member_declaration_reference;
-      output_string out_channel ",";
-      output_facts (flow_pred "MemberDeclarationInfo") member_declaration_info;
-      output_string out_channel ",";
-      output_facts (flow_pred "TypeDeclarationReference") type_declaration_reference;
-      output_string out_channel ",";
-      output_facts (flow_pred "TypeDeclarationInfo") type_declaration_info;
-      output_string out_channel ",";
-      output_facts (flow_pred "TypeImportDeclaration") type_import_declaration;
-      output_string out_channel ",";
-      output_facts (flow_pred "SourceOfTypeExport") source_of_type_export;
-      output_string out_channel ",";
-      output_facts (flow_pred "FileOfStringModule") file_of_string_module;
-      output_string out_channel ",";
-      output_facts (flow_pred "ModuleDoc") module_documentation;
-      output_string out_channel ",";
-      output_facts "src.FileLines.1" file_lines;
-      close_out out_channel;
-      { files_analyzed = 1; json_filenames = SSet.singleton output_file }
+      Timeout.with_timeout
+        ~timeout:glean_timeout
+        ~on_timeout:(fun _ ->
+          failwith (Utils_js.spf "Timed out visiting: %s" (File_key.to_string file)))
+        ~do_:(fun _ ->
+          let root = Options.root options in
+          let reader = State_reader.create () in
+          let resolved_modules =
+            Parsing_heaps.get_file_addr_unsafe file
+            |> Parsing_heaps.Reader.get_typed_parse_unsafe ~reader file
+            |> Parsing_heaps.Reader.get_resolved_modules_unsafe
+                 ~reader
+                 Parsing_heaps.read_dependency
+                 file
+          in
+          let scope_info =
+            Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
+          in
+          let module_documentation = module_documentations ~root ~write_root ~ast ~file in
+          let (declaration_info, member_declaration_info, type_declaration_info) =
+            declaration_infos
+              ~scope_info
+              ~root
+              ~write_root
+              ~glean_log
+              ~file
+              ~file_sig
+              ~cx
+              ~reader
+              ~typed_ast
+              ~ast
+          in
+          let type_import_declaration =
+            type_import_declarations ~root ~write_root ~resolved_modules ~file_sig
+          in
+          let loc_source = fst ast |> Loc.source in
+          let source_of_export =
+            source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_modules ~reader
+          in
+          let source_of_type_export =
+            source_of_type_exports
+              ~root
+              ~write_root
+              ~file
+              ~reader
+              ~loc_source
+              ~type_sig
+              ~resolved_modules
+          in
+          let local_declaration_reference =
+            local_declaration_references ~root ~write_root ~scope_info
+          in
+          let import_declaration =
+            import_declarations ~root ~write_root ~resolved_modules ~file_sig
+          in
+          let member_declaration_reference =
+            member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
+          in
+          let type_declaration_reference =
+            type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast
+          in
+          let file_of_string_module = file_of_string_modules ~root ~write_root ~options ~file in
+          let file_lines = file_liness ~root ~write_root ~file in
+          let output_file =
+            let file_name = Printf.sprintf "%d.json" (Unix.getpid ()) in
+            Filename.concat output_dir file_name
+          in
+          let is_first_write_to_file = not (Sys.file_exists output_file) in
+          let out_channel =
+            open_out_gen [Open_wronly; Open_creat; Open_append; Open_text] 0o666 output_file
+          in
+          let output_facts predicate facts =
+            let open Hh_json in
+            json_to_output
+              out_channel
+              (JSON_Object [("predicate", JSON_String predicate); ("facts", JSON_Array facts)])
+          in
+          if is_first_write_to_file then
+            output_string out_channel "["
+          else
+            output_string out_channel ",";
+          let flow_pred pred = Printf.sprintf "flow.%s.%d" pred flow_schema_version in
+          output_facts (flow_pred "LocalDeclarationReference") local_declaration_reference;
+          output_string out_channel ",";
+          output_facts (flow_pred "DeclarationInfo") declaration_info;
+          output_string out_channel ",";
+          output_facts (flow_pred "SourceOfExport") source_of_export;
+          output_string out_channel ",";
+          output_facts (flow_pred "ImportDeclaration") import_declaration;
+          output_string out_channel ",";
+          output_facts (flow_pred "MemberDeclarationReference") member_declaration_reference;
+          output_string out_channel ",";
+          output_facts (flow_pred "MemberDeclarationInfo") member_declaration_info;
+          output_string out_channel ",";
+          output_facts (flow_pred "TypeDeclarationReference") type_declaration_reference;
+          output_string out_channel ",";
+          output_facts (flow_pred "TypeDeclarationInfo") type_declaration_info;
+          output_string out_channel ",";
+          output_facts (flow_pred "TypeImportDeclaration") type_import_declaration;
+          output_string out_channel ",";
+          output_facts (flow_pred "SourceOfTypeExport") source_of_type_export;
+          output_string out_channel ",";
+          output_facts (flow_pred "FileOfStringModule") file_of_string_module;
+          output_string out_channel ",";
+          output_facts (flow_pred "ModuleDoc") module_documentation;
+          output_string out_channel ",";
+          output_facts "src.FileLines.1" file_lines;
+          close_out out_channel;
+          { files_analyzed = 1; json_filenames = SSet.singleton output_file })
   end : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
   )
 
-let make ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps ~glean_log =
+let make
+    ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps ~glean_log ~glean_timeout =
   let module C = ( val create_typed_runner_config
                          ~output_dir
                          ~write_root
                          ~include_direct_deps
-                         ~glean_log : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
+                         ~glean_log
+                         ~glean_timeout : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
                  )
   in
   if include_reachable_deps then

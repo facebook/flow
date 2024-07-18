@@ -30,6 +30,10 @@ let spec =
            ~doc:"Additionally index reachable dependencies of input files"
       |> flag "--schema-version" truthy ~doc:"Show schema version used by the indexer"
       |> flag "--glean-log" truthy ~doc:"Log extra information from Glean run"
+      |> flag
+           "--glean-timeout"
+           (required ~default:600 int)
+           ~doc:"Maximum time to wait per file, in seconds"
       );
   }
 
@@ -41,10 +45,13 @@ let main
     include_reachable_deps
     show_schema_version
     glean_log
+    glean_timeout
     () =
   if show_schema_version then
     print_endline (Int.to_string GleanRunner.all_schema_version)
-  else
+  else (
+    if glean_timeout <= 0 then
+      failwith (Utils_js.spf "--glean-timeout must be a positive integer. Got %d" glean_timeout);
     match (output_dir_opt, write_root_opt) with
     | (Some output_dir, Some write_root) ->
       if (not (Sys.file_exists output_dir)) || not (Sys.is_directory output_dir) then
@@ -59,9 +66,11 @@ let main
              ~include_direct_deps
              ~include_reachable_deps
              ~glean_log
+             ~glean_timeout
           )
           codemod_flags
           ()
     | _ -> failwith "--output-dir and --write-root are required."
+  )
 
 let command = CommandSpec.command spec main
