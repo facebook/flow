@@ -7021,7 +7021,7 @@ struct
             }
         | ObjRest xs -> ObjRestT (reason, xs, OpenT tvar, id)
         | ArrRest i -> ArrRestT (unknown_use, reason, i, OpenT tvar)
-        | Default -> PredicateT (NotP VoidP, tvar)
+        | Default -> FilterOptionalT (unknown_use, OpenT tvar)
       )
 
   and evaluate_type_destructor cx ~trace use_op reason t d tvar =
