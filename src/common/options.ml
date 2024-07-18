@@ -149,6 +149,7 @@ type t = {
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
+  opt_add_missing_attributes_quickfix: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_ban_spread_key_props: bool;
   opt_verbose: Verbose.t option;
@@ -354,6 +355,8 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
+
+let add_missing_attributes_quickfix opts = opts.opt_add_missing_attributes_quickfix
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 

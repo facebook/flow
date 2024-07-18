@@ -1,0 +1,63 @@
+// @flow
+
+import * as React from "react";
+
+type Props1 = $ReadOnly<{ foo: number, bar?: string }>;
+
+type Props2 = $ReadOnly<{ bak: number, baz?: string }>;
+
+type Props3<P> = $ReadOnly<{ foo: P, bar?: P }>;
+
+function test1() {
+    declare function Foo(props: Props1): React.Node;
+    return <Foo />;
+}
+
+function test2() {
+    declare component Foo(foo: number, bar?: string);
+    return <Foo />;
+}
+
+function test3() {
+    declare component Foo(...props: {...Props1});
+    return <Foo />;
+}
+
+function test4() {
+    declare class Foo extends React.Component<Props1> {}
+    return <Foo />;
+}
+
+function test5(Foo: React.AbstractComponent<Props1>) {
+    return <Foo />;
+}
+
+function test6<P>(Foo: React.AbstractComponent<Props3<P>>): any {
+    return <Foo />;
+}
+
+function test7<P>(Foo: React.AbstractComponent<{...Props1, ...Props3<P>}>): any {
+    return <Foo />;
+}
+
+function test8<P: React.AbstractComponent<Props1>>(Foo: P): any {
+    return <Foo />;
+}
+
+function test9<P: Props1>(Foo: React.AbstractComponent<P>): any {
+    return <Foo />;
+}
+
+function test10(Foo: React.AbstractComponent<Props1 | Props1>): any {
+    return <Foo />;
+}
+
+function test11(Foo: React.AbstractComponent<Props1>): any {
+    const obj = {foo: 1, bar: "2"};
+    return <Foo {...obj}/>; // do not add any
+}
+
+function test12(Foo: React.AbstractComponent<Props1>): any {
+    const obj = {bar: "2"};
+    return <Foo {...obj} />; // add 'foo'
+}

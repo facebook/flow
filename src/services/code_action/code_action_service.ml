@@ -250,6 +250,29 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
   else
     []
 
+let add_jsx_props_code_actions ~snippets_enabled ~cx ~ast ~typed_ast ~options uri loc =
+  if Options.add_missing_attributes_quickfix options then
+    match Refactor_add_jsx_props.fill_props cx ~snippets_enabled ~ast ~tast:typed_ast loc with
+    | None -> []
+    | Some ast' ->
+      ast'
+      |> Flow_ast_differ.program ast
+      |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+      |> flow_loc_patch_to_lsp_edits
+      |> fun edits ->
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title = "Add missing attributes";
+            kind = CodeActionKind.quickfix;
+            diagnostics = [];
+            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          };
+      ]
+  else
+    []
+
 let preferred_import ~ast ~exports name loc =
   let files =
     if Autofix_imports.loc_is_type ~ast loc then
@@ -1094,6 +1117,14 @@ let code_actions_at_loc
         loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
+    @ add_jsx_props_code_actions
+        ~snippets_enabled:(Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
+        ~cx
+        ~ast
+        ~typed_ast
+        ~options
+        uri
+        loc
   in
   let error_fixes =
     code_actions_of_errors

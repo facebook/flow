@@ -250,6 +250,8 @@ val suppress_types : config -> SSet.t
 
 val ts_syntax : config -> bool
 
+val add_missing_attributes_quickfix : config -> bool
+
 val use_mixed_in_catch_variables : config -> bool option
 
 val ban_spread_key_props : config -> bool option

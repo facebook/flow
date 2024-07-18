@@ -1,0 +1,29 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Add missing attributes",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 39,
+                  "character": 11
+                },
+                "end": {
+                  "line": 39,
+                  "character": 18
+                }
+              },
+              "newText": "<Foo foo={foo} />"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
