@@ -2371,8 +2371,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ variance.js:49:26
 
-Incorrect arguments passed to call of method `assign` because tuple element at index `0` [1] labeled `foo` is not
-readable. [cannot-read]
+Incorrect arguments passed to `Object.assign` because tuple element at index `0` [1] labeled `foo` is not readable.
+[cannot-read]
 
    variance.js:49:26
    49| Object.assign({a: 1}, ...osw); // ERROR - can't read

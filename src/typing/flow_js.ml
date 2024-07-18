@@ -3272,25 +3272,11 @@ struct
         (* Special handlers for builtin functions *)
         | ( CustomFunT
               ( _,
-                ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint
-                | DebugThrow | DebugSleep )
+                (ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow | DebugSleep)
               ),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | ( CustomFunT (_, ObjectAssign),
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action =
-                  Funcalltype { call_targs = None; call_args_tlist = dest_t :: ts; call_tout; _ };
-                return_hint = _;
-              }
-          ) ->
-          let dest_t = extract_non_spread cx dest_t in
-          let t = chain_objects cx ~trace reason_op dest_t ts in
-          rec_flow_t cx ~use_op trace (t, OpenT call_tout)
         | ( CustomFunT (_, ObjectGetPrototypeOf),
             CallT
               {
@@ -3360,7 +3346,7 @@ struct
           let t = extract_non_spread cx arg1 in
           rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
-        | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
+        | ( CustomFunT (_, (ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
             MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
           ) ->
           apply_method_action cx trace l use_op reason_call l action
@@ -6631,7 +6617,6 @@ struct
     | CheckReactImmutableT _ ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
-    | UseT (_, CustomFunT (_, ObjectAssign))
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
     | UseT (_, CustomFunT (_, DebugPrint))
@@ -6716,7 +6701,6 @@ struct
     | NamespaceT _ ->
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
-    | CustomFunT (_, ObjectAssign)
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)
     | CustomFunT (_, DebugThrow)
@@ -7738,34 +7722,6 @@ struct
         )
     in
     rec_flow cx trace (tc, ThisSpecializeT (reason_tapp, this, k))
-
-  (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
-     existing object receives properties from other objects. This pattern suffers
-     from "races" in the type checker, since the object supposed to receive
-     properties is available even when the other objects supplying the properties
-     are not yet available. *)
-  and chain_objects cx ?trace reason this those =
-    let result =
-      List.fold_left
-        (fun result that ->
-          let (that, kind) =
-            match that with
-            | Arg t -> (t, default_obj_assign_kind)
-            | SpreadArg t ->
-              (* If someone does Object.assign({}, ...Array<obj>) we can treat it like
-                 Object.assign({}, obj). *)
-              (t, ObjSpreadAssign)
-          in
-          Tvar.mk_where cx reason (fun t ->
-              flow_opt
-                cx
-                ?trace
-                (result, ObjAssignToT (Op (ObjectChain { op = reason }), reason, that, t, kind))
-          ))
-        this
-        those
-    in
-    reposition cx ?trace (loc_of_reason reason) result
 
   (*********)
   (* enums *)

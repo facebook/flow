@@ -31,10 +31,8 @@ class ['a] t =
       | NullProtoT _ ->
         acc
       | CustomFunT
-          ( _,
-            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow
-            | DebugSleep )
-          ) ->
+          (_, (ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow | DebugSleep))
+        ->
         acc
       | EvalT (t, defer_use_t, id) ->
         let acc = self#type_ cx P.Positive acc t in

@@ -125,7 +125,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | Placeholder -> "Placeholder"
   in
   let custom_fun = function
-    | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
     | DebugPrint -> "DebugPrint"

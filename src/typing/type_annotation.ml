@@ -1261,7 +1261,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               let reason = mk_annot_reason RFunctionType loc in
               reconstruct_ast (FunProtoBindT reason) None
           )
-        | "Object$Assign" -> mk_custom_fun cx loc t_ast targs ident ObjectAssign
         | "Object$GetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectGetPrototypeOf
         | "Object$SetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectSetPrototypeOf
         | "React$AbstractComponent" ->

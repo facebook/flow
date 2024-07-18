@@ -2263,11 +2263,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (Function_bind loc)
     | _ -> Err (loc, CheckError)
   end
-  | "Object$Assign" -> begin
-    match targs with
-    | None -> Annot (Object_assign loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "Object$GetPrototypeOf" -> begin
     match targs with
     | None -> Annot (Object_getPrototypeOf loc)

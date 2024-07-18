@@ -1723,7 +1723,6 @@ module rec TypeTerm : sig
 
   and custom_fun_kind =
     (* builtins *)
-    | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf
     (* Internal tools *)

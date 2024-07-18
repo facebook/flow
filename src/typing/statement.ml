@@ -6172,6 +6172,64 @@ module Make
       )
     in
     match (m, targs, args) with
+    | ("assign", None, (args_loc, { ArgList.arguments = []; comments })) ->
+      let use_op = Frame (FunMissingArg { def = reason; op = reason; n = 0 }, use_op) in
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EIncompatibleWithUseOp { reason_lower = reason; reason_upper = reason; use_op }
+        );
+      let t = AnyT.error reason in
+      (t, None, (args_loc, { ArgList.arguments = []; comments }))
+    | ("assign", None, (args_loc, { ArgList.arguments = first_arg :: args; comments })) ->
+      let (target_t, rest_arg_ts, args) =
+        let ((first_arg_t, first_arg), rest_args_with_ts) =
+          Nel.map (expression_or_spread cx) (first_arg, args)
+        in
+        let (rest_arg_ts, rest_args) = List.split rest_args_with_ts in
+        let target_t =
+          match first_arg_t with
+          | Arg t -> t
+          | SpreadArg arr ->
+            let reason = reason_of_t arr in
+            let loc = loc_of_t arr in
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.SpreadArgument));
+            AnyT.error reason
+        in
+        ( target_t,
+          rest_arg_ts,
+          (args_loc, { Ast.Expression.ArgList.arguments = first_arg :: rest_args; comments })
+        )
+      in
+      let t =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+            let result =
+              List.fold_left
+                (fun result that ->
+                  let (that, kind) =
+                    match that with
+                    | Arg t -> (t, default_obj_assign_kind)
+                    | SpreadArg t ->
+                      (* If someone does Object.assign({}, ...Array<obj>) we can treat it like
+                         Object.assign({}, obj). *)
+                      (t, ObjSpreadAssign)
+                  in
+                  Tvar.mk_where cx reason (fun t ->
+                      Flow.flow
+                        cx
+                        ( result,
+                          ObjAssignToT (Op (ObjectChain { op = reason }), reason, that, t, kind)
+                        )
+                  ))
+                target_t
+                rest_arg_ts
+            in
+            Flow.flow cx (Flow.reposition cx (loc_of_reason reason) result, UseT (use_op, tout))
+        )
+      in
+      (t, None, args)
     | ("create", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
       let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
@@ -6470,8 +6528,8 @@ module Make
         Base.Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
-    | ( ( "create" | "getOwnPropertyNames" | "keys" | "defineProperty" | "defineProperties"
-        | "freeze" ),
+    | ( ( "assign" | "create" | "getOwnPropertyNames" | "keys" | "defineProperty"
+        | "defineProperties" | "freeze" ),
         Some (targs_loc, targs),
         _
       ) ->

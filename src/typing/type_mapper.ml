@@ -173,10 +173,8 @@ class virtual ['a] t =
           InternalT (ExtendsT (r, t1', t2'))
       | InternalT (EnforceUnionOptimized _) -> t
       | CustomFunT
-          ( _r,
-            ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow
-            | DebugSleep )
-          ) ->
+          (_r, (ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow | DebugSleep))
+        ->
         t
       | AnyT _ -> t
       | OptionalT { reason; type_ = t'; use_desc } ->

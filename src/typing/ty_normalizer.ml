@@ -1346,18 +1346,6 @@ module Make (I : INPUT) : S = struct
     and custom_fun_expanded =
       Type.(
         function
-        (* Object.assign: (target: any, ...sources: Array<any>): any *)
-        | ObjectAssign ->
-          return
-            Ty.(
-              mk_fun
-                ~params:[(Some "target", explicit_any, non_opt_param)]
-                ~rest:
-                  ( Some "sources",
-                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
-                  )
-                (ReturnType explicit_any)
-            )
         (* Object.getPrototypeOf: (o: any): any *)
         | ObjectGetPrototypeOf ->
           return
@@ -1442,7 +1430,6 @@ module Make (I : INPUT) : S = struct
     and custom_fun_short =
       Type.(
         function
-        | ObjectAssign -> return (builtin_t (Reason.OrdinaryName "Object$Assign"))
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
         | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))

@@ -654,7 +654,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "objectAssign",
-               "type": "(target: any, ...sources: Array<any>) => any"
+               "type": "Object$Assign"
              },
              {
                "name": "objectGetPrototypeOf",

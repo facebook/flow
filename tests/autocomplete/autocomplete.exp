@@ -254,7 +254,7 @@ Flags: --pretty
   ]
 }
 
-customfun.js:5:3
+customfun.js:4:3
 Flags: --pretty
 {
   "result":[
@@ -286,7 +286,6 @@ Flags: --pretty
     {"name":"interface","type":""},
     {"name":"let","type":""},
     {"name":"new","type":""},
-    {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
     {"name":"objectGetPrototypeOf","type":"(o: any) => any"},
     {"name":"opaque","type":""},
     {"name":"return","type":""},

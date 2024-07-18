@@ -1,7 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test1.js:2:1
 
-Incorrect arguments passed to call of method `assign` because string [1] is incompatible with number [2].
-[incompatible-type]
+Incorrect arguments passed to `Object.assign` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test1.js:2:1
    2| Object.assign({ p: 0 }, new C);

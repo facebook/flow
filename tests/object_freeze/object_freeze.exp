@@ -34,7 +34,7 @@ Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable. [ca
 
 Error --------------------------------------------------------------------------------------------- object_freeze.js:6:1
 
-Incorrect arguments passed to call of method `assign` because property `bar` is not writable. [cannot-write]
+Incorrect arguments passed to `Object.assign` because property `bar` is not writable. [cannot-write]
 
    6| Object.assign(foo, {bar: '12345'}); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
