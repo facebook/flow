@@ -631,7 +631,8 @@ let module_documentations ~root ~write_root ~ast ~file : Hh_json.json list =
     [ModuleDoc.{ documentation; file } |> ModuleDoc.to_json ~root ~write_root]
   | _ -> []
 
-let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
+let declaration_infos
+    ~root ~write_root ~glean_log ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
   let infos = ref [] in
   let add_info kind name loc (type_ : Type.t) = infos := ((kind, name, loc), type_) :: !infos in
   let add_var_info = add_info `Declaration in
@@ -653,7 +654,12 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
   let exact_by_default = Context.exact_by_default cx in
   let docs_and_spans = DocumentationFullspanMap.create ast file in
   Base.List.fold
-    (Ty_normalizer_flow.from_types genv !infos)
+    (Ty_normalizer_flow.from_types
+       ~f:(fun (_, _, loc) ->
+         if glean_log then Utils_js.prerr_endlinef "normalizing: %s" (Reason.string_of_loc loc))
+       genv
+       !infos
+    )
     ~init:([], [], [])
     ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
       let (documentation, span) =
@@ -687,8 +693,7 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
             TypeDeclarationInfo.{ typeDeclaration; type_; documentation; span }
             |> TypeDeclarationInfo.to_json ~root ~write_root
           in
-          (var_infos, member_infos, type_info :: type_infos))
-  )
+          (var_infos, member_infos, type_info :: type_infos)))
 
 let file_of_string_modules ~root ~write_root ~options ~file:file_key =
   let open Base.List.Let_syntax in
@@ -724,7 +729,7 @@ let all_schema_version = 7
 
 let flow_schema_version = 3
 
-let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps =
+let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps ~glean_log =
   (module struct
     type accumulator = {
       files_analyzed: int;
@@ -766,6 +771,7 @@ let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps =
 
     let visit ~options ast ctx =
       let Codemod_context.Typed.{ typed_ast; cx; file; file_sig; type_sig; _ } = ctx in
+      if glean_log then Utils_js.prerr_endlinef "visiting: %s" (File_key.to_string file);
       let root = Options.root options in
       let reader = State_reader.create () in
       let resolved_modules =
@@ -781,7 +787,17 @@ let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps =
       in
       let module_documentation = module_documentations ~root ~write_root ~ast ~file in
       let (declaration_info, member_declaration_info, type_declaration_info) =
-        declaration_infos ~scope_info ~root ~write_root ~file ~file_sig ~cx ~reader ~typed_ast ~ast
+        declaration_infos
+          ~scope_info
+          ~root
+          ~write_root
+          ~glean_log
+          ~file
+          ~file_sig
+          ~cx
+          ~reader
+          ~typed_ast
+          ~ast
       in
       let type_import_declaration =
         type_import_declarations ~root ~write_root ~resolved_modules ~file_sig
@@ -861,9 +877,12 @@ let create_typed_runner_config ~output_dir ~write_root ~include_direct_deps =
   end : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
   )
 
-let make ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps =
-  let module C = ( val create_typed_runner_config ~output_dir ~write_root ~include_direct_deps
-                     : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
+let make ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps ~glean_log =
+  let module C = ( val create_typed_runner_config
+                         ~output_dir
+                         ~write_root
+                         ~include_direct_deps
+                         ~glean_log : Codemod_runner.SIMPLE_TYPED_RUNNER_CONFIG
                  )
   in
   if include_reachable_deps then

@@ -29,6 +29,7 @@ let spec =
            truthy
            ~doc:"Additionally index reachable dependencies of input files"
       |> flag "--schema-version" truthy ~doc:"Show schema version used by the indexer"
+      |> flag "--glean-log" truthy ~doc:"Log extra information from Glean run"
       );
   }
 
@@ -39,6 +40,7 @@ let main
     include_direct_deps
     include_reachable_deps
     show_schema_version
+    glean_log
     () =
   if show_schema_version then
     print_endline (Int.to_string GleanRunner.all_schema_version)
@@ -51,7 +53,13 @@ let main
         failwith "Output directory is nonempty. Empty it."
       else
         CodemodCommand.main
-          (GleanRunner.make ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps)
+          (GleanRunner.make
+             ~output_dir
+             ~write_root
+             ~include_direct_deps
+             ~include_reachable_deps
+             ~glean_log
+          )
           codemod_flags
           ()
     | _ -> failwith "--output-dir and --write-root are required."

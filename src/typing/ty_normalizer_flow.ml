@@ -72,11 +72,12 @@ let print_normalizer_banner genv =
     in
     prerr_endlinef "%s" banner
 
-let from_types genv ts =
+let from_types ?f genv ts =
   print_normalizer_banner genv;
   let (_, result) =
     Base.List.fold_map
       ~f:(fun state (a, t) ->
+        Option.iter (fun f -> f a) f;
         match run_type ~genv state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
