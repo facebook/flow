@@ -873,14 +873,11 @@ let resolve_op_assign cx ~exp_loc lhs op rhs =
       | Some Abnormal.Throw -> EmptyT.at exp_loc
       | None -> rhs_t
     in
-    let ub t =
-      match op with
-      | Assignment.NullishAssign -> NullishCoalesceT (reason, rhs_t, t)
-      | Assignment.AndAssign -> AndT (reason, rhs_t, t)
-      | Assignment.OrAssign -> OrT (reason, rhs_t, t)
-      | _ -> assert_false "Bad conditional guard"
-    in
-    Tvar.mk_no_wrap_where cx reason (fun t -> Flow_js.flow cx (lhs_t, ub t))
+    (match op with
+    | Assignment.NullishAssign -> Operators.logical_nullish_coalesce cx reason lhs_t rhs_t
+    | Assignment.AndAssign -> Operators.logical_and cx reason lhs_t rhs_t
+    | Assignment.OrAssign -> Operators.logical_or cx reason lhs_t rhs_t
+    | _ -> assert_false "Bad conditional guard")
 
 let resolve_update cx ~id_loc ~exp_loc id_reason =
   let reason = mk_reason (RCustom "update") exp_loc in

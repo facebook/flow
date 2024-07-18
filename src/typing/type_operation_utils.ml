@@ -341,6 +341,80 @@ module Operators = struct
           t
     )
 
+  let logical_and cx reason left right =
+    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+        Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
+        |> Base.List.iter ~f:(fun left ->
+               begin
+                 match left with
+                 | DefT (reason, NumT _) ->
+                   Flow_js_utils.add_output
+                     cx
+                     (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
+                 | _ -> ()
+               end;
+
+               (* a falsy && b ~> a
+                  a truthy && b ~> b
+                  a && b ~> a falsy | b *)
+               match Type_filter.exists cx left with
+               | DefT (_, EmptyT) ->
+                 (* falsy *)
+                 Flow.flow cx (left, PredicateT (NotP ExistsP, tout))
+               | _ ->
+                 (match Type_filter.not_exists cx left with
+                 | DefT (_, EmptyT) ->
+                   (* truthy *)
+                   Flow.flow cx (right, UseT (unknown_use, OpenT tout))
+                 | _ ->
+                   Flow.flow cx (left, PredicateT (NotP ExistsP, tout));
+                   Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
+           )
+    )
+
+  let logical_or cx reason left right =
+    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+        Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
+        |> Base.List.iter ~f:(fun left ->
+               (* a truthy || b ~> a
+                  a falsy || b ~> b
+                  a || b ~> a truthy | b *)
+               match Type_filter.not_exists cx left with
+               | DefT (_, EmptyT) ->
+                 (* truthy *)
+                 Flow.flow cx (left, PredicateT (ExistsP, tout))
+               | _ ->
+                 (match Type_filter.exists cx left with
+                 | DefT (_, EmptyT) ->
+                   (* falsy *)
+                   Flow.flow cx (right, UseT (unknown_use, OpenT tout))
+                 | _ ->
+                   Flow.flow cx (left, PredicateT (ExistsP, tout));
+                   Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
+           )
+    )
+
+  let logical_nullish_coalesce cx reason left right =
+    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+        Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
+        |> Base.List.iter ~f:(fun left ->
+               match Type_filter.maybe cx left with
+               | DefT (_, EmptyT)
+               (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
+               | AnyT _ ->
+                 (* not-nullish *)
+                 Flow.flow cx (left, PredicateT (NotP MaybeP, tout))
+               | _ ->
+                 (match Type_filter.not_maybe cx left with
+                 | DefT (_, EmptyT) ->
+                   (* nullish *)
+                   Flow.flow cx (right, UseT (unknown_use, OpenT tout))
+                 | _ ->
+                   Flow.flow cx (left, PredicateT (NotP MaybeP, tout));
+                   Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
+           )
+    )
+
   let unary_not =
     let f reason = function
       | AnyT (_, src) -> AnyT.why src reason

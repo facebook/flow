@@ -135,10 +135,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | StrictEqT _
   | EqT _ ->
     ()
-  | AndT (_, _, tvar)
-  | OrT (_, _, tvar)
-  | NullishCoalesceT (_, _, tvar) ->
-    resolve_tvar tvar
   | SpecializeT (_, _, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k
   | ValueToTypeReferenceT (_, _, _, t) -> resolve t

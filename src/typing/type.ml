@@ -682,10 +682,6 @@ module rec TypeTerm : sig
         flip: bool;
         arg: t;
       }
-    (* logical operators *)
-    | AndT of reason * t * tvar
-    | OrT of reason * t * tvar
-    | NullishCoalesceT of reason * t * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
           with type arguments targs, and flows the result into tresult. If cache
@@ -4104,7 +4100,6 @@ let string_of_use_op_rec : use_op -> string =
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
-  | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
@@ -4160,14 +4155,12 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | PrivateMethodT _ -> "PrivateMethodT"
   | MixinT _ -> "MixinT"
-  | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjRestT _ -> "ObjRestT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OptionalChainT _ -> "OptionalChainT"
-  | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
   | ReactKitT _ -> "ReactKitT"
   | ReposLowerT _ -> "ReposLowerT"

@@ -47,7 +47,6 @@ and reason_of_defer_use_t = function
 
 and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
-  | AndT (reason, _, _) -> reason
   | ArrRestT (_, reason, _, _) -> reason
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
@@ -86,7 +85,6 @@ and reason_of_use_t = function
   | MapTypeT (_, reason, _, _) -> reason
   | MethodT (_, reason, _, _, _) -> reason
   | MixinT (reason, _) -> reason
-  | NullishCoalesceT (reason, _, _) -> reason
   | ObjAssignToT (_, reason, _, _, _) -> reason
   | ObjAssignFromT (_, reason, _, _, _) -> reason
   | ObjRestT (reason, _, _, _) -> reason
@@ -94,7 +92,6 @@ and reason_of_use_t = function
   | ObjTestT (reason, _, _) -> reason
   | OptionalChainT { reason; _ } -> reason
   | OptionalIndexedAccessT { reason; _ } -> reason
-  | OrT (reason, _, _) -> reason
   | PredicateT (_, (reason, _)) -> reason
   | PrivateMethodT (_, reason, _, _, _, _, _) -> reason
   | ReactKitT (_, reason, _) -> reason
@@ -282,9 +279,6 @@ let rec util_use_op_of_use_t :
   | GuardT (_, _, _)
   | StrictEqT _
   | EqT _
-  | AndT (_, _, _)
-  | OrT (_, _, _)
-  | NullishCoalesceT (_, _, _)
   | ThisSpecializeT (_, _, _)
   | LookupT _
   | ObjRestT (_, _, _, _)

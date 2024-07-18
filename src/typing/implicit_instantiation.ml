@@ -354,9 +354,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
        because they are operations on values. *)
     | StrictEqT _
     | EqT _
-    | AndT _
-    | OrT _
-    | NullishCoalesceT _
     | ObjAssignToT _
     | ObjAssignFromT _
     | ObjTestT _

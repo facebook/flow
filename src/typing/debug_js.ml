@@ -684,7 +684,6 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "UseT (%s, OpenT (%S, %d))" (string_of_use_op use_op) (dump_reason cx r) id
     | UseT (use_op, (DefT (_, _) as t)) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
-    | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
     | BindT (use_op, _, _) -> p t ~extra:(string_of_use_op use_op)
     | CallElemT (_, _, _, _, _) -> p t
@@ -854,7 +853,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | PrivateMethodT (_, _, _, prop, _, _, action) ->
       p ~extra:(spf "(%s), (%s)" prop (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
-    | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjRestT (_, xs, arg, _) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
@@ -866,7 +864,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(kid index_type) t
     | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex name; _ } ->
       p ~extra:(display_string_of_name name) t
-    | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t
     | ReactKitT (use_op, _, tool) ->

@@ -4882,11 +4882,7 @@ module Make
         | None -> t2
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-      ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            Flow.flow cx (t1, OrT (reason, t2, t))
-        ),
-        { operator = Or; left; right; comments }
-      )
+      (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
     | And ->
       let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
       let ((((_, t2), _) as right), right_abnormal) =
@@ -4898,11 +4894,7 @@ module Make
         | None -> t2
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-      ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            Flow.flow cx (t1, AndT (reason, t2, t))
-        ),
-        { operator = And; left; right; comments }
-      )
+      (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
     | NullishCoalesce ->
       let (((_, t1), _) as left) = expression cx left in
       let ((((_, t2), _) as right), right_abnormal) =
@@ -4914,9 +4906,7 @@ module Make
         | None -> t2
       in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
-      ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))
-        ),
+      ( Operators.logical_nullish_coalesce cx reason t1 t2,
         { operator = NullishCoalesce; left; right; comments }
       )
 
@@ -5241,11 +5231,7 @@ module Make
             | Some Abnormal.Throw -> EmptyT.at loc
             | None -> rhs_t
           in
-          let result_t =
-            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-                Flow.flow cx (lhs_t, NullishCoalesceT (reason, rhs_t, t))
-            )
-          in
+          let result_t = Operators.logical_nullish_coalesce cx reason lhs_t rhs_t in
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
@@ -5258,11 +5244,7 @@ module Make
             | Some Abnormal.Throw -> EmptyT.at loc
             | None -> rhs_t
           in
-          let result_t =
-            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-                Flow.flow cx (lhs_t, AndT (reason, rhs_t, t))
-            )
-          in
+          let result_t = Operators.logical_and cx reason lhs_t rhs_t in
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.OrAssign ->
@@ -5276,11 +5258,7 @@ module Make
             | Some Abnormal.Throw -> EmptyT.at loc
             | None -> rhs_t
           in
-          let result_t =
-            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-                Flow.flow cx (lhs_t, OrT (reason, rhs_t, t))
-            )
-          in
+          let result_t = Operators.logical_or cx reason lhs_t rhs_t in
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | _ -> assert_false "Unexpected operator"))
