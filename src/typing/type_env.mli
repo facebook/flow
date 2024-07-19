@@ -178,4 +178,4 @@ val type_guard_at_return :
   return_loc:ALoc.t ->
   pos_write_locs:Env_api.write_locs ->
   neg_refi:Env_api.predicate_refinement ->
-  (Type.t * Type.predicate, ALoc.t list) result
+  (Type.t * Type.predicate option, ALoc.t list) result

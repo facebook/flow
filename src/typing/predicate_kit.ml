@@ -216,9 +216,6 @@ module Make (Flow : Flow_common.S) : S = struct
         ( fun_t,
           CallLatentPredT { use_op; reason; targs; argts; sense = false; idx; tin = l; tout = t }
         )
-    | NoP
-    | NotP NoP ->
-      rec_flow_t cx trace ~use_op:unknown_use (l, OpenT t)
 
   and prop_exists_test cx trace key reason sense obj result =
     prop_exists_test_generic key reason cx trace result obj sense (ExistsP, NotP ExistsP) obj

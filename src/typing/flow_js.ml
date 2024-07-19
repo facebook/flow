@@ -495,15 +495,6 @@ struct
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
-        (*****************)
-        (* Predicate NoP *)
-        (*****************)
-        | (_, PredicateT (NoP, u))
-        | (_, PredicateT (NotP NoP, u)) ->
-          (* When the predicate is a no-op, we'd like to behave as close as possible
-           * to not having created the PredicateT constraint at all. We forward the
-           * lower-bound as is. *)
-          rec_flow_t ~use_op:unknown_use cx trace (l, OpenT u)
         | (UnionT (_, urep), PreprocessKitT (_, ConcretizeTypes _)) ->
           flow_all_in_union cx trace urep u
         | (MaybeT (lreason, t), PreprocessKitT (_, ConcretizeTypes _)) ->

@@ -7818,9 +7818,12 @@ module Make
               (* Negative *)
               if not one_sided then
                 let type_guard_with_neg_pred =
-                  Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx tg_reason (fun tout ->
-                      Flow.flow cx (type_guard, PredicateT (neg_pred, tout))
-                  )
+                  match neg_pred with
+                  | None -> type_guard
+                  | Some neg_pred ->
+                    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx tg_reason (fun tout ->
+                        Flow.flow cx (type_guard, PredicateT (neg_pred, tout))
+                    )
                 in
                 if
                   not

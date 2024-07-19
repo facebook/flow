@@ -12,8 +12,6 @@ open Loc_collections
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
 
-let ( +> ) f g x = g (f x)
-
 module LookupMode = struct
   type t =
     | ForValue
@@ -269,43 +267,30 @@ let maybe_predicate_function =
   in
   on_t
 
-let simplify_nop_pred =
-  let rec loop p =
-    match p with
-    | AndP (p1, p2) ->
-      let p1' = loop p1 in
-      let p2' = loop p2 in
-      begin
-        match (p1', p2') with
-        | (NoP, NoP) -> NoP
-        | (NoP, _) -> p2'
-        | (_, NoP) -> p1'
-        | _ -> p
-      end
-    | OrP (p1, p2) ->
-      let p1' = loop p1 in
-      let p2' = loop p2 in
-      begin
-        match (p1', p2') with
-        | (NoP, NoP) -> NoP
-        | (NoP, _) -> NoP
-        | (_, NoP) -> NoP
-        | _ -> p
-      end
-    | _ -> p
-  in
-  loop
-
 let predicate_of_refinement cx =
   let open Env_api.Refi in
   let rec pred = function
-    | AndR (r1, r2) -> AndP (pred r1, pred r2)
-    | OrR (r1, r2) -> OrP (pred r1, pred r2)
-    | NotR r -> NotP (pred r)
-    | TruthyR -> ExistsP
-    | NullR -> NullP
-    | UndefinedR -> VoidP
-    | MaybeR -> MaybeP
+    | AndR (r1, r2) ->
+      (match (pred r1, pred r2) with
+      | (Some p1, Some p2) -> Some (AndP (p1, p2))
+      | (Some p, None)
+      | (None, Some p) ->
+        Some p
+      | (None, None) -> None)
+    | OrR (r1, r2) ->
+      (match (pred r1, pred r2) with
+      | (Some p1, Some p2) -> Some (OrP (p1, p2))
+      | (None, _)
+      | (_, None) ->
+        None)
+    | NotR r ->
+      (match pred r with
+      | None -> None
+      | Some p -> Some (NotP p))
+    | TruthyR -> Some ExistsP
+    | NullR -> Some NullP
+    | UndefinedR -> Some VoidP
+    | MaybeR -> Some MaybeP
     | InstanceOfR (loc, _) ->
       (* Instanceof refinements store the loc they check against, which is a read in the env *)
       Debug_js.Verbose.print_if_verbose_lazy
@@ -315,39 +300,40 @@ let predicate_of_refinement cx =
           );
       let t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
       Type_operation_utils.TypeAssertions.assert_instanceof_rhs cx t;
-      LeftP (InstanceofTest, t)
-    | IsArrayR -> ArrP
-    | BoolR loc -> BoolP loc
-    | FunctionR -> FunP
-    | NumberR loc -> NumP loc
-    | BigIntR loc -> BigIntP loc
-    | ObjectR -> ObjP
-    | StringR loc -> StrP loc
-    | SymbolR loc -> SymbolP loc
-    | SingletonBoolR { loc; sense = _; lit } -> SingletonBoolP (loc, lit)
-    | SingletonStrR { loc; sense; lit } -> SingletonStrP (loc, sense, lit)
-    | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
-    | SingletonBigIntR { loc; sense; lit } -> SingletonBigIntP (loc, sense, lit)
+      Some (LeftP (InstanceofTest, t))
+    | IsArrayR -> Some ArrP
+    | BoolR loc -> Some (BoolP loc)
+    | FunctionR -> Some FunP
+    | NumberR loc -> Some (NumP loc)
+    | BigIntR loc -> Some (BigIntP loc)
+    | ObjectR -> Some ObjP
+    | StringR loc -> Some (StrP loc)
+    | SymbolR loc -> Some (SymbolP loc)
+    | SingletonBoolR { loc; sense = _; lit } -> Some (SingletonBoolP (loc, lit))
+    | SingletonStrR { loc; sense; lit } -> Some (SingletonStrP (loc, sense, lit))
+    | SingletonNumR { loc; sense; lit } -> Some (SingletonNumP (loc, sense, lit))
+    | SingletonBigIntR { loc; sense; lit } -> Some (SingletonBigIntP (loc, sense, lit))
     | SentinelR (prop, loc) ->
       Debug_js.Verbose.print_if_verbose_lazy
         cx
         (lazy [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]);
       let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
-      LeftP (SentinelProp prop, other_t)
+      Some (LeftP (SentinelProp prop, other_t))
     | LatentR { func = (func_loc, _); index; _ } ->
       let (lazy (_, _, t, _, _)) =
         ALocMap.find func_loc (Context.environment cx).Loc_env.pred_func_map
       in
       if maybe_predicate_function cx t then
-        LatentP (read_pred_func_info_exn cx func_loc, index)
+        Some (LatentP (read_pred_func_info_exn cx func_loc, index))
       else
-        NoP
+        None
     | PropNullishR { propname; loc } ->
-      NotP (PropNonMaybeP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
+      Some
+        (NotP (PropNonMaybeP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)))
     | PropExistsR { propname; loc } ->
-      PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
+      Some (PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
   in
-  pred +> simplify_nop_pred
+  pred
 
 let refine cx reason loc refi res =
   Base.Option.value_map
@@ -356,8 +342,8 @@ let refine cx reason loc refi res =
         let predicate = predicate |> snd |> predicate_of_refinement cx in
         let reason = mk_reason (RRefined (desc_of_reason reason)) loc in
         match predicate with
-        | NoP -> t
-        | _ ->
+        | None -> t
+        | Some predicate ->
           Tvar.mk_no_wrap_where cx reason (fun tvar ->
               Flow_js.flow cx (t, PredicateT (predicate, tvar))
           )
@@ -560,7 +546,7 @@ let read_to_predicate cx var_info ({ Env_api.write_locs; _ }, _, _) =
   let predicates =
     Base.List.filter_map write_locs ~f:(function
         | Env_api.With_ALoc.Refinement { refinement_id; _ } ->
-          Some (find_refi var_info refinement_id |> snd |> predicate_of_refinement cx)
+          find_refi var_info refinement_id |> snd |> predicate_of_refinement cx
         | _ -> None
         )
   in
@@ -608,7 +594,7 @@ let type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_r
     let lookup_mode = LookupMode.ForValue in
     Ok
       ( type_of_state ~lookup_mode cx env return_loc reason pos_write_locs None None,
-        Base.Option.value ~default:NoP (read_to_predicate cx var_info neg_refi)
+        read_to_predicate cx var_info neg_refi
       )
 
 let ref_entry_exn ~lookup_mode cx loc reason =
