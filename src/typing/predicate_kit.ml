@@ -13,20 +13,6 @@ open Flow_js_utils
 module type S = sig
   val predicate : Context.t -> DepthTrace.t -> tvar -> Type.t -> predicate -> unit
 
-  val call_latent_pred :
-    Context.t ->
-    DepthTrace.t ->
-    Type.t ->
-    use_op:use_op ->
-    reason:reason ->
-    targs:Type.targ list option ->
-    argts:Type.call_arg list ->
-    sense:bool ->
-    idx:int ->
-    Type.t ->
-    tvar ->
-    unit
-
   val prop_exists_test_generic :
     string ->
     reason ->
@@ -44,6 +30,7 @@ module type S = sig
 end
 
 module Make (Flow : Flow_common.S) : S = struct
+  module SpeculationKit = Speculation_kit.Make (Flow)
   open Flow
 
   (* t - predicate output recipient (normally a tvar)
@@ -216,93 +203,93 @@ module Make (Flow : Flow_common.S) : S = struct
     (********************)
     | LatentP ((lazy (use_op, loc, fun_t, targs, argts)), idx) ->
       let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
-      rec_flow
-        cx
-        trace
-        ( fun_t,
-          CallLatentPredT { use_op; reason; targs; argts; sense = true; idx; tin = l; tout = t }
-        )
+      call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense:true ~idx l t
     | NotP (LatentP ((lazy (use_op, loc, fun_t, targs, argts)), idx)) ->
       let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
-      rec_flow
-        cx
-        trace
-        ( fun_t,
-          CallLatentPredT { use_op; reason; targs; argts; sense = false; idx; tin = l; tout = t }
-        )
+      call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense:false ~idx l t
 
-  (* Calls to functions appearing in predicate refinement contexts dispatch
-     to this case. Here, the callee function type holds the predicate
-     that will refine the incoming `unrefined_t` and flow a filtered
-     (refined) version of this type into `fresh_t`.
-
-     Problematic cases (e.g. when the refining index is out of bounds w.r.t.
-     `params`) raise errors, but also propagate the unrefined types (as if the
-     refinement never took place).
-  *)
+  (* call_latent_pred connects a predicate function with information available
+   * at a call-site appearing in a conditional position (e.g. `if (pred(x))`).
+   * [tin] is the incoming type of `x` and [tout] the refined result in the then-
+   * branch. Since at the time of processing the call we do not know yet the
+   * function's formal parameters, [idx] is the index of the argument that gets
+   * refined. *)
   and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx tin tout =
-    match fun_t with
-    | DefT (_, FunT (_, { params; predicate = Some predicate; _ })) -> begin
-      (* TODO: for the moment we only support simple keys (empty projection)
-         that exactly correspond to the function's parameters *)
-      match (Base.List.nth params idx, predicate) with
-      | (None, _)
-      | (Some (None, _), _) ->
-        let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
-        add_output cx msg;
-        rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
-      | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
-        let key = (OrdinaryName name, []) in
-        let preds =
-          if sense then
-            pmap
-          else
-            nmap
-        in
-        begin
-          match Key_map.find_opt key preds with
-          | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
-          | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
-        end
-      | ( Some (Some name, _),
-          TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
-        ) ->
-        let t =
-          if param_name <> name then
-            (* This is not the refined parameter. *)
-            tin
-          else if sense then
-            intersect cx tin type_guard
-          else if not one_sided then
-            type_guard_diff cx tin type_guard
-          else
-            (* Do not refine else branch on one-sided type-guard *)
-            tin
-        in
-        rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
-    end
-    | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }) ->
-      let tvar = (reason, Tvar.mk_no_wrap cx reason) in
-      let calltype = mk_functioncalltype ~call_kind:RegularCallKind reason targs argts tvar in
-      let check =
-        lazy
-          (Implicit_instantiation_check.of_call
-             fun_t
-             (tparams_loc, ids, t)
-             unknown_use
-             reason
-             calltype
+    let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t fun_t) fun_t in
+    Base.List.iter ts ~f:(function
+        | IntersectionT (r, rep) ->
+          Base.List.map (InterRep.members rep) ~f:(fun t () ->
+              call_latent_pred cx trace t ~use_op ~reason ~targs ~argts ~sense ~idx tin tout
           )
-      in
-      let lparts = (reason_tapp, tparams_loc, ids, t) in
-      let uparts = (use_op, reason, calltype.call_targs, Type.hint_unavailable) in
-      let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
-      rec_flow
-        cx
-        trace
-        (t_, CallLatentPredT { use_op; reason; targs = None; argts; sense; idx; tin; tout })
-    (* Fall through all the remaining cases *)
-    | _ -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+          |> SpeculationKit.try_custom cx ~use_op ~no_match_error_loc:(loc_of_reason r)
+        (* Calls to functions appearing in predicate refinement contexts dispatch
+            to this case. Here, the callee function type holds the predicate
+            that will refine the incoming `unrefined_t` and flow a filtered
+            (refined) version of this type into `fresh_t`.
+
+            Problematic cases (e.g. when the refining index is out of bounds w.r.t.
+            `params`) raise errors, but also propagate the unrefined types (as if the
+            refinement never took place).
+        *)
+        | DefT (_, FunT (_, { params; predicate = Some predicate; _ })) -> begin
+          (* TODO: for the moment we only support simple keys (empty projection)
+             that exactly correspond to the function's parameters *)
+          match (Base.List.nth params idx, predicate) with
+          | (None, _)
+          | (Some (None, _), _) ->
+            let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
+            add_output cx msg;
+            rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+          | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
+            let key = (OrdinaryName name, []) in
+            let preds =
+              if sense then
+                pmap
+              else
+                nmap
+            in
+            begin
+              match Key_map.find_opt key preds with
+              | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
+              | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+            end
+          | ( Some (Some name, _),
+              TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
+            ) ->
+            let t =
+              if param_name <> name then
+                (* This is not the refined parameter. *)
+                tin
+              else if sense then
+                intersect cx tin type_guard
+              else if not one_sided then
+                type_guard_diff cx tin type_guard
+              else
+                (* Do not refine else branch on one-sided type-guard *)
+                tin
+            in
+            rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
+        end
+        | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }) as fun_t ->
+          let tvar = (reason, Tvar.mk_no_wrap cx reason) in
+          let calltype = mk_functioncalltype ~call_kind:RegularCallKind reason targs argts tvar in
+          let check =
+            lazy
+              (Implicit_instantiation_check.of_call
+                 fun_t
+                 (tparams_loc, ids, t)
+                 unknown_use
+                 reason
+                 calltype
+              )
+          in
+          let lparts = (reason_tapp, tparams_loc, ids, t) in
+          let uparts = (use_op, reason, calltype.call_targs, Type.hint_unavailable) in
+          let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
+          call_latent_pred cx trace t_ ~use_op ~reason ~targs:None ~argts ~sense ~idx tin tout
+        (* Fall through all the remaining cases *)
+        | _ -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+        )
 
   (* This utility is expected to be used when we a variable of type [t1] is refined
    * with the use of a type guard function with type `(x: mixed) => x is t2`.

@@ -50,7 +50,6 @@ and reason_of_use_t = function
   | ArrRestT (_, reason, _, _) -> reason
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
-  | CallLatentPredT { reason; _ } -> reason
   | CallT { reason; _ } -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | ConstructorT { reason; _ } -> reason
@@ -303,7 +302,6 @@ let rec util_use_op_of_use_t :
   | DebugPrintT _
   | SentinelPropTestT (_, _, _, _, _)
   | OptionalChainT _
-  | CallLatentPredT _
   | CondT (_, _, _, _)
   | ReactPropsToOut _
   | ReactInToProps _

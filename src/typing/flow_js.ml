@@ -2417,20 +2417,6 @@ struct
         | (_, MakeExactT (reason_op, k)) ->
           add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t l));
           continue cx trace (AnyT.error reason_op) k
-        (* Call to predicated (latent) functions *)
-        | (_, CallLatentPredT { use_op; reason; targs; argts; sense; idx; tin; tout }) ->
-          PredicateKit.call_latent_pred
-            cx
-            trace
-            l
-            ~use_op
-            ~reason
-            ~targs
-            ~argts
-            ~sense
-            ~idx
-            tin
-            tout
         (********************)
         (* mixin conversion *)
         (********************)
@@ -6331,7 +6317,6 @@ struct
     | BindT _
     | CallT _
     | CallElemT _
-    | CallLatentPredT _
     | CJSExtractNamedExportsT _
     | CondT _
     | ConstructorT _

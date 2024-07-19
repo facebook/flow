@@ -315,7 +315,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | PrivateMethodT _
     | ConstructorT _
     | ToStringT _
-    | CallLatentPredT _
     | MapTypeT _
     (* Get/set-prop related upper bounds are ignored because there is not enough info to reverse. *)
     | SetPropT _

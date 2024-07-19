@@ -796,22 +796,6 @@ module rec TypeTerm : sig
         t_out: use_t;
         voided_out: t_out;
       }
-    (* CallLatentPredT connects a predicate function with information available
-     * at a call-site appearing in a conditional position (e.g. `if (pred(x))`).
-     * [tin] is the incoming type of `x` and [tout] the refined result in the then-
-     * branch. Since at the time of processing the call we do not know yet the
-     * function's formal parameters, [idx] is the index of the argument that gets
-     * refined. *)
-    | CallLatentPredT of {
-        use_op: use_op;
-        reason: reason;
-        targs: targ list option;
-        argts: call_arg list;
-        sense: sense;
-        idx: index;
-        tin: t;
-        tout: tvar;
-      }
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread
@@ -4098,7 +4082,6 @@ let string_of_use_ctor = function
   | ArrRestT _ -> "ArrRestT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
-  | CallLatentPredT _ -> "CallLatentPredT"
   | CallT _ -> "CallT"
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | ConstructorT _ -> "ConstructorT"
