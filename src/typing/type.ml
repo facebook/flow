@@ -1720,7 +1720,6 @@ module rec TypeTerm : sig
   and custom_fun_kind =
     (* builtins *)
     | ObjectGetPrototypeOf
-    | ObjectSetPrototypeOf
     (* Internal tools *)
     | DebugPrint
     | DebugThrow

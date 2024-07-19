@@ -3209,10 +3209,7 @@ struct
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           rec_flow_t cx ~use_op trace (AnyT.why src reason_op, OpenT call_tout)
         (* Special handlers for builtin functions *)
-        | ( CustomFunT
-              ( _,
-                (ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow | DebugSleep)
-              ),
+        | ( CustomFunT (_, (ObjectGetPrototypeOf | DebugPrint | DebugThrow | DebugSleep)),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
@@ -3228,21 +3225,6 @@ struct
           ) ->
           let l = extract_non_spread cx arg in
           rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
-        | ( CustomFunT (_, ObjectSetPrototypeOf),
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action =
-                  Funcalltype
-                    { call_targs = None; call_args_tlist = arg1 :: arg2 :: _; call_tout; _ };
-                return_hint = _;
-              }
-          ) ->
-          let target = extract_non_spread cx arg1 in
-          let proto = extract_non_spread cx arg2 in
-          rec_flow cx trace (target, SetProtoT (reason_op, proto));
-          rec_flow_t cx ~use_op trace (BoolT.why reason_op, OpenT call_tout)
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
         (* Facebookisms are special Facebook-specific functions that are not
            expressable with our current type syntax, so we've hacked in special
@@ -3285,7 +3267,7 @@ struct
           let t = extract_non_spread cx arg1 in
           rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
-        | ( CustomFunT (_, (ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
+        | ( CustomFunT (_, ObjectGetPrototypeOf),
             MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
           ) ->
           apply_method_action cx trace l use_op reason_call l action
@@ -6554,7 +6536,6 @@ struct
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
-    | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
     | UseT (_, CustomFunT (_, DebugPrint))
     | UseT (_, CustomFunT (_, DebugThrow))
     | UseT (_, CustomFunT (_, DebugSleep))
@@ -6638,7 +6619,6 @@ struct
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | CustomFunT (_, ObjectGetPrototypeOf)
-    | CustomFunT (_, ObjectSetPrototypeOf)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
     | StrUtilT _

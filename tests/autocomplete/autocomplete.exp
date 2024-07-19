@@ -1468,7 +1468,7 @@ Flags: --pretty
     {"name":"ReferenceError","type":"typeof ReferenceError"},
     {
       "name":"Reflect",
-      "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (o: any) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (o: any, p: any) => any, ...}"
+      "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (o: any) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (target: any, prototype: {[any]: any} | null) => boolean, ...}"
     },
     {"name":"RegExp","type":"typeof RegExp"},
     {"name":"registration","type":"ServiceWorkerRegistration"},

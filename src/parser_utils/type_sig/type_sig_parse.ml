@@ -2268,11 +2268,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (Object_getPrototypeOf loc)
     | _ -> Err (loc, CheckError)
   end
-  | "Object$SetPrototypeOf" -> begin
-    match targs with
-    | None -> Annot (Object_setPrototypeOf loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "NoInfer" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

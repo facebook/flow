@@ -1350,12 +1350,6 @@ module Make (I : INPUT) : S = struct
         | ObjectGetPrototypeOf ->
           return
             Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] (ReturnType explicit_any))
-        (* Object.setPrototypeOf: (o: any, p: any): any *)
-        | ObjectSetPrototypeOf ->
-          let params =
-            [(Some "o", Ty.explicit_any, non_opt_param); (Some "p", Ty.explicit_any, non_opt_param)]
-          in
-          return (mk_fun ~params Ty.(ReturnType explicit_any))
         (* debugPrint: (_: any[]) => void *)
         | DebugPrint ->
           return
@@ -1431,7 +1425,6 @@ module Make (I : INPUT) : S = struct
       Type.(
         function
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
-        | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
         | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))

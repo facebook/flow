@@ -126,7 +126,6 @@ let rec dump_t_ (depth, tvars) cx t =
   in
   let custom_fun = function
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
-    | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
     | DebugPrint -> "DebugPrint"
     | DebugThrow -> "DebugThrow"
     | DebugSleep -> "DebugSleep"

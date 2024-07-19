@@ -172,10 +172,7 @@ class virtual ['a] t =
         else
           InternalT (ExtendsT (r, t1', t2'))
       | InternalT (EnforceUnionOptimized _) -> t
-      | CustomFunT
-          (_r, (ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint | DebugThrow | DebugSleep))
-        ->
-        t
+      | CustomFunT (_r, (ObjectGetPrototypeOf | DebugPrint | DebugThrow | DebugSleep)) -> t
       | AnyT _ -> t
       | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in
