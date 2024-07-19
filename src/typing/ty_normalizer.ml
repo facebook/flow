@@ -1364,11 +1364,6 @@ module Make (I : INPUT) : S = struct
                   ]
                 (ReturnType Void)
             )
-        (* debugThrow: () => empty *)
-        | DebugThrow -> return (mk_fun Ty.(ReturnType (mk_empty EmptyType)))
-        (* debugSleep: (seconds: number) => void *)
-        | DebugSleep ->
-          return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] (ReturnType Void))
       )
 
     and subst_name ~env loc t bound name =
@@ -1426,8 +1421,6 @@ module Make (I : INPUT) : S = struct
         function
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
-        | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
-        | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))
       )
 
     and custom_fun ~env t =

@@ -127,8 +127,6 @@ let rec dump_t_ (depth, tvars) cx t =
   let custom_fun = function
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | DebugPrint -> "DebugPrint"
-    | DebugThrow -> "DebugThrow"
-    | DebugSleep -> "DebugSleep"
   in
   let instance_t { static = _; super = _; implements = _; inst = { class_id; type_args; _ } } =
     spf
@@ -713,7 +711,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | CopyNamedExportsT _ -> p t
     | CopyTypeExportsT _ -> p t
     | DebugPrintT _ -> p t
-    | DebugSleepT _ -> p t
     | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
     | ConditionalT
         {

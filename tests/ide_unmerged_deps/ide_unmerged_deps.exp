@@ -26,8 +26,16 @@ References:
           ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- slow_dependent.js:7:1
 
-Found 1 error
+Cannot resolve name `$Flow$DebugSleep$DO_NOT_USE_IN_PRODUCTION_CODE_OR_YOU_WILL_BE_FIRED`. [cannot-resolve-name]
+
+   7| $Flow$DebugSleep$DO_NOT_USE_IN_PRODUCTION_CODE_OR_YOU_WILL_BE_FIRED(10);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors
 
 The Flow server is currently in lazy mode and is only checking 3/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

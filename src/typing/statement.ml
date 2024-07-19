@@ -3720,6 +3720,78 @@ module Make
                 comments;
               }
           )
+      | Call
+          {
+            Call.callee =
+              ( callee_loc,
+                Identifier
+                  ( callee_id_loc,
+                    ( {
+                        Ast.Identifier.name =
+                          "$Flow$DebugSleep$DO_NOT_USE_IN_PRODUCTION_CODE_OR_YOU_WILL_BE_FIRED";
+                        comments = _;
+                      } as callee_id
+                    )
+                  )
+              );
+            targs = None;
+            arguments =
+              ( args_loc,
+                {
+                  ArgList.arguments =
+                    [
+                      Expression
+                        (lit_exp_loc, (NumberLiteral { Ast.NumberLiteral.value; _ } as lit_ast));
+                    ];
+                  comments = args_comments;
+                }
+              );
+            comments;
+          }
+        when not (Type_env.local_scope_entry_exists cx callee_id_loc) ->
+        let any_t_with_loc loc = (loc, AnyT.untyped (mk_reason RAnyImplicit loc)) in
+        let n = ref value in
+        while !n > 0.0 do
+          WorkerCancel.check_should_cancel ();
+          Unix.sleepf (min !n 1.0);
+          n := !n -. 1.
+        done;
+        Some
+          ( any_t_with_loc loc,
+            Call
+              {
+                Call.callee =
+                  (any_t_with_loc callee_loc, Identifier (any_t_with_loc callee_id_loc, callee_id));
+                targs = None;
+                arguments =
+                  ( args_loc,
+                    {
+                      ArgList.arguments = [Expression (any_t_with_loc lit_exp_loc, lit_ast)];
+                      comments = args_comments;
+                    }
+                  );
+                comments;
+              }
+          )
+      | Call
+          {
+            Call.callee =
+              ( _,
+                Identifier
+                  ( callee_id_loc,
+                    {
+                      Ast.Identifier.name =
+                        "$Flow$DebugThrow$DO_NOT_USE_IN_PRODUCTION_CODE_OR_YOU_WILL_BE_FIRED";
+                      comments = _;
+                    }
+                  )
+              );
+            targs = None;
+            arguments = _;
+            comments = _;
+          }
+        when not (Type_env.local_scope_entry_exists cx callee_id_loc) ->
+        raise (Error_message.EDebugThrow loc)
       (******************************************)
       (* See ~/www/static_upstream/core/ *)
       | Call { Call.callee; targs; arguments; comments }

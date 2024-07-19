@@ -1,7 +1,5 @@
 // @flow
 
-declare var sleep: $Flow$DebugSleep;
-
-sleep(100); // sleep for 100 seconds
+$Flow$DebugSleep$DO_NOT_USE_IN_PRODUCTION_CODE_OR_YOU_WILL_BE_FIRED(100); // sleep for 100 seconds
 
 export const x: string = 123;

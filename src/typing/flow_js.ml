@@ -530,13 +530,6 @@ struct
         | (_, DebugPrintT reason) ->
           let str = Debug_js.dump_t ~depth:10 cx l in
           add_output cx (Error_message.EDebugPrint (reason, str))
-        | (DefT (_, NumT (Literal (_, (n, _)))), DebugSleepT _) ->
-          let n = ref n in
-          while !n > 0.0 do
-            WorkerCancel.check_should_cancel ();
-            Unix.sleepf (min !n 1.0);
-            n := !n -. 1.
-          done
         | (DefT (reason, EmptyT), ConvertEmptyPropsToMixedT (_, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (MixedT.make reason, tout)
         | (_, ConvertEmptyPropsToMixedT (_, tout)) ->
@@ -3209,7 +3202,7 @@ struct
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           rec_flow_t cx ~use_op trace (AnyT.why src reason_op, OpenT call_tout)
         (* Special handlers for builtin functions *)
-        | ( CustomFunT (_, (ObjectGetPrototypeOf | DebugPrint | DebugThrow | DebugSleep)),
+        | ( CustomFunT (_, (ObjectGetPrototypeOf | DebugPrint)),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
@@ -3249,23 +3242,6 @@ struct
                      (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
                   ))
             call_args_tlist;
-          rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
-        | ( CustomFunT (_, DebugThrow),
-            CallT { use_op = _; reason = reason_op; call_action = _; return_hint = _ }
-          ) ->
-          raise (Error_message.EDebugThrow (loc_of_reason reason_op))
-        | ( CustomFunT (_, DebugSleep),
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action =
-                  Funcalltype { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
-                return_hint = _;
-              }
-          ) ->
-          let t = extract_non_spread cx arg1 in
-          rec_flow cx trace (t, DebugSleepT reason_op);
           rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
         | ( CustomFunT (_, ObjectGetPrototypeOf),
             MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
@@ -6518,7 +6494,6 @@ struct
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
     | DebugPrintT _
-    | DebugSleepT _
     | StrictEqT _
     | EqT _
     | HasOwnPropT _
@@ -6537,8 +6512,6 @@ struct
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, DebugPrint))
-    | UseT (_, CustomFunT (_, DebugThrow))
-    | UseT (_, CustomFunT (_, DebugSleep))
     | UseT _ ->
       true
 
@@ -6619,8 +6592,6 @@ struct
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | CustomFunT (_, ObjectGetPrototypeOf)
-    | CustomFunT (_, DebugThrow)
-    | CustomFunT (_, DebugSleep)
     | StrUtilT _
     | DefT _
     | AnyT _ ->

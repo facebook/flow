@@ -789,7 +789,6 @@ module rec TypeTerm : sig
     (* tools for preprocessing types *)
     | PreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
-    | DebugSleepT of reason
     | SentinelPropTestT of reason * t * sense * UnionEnum.star * tvar
     | OptionalChainT of {
         reason: reason;
@@ -1722,8 +1721,6 @@ module rec TypeTerm : sig
     | ObjectGetPrototypeOf
     (* Internal tools *)
     | DebugPrint
-    | DebugThrow
-    | DebugSleep
 
   and concretization_target =
     | ConcretizeForImportsExports of ident
@@ -4109,7 +4106,6 @@ let string_of_use_ctor = function
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | CopyTypeExportsT _ -> "CopyTypeExportsT"
   | DebugPrintT _ -> "DebugPrintT"
-  | DebugSleepT _ -> "DebugSleepT"
   | ElemT _ -> "ElemT"
   | EnumCastT _ -> "EnumCastT"
   | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"

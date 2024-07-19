@@ -30,7 +30,7 @@ class ['a] t =
       | ObjProtoT _
       | NullProtoT _ ->
         acc
-      | CustomFunT (_, (ObjectGetPrototypeOf | DebugPrint | DebugThrow | DebugSleep)) -> acc
+      | CustomFunT (_, (ObjectGetPrototypeOf | DebugPrint)) -> acc
       | EvalT (t, defer_use_t, id) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#defer_use_type cx acc defer_use_t in

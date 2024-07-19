@@ -957,12 +957,6 @@ and merge_annot env file = function
   | FlowDebugPrint loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.DebugPrint)
-  | FlowDebugThrow loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.DebugThrow)
-  | FlowDebugSleep loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.DebugSleep)
   | Renders (loc, t, renders_variant) ->
     let t = merge { env with in_renders_arg = true } file t in
     let reason =

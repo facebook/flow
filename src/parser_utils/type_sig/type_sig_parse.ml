@@ -2556,16 +2556,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (FlowDebugPrint loc)
     | _ -> Err (loc, CheckError)
   end
-  | "$Flow$DebugThrow" -> begin
-    match targs with
-    | None -> Annot (FlowDebugThrow loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "$Flow$DebugSleep" -> begin
-    match targs with
-    | None -> Annot (FlowDebugSleep loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "$Flow$EnforceOptimized" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) -> annot opts scope tbls xs t
