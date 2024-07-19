@@ -13,6 +13,20 @@ open Flow_js_utils
 module type S = sig
   val predicate : Context.t -> DepthTrace.t -> tvar -> Type.t -> predicate -> unit
 
+  val call_latent_pred :
+    Context.t ->
+    DepthTrace.t ->
+    Type.t ->
+    use_op:use_op ->
+    reason:reason ->
+    targs:Type.targ list option ->
+    argts:Type.call_arg list ->
+    sense:bool ->
+    idx:int ->
+    Type.t ->
+    tvar ->
+    unit
+
   val prop_exists_test_generic :
     string ->
     reason ->
@@ -216,6 +230,147 @@ module Make (Flow : Flow_common.S) : S = struct
         ( fun_t,
           CallLatentPredT { use_op; reason; targs; argts; sense = false; idx; tin = l; tout = t }
         )
+
+  (* Calls to functions appearing in predicate refinement contexts dispatch
+     to this case. Here, the callee function type holds the predicate
+     that will refine the incoming `unrefined_t` and flow a filtered
+     (refined) version of this type into `fresh_t`.
+
+     Problematic cases (e.g. when the refining index is out of bounds w.r.t.
+     `params`) raise errors, but also propagate the unrefined types (as if the
+     refinement never took place).
+  *)
+  and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx tin tout =
+    match fun_t with
+    | DefT (_, FunT (_, { params; predicate = Some predicate; _ })) -> begin
+      (* TODO: for the moment we only support simple keys (empty projection)
+         that exactly correspond to the function's parameters *)
+      match (Base.List.nth params idx, predicate) with
+      | (None, _)
+      | (Some (None, _), _) ->
+        let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
+        add_output cx msg;
+        rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+      | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
+        let key = (OrdinaryName name, []) in
+        let preds =
+          if sense then
+            pmap
+          else
+            nmap
+        in
+        begin
+          match Key_map.find_opt key preds with
+          | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
+          | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+        end
+      | ( Some (Some name, _),
+          TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
+        ) ->
+        let t =
+          if param_name <> name then
+            (* This is not the refined parameter. *)
+            tin
+          else if sense then
+            intersect cx tin type_guard
+          else if not one_sided then
+            type_guard_diff cx tin type_guard
+          else
+            (* Do not refine else branch on one-sided type-guard *)
+            tin
+        in
+        rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
+    end
+    | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }) ->
+      let tvar = (reason, Tvar.mk_no_wrap cx reason) in
+      let calltype = mk_functioncalltype ~call_kind:RegularCallKind reason targs argts tvar in
+      let check =
+        lazy
+          (Implicit_instantiation_check.of_call
+             fun_t
+             (tparams_loc, ids, t)
+             unknown_use
+             reason
+             calltype
+          )
+      in
+      let lparts = (reason_tapp, tparams_loc, ids, t) in
+      let uparts = (use_op, reason, calltype.call_targs, Type.hint_unavailable) in
+      let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
+      rec_flow
+        cx
+        trace
+        (t_, CallLatentPredT { use_op; reason; targs = None; argts; sense; idx; tin; tout })
+    (* Fall through all the remaining cases *)
+    | _ -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
+
+  (* This utility is expected to be used when we a variable of type [t1] is refined
+   * with the use of a type guard function with type `(x: mixed) => x is t2`.
+   * Because this kind of refinement is expressed through a PredicateT constraint,
+   * t1 is already concretized by the time it reaches this point. Type t2, on the
+   * other hand, is not, since it is coming directly from the annotation. This is why
+   * we concretize it first, before attempting any comparisons. *)
+  and intersect cx t1 t2 =
+    let module TSet = Type_filter.TypeTagSet in
+    let quick_subtype = TypeUtil.quick_subtype in
+    let t1_tags = Type_filter.tag_of_t cx t1 in
+    let t2_tags =
+      t2
+      |> possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t2)
+      |> Base.List.map ~f:(Type_filter.tag_of_t cx)
+      |> Base.Option.all
+      |> Base.Option.map ~f:(Base.List.fold ~init:TSet.empty ~f:TSet.union)
+    in
+    let is_any t =
+      let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
+      List.exists Type.is_any ts
+    in
+    let is_null t =
+      match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
+      | [DefT (_, NullT)] -> true
+      | _ -> false
+    in
+    let is_void t =
+      match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
+      | [DefT (_, VoidT)] -> true
+      | _ -> false
+    in
+    match (t1_tags, t2_tags) with
+    | (Some t1_tags, Some t2_tags) when not (Type_filter.tags_overlap t1_tags t2_tags) ->
+      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      DefT (r, EmptyT)
+    | _ ->
+      if is_any t1 then
+        t2
+      else if is_any t2 then
+        (* Filter out null and void types from the input if comparing with any *)
+        if is_null t1 || is_void t1 then
+          let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+          DefT (r, EmptyT)
+        else
+          t1
+      else if quick_subtype t1 t2 then
+        t1
+      else if quick_subtype t2 t1 then
+        t2
+      else if speculative_subtyping_succeeds cx t1 t2 then
+        t1
+      else if speculative_subtyping_succeeds cx t2 t1 then
+        t2
+      else
+        let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+        IntersectionT (r, InterRep.make t2 t1 [])
+
+  (* This utility is expected to be used when negating the refinement of a type [t1]
+   * with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
+   * This means that the positive branch will always be taken, and so we are left with
+   * `empty` in the negated case. *)
+  and type_guard_diff cx t1 t2 =
+    if TypeUtil.quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
+      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      DefT (r, EmptyT)
+    else
+      t1
 
   and prop_exists_test cx trace key reason sense obj result =
     prop_exists_test_generic key reason cx trace result obj sense (ExistsP, NotP ExistsP) obj

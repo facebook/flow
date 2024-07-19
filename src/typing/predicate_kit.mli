@@ -10,6 +10,20 @@ open Type
 module type S = sig
   val predicate : Context.t -> DepthTrace.t -> tvar -> Type.t -> predicate -> unit
 
+  val call_latent_pred :
+    Context.t ->
+    DepthTrace.t ->
+    Type.t ->
+    use_op:use_op ->
+    reason:Reason.reason ->
+    targs:Type.targ list option ->
+    argts:Type.call_arg list ->
+    sense:bool ->
+    idx:int ->
+    Type.t ->
+    tvar ->
+    unit
+
   val prop_exists_test_generic :
     string ->
     Reason.reason ->

@@ -180,6 +180,14 @@ module type SUBTYPING = sig
     ALoc.t * Type.typeparam Nel.t * Type.t ->
     Type.t * (Type.t * Subst_name.t) list
 
+  val instantiate_poly_call_or_new :
+    Context.t ->
+    DepthTrace.t ->
+    reason * ALoc.t * typeparam Nel.t * Type.t ->
+    use_op * reason * targ list option * lazy_hint_t ->
+    Implicit_instantiation_check.t Lazy.t ->
+    Type.t
+
   val mk_typeapp_of_poly :
     Context.t ->
     Type.DepthTrace.t ->
