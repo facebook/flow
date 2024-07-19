@@ -718,8 +718,8 @@ let rec resolve_binding cx reason loc b =
       | HintAvailable (t, _) ->
         let t =
           if Option.is_some default_expression then
-            Tvar.mk_no_wrap_where cx reason (fun tout ->
-                Flow_js.flow cx (t, PredicateT (NotP VoidP, tout))
+            Tvar.mk_where cx reason (fun tout ->
+                Flow_js.flow cx (t, FilterOptionalT (unknown_use, tout))
             )
           else
             t
