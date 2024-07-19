@@ -1461,7 +1461,10 @@ struct
           rec_flow cx trace (l, t_out)
         | (KeysT (reason1, o1), _) ->
           (* flow all keys of o1 to u *)
-          rec_flow cx trace (o1, GetKeysT (reason1, u))
+          rec_flow cx trace (o1, GetKeysT (reason1, u));
+          (match u with
+          | UseT (_, t) -> Tvar_resolver.resolve cx t
+          | _ -> ())
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
         | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForInspection tvar))) ->
