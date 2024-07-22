@@ -13,4 +13,4 @@ if (!$cygwin_root) {
     echo "Found cygwin in $cygwin_root"
 }
 
-winget install opam --disable-interactivity --accept-source-agreements --location $cygwin_root
+winget install opam --disable-interactivity --accept-source-agreements --accept-package-agreements --location $cygwin_root
