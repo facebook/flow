@@ -13,4 +13,5 @@ if (!$cygwin_root) {
     echo "Found cygwin in $cygwin_root"
 }
 
+winget remove source msstore
 winget install opam --disable-interactivity --accept-source-agreements --location $cygwin_root
