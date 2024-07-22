@@ -1420,6 +1420,8 @@ Flags: --pretty
     {"name":"Performance","type":"typeof Performance"},
     {"name":"performance","type":"Performance"},
     {"name":"PerformanceEntry","type":"typeof PerformanceEntry"},
+    {"name":"PerformanceEventTiming","type":"typeof PerformanceEventTiming"},
+    {"name":"PerformanceLongTaskTiming","type":"typeof PerformanceLongTaskTiming"},
     {"name":"PerformanceNavigation","type":"typeof PerformanceNavigation"},
     {
       "name":"PerformanceNavigationTiming",
@@ -1602,6 +1604,7 @@ Flags: --pretty
     {"name":"SyntheticTransitionEvent","type":"typeof SyntheticTransitionEvent"},
     {"name":"SyntheticUIEvent","type":"typeof SyntheticUIEvent"},
     {"name":"SyntheticWheelEvent","type":"typeof SyntheticWheelEvent"},
+    {"name":"TaskAttributionTiming","type":"typeof TaskAttributionTiming"},
     {"name":"Text","type":"typeof Text"},
     {"name":"TextDecoder","type":"typeof TextDecoder"},
     {"name":"TextDecoderStream","type":"typeof TextDecoderStream"},
