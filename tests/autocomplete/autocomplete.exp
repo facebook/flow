@@ -1053,6 +1053,10 @@ pattern.js:12:14
 Flags: --pretty
 {"result":[]}
 
+qux.js:6:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
 namespace.js:8:12
 Flags: --pretty
 {"result":[{"name":"a","type":"number"},{"name":"s","type":"typeof S"}]}
