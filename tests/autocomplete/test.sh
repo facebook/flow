@@ -14,6 +14,7 @@ queries_in_file autocomplete "num.js" --pretty
 queries_in_file autocomplete "bool.js" --pretty
 queries_in_file autocomplete "union.js" --pretty
 queries_in_file autocomplete "object_builtins.js" --pretty
+queries_in_file autocomplete "exact.js" --pretty
 queries_in_file autocomplete "function_builtins.js" --pretty
 queries_in_file autocomplete "fun.js" --pretty
 queries_in_file autocomplete "this.js" --pretty
