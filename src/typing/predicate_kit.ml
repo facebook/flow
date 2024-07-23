@@ -30,12 +30,6 @@ module Make (Flow : Flow_common.S) : S = struct
       | ExistsP
       | NotP ExistsP ->
         ConcretizeForMaybeOrExistPredicateTest
-      | RightP (InstanceofTest, _)
-      | NotP (RightP (InstanceofTest, _)) ->
-        ConcretizeRHSForInstanceOfPredicateTest
-      | RightP (SentinelProp _, _)
-      | NotP (RightP (SentinelProp _, _)) ->
-        ConcretizeRHSForSentinelPropPredicateTest
       | _ -> ConcretizeForGeneralPredicateTest
     in
     rec_flow cx trace (l, PredicateT (variant, (reason, id)));
@@ -43,10 +37,6 @@ module Make (Flow : Flow_common.S) : S = struct
     |> Base.List.iter ~f:(function
            | GenericT { bound; name; reason; id; no_infer } ->
              (match p with
-             (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
-             | RightP _
-             | NotP (RightP _) ->
-               predicate_no_concretization cx trace tvar l p
              | _ ->
                let bound_tvar = (reason, Tvar.mk_no_wrap cx reason) in
                concretize_and_run_predicate
@@ -99,17 +89,8 @@ module Make (Flow : Flow_common.S) : S = struct
     (*********************************)
     (* deconstruction of binary test *)
     (*********************************)
-    | LeftP (b, r) -> concretize_binary_rhs_and_run_binary_predicate cx trace l r true b t
-    | NotP (LeftP (b, r)) -> concretize_binary_rhs_and_run_binary_predicate cx trace l r false b t
-    (* when right is evaluated, call appropriate handler *)
-    | RightP (b, actual_l) ->
-      let r = l in
-      let l = actual_l in
-      binary_predicate cx trace true b l r t
-    | NotP (RightP (b, actual_l)) ->
-      let r = l in
-      let l = actual_l in
-      binary_predicate cx trace false b l r t
+    | BinaryP (b, r) -> concretize_binary_rhs_and_run_binary_predicate cx trace l r true b t
+    | NotP (BinaryP (b, r)) -> concretize_binary_rhs_and_run_binary_predicate cx trace l r false b t
     (***********************)
     (* typeof _ ~ "boolean" *)
     (***********************)
@@ -505,7 +486,7 @@ module Make (Flow : Flow_common.S) : S = struct
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-      let pred = LeftP (InstanceofTest, right) in
+      let pred = BinaryP (InstanceofTest, right) in
       concretize_and_run_predicate
         cx
         trace
@@ -519,7 +500,7 @@ module Make (Flow : Flow_common.S) : S = struct
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-      let pred = NotP (LeftP (InstanceofTest, right)) in
+      let pred = NotP (BinaryP (InstanceofTest, right)) in
       concretize_and_run_predicate
         cx
         trace
@@ -556,16 +537,16 @@ module Make (Flow : Flow_common.S) : S = struct
         rec_flow_t cx trace ~use_op:unknown_use (c, OpenT result)
       else
         (* Recursively check whether super(C) extends A, with enough context. **)
-        let pred = LeftP (InstanceofTest, right) in
+        let pred = BinaryP (InstanceofTest, right) in
         predicate cx trace (reposition_reason cx ~trace reason super_c) pred result
     (* If we are checking `instanceof Object` or `instanceof Function`, objects
        with `ObjProtoT` or `FunProtoT` should pass. *)
     | (true, ObjProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
-      predicate cx trace obj_proto (LeftP (InstanceofTest, right)) result
+      predicate cx trace obj_proto (BinaryP (InstanceofTest, right)) result
     | (true, FunProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
-      predicate cx trace fun_proto (LeftP (InstanceofTest, right)) result
+      predicate cx trace fun_proto (BinaryP (InstanceofTest, right)) result
     (* We hit the root class, so C is not a subclass of A **)
     | (true, DefT (_, NullT), InternalT (ExtendsT (r, _, a))) ->
       rec_flow_t
@@ -604,7 +585,7 @@ module Make (Flow : Flow_common.S) : S = struct
           cx
           trace
           (reposition_reason cx ~trace reason super_c)
-          (NotP (LeftP (InstanceofTest, right)))
+          (NotP (BinaryP (InstanceofTest, right)))
           result
     | (false, ObjProtoT _, InternalT (ExtendsT (r, c, _))) ->
       (* We hit the root class, so C is not a subclass of A **)

@@ -300,7 +300,7 @@ let predicate_of_refinement cx =
           );
       let t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
       Type_operation_utils.TypeAssertions.assert_instanceof_rhs cx t;
-      Some (LeftP (InstanceofTest, t))
+      Some (BinaryP (InstanceofTest, t))
     | IsArrayR -> Some ArrP
     | BoolR loc -> Some (BoolP loc)
     | FunctionR -> Some FunP
@@ -318,7 +318,7 @@ let predicate_of_refinement cx =
         cx
         (lazy [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]);
       let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
-      Some (LeftP (SentinelProp prop, other_t))
+      Some (BinaryP (SentinelProp prop, other_t))
     | LatentR { func = (func_loc, _); index; _ } ->
       let (lazy (_, _, t, _, _)) =
         ALocMap.find func_loc (Context.environment cx).Loc_env.pred_func_map

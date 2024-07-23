@@ -1697,7 +1697,7 @@ and merge_predicate env file (loc, p) =
     | ExistsP key -> singleton key Type.ExistsP
     | InstanceofP (key, t) ->
       let t = merge env file t in
-      singleton key Type.(LeftP (InstanceofTest, t))
+      singleton key Type.(BinaryP (InstanceofTest, t))
     | ArrP key -> singleton key Type.ArrP
     | NullP key -> singleton key Type.NullP
     | MaybeP key -> singleton key Type.MaybeP
@@ -1718,28 +1718,28 @@ and merge_predicate env file (loc, p) =
     | SentinelStrP (key, prop, loc, x) ->
       let reason = Reason.(mk_reason RString loc) in
       let t = Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName x)))) in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | SentinelNumP (key, prop, loc, x, raw) ->
       let reason = Reason.(mk_reason RNumber loc) in
       let t = Type.(DefT (reason, NumT (Literal (None, (x, raw))))) in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | SentinelBigIntP (key, prop, loc, x, raw) ->
       let reason = Reason.(mk_reason RBigInt loc) in
       let t = Type.(DefT (reason, BigIntT (Literal (None, (x, raw))))) in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | SentinelBoolP (key, prop, loc, x) ->
       let reason = Reason.(mk_reason RBoolean loc) in
       let t = Type.(DefT (reason, BoolT (Some x))) in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | SentinelNullP (key, prop, loc) ->
       let t = Type.NullT.at loc in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | SentinelVoidP (key, prop, loc) ->
       let t = Type.VoidT.at loc in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | SentinelExprP (key, prop, t) ->
       let t = merge env file t in
-      singleton key Type.(LeftP (SentinelProp prop, t))
+      singleton key Type.(BinaryP (SentinelProp prop, t))
     | LatentP (t, targs, args, keys) ->
       let call_info =
         lazy

@@ -910,18 +910,12 @@ class virtual ['a] t =
           p
         else
           NotP p''
-      | LeftP (test, t) ->
+      | BinaryP (test, t) ->
         let t' = self#type_ cx map_cx t in
         if t' == t then
           p
         else
-          LeftP (test, t')
-      | RightP (test, t) ->
-        let t' = self#type_ cx map_cx t in
-        if t' == t then
-          p
-        else
-          RightP (test, t')
+          BinaryP (test, t')
       | ExistsP
       | NullP
       | MaybeP

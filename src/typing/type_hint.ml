@@ -593,7 +593,7 @@ and type_of_hint_decomposition cx op reason t =
                 | SingletonBigInt n -> DefT (reason, SingletonBigIntT (Some n, Int64.to_string n))
                 | Member reason -> Type_env.find_write cx Env_api.ExpressionLoc reason
               in
-              LeftP (SentinelProp prop, other_t)
+              BinaryP (SentinelProp prop, other_t)
             in
             let predicate =
               Base.List.fold tl ~init:(predicate_of_check hd) ~f:(fun acc check ->

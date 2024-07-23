@@ -169,8 +169,7 @@ class ['a] t =
       | AndP (p1, p2) -> self#list (self#predicate cx) acc [p1; p2]
       | OrP (p1, p2) -> self#list (self#predicate cx) acc [p1; p2]
       | NotP p -> self#predicate cx acc p
-      | LeftP (_, t) -> self#type_ cx P.Positive acc t
-      | RightP (_, t) -> self#type_ cx P.Positive acc t
+      | BinaryP (_, t) -> self#type_ cx P.Positive acc t
       | ExistsP -> acc
       | NullP -> acc
       | MaybeP -> acc
