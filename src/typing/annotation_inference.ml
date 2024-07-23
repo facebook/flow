@@ -41,8 +41,7 @@ let object_like_op = function
   | Annot_GetKeysT _
   | Annot_GetEnumT _
   | Annot_DeepReadOnlyT _
-  | Annot_ToStringT _
-  | Annot__Future_added_value__ _ ->
+  | Annot_ToStringT _ ->
     false
   | Annot_GetTypeFromNamespaceT _
   | Annot_GetPropT _

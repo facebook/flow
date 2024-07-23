@@ -3335,7 +3335,6 @@ module AConstraint = struct
       }
     | Annot_ObjRestT of Reason.t * string list
     | Annot_GetValuesT of Reason.t
-    | Annot__Future_added_value__ of Reason.t
 
   (** This kind of constraint is meant to represent type annotations. Unlike the
       constraints described above that may gradually evolve towards the solution
@@ -3427,7 +3426,6 @@ module AConstraint = struct
     | Annot_ToStringT _ -> "Annot_ToStringT"
     | Annot_ObjRestT _ -> "Annot_ObjRestT"
     | Annot_GetValuesT _ -> "Annot_GetValuesT"
-    | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
     | Annot_ConcretizeForImportsExports (r, _)
@@ -3465,8 +3463,7 @@ module AConstraint = struct
     | Annot_ToStringT { reason = r; _ }
     | Annot_ObjRestT (r, _)
     | Annot_GetValuesT r
-    | Annot_DeepReadOnlyT (r, _, _)
-    | Annot__Future_added_value__ r ->
+    | Annot_DeepReadOnlyT (r, _, _) ->
       r
 
   let use_op_of_operation = function
@@ -3506,8 +3503,7 @@ module AConstraint = struct
     | Annot_ToStringT _
     | Annot_ObjRestT _
     | Annot_GetValuesT _
-    | Annot_GetEnumT _
-    | Annot__Future_added_value__ _ ->
+    | Annot_GetEnumT _ ->
       None
 
   (* Used to produce prettier error messages for annotation inference. *)
