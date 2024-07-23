@@ -18,38 +18,32 @@ module Make (Flow : Flow_common.S) : S = struct
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Flow
 
-  let rec concretize_and_run_predicate cx trace l p tvar ~predicate_no_concretization =
+  let concretization_variant_of_predicate = function
+    | MaybeP
+    | NotP MaybeP
+    | ExistsP
+    | NotP ExistsP ->
+      ConcretizeForMaybeOrExistPredicateTest
+    | _ -> ConcretizeForGeneralPredicateTest
+
+  let rec concretize_and_run_predicate cx trace l variant tvar ~predicate_no_concretization =
     let reason = reason_of_t l in
     let id = Tvar.mk_no_wrap cx reason in
-    let variant =
-      match p with
-      | MaybeP
-      | NotP MaybeP
-      | ExistsP
-      | NotP ExistsP ->
-        ConcretizeForMaybeOrExistPredicateTest
-      | _ -> ConcretizeForGeneralPredicateTest
-    in
     rec_flow cx trace (l, PredicateT (variant, (reason, id)));
     Flow_js_utils.types_of cx (Context.find_graph cx id)
     |> Base.List.iter ~f:(function
            | GenericT { bound; name; reason; id; no_infer } ->
-             (match p with
-             | _ ->
-               let bound_tvar = (reason, Tvar.mk_no_wrap cx reason) in
-               concretize_and_run_predicate
-                 cx
-                 trace
-                 (reposition_reason cx reason bound)
-                 p
-                 bound_tvar
-                 ~predicate_no_concretization;
-               let cont = Upper (UseT (unknown_use, OpenT tvar)) in
-               rec_flow
-                 cx
-                 trace
-                 (OpenT bound_tvar, SealGenericT { reason; id; name; cont; no_infer }))
-           | l -> predicate_no_concretization cx trace tvar l p
+             let bound_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+             concretize_and_run_predicate
+               cx
+               trace
+               (reposition_reason cx reason bound)
+               variant
+               bound_tvar
+               ~predicate_no_concretization;
+             let cont = Upper (UseT (unknown_use, OpenT tvar)) in
+             rec_flow cx trace (OpenT bound_tvar, SealGenericT { reason; id; name; cont; no_infer })
+           | l -> predicate_no_concretization cx trace tvar l
            )
 
   and concretize_binary_rhs_and_run_binary_predicate cx trace l r sense b tvar =
@@ -68,7 +62,7 @@ module Make (Flow : Flow_common.S) : S = struct
      l - incoming concrete LB (predicate input)
      result - guard result in case of success
      p - predicate *)
-  and predicate_no_concretization cx trace t l p =
+  and predicate_no_concretization cx trace t l ~p =
     match p with
     (************************)
     (* deconstruction of && *)
@@ -76,14 +70,38 @@ module Make (Flow : Flow_common.S) : S = struct
     | AndP (p1, p2) ->
       let reason = replace_desc_reason RAnd (fst t) in
       let tvar = (reason, Tvar.mk_no_wrap cx reason) in
-      concretize_and_run_predicate cx trace l p1 tvar ~predicate_no_concretization;
-      concretize_and_run_predicate cx trace (OpenT tvar) p2 t ~predicate_no_concretization
+      concretize_and_run_predicate
+        cx
+        trace
+        l
+        (concretization_variant_of_predicate p1)
+        tvar
+        ~predicate_no_concretization:(predicate_no_concretization ~p:p1);
+      concretize_and_run_predicate
+        cx
+        trace
+        (OpenT tvar)
+        (concretization_variant_of_predicate p2)
+        t
+        ~predicate_no_concretization:(predicate_no_concretization ~p:p2)
     (************************)
     (* deconstruction of || *)
     (************************)
     | OrP (p1, p2) ->
-      concretize_and_run_predicate cx trace l p1 t ~predicate_no_concretization;
-      concretize_and_run_predicate cx trace l p2 t ~predicate_no_concretization
+      concretize_and_run_predicate
+        cx
+        trace
+        l
+        (concretization_variant_of_predicate p1)
+        t
+        ~predicate_no_concretization:(predicate_no_concretization ~p:p1);
+      concretize_and_run_predicate
+        cx
+        trace
+        l
+        (concretization_variant_of_predicate p2)
+        t
+        ~predicate_no_concretization:(predicate_no_concretization ~p:p2)
     (*********************************)
     (* deconstruction of binary test *)
     (*********************************)
@@ -215,9 +233,9 @@ module Make (Flow : Flow_common.S) : S = struct
     | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l t
     | NotP (PropNonMaybeP (key, r)) -> prop_non_maybe_test cx trace key r false l t
     (* classical logic i guess *)
-    | NotP (NotP p) -> predicate_no_concretization cx trace t l p
-    | NotP (AndP (p1, p2)) -> predicate_no_concretization cx trace t l (OrP (NotP p1, NotP p2))
-    | NotP (OrP (p1, p2)) -> predicate_no_concretization cx trace t l (AndP (NotP p1, NotP p2))
+    | NotP (NotP p) -> predicate_no_concretization cx trace t l ~p
+    | NotP (AndP (p1, p2)) -> predicate_no_concretization cx trace t l ~p:(OrP (NotP p1, NotP p2))
+    | NotP (OrP (p1, p2)) -> predicate_no_concretization cx trace t l ~p:(AndP (NotP p1, NotP p2))
     (********************)
     (* Latent predicate *)
     (********************)
@@ -271,7 +289,13 @@ module Make (Flow : Flow_common.S) : S = struct
             begin
               match Key_map.find_opt key preds with
               | Some p ->
-                concretize_and_run_predicate cx trace tin p tout ~predicate_no_concretization
+                concretize_and_run_predicate
+                  cx
+                  trace
+                  tin
+                  (concretization_variant_of_predicate p)
+                  tout
+                  ~predicate_no_concretization:(predicate_no_concretization ~p)
               | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
           | ( Some (Some name, _),
@@ -485,28 +509,26 @@ module Make (Flow : Flow_common.S) : S = struct
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-      let pred = BinaryP (InstanceofTest, right) in
       concretize_and_run_predicate
         cx
         trace
         arrt
-        pred
+        ConcretizeForGeneralPredicateTest
         result
-        ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
+        ~predicate_no_concretization:(fun cx trace tvar arrt ->
           instanceof_test cx trace tvar (true, arrt, right)
       )
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-      let pred = NotP (BinaryP (InstanceofTest, right)) in
       concretize_and_run_predicate
         cx
         trace
         arrt
-        pred
+        ConcretizeForGeneralPredicateTest
         result
-        ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
+        ~predicate_no_concretization:(fun cx trace tvar arrt ->
           instanceof_test cx trace tvar (false, arrt, right)
       )
     (* Suppose that we have an instance x of class C, and we check whether x is
@@ -536,14 +558,13 @@ module Make (Flow : Flow_common.S) : S = struct
         rec_flow_t cx trace ~use_op:unknown_use (c, OpenT result)
       else
         (* Recursively check whether super(C) extends A, with enough context. **)
-        let pred = BinaryP (InstanceofTest, right) in
         concretize_and_run_predicate
           cx
           trace
           (reposition_reason cx ~trace reason super_c)
-          pred
+          ConcretizeForGeneralPredicateTest
           result
-          ~predicate_no_concretization:(fun cx trace tvar l _pred ->
+          ~predicate_no_concretization:(fun cx trace tvar l ->
             instanceof_test cx trace tvar (true, l, right)
         )
     (* If we are checking `instanceof Object` or `instanceof Function`, objects
@@ -554,20 +575,22 @@ module Make (Flow : Flow_common.S) : S = struct
         cx
         trace
         obj_proto
-        (BinaryP (InstanceofTest, right))
+        ConcretizeForGeneralPredicateTest
         result
-        ~predicate_no_concretization:(fun cx trace tvar l _pred ->
-          instanceof_test cx trace tvar (true, l, right))
+        ~predicate_no_concretization:(fun cx trace tvar l ->
+          instanceof_test cx trace tvar (true, l, right)
+      )
     | (true, FunProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
       concretize_and_run_predicate
         cx
         trace
         fun_proto
-        (BinaryP (InstanceofTest, right))
+        ConcretizeForGeneralPredicateTest
         result
-        ~predicate_no_concretization:(fun cx trace tvar l _pred ->
-          instanceof_test cx trace tvar (true, l, right))
+        ~predicate_no_concretization:(fun cx trace tvar l ->
+          instanceof_test cx trace tvar (true, l, right)
+      )
     (* We hit the root class, so C is not a subclass of A **)
     | (true, DefT (_, NullT), InternalT (ExtendsT (r, _, a))) ->
       rec_flow_t
@@ -606,10 +629,11 @@ module Make (Flow : Flow_common.S) : S = struct
           cx
           trace
           (reposition_reason cx ~trace reason super_c)
-          (NotP (BinaryP (InstanceofTest, right)))
+          ConcretizeForGeneralPredicateTest
           result
-          ~predicate_no_concretization:(fun cx trace tvar l _pred ->
-            instanceof_test cx trace tvar (false, l, right))
+          ~predicate_no_concretization:(fun cx trace tvar l ->
+            instanceof_test cx trace tvar (false, l, right)
+        )
     | (false, ObjProtoT _, InternalT (ExtendsT (r, c, _))) ->
       (* We hit the root class, so C is not a subclass of A **)
       rec_flow_t
@@ -781,8 +805,13 @@ module Make (Flow : Flow_common.S) : S = struct
         (* not enough info to refine *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
 
-  let predicate cx =
-    concretize_and_run_predicate cx DepthTrace.unit_trace ~predicate_no_concretization
+  let predicate cx t p =
+    concretize_and_run_predicate
+      cx
+      DepthTrace.unit_trace
+      t
+      (concretization_variant_of_predicate p)
+      ~predicate_no_concretization:(predicate_no_concretization ~p)
 end
 
 module Kit = Make (Flow_js.FlowJs)
