@@ -663,7 +663,7 @@ module rec TypeTerm : sig
         t_out: use_t;
       }
     (* operation specifying a type refinement via a predicate *)
-    | PredicateT of predicate * tvar
+    | PredicateT of predicate_concretizer_variant * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
        incoming type. Unlike PredicateT, the subsequent flow (if any) uses
        an arbitrary LB specified in the GuardT value, rather than the filtered
@@ -1066,6 +1066,12 @@ module rec TypeTerm : sig
        of the function in type [t]. We also include information for all type arguments
        and argument types of the call, to enable polymorphic calls. *)
     | LatentP of pred_funcall_info Lazy.t * index
+
+  and predicate_concretizer_variant =
+    | ConcretizeForGeneralPredicateTest
+    | ConcretizeForMaybeOrExistPredicateTest
+    | ConcretizeRHSForInstanceOfPredicateTest
+    | ConcretizeRHSForSentinelPropPredicateTest
 
   and substitution = Key.t SMap.t
 
@@ -4226,6 +4232,12 @@ let rec string_of_predicate = function
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
   | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+
+let string_of_predicate_concretizer_variant = function
+  | ConcretizeForGeneralPredicateTest -> "ConcretizeForGeneralPredicateTest"
+  | ConcretizeForMaybeOrExistPredicateTest -> "ConcretizeForMaybeOrExistPredicateTest"
+  | ConcretizeRHSForInstanceOfPredicateTest -> "ConcretizeRHSForInstanceOfPredicateTest"
+  | ConcretizeRHSForSentinelPropPredicateTest -> "ConcretizeRHSForSentinelPropPredicateTest"
 
 let string_of_type_t_kind = function
   | TypeAliasKind -> "TypeAliasKind"

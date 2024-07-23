@@ -1746,7 +1746,7 @@ struct
                that the check is guaranteed to fail (assuming the union doesn't
                degenerate to a singleton) *)
             rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
-        | (UnionT (_, rep), PredicateT ((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP), tvar))
+        | (UnionT (_, rep), PredicateT (ConcretizeForMaybeOrExistPredicateTest, tvar))
           when UnionRep.is_optimized_finally rep ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         (* Shortcut for indexed accesses with the same type as the dict key. *)
@@ -1843,8 +1843,7 @@ struct
           when match u with
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
                   prevents a drastic blowup of cases which can cause perf problems. *)
-               | PredicateT (RightP (SentinelProp _, _), _)
-               | PredicateT (NotP (RightP (SentinelProp _, _)), _)
+               | PredicateT (ConcretizeRHSForSentinelPropPredicateTest, _)
                | WriteComputedObjPropCheckT _
                | ExtractReactRefT _ ->
                  false
@@ -2516,7 +2515,7 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Special case for `_ instanceof C` where C is polymorphic *)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
-            PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _)
+            PredicateT (ConcretizeRHSForInstanceOfPredicateTest, _)
           ) ->
           let l =
             instantiate_poly_default_args

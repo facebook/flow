@@ -23,7 +23,22 @@ module Make (Flow : Flow_common.S) : S = struct
   and concretize_and_run_predicate cx trace l p tvar ~predicate_no_concretization =
     let reason = reason_of_t l in
     let id = Tvar.mk_no_wrap cx reason in
-    rec_flow cx trace (l, PredicateT (p, (reason, id)));
+    let variant =
+      match p with
+      | MaybeP
+      | NotP MaybeP
+      | ExistsP
+      | NotP ExistsP ->
+        ConcretizeForMaybeOrExistPredicateTest
+      | RightP (InstanceofTest, _)
+      | NotP (RightP (InstanceofTest, _)) ->
+        ConcretizeRHSForInstanceOfPredicateTest
+      | RightP (SentinelProp _, _)
+      | NotP (RightP (SentinelProp _, _)) ->
+        ConcretizeRHSForSentinelPropPredicateTest
+      | _ -> ConcretizeForGeneralPredicateTest
+    in
+    rec_flow cx trace (l, PredicateT (variant, (reason, id)));
     Flow_js_utils.types_of cx (Context.find_graph cx id)
     |> Base.List.iter ~f:(function
            | GenericT { bound; name; reason; id; no_infer } ->

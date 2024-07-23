@@ -860,7 +860,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex name; _ } ->
       p ~extra:(display_string_of_name name) t
     | PredicateT (pred, arg) ->
-      p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t
+      p
+        ~reason:false
+        ~extra:(spf "%s, %s" (string_of_predicate_concretizer_variant pred) (tout arg))
+        t
     | ReactKitT (use_op, _, tool) ->
       p t ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
     | ReactPropsToOut (_, props)
