@@ -18,7 +18,9 @@ module Make (Flow : Flow_common.S) : S = struct
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Flow
 
-  let rec predicate cx trace l p tvar =
+  let rec predicate = concretize_and_run_predicate ~predicate_no_concretization
+
+  and concretize_and_run_predicate cx trace l p tvar ~predicate_no_concretization =
     let reason = reason_of_t l in
     let id = Tvar.mk_no_wrap cx reason in
     rec_flow cx trace (l, PredicateT (p, (reason, id)));
@@ -32,7 +34,13 @@ module Make (Flow : Flow_common.S) : S = struct
                predicate_no_concretization cx trace tvar l p
              | _ ->
                let bound_tvar = (reason, Tvar.mk_no_wrap cx reason) in
-               predicate cx trace (reposition_reason cx reason bound) p bound_tvar;
+               concretize_and_run_predicate
+                 cx
+                 trace
+                 (reposition_reason cx reason bound)
+                 p
+                 bound_tvar
+                 ~predicate_no_concretization;
                let cont = Upper (UseT (unknown_use, OpenT tvar)) in
                rec_flow
                  cx
@@ -472,13 +480,30 @@ module Make (Flow : Flow_common.S) : S = struct
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-      predicate cx trace arrt (LeftP (InstanceofTest, right)) result
+      let pred = LeftP (InstanceofTest, right) in
+      concretize_and_run_predicate
+        cx
+        trace
+        arrt
+        pred
+        result
+        ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
+          predicate cx trace right (RightP (InstanceofTest, arrt)) tvar
+      )
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
-      predicate cx trace arrt pred result
+      concretize_and_run_predicate
+        cx
+        trace
+        arrt
+        pred
+        result
+        ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
+          predicate cx trace right (NotP (RightP (InstanceofTest, arrt))) tvar
+      )
     (* Suppose that we have an instance x of class C, and we check whether x is
        `instanceof` class A. To decide what the appropriate refinement for x
        should be, we need to decide whether C extends A, choosing either C or A
