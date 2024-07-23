@@ -11,16 +11,14 @@ open Reason
 open Flow_js_utils
 
 module type S = sig
-  val predicate : Context.t -> DepthTrace.t -> Type.t -> predicate -> tvar -> unit
+  val predicate : Context.t -> Type.t -> predicate -> tvar -> unit
 end
 
 module Make (Flow : Flow_common.S) : S = struct
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Flow
 
-  let rec predicate = concretize_and_run_predicate ~predicate_no_concretization
-
-  and concretize_and_run_predicate cx trace l p tvar ~predicate_no_concretization =
+  let rec concretize_and_run_predicate cx trace l p tvar ~predicate_no_concretization =
     let reason = reason_of_t l in
     let id = Tvar.mk_no_wrap cx reason in
     let variant =
@@ -78,14 +76,14 @@ module Make (Flow : Flow_common.S) : S = struct
     | AndP (p1, p2) ->
       let reason = replace_desc_reason RAnd (fst t) in
       let tvar = (reason, Tvar.mk_no_wrap cx reason) in
-      predicate cx trace l p1 tvar;
-      predicate cx trace (OpenT tvar) p2 t
+      concretize_and_run_predicate cx trace l p1 tvar ~predicate_no_concretization;
+      concretize_and_run_predicate cx trace (OpenT tvar) p2 t ~predicate_no_concretization
     (************************)
     (* deconstruction of || *)
     (************************)
     | OrP (p1, p2) ->
-      predicate cx trace l p1 t;
-      predicate cx trace l p2 t
+      concretize_and_run_predicate cx trace l p1 t ~predicate_no_concretization;
+      concretize_and_run_predicate cx trace l p2 t ~predicate_no_concretization
     (*********************************)
     (* deconstruction of binary test *)
     (*********************************)
@@ -272,7 +270,8 @@ module Make (Flow : Flow_common.S) : S = struct
             in
             begin
               match Key_map.find_opt key preds with
-              | Some p -> predicate cx trace tin p tout
+              | Some p ->
+                concretize_and_run_predicate cx trace tin p tout ~predicate_no_concretization
               | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
           | ( Some (Some name, _),
@@ -538,15 +537,37 @@ module Make (Flow : Flow_common.S) : S = struct
       else
         (* Recursively check whether super(C) extends A, with enough context. **)
         let pred = BinaryP (InstanceofTest, right) in
-        predicate cx trace (reposition_reason cx ~trace reason super_c) pred result
+        concretize_and_run_predicate
+          cx
+          trace
+          (reposition_reason cx ~trace reason super_c)
+          pred
+          result
+          ~predicate_no_concretization:(fun cx trace tvar l _pred ->
+            instanceof_test cx trace tvar (true, l, right)
+        )
     (* If we are checking `instanceof Object` or `instanceof Function`, objects
        with `ObjProtoT` or `FunProtoT` should pass. *)
     | (true, ObjProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
-      predicate cx trace obj_proto (BinaryP (InstanceofTest, right)) result
+      concretize_and_run_predicate
+        cx
+        trace
+        obj_proto
+        (BinaryP (InstanceofTest, right))
+        result
+        ~predicate_no_concretization:(fun cx trace tvar l _pred ->
+          instanceof_test cx trace tvar (true, l, right))
     | (true, FunProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
-      predicate cx trace fun_proto (BinaryP (InstanceofTest, right)) result
+      concretize_and_run_predicate
+        cx
+        trace
+        fun_proto
+        (BinaryP (InstanceofTest, right))
+        result
+        ~predicate_no_concretization:(fun cx trace tvar l _pred ->
+          instanceof_test cx trace tvar (true, l, right))
     (* We hit the root class, so C is not a subclass of A **)
     | (true, DefT (_, NullT), InternalT (ExtendsT (r, _, a))) ->
       rec_flow_t
@@ -581,12 +602,14 @@ module Make (Flow : Flow_common.S) : S = struct
       if is_same_instance_type instance_a instance_c then
         ()
       else
-        predicate
+        concretize_and_run_predicate
           cx
           trace
           (reposition_reason cx ~trace reason super_c)
           (NotP (BinaryP (InstanceofTest, right)))
           result
+          ~predicate_no_concretization:(fun cx trace tvar l _pred ->
+            instanceof_test cx trace tvar (false, l, right))
     | (false, ObjProtoT _, InternalT (ExtendsT (r, c, _))) ->
       (* We hit the root class, so C is not a subclass of A **)
       rec_flow_t
@@ -757,8 +780,11 @@ module Make (Flow : Flow_common.S) : S = struct
       | None ->
         (* not enough info to refine *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
+
+  let predicate cx =
+    concretize_and_run_predicate cx DepthTrace.unit_trace ~predicate_no_concretization
 end
 
 module Kit = Make (Flow_js.FlowJs)
 
-let predicate cx = Kit.predicate cx DepthTrace.unit_trace
+let predicate = Kit.predicate
