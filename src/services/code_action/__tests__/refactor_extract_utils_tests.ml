@@ -6,6 +6,7 @@
  *)
 
 open OUnit2
+open Ast_extraction_utils
 open Refactor_extract_utils
 open Loc_collections
 

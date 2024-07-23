@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Ast_extraction_utils
 open Refactor_extract_utils
 open Loc_collections
 

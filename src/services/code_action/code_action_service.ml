@@ -183,7 +183,7 @@ let refactor_extract_code_actions
               module_ref_prefix_LEGACY_INTEROP;
             }
           in
-          Refactor_extract_utils.AstExtractor.tokens ~parse_options (Some file) file_contents
+          Ast_extraction_utils.AstExtractor.tokens ~parse_options (Some file) file_contents
         in
         Refactor_extract.provide_available_refactors
           ~tokens

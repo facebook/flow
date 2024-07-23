@@ -11,7 +11,7 @@ open Refactor_extract_utils_tests
 let assert_refactored
     ~ctxt ?(support_experimental_snippet_text_edit = false) expected source extract_range =
   let ast = parse source in
-  let tokens = Refactor_extract_utils.AstExtractor.tokens (Some dummy_filename) source in
+  let tokens = Ast_extraction_utils.AstExtractor.tokens (Some dummy_filename) source in
   let cx = dummy_context () in
   let typed_ast = typed_ast_of_ast cx ast in
   let reader = State_reader.create () in
