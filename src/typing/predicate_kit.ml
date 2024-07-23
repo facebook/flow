@@ -488,7 +488,7 @@ module Make (Flow : Flow_common.S) : S = struct
         pred
         result
         ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
-          predicate cx trace right (RightP (InstanceofTest, arrt)) tvar
+          predicate_no_concretization cx trace tvar right (RightP (InstanceofTest, arrt))
       )
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
@@ -502,7 +502,7 @@ module Make (Flow : Flow_common.S) : S = struct
         pred
         result
         ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
-          predicate cx trace right (NotP (RightP (InstanceofTest, arrt))) tvar
+          predicate_no_concretization cx trace tvar right (NotP (RightP (InstanceofTest, arrt)))
       )
     (* Suppose that we have an instance x of class C, and we check whether x is
        `instanceof` class A. To decide what the appropriate refinement for x
