@@ -600,9 +600,7 @@ and type_of_hint_decomposition cx op reason t =
                   AndP (acc, predicate_of_check check)
               )
             in
-            Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                Flow_js.flow cx (t, PredicateT (predicate, tvar))
-            )))
+            Tvar.mk_no_wrap_where cx reason (Predicate_kit.predicate cx t predicate)))
       | Simplify_Callee reason ->
         let simplify fn = get_t cx (simplify_callee cx reason unknown_use fn) in
         (match simplify t with

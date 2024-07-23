@@ -360,14 +360,14 @@ module Operators = struct
                match Type_filter.exists cx left with
                | DefT (_, EmptyT) ->
                  (* falsy *)
-                 Flow.flow cx (left, PredicateT (NotP ExistsP, tout))
+                 Predicate_kit.predicate cx left (NotP ExistsP) tout
                | _ ->
                  (match Type_filter.not_exists cx left with
                  | DefT (_, EmptyT) ->
                    (* truthy *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
-                   Flow.flow cx (left, PredicateT (NotP ExistsP, tout));
+                   Predicate_kit.predicate cx left (NotP ExistsP) tout;
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
            )
     )
@@ -382,14 +382,14 @@ module Operators = struct
                match Type_filter.not_exists cx left with
                | DefT (_, EmptyT) ->
                  (* truthy *)
-                 Flow.flow cx (left, PredicateT (ExistsP, tout))
+                 Predicate_kit.predicate cx left ExistsP tout
                | _ ->
                  (match Type_filter.exists cx left with
                  | DefT (_, EmptyT) ->
                    (* falsy *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
-                   Flow.flow cx (left, PredicateT (ExistsP, tout));
+                   Predicate_kit.predicate cx left ExistsP tout;
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
            )
     )
@@ -403,14 +403,14 @@ module Operators = struct
                (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
                | AnyT _ ->
                  (* not-nullish *)
-                 Flow.flow cx (left, PredicateT (NotP MaybeP, tout))
+                 Predicate_kit.predicate cx left (NotP MaybeP) tout
                | _ ->
                  (match Type_filter.not_maybe cx left with
                  | DefT (_, EmptyT) ->
                    (* nullish *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
-                   Flow.flow cx (left, PredicateT (NotP MaybeP, tout));
+                   Predicate_kit.predicate cx left (NotP MaybeP) tout;
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
            )
     )

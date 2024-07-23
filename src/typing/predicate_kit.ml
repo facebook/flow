@@ -11,33 +11,41 @@ open Reason
 open Flow_js_utils
 
 module type S = sig
-  val predicate : Context.t -> DepthTrace.t -> tvar -> Type.t -> predicate -> unit
-
-  val prop_exists_test_generic :
-    string ->
-    reason ->
-    Context.t ->
-    DepthTrace.t ->
-    tvar ->
-    Type.t ->
-    bool ->
-    predicate * predicate ->
-    Type.t ->
-    unit
-
-  val sentinel_prop_test_generic :
-    string -> Context.t -> DepthTrace.t -> tvar -> Type.t -> bool * Type.t * Type.t -> unit
+  val predicate : Context.t -> DepthTrace.t -> Type.t -> predicate -> tvar -> unit
 end
 
 module Make (Flow : Flow_common.S) : S = struct
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Flow
 
+  let rec predicate cx trace l p tvar =
+    let reason = reason_of_t l in
+    let id = Tvar.mk_no_wrap cx reason in
+    rec_flow cx trace (l, PredicateT (p, (reason, id)));
+    Flow_js_utils.types_of cx (Context.find_graph cx id)
+    |> Base.List.iter ~f:(function
+           | GenericT { bound; name; reason; id; no_infer } ->
+             (match p with
+             (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
+             | RightP _
+             | NotP (RightP _) ->
+               predicate_no_concretization cx trace tvar l p
+             | _ ->
+               let bound_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+               predicate cx trace (reposition_reason cx reason bound) p bound_tvar;
+               let cont = Upper (UseT (unknown_use, OpenT tvar)) in
+               rec_flow
+                 cx
+                 trace
+                 (OpenT bound_tvar, SealGenericT { reason; id; name; cont; no_infer }))
+           | l -> predicate_no_concretization cx trace tvar l p
+           )
+
   (* t - predicate output recipient (normally a tvar)
      l - incoming concrete LB (predicate input)
      result - guard result in case of success
      p - predicate *)
-  let rec predicate cx trace t l p =
+  and predicate_no_concretization cx trace t l p =
     match p with
     (************************)
     (* deconstruction of && *)
@@ -45,21 +53,21 @@ module Make (Flow : Flow_common.S) : S = struct
     | AndP (p1, p2) ->
       let reason = replace_desc_reason RAnd (fst t) in
       let tvar = (reason, Tvar.mk_no_wrap cx reason) in
-      rec_flow cx trace (l, PredicateT (p1, tvar));
-      rec_flow cx trace (OpenT tvar, PredicateT (p2, t))
+      predicate cx trace l p1 tvar;
+      predicate cx trace (OpenT tvar) p2 t
     (************************)
     (* deconstruction of || *)
     (************************)
     | OrP (p1, p2) ->
-      rec_flow cx trace (l, PredicateT (p1, t));
-      rec_flow cx trace (l, PredicateT (p2, t))
+      predicate cx trace l p1 t;
+      predicate cx trace l p2 t
     (*********************************)
     (* deconstruction of binary test *)
     (*********************************)
 
     (* when left is evaluated, store it and evaluate right *)
-    | LeftP (b, r) -> rec_flow cx trace (r, PredicateT (RightP (b, l), t))
-    | NotP (LeftP (b, r)) -> rec_flow cx trace (r, PredicateT (NotP (RightP (b, l)), t))
+    | LeftP (b, r) -> predicate cx trace r (RightP (b, l)) t
+    | NotP (LeftP (b, r)) -> predicate cx trace r (NotP (RightP (b, l))) t
     (* when right is evaluated, call appropriate handler *)
     | RightP (b, actual_l) ->
       let r = l in
@@ -195,9 +203,9 @@ module Make (Flow : Flow_common.S) : S = struct
     | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l t
     | NotP (PropNonMaybeP (key, r)) -> prop_non_maybe_test cx trace key r false l t
     (* classical logic i guess *)
-    | NotP (NotP p) -> predicate cx trace t l p
-    | NotP (AndP (p1, p2)) -> predicate cx trace t l (OrP (NotP p1, NotP p2))
-    | NotP (OrP (p1, p2)) -> predicate cx trace t l (AndP (NotP p1, NotP p2))
+    | NotP (NotP p) -> predicate_no_concretization cx trace t l p
+    | NotP (AndP (p1, p2)) -> predicate_no_concretization cx trace t l (OrP (NotP p1, NotP p2))
+    | NotP (OrP (p1, p2)) -> predicate_no_concretization cx trace t l (AndP (NotP p1, NotP p2))
     (********************)
     (* Latent predicate *)
     (********************)
@@ -231,10 +239,10 @@ module Make (Flow : Flow_common.S) : S = struct
             `params`) raise errors, but also propagate the unrefined types (as if the
             refinement never took place).
         *)
-        | DefT (_, FunT (_, { params; predicate = Some predicate; _ })) -> begin
+        | DefT (_, FunT (_, { params; predicate = Some p; _ })) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
-          match (Base.List.nth params idx, predicate) with
+          match (Base.List.nth params idx, p) with
           | (None, _)
           | (Some (None, _), _) ->
             let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
@@ -250,7 +258,7 @@ module Make (Flow : Flow_common.S) : S = struct
             in
             begin
               match Key_map.find_opt key preds with
-              | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
+              | Some p -> predicate cx trace tin p tout
               | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
           | ( Some (Some name, _),
@@ -293,7 +301,6 @@ module Make (Flow : Flow_common.S) : S = struct
 
   (* This utility is expected to be used when we a variable of type [t1] is refined
    * with the use of a type guard function with type `(x: mixed) => x is t2`.
-   * Because this kind of refinement is expressed through a PredicateT constraint,
    * t1 is already concretized by the time it reaches this point. Type t2, on the
    * other hand, is not, since it is coming directly from the annotation. This is why
    * we concretize it first, before attempting any comparisons. *)
@@ -437,13 +444,12 @@ module Make (Flow : Flow_common.S) : S = struct
       let reason = fst result in
       InterRep.members rep
       |> List.iter (fun obj ->
-             rec_flow
-               cx
-               trace
-               ( obj,
-                 PreprocessKitT
-                   (reason, PropExistsTest (sense, key, reason, orig_obj, result, (pred, not_pred)))
-               )
+             let id = Tvar.mk_no_wrap cx reason in
+             rec_flow cx trace (obj, PreprocessKitT (reason, PropExistsTest (reason, id)));
+             let f =
+               prop_exists_test_generic key reason cx trace result orig_obj sense (pred, not_pred)
+             in
+             Flow_js_utils.possible_types cx id |> List.iter f
          )
     | _ -> rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
 
@@ -466,13 +472,13 @@ module Make (Flow : Flow_common.S) : S = struct
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-      rec_flow cx trace (arrt, PredicateT (LeftP (InstanceofTest, right), result))
+      predicate cx trace arrt (LeftP (InstanceofTest, right)) result
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
-      rec_flow cx trace (arrt, PredicateT (pred, result))
+      predicate cx trace arrt pred result
     (* Suppose that we have an instance x of class C, and we check whether x is
        `instanceof` class A. To decide what the appropriate refinement for x
        should be, we need to decide whether C extends A, choosing either C or A
@@ -483,7 +489,7 @@ module Make (Flow : Flow_common.S) : S = struct
        recursion; it is also used elsewhere for running similar recursive
        subclass decisions.) **)
     | (true, (DefT (_, InstanceT _) as c), DefT (r, ClassT a)) ->
-      predicate
+      predicate_no_concretization
         cx
         trace
         result
@@ -502,16 +508,15 @@ module Make (Flow : Flow_common.S) : S = struct
       else
         (* Recursively check whether super(C) extends A, with enough context. **)
         let pred = LeftP (InstanceofTest, right) in
-        let u = PredicateT (pred, result) in
-        rec_flow cx trace (super_c, ReposLowerT (reason, false, u))
+        predicate cx trace (reposition_reason cx ~trace reason super_c) pred result
     (* If we are checking `instanceof Object` or `instanceof Function`, objects
        with `ObjProtoT` or `FunProtoT` should pass. *)
     | (true, ObjProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
-      rec_flow cx trace (obj_proto, PredicateT (LeftP (InstanceofTest, right), result))
+      predicate cx trace obj_proto (LeftP (InstanceofTest, right)) result
     | (true, FunProtoT reason, (InternalT (ExtendsT _) as right)) ->
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
-      rec_flow cx trace (fun_proto, PredicateT (LeftP (InstanceofTest, right), result))
+      predicate cx trace fun_proto (LeftP (InstanceofTest, right)) result
     (* We hit the root class, so C is not a subclass of A **)
     | (true, DefT (_, NullT), InternalT (ExtendsT (r, _, a))) ->
       rec_flow_t
@@ -532,7 +537,7 @@ module Make (Flow : Flow_common.S) : S = struct
        appropriate refinement for x should be, we need to decide whether C
        extends A, choosing either nothing or C based on the result. **)
     | (false, (DefT (_, InstanceT _) as c), DefT (r, ClassT (DefT (_, InstanceT _) as a))) ->
-      predicate
+      predicate_no_concretization
         cx
         trace
         result
@@ -547,8 +552,12 @@ module Make (Flow : Flow_common.S) : S = struct
       if is_same_instance_type instance_a instance_c then
         ()
       else
-        let u = PredicateT (NotP (LeftP (InstanceofTest, right)), result) in
-        rec_flow cx trace (super_c, ReposLowerT (reason, false, u))
+        predicate
+          cx
+          trace
+          (reposition_reason cx ~trace reason super_c)
+          (NotP (LeftP (InstanceofTest, right)))
+          result
     | (false, ObjProtoT _, InternalT (ExtendsT (r, c, _))) ->
       (* We hit the root class, so C is not a subclass of A **)
       rec_flow_t
@@ -707,10 +716,10 @@ module Make (Flow : Flow_common.S) : S = struct
           let reason = fst result in
           InterRep.members rep
           |> List.iter (fun obj ->
-                 rec_flow
-                   cx
-                   trace
-                   (obj, PreprocessKitT (reason, SentinelPropTest (sense, key, t, orig_obj, result)))
+                 let id = Tvar.mk_no_wrap cx reason in
+                 rec_flow cx trace (obj, PreprocessKitT (reason, SentinelPropTest (reason, id)));
+                 let f l = sentinel_prop_test_generic key cx trace result orig_obj (sense, l, t) in
+                 Flow_js_utils.possible_types cx id |> List.iter f
              )
         | _ ->
           (* not enough info to refine *)
@@ -720,3 +729,7 @@ module Make (Flow : Flow_common.S) : S = struct
         (* not enough info to refine *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
 end
+
+module Kit = Make (Flow_js.FlowJs)
+
+let predicate cx = Kit.predicate cx DepthTrace.unit_trace

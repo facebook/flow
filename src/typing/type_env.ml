@@ -343,10 +343,7 @@ let refine cx reason loc refi res =
         let reason = mk_reason (RRefined (desc_of_reason reason)) loc in
         match predicate with
         | None -> t
-        | Some predicate ->
-          Tvar.mk_no_wrap_where cx reason (fun tvar ->
-              Flow_js.flow cx (t, PredicateT (predicate, tvar))
-          )
+        | Some predicate -> Tvar.mk_no_wrap_where cx reason (Predicate_kit.predicate cx t predicate)
       in
       match res with
       | Ok t -> Ok (map_t t)

@@ -1716,8 +1716,8 @@ module rec TypeTerm : sig
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of concretization_target
-    | SentinelPropTest of bool * string * t * t * tvar
-    | PropExistsTest of bool * string * reason * t * tvar * (predicate * predicate)
+    | SentinelPropTest of tvar
+    | PropExistsTest of tvar
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no

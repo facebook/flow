@@ -180,7 +180,6 @@ struct
 
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
   module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
-  module PredicateKit = Predicate_kit.Make (FlowJs)
 
   module Import_export_helper :
     Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
@@ -1449,10 +1448,9 @@ struct
            object type with all the properties of those object types. The added
            complication arises as an implementation detail, because we do not
            concatenate those object types explicitly. *)
-        | (_, PreprocessKitT (_, SentinelPropTest (sense, key, t, inter, tvar))) ->
-          PredicateKit.sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
-        | (_, PreprocessKitT (_, PropExistsTest (sense, key, reason, inter, tvar, preds))) ->
-          PredicateKit.prop_exists_test_generic key reason cx trace tvar inter sense preds l
+        | (_, PreprocessKitT (_, SentinelPropTest tvar))
+        | (_, PreprocessKitT (_, PropExistsTest tvar)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)
@@ -1748,9 +1746,9 @@ struct
                that the check is guaranteed to fail (assuming the union doesn't
                degenerate to a singleton) *)
             rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
-        | (UnionT (_, rep), PredicateT (((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP) as p), t))
+        | (UnionT (_, rep), PredicateT ((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP), tvar))
           when UnionRep.is_optimized_finally rep ->
-          PredicateKit.predicate cx trace t l p
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         (* Shortcut for indexed accesses with the same type as the dict key. *)
         | ( UnionT _,
             ElemT
@@ -1983,7 +1981,8 @@ struct
              )
         (* predicates: prevent a predicate upper bound from prematurely decomposing
            an intersection lower bound *)
-        | (IntersectionT _, PredicateT (pred, tout)) -> PredicateKit.predicate cx trace tout l pred
+        | (IntersectionT _, PredicateT (_, tout)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tout)
         (* same for guards *)
         | (IntersectionT _, GuardT (pred, result, tout)) -> guard cx trace l pred result tout
         (* ObjAssignFromT copies multiple properties from its incoming LB.
@@ -2529,7 +2528,8 @@ struct
               (tparams_loc, ids, t)
           in
           rec_flow cx trace (l, u)
-        | (DefT (_, PolyT _), PredicateT (p, t)) -> PredicateKit.predicate cx trace t l p
+        | (DefT (_, PolyT _), PredicateT (_, t)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT t)
         (* The rules below are hit when a polymorphic type appears outside a
            type application expression - i.e. not followed by a type argument list
            delimited by angle brackets.
@@ -4623,7 +4623,8 @@ struct
         (***********************)
 
         (* Don't refine opaque types based on its bound *)
-        | (OpaqueT _, PredicateT (p, t)) -> PredicateKit.predicate cx trace t l p
+        | (OpaqueT _, PredicateT (_, tvar)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         | (OpaqueT _, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
         | (OpaqueT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
@@ -4659,7 +4660,7 @@ struct
         (**************************************)
         (* types may be refined by predicates *)
         (**************************************)
-        | (_, PredicateT (p, t)) -> PredicateKit.predicate cx trace t l p
+        | (_, PredicateT (_, tvar)) -> rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         | (_, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
         | (_, SentinelPropTestT (reason, obj, sense, enum, result)) ->
           let t = Type_filter.sentinel_refinement l reason obj sense enum in
@@ -5950,13 +5951,6 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
-      (* The LHS is what's actually getting refined--don't do anything special for the RHS *)
-      | PredicateT (RightP _, _)
-      | PredicateT (NotP (RightP _), _) ->
-        false
-      | PredicateT (pred, t_out) ->
-        narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
-        true
       | ToStringT { orig_t; reason; t_out } ->
         narrow_generic_use
           (fun t_out' -> ToStringT { orig_t; reason; t_out = UseT (unknown_use, OpenT t_out') })
