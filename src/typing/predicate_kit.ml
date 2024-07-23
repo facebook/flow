@@ -64,6 +64,18 @@ module Make (Flow : Flow_common.S) : S = struct
            | l -> predicate_no_concretization cx trace tvar l p
            )
 
+  and concretize_binary_rhs_and_run_binary_predicate cx trace l r sense b tvar =
+    let reason = reason_of_t r in
+    let id = Tvar.mk_no_wrap cx reason in
+    let variant =
+      match b with
+      | InstanceofTest -> ConcretizeRHSForInstanceOfPredicateTest
+      | SentinelProp _ -> ConcretizeRHSForSentinelPropPredicateTest
+    in
+    rec_flow cx trace (r, PredicateT (variant, (reason, id)));
+    Flow_js_utils.types_of cx (Context.find_graph cx id)
+    |> Base.List.iter ~f:(fun r -> binary_predicate cx trace sense b l r tvar)
+
   (* t - predicate output recipient (normally a tvar)
      l - incoming concrete LB (predicate input)
      result - guard result in case of success
@@ -87,26 +99,8 @@ module Make (Flow : Flow_common.S) : S = struct
     (*********************************)
     (* deconstruction of binary test *)
     (*********************************)
-
-    (* when left is evaluated, store it and evaluate right *)
-    | LeftP (b, r) ->
-      concretize_and_run_predicate
-        cx
-        trace
-        r
-        (RightP (b, l))
-        t
-        ~predicate_no_concretization:(fun cx trace tvar concretized_r _pred ->
-          binary_predicate cx trace true b l concretized_r tvar)
-    | NotP (LeftP (b, r)) ->
-      concretize_and_run_predicate
-        cx
-        trace
-        r
-        (NotP (RightP (b, l)))
-        t
-        ~predicate_no_concretization:(fun cx trace tvar concretized_r _pred ->
-          binary_predicate cx trace false b l concretized_r tvar)
+    | LeftP (b, r) -> concretize_binary_rhs_and_run_binary_predicate cx trace l r true b t
+    | NotP (LeftP (b, r)) -> concretize_binary_rhs_and_run_binary_predicate cx trace l r false b t
     (* when right is evaluated, call appropriate handler *)
     | RightP (b, actual_l) ->
       let r = l in
