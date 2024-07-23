@@ -13,4 +13,5 @@ if (!$cygwin_root) {
     echo "Found cygwin in $cygwin_root"
 }
 
-Invoke-Expression "& { $(Invoke-RestMethod https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1 -OpamBinDir $cygwin_root\bin) }"
+(new-object net.webclient).DownloadFile('https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1','install.ps1')
+./install.ps1 -OpamBinDir $cygwin_root\bin
