@@ -613,7 +613,6 @@ module rec ConsGen : S = struct
       | AnyT _ -> Flow_js_utils.add_output cx Error_message.(EAnyValueUsedAsType { reason_use })
       | _ -> Flow_js_utils.add_output cx Error_message.(EValueUsedAsType { reason_use }));
       AnyT.error reason_use
-    | (l, Annot_ConcretizeForImportsExports (_, f)) -> f l
     (*******************)
     (* `import typeof` *)
     (*******************)
@@ -711,6 +710,7 @@ module rec ConsGen : S = struct
           targs
       in
       elab_t cx t op
+    | (l, Annot_ConcretizeForImportsExports (_, f)) -> f l
     (****************)
     (* Opaque types *)
     (****************)

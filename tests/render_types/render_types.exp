@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------- annotation_inference_regression_test/test.js:2:1
+
+Cannot cast `1` to `R` because number [1] does not render `React.Element` [2]. [incompatible-cast]
+
+   annotation_inference_regression_test/test.js:2:1
+   2| 1 as R; // error
+      ^ [1]
+
+References:
+   annotation_inference_regression_test/test.js:2:6
+   2| 1 as R; // error
+           ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- fragment.js:9:26
 
 Cannot assign `<>...</>` to `el3` because `Fragment` element [1] does not render `Bad` [2]. [incompatible-type]
@@ -2289,7 +2303,7 @@ References:
 
 
 
-Found 161 errors
+Found 162 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
