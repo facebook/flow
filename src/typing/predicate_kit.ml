@@ -18,6 +18,10 @@ module Make (Flow : Flow_common.S) : S = struct
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Flow
 
+  type instanceof_rhs =
+    | TypeOperand of Type.t
+    | InternalExtendsOperand of reason * Type.t * Type.t
+
   let concretization_variant_of_predicate = function
     | MaybeP
     | NotP MaybeP
@@ -491,12 +495,9 @@ module Make (Flow : Flow_common.S) : S = struct
     | _ -> rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
 
   and binary_predicate cx trace sense test left right result =
-    let handler =
-      match test with
-      | InstanceofTest -> instanceof_test
-      | SentinelProp key -> sentinel_prop_test key
-    in
-    handler cx trace result (sense, left, right)
+    match test with
+    | InstanceofTest -> instanceof_test cx trace result (sense, left, TypeOperand right)
+    | SentinelProp key -> sentinel_prop_test key cx trace result (sense, left, right)
 
   and instanceof_test cx trace result = function
     (* instanceof on an ArrT is a special case since we treat ArrT as its own
@@ -505,9 +506,11 @@ module Make (Flow : Flow_common.S) : S = struct
        it at this stage instead of simply converting (ArrT, InstanceofP c)
        to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
        first. *)
-    | (true, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
+    | (true, (DefT (reason, ArrT arrtype) as arr), TypeOperand (DefT (r, ClassT a))) ->
       let elemt = elemt_of_arrtype arrtype in
-      let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
+      let right =
+        InternalExtendsOperand (update_desc_reason (fun desc -> RExtends desc) r, arr, a)
+      in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       concretize_and_run_predicate
         cx
@@ -518,9 +521,11 @@ module Make (Flow : Flow_common.S) : S = struct
         ~predicate_no_concretization:(fun cx trace tvar arrt ->
           instanceof_test cx trace tvar (true, arrt, right)
       )
-    | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
+    | (false, (DefT (reason, ArrT arrtype) as arr), TypeOperand (DefT (r, ClassT a))) ->
       let elemt = elemt_of_arrtype arrtype in
-      let right = InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, arr, a)) in
+      let right =
+        InternalExtendsOperand (update_desc_reason (fun desc -> RExtends desc) r, arr, a)
+      in
       let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
       concretize_and_run_predicate
         cx
@@ -540,18 +545,18 @@ module Make (Flow : Flow_common.S) : S = struct
        class. (As a technical tool, we use Extends(_, _) to perform this
        recursion; it is also used elsewhere for running similar recursive
        subclass decisions.) **)
-    | (true, (DefT (_, InstanceT _) as c), DefT (r, ClassT a)) ->
+    | (true, (DefT (_, InstanceT _) as c), TypeOperand (DefT (r, ClassT a))) ->
       instanceof_test
         cx
         trace
         result
-        (true, c, InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
+        (true, c, InternalExtendsOperand (update_desc_reason (fun desc -> RExtends desc) r, c, a))
     (* If C is a subclass of A, then don't refine the type of x. Otherwise,
        refine the type of x to A. (In general, the type of x should be refined to
        C & A, but that's hard to compute.) **)
     | ( true,
         DefT (reason, InstanceT { super = super_c; inst = instance_c; _ }),
-        (InternalT (ExtendsT (_, c, DefT (_, InstanceT { inst = instance_a; _ }))) as right)
+        (InternalExtendsOperand (_, c, DefT (_, InstanceT { inst = instance_a; _ })) as right)
       ) ->
       (* TODO: intersection *)
       if is_same_instance_type instance_a instance_c then
@@ -569,7 +574,7 @@ module Make (Flow : Flow_common.S) : S = struct
         )
     (* If we are checking `instanceof Object` or `instanceof Function`, objects
        with `ObjProtoT` or `FunProtoT` should pass. *)
-    | (true, ObjProtoT reason, (InternalT (ExtendsT _) as right)) ->
+    | (true, ObjProtoT reason, (InternalExtendsOperand _ as right)) ->
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
       concretize_and_run_predicate
         cx
@@ -580,7 +585,7 @@ module Make (Flow : Flow_common.S) : S = struct
         ~predicate_no_concretization:(fun cx trace tvar l ->
           instanceof_test cx trace tvar (true, l, right)
       )
-    | (true, FunProtoT reason, (InternalT (ExtendsT _) as right)) ->
+    | (true, FunProtoT reason, (InternalExtendsOperand _ as right)) ->
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
       concretize_and_run_predicate
         cx
@@ -592,14 +597,14 @@ module Make (Flow : Flow_common.S) : S = struct
           instanceof_test cx trace tvar (true, l, right)
       )
     (* We hit the root class, so C is not a subclass of A **)
-    | (true, DefT (_, NullT), InternalT (ExtendsT (r, _, a))) ->
+    | (true, DefT (_, NullT), InternalExtendsOperand (r, _, a)) ->
       rec_flow_t
         cx
         trace
         ~use_op:unknown_use
         (reposition cx ~trace (loc_of_reason r) a, OpenT result)
     (* If we're refining `mixed` or `any` with instanceof A, then flow A to the result *)
-    | (true, (DefT (_, MixedT _) | AnyT _), DefT (class_reason, ClassT a)) ->
+    | (true, (DefT (_, MixedT _) | AnyT _), TypeOperand (DefT (class_reason, ClassT a))) ->
       let desc = reason_of_t a |> desc_of_reason in
       let loc = loc_of_reason class_reason in
       rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace ~desc loc a, OpenT result)
@@ -610,17 +615,20 @@ module Make (Flow : Flow_common.S) : S = struct
        check whether x is _not_ `instanceof` class A. To decide what the
        appropriate refinement for x should be, we need to decide whether C
        extends A, choosing either nothing or C based on the result. **)
-    | (false, (DefT (_, InstanceT _) as c), DefT (r, ClassT (DefT (_, InstanceT _) as a))) ->
+    | ( false,
+        (DefT (_, InstanceT _) as c),
+        TypeOperand (DefT (r, ClassT (DefT (_, InstanceT _) as a)))
+      ) ->
       instanceof_test
         cx
         trace
         result
-        (false, c, InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
+        (false, c, InternalExtendsOperand (update_desc_reason (fun desc -> RExtends desc) r, c, a))
     (* If C is a subclass of A, then do nothing, since this check cannot
        succeed. Otherwise, don't refine the type of x. **)
     | ( false,
         DefT (reason, InstanceT { super = super_c; inst = instance_c; _ }),
-        (InternalT (ExtendsT (_, _, DefT (_, InstanceT { inst = instance_a; _ }))) as right)
+        (InternalExtendsOperand (_, _, DefT (_, InstanceT { inst = instance_a; _ })) as right)
       ) ->
       if is_same_instance_type instance_a instance_c then
         ()
@@ -634,7 +642,7 @@ module Make (Flow : Flow_common.S) : S = struct
           ~predicate_no_concretization:(fun cx trace tvar l ->
             instanceof_test cx trace tvar (false, l, right)
         )
-    | (false, ObjProtoT _, InternalT (ExtendsT (r, c, _))) ->
+    | (false, ObjProtoT _, InternalExtendsOperand (r, c, _)) ->
       (* We hit the root class, so C is not a subclass of A **)
       rec_flow_t
         cx
