@@ -74,8 +74,24 @@ module Make (Flow : Flow_common.S) : S = struct
     (*********************************)
 
     (* when left is evaluated, store it and evaluate right *)
-    | LeftP (b, r) -> predicate cx trace r (RightP (b, l)) t
-    | NotP (LeftP (b, r)) -> predicate cx trace r (NotP (RightP (b, l))) t
+    | LeftP (b, r) ->
+      concretize_and_run_predicate
+        cx
+        trace
+        r
+        (RightP (b, l))
+        t
+        ~predicate_no_concretization:(fun cx trace tvar concretized_r _pred ->
+          binary_predicate cx trace true b l concretized_r tvar)
+    | NotP (LeftP (b, r)) ->
+      concretize_and_run_predicate
+        cx
+        trace
+        r
+        (NotP (RightP (b, l)))
+        t
+        ~predicate_no_concretization:(fun cx trace tvar concretized_r _pred ->
+          binary_predicate cx trace false b l concretized_r tvar)
     (* when right is evaluated, call appropriate handler *)
     | RightP (b, actual_l) ->
       let r = l in
