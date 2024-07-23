@@ -164,7 +164,7 @@ class virtual ['a] t =
           t
         else
           NamespaceT namespace_t'
-      | InternalT (EnforceUnionOptimized _) -> t
+      | InternalEnforceUnionOptimizedT _ -> t
       | CustomFunT (_r, (ObjectGetPrototypeOf | DebugPrint)) -> t
       | AnyT _ -> t
       | OptionalT { reason; type_ = t'; use_desc } ->

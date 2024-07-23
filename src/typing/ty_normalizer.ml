@@ -705,7 +705,7 @@ module Make (I : INPUT) : S = struct
             eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
       | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
-      | InternalT i -> internal_t t i
+      | InternalEnforceUnionOptimizedT _ -> terr ~kind:BadInternalT (Some t)
       | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
         let env = { env with Env.keep_only_namespace_name = true } in
         cont ~env ?id values_type
@@ -1428,12 +1428,6 @@ module Make (I : INPUT) : S = struct
         custom_fun_expanded t
       else
         custom_fun_short t
-
-    and internal_t t =
-      Type.(
-        function
-        | EnforceUnionOptimized _ -> terr ~kind:BadInternalT (Some t)
-      )
 
     and param_bound ~env = function
       | T.DefT (_, T.MixedT _) -> return None

@@ -614,7 +614,7 @@ let rec extract_type cx this_t =
   | DefT (_, ClassT _)
   | CustomFunT (_, _)
   | DefT (_, EmptyT)
-  | InternalT (EnforceUnionOptimized _)
+  | InternalEnforceUnionOptimizedT _
   | FunProtoBindT _
   | FunProtoT _
   | KeysT (_, _)

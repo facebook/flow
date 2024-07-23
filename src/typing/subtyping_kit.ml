@@ -2367,7 +2367,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         );
       rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) lreason, u)
     | (FunProtoBindT reason, _) -> rec_flow_t cx trace ~use_op (FunProtoT reason, u)
-    | (InternalT (EnforceUnionOptimized reason), _) ->
+    | (InternalEnforceUnionOptimizedT reason, _) ->
       add_output
         cx
         (Error_message.EUnionOptimizationOnNonUnion

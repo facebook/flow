@@ -6376,7 +6376,7 @@ struct
     | UseT (_, DefT (_, TypeT _))
     | ValueToTypeReferenceT _
     (* Should never occur, so we just defer to __flow to handle errors *)
-    | UseT (_, InternalT _)
+    | UseT (_, InternalEnforceUnionOptimizedT _)
     | UseT (_, ModuleT _)
     | ReactPropsToOut _
     | ReactInToProps _
@@ -6497,7 +6497,7 @@ struct
     | IntersectionT _
     | CustomFunT (_, DebugPrint)
     | ThisTypeAppT _
-    | InternalT (EnforceUnionOptimized _) ->
+    | InternalEnforceUnionOptimizedT _ ->
       false
     (* Should never occur as the lower bound of any *)
     | ModuleT _

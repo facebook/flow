@@ -182,7 +182,7 @@ module rec TypeTerm : sig
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
     (* types that should never appear in signatures *)
-    | InternalT of internal_t
+    | InternalEnforceUnionOptimizedT of reason
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind (* Predicate types **)
@@ -321,9 +321,6 @@ module rec TypeTerm : sig
   and enum_info =
     | ConcreteEnum of enum_concrete_info
     | AbstractEnum of { representation_t: t }
-
-  and internal_t = (* $Flow$EnforceOptimized *)
-    | EnforceUnionOptimized of reason
 
   and 'loc virtual_root_use_op =
     | ObjectSpread of { op: 'loc virtual_reason }
@@ -3840,7 +3837,7 @@ let is_use = function
 
 (* not all so-called def types can appear as use types *)
 let is_proper_def = function
-  | InternalT _ -> false
+  | InternalEnforceUnionOptimizedT _ -> false
   | _ -> true
 
 (* convenience *)
@@ -3975,7 +3972,7 @@ let string_of_ctor = function
   | DefT (_, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
-  | InternalT (EnforceUnionOptimized _) -> "EnforceUnionOptimizedT"
+  | InternalEnforceUnionOptimizedT _ -> "InternalEnforceUnionOptimizedT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | GenericT _ -> "GenericT"

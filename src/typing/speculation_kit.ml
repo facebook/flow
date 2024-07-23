@@ -381,7 +381,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         {
           use_op = _;
           reason_op = _;
-          l = InternalT (EnforceUnionOptimized reason);
+          l = InternalEnforceUnionOptimizedT reason;
           union_rep = rep;
           us = _;
         } ->
