@@ -13,4 +13,5 @@ if (!$cygwin_root) {
     echo "Found cygwin in $cygwin_root"
 }
 
-winget install opam --disable-interactivity --accept-source-agreements --location $cygwin_root
+(new-object net.webclient).DownloadFile('https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1','install.ps1')
+./install.ps1 -OpamBinDir $cygwin_root\bin
