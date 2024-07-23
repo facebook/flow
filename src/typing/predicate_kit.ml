@@ -488,7 +488,7 @@ module Make (Flow : Flow_common.S) : S = struct
         pred
         result
         ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
-          predicate_no_concretization cx trace tvar right (RightP (InstanceofTest, arrt))
+          instanceof_test cx trace tvar (true, arrt, right)
       )
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
@@ -502,7 +502,7 @@ module Make (Flow : Flow_common.S) : S = struct
         pred
         result
         ~predicate_no_concretization:(fun cx trace tvar arrt _pred ->
-          predicate_no_concretization cx trace tvar right (NotP (RightP (InstanceofTest, arrt)))
+          instanceof_test cx trace tvar (false, arrt, right)
       )
     (* Suppose that we have an instance x of class C, and we check whether x is
        `instanceof` class A. To decide what the appropriate refinement for x
@@ -514,12 +514,11 @@ module Make (Flow : Flow_common.S) : S = struct
        recursion; it is also used elsewhere for running similar recursive
        subclass decisions.) **)
     | (true, (DefT (_, InstanceT _) as c), DefT (r, ClassT a)) ->
-      predicate_no_concretization
+      instanceof_test
         cx
         trace
         result
-        (InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
-        (RightP (InstanceofTest, c))
+        (true, c, InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
     (* If C is a subclass of A, then don't refine the type of x. Otherwise,
        refine the type of x to A. (In general, the type of x should be refined to
        C & A, but that's hard to compute.) **)
@@ -562,12 +561,11 @@ module Make (Flow : Flow_common.S) : S = struct
        appropriate refinement for x should be, we need to decide whether C
        extends A, choosing either nothing or C based on the result. **)
     | (false, (DefT (_, InstanceT _) as c), DefT (r, ClassT (DefT (_, InstanceT _) as a))) ->
-      predicate_no_concretization
+      instanceof_test
         cx
         trace
         result
-        (InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
-        (NotP (RightP (InstanceofTest, c)))
+        (false, c, InternalT (ExtendsT (update_desc_reason (fun desc -> RExtends desc) r, c, a)))
     (* If C is a subclass of A, then do nothing, since this check cannot
        succeed. Otherwise, don't refine the type of x. **)
     | ( false,
