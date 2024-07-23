@@ -188,17 +188,9 @@ let compatibility_call call =
     true
   | _ -> false
 
-let componentlike_name name =
-  let rec cln n =
-    if String.length name > n && String.sub name n (n + 1) = "_" then
-      cln (n + 1)
-    else
-      String.length name > n
-      &&
-      let fst = String.sub name n (n + 1) in
-      fst = String.uppercase_ascii fst
-  in
-  cln 0
+let componentlike_name_regexp = Str.regexp "_*[A-Z].*"
+
+let componentlike_name name = Str.string_match componentlike_name_regexp name 0
 
 let bare_use { Ast.Expression.Call.callee; _ } =
   let open Ast.Expression in
@@ -890,7 +882,7 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
 
     method! export_default_declaration_decl decl =
       let cur_declaring = declaring_function_component in
-      let filename = Context.file cx |> File_key.to_string in
+      let filename = Context.file cx |> File_key.to_string |> Filename.basename in
       let next_declaring =
         if componentlike_name filename || Flow_ast_utils.hook_name filename then
           match decl with

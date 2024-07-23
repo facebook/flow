@@ -1,3 +1,17 @@
+Error --------------------------------------------------------------------------------------- componentlike_name.js:12:3
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   componentlike_name.js:12:3
+   12|   useState(); // ERROR
+         ^^^^^^^^^^
+
+References:
+   componentlike_name.js:12:3
+   12|   useState(); // ERROR
+         ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- dro.js:2:5
 
 Cannot assign `42` to `a.x.y` because property `y` is not writable. [cannot-write]
@@ -652,6 +666,20 @@ Cannot read `current` from `ref4` [1] because `ref` values may not be read durin
            ^^^^ [1]
 
 
+Error ------------------------------------------------------------------------- invalidComponentExportDefaultAnon.js:5:3
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   invalidComponentExportDefaultAnon.js:5:3
+   5|   useState(); // ERROR
+        ^^^^^^^^^^
+
+References:
+   invalidComponentExportDefaultAnon.js:5:3
+   5|   useState(); // ERROR
+        ^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- nested.js:5:5
 
 Cannot read `current` from `ref` [1] because `ref` values may not be read within hooks.
@@ -725,4 +753,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 55 errors
+Found 57 errors
