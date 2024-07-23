@@ -44,7 +44,6 @@ let check_ref_use cx rrid in_hook var_reason kind t =
     | IntersectionT (_, rep) -> InterRep.members rep |> Base.List.concat_map ~f:recur
     | MaybeT (_, t)
     | OptionalT { type_ = t; _ }
-    | ExactT (_, t)
     | AnnotT (_, t, _)
     | TypeAppT { type_ = t; _ }
     | GenericT { bound = t; _ }
@@ -144,7 +143,6 @@ let hook_callee cx t =
       |> Base.List.fold ~init:AnyCallee ~f:(fun acc t -> inv_merge (recur t) acc)
     | MaybeT (_, t)
     | OptionalT { type_ = t; _ }
-    | ExactT (_, t)
     | AnnotT (_, t, _)
     | TypeAppT { type_ = t; _ }
     | GenericT { bound = t; _ }

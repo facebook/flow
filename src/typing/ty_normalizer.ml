@@ -396,6 +396,7 @@ module Make (I : INPUT) : S = struct
         | CallType _
         | ConditionalType _ ->
           true
+        | ExactType
         | ReadOnlyType
         | ReactDRO _
         | MakeHooklike
@@ -703,7 +704,6 @@ module Make (I : INPUT) : S = struct
               { env with Env.seen_eval_ids = Type.EvalIdSet.add id' env.Env.seen_eval_ids }
             in
             eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
-      | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalEnforceUnionOptimizedT _ -> terr ~kind:BadInternalT (Some t)
       | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
@@ -1160,8 +1160,6 @@ module Make (I : INPUT) : S = struct
         Ty.Fun fun_t
       | DefT (_, ReactAbstractComponentT _) -> type__ ~env t
       | _ -> terr ~kind:BadPoly (Some t)
-
-    and exact_t ~env t = type__ ~env t >>| Ty.mk_exact
 
     and type_app =
       let mk_generic ~env symbol kind tparams targs =
@@ -1627,6 +1625,7 @@ module Make (I : INPUT) : S = struct
       | T.ReactDRO _ ->
         return ty
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
+      | T.ExactType -> return (Ty.Utility (Ty.Exact ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
       | T.EnumType -> return (Ty.Utility (Ty.Enum ty))
       | T.PartialType -> return (Ty.Utility (Ty.Partial ty))
@@ -2366,7 +2365,6 @@ module Make (I : INPUT) : S = struct
               ~non_eval:TypeConverter.convert_type_destructor_unevaluated
               ~force_eval:true
               (t, d, id')
-      | ExactT (_, t) -> type__ ~env ~inherited ~source ~imode t
       | GenericT { bound; _ } -> type__ ~env ~inherited ~source ~imode bound
       | OpaqueT (r, o) -> opaque_t ~env ~inherited ~source ~imode r o
       | DefT (reason, ReactAbstractComponentT _) ->

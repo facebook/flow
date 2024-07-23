@@ -188,6 +188,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           cx
     in
     (********************)
+    (* Object Make Exact *)
+    (********************)
+    let object_make_exact cx trace _use_op reason x tout =
+      (* We always use an unknown_use intentionally when flowing to the tout. The use_op associated
+       * with the tvar is more relevant with the use of the $Exact type than the use_op associated
+       * with the $Exact instantiation *)
+      rec_flow_t ~use_op:unknown_use cx trace (Slice_utils.object_make_exact cx reason x, tout)
+    in
+    (********************)
     (* Object Read Only *)
     (********************)
     let object_read_only cx trace _use_op reason x tout =
@@ -544,6 +553,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (* Object Resolution *)
     (*********************)
     let next = function
+      | MakeExact -> object_make_exact
       | Spread (options, state) -> object_spread options state
       | Rest (options, state) -> object_rest options state
       | ReactConfig state -> react_config state

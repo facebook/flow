@@ -22,6 +22,23 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
                              ^
 
 
+Error ----------------------------------------------------------------------------------------------------- keys.js:15:1
+
+Cannot cast `f` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   keys.js:15:1
+   15| f as empty; // error
+       ^
+
+References:
+   keys.js:13:45
+   13| declare var exact_intersection: $Exact<{ f: string, ... } & { g: number, ... }>;
+                                                   ^^^^^^ [1]
+   keys.js:15:6
+   15| f as empty; // error
+            ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ main.js:6:1
 
 Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -901,4 +918,4 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 57 errors
+Found 58 errors

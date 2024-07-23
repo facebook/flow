@@ -1052,7 +1052,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let desc = RExactType (desc_of_t t) in
-              reconstruct_ast (ExactT (mk_annot_reason desc loc, t)) targs
+              let reason = mk_annot_reason desc loc in
+              let t = push_type_alias_reason reason t in
+              reconstruct_ast
+                (mk_type_destructor cx (use_op reason) reason t ExactType (mk_eval_id cx loc))
+                targs
           )
         | "$Rest" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->

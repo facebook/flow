@@ -63,7 +63,6 @@ end = struct
     | ObjProtoT _ ->
       ()
     | OptionalT { type_ = t; _ }
-    | ExactT (_, t)
     | MaybeT (_, t)
     | StrUtilT { remainder = Some t; _ } ->
       check_polarity cx ?trace seen tparams polarity t

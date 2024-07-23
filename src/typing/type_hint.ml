@@ -127,7 +127,6 @@ let get_t = get_t ~depth:3
 let rec instantiate_callee cx fn instantiation_hint =
   let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let rec handle_poly = function
-    | ExactT (_, DefT (_, ObjT { call_t = Some id; _ }))
     | DefT (_, ObjT { call_t = Some id; _ })
     | DefT (_, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
       handle_poly (Context.find_call cx id)

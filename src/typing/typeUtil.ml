@@ -20,7 +20,6 @@ let rec reason_of_t = function
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
-  | ExactT (reason, _) -> reason
   | GenericT { reason; _ } -> reason
   | InternalEnforceUnionOptimizedT reason -> reason
   | FunProtoT reason -> reason
@@ -78,7 +77,6 @@ and reason_of_use_t = function
   | ImplementsT (_, t) -> reason_of_t t
   | PreprocessKitT (reason, _) -> reason
   | LookupT { reason; _ } -> reason
-  | MakeExactT (reason, _) -> reason
   | MapTypeT (_, reason, _, _) -> reason
   | MethodT (_, reason, _, _, _) -> reason
   | MixinT (reason, _) -> reason
@@ -149,7 +147,6 @@ let rec mod_reason_of_t f = function
   | MaybeT (reason, src) -> MaybeT (f reason, src)
   | OptionalT { reason; type_; use_desc } -> OptionalT { reason = f reason; type_; use_desc }
   | EvalT (t, defer_use_t, id) -> EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
-  | ExactT (reason, t) -> ExactT (f reason, t)
   | GenericT ({ reason; _ } as generic) -> GenericT { generic with reason = f reason }
   | InternalEnforceUnionOptimizedT reason -> InternalEnforceUnionOptimizedT (f reason)
   | FunProtoT reason -> FunProtoT (f reason)
@@ -252,7 +249,6 @@ let rec util_use_op_of_use_t :
   | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
-  | MakeExactT (r, Lower (op, t)) -> util op (fun op -> MakeExactT (r, Lower (op, t)))
   | PromoteRendersRepresentationT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> PromoteRendersRepresentationT { contents with use_op })
   | TryRenderTypePromotionT ({ use_op; _ } as contents) ->
@@ -262,7 +258,6 @@ let rec util_use_op_of_use_t :
   | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })
   | CheckReactImmutableT ({ use_op; _ } as x) ->
     util use_op (fun use_op -> CheckReactImmutableT { x with use_op })
-  | MakeExactT (_, _)
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)
   | GetProtoT (_, _)
@@ -490,7 +485,6 @@ let reasonless_compare =
         OptionalT { reason; type_ = t1; use_desc }
       ) ->
       OptionalT { reason; type_ = swap_reason t2 t1; use_desc }
-    | (ExactT (_, t2), ExactT (r, t1)) -> ExactT (r, swap_reason t2 t1)
     | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
   in
   fun t1 t2 ->
@@ -637,7 +631,6 @@ let quick_subtype t1 t2 =
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT expected)) ->
     OrdinaryName actual = expected
-  | (DefT (_, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) -> reasonless_eq t1 t2'
   | _ -> reasonless_eq t1 t2
 
 let reason_of_propref = function

@@ -149,7 +149,6 @@ let rec not_exists cx t =
     | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
     | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, OrdinaryName "")))
     | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
-    | ExactT (_, t) -> not_exists cx t
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) ->
       recurse_into_intersection cx (not_exists cx) (r, InterRep.members rep)
@@ -750,7 +749,6 @@ and tag_of_t cx t =
   match t with
   | DefT (_, t) -> tag_of_def_t cx t
   | ThisInstanceT (_, { inst; _ }, _, _) -> tag_of_inst inst
-  | ExactT (_, t) -> tag_of_t cx t
   | OpenT _
   | AnnotT (_, _, _) ->
     Context.find_resolved cx t |> Base.Option.bind ~f:(tag_of_t cx)

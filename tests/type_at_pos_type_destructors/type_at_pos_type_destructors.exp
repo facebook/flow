@@ -108,6 +108,7 @@ conditional-types.js:34:5,34:5
 exact.js:4:6
 Flags:
 type B = $Exact<A>
+= {|x: number|}
 
 'A' defined at exact.js:3:5
 'B' defined at exact.js:4:5
@@ -117,6 +118,7 @@ exact.js:4:6,4:6
 exact.js:6:13
 Flags:
 $Exact<A>
+= {|x: number|}
 
 'A' defined at exact.js:3:5
 
@@ -125,6 +127,7 @@ exact.js:6:13,6:13
 exact.js:8:13
 Flags:
 $Exact<B>
+= {|x: number|}
 
 'B' defined at exact.js:4:5
 
@@ -132,7 +135,8 @@ exact.js:8:13,8:13
 
 exact.js:10:13
 Flags:
-{|p: number|}
+$Exact<{p: number, ...}>
+= {|p: number|}
 exact.js:10:13,10:13
 
 exact.js:13:17
@@ -147,7 +151,8 @@ exact.js:15:7,15:7
 
 exact.js:19:13
 Flags:
-$Exact<A>
+$Exact<$Exact<A>>
+= {|x: number|}
 
 'A' defined at exact.js:3:5
 
@@ -156,6 +161,7 @@ exact.js:19:13,19:13
 exact.js:23:13
 Flags:
 $Exact<Class<C>>
+= {|name: string|}
 
 'C' defined at exact.js:22:6
 
@@ -163,7 +169,8 @@ exact.js:23:13,23:13
 
 exact.js:26:6
 Flags:
-type P<X> = {|m: (x: X) => void|}
+type P<X> = $Exact<{m: (x: X) => void, ...}>
+= {|m: (x: X) => void|}
 
 'P' defined at exact.js:26:5
 
@@ -172,6 +179,7 @@ exact.js:26:6,26:6
 exact.js:28:6
 Flags:
 type Q<X> = $Exact<P<X>>
+= {|m: (x: X) => void|}
 
 'P' defined at exact.js:26:5
 'Q' defined at exact.js:28:5

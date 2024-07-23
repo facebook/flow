@@ -88,7 +88,7 @@ takesSubtypeOfPerson2(returnsExactlyPerson()); // error
 //
 type PersonPred = (person: Person) => boolean;
 
-declare function returnsExactlyPersonPred(): $Exact<PersonPred>;
+declare function returnsExactlyPersonPred(): $Exact<PersonPred>; // error
 declare function takesPersonPred(pred: PersonPred): void;
 
-takesPersonPred(returnsExactlyPersonPred()); // error
+takesPersonPred(returnsExactlyPersonPred()); // ok

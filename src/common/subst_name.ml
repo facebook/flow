@@ -7,6 +7,7 @@
 
 type op_kind =
   | Spread
+  | MakeExact
   | ReadOnly
   | Mapped
   | Partial

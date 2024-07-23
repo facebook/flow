@@ -768,7 +768,10 @@ and merge_annot env file = function
     let t = merge env file t in
     let desc = TypeUtil.desc_of_t t in
     let reason = Reason.(mk_annot_reason (RExactType desc) loc) in
-    Type.ExactT (reason, t)
+    let t = TypeUtil.push_type_alias_reason reason t in
+    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
+    let id = eval_id_of_aloc file loc in
+    Type.(EvalT (t, TypeDestructorT (use_op, reason, ExactType), id))
   | Rest (loc, t1, t2) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Rest")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

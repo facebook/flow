@@ -251,28 +251,5 @@ References:
                                              ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:86:15
 
-Computing object type [1] may lead to an exponentially large number of cases to reason about because `State` [2] and
-`State` [3] are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.
-You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.
-[exponential-spread]
-
-   type_spread.js:86:15
-   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
-                     ^^^^^^^^^^^^^
-
-References:
-   type_spread.js:86:10
-   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:86:22
-   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
-                            ^^^^^ [2]
-   type_spread.js:86:57
-   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
-                                                               ^^^^^ [3]
-
-
-
-Found 13 errors
+Found 12 errors

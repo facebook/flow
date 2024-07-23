@@ -570,41 +570,26 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:23:17
 
-Cannot use exact on intersection type [1] in an export position. Please provide an (alternative) annotation for
-exact [2]. [invalid-exported-annotation]
-
-   ops_on_intersection.js:23:17
-   23| declare var y5: $Exact<S>;
-                       ^^^^^^^^^ [2]
-
-References:
-   ops_on_intersection.js:5:10
-    5| type S = { f: any } & { g: any };
-                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:27:17
-
 Cannot use statics on intersection type [1] in an export position. Please provide an (alternative) annotation for
 statics [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:27:17
-   27| declare var y6: Class<C & D>;
+   ops_on_intersection.js:23:17
+   23| declare var y6: Class<C & D>;
                        ^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:27:23
-   27| declare var y6: Class<C & D>;
+   ops_on_intersection.js:23:23
+   23| declare var y6: Class<C & D>;
                              ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:31:25
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:27:25
 
 Cannot use class extends on intersection type [1] in an export position. Please provide an (alternative) annotation for
 class extends [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:31:25
-   31| export class c7 extends ((0: any): T) {}
+   ops_on_intersection.js:27:25
+   27| export class c7 extends ((0: any): T) {}
                                ^^^^^^^^^^^^^ [2]
 
 References:
@@ -613,13 +598,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:36:37
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:32:37
 
 Cannot use prototype on intersection type [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:36:37
-   36| declare export var x8: { __proto__: T };
+   ops_on_intersection.js:32:37
+   32| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
@@ -628,13 +613,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:39:32
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:35:32
 
 Cannot use mixins on intersection type [1] in an export position. Please provide an (alternative) annotation for
 mixins [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:39:32
-   39| declare export class x9 mixins t {}
+   ops_on_intersection.js:35:32
+   35| declare export class x9 mixins t {}
                                       ^ [2]
 
 References:
@@ -643,13 +628,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:42:20
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:38:20
 
 Cannot use unary minus on intersection type [1] in an export position. Please provide an (alternative) annotation for
 unary minus [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:42:20
-   42| export const x10 = -n;
+   ops_on_intersection.js:38:20
+   38| export const x10 = -n;
                           ^^ [2]
 
 References:
@@ -658,13 +643,13 @@ References:
                       ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:45:20
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:41:20
 
 Cannot use unary not on intersection type [1] in an export position. Please provide an (alternative) annotation for
 unary not [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:45:20
-   45| export const x11 = !n;
+   ops_on_intersection.js:41:20
+   41| export const x11 = !n;
                           ^^ [2]
 
 References:
@@ -673,14 +658,29 @@ References:
                       ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:18
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:44:18
 
 Cannot use `$KeyMirror` on intersection type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:48:18
-   48| declare var y12: $KeyMirror<S>;
+   ops_on_intersection.js:44:18
+   44| declare var y12: $KeyMirror<S>;
                         ^^^^^^^^^^^^^ [2]
+
+References:
+   ops_on_intersection.js:5:10
+    5| type S = { f: any } & { g: any };
+                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:18
+
+Cannot use `$ObjMapConst` on intersection type [1] in an export position. Please provide an (alternative) annotation for
+`$ObjMapConst` [2]. [invalid-exported-annotation]
+
+   ops_on_intersection.js:48:18
+   48| declare var y13: $ObjMapConst<S, any>;
+                        ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_intersection.js:5:10
@@ -690,26 +690,11 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:52:18
 
-Cannot use `$ObjMapConst` on intersection type [1] in an export position. Please provide an (alternative) annotation for
-`$ObjMapConst` [2]. [invalid-exported-annotation]
-
-   ops_on_intersection.js:52:18
-   52| declare var y13: $ObjMapConst<S, any>;
-                        ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   ops_on_intersection.js:5:10
-    5| type S = { f: any } & { g: any };
-                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:56:18
-
 Cannot use key set on intersection type [1] in an export position. Please provide an (alternative) annotation for key
 set [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:56:18
-   56| declare var y14: $Keys<T>;
+   ops_on_intersection.js:52:18
+   52| declare var y14: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
@@ -1007,4 +992,4 @@ References:
 
 
 
-Found 69 errors
+Found 68 errors

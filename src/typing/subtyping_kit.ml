@@ -1053,6 +1053,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (IntersectionT _, DefT (r, ObjT { flags; props_tmap; proto_t; call_t; reachable_targs = _ }))
       when NameUtils.Map.cardinal (Context.find_props cx props_tmap) > 1 && flags.obj_kind <> Exact
       ->
+      Debug_js.Verbose.print_if_verbose cx ["trapped"];
       Context.iter_real_props cx props_tmap (fun x p ->
           let pmap = NameUtils.Map.singleton x p in
           let id = Context.generate_property_map cx pmap in
@@ -1136,32 +1137,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           Truthy
       in
       rec_flow_t cx trace ~use_op (DefT (reason, StrT literal_kind), u)
-    (************************************************************************)
-    (* exact object types *)
-    (************************************************************************)
-
-    (* ExactT<X> comes from annotation, may behave as LB or UB *)
-
-    (* when $Exact<LB> ~> UB, forward to MakeExactT *)
-    | (ExactT (r, t), _) ->
-      let t = push_type_alias_reason r t in
-      rec_flow cx trace (t, MakeExactT (r, Upper (UseT (use_op, u))))
-    (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
-    | (DefT (_, ObjT { flags; _ }), ExactT (r, t)) ->
-      if Obj_type.is_exact flags.obj_kind then
-        let t = push_type_alias_reason r t in
-        rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
-      else (
-        exact_obj_error cx flags.obj_kind ~use_op ~exact_reason:r l;
-        (* Continue the Flow even after we've errored. Often, there is more that
-         * is different then just the fact that the upper bound is exact and the
-         * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
-        rec_flow_t cx trace ~use_op (l, t)
-      )
-    (* any ~> $Exact<UB>. unwrap exact *)
-    | ((DefT (_, EmptyT) | AnyT _), ExactT (_, t)) -> rec_flow_t cx trace ~use_op (l, t)
-    (* anything else ~> $Exact<UB>. error *)
-    | (_, ExactT (r, t)) -> rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
     (*
      * When do we consider a polymorphic type <X:U> T to be a subtype of another
      * polymorphic type <X:U'> T'? This is the subject of a long line of

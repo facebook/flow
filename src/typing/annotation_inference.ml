@@ -29,7 +29,6 @@ let object_like_op = function
   | Annot_CopyTypeExportsT _
   | Annot_ElemT _
   | Annot_GetStaticsT _
-  | Annot_MakeExactT _
   | Annot_MixinT _
   | Annot_ObjKitT _
   | Annot_ObjTestProtoT _
@@ -474,6 +473,9 @@ module rec ConsGen : S = struct
       let t = elab_t cx t (Annot_DeepReadOnlyT (reason, dro_loc, dro_kind)) in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (_, _, MakeHooklike), _), _) -> t
+    | (EvalT (t, TypeDestructorT (_, r, ExactType), _), _) ->
+      let t = make_exact cx r t in
+      elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
       let t = make_partial cx use_op reason t in
       elab_t cx t op
@@ -758,12 +760,6 @@ module rec ConsGen : S = struct
     (********************************)
     (* Union and intersection types *)
     (********************************)
-    | (UnionT (reason, rep), Annot_MakeExactT reason_op) ->
-      let ts = UnionRep.members rep in
-      let f t = ExactT (reason_op, t) in
-      let ts' = Base.List.map ts ~f in
-      let reason' = repos_reason (loc_of_reason reason_op) reason in
-      union_of_ts reason' ts'
     | (UnionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
       object_kit_concrete cx use_op op reason resolve_tool tool t
     | (UnionT (_, rep), _) ->
@@ -813,21 +809,6 @@ module rec ConsGen : S = struct
       elab_t cx (DefT (reason, NumT (Literal (None, lit)))) op
     | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT (Some b))) op
     | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
-    (*********)
-    (* Exact *)
-    (*********)
-    | (ExactT (r, t), _) ->
-      let t = push_type_alias_reason r t in
-      let t = make_exact cx r t in
-      elab_t cx t op
-    | (DefT (reason_obj, ObjT obj), Annot_MakeExactT reason_op) ->
-      TypeUtil.make_exact_object ~reason_obj obj ~reason_op
-    | (AnyT (_, src), Annot_MakeExactT reason_op) -> AnyT.why src reason_op
-    | (DefT (_, VoidT), Annot_MakeExactT reason_op) -> VoidT.why reason_op
-    | (DefT (_, EmptyT), Annot_MakeExactT reason_op) -> EmptyT.why reason_op
-    | (_, Annot_MakeExactT reason_op) ->
-      Flow_js_utils.add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t t));
-      AnyT.error reason_op
     (**********)
     (* Mixins *)
     (**********)
@@ -1373,12 +1354,14 @@ module rec ConsGen : S = struct
       let return _ _ t = t in
       Slice_utils.check_component_config ~add_output ~return pmap cx
     in
+    let object_make_exact cx _use_op = Slice_utils.object_make_exact cx in
     let object_read_only cx _use_op = Slice_utils.object_read_only cx in
     let object_partial cx _use_op = Slice_utils.object_update_optionality `Partial cx in
     let object_required cx _use_op = Slice_utils.object_update_optionality `Required cx in
     let next op cx use_op tool reason x =
       Object.(
         match tool with
+        | MakeExact -> object_make_exact cx use_op reason x
         | Spread (options, state) -> object_spread options state cx use_op reason x
         | Rest (options, state) -> object_rest options state cx use_op reason x
         | Partial -> object_partial cx use_op reason x
@@ -1432,7 +1415,9 @@ module rec ConsGen : S = struct
     let resolve_tool = Type.Object.(Resolve Next) in
     object_kit cx use_op reason resolve_tool Type.Object.Required t
 
-  and make_exact cx reason t = elab_t cx t (Annot_MakeExactT reason)
+  and make_exact cx reason t =
+    let resolve_tool = Type.Object.(Resolve Next) in
+    object_kit cx unknown_use reason resolve_tool Type.Object.MakeExact t
 
   and obj_test_proto cx reason_op t = elab_t cx t (Annot_ObjTestProtoT reason_op)
 end

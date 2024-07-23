@@ -8,9 +8,9 @@ props [2]. [prop-missing]
         ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:23:57
+   test.js:23:50
    23| class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
-                                                               ^^^^^^^^^^^^^ [1]
+                                                        ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:25:1
    25| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -26,9 +26,9 @@ props [2]. [prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:35:46
+   test.js:35:39
    35| const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
-                                                    ^^^^^^^^^^^^^ [1]
+                                             ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:37:1
    37| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -44,9 +44,9 @@ props [2]. [prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:43:57
+   test.js:43:50
    43| const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
-                                                               ^^^^^^^^^^^^^ [1]
+                                                        ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:45:1
    45| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -267,9 +267,9 @@ References:
    test.js:134:1
    134| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:134:2
@@ -285,9 +285,9 @@ References:
    test.js:134:1
    134| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:134:2
@@ -303,9 +303,9 @@ References:
    test.js:134:1
    134| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:134:2
@@ -321,9 +321,9 @@ References:
    test.js:134:1
    134| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:134:2
@@ -339,9 +339,9 @@ References:
    test.js:134:1
    134| <ClassExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:142:2
@@ -354,9 +354,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:142:1
         v-----------------------------------------------------------
    142| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -382,9 +382,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:142:1
         v-----------------------------------------------------------
    142| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -410,9 +410,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:142:1
         v-----------------------------------------------------------
    142| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -520,9 +520,9 @@ References:
    173|   {...{boolean1: true, boolean2: false}}
    174| />;
         -^ [1]
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:175:2
@@ -535,9 +535,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:175:1
         v-----------------------------------------------------------
    175| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -560,9 +560,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:175:1
         v-----------------------------------------------------------
    175| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -585,9 +585,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:59
+   test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:175:1
         v-----------------------------------------------------------
    175| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -1032,9 +1032,9 @@ References:
    test.js:320:1
    320| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:320:2
@@ -1050,9 +1050,9 @@ References:
    test.js:320:1
    320| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:320:2
@@ -1068,9 +1068,9 @@ References:
    test.js:320:1
    320| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:320:2
@@ -1086,9 +1086,9 @@ References:
    test.js:320:1
    320| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:320:2
@@ -1104,9 +1104,9 @@ References:
    test.js:320:1
    320| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:328:2
@@ -1119,9 +1119,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:328:1
         v-------------------------------------------------------
    328| <FunctionExact_ManyProps // OK: Other props are allowed.
@@ -1147,9 +1147,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:328:1
         v-------------------------------------------------------
    328| <FunctionExact_ManyProps // OK: Other props are allowed.
@@ -1175,9 +1175,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:328:1
         v-------------------------------------------------------
    328| <FunctionExact_ManyProps // OK: Other props are allowed.
@@ -1285,9 +1285,9 @@ References:
    359|   {...{boolean1: true, boolean2: false}}
    360| />;
         -^ [1]
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:361:2
@@ -1300,9 +1300,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:361:1
         v--------------------------------------------------------------
    361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
@@ -1325,9 +1325,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:361:1
         v--------------------------------------------------------------
    361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
@@ -1350,9 +1350,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:48
+   test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:361:1
         v--------------------------------------------------------------
    361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
@@ -1595,9 +1595,9 @@ References:
    test.js:445:1
    445| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:445:2
@@ -1613,9 +1613,9 @@ References:
    test.js:445:1
    445| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:445:2
@@ -1631,9 +1631,9 @@ References:
    test.js:445:1
    445| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:445:2
@@ -1649,9 +1649,9 @@ References:
    test.js:445:1
    445| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:445:2
@@ -1667,9 +1667,9 @@ References:
    test.js:445:1
    445| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:453:2
@@ -1682,9 +1682,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:453:1
         v--------------------------------------------------------------
    453| <AbstractExact_ManyProps // Error: Other props are not allowed.
@@ -1710,9 +1710,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:453:1
         v--------------------------------------------------------------
    453| <AbstractExact_ManyProps // Error: Other props are not allowed.
@@ -1738,9 +1738,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:453:1
         v--------------------------------------------------------------
    453| <AbstractExact_ManyProps // Error: Other props are not allowed.
@@ -1848,9 +1848,9 @@ References:
    484|   {...{boolean1: true, boolean2: false}}
    485| />;
         -^ [1]
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:486:2
@@ -1863,9 +1863,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:486:1
         v--------------------------------------------------------------
    486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
@@ -1888,9 +1888,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:486:1
         v--------------------------------------------------------------
    486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
@@ -1913,9 +1913,9 @@ props [2]. [prop-missing]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
+   test.js:443:52
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:486:1
         v--------------------------------------------------------------
    486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
@@ -2610,9 +2610,9 @@ References:
    test.js:717:1
    717| <ClassExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:716:34
+   test.js:716:27
    716|   extends React.Component<$Exact<Props_OptionalProps>> {}
-                                         ^^^^^^^^^^^^^^^^^^^ [2]
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:725:7
@@ -2754,9 +2754,9 @@ References:
    test.js:769:1
    769| <FunctionExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:768:52
+   test.js:768:45
    768| const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
-                                                           ^^^^^^^^^^^^^^^^^^^ [2]
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:777:7
@@ -2850,9 +2850,9 @@ References:
    test.js:804:1
    804| <AbstractExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:803:30
+   test.js:803:23
    803|   React.ComponentType<$Exact<Props_OptionalProps>> = any;
-                                     ^^^^^^^^^^^^^^^^^^^ [2]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:812:7
@@ -3066,9 +3066,9 @@ References:
    910|   foo={1}
    911| />;
         -^ [1]
-   test.js:897:34
+   test.js:897:27
    897|   extends React.Component<$Exact<Props_DefaultProps>> {
-                                         ^^^^^^^^^^^^^^^^^^ [2]
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:925:2
@@ -3129,9 +3129,9 @@ References:
    960|   foo={1}
    961| />;
         -^ [1]
-   test.js:946:51
+   test.js:946:44
    946| function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
-                                                          ^^^^^^^^^^^^^^^^^^ [2]
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:971:2

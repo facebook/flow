@@ -3149,9 +3149,9 @@ Cannot get `o.p4` because property `p4` is missing in object type [1]. [prop-mis
                ^^
 
 References:
-   missing-property-cond.js:17:25
+   missing-property-cond.js:17:18
    17| function foo4(o: $Exact<{ x: number }>) {
-                               ^^^^^^^^^^^^^ [1]
+                        ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:21:10

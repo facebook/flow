@@ -550,7 +550,6 @@ let rec extract_type cx this_t =
   | DefT (_, InstanceT _) as t -> Success t
   | DefT (_, ObjT _) as t -> Success t
   | DefT (_, EnumObjectT _) as t -> Success t
-  | ExactT (_, t) -> extract_type cx t
   | GenericT { bound; _ } -> extract_type cx bound
   | ModuleT _ as t -> SuccessModule t
   | NamespaceT _ as t -> SuccessNamespace t

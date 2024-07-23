@@ -143,7 +143,6 @@ end = struct
         | OpenT _
         | DefT (_, (ClassT _ | TypeT (_, _) | PolyT _))
         | ThisInstanceT _
-        | ExactT _
         | IntersectionT _
         | UnionT _
         | MaybeT _
@@ -1538,7 +1537,7 @@ module ImportTypeTKit = struct
 
   let on_concrete_type cx reason export_name exported_type =
     match (exported_type, export_name) with
-    | ((ExactT (_, DefT (_, ObjT _)) | DefT (_, ObjT _)), "default") -> exported_type
+    | (DefT (_, ObjT _), "default") -> exported_type
     | (exported_type, _) ->
       (match canonicalize_imported_type cx reason exported_type with
       | Some imported_t -> imported_t
@@ -2067,8 +2066,7 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
         )
         module_t
     (* ObjT CommonJS export values have their properties turned into named exports. *)
-    | DefT (_, ObjT o)
-    | ExactT (_, DefT (_, ObjT o)) ->
+    | DefT (_, ObjT o) ->
       let { props_tmap; proto_t; _ } = o in
       (* Copy props from the prototype *)
       let module_t = F.cjs_extract_named_exports cx (reason, local_module) proto_t in

@@ -261,6 +261,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | NonMaybeType ->
         merge_lower_or_upper_bounds r (OpenT tout)
         |> bind_use_t_result ~f:(fun t -> UpperT (MaybeT (r, t)))
+      | ExactType
       | ReadOnlyType
       | ReactDRO _
       | MakeHooklike
@@ -390,8 +391,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       UpperNonT u
     | DeepReadOnlyT (((r, _) as tout), _) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
     | HooklikeT ((r, _) as tout) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
-    | MakeExactT (_, Lower (_, t)) -> UpperT t
-    | MakeExactT (_, Upper use_t) -> t_of_use_t cx seen tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx seen tvar use_t
     | ReposUseT (_, _, _use_op, t) ->
       Flow.flow_t cx (t, tvar);
@@ -422,6 +421,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       t_of_use_t cx seen tvar u
     | ObjKitT (_, r, _, tool, tout) ->
       (match tool with
+      | Object.MakeExact
       | Object.ReadOnly
       | Object.Partial
       | Object.Required

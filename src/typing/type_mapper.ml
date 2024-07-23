@@ -88,12 +88,6 @@ class virtual ['a] t =
           t
         else
           TypeAppT { reason; use_op; type_ = type_'; targs = targs'; from_value; use_desc }
-      | ExactT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ExactT (r, t'')
       | FunProtoT _
       | ObjProtoT _
       | NullProtoT _
@@ -563,7 +557,8 @@ class virtual ['a] t =
           t
         else
           OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type' }
-      | ReadOnlyType -> t
+      | ExactType
+      | ReadOnlyType
       | RequiredType
       | PartialType
       | EnumType ->

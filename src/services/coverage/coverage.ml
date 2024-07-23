@@ -134,7 +134,6 @@ let visitor =
       | EvalT (t, _, id) -> self#eval_t cx t id
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)
-      | ExactT (_, t)
       | DefT (_, PolyT { t_out = t; _ })
       | TypeAppT { reason = _; use_op = _; type_ = t; targs = _; from_value = _; use_desc = _ }
       | DefT (_, TypeT (_, t))

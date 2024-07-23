@@ -40,6 +40,7 @@ let string_of_destructor = function
   | EnumType -> "EnumType"
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
+  | ExactType -> "ExactType"
   | ReadOnlyType -> "ReadOnly"
   | ReactCheckComponentConfig _ -> "ReactCheckComponentConfig"
   | ReactCheckComponentRef -> "ReactCheckComponentRef"
@@ -336,7 +337,6 @@ let rec dump_t_ (depth, tvars) cx t =
             | None -> spf "%s, %s" (kid base) (kid this)
           end
         t
-    | ExactT (_, arg) -> p ~extra:(kid arg) t
     | MaybeT (_, arg) -> p ~extra:(kid arg) t
     | IntersectionT (_, rep) ->
       p ~extra:(spf "[%s]" (String.concat "; " (Base.List.map ~f:kid (InterRep.members rep)))) t
@@ -637,6 +637,7 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       let object_map prop_type = spf "ObjectMap {prop_type: %s}" (kid prop_type) in
       let tool = function
+        | MakeExact -> "MakeExact"
         | ReadOnly -> "ReadOnly"
         | Object.ReactCheckComponentConfig _ -> "ReactCheckComponentConfig"
         | Partial -> "Partial"
@@ -840,7 +841,6 @@ and dump_use_t_ (depth, tvars) cx t =
                  ))
           )
         t
-    | MakeExactT _ -> p t
     | MapTypeT _ -> p t
     | MethodT (_, _, _, prop, action) ->
       p ~extra:(spf "(%s, %s)" (propref prop) (method_action action)) t

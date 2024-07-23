@@ -1465,7 +1465,10 @@ type-alias.js:6:6 = {
   "end":6
 }
 type-alias.js:7:6 = {
-  "types":{"unevaluated":{"type":"type E = $Exact<D>"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"type E = $Exact<D>"},
+    "evaluated":{"type":"type E = {|x: number|}"}
+  },
   "reasons":[],
   "loc":{
     "source":"type-alias.js",

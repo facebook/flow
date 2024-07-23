@@ -454,9 +454,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                { reason_lower = TypeUtil.reason_of_t l; reason_upper = reason_op; use_op }
             );
           true
-        | DefT (_, ObjT _)
-        | ExactT (_, DefT (_, ObjT _)) ->
-          shortcut_disjoint_union cx trace reason_op use_op l rep
+        | DefT (_, ObjT _) -> shortcut_disjoint_union cx trace reason_op use_op l rep
         | _ -> false
       end
     | IntersectionCases _ -> false

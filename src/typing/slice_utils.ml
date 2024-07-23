@@ -45,7 +45,6 @@ let mk_object_type
       DefT (reason, InstanceT { static; super = ObjProtoT reason; implements = []; inst })
     | None ->
       let t = DefT (reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
-      (* Wrap the final type in an `ExactT` if we have an exact flag *)
       if wrap_on_exact_obj && Obj_type.is_exact flags.obj_kind then
         if Flow_js_utils.TvarVisitors.has_unresolved_tvars_or_placeholders cx t then
           t
@@ -1130,6 +1129,70 @@ let object_rest
     return cx use_op options t
 
 (********************)
+(* Object Make Exact *)
+(********************)
+let object_make_exact =
+  let mk_exact_object cx reason slice =
+    let { Object.reason = r; props; flags; generics; interface; reachable_targs } = slice in
+    match interface with
+    | Some _ ->
+      Flow_js_utils.add_output cx (Error_message.EUnsupportedExact (reason, r));
+      AnyT.error reason
+    | None ->
+      let props =
+        NameUtils.Map.map
+          (fun { Object.prop_t; is_method; is_own = _; polarity; key_loc } ->
+            if is_method then
+              Method { key_loc; type_ = prop_t }
+            else
+              Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity })
+          props
+      in
+      (* This case analysis aims at recovering a potential type alias associated
+       * with an $Exact<> constructor. *)
+      let reason_obj =
+        match desc_of_reason ~unwrap:false reason with
+        | RTypeAlias (n, loc, _) ->
+          update_desc_reason
+            (function
+              | RTypeAlias (_, _, desc) -> RTypeAlias (n, loc, desc)
+              | desc -> RTypeAlias (n, loc, desc))
+            r
+        | _ ->
+          (* If [r] is an RTypeAlias, then this alias is no longer valid. *)
+          update_desc_reason invalidate_rtype_alias r
+      in
+      let flags =
+        {
+          flags with
+          obj_kind =
+            (match flags.obj_kind with
+            | Inexact -> Exact
+            | k -> k);
+        }
+      in
+      let call = None in
+      let id = Context.generate_property_map cx props in
+      let proto = ObjProtoT reason in
+      mk_object_type
+        cx
+        ~reason:reason_obj
+        ~invalidate_aliases:true
+        ~interface:None
+        ~reachable_targs
+        ~kind:Subst_name.MakeExact
+        flags
+        call
+        id
+        proto
+        generics
+  in
+  fun cx reason x ->
+    match Nel.map (mk_exact_object cx reason) x with
+    | (t, []) -> t
+    | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
+
+(********************)
 (* Object Read Only *)
 (********************)
 let object_read_only =
@@ -1482,12 +1545,13 @@ let resolve
     let (t, todo) = InterRep.members_nel rep in
     let resolve_tool = Resolve (List0 (todo, (intersection_loc, And))) in
     recurse cx use_op reason resolve_tool tool t
-  (* `null` and `void` should pass through Partial and Required,
+  (* `null` and `void` should pass through Partial, Required, $Exact,
      since we would like e.g. Partial<?Foo> to be equivalent to ?Partial<Foo> *)
   | DefT (_, (NullT | VoidT))
     when match tool with
          | Partial
          | Required
+         | MakeExact
          | Object.ObjectMap _ ->
            true
          | _ -> false ->
@@ -1638,9 +1702,12 @@ let resolve
   (* Other types have reasonable object representations that may be added as
    * new uses of the object kit resolution code is found. *)
   | t ->
-    add_output
-      cx
-      (Error_message.EInvalidObjectKit { reason = reason_of_t t; reason_op = reason; use_op });
+    (match tool with
+    | MakeExact -> add_output cx (Error_message.EUnsupportedExact (reason, reason_of_t t))
+    | _ ->
+      add_output
+        cx
+        (Error_message.EInvalidObjectKit { reason = reason_of_t t; reason_op = reason; use_op }));
     return cx use_op (AnyT.error reason)
 
 let super

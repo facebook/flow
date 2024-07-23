@@ -44,7 +44,6 @@ class ['a] t =
         in
         acc
       | GenericT { bound; _ } -> self#type_ cx pole acc bound
-      | ExactT (_, t) -> self#type_ cx pole acc t
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
       | StrUtilT _ -> acc
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
@@ -204,6 +203,7 @@ class ['a] t =
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ }
       | PropertyType _
       | ValuesType
+      | ExactType
       | ReadOnlyType
       | PartialType
       | RequiredType

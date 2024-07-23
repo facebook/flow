@@ -35,7 +35,6 @@ import {
   x2 as intersection_x2,
   x3 as intersection_x3,
   x4 as intersection_x4,
-  x5 as intersection_x5,
   x6 as intersection_x6,
   x7 as intersection_x7,
   x8 as intersection_x8,
@@ -51,7 +50,6 @@ import {
 (intersection_x2: any);
 (intersection_x3: any);
 (intersection_x4: any);
-(intersection_x5: any);
 (intersection_x6: any);
 (intersection_x7: any);
 (intersection_x8.__proto__: any);

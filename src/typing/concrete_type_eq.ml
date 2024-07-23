@@ -18,7 +18,6 @@ let rec swap_reason t2 t1 =
   | (OptionalT { reason = _; type_ = t2; use_desc = _ }, OptionalT { reason; type_ = t1; use_desc })
     ->
     OptionalT { reason; type_ = swap_reason t2 t1; use_desc }
-  | (ExactT (_, t2), ExactT (r, t1)) -> ExactT (r, swap_reason t2 t1)
   | ( OpaqueT (_, { underlying_t = u2; super_t = s2; _ }),
       OpaqueT (r, ({ underlying_t = u1; super_t = s1; _ } as o))
     ) ->

@@ -96,8 +96,6 @@ module rec TypeTerm : sig
         from_value: bool;
         use_desc: bool;
       }
-    (* exact *)
-    | ExactT of reason * t
     | FunProtoT of reason (* Function.prototype *)
     | ObjProtoT of reason (* Object.prototype *)
     (* Signifies the end of the prototype chain. Distinct from NullT when it
@@ -749,8 +747,6 @@ module rec TypeTerm : sig
     | GetDictValuesT of reason * use_t
     (* Element access *)
     | ElemT of use_op * reason * t * elem_action
-    (* exact ops *)
-    | MakeExactT of reason * cont
     (* Module export handling *)
     | CJSExtractNamedExportsT of
         reason
@@ -1614,6 +1610,7 @@ module rec TypeTerm : sig
     | ElementType of { index_type: t }
     | OptionalIndexedAccessNonMaybeType of { index: optional_indexed_access_index }
     | OptionalIndexedAccessResultType of { void_reason: reason }
+    | ExactType
     | ReadOnlyType
     | PartialType
     | RequiredType
@@ -2547,9 +2544,7 @@ end = struct
   let props_of find_props t =
     TypeTerm.(
       match t with
-      | DefT (_, ObjT { props_tmap; _ })
-      | ExactT (_, DefT (_, ObjT { props_tmap; _ })) ->
-        Some (find_props props_tmap)
+      | DefT (_, ObjT { props_tmap; _ }) -> Some (find_props props_tmap)
       | _ -> None
     )
 
@@ -2966,6 +2961,7 @@ and Object : sig
   end
 
   type tool =
+    | MakeExact
     | ReadOnly
     | Partial
     | Required
@@ -3312,7 +3308,6 @@ module AConstraint = struct
     | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
     | Annot_GetStaticsT of Reason.t
     | Annot_LookupT of Reason.t * TypeTerm.use_op * TypeTerm.propref * TypeTerm.t
-    | Annot_MakeExactT of Reason.t
     | Annot_ObjKitT of Reason.t * TypeTerm.use_op * Object.resolve_tool * Object.tool
     | Annot_ObjTestProtoT of Reason.t
     | Annot_MixinT of Reason.t
@@ -3412,7 +3407,6 @@ module AConstraint = struct
     | Annot_ElemT _ -> "Annot_ElemT"
     | Annot_GetStaticsT _ -> "Annot_GetStaticsT"
     | Annot_LookupT _ -> "Annot_LookupT"
-    | Annot_MakeExactT _ -> "Annot_MakeExactT"
     | Annot_ObjKitT _ -> "Annot_ObjKitT"
     | Annot_ObjTestProtoT _ -> "Annot_ObjTestProtoT"
     | Annot_MixinT _ -> "Annot_MixinT"
@@ -3449,7 +3443,6 @@ module AConstraint = struct
     | Annot_ElemT (r, _, _)
     | Annot_GetStaticsT r
     | Annot_LookupT (r, _, _, _)
-    | Annot_MakeExactT r
     | Annot_ObjKitT (r, _, _, _)
     | Annot_ObjTestProtoT r
     | Annot_ArithT { reason = r; _ }
@@ -3489,7 +3482,6 @@ module AConstraint = struct
     | Annot_CopyNamedExportsT _
     | Annot_CopyTypeExportsT _
     | Annot_GetStaticsT _
-    | Annot_MakeExactT _
     | Annot_ObjTestProtoT _
     | Annot_ArithT _
     | Annot_UnaryArithT _
@@ -3512,6 +3504,7 @@ module AConstraint = struct
         RCustom
           Object.(
             match tool with
+            | MakeExact -> "exact"
             | ReactCheckComponentConfig _ -> "react check component config"
             | ReadOnly -> "readonly"
             | Partial -> "partial"
@@ -3524,7 +3517,6 @@ module AConstraint = struct
           )
       in
       replace_desc_reason desc r
-    | Annot_MakeExactT r -> replace_desc_reason (RCustom "exact") r
     | Annot_GetStaticsT r -> replace_desc_reason (RCustom "statics") r
     | Annot_MixinT r -> replace_desc_reason (RCustom "mixins") r
     | Annot_UnaryArithT (r, _) -> replace_desc_reason (RCustom "unary minus") r
@@ -3971,7 +3963,6 @@ let string_of_ctor = function
   | CustomFunT _ -> "CustomFunT"
   | DefT (_, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
-  | ExactT _ -> "ExactT"
   | InternalEnforceUnionOptimizedT _ -> "InternalEnforceUnionOptimizedT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoBindT _ -> "FunProtoBindT"
@@ -4121,7 +4112,6 @@ let string_of_use_ctor = function
         | PropExistsTest _ -> "PropExistsTest"
       end
   | LookupT _ -> "LookupT"
-  | MakeExactT _ -> "MakeExactT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"
   | PrivateMethodT _ -> "PrivateMethodT"

@@ -120,7 +120,6 @@ let is_concrete t =
   match t with
   | EvalT _
   | AnnotT _
-  | ExactT _
   | MaybeT _
   | OptionalT _
   | TypeAppT _
@@ -1647,12 +1646,6 @@ struct
            reposition the entire union type. *)
         | (UnionT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (UnionT (reason, rep), MakeExactT (reason_op, k)) ->
-          let ts = UnionRep.members rep in
-          let f t = ExactT (reason_op, t) in
-          let ts' = Base.List.map ts ~f in
-          let reason' = repos_reason (loc_of_reason reason_op) reason in
-          continue cx trace (union_of_ts reason' ts') k
         | (UnionT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
@@ -2385,36 +2378,6 @@ struct
            (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
            a lower bound, it's the same as DefT (_, NullT) *)
         | (NullProtoT reason, _) -> rec_flow cx trace (DefT (reason, NullT), u)
-        (************************************************************************)
-        (* exact object types *)
-        (************************************************************************)
-
-        (* ExactT<X> comes from annotation, may behave as LB or UB *)
-
-        (* when $Exact<LB> ~> UB, forward to MakeExactT *)
-        | (ExactT (r, t), _) ->
-          let t = push_type_alias_reason r t in
-          rec_flow cx trace (t, MakeExactT (r, Upper u))
-        (* Classes/Functions are "inexact" *)
-        (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
-        (* exactify incoming LB object type, flow to UB *)
-        | (DefT (r, ObjT obj), MakeExactT (reason_op, Upper u)) ->
-          let exactobj = TypeUtil.make_exact_object ~reason_obj:r obj ~reason_op in
-          rec_flow cx trace (exactobj, u)
-        (* exactify incoming UB object type, flow to LB *)
-        | (DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, l))) ->
-          (* forward to standard obj ~> obj *)
-          let ru = repos_reason (loc_of_reason reason_op) ru in
-          let xu = TypeUtil.make_exact_object ~reason_obj:ru obj_u ~reason_op in
-          rec_flow cx trace (l, UseT (use_op, xu))
-        | (AnyT (_, src), MakeExactT (reason_op, k)) -> continue cx trace (AnyT.why src reason_op) k
-        | (DefT (_, VoidT), MakeExactT (reason_op, k)) -> continue cx trace (VoidT.why reason_op) k
-        | (DefT (_, EmptyT), MakeExactT (reason_op, k)) ->
-          continue cx trace (EmptyT.why reason_op) k
-        (* unsupported kind *)
-        | (_, MakeExactT (reason_op, k)) ->
-          add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t l));
-          continue cx trace (AnyT.error reason_op) k
         (********************)
         (* mixin conversion *)
         (********************)
@@ -5815,7 +5778,6 @@ struct
     | ConditionalT _
     | DestructuringT _
     | EnumExhaustiveCheckT _
-    | MakeExactT _
     | FilterMaybeT _
     | ObjKitT _
     | OptionalIndexedAccessT _
@@ -5979,25 +5941,6 @@ struct
       | ObjRestT (r, xs, t_out, id) ->
         narrow_generic (fun t_out' -> ObjRestT (r, xs, t_out', id)) t_out;
         true
-      | MakeExactT (reason_op, k) ->
-        narrow_generic_with_continuation
-          (fun t_out -> MakeExactT (reason_op, Upper (UseT (unknown_use, OpenT t_out))))
-          k;
-        true
-      | UseT (use_op, ExactT (r, u)) ->
-        if is_concrete bound then
-          match bound with
-          | DefT (_, ObjT { flags; _ }) when not @@ Obj_type.is_exact flags.obj_kind ->
-            let l = make_generic bound in
-            exact_obj_error cx flags.obj_kind ~exact_reason:r ~use_op l;
-            (* Continue the Flow even after we've errored. Often, there is more that
-             * is different then just the fact that the upper bound is exact and the
-             * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
-            rec_flow_t cx trace ~use_op (l, u);
-            true
-          | _ -> false
-        else
-          wait_for_concrete_bound ()
       (* Support "new this.constructor ()" *)
       | GetPropT
           {
@@ -6283,8 +6226,7 @@ struct
       true
     | ExitRendersT { renders_reason = _; u } -> any_propagated cx trace any u
     | UseT (use_op, DefT (_, ArrT (ROArrayAT (t, _)))) (* read-only arrays are covariant *)
-    | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *)
-    | UseT (use_op, ExactT (_, t)) ->
+    | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *) ->
       covariant_flow ~use_op t;
       true
     | UseT
@@ -6340,7 +6282,6 @@ struct
     | PreprocessKitT _
     | ResolveUnionT _
     | LookupT _
-    | MakeExactT _
     | MapTypeT _
     | MethodT _
     | MixinT _
@@ -6486,7 +6427,6 @@ struct
     | AnnotT _ -> true
     | OpenT (_, id) -> any_prop_tvar cx id
     (* Handled already in __flow *)
-    | ExactT _
     | ThisInstanceT _
     | EvalT _
     | OptionalT _
@@ -7259,6 +7199,7 @@ struct
                   ObjKitT (use_op, reason, tool, Rest (options, state), OpenT tout)
                 )
               )
+            | ExactType -> Object.(ObjKitT (use_op, reason, Resolve Next, MakeExact, OpenT tout))
             | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
             | ReactDRO (dro_loc, dro_type) -> DeepReadOnlyT (tout, (dro_loc, dro_type))
             | MakeHooklike -> HooklikeT tout
@@ -9634,9 +9575,6 @@ struct
               super_t = OptionUtils.ident_map (recurse seen) opaquetype.super_t;
             }
           )
-      | ExactT (r, t) ->
-        let r = mod_reason r in
-        ExactT (r, recurse seen t)
       | DefT (r, RendersT (StructuralRenders { renders_variant; renders_structural_type = t })) ->
         let r = mod_reason r in
         DefT

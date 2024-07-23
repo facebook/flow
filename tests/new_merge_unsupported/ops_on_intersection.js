@@ -19,10 +19,6 @@ export const x3 = t[('': string)];
 // Annot_ObjKitT Spread
 export const x4 = { ...t };
 
-// Annot_MakeExactT
-declare var y5: $Exact<S>;
-export const x5 = y5.f;
-
 // Annot_GetStaticsT
 declare var y6: Class<C & D>;
 export const x6 = y6.f;
