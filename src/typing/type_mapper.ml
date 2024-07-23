@@ -164,13 +164,6 @@ class virtual ['a] t =
           t
         else
           NamespaceT namespace_t'
-      | InternalT (ExtendsT (r, t1, t2)) ->
-        let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
-        if t1' == t1 && t2' == t2 then
-          t
-        else
-          InternalT (ExtendsT (r, t1', t2'))
       | InternalT (EnforceUnionOptimized _) -> t
       | CustomFunT (_r, (ObjectGetPrototypeOf | DebugPrint)) -> t
       | AnyT _ -> t

@@ -405,7 +405,6 @@ let rec dump_t_ (depth, tvars) cx t =
              (kid values_type)
              (Properties.string_of_id types_tmap)
           )
-    | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (EnforceUnionOptimized _) -> p t
 

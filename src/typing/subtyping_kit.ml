@@ -1787,7 +1787,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
       rec_flow cx trace (l, UseT (use_op, uproto))
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
-     * object is a subtype. We use `ExtendsT` to walk the proto chain of the
+     * object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
      * object, in case it includes a nominal type. *)
     | (DefT (_, ObjT _), DefT (_, InstanceT _)) -> rec_flow cx trace (l, extends_use_type use_op l u)
     (****************************************)

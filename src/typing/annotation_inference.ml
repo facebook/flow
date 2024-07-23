@@ -529,8 +529,7 @@ module rec ConsGen : S = struct
       error_unsupported ~suggestion:"$KeyMirror" cx reason op
     | (EvalT (_, TypeDestructorT (_, reason, _), _), _) -> error_unsupported cx reason op
     | (OpenT (reason, id), _) -> elab_open cx ~seen reason id op
-    | (InternalT (ExtendsT (reason, _, _) | EnforceUnionOptimized reason), _) ->
-      error_unsupported cx reason op
+    | (InternalT (EnforceUnionOptimized reason), _) -> error_unsupported cx reason op
     | (AnnotT (r, t, _), _) ->
       let t = reposition cx (loc_of_reason r) t in
       elab_t cx ~seen t op

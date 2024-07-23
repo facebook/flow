@@ -3313,7 +3313,7 @@ struct
           ) else
             (* If this instance type has declared implementations, any structural
                tests have already been performed at the declaration site. We can
-               then use the ExtendsT use type to search for a nominally matching
+               then use the ExtendsUseT use type to search for a nominally matching
                implementation, thereby short-circuiting a potentially expensive
                structural test at the use site. *)
             let u = ExtendsUseT (use_op, reason_op, try_ts_on_failure @ implements, l, u) in
@@ -5363,7 +5363,7 @@ struct
         | (ObjProtoT _, SuperT _)
         | (FunProtoT _, SuperT _) ->
           ()
-        (* ExtendsT searches for a nominal superclass. The search terminates with
+        (* ExtendsUseT searches for a nominal superclass. The search terminates with
            either failure at the root or a structural subtype check. **)
         | (AnyT (_, src), ExtendsUseT (use_op, reason_op, ts, t1, t2)) ->
           Base.List.iter ts ~f:(fun t -> rec_flow_t cx trace ~use_op (AnyT.why src reason_op, t));
@@ -6500,7 +6500,6 @@ struct
     | InternalT (EnforceUnionOptimized _) ->
       false
     (* Should never occur as the lower bound of any *)
-    | InternalT (ExtendsT _)
     | ModuleT _
     | NamespaceT _ ->
       false

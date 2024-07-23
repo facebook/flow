@@ -322,10 +322,7 @@ module rec TypeTerm : sig
     | ConcreteEnum of enum_concrete_info
     | AbstractEnum of { representation_t: t }
 
-  and internal_t =
-    (* util for deciding subclassing relations *)
-    | ExtendsT of reason * t * t
-    (* $Flow$EnforceOptimized *)
+  and internal_t = (* $Flow$EnforceOptimized *)
     | EnforceUnionOptimized of reason
 
   and 'loc virtual_root_use_op =
@@ -3978,7 +3975,6 @@ let string_of_ctor = function
   | DefT (_, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
-  | InternalT (ExtendsT _) -> "ExtendsT"
   | InternalT (EnforceUnionOptimized _) -> "EnforceUnionOptimizedT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoBindT _ -> "FunProtoBindT"

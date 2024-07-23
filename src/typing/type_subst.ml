@@ -334,8 +334,7 @@ let substituter =
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in
               Flow_cache.Eval.id cx x' (TypeDestructorT (use_op, r, d'))
-          | ModuleT _
-          | InternalT (ExtendsT _) ->
+          | ModuleT _ ->
             failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
           | UnionT (r, urep) -> union_ident_map_and_dedup cx (self#type_ cx map_cx) t r urep
           | t -> super#type_ cx map_cx t

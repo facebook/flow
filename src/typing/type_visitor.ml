@@ -68,10 +68,6 @@ class ['a] t =
           } ->
         self#export_types cx pole acc exporttypes
       | NamespaceT namespace_t -> self#namespace_type cx pole acc namespace_t
-      | InternalT (ExtendsT (_, t1, t2)) ->
-        let acc = self#type_ cx pole_TODO acc t1 in
-        let acc = self#type_ cx pole_TODO acc t2 in
-        acc
       | ThisInstanceT (_, t, _, _) -> self#instance_type cx pole acc t
       | ThisTypeAppT (_, t, this, ts_opt) ->
         let acc = self#type_ cx P.Positive acc t in
