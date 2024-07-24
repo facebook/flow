@@ -1,18 +1,3 @@
-Error ----------------------------------------------------------------------------------------------- concretize.js:7:47
-
-Cannot instantiate `SyntheticKeyboardEvent` because `C1` [1] is incompatible with `EventTarget` [2] in type argument
-`T`. [incompatible-type-arg]
-
-   concretize.js:7:47
-    7| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
-                                                     ^^ [1]
-
-References:
-   <BUILTINS>/react-dom.js:74:42
-   74| declare class SyntheticKeyboardEvent<+T: EventTarget = EventTarget>
-                                                ^^^^^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- concretize.js:8:16
 
 Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [2] in type argument `T` [3] of the first
@@ -89,4 +74,4 @@ References:
 
 
 
-Found 5 errors
+Found 4 errors

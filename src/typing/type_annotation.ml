@@ -2664,7 +2664,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           Context.add_post_inference_validation_flow
             env.cx
             type_
-            (SpecializeT (use_op, reason, reason, true, Some targs, Tvar.mk env.cx reason))
+            (SpecializeT (use_op, reason, reason, false, Some targs, Tvar.mk env.cx reason))
         | _ -> failwith "typeapp_annot should create a TypeAppT"
       );
       (t, Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
