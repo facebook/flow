@@ -1338,9 +1338,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
        *)
       rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
-      (* Ensure this is a function component *)
-      rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl "React$Node");
-
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders);
 
