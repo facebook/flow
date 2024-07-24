@@ -44,7 +44,7 @@ let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_as
   [
     CodeAction.Action
       {
-        CodeAction.title = "insert type annotation";
+        CodeAction.title = "Insert type annotation to fix signature-verification-failure error";
         kind = CodeActionKind.quickfix;
         (* Handing back the diagnostics we were given is a placeholder for
            eventually generating the diagnostics for the errors we are fixing *)
@@ -1070,7 +1070,7 @@ let code_actions_at_loc
     ~only
     ~uri
     ~loc =
-  let experimental_code_actions =
+  let autofix_exports_code_actions =
     autofix_exports_code_actions
       ~options
       ~cx
@@ -1085,36 +1085,40 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
-    @ refactor_extract_code_actions
-        ~options
-        ~support_experimental_snippet_text_edit:
-          (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
-        ~file_contents
-        ~ast
-        ~cx
-        ~file_sig
-        ~typed_ast
-        ~loc_of_aloc
-        ~get_ast_from_shared_mem
-        ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
-        ~get_type_sig
-        ~only
-        uri
-        loc
-    @ autofix_missing_local_annot_code_actions
-        ~options
-        ~cx
-        ~loc_of_aloc
-        ~get_ast_from_shared_mem
-        ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
-        ~get_type_sig
-        ~ast
-        ~file_sig
-        ~tolerable_errors
-        ~typed_ast
-        ~diagnostics
-        uri
-        loc
+  in
+  let autofix_missing_local_annot_code_actions =
+    autofix_missing_local_annot_code_actions
+      ~options
+      ~cx
+      ~loc_of_aloc
+      ~get_ast_from_shared_mem
+      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_type_sig
+      ~ast
+      ~file_sig
+      ~tolerable_errors
+      ~typed_ast
+      ~diagnostics
+      uri
+      loc
+  in
+  let refactor_code_actions =
+    refactor_extract_code_actions
+      ~options
+      ~support_experimental_snippet_text_edit:
+        (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
+      ~file_contents
+      ~ast
+      ~cx
+      ~file_sig
+      ~typed_ast
+      ~loc_of_aloc
+      ~get_ast_from_shared_mem
+      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_type_sig
+      ~only
+      uri
+      loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     @ add_jsx_props_code_actions
@@ -1145,7 +1149,13 @@ let code_actions_at_loc
       loc
   in
   let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
-  let actions = parse_error_fixes @ experimental_code_actions @ error_fixes in
+  let actions =
+    parse_error_fixes
+    @ autofix_exports_code_actions
+    @ autofix_missing_local_annot_code_actions
+    @ error_fixes
+    @ refactor_code_actions
+  in
   let actions =
     if include_organize_imports_actions only then
       organize_imports_code_action uri :: actions

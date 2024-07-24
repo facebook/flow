@@ -86,7 +86,8 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'insert type annotation',
+                title:
+                  'Insert type annotation to fix signature-verification-failure error',
                 kind: 'quickfix',
                 diagnostics: [
                   {
@@ -148,7 +149,8 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'insert type annotation',
+                title:
+                  'Insert type annotation to fix signature-verification-failure error',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
@@ -206,7 +208,8 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'insert type annotation',
+                title:
+                  'Insert type annotation to fix signature-verification-failure error',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
