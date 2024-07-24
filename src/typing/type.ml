@@ -675,16 +675,13 @@ module rec TypeTerm : sig
         arg: t;
       }
     (* operation on polymorphic types *)
-    (* SpecializeT(_, _, _, cache, targs, tresult) instantiates a polymorphic type
-          with type arguments targs, and flows the result into tresult. If cache
-          is set, it looks up a cache of existing instantiations for the type
-          parameters of the polymorphic type, unifying the type arguments with
-          those instantiations if such exist.
+    (* SpecializeT(_, _, _, targs, tresult) instantiates a polymorphic type
+          with type arguments targs, and flows the result into tresult.
 
           The first reason is the reason why we're specializing. The second
           reason points to the type application itself
        **)
-    | SpecializeT of use_op * reason * reason * bool * t list option * t
+    | SpecializeT of use_op * reason * reason * t list option * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* Convert a value to a type inference (e.g. ClassT -> InstanceT) *)

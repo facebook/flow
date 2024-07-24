@@ -590,7 +590,7 @@ let error_message_kind_of_upper = function
   | ArrRestT _ -> Error_message.IncompatibleArrRestT
   | SuperT _ -> Error_message.IncompatibleSuperT
   | MixinT _ -> Error_message.IncompatibleMixinT
-  | SpecializeT (Op (ClassExtendsCheck _), _, _, _, _, _) -> Error_message.IncompatibleSuperT
+  | SpecializeT (Op (ClassExtendsCheck _), _, _, _, _) -> Error_message.IncompatibleSuperT
   | SpecializeT _ -> Error_message.IncompatibleSpecializeT
   | ConcretizeTypeAppsT _ -> Error_message.IncompatibleSpecializeT
   | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
@@ -1228,46 +1228,37 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       all_ts_rev
     )
 
-  let mk_typeapp_of_poly
-      cx trace ~use_op ~reason_op ~reason_tapp ?(cache = false) id tparams_loc xs t ts =
-    if cache then
-      instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) ts
-      |> fst
-    else
-      let key = (id, ts) in
-      let cache = Context.subst_cache cx in
-      match Type.SubstCacheMap.find_opt key !cache with
-      | None ->
-        let errs_ref = ref [] in
-        let t =
-          instantiate_poly_with_targs
-            cx
-            trace
-            ~use_op
-            ~reason_op
-            ~reason_tapp
-            ~errs_ref
-            (tparams_loc, xs, t)
-            ts
-          |> fst
-        in
-        cache := Type.SubstCacheMap.add key (!errs_ref, t) !cache;
-        t
-      | Some (errs, t) ->
-        errs
-        |> List.iter (function
-               | Context.ETooManyTypeArgs (arity_loc, maximum_arity) ->
-                 let msg =
-                   Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity }
-                 in
-                 add_output cx msg
-               | Context.ETooFewTypeArgs (arity_loc, minimum_arity) ->
-                 let msg =
-                   Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity }
-                 in
-                 add_output cx msg
-               );
-        t
+  let mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts =
+    let key = (id, ts) in
+    let cache = Context.subst_cache cx in
+    match Type.SubstCacheMap.find_opt key !cache with
+    | None ->
+      let errs_ref = ref [] in
+      let t =
+        instantiate_poly_with_targs
+          cx
+          trace
+          ~use_op
+          ~reason_op
+          ~reason_tapp
+          ~errs_ref
+          (tparams_loc, xs, t)
+          ts
+        |> fst
+      in
+      cache := Type.SubstCacheMap.add key (!errs_ref, t) !cache;
+      t
+    | Some (errs, t) ->
+      errs
+      |> List.iter (function
+             | Context.ETooManyTypeArgs (arity_loc, maximum_arity) ->
+               let msg = Error_message.ETooManyTypeArgs { reason_tapp; arity_loc; maximum_arity } in
+               add_output cx msg
+             | Context.ETooFewTypeArgs (arity_loc, minimum_arity) ->
+               let msg = Error_message.ETooFewTypeArgs { reason_tapp; arity_loc; minimum_arity } in
+               add_output cx msg
+             );
+      t
 
   (* Instantiate a polymorphic definition by creating fresh type arguments. *)
   let instantiate_poly

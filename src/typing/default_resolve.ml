@@ -135,7 +135,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | StrictEqT _
   | EqT _ ->
     ()
-  | SpecializeT (_, _, _, _, _, tout) -> resolve tout
+  | SpecializeT (_, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k
   | ValueToTypeReferenceT (_, _, _, t) -> resolve t
   | ConcretizeTypeAppsT _ -> _TODO

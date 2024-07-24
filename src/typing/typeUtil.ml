@@ -98,7 +98,7 @@ and reason_of_use_t = function
   | SetPropT (_, reason, _, _, _, _, _) -> reason
   | SetPrivatePropT (_, reason, _, _, _, _, _, _, _) -> reason
   | SetProtoT (reason, _) -> reason
-  | SpecializeT (_, _, reason, _, _, _) -> reason
+  | SpecializeT (_, _, reason, _, _) -> reason
   | StrictEqT { reason; _ } -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
   | SuperT (_, reason, _) -> reason
@@ -230,7 +230,7 @@ let rec util_use_op_of_use_t :
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
   | ToStringT { orig_t; reason; t_out } ->
     nested_util t_out (fun t_out -> ToStringT { orig_t; reason; t_out })
-  | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
+  | SpecializeT (op, r1, r2, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, ts, t))
   | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
   | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
   | FilterOptionalT (op, t) -> util op (fun op -> FilterOptionalT (op, t))

@@ -457,12 +457,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | SuperProp (_, p) -> spf "Super %s" (normalized_prop p)
     | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in
-  let specialize_cache cache =
-    if cache then
-      "Some cache"
-    else
-      "None"
-  in
   let react_kit =
     React.(
       function
@@ -897,18 +891,13 @@ and dump_use_t_ (depth, tvars) cx t =
     | SetPrivatePropT (_, _, prop, _, _, _, _, ptype, _) ->
       p ~extra:(spf "(%s), %s" prop (kid ptype)) t
     | SetProtoT (_, arg) -> p ~extra:(kid arg) t
-    | SpecializeT (_, _, _, cache, args_opt, ret) ->
+    | SpecializeT (_, _, _, args_opt, ret) ->
       p
         ~extra:
           begin
             match args_opt with
-            | Some args ->
-              spf
-                "%s, [%s], %s"
-                (specialize_cache cache)
-                (String.concat "; " (Base.List.map ~f:kid args))
-                (kid ret)
-            | None -> spf "%s, %s" (specialize_cache cache) (kid ret)
+            | Some args -> spf "[%s], %s" (String.concat "; " (Base.List.map ~f:kid args)) (kid ret)
+            | None -> kid ret
           end
         t
     | StrictEqT { arg; _ }

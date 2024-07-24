@@ -20,7 +20,7 @@ module FlowJS : Type_annotation_sig.ConsGen = struct
     let reason = reason_of_t c in
     let f c =
       Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tvar ->
-          Flow.flow cx (c, SpecializeT (use_op, reason_op, reason_tapp, false, targs, tvar))
+          Flow.flow cx (c, SpecializeT (use_op, reason_op, reason_tapp, targs, tvar))
       )
     in
     map_on_resolved_type cx reason c f

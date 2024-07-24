@@ -67,7 +67,6 @@ module type BASE = sig
     reason_tapp:Reason.reason ->
     from_value:bool ->
     ?use_desc:bool ->
-    ?cache:bool ->
     Type.t ->
     Type.t list ->
     Type.t
@@ -194,7 +193,6 @@ module type SUBTYPING = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    ?cache:bool ->
     Type.Poly.id ->
     ALoc.t ->
     Type.typeparam Nel.t ->

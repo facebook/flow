@@ -1222,7 +1222,6 @@ struct
               ~reason_tapp
               ~from_value
               ~use_desc
-              ~cache:false
               type_
               targs
           in
@@ -2439,28 +2438,17 @@ struct
            operation. (SpecializeT operations are created when processing TypeAppT
            types, so the decision to cache or not originates there.) *)
         | ( DefT (_, PolyT { tparams_loc; tparams = xs; t_out = t; id }),
-            SpecializeT (use_op, reason_op, reason_tapp, cache, ts, tvar)
+            SpecializeT (use_op, reason_op, reason_tapp, ts, tvar)
           ) ->
           let ts = Base.Option.value ts ~default:[] in
           let t_ =
-            mk_typeapp_of_poly
-              cx
-              trace
-              ~use_op
-              ~reason_op
-              ~reason_tapp
-              ~cache
-              id
-              tparams_loc
-              xs
-              t
-              ts
+            mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts
           in
           rec_flow_t ~use_op:unknown_use cx trace (t_, tvar)
         (* empty targs specialization of non-polymorphic classes is a no-op *)
-        | (DefT (_, ClassT _), SpecializeT (_, _, _, _, None, tvar)) ->
+        | (DefT (_, ClassT _), SpecializeT (_, _, _, None, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
-        | (AnyT _, SpecializeT (_, _, _, _, _, tvar)) ->
+        | (AnyT _, SpecializeT (_, _, _, _, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
         (* this-specialize a this-abstracted class by substituting This *)
         | (DefT (_, ClassT (ThisInstanceT (inst_r, i, _, this_name))), ThisSpecializeT (r, this, k))
@@ -7456,10 +7444,7 @@ struct
       | None -> c
       | Some ts ->
         Tvar.mk_where cx reason_tapp (fun tout ->
-            rec_flow
-              cx
-              trace
-              (c, SpecializeT (unknown_use, reason_op, reason_tapp, false, Some ts, tout))
+            rec_flow cx trace (c, SpecializeT (unknown_use, reason_op, reason_tapp, Some ts, tout))
         )
     in
     rec_flow cx trace (tc, ThisSpecializeT (reason_tapp, this, k))
@@ -9369,18 +9354,9 @@ struct
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
   and mk_typeapp_instance_annot
-      cx
-      ?trace
-      ~use_op
-      ~reason_op
-      ~reason_tapp
-      ~from_value
-      ?(use_desc = false)
-      ?(cache = false)
-      c
-      ts =
+      cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value ?(use_desc = false) c ts =
     let t = Tvar.mk cx reason_tapp in
-    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
+    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, Some ts, t));
     if from_value then
       reposition_reason cx ?trace reason_tapp ~use_desc t
     else
@@ -9388,7 +9364,7 @@ struct
 
   and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value c ts =
     let t = Tvar.mk cx reason_tapp in
-    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, false, Some ts, t));
+    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, Some ts, t));
     if from_value then
       reposition_reason cx ?trace reason_tapp ~use_desc:false t
     else
@@ -9835,8 +9811,8 @@ let filter_optional cx reason opt_t = filter_optional cx reason opt_t
 
 let reposition cx loc t = reposition cx loc ?desc:None ?annot_loc:None t
 
-let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts =
-  mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts
+let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value c ts =
+  mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value c ts
 
 let mk_type_destructor cx use_op reason t d id =
   mk_type_destructor cx ~trace:DepthTrace.dummy_trace use_op reason t d id
