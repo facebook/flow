@@ -10,8 +10,9 @@
 
 const {execSync, spawn} = require('child_process');
 const {randomBytes} = require('crypto');
-const {createWriteStream, realpathSync} = require('fs');
-const {appendFile, readdir, readFile, unlink, writeFile} =
+const {createWriteStream, realpathSync, lstatSync} = require('fs');
+// $FlowFixMe[prop-missing]
+const {appendFile, readdir, readFile, unlink, writeFile, cp} =
   require('fs').promises;
 const {platform, tmpdir} = require('os');
 const {basename, dirname, extname, join, sep: dir_sep} = require('path');
@@ -167,14 +168,19 @@ class TestBuilder {
   async addFileImpl(source: string, dest: string): Promise<string> {
     source = join(this.sourceDir, source);
     dest = join(this.dir, dest);
-    const contents_buffer = await readFile(source);
-    let contents = contents_buffer.toString();
-    if (contents.match(/@thisWillBeFlowInTest/)) {
-      // Undo what the convert command did
-      contents = contents.replace(/@thisWillBeFlowInTest/, '@flow');
-    }
     await mkdirp(dirname(dest));
-    await writeFile(dest, contents);
+    if (lstatSync(source).isSymbolicLink()) {
+      // See https://nodejs.org/api/fs.html#fspromisescpsrc-dest-options
+      await cp(source, dest, {verbatimSymlinks: true});
+    } else {
+      const contents_buffer = await readFile(source);
+      let contents = contents_buffer.toString();
+      if (contents.match(/@thisWillBeFlowInTest/)) {
+        // Undo what the convert command did
+        contents = contents.replace(/@thisWillBeFlowInTest/, '@flow');
+      }
+      await writeFile(dest, contents);
+    }
     return dest;
   }
 
