@@ -141,6 +141,16 @@ let rec dump_t_ (depth, tvars) cx t =
       )
       (ALoc.debug_to_string (class_id :> ALoc.t))
   in
+  let tuple_elements ~inexact elements =
+    let elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements in
+    let elements =
+      if inexact then
+        elements @ ["..."]
+      else
+        elements
+    in
+    String.concat ", " elements
+  in
   if depth = 0 then
     string_of_ctor t
   else
@@ -248,33 +258,14 @@ let rec dump_t_ (depth, tvars) cx t =
             (ArrayAT
               {
                 elem_t;
-                tuple_view = Some (TupleView { elements; arity = _; inexact = _ });
+                tuple_view = Some (TupleView { elements; inexact; arity = _ });
                 react_dro = _;
               }
               )
         ) ->
-      p
-        ~extra:
-          (spf
-             "Array %s, %s"
-             (kid elem_t)
-             (spf
-                "[%s]"
-                (String.concat
-                   ", "
-                   (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements)
-                )
-             )
-          )
-        t
-    | DefT (_, ArrT (TupleAT { elements; _ })) ->
-      p
-        ~extra:
-          (spf
-             "Tuple [%s]"
-             (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements))
-          )
-        t
+      p ~extra:(spf "Array %s, [%s]" (kid elem_t) (tuple_elements ~inexact elements)) t
+    | DefT (_, ArrT (TupleAT { elements; inexact; _ })) ->
+      p ~extra:(spf "Tuple [%s]" (tuple_elements ~inexact elements)) t
     | DefT (_, ArrT (ROArrayAT (elemt, _))) -> p ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
     | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
     | DefT (_, InstanceT inst_t) -> p ~extra:(instance_t inst_t) t
