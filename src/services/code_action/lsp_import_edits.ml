@@ -44,7 +44,8 @@ let string_of_path_parts parts =
   else
     str'
 
-let path_parts_rev_to_absolute dir_rev = dir_rev |> Base.List.rev |> String.concat "/"
+let path_parts_rev_to_absolute ?(dir_sep = Filename.dir_sep) dir_rev =
+  dir_rev |> Base.List.rev |> String.concat dir_sep
 
 (**
  * For a `package_absolute_path` already decided to contain a package.json, we decide whether a given
@@ -113,7 +114,9 @@ let node_path ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path ~
       let package_dir_rev = package_dir :: ancestor_rev in
       (match
          get_package_info
-           (File_key.JsonFile (path_parts_rev_to_absolute ("package.json" :: package_dir_rev)))
+           (File_key.JsonFile
+              (path_parts_rev_to_absolute ~dir_sep:"/" ("package.json" :: package_dir_rev))
+           )
        with
       | Some (Ok package_info)
         when can_import_as_node_package
