@@ -349,6 +349,21 @@ References:
                                         ^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- poly_component_type.js:8:1
+
+Cannot cast `el` to renders `NotAButton` because `React.Element` [1] does not render `NotAButton` [2].
+[incompatible-cast]
+
+   poly_component_type.js:8:1
+   8| el as renders NotAButton; // ERROR
+      ^^ [1]
+
+References:
+   poly_component_type.js:8:7
+   8| el as renders NotAButton; // ERROR
+            ^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- poly_no_args.js:4:10
 
 Cannot use component Poly [1] without 1 type argument. [missing-type-arg]

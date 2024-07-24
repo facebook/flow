@@ -2756,11 +2756,11 @@ struct
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
         | ( OpaqueT
-              ( _,
+              ( _elem_reason,
                 {
                   opaque_id;
                   super_t = Some (DefT (_, ObjT { props_tmap; _ }));
-                  opaque_type_args = (_, _, component_t, _) :: _;
+                  opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
                   _;
                 }
               ),
@@ -2778,21 +2778,10 @@ struct
           when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
           (match Context.find_monomorphized_component cx props_tmap with
           | Some mono_component ->
-            rec_flow
-              cx
-              trace
-              ( mono_component,
-                PromoteRendersRepresentationT
-                  {
-                    use_op;
-                    reason;
-                    tout;
-                    should_distribute;
-                    renders_variant;
-                    promote_structural_components;
-                    resolved_elem = Some l;
-                  }
-              )
+            let render_type =
+              get_builtin_typeapp cx (reason_of_t l) "React$ComponentRenders" [mono_component]
+            in
+            rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
           | None ->
             if promote_structural_components then
               (* We only want to promote if this is actually a React of a component, otherwise we want

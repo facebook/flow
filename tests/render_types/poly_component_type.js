@@ -5,4 +5,5 @@ declare component Button();
 declare component NotAButton();
 
 const el = <Poly><Button /></Poly>;
-el as renders NotAButton; // SHOULD ERROR
+el as renders NotAButton; // ERROR
+el as renders Button; // OK
