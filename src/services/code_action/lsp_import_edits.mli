@@ -27,6 +27,7 @@ module For_tests : sig
   val path_of_modulename :
     node_resolver_dirnames:string list ->
     get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
+    resolves_to_real_path:(from:string -> to_real_path:string -> bool) ->
     string option ->
     File_key.t ->
     string option ->

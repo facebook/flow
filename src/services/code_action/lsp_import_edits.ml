@@ -44,6 +44,46 @@ let string_of_path_parts parts =
   else
     str'
 
+let path_parts_rev_to_absolute dir_rev = dir_rev |> Base.List.rev |> String.concat Filename.dir_sep
+
+(**
+ * For a `package_absolute_path` already decided to contain a package.json, we decide whether a given
+ * file path (broken down into parts and reversed as `src_rev`) can import it as a node_package like
+ * `package_dir` or `package_dir/nested/module`, instead of a full relative part import.
+ *
+ * Here, we follow the node resolution algoritim wrt node_modules. If in foo/bar/baz.js,
+ * we import package_a, then node will try to look for the package in the following order
+ *
+ * - foo/bar/node_modules
+ * - foo/node_modules
+ * - node_modules
+ *
+ * For each candidate, we call realpath to find out whether the candidate path, if exists, resolves
+ * to the same package_absolute_path.
+ *)
+let rec can_import_as_node_package
+    ~node_resolver_dirnames
+    ~resolves_to_real_path
+    ~package_absolute_path
+    ~package_dir
+    src_dir_rev_nel =
+  match src_dir_rev_nel with
+  | None -> false
+  | Some (inner_most_dir, src_dir_rev_list) ->
+    Base.List.exists node_resolver_dirnames ~f:(fun node_modules ->
+        let from =
+          path_parts_rev_to_absolute
+            (package_dir :: node_modules :: inner_most_dir :: src_dir_rev_list)
+        in
+        resolves_to_real_path ~from ~to_real_path:package_absolute_path
+    )
+    || can_import_as_node_package
+         ~node_resolver_dirnames
+         ~resolves_to_real_path
+         ~package_absolute_path
+         ~package_dir
+         (Nel.of_list src_dir_rev_list)
+
 (** [node_path ~node_resolver_dirnames ~reader src_dir require_path] converts absolute path
     [require_path] into a Node-compatible "require" path relative to [src_dir], taking into
     account node's hierarchical search for [node_modules].
@@ -57,20 +97,40 @@ let string_of_path_parts parts =
 
     Lastly, if the path ends with [index.js] or [.js], those default suffixes are also
     removed. *)
-let node_path ~node_resolver_dirnames ~get_package_info ~src_dir require_path =
+let node_path ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path ~src_dir require_path
+    =
   let require_path = String_utils.rstrip require_path Files.flow_ext in
   let src_parts = Files.split_path src_dir in
   let req_parts = Files.split_path require_path in
   let (ancestor_rev, to_src, to_req) = find_ancestor_rev src_parts req_parts in
-  match to_req with
-  | node_modules :: package_dir :: rest when List.mem node_modules node_resolver_dirnames ->
-    let package_path =
-      package_dir :: node_modules :: ancestor_rev |> Base.List.rev |> String.concat "/"
-    in
-    (match main_of_package ~get_package_info package_path with
-    | Some main when path_matches (String.concat "/" rest) main -> package_dir
-    | _ -> string_of_path_parts (package_dir :: rest))
-  | _ ->
+  let src_rev_lazy = lazy (Nel.of_list (List.rev_append to_src ancestor_rev)) in
+  (* In this function, we will check whether any of the ancestor directory of the required file
+   * is a package. If so, we call can_import_as_node_package to see whether we can import it as
+   * a node package. *)
+  let rec node_modules_package_import_path ancestor_rev to_req =
+    match to_req with
+    | package_dir :: rest ->
+      let package_dir_rev = package_dir :: ancestor_rev in
+      (match
+         get_package_info
+           (File_key.JsonFile (path_parts_rev_to_absolute ("package.json" :: package_dir_rev)))
+       with
+      | Some (Ok package_info)
+        when can_import_as_node_package
+               ~node_resolver_dirnames
+               ~resolves_to_real_path
+               ~package_absolute_path:(path_parts_rev_to_absolute package_dir_rev)
+               ~package_dir
+               (Lazy.force src_rev_lazy) ->
+        (match Package_json.main package_info with
+        | Some main when path_matches (String.concat "/" rest) main -> Some package_dir
+        | _ -> Some (string_of_path_parts (package_dir :: rest)))
+      | _ -> node_modules_package_import_path (package_dir :: ancestor_rev) rest)
+    | [] -> None
+  in
+  match node_modules_package_import_path ancestor_rev to_req with
+  | Some path -> path
+  | None ->
     let parts =
       if Base.List.is_empty to_src then
         Filename.current_dir_name :: to_req
@@ -83,13 +143,14 @@ let node_path ~node_resolver_dirnames ~get_package_info ~src_dir require_path =
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
     filename, returns the path relative to [src_dir]. *)
-let path_of_modulename ~node_resolver_dirnames ~get_package_info src_dir file_key = function
+let path_of_modulename
+    ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path src_dir file_key = function
   | Some _ as string_module_name -> string_module_name
   | None ->
     Base.Option.map
       ~f:(fun src_dir ->
         let path = File_key.to_string (Files.chop_flow_ext file_key) in
-        node_path ~node_resolver_dirnames ~get_package_info ~src_dir path)
+        node_path ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path ~src_dir path)
       src_dir
 
 let haste_package_path ~module_system_info ~src_dir require_path =
@@ -147,6 +208,7 @@ let from_of_source ~module_system_info ~src_dir source =
     path_of_modulename
       ~node_resolver_dirnames
       ~get_package_info:module_system_info.get_package_info
+      ~resolves_to_real_path:module_system_info.resolves_to_real_path
       src_dir
       from
       module_name

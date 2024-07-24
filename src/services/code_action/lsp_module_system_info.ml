@@ -11,4 +11,5 @@ type t = {
   get_haste_name: File_key.t -> string option;
   get_package_info: File_key.t -> (Package_json.t, unit) result option;
   is_package_file: string -> bool;
+  resolves_to_real_path: from:string -> to_real_path:string -> bool;
 }

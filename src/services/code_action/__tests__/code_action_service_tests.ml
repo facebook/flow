@@ -16,6 +16,8 @@ let string_opt = function
 
 let node_resolver_dirnames = ["node_modules"]
 
+let resolves_to_real_path ~from:_ ~to_real_path:_ = true
+
 (** Creates a mutator so we can write some files to sharedmem, and
     cleans up at the end. *)
 let with_transaction iter_files f =
@@ -60,6 +62,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/bar.js")
                None
@@ -71,6 +74,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/index.js")
                None
@@ -82,6 +86,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/bar.json")
                None
@@ -93,6 +98,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root")
                (File_key.SourceFile "/path/to/root/foo/index.json")
                None
@@ -100,10 +106,14 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "./foo/index.json") path
          );
          ( "removes_node_modules_in_parent" >:: fun ctxt ->
+           let fn = "/path/to/root/a/node_modules/module/package.json" in
+           let pkg = Package_json.create ~name:None ~main:None ~haste_commonjs:false in
+           with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a/b")
                (File_key.SourceFile "/path/to/root/a/node_modules/module/index.js")
                None
@@ -111,10 +121,14 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "module") path
          );
          ( "removes_node_modules_in_self" >:: fun ctxt ->
+           let fn = "/path/to/root/a/node_modules/module/package.json" in
+           let pkg = Package_json.create ~name:None ~main:None ~haste_commonjs:false in
+           with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a")
                (File_key.SourceFile "/path/to/root/a/node_modules/module/index.js")
                None
@@ -126,6 +140,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a")
                (File_key.SourceFile "/path/to/root/a/b/node_modules/module/index.js")
                None
@@ -137,6 +152,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/a/b/node_modules/module/index.js")
                None
@@ -151,6 +167,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/node_modules/pkg_with_main/main.js")
                None
@@ -167,6 +184,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/node_modules/pkg_with_relative_main/main.js")
                None
@@ -183,6 +201,7 @@ let tests =
              path_of_modulename
                ~node_resolver_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
                (Some "/path/to/root/a/c")
                (File_key.SourceFile "/path/to/root/node_modules/pkg_with_nested_main/dist/main.js")
                None

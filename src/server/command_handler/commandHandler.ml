@@ -266,6 +266,8 @@ let mk_module_system_info =
       get_haste_name = get_haste_name ~reader;
       get_package_info = Parsing_heaps.Reader.get_package_info ~reader;
       is_package_file = is_package_file ~reader;
+      resolves_to_real_path =
+        (fun ~from ~to_real_path -> Sys_utils.realpath from = Some to_real_path);
     }
 
 let get_status ~options ~reader env =

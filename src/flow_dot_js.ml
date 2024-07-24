@@ -395,6 +395,7 @@ let autocomplete filename content line col js_config_object :
                 get_haste_name = (fun _ -> None);
                 get_package_info = (fun _ -> None);
                 is_package_file = (fun _ -> false);
+                resolves_to_real_path = (fun ~from:_ ~to_real_path:_ -> false);
               }
           ~loc_of_aloc
           ~search_exported_values:(fun ~ac_options:_ _ -> empty_exports_search_result)
