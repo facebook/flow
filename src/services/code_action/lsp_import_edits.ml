@@ -44,7 +44,7 @@ let string_of_path_parts parts =
   else
     str'
 
-let path_parts_rev_to_absolute dir_rev = dir_rev |> Base.List.rev |> String.concat Filename.dir_sep
+let path_parts_rev_to_absolute dir_rev = dir_rev |> Base.List.rev |> String.concat "/"
 
 (**
  * For a `package_absolute_path` already decided to contain a package.json, we decide whether a given
