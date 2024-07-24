@@ -355,7 +355,7 @@ jobs:
         path: bin/linux
     - run: chmod +x bin/linux/flow
     - name: Run tests
-      run: ./runtests.sh bin/linux/flow | cat
+      run: ./runtests.sh bin/linux/flow
   runtests_macos_x86:
     runs-on: macos-13
     needs:
@@ -371,7 +371,7 @@ jobs:
         path: bin/macos
     - run: chmod +x bin/macos/flow
     - name: Run tests
-      run: ./runtests.sh bin/macos/flow | cat
+      run: ./runtests.sh bin/macos/flow
   runtests_macos_arm:
     runs-on: macos-14
     needs:
@@ -387,7 +387,7 @@ jobs:
         path: bin/macos
     - run: chmod +x bin/macos/flow
     - name: Run tests
-      run: ./runtests.sh bin/macos/flow | cat
+      run: ./runtests.sh bin/macos/flow
   tool_test_linux:
     runs-on: ubuntu-22.04
     needs:
