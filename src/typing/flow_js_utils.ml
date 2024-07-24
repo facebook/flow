@@ -85,7 +85,7 @@ end = struct
 
   class tvar_forcing_visitor =
     object (this)
-      inherit [ISet.t] Type_visitor.t as super
+      inherit [ISet.t * bool] Type_visitor.t as super
 
       method! call_prop _cx _pole acc _id = acc
 
@@ -172,18 +172,24 @@ end = struct
       object (this)
         inherit tvar_forcing_visitor
 
-        method! tvar cx pole acc r id =
+        method! tvar cx pole (seen, in_lazy_tvar) r id =
           let (root_id, constraints) = Context.find_constraints cx id in
           let s = get_fully_resolved_state cx r id constraints in
-          if (not (ISet.mem root_id acc)) && ISet.mem root_id (Context.delayed_forcing_tvars cx)
+          if
+            (not (ISet.mem root_id seen))
+            && (in_lazy_tvar || ISet.mem root_id (Context.delayed_forcing_tvars cx))
           then
-            Context.force_fully_resolved_tvar cx s |> this#type_ cx pole (ISet.add root_id acc)
+            let (seen, _) =
+              Context.force_fully_resolved_tvar cx s
+              |> this#type_ cx pole (ISet.add root_id seen, true)
+            in
+            (seen, in_lazy_tvar)
           else
-            acc
+            (seen, in_lazy_tvar)
       end
     in
     fun cx t ->
-      let (_ : ISet.t) = visitor#type_ cx Polarity.Positive ISet.empty t in
+      let (_ : ISet.t * bool) = visitor#type_ cx Polarity.Positive (ISet.empty, false) t in
       ()
 
   let validate_type_sig_type ~error_recursive =
@@ -191,40 +197,43 @@ end = struct
       object (this)
         inherit tvar_forcing_visitor
 
-        method! tvar cx pole acc r id =
+        method! tvar cx pole (seen, in_lazy_tvar) r id =
           let (root_id, constraints) = Context.find_constraints cx id in
           let s = get_fully_resolved_state cx r id constraints in
-          if not (ISet.mem root_id acc) then
+          if not (ISet.mem root_id seen) then
             Constraint.ForcingState.force ~on_error:(error_recursive cx) s
-            |> this#type_ cx pole (ISet.add root_id acc)
+            |> this#type_ cx pole (ISet.add root_id seen, in_lazy_tvar)
           else
-            acc
+            (seen, in_lazy_tvar)
       end
     in
     fun src_cx t ->
-      let (_ : ISet.t) = visitor#type_ src_cx Polarity.Positive ISet.empty t in
+      let (_ : ISet.t * bool) = visitor#type_ src_cx Polarity.Positive (ISet.empty, false) t in
       ()
 end
 
 let unwrap_fully_resolved_open_t cx t =
-  InvalidCyclicTypeValidation.validate_local_type cx t;
   let open Type in
   let open Reason in
-  match t with
-  | OpenT (r, id) ->
-    (match Context.find_graph cx id with
-    | Type.Constraint.FullyResolved s -> Context.force_fully_resolved_tvar cx s
-    | Type.Constraint.Resolved t ->
-      failwith
-        (Utils_js.spf
-           "tvar (%s, %d) = %s is resolved but not fully resolved"
-           (dump_reason r)
-           id
-           (Debug_js.dump_t cx ~depth:3 t)
-        )
-    | Type.Constraint.Unresolved _ ->
-      failwith (Utils_js.spf "tvar (%s, %d) is unresolved" (dump_reason r) id))
-  | t -> t
+  let unwrapped =
+    match t with
+    | OpenT (r, id) ->
+      (match Context.find_graph cx id with
+      | Type.Constraint.FullyResolved s -> Context.force_fully_resolved_tvar cx s
+      | Type.Constraint.Resolved t ->
+        failwith
+          (Utils_js.spf
+             "tvar (%s, %d) = %s is resolved but not fully resolved"
+             (dump_reason r)
+             id
+             (Debug_js.dump_t cx ~depth:3 t)
+          )
+      | Type.Constraint.Unresolved _ ->
+        failwith (Utils_js.spf "tvar (%s, %d) is unresolved" (dump_reason r) id))
+    | t -> t
+  in
+  InvalidCyclicTypeValidation.validate_local_type cx unwrapped;
+  unwrapped
 
 let map_on_resolved_type cx reason_op l f =
   Tvar.mk_fully_resolved_lazy
