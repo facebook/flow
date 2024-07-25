@@ -50,8 +50,12 @@ let main
   if show_schema_version then
     print_endline (Int.to_string GleanRunner.all_schema_version)
   else (
-    if glean_timeout <= 0 then
-      failwith (Utils_js.spf "--glean-timeout must be a positive integer. Got %d" glean_timeout);
+    if glean_timeout < 0 then
+      failwith
+        (Utils_js.spf
+           "--glean-timeout must be a positive integer, or 0 to disable. Got %d"
+           glean_timeout
+        );
     match (output_dir_opt, write_root_opt) with
     | (Some output_dir, Some write_root) ->
       if (not (Sys.file_exists output_dir)) || not (Sys.is_directory output_dir) then
