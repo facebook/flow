@@ -27,7 +27,7 @@ let max_size_of_evaluated_type = 100
 let dump_type_at_pos ~cx ~typed_ast loc =
   match find_type_at_pos_annotation cx typed_ast loc with
   | None -> None
-  | Some (loc, _, t) -> Some (loc, Debug_js.dump_t cx ~depth:3 t)
+  | Some (loc, _, t) -> Some (loc, Debug_js.dump_t cx ~depth:10 t)
 
 let type_at_pos_type
     ~cx

@@ -691,6 +691,7 @@ let infer_type
     json;
     strip_root;
     expanded;
+    debug_print_internal_repr;
     no_typed_ast_for_imports;
   } =
     input
@@ -731,70 +732,87 @@ let infer_type
         ( (Parse_artifacts { file_sig; ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) as
         check_result
         ) ->
-      let ((loc, tys), type_at_pos_json_props) =
-        Type_info_service.type_at_pos
-          ~cx
-          ~file_sig
-          ~typed_ast
-          ~omit_targ_defaults
-          ~max_depth
-          ~verbose_normalizer
-          ~no_typed_ast_for_imports
-          ~include_refs:(Some (Parsing_heaps.Reader.loc_of_aloc ~reader))
-          file_key
-          line
-          column
-      in
-      let (getdef_loc_result, _) =
-        try_with_json (fun () ->
-            get_def_of_check_result
-              ~reader
-              ~profiling
-              ~check_result
-              ~purpose:Get_def_types.Purpose.JSDoc
-              (file_key, line, column)
-        )
-      in
-      let get_def_documentation =
-        match getdef_loc_result with
-        | Ok [getdef_loc] ->
-          Find_documentation.jsdoc_of_getdef_loc
-            ~ast
-            ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-            getdef_loc
-          |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-        | _ -> None
-      in
-      let hardcoded_documentation =
-        Find_documentation.hardcoded_documentation_at_loc
-          ast
-          (Loc.cursor (Some file_key) line column)
-      in
-      let documentation =
-        match (get_def_documentation, hardcoded_documentation) with
-        | (None, None) -> None
-        | (Some d, None)
-        | (None, Some d) ->
-          Some d
-        | (Some d1, Some d2) -> Some (d1 ^ "\n\n" ^ d2)
-      in
-      let json_props =
-        ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
-        :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
-      in
-      let exact_by_default = Options.exact_by_default options in
-      let response =
-        infer_type_to_response
-          ~reader
-          ~json
-          ~expanded
-          ~exact_by_default
-          ~strip_root
-          loc
-          documentation
-          tys
-      in
-      (Ok response, Some (Hh_json.JSON_Object json_props)))
+      if debug_print_internal_repr then
+        let result =
+          Query_types.dump_type_at_pos ~cx ~typed_ast (Loc.cursor (Some file_key) line column)
+        in
+        match result with
+        | None ->
+          let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+          (Error "Cannot dump type", Some (Hh_json.JSON_Object json_props))
+        | Some (loc, t) ->
+          ( Ok
+              ServerProt.Response.(
+                Infer_type_response
+                  { loc; tys = Infer_type_string (Some (t, None)); documentation = None }
+              ),
+            None
+          )
+      else
+        let ((loc, tys), type_at_pos_json_props) =
+          Type_info_service.type_at_pos
+            ~cx
+            ~file_sig
+            ~typed_ast
+            ~omit_targ_defaults
+            ~max_depth
+            ~verbose_normalizer
+            ~no_typed_ast_for_imports
+            ~include_refs:(Some (Parsing_heaps.Reader.loc_of_aloc ~reader))
+            file_key
+            line
+            column
+        in
+        let (getdef_loc_result, _) =
+          try_with_json (fun () ->
+              get_def_of_check_result
+                ~reader
+                ~profiling
+                ~check_result
+                ~purpose:Get_def_types.Purpose.JSDoc
+                (file_key, line, column)
+          )
+        in
+        let get_def_documentation =
+          match getdef_loc_result with
+          | Ok [getdef_loc] ->
+            Find_documentation.jsdoc_of_getdef_loc
+              ~ast
+              ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
+              getdef_loc
+            |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+          | _ -> None
+        in
+        let hardcoded_documentation =
+          Find_documentation.hardcoded_documentation_at_loc
+            ast
+            (Loc.cursor (Some file_key) line column)
+        in
+        let documentation =
+          match (get_def_documentation, hardcoded_documentation) with
+          | (None, None) -> None
+          | (Some d, None)
+          | (None, Some d) ->
+            Some d
+          | (Some d1, Some d2) -> Some (d1 ^ "\n\n" ^ d2)
+        in
+        let json_props =
+          ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
+          :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
+        in
+        let exact_by_default = Options.exact_by_default options in
+        let response =
+          infer_type_to_response
+            ~reader
+            ~json
+            ~expanded
+            ~exact_by_default
+            ~strip_root
+            loc
+            documentation
+            tys
+        in
+        (Ok response, Some (Hh_json.JSON_Object json_props)))
 
 let insert_type
     ~options
@@ -2290,6 +2308,7 @@ let handle_persistent_infer_type
       json = false;
       strip_root = None;
       expanded = false;
+      debug_print_internal_repr = false;
       no_typed_ast_for_imports = false;
     }
   in
