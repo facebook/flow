@@ -1429,26 +1429,6 @@ struct
         | (OpaqueT (r, { underlying_t = Some t; _ }), _)
           when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
           rec_flow cx trace (t, u)
-        (*****************************************************************)
-        (* Intersection type preprocessing for certain object predicates *)
-        (*****************************************************************)
-
-        (* Predicate refinements on intersections of object types need careful
-           handling. An intersection of object types passes a predicate when any of
-           those object types passes the predicate: however, the refined type must
-           be the intersection as a whole, not the particular object type that
-           passes the predicate! (For example, we may check some condition on
-           property x and property y of { x: ... } & { y: ... } in sequence, and not
-           expect to get property-not-found errors in the process.)
-
-           Although this seems like a special case, it's not. An intersection of
-           object types should behave more or less the same as a "concatenated"
-           object type with all the properties of those object types. The added
-           complication arises as an implementation detail, because we do not
-           concatenate those object types explicitly. *)
-        | (_, PreprocessKitT (_, SentinelPropTest tvar))
-        | (_, PreprocessKitT (_, PropExistsTest tvar)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)

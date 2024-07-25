@@ -1707,10 +1707,7 @@ module rec TypeTerm : sig
     | ConcretizeComputedPropsT of ident
     | ConcretizeForOperatorsChecking of ident
 
-  and intersection_preprocess_tool =
-    | ConcretizeTypes of concretization_target
-    | SentinelPropTest of tvar
-    | PropExistsTest of tvar
+  and intersection_preprocess_tool = ConcretizeTypes of concretization_target
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no
@@ -4105,8 +4102,6 @@ let string_of_use_ctor = function
             | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking"
           in
           "ConcretizeTypes(" ^ s ^ ")"
-        | SentinelPropTest _ -> "SentinelPropTest"
-        | PropExistsTest _ -> "PropExistsTest"
       end
   | LookupT _ -> "LookupT"
   | MapTypeT _ -> "MapTypeT"
