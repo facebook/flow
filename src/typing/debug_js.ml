@@ -800,11 +800,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (tvar ptvar)
           )
         t
-    | GuardT (pred, result, sink) ->
-      p
-        ~reason:false
-        ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (tout sink))
-        t
     | HasOwnPropT _ -> p t
     | PreprocessKitT _ -> p t
     | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->

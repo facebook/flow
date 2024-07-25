@@ -71,7 +71,6 @@ and reason_of_use_t = function
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
   | GetStaticsT (reason, _) -> reason
-  | GuardT (_, _, (r, _)) -> r
   | HasOwnPropT (_, reason, _) -> reason
   | ImplementsT (_, t) -> reason_of_t t
   | PreprocessKitT (reason, _) -> reason
@@ -266,7 +265,6 @@ let rec util_use_op_of_use_t :
   | DeepReadOnlyT _
   | HooklikeT _
   | PredicateT (_, _)
-  | GuardT (_, _, _)
   | StrictEqT _
   | ThisSpecializeT (_, _, _)
   | LookupT _
