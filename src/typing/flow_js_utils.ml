@@ -382,42 +382,6 @@ let function_like_op = function
     true
   | t -> object_like_op t
 
-(* If we allow `==` on these two types. *)
-let equatable = function
-  | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, (NumT _ | SingletonNumT _)))
-  | ( (DefT (_, (StrT _ | SingletonStrT _)) | StrUtilT _),
-      (DefT (_, (StrT _ | SingletonStrT _)) | StrUtilT _)
-    )
-  | (DefT (_, (BoolT _ | SingletonBoolT _)), DefT (_, (BoolT _ | SingletonBoolT _)))
-  | (DefT (_, SymbolT), DefT (_, SymbolT))
-  | (DefT (_, EmptyT), _)
-  | (_, DefT (_, EmptyT))
-  | (_, DefT (_, MixedT _))
-  | (DefT (_, MixedT _), _)
-  | (AnyT _, _)
-  | (_, AnyT _)
-  | (DefT (_, VoidT), _)
-  | (_, DefT (_, VoidT))
-  | (DefT (_, NullT), _)
-  | (_, DefT (_, NullT)) ->
-    true
-  | ( DefT
-        ( _,
-          ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT | EnumObjectT _ | EnumValueT _ )
-        ),
-      _
-    )
-  | ( _,
-      DefT
-        ( _,
-          ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT | EnumObjectT _ | EnumValueT _ )
-        )
-    ) ->
-    false
-  | _ -> true
-
 let strict_equatable_error cond_context (l, r) =
   let comparison_error =
     lazy

@@ -1642,19 +1642,12 @@ struct
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
-        | ((UnionT (_, rep1) as u1), EqT { arg = UnionT _ as u2; _ }) ->
-          if union_optimization_guard cx ~equiv:true (curry equatable) u1 u2 then begin
-            if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
-          end else
-            flow_all_in_union cx trace rep1 u
         | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; cond_context; _ }) ->
           if union_optimization_guard cx ~equiv:true (curry (strict_equatable cond_context)) u1 u2
           then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
-        | (UnionT _, EqT { reason; flip; arg }) when needs_resolution arg || is_generic arg ->
-          rec_flow cx trace (arg, EqT { reason; flip = not flip; arg = l })
         | (UnionT _, StrictEqT { reason; cond_context; flip; arg })
           when needs_resolution arg || is_generic arg ->
           rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
@@ -4573,7 +4566,6 @@ struct
         (**************************)
         (* relational comparisons *)
         (**************************)
-        | (l, EqT { reason; flip; arg = r }) -> flow_eq cx trace reason flip l r
         | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
           flow_strict_eq cx trace reason cond_context flip l r
         (**************************************)
@@ -5687,29 +5679,6 @@ struct
       (* END OF PATTERN MATCH *)
     )
 
-  (**
-   * == equality
-   *
-   * typecheck iff they intersect (otherwise, unsafe coercions may happen).
-   *
-   * note: almost any types may be compared with === (in)equality.
-   **)
-  and flow_eq cx trace reason flip l r =
-    if needs_resolution r || is_generic r then
-      rec_flow cx trace (r, EqT { reason; flip = not flip; arg = l })
-    else
-      let (l, r) =
-        if flip then
-          (r, l)
-        else
-          (l, r)
-      in
-      if equatable (l, r) then
-        ()
-      else
-        let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-        add_output cx (Error_message.ENonStrictEqualityComparison reasons)
-
   and flow_strict_eq cx trace reason cond_context flip l r =
     if needs_resolution r || is_generic r then
       rec_flow cx trace (r, StrictEqT { reason; cond_context; flip = not flip; arg = l })
@@ -5854,7 +5823,6 @@ struct
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
       | PreprocessKitT (_, ConcretizeTypes (ConcretizeForOperatorsChecking _))
-      | EqT _
       | StrictEqT _
       | TestPropT _
       | OptionalChainT _
@@ -6307,7 +6275,6 @@ struct
        true *)
     | DebugPrintT _
     | StrictEqT _
-    | EqT _
     | HasOwnPropT _
     | ExtractReactRefT _
     | ImplementsT _

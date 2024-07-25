@@ -58,7 +58,6 @@ and reason_of_use_t = function
   | EnumCastT { enum = (reason, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | GetEnumT { reason; _ } -> reason
-  | EqT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
   | ExportNamedT { reason; _ } -> reason
   | ExportTypeT { reason; _ } -> reason
@@ -269,7 +268,6 @@ let rec util_use_op_of_use_t :
   | PredicateT (_, _)
   | GuardT (_, _, _)
   | StrictEqT _
-  | EqT _
   | ThisSpecializeT (_, _, _)
   | LookupT _
   | ObjRestT (_, _, _, _)
