@@ -6,7 +6,7 @@
   (language c)
   (names hh_shared)
   (flags
-   (:standard -I../../src/third-party/lz4)))
+   (:standard -I../../src/third-party/lz4 -I +unix)))
  (c_library_flags
   (:include heap_libc_flags.txt))
  (preprocess
@@ -51,6 +51,7 @@
   heap_libc
   leb128
   logging_common
+  unix
   utils_core
   worker_cancel))
 

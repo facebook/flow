@@ -1,4 +1,4 @@
 (library
  (name logging_common_stubs)
  (wrapped false)
- (libraries lwt))
+ (libraries lwt unix))
