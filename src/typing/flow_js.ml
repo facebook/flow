@@ -1947,8 +1947,6 @@ struct
            an intersection lower bound *)
         | (IntersectionT _, PredicateT (_, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tout)
-        (* same for guards *)
-        | (IntersectionT _, GuardT (pred, result, tout)) -> guard cx trace l pred result tout
         (* ObjAssignFromT copies multiple properties from its incoming LB.
            Here we simulate a merged object type by iterating over the
            entire intersection. *)
@@ -4537,7 +4535,6 @@ struct
         (* Don't refine opaque types based on its bound *)
         | (OpaqueT _, PredicateT (_, tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
-        | (OpaqueT _, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
         | (OpaqueT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
@@ -4572,7 +4569,6 @@ struct
         (* types may be refined by predicates *)
         (**************************************)
         | (_, PredicateT (_, tvar)) -> rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
-        | (_, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
         | (_, SentinelPropTestT (reason, obj, sense, enum, result)) ->
           let t = Type_filter.sentinel_refinement l reason obj sense enum in
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT result)
@@ -6199,7 +6195,6 @@ struct
     | GetStaticsT _
     | GetValuesT _
     | GetDictValuesT _
-    | GuardT _
     | FilterOptionalT _
     | FilterMaybeT _
     | DeepReadOnlyT _
@@ -7666,37 +7661,6 @@ struct
     let tvar = Tvar.mk_no_wrap cx reason in
     flow_opt cx ?trace (opt_t, FilterOptionalT (unknown_use, OpenT (reason, tvar)));
     tvar
-
-  (**********)
-  (* guards *)
-  (**********)
-  and guard cx trace source pred result sink =
-    match pred with
-    | ExistsP -> begin
-      match Type_filter.exists cx source with
-      | DefT (_, EmptyT) -> ()
-      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-    end
-    | NotP ExistsP -> begin
-      match Type_filter.not_exists cx source with
-      | DefT (_, EmptyT) -> ()
-      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-    end
-    | MaybeP -> begin
-      match Type_filter.maybe cx source with
-      | DefT (_, EmptyT) -> ()
-      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-    end
-    | NotP MaybeP -> begin
-      match Type_filter.not_maybe cx source with
-      | DefT (_, EmptyT) -> ()
-      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-    end
-    | NotP (NotP p) -> guard cx trace source p result sink
-    | _ ->
-      let loc = loc_of_reason (fst sink) in
-      let pred_str = string_of_predicate pred in
-      add_output cx Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str))
 
   and pick_use_op cx op1 op2 =
     let ignore_root = function

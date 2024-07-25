@@ -362,7 +362,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetEnumT _
     | DebugPrintT _
     | PredicateT _
-    | GuardT _
     | CondT _
     | SentinelPropTestT _
     | CheckUnusedPromiseT _

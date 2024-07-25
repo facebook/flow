@@ -656,11 +656,6 @@ module rec TypeTerm : sig
       }
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate_concretizer_variant * tvar
-    (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
-       incoming type. Unlike PredicateT, the subsequent flow (if any) uses
-       an arbitrary LB specified in the GuardT value, rather than the filtered
-       result of the predicate itself *)
-    | GuardT of predicate * t * tvar
     (* === *)
     | StrictEqT of {
         reason: Reason.t;
@@ -4078,7 +4073,6 @@ let string_of_use_ctor = function
   | GetPrivatePropT _ -> "GetPrivatePropT"
   | GetProtoT _ -> "GetProtoT"
   | GetStaticsT _ -> "GetStaticsT"
-  | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | ImplementsT _ -> "ImplementsT"
   | PreprocessKitT (_, tool) ->

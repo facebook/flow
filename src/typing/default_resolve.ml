@@ -129,9 +129,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ImplementsT _ -> ()
   | MixinT (_, t) -> resolve t
   | ToStringT { t_out; _ } -> default_resolve_touts ~flow cx loc t_out
-  | PredicateT (_, tvar)
-  | GuardT (_, _, tvar) ->
-    resolve_tvar tvar
+  | PredicateT (_, tvar) -> resolve_tvar tvar
   | StrictEqT _ -> ()
   | SpecializeT (_, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k

@@ -420,7 +420,8 @@ and prop_exists_test_generic key reason cx trace result orig_obj sense (pred, no
           else
             not_pred
         in
-        rec_flow cx trace (t, GuardT (pred, orig_obj, result))
+        possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
+        |> List.iter (fun t -> guard cx trace t pred orig_obj result)
       | None ->
         (* prop cannot be read *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result);
@@ -456,7 +457,8 @@ and prop_exists_test_generic key reason cx trace result orig_obj sense (pred, no
           else
             not_pred
         in
-        rec_flow cx trace (t, GuardT (pred, orig_obj, result))
+        possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
+        |> List.iter (fun t -> guard cx trace t pred orig_obj result)
       else (
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result);
         add_output
@@ -784,6 +786,37 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     | None ->
       (* not enough info to refine *)
       rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
+
+(**********)
+(* guards *)
+(**********)
+and guard cx trace source pred result sink =
+  match pred with
+  | ExistsP -> begin
+    match Type_filter.exists cx source with
+    | DefT (_, EmptyT) -> ()
+    | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+  end
+  | NotP ExistsP -> begin
+    match Type_filter.not_exists cx source with
+    | DefT (_, EmptyT) -> ()
+    | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+  end
+  | MaybeP -> begin
+    match Type_filter.maybe cx source with
+    | DefT (_, EmptyT) -> ()
+    | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+  end
+  | NotP MaybeP -> begin
+    match Type_filter.not_maybe cx source with
+    | DefT (_, EmptyT) -> ()
+    | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+  end
+  | NotP (NotP p) -> guard cx trace source p result sink
+  | _ ->
+    let loc = loc_of_reason (fst sink) in
+    let pred_str = string_of_predicate pred in
+    add_output cx Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str))
 
 let predicate cx t p =
   concretize_and_run_predicate
