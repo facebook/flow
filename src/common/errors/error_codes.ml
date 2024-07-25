@@ -209,6 +209,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnusedPromise -> UnusedPromise
 
 let require_specific : error_code -> bool = function
+  | InvalidRendersTypeArgument
   | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
