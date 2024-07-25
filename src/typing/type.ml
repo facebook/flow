@@ -668,12 +668,6 @@ module rec TypeTerm : sig
         flip: bool;
         arg: t;
       }
-    (* == *)
-    | EqT of {
-        reason: reason;
-        flip: bool;
-        arg: t;
-      }
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, targs, tresult) instantiates a polymorphic type
           with type arguments targs, and flows the result into tresult.
@@ -4072,7 +4066,6 @@ let string_of_use_ctor = function
   | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"
   | GetEnumT _ -> "GetEnumT"
   | ConditionalT _ -> "ConditionalT"
-  | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
   | ExtendsUseT _ -> "ExtendsUseT"

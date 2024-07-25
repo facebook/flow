@@ -4856,15 +4856,7 @@ module Make
       let reconstruct_ast = visit_eq_test cx ~cond loc left right in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
-      let desc =
-        RBinaryOperator
-          ( Flow_ast_utils.string_of_binary_operator operator,
-            desc_of_reason (reason_of_t t1),
-            desc_of_reason (reason_of_t t2)
-          )
-      in
-      let reason = mk_reason desc loc in
-      Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 });
+      Operators.check_eq cx (t1, t2);
       (BoolT.at loc, { operator; left; right; comments })
     | In ->
       let (((_, t1), _) as left) = expression cx left in

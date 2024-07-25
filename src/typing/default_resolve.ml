@@ -132,9 +132,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | PredicateT (_, tvar)
   | GuardT (_, _, tvar) ->
     resolve_tvar tvar
-  | StrictEqT _
-  | EqT _ ->
-    ()
+  | StrictEqT _ -> ()
   | SpecializeT (_, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k
   | ValueToTypeReferenceT (_, _, _, t) -> resolve t

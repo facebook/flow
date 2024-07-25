@@ -330,6 +330,94 @@ module Operators = struct
         ~check_base
         (t1, t2)
 
+  let check_eq =
+    let open Flow_js_utils in
+    let get_no_match_error_loc r_pair =
+      r_pair |> Flow_error.ordered_reasons |> fst |> loc_of_reason
+    in
+    let needs_concretization = function
+      | OpenT _
+      | GenericT _
+      | EvalT _
+      | TypeAppT _
+      | OptionalT _
+      | UnionT _
+      | MaybeT _
+      | AnnotT _
+      | KeysT _
+      | NullProtoT _ ->
+        true
+      | _ -> false
+    in
+    let will_fail_check_if_unmatched = function
+      | DefT
+          ( _,
+            ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
+            | SymbolT | EnumObjectT _ | EnumValueT _ )
+          ) ->
+        true
+      | _ -> false
+    in
+    let is_always_allowed_one_side_t = function
+      | AnyT _
+      | DefT (_, EmptyT)
+      | DefT (_, MixedT _)
+      | DefT (_, VoidT)
+      | DefT (_, NullT) ->
+        true
+      | _ -> false
+    in
+    (* If we allow `==` on these two types. *)
+    let equatable = function
+      | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, (NumT _ | SingletonNumT _)))
+      | ( (DefT (_, (StrT _ | SingletonStrT _)) | StrUtilT _),
+          (DefT (_, (StrT _ | SingletonStrT _)) | StrUtilT _)
+        )
+      | (DefT (_, (BoolT _ | SingletonBoolT _)), DefT (_, (BoolT _ | SingletonBoolT _)))
+      | (DefT (_, SymbolT), DefT (_, SymbolT)) ->
+        true
+      | (t1, t2) -> (not (will_fail_check_if_unmatched t1)) && not (will_fail_check_if_unmatched t2)
+    in
+    let rec distribute cx (t1, t2) =
+      if is_always_allowed_one_side_t t1 || is_always_allowed_one_side_t t2 then
+        ()
+      else
+        match (t1, t2) with
+        | (IntersectionT (r1, rep1), t2) ->
+          let cases =
+            Base.List.map (InterRep.members rep1) ~f:(fun t1 () -> distribute cx (t1, t2))
+          in
+          Speculation_flow.try_custom
+            cx
+            ~no_match_error_loc:(get_no_match_error_loc (r1, TypeUtil.reason_of_t t2))
+            cases
+        | (t1, IntersectionT (r2, rep2)) ->
+          let cases =
+            Base.List.map (InterRep.members rep2) ~f:(fun t2 () -> distribute cx (t1, t2))
+          in
+          Speculation_flow.try_custom
+            cx
+            ~no_match_error_loc:(get_no_match_error_loc (TypeUtil.reason_of_t t1, r2))
+            cases
+        | (t1, t2) when needs_concretization t1 ->
+          Base.List.iter
+            (Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t1) t1)
+            ~f:(fun t1 -> distribute cx (t1, t2))
+        | (t1, t2) when needs_concretization t2 ->
+          Base.List.iter
+            (Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t2) t2)
+            ~f:(fun t2 -> distribute cx (t1, t2))
+        | (l, r) ->
+          if equatable (l, r) then
+            ()
+          else
+            let reasons =
+              FlowError.ordered_reasons (TypeUtil.reason_of_t l, TypeUtil.reason_of_t r)
+            in
+            add_output cx (Error_message.ENonStrictEqualityComparison reasons)
+    in
+    distribute
+
   let unary_arith cx reason kind t =
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
         DistributeUnionIntersection.distribute

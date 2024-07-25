@@ -85,6 +85,8 @@ module Operators : sig
 
   val check_comparator : Context.t -> Type.t -> Type.t -> unit
 
+  val check_eq : Context.t -> Type.t * Type.t -> unit
+
   val logical_and : Context.t -> reason -> Type.t -> Type.t -> Type.t
 
   val logical_or : Context.t -> reason -> Type.t -> Type.t -> Type.t
