@@ -159,7 +159,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     resolve t
   | ReactKitT (_, _, tool) -> resolve_react_tool tool
   | PreprocessKitT _ -> _TODO
-  | DebugPrintT _ -> ()
   | SentinelPropTestT (_, _, _, _, tvar) -> resolve_tvar tvar
   | OptionalChainT { t_out; voided_out; _ } ->
     resolve voided_out;

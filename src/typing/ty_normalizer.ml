@@ -1348,20 +1348,6 @@ module Make (I : INPUT) : S = struct
         | ObjectGetPrototypeOf ->
           return
             Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] (ReturnType explicit_any))
-        (* debugPrint: (_: any[]) => void *)
-        | DebugPrint ->
-          return
-            Ty.(
-              mk_fun
-                ~params:
-                  [
-                    ( Some "_",
-                      Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any },
-                      non_opt_param
-                    );
-                  ]
-                (ReturnType Void)
-            )
       )
 
     and subst_name ~env loc t bound name =
@@ -1418,7 +1404,6 @@ module Make (I : INPUT) : S = struct
       Type.(
         function
         | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
-        | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
       )
 
     and custom_fun ~env t =

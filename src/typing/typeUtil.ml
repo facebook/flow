@@ -53,7 +53,6 @@ and reason_of_use_t = function
   | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
-  | DebugPrintT reason -> reason
   | ElemT (_, reason, _, _) -> reason
   | EnumCastT { enum = (reason, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
@@ -288,7 +287,6 @@ let rec util_use_op_of_use_t :
       }
   | PreprocessKitT (_, _)
   | ExtractReactRefT _
-  | DebugPrintT _
   | SentinelPropTestT (_, _, _, _, _)
   | OptionalChainT _
   | CondT (_, _, _, _)

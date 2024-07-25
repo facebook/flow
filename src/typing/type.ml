@@ -764,7 +764,6 @@ module rec TypeTerm : sig
     | ReactKitT of use_op * reason * React.tool
     (* tools for preprocessing types *)
     | PreprocessKitT of reason * intersection_preprocess_tool
-    | DebugPrintT of reason
     | SentinelPropTestT of reason * t * sense * UnionEnum.star * tvar
     | OptionalChainT of {
         reason: reason;
@@ -1681,11 +1680,8 @@ module rec TypeTerm : sig
 
   and t_out = t
 
-  and custom_fun_kind =
-    (* builtins *)
+  and custom_fun_kind = (* builtins *)
     | ObjectGetPrototypeOf
-    (* Internal tools *)
-    | DebugPrint
 
   and concretization_target =
     | ConcretizeForImportsExports of ident
@@ -4055,7 +4051,6 @@ let string_of_use_ctor = function
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | CopyTypeExportsT _ -> "CopyTypeExportsT"
-  | DebugPrintT _ -> "DebugPrintT"
   | ElemT _ -> "ElemT"
   | EnumCastT _ -> "EnumCastT"
   | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"

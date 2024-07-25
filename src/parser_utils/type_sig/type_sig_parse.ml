@@ -2551,11 +2551,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactImmutable (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "$Flow$DebugPrint" -> begin
-    match targs with
-    | None -> Annot (FlowDebugPrint loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "$Flow$EnforceOptimized" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) -> annot opts scope tbls xs t

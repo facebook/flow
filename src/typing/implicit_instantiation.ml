@@ -360,7 +360,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | EnumCastT _
     | EnumExhaustiveCheckT _
     | GetEnumT _
-    | DebugPrintT _
     | PredicateT _
     | CondT _
     | SentinelPropTestT _
