@@ -477,12 +477,10 @@ and prop_exists_test_generic key reason cx trace result orig_obj sense (pred, no
     let reason = fst result in
     InterRep.members rep
     |> List.iter (fun obj ->
-           let id = Tvar.mk_no_wrap cx reason in
-           rec_flow cx trace (obj, PreprocessKitT (reason, PropExistsTest (reason, id)));
            let f =
              prop_exists_test_generic key reason cx trace result orig_obj sense (pred, not_pred)
            in
-           Flow_js_utils.possible_types cx id |> List.iter f
+           possible_concrete_types_for_inspection cx reason obj |> List.iter f
        )
   | _ -> rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
 
@@ -776,10 +774,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         let reason = fst result in
         InterRep.members rep
         |> List.iter (fun obj ->
-               let id = Tvar.mk_no_wrap cx reason in
-               rec_flow cx trace (obj, PreprocessKitT (reason, SentinelPropTest (reason, id)));
                let f l = sentinel_prop_test_generic key cx trace result orig_obj (sense, l, t) in
-               Flow_js_utils.possible_types cx id |> List.iter f
+               possible_concrete_types_for_inspection cx reason obj |> List.iter f
            )
       | _ ->
         (* not enough info to refine *)
