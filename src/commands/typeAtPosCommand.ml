@@ -44,6 +44,11 @@ let spec =
         |> flag "--max-depth" (required ~default:50 int) ~doc:"Maximum depth of type (default 50)"
         |> flag "--verbose-normalizer" truthy ~doc:"Print verbose info during normalization"
         |> flag
+             "--debug-print-internal-repr"
+             truthy
+             ~doc:
+               "Print internal representation of the type for debugging purposes. You should not depend on the output."
+        |> flag
              "--do_not_use_typed_AST_for_imports"
              truthy
              ~doc:"" (* internal flag for regression purposes *)
@@ -135,6 +140,7 @@ let main
     omit_targ_defaults
     max_depth
     verbose_normalizer
+    debug_print_internal_repr
     no_typed_ast_for_imports
     args
     () =
@@ -163,6 +169,7 @@ let main
       json;
       strip_root;
       expanded;
+      debug_print_internal_repr;
       no_typed_ast_for_imports;
     }
   in
