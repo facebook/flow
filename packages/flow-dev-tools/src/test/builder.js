@@ -12,7 +12,7 @@ const {execSync, spawn} = require('child_process');
 const {randomBytes} = require('crypto');
 const {createWriteStream, realpathSync, lstatSync} = require('fs');
 // $FlowFixMe[prop-missing]
-const {appendFile, readdir, readFile, unlink, writeFile, cp} =
+const {appendFile, readdir, readFile, unlink, writeFile, cp, symlink} =
   require('fs').promises;
 const {platform, tmpdir} = require('os');
 const {basename, dirname, extname, join, sep: dir_sep} = require('path');
@@ -169,18 +169,13 @@ class TestBuilder {
     source = join(this.sourceDir, source);
     dest = join(this.dir, dest);
     await mkdirp(dirname(dest));
-    if (lstatSync(source).isSymbolicLink()) {
-      // See https://nodejs.org/api/fs.html#fspromisescpsrc-dest-options
-      await cp(source, dest, {verbatimSymlinks: true});
-    } else {
-      const contents_buffer = await readFile(source);
-      let contents = contents_buffer.toString();
-      if (contents.match(/@thisWillBeFlowInTest/)) {
-        // Undo what the convert command did
-        contents = contents.replace(/@thisWillBeFlowInTest/, '@flow');
-      }
-      await writeFile(dest, contents);
+    const contents_buffer = await readFile(source);
+    let contents = contents_buffer.toString();
+    if (contents.match(/@thisWillBeFlowInTest/)) {
+      // Undo what the convert command did
+      contents = contents.replace(/@thisWillBeFlowInTest/, '@flow');
     }
+    await writeFile(dest, contents);
     return dest;
   }
 
@@ -192,6 +187,20 @@ class TestBuilder {
   async addFiles(sources: Array<string>): Promise<void> {
     const filenames = await Promise.all(
       sources.map(source => this.addFileImpl(source, source)),
+    );
+    await this.forceRecheck(filenames);
+  }
+
+  async addSymlinkDirs(
+    destinationPathPairs: Array<[string, string]>,
+  ): Promise<void> {
+    const filenames = await Promise.all(
+      destinationPathPairs.map(async ([destination, path]) => {
+        const dest = join(this.dir, destination);
+        await mkdirp(dirname(dest));
+        await symlink(path, dest, 'dir');
+        return dest;
+      }),
     );
     await this.forceRecheck(filenames);
   }
