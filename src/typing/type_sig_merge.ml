@@ -957,9 +957,6 @@ and merge_annot env file = function
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactDRO (loc, ImmutableAnnot)), id))
-  | FlowDebugPrint loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.CustomFunT (reason, Type.DebugPrint)
   | Renders (loc, t, renders_variant) ->
     let t = merge { env with in_renders_arg = true } file t in
     let reason =

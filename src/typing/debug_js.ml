@@ -127,7 +127,6 @@ let rec dump_t_ (depth, tvars) cx t =
   in
   let custom_fun = function
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
-    | DebugPrint -> "DebugPrint"
   in
   let instance_t { static = _; super = _; implements = _; inst = { class_id; type_args; _ } } =
     spf
@@ -694,7 +693,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | ConstructorT _ -> p t
     | CopyNamedExportsT _ -> p t
     | CopyTypeExportsT _ -> p t
-    | DebugPrintT _ -> p t
     | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
     | ConditionalT
         {
@@ -1211,7 +1209,6 @@ let dump_error_message =
         "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
-    | EDebugPrint (reason, _) -> spf "EDebugPrint (%s, _)" (dump_reason cx reason)
     | EExportValueAsType (reason, name) ->
       spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) (display_string_of_name name)
     | EImportValueAsType (reason, str) ->
@@ -1940,6 +1937,8 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
+    | ETemporaryHardcodedErrorForPrototyping (reason, _) ->
+      spf "ETemporaryHardcodedErrorForPrototyping (%s, _)" (dump_reason cx reason)
 
 module Verbose = struct
   let print_if_verbose_lazy

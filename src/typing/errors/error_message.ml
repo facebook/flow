@@ -40,7 +40,6 @@ and 'loc t' =
       special: lower_kind option;
       use_op: 'loc virtual_use_op option;
     }
-  | EDebugPrint of 'loc virtual_reason * string
   | EExportValueAsType of 'loc virtual_reason * name
   | EImportValueAsType of 'loc virtual_reason * string
   | EImportTypeAsTypeof of 'loc virtual_reason * string
@@ -621,6 +620,9 @@ and 'loc t' =
       arg: 'loc virtual_reason;
     }
   | ECannotCallReactComponent of { reason: 'loc virtual_reason }
+  (* As the name suggest, don't use this for production purposes, but feel free to use it to
+   * quickly test out some ideas. *)
+  | ETemporaryHardcodedErrorForPrototyping of 'loc virtual_reason * string
 
 and enum_kind =
   | ConcreteEnumKind
@@ -957,7 +959,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { create_element_loc = f create_element_loc; invalid_react = map_reason invalid_react }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
-  | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
   | EExportValueAsType (r, s) -> EExportValueAsType (map_reason r, s)
   | EImportValueAsType (r, s) -> EImportValueAsType (map_reason r, s)
   | EImportTypeAsTypeof (r, s) -> EImportTypeAsTypeof (map_reason r, s)
@@ -1374,6 +1375,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnionOptimizationOnNonUnion { loc; arg } ->
     EUnionOptimizationOnNonUnion { loc = f loc; arg = map_reason arg }
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
+  | ETemporaryHardcodedErrorForPrototyping (r, s) ->
+    ETemporaryHardcodedErrorForPrototyping (map_reason r, s)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1502,7 +1505,7 @@ let util_use_op_of_msg nope util = function
     )
   | EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc } ->
     util use_op (fun use_op -> EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc })
-  | EDebugPrint (_, _)
+  | ETemporaryHardcodedErrorForPrototyping (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
   | EImportTypeAsTypeof (_, _)
@@ -1705,7 +1708,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EImportTypeAsTypeof (reason, _)
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
-  | EDebugPrint (reason, _)
+  | ETemporaryHardcodedErrorForPrototyping (reason, _)
   | EComputedPropertyWithUnion reason ->
     Some (loc_of_reason reason)
   | EEnumAllMembersAlreadyChecked { loc; _ }
@@ -2132,7 +2135,8 @@ let friendly_message_of_msg = function
         suggestion = None;
         use_op = Base.Option.value ~default:unknown_use use_op;
       }
-  | EDebugPrint (_, str) -> Normal (MessagePlainTextReservedForInternalErrorOnly str)
+  | ETemporaryHardcodedErrorForPrototyping (_, str) ->
+    Normal (MessagePlainTextReservedForInternalErrorOnly str)
   | EExportValueAsType (_, export_name) ->
     Normal (MessageExportValueAsType (display_string_of_name export_name))
   | EImportValueAsType (_, export_name) -> Normal (MessageImportValueAsType export_name)
@@ -2952,7 +2956,7 @@ let error_code_of_message err : error_code option =
   | EComparison _ ->
     Some InvalidCompare
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
-  | EDebugPrint (_, _) -> None
+  | ETemporaryHardcodedErrorForPrototyping (_, _) -> None
   | EIncorrectTypeWithReplacement { kind; _ } ->
     (match IncorrectType.error_type_of_kind kind with
     | IncorrectType.DeprecatedUtility -> Some DeprecatedUtility

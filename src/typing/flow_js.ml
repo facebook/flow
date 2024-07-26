@@ -513,12 +513,6 @@ struct
               None
           in
           rec_flow cx trace (reposition ~trace cx loc ?annot_loc:(annot_loc_of_reason r) ?desc t, u)
-        (*************)
-        (* Debugging *)
-        (*************)
-        | (_, DebugPrintT reason) ->
-          let str = Debug_js.dump_t ~depth:10 cx l in
-          add_output cx (Error_message.EDebugPrint (reason, str))
         | (DefT (reason, EmptyT), ConvertEmptyPropsToMixedT (_, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (MixedT.make reason, tout)
         | (_, ConvertEmptyPropsToMixedT (_, tout)) ->
@@ -3034,7 +3028,7 @@ struct
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           rec_flow_t cx ~use_op trace (AnyT.why src reason_op, OpenT call_tout)
         (* Special handlers for builtin functions *)
-        | ( CustomFunT (_, (ObjectGetPrototypeOf | DebugPrint)),
+        | ( CustomFunT (_, ObjectGetPrototypeOf),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
@@ -3051,30 +3045,6 @@ struct
           let l = extract_non_spread cx arg in
           rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
-        (* Facebookisms are special Facebook-specific functions that are not
-           expressable with our current type syntax, so we've hacked in special
-           handling. Terminate with extreme prejudice. *)
-        | ( CustomFunT (_, DebugPrint),
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action = Funcalltype { call_targs = None; call_args_tlist; call_tout; _ };
-                return_hint = _;
-              }
-          ) ->
-          List.iter
-            (fun arg ->
-              match arg with
-              | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
-              | SpreadArg t ->
-                add_output
-                  cx
-                  (Error_message.EUnsupportedSyntax
-                     (loc_of_t t, Flow_intermediate_error_types.SpreadArgument)
-                  ))
-            call_args_tlist;
-          rec_flow_t cx ~use_op trace (VoidT.why reason_op, OpenT call_tout)
         | ( CustomFunT (_, ObjectGetPrototypeOf),
             MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
           ) ->
@@ -6268,7 +6238,6 @@ struct
       true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
-    | DebugPrintT _
     | StrictEqT _
     | HasOwnPropT _
     | ExtractReactRefT _
@@ -6285,7 +6254,6 @@ struct
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
-    | UseT (_, CustomFunT (_, DebugPrint))
     | UseT _ ->
       true
 
@@ -6354,7 +6322,6 @@ struct
     | TypeAppT _
     | UnionT _
     | IntersectionT _
-    | CustomFunT (_, DebugPrint)
     | ThisTypeAppT _
     | InternalEnforceUnionOptimizedT _ ->
       false
