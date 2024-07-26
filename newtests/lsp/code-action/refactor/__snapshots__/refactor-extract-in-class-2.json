@@ -66,6 +66,39 @@
           "Extract to constant in method 'test'"
         ]
       }
+    },
+    {
+      "title": "Insert inferred type as a type cast",
+      "kind": "refactor",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 4
+                },
+                "end": {
+                  "line": 4,
+                  "character": 15
+                }
+              },
+              "newText": "this.test() as void"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_inferred_type_as_cast",
+          "Insert inferred type as a type cast"
+        ]
+      }
     }
   ]
 }

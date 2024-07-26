@@ -33,6 +33,39 @@
           "Add optional chaining for object that might be `undefined`"
         ]
       }
+    },
+    {
+      "title": "Insert inferred type as a type cast",
+      "kind": "refactor",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 0
+                },
+                "end": {
+                  "line": 3,
+                  "character": 7
+                }
+              },
+              "newText": "foo.bar as any | number"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_inferred_type_as_cast",
+          "Insert inferred type as a type cast"
+        ]
+      }
     }
   ]
 }

@@ -81,11 +81,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 3,
-            character: 2,
+            character: 3,
           },
           end: {
             line: 3,
-            character: 9,
+            character: 3,
           },
         },
         context: {
@@ -132,11 +132,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 3,
-            character: 2,
+            character: 3,
           },
           end: {
             line: 3,
-            character: 11,
+            character: 3,
           },
         },
         context: {
@@ -183,11 +183,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 6,
-            character: 2,
+            character: 3,
           },
           end: {
             line: 6,
-            character: 8,
+            character: 3,
           },
         },
         context: {
@@ -225,11 +225,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 3,
-            character: 1,
+            character: 3,
           },
           end: {
             line: 3,
-            character: 14,
+            character: 3,
           },
         },
         context: {
@@ -278,7 +278,11 @@ module.exports = (suite(
             result: [],
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('provide quickfix for parse error', [
@@ -495,11 +499,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 8,
-            character: 4,
+            character: 5,
           },
           end: {
             line: 8,
-            character: 11,
+            character: 5,
           },
         },
         context: {
@@ -551,7 +555,7 @@ module.exports = (suite(
           },
           end: {
             line: 12,
-            character: 16,
+            character: 9,
           },
         },
         context: {
@@ -599,11 +603,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 18,
-            character: 4,
+            character: 5,
           },
           end: {
             line: 18,
-            character: 11,
+            character: 5,
           },
         },
         context: {
@@ -656,7 +660,7 @@ module.exports = (suite(
           },
           end: {
             line: 22,
-            character: 11,
+            character: 4,
           },
         },
         context: {
@@ -1104,11 +1108,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 2,
-            character: 0,
+            character: 3,
           },
           end: {
             line: 2,
-            character: 14,
+            character: 3,
           },
         },
         context: {
@@ -1141,11 +1145,11 @@ module.exports = (suite(
         range: {
           start: {
             line: 2,
-            character: 0,
+            character: 3,
           },
           end: {
             line: 2,
-            character: 21,
+            character: 3,
           },
         },
         context: {
