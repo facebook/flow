@@ -3,6 +3,11 @@ title: Higher-order Components
 slug: /react/hoc
 ---
 
+:::danger
+Higher-order components are discouraged in modern React code and will not be updated for [Component Syntax](../component-syntax).
+Consider using a hook to accomplish your task instead.
+:::
+
 A popular pattern in React is the [higher-order component pattern][], so it's
 important that we can provide effective types for higher-order components in
 Flow. If you don't already know what a higher-order component is then make sure
