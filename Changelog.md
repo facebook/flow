@@ -1,3 +1,29 @@
+### 0.242.0
+
+Likely to cause new Flow errors:
+* Support for special function type `$Flow$DebugPrint` was removed. To see the internal representation of type, use the `flow type-at-pos` command with flag `--debug-print-internal-repr`. Note that this is for debugging purpose only, and you should never depend on the output of `--debug-print-internal-repr`
+* More invalid compare errors will be consistently caught when using `==` and `!=`.
+* `invalid-render` errors can no longer be suppressed without specific error code.
+* Flow can now detect more bad cyclic types, including across module boundaries. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABABhWhPbIAdTgElqABIAGrcGQkdkAXnZwAAOlB2ezICJvBJkOz7KYoAheIrlQBtHa0TXaioIAC6mrFEvaAB5ubywAKhbbcJKAHy8dkAel97MwbBVPNw2XZbNk7KgEAA7irgYHsOyNAtlKVFfSANyKxUaJ5UZO2ezspq4G3ij0Op1hl2CkWVr05qD53CFlXQEskM1SC3NgAUwHZhpI1tL3HZ9IAlOyMFKa-z6+7JVm-QGTJQILd+A0TCQ4NAkhl7CYQPSgA)
+* You may see some errors moved around when `$Exact<...>` is involved. Some invalid `$Exact<...>` type will now have `not-an-object` error code.
+* Fixed a bug that makes some exported types accidentally any. Previously hidden errors might be exposed.
+
+New Features:
+* `declare namespace` support is enabled by default.
+* Added "Add Missing Attributes" quickfix for JSX. This is available when the cursor is over the name of a JSX element that is missing a required attribute.
+* Added a `StringSuffix` type, which goes along with the recently added `StringPrefix` type. `StringSuffix` can be used to type strings with a specified suffix. E.g. `StringSuffix<'!'>` allows for `'yay!'` and `'woo!'`. The type argument for the suffix must be a string literal. The second, optional, type argument can be used for the type of the remainder of the string after the suffix is removed.
+
+Notable bug fixes:
+* Fix a bug that caused Flow to infer incorrect render types for elements of polymorphic components under niche circumstances
+
+IDE:
+* Flow now supports symlinked node_modules in autoimports better. If allowed by the node resolution algorithm, autoimport will insert import specifier like `my-package` or `my-package/foo` instead of a relative path import.
+
+Library Definitions:
+* CredMgmtCredentialRequestOptions properties are now optional
+* `Reflect.setPrototypeof` are no longer special-cased, and the backing special type `Object$SetPrototypeOf` is removed. The new typing is intentionally loose. Similar to `Object.setPrototypeof`, this is inherently unsafe since Flow won't track prototype mutations.
+* `Object.assign` is still special cased, but the special-casing is only available for a syntactic `Object.assign(...)` call. If you try to use Object.assign in some other ways (e.g. `const f = Object.assign; f(...)`), you will get a a less precise and accurate typing for it. If you don't like the default fallback type, you can override the `Object$Assign` type. While the special-casing behavior will stay for the syntactic call, you should migrate your code to use the spread syntax instead.
+
 ### 0.241.0
 
 No changes from 0.240.0
