@@ -764,7 +764,7 @@ module rec TypeTerm : sig
     | ReactKitT of use_op * reason * React.tool
     (* tools for preprocessing types *)
     | ConcretizeT of reason * concretization_target
-    | SentinelPropTestT of reason * t * sense * UnionEnum.star * tvar
+    | SentinelPropTestT of tvar
     | OptionalChainT of {
         reason: reason;
         lhs_reason: reason;

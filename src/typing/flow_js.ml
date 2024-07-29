@@ -1644,66 +1644,8 @@ struct
         | (UnionT _, StrictEqT { reason; cond_context; flip; arg })
           when needs_resolution arg || is_generic arg ->
           rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
-        | (UnionT (r, rep), SentinelPropTestT (_reason, l, sense, sentinel, result)) ->
-          (* we have the check l.key === sentinel where l.key is a union *)
-          if sense then
-            match sentinel with
-            | UnionEnum.One enum ->
-              let def =
-                match enum with
-                | UnionEnum.Str v -> SingletonStrT v
-                | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
-                | UnionEnum.Bool v -> SingletonBoolT v
-                | UnionEnum.BigInt v -> SingletonBigIntT v
-                | UnionEnum.Void -> VoidT
-                | UnionEnum.Null -> NullT
-              in
-              (match
-                 UnionRep.quick_mem_enum ~quick_subtype:TypeUtil.quick_subtype (DefT (r, def)) rep
-               with
-              | UnionRep.No -> () (* provably unreachable, so prune *)
-              | UnionRep.Yes -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
-              | UnionRep.Conditional _
-              | UnionRep.Unknown ->
-                (* inconclusive: the union is not concretized *)
-                flow_all_in_union cx trace rep u)
-            | UnionEnum.Many enums ->
-              let acc =
-                UnionEnumSet.fold
-                  (fun enum acc ->
-                    let def =
-                      match enum with
-                      | UnionEnum.Str v -> SingletonStrT v
-                      | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
-                      | UnionEnum.Bool v -> SingletonBoolT v
-                      | UnionEnum.BigInt v -> SingletonBigIntT v
-                      | UnionEnum.Void -> VoidT
-                      | UnionEnum.Null -> NullT
-                    in
-                    UnionRep.join_quick_mem_results
-                      ( acc,
-                        UnionRep.quick_mem_enum
-                          ~quick_subtype:TypeUtil.quick_subtype
-                          (DefT (r, def))
-                          rep
-                      ))
-                  enums
-                  UnionRep.No
-              in
-              begin
-                match acc with
-                | UnionRep.No -> () (* provably unreachable, so prune *)
-                | UnionRep.Yes -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
-                | UnionRep.Conditional _
-                | UnionRep.Unknown ->
-                  (* inconclusive: the union is not concretized *)
-                  flow_all_in_union cx trace rep u
-              end
-          else
-            (* for l.key !== sentinel where l.key is a union, we can't really prove
-               that the check is guaranteed to fail (assuming the union doesn't
-               degenerate to a singleton) *)
-            rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
+        | (UnionT (_, _), SentinelPropTestT result) ->
+          rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
         | (UnionT (_, rep), PredicateT (ConcretizeForMaybeOrExistPredicateTest, tvar))
           when UnionRep.is_optimized_finally rep ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
@@ -4536,9 +4478,7 @@ struct
         (* types may be refined by predicates *)
         (**************************************)
         | (_, PredicateT (_, tvar)) -> rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
-        | (_, SentinelPropTestT (reason, obj, sense, enum, result)) ->
-          let t = Type_filter.sentinel_refinement l reason obj sense enum in
-          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT result)
+        | (_, SentinelPropTestT result) -> rec_flow_t cx trace ~use_op:unknown_use (l, OpenT result)
         (******************************)
         (* functions statics - part B *)
         (******************************)

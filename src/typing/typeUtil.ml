@@ -90,7 +90,7 @@ and reason_of_use_t = function
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
-  | SentinelPropTestT (_, _, _, _, (reason, _)) -> reason
+  | SentinelPropTestT (reason, _) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
   | SetPropT (_, reason, _, _, _, _, _) -> reason
   | SetPrivatePropT (_, reason, _, _, _, _, _, _, _) -> reason
@@ -287,7 +287,7 @@ let rec util_use_op_of_use_t :
       }
   | ConcretizeT (_, _)
   | ExtractReactRefT _
-  | SentinelPropTestT (_, _, _, _, _)
+  | SentinelPropTestT (_, _)
   | OptionalChainT _
   | CondT (_, _, _, _)
   | ReactPropsToOut _

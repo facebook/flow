@@ -11,19 +11,6 @@ open Type
 open TypeUtil
 open Utils_js
 
-let string_of_union_enum = function
-  | UnionEnum.Str x -> spf "string %s" (display_string_of_name x)
-  | UnionEnum.Num x -> spf "number %f" x
-  | UnionEnum.Bool x -> spf "boolean %b" x
-  | UnionEnum.BigInt (_, x) -> spf "bigint %s" x
-  | UnionEnum.Null -> "null"
-  | UnionEnum.Void -> "void"
-
-let string_of_sentinel = function
-  | UnionEnum.One enum -> string_of_union_enum enum
-  | UnionEnum.Many enums ->
-    ListUtils.to_string " | " string_of_union_enum @@ UnionEnumSet.elements enums
-
 let string_of_selector = function
   | Elem _ -> "Elem _" (* TODO print info about the key *)
   | Prop (x, _) -> spf "Prop %s" x
@@ -862,11 +849,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _ ->
         p ~extra:(string_of_use_op use_op) t)
-    | SentinelPropTestT (_, l, sense, sentinel, result) ->
-      p
-        ~reason:false
-        ~extra:(spf "%s, %b, %s, %s" (kid l) sense (string_of_sentinel sentinel) (tout result))
-        t
+    | SentinelPropTestT result -> p ~reason:false ~extra:(spf "%s" (tout result)) t
     | SuperT _ -> p t
     | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | SetElemT (_, _, ix, _, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t

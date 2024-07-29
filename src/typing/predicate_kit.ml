@@ -686,8 +686,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
           let desc = RMatchingProp (key, desc_of_sentinel sentinel) in
           replace_desc_reason desc (fst result)
         in
-        let test = SentinelPropTestT (reason, orig_obj, sense, sentinel, result) in
-        rec_flow cx trace (t, test)
+        concretize_and_run_sentinel_prop_test cx trace reason ~orig_obj ~sense ~sentinel t result
       | None ->
         let reason_obj = reason_of_t obj in
         add_output
@@ -714,8 +713,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
           let desc = RMatchingProp (key, desc_of_sentinel sentinel) in
           replace_desc_reason desc (fst result)
         in
-        let test = SentinelPropTestT (reason, orig_obj, sense, sentinel, result) in
-        rec_flow cx trace (t, test)
+        concretize_and_run_sentinel_prop_test cx trace reason ~orig_obj ~sense ~sentinel t result
       else
         add_output
           cx
@@ -760,12 +758,9 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       (* tuple.length ===/!== literal value *)
       | DefT (reason, ArrT (TupleAT { elem_t = _; elements = _; arity; inexact; react_dro = _ }))
         when key = "length" ->
-        let test =
-          let desc = RMatchingProp (key, desc_of_sentinel s) in
-          let r = replace_desc_reason desc (fst result) in
-          SentinelPropTestT (r, orig_obj, sense, s, result)
-        in
-        rec_flow cx trace (tuple_length reason ~inexact arity, test)
+        let r = replace_desc_reason (RMatchingProp (key, desc_of_sentinel s)) (fst result) in
+        let input = tuple_length reason ~inexact arity in
+        concretize_and_run_sentinel_prop_test cx trace r ~orig_obj ~sense ~sentinel:s input result
       | DefT (_, ArrT (TupleAT { elements; _ })) when is_str_intlike key ->
         flow_sentinel_tuple sense elements obj s
       | IntersectionT (_, rep) ->
@@ -786,6 +781,97 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     | None ->
       (* not enough info to refine *)
       rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
+
+and concretize_and_run_sentinel_prop_test cx trace reason ~orig_obj ~sense ~sentinel input result =
+  let id = Tvar.mk_no_wrap cx reason in
+  rec_flow cx trace (input, SentinelPropTestT (reason, id));
+  Flow_js_utils.types_of cx (Context.find_graph cx id)
+  |> Base.List.iter ~f:(function
+         | UnionT (r, rep) ->
+           let l = orig_obj in
+           (* we have the check l.key === sentinel where l.key is a union *)
+           if sense then
+             match sentinel with
+             | UnionEnum.One enum ->
+               let def =
+                 match enum with
+                 | UnionEnum.Str v -> SingletonStrT v
+                 | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
+                 | UnionEnum.Bool v -> SingletonBoolT v
+                 | UnionEnum.BigInt v -> SingletonBigIntT v
+                 | UnionEnum.Void -> VoidT
+                 | UnionEnum.Null -> NullT
+               in
+               (match
+                  UnionRep.quick_mem_enum ~quick_subtype:TypeUtil.quick_subtype (DefT (r, def)) rep
+                with
+               | UnionRep.No -> () (* provably unreachable, so prune *)
+               | UnionRep.Yes -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
+               | UnionRep.Conditional _
+               | UnionRep.Unknown ->
+                 (* inconclusive: the union is not concretized *)
+                 Base.List.iter (UnionRep.members rep) ~f:(fun l ->
+                     concretize_and_run_sentinel_prop_test
+                       cx
+                       trace
+                       reason
+                       ~orig_obj
+                       ~sense
+                       ~sentinel
+                       l
+                       result
+                 ))
+             | UnionEnum.Many enums ->
+               let acc =
+                 UnionEnumSet.fold
+                   (fun enum acc ->
+                     let def =
+                       match enum with
+                       | UnionEnum.Str v -> SingletonStrT v
+                       | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
+                       | UnionEnum.Bool v -> SingletonBoolT v
+                       | UnionEnum.BigInt v -> SingletonBigIntT v
+                       | UnionEnum.Void -> VoidT
+                       | UnionEnum.Null -> NullT
+                     in
+                     UnionRep.join_quick_mem_results
+                       ( acc,
+                         UnionRep.quick_mem_enum
+                           ~quick_subtype:TypeUtil.quick_subtype
+                           (DefT (r, def))
+                           rep
+                       ))
+                   enums
+                   UnionRep.No
+               in
+               begin
+                 match acc with
+                 | UnionRep.No -> () (* provably unreachable, so prune *)
+                 | UnionRep.Yes -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
+                 | UnionRep.Conditional _
+                 | UnionRep.Unknown ->
+                   (* inconclusive: the union is not concretized *)
+                   Base.List.iter (UnionRep.members rep) ~f:(fun l ->
+                       concretize_and_run_sentinel_prop_test
+                         cx
+                         trace
+                         reason
+                         ~orig_obj
+                         ~sense
+                         ~sentinel
+                         l
+                         result
+                   )
+               end
+           else
+             (* for l.key !== sentinel where l.key is a union, we can't really prove
+                that the check is guaranteed to fail (assuming the union doesn't
+                degenerate to a singleton) *)
+             rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
+         | l ->
+           let t = Type_filter.sentinel_refinement l reason orig_obj sense sentinel in
+           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT result)
+         )
 
 (**********)
 (* guards *)
