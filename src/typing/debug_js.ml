@@ -799,7 +799,7 @@ and dump_use_t_ (depth, tvars) cx t =
           )
         t
     | HasOwnPropT _ -> p t
-    | PreprocessKitT _ -> p t
+    | ConcretizeT _ -> p t
     | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->
       p
         ~extra:

@@ -43,7 +43,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
    * tparams with $Keys/keyof upper bounds:
    * type Pick<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]}
    *
-   * Note that we use the PreprocessKitT constraint to flatten the union. A non-homomorphic mapped
+   * Note that we use the ConcretizeT constraint to flatten the union. A non-homomorphic mapped
    * type *must not* operate over Unresolved tvar because additional keys received in the future
    * will cause us to incorrectly output a union. While this approach of eagerly resolving the type
    * may lead to edge cases where we miss keys, it seems like the best way forward. To get rid of

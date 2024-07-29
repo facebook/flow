@@ -763,7 +763,7 @@ module rec TypeTerm : sig
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
     | ReactKitT of use_op * reason * React.tool
     (* tools for preprocessing types *)
-    | PreprocessKitT of reason * intersection_preprocess_tool
+    | ConcretizeT of reason * concretization_target
     | SentinelPropTestT of reason * t * sense * UnionEnum.star * tvar
     | OptionalChainT of {
         reason: reason;
@@ -1150,7 +1150,7 @@ module rec TypeTerm : sig
    * remains the same.
    * (ii) The successful speculation id has not been recorded in "set". This choice
    * is a sibling of the currently "set" choice. This is possible thanks to the
-   * special behavior of PreprocessKitT with union-like types. In this case, we
+   * special behavior of ConcretizeT with union-like types. In this case, we
    * will only accept the overload if all sibling branches agree on the result.
    * Otherwise the result is deemed "invalid".
    *)
@@ -4070,21 +4070,14 @@ let string_of_use_ctor = function
   | GetStaticsT _ -> "GetStaticsT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | ImplementsT _ -> "ImplementsT"
-  | PreprocessKitT (_, tool) ->
+  | ConcretizeT (_, c) ->
     spf
-      "PreprocessKitT %s"
-      begin
-        match tool with
-        | ConcretizeTypes c ->
-          let s =
-            match c with
-            | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
-            | ConcretizeForInspection _ -> "ConcretizeForInspection"
-            | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
-            | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking"
-          in
-          "ConcretizeTypes(" ^ s ^ ")"
-      end
+      "ConcretizeT %s"
+      (match c with
+      | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
+      | ConcretizeForInspection _ -> "ConcretizeForInspection"
+      | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
+      | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking")
   | LookupT _ -> "LookupT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"

@@ -493,17 +493,16 @@ struct
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
-        | (UnionT (_, urep), PreprocessKitT (_, ConcretizeTypes _)) ->
-          flow_all_in_union cx trace urep u
-        | (MaybeT (lreason, t), PreprocessKitT (_, ConcretizeTypes _)) ->
+        | (UnionT (_, urep), ConcretizeT _) -> flow_all_in_union cx trace urep u
+        | (MaybeT (lreason, t), ConcretizeT _) ->
           let lreason = replace_desc_reason RNullOrVoid lreason in
           rec_flow cx trace (NullT.make lreason, u);
           rec_flow cx trace (VoidT.make lreason, u);
           rec_flow cx trace (t, u)
-        | (OptionalT { reason = r; type_ = t; use_desc }, PreprocessKitT (_, ConcretizeTypes _)) ->
+        | (OptionalT { reason = r; type_ = t; use_desc }, ConcretizeT _) ->
           rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r, u);
           rec_flow cx trace (t, u)
-        | (AnnotT (r, t, use_desc), PreprocessKitT (_, ConcretizeTypes _)) ->
+        | (AnnotT (r, t, use_desc), ConcretizeT _) ->
           (* TODO: directly derive loc and desc from the reason of tvar *)
           let loc = loc_of_reason r in
           let desc =
@@ -1327,7 +1326,7 @@ struct
           )
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForImportsExports tvar))) ->
+        | (t, ConcretizeT (reason, ConcretizeForImportsExports tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (* Namespace and type qualification *)
         | ( NamespaceT { namespace_symbol = _; values_type; types_tmap },
@@ -1437,7 +1436,7 @@ struct
           | _ -> ())
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForInspection tvar))) ->
+        | (t, ConcretizeT (reason, ConcretizeForInspection tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (* helpers *)
         | ( DefT (reason_o, ObjT { props_tmap = mapr; flags; _ }),
@@ -1975,9 +1974,7 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | ( IntersectionT _,
-            PreprocessKitT (reason, ConcretizeTypes (ConcretizeForOperatorsChecking tvar))
-          ) ->
+        | (IntersectionT _, ConcretizeT (reason, ConcretizeForOperatorsChecking tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         | (IntersectionT (r, rep), u) ->
           let u' =
@@ -4189,7 +4186,7 @@ struct
           ) ->
           add_specialized_callee_method_action cx trace (AnyT.untyped reason_call) action
         (* computed properties *)
-        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeComputedPropsT tvar))) ->
+        | (t, ConcretizeT (reason, ConcretizeComputedPropsT tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (**************************************************)
         (* array pattern can consume the rest of an array *)
@@ -4528,7 +4525,7 @@ struct
             )
         (* Concretize types for type operation purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForOperatorsChecking tvar))) ->
+        | (t, ConcretizeT (reason, ConcretizeForOperatorsChecking tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (**************************)
         (* relational comparisons *)
@@ -5788,7 +5785,7 @@ struct
       match u with
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
-      | PreprocessKitT (_, ConcretizeTypes (ConcretizeForOperatorsChecking _))
+      | ConcretizeT (_, ConcretizeForOperatorsChecking _)
       | StrictEqT _
       | TestPropT _
       | OptionalChainT _
@@ -6169,7 +6166,7 @@ struct
     | FilterMaybeT _
     | DeepReadOnlyT _
     | HooklikeT _
-    | PreprocessKitT _
+    | ConcretizeT _
     | ResolveUnionT _
     | LookupT _
     | MapTypeT _
@@ -9602,7 +9599,7 @@ struct
 
   and possible_concrete_types mk_concretization_target cx reason t =
     let id = Tvar.mk_no_wrap cx reason in
-    flow cx (t, PreprocessKitT (reason, ConcretizeTypes (mk_concretization_target id)));
+    flow cx (t, ConcretizeT (reason, mk_concretization_target id));
     Flow_js_utils.possible_types cx id
 
   and possible_concrete_types_for_inspection cx t =
