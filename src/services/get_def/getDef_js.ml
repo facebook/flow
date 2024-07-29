@@ -33,14 +33,11 @@ let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance
   | Some def_locs -> Ok (Nel.map loc_of_aloc def_locs, Some name)
   | None -> Error (Printf.sprintf "failed to find member %s in members map" name)
 
-let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig :
-    (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
+let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig ~scope_info
+    : (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
   function
   | Get_def_request.Identifier { name; loc = (aloc, type_) } ->
     let loc = loc_of_aloc aloc in
-    let scope_info =
-      Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
-    in
     let all_uses = Scope_api.With_Loc.all_uses scope_info in
     let matching_uses = Loc_collections.LocSet.filter (fun use -> Loc.contains use loc) all_uses in
     (match Loc_collections.LocSet.elements matching_uses with
@@ -50,7 +47,15 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
       Ok (def_loc, Some name)
     | [] ->
       let req = Get_def_request.Type { annot = (aloc, type_); name = Some name } in
-      process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
+      process_request
+        ~loc_of_aloc
+        ~cx
+        ~is_legit_require
+        ~ast
+        ~typed_ast_opt
+        ~file_sig
+        ~scope_info
+        req
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name
@@ -70,7 +75,7 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
         Member { prop_name = name; object_type = (loc, props_object); force_instance = false }
       )
     in
-    process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig req
+    process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig ~scope_info req
 
 module Depth = struct
   let limit = 100
@@ -121,11 +126,15 @@ end
 
 let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
+  let scope_info =
+    Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
+  in
+  let is_local_use aloc = Scope_api.With_Loc.is_local_use scope_info (loc_of_aloc aloc) in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc source_aloc in
     SMap.exists (fun _ locs -> List.exists (fun loc -> loc = source_loc) locs) require_loc_map
   in
-  let rec loop ~depth req_loc loop_name =
+  let rec loop ~scope_info ~depth req_loc loop_name =
     match Depth.add req_loc depth with
     | Error error ->
       let trace_of_locs locs =
@@ -148,7 +157,9 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
     | Ok Depth.NoResult ->
       let open Get_def_process_location in
       let result =
-        match process_location cx ~is_legit_require ~available_ast ~purpose req_loc with
+        match
+          process_location cx ~is_local_use ~is_legit_require ~available_ast ~purpose req_loc
+        with
         | OwnDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
         | Request request -> begin
           match
@@ -159,6 +170,7 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
               ~ast
               ~typed_ast_opt:(Typed_ast_utils.typed_ast_of_available_ast available_ast)
               ~file_sig
+              ~scope_info
               request
           with
           | Ok (res_locs, name) ->
@@ -172,7 +184,7 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
                    if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
                      Def (LocSet.singleton res_loc, name)
                    else
-                     match loop ~depth res_loc name with
+                     match loop ~scope_info ~depth res_loc name with
                      | Bad_loc _ -> Def (LocSet.singleton res_loc, name)
                      | Def_error msg -> Partial (LocSet.singleton res_loc, name, msg)
                      | (Def _ | Partial _) as res -> res
@@ -198,4 +210,4 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
       Depth.cache_result req_loc result depth;
       result
   in
-  loop ~depth:(Depth.empty ()) requested_loc None
+  loop ~depth:(Depth.empty ()) ~scope_info requested_loc None
