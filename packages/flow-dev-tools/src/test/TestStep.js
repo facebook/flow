@@ -252,6 +252,14 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       env.triggerFlowCheck();
     });
 
+  addSymlinkDirs: (
+    ...destinationPathPairs: Array<[string, string]>
+  ) => TestStepFirstStage = (...sources) =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.addSymlinkDirs(sources);
+      env.triggerFlowCheck();
+    });
+
   addFixture: (source: string, dest?: string) => TestStepFirstStage = (
     source,
     dest,
