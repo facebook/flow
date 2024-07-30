@@ -85,7 +85,7 @@ let annot_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
     annot
 
-class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
+class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~purpose =
   object (this)
     inherit [ALoc.t, 'T, ALoc.t, 'T] enclosing_node_mapper as super
 
@@ -237,6 +237,40 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
         | _ -> ()
       end;
       super#member loc expr
+
+    method! generic_type expr =
+      let open Ast.Type.Generic in
+      let { id; targs; comments = _ } = expr in
+      begin
+        match (id, targs) with
+        | ( Identifier.Unqualified (pick_annot, { Ast.Identifier.name = "Pick"; comments = _ }),
+            Some (_, { Ast.Type.TypeArgs.arguments = [(obj_annot, _); keys]; _ })
+          )
+          when not (is_local_use (this#loc_of_annot pick_annot)) ->
+          let request annot prop_name =
+            if this#annot_covers_target annot then
+              let obj_annot =
+                (this#loc_of_annot obj_annot, this#type_from_enclosing_node obj_annot)
+              in
+              let result =
+                Get_def_request.(
+                  Member { prop_name; object_type = obj_annot; force_instance = false }
+                )
+              in
+              this#request result
+          in
+          (match keys with
+          | (annot, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ }) -> request annot value
+          | (_, Ast.Type.Union { Ast.Type.Union.types = (t1, t2, ts); _ }) ->
+            Base.List.iter (t1 :: t2 :: ts) ~f:(function
+                | (annot, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ }) ->
+                  request annot value
+                | _ -> ()
+                )
+          | _ -> ())
+        | _ -> ()
+      end;
+      super#generic_type expr
 
     method! indexed_access_type expr =
       let open Ast.Type.IndexedAccess in
@@ -591,9 +625,9 @@ class virtual ['T] searcher _cx ~is_legit_require ~covers_target ~purpose =
         pn
   end
 
-class typed_ast_searcher _cx ~typed_ast:_ ~is_legit_require ~covers_target ~purpose =
+class typed_ast_searcher _cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =
   object
-    inherit [ALoc.t * Type.t] searcher _cx ~is_legit_require ~covers_target ~purpose
+    inherit [ALoc.t * Type.t] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~purpose
 
     method private loc_of_annot (loc, _) = loc
 
@@ -653,9 +687,9 @@ let find_remote_name_def_loc_in_node loc node =
 
 exception Internal_error_exn of internal_error
 
-class on_demand_searcher cx ~is_legit_require ~covers_target ~purpose =
+class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purpose =
   object (this)
-    inherit [ALoc.t] searcher cx ~is_legit_require ~covers_target ~purpose
+    inherit [ALoc.t] searcher cx ~is_local_use ~is_legit_require ~covers_target ~purpose
 
     method on_type_annot x = x
 
@@ -713,13 +747,17 @@ let search ~searcher ast =
   | exception Internal_error_exn err -> InternalError err
   | _ -> searcher#found_loc
 
-let process_location cx ~available_ast ~is_legit_require ~purpose loc =
+let process_location cx ~available_ast ~is_local_use ~is_legit_require ~purpose loc =
   match available_ast with
   | Typed_ast_utils.Typed_ast typed_ast ->
     let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-    let searcher = new typed_ast_searcher () ~typed_ast ~is_legit_require ~covers_target ~purpose in
+    let searcher =
+      new typed_ast_searcher () ~typed_ast ~is_local_use ~is_legit_require ~covers_target ~purpose
+    in
     search ~searcher typed_ast
   | Typed_ast_utils.ALoc_ast aloc_ast ->
     let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-    let searcher = new on_demand_searcher cx ~is_legit_require ~covers_target ~purpose in
+    let searcher =
+      new on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purpose
+    in
     search ~searcher aloc_ast

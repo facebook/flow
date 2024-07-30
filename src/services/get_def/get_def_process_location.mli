@@ -25,6 +25,7 @@ type 'loc result =
  * `ALoc.t * Type.t` through an inferred constraint. *)
 class virtual ['T] searcher :
   'c
+  -> is_local_use:(ALoc.t -> bool)
   -> is_legit_require:(ALoc.t -> bool)
   -> covers_target:(ALoc.t -> bool)
   -> purpose:Get_def_types.Purpose.t
@@ -62,6 +63,7 @@ val process_type_request : Context.t -> Type.t -> (ALoc.t, string) Stdlib.result
 val process_location :
   Context.t ->
   available_ast:Typed_ast_utils.available_ast ->
+  is_local_use:(ALoc.t -> bool) ->
   is_legit_require:(ALoc.t -> bool) ->
   purpose:Get_def_types.Purpose.t ->
   Loc.t ->
