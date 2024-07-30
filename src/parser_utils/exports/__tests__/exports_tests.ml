@@ -677,6 +677,14 @@ let%expect_test "es6_export_alias" =
     [(NamedType "Bar"); (Named "bar")]
   |}]
 
+let%expect_test "cjs_export_type_alias" =
+  print_module {|
+    export type {Foo as Bar} from 'baz';
+  |};
+  [%expect {|
+    [(NamedType "Bar")]
+  |}]
+
 let%expect_test "cjs_default_remote_ref" =
   print_module {|
     import type {T} from './foo';

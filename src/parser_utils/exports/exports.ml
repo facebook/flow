@@ -380,13 +380,9 @@ module CJS = struct
     let open Type_sig_pack in
     match value with
     | ExportTypeRef _
-    | ExportTypeBinding _ ->
-      NamedType name :: acc
+    | ExportTypeBinding _
     | ExportTypeFrom _ ->
-      (* TODO: ExportTypeFrom defines aliases, which we don't handle yet. TS
-         keeps track of them and only suggests them if the re-exported thing
-         can't be imported. *)
-      acc
+      NamedType name :: acc
 
   let exports type_sig type_exports exports info =
     (* TODO: re-exports *)
