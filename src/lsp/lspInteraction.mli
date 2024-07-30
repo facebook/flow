@@ -27,6 +27,7 @@ type trigger =
   | Rename of Lsp.lsp_id
   | ServerConnected
   | SelectionRange of Lsp.lsp_id
+  | SemanticDecorations of Lsp.lsp_id
   | SignatureHelp of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id

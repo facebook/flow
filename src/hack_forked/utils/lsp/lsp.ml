@@ -1217,6 +1217,21 @@ module SelectionRange = struct
   type result = selection_range list
 end
 
+(* Type Coverage request, method="textDocument/semanticDecorations" *)
+(* THIS IS A FLOW-SPECIFIC EXTENSION TO LSP.                        *)
+module SemanticDecorations = struct
+  type params = { textDocument: TextDocumentIdentifier.t }
+
+  and result = { decorations: decoration list }
+
+  and decoration = {
+    range: range;
+    kind: kind;
+  }
+
+  and kind = RefinedValue
+end
+
 (* Document Signature Help request, method="textDocument/signatureHelp" *)
 module SignatureHelp = struct
   module TriggerKind = struct
@@ -1484,6 +1499,7 @@ type lsp_request =
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | ConfigurationRequest of Configuration.params
   | SelectionRangeRequest of SelectionRange.params
+  | SemanticDecorationsRequest of SemanticDecorations.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -1519,6 +1535,7 @@ type lsp_result =
   | CompletionItemResolveResult of CompletionItemResolve.result
   | ConfigurationResult of Configuration.result
   | SelectionRangeResult of SelectionRange.result
+  | SemanticDecorationsResult of SemanticDecorations.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result

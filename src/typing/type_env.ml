@@ -346,7 +346,9 @@ let refine cx reason loc refi res =
         | Some predicate -> Tvar.mk_no_wrap_where cx reason (Predicate_kit.predicate cx t predicate)
       in
       match res with
-      | Ok t -> Ok (map_t t)
+      | Ok t ->
+        Context.add_refined_location cx loc;
+        Ok (map_t t)
       | Error (t, errs) -> Error (map_t t, errs))
     ~default:res
     refi
