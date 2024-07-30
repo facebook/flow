@@ -1,3 +1,11 @@
+### 0.242.1
+
+New Features:
+* For `Pick` utility type with string literals in the second type argument, go-to-definition on the string literal will jump to corresponding prop's location
+
+Notable bug fixes:
+* Re-exported types will show in autoimports from files without any import statement.
+
 ### 0.242.0
 
 Likely to cause new Flow errors:
