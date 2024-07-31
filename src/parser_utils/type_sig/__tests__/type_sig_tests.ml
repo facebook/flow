@@ -7003,23 +7003,6 @@ let%expect_test "declare_component" =
                        BuiltinRef {ref_loc = [2:39]; type_ref = true; name = "React$Node"})),
                  Flow_ast.Type.Renders.Normal)))}} |}]
 
-let%expect_test "declare_component_disabled" =
-  print_sig ~enable_component_syntax:false {|
-    declare export component Baz ();
-    declare export default component Bar ();
-  |};
-  [%expect{|
-    ESModule {type_exports = [||];
-      exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:15-22]; index = 1}|];
-      info =
-      ESModuleInfo {type_export_keys = [||];
-        type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
-
-    Local defs:
-    0. DisabledComponentBinding {id_loc = [1:25-28]; name = "Baz"}
-    1. DisabledComponentBinding {id_loc = [2:33-36]; name = "Bar"} |}]
-
 let%expect_test "component_type" =
   print_sig {|
     type A = number
@@ -7079,8 +7062,8 @@ let%expect_test "component_type" =
                        Flow_ast.Type.Renders.Normal)))}
                )))} |}]
 
-let%expect_test "declare_component_disabled" =
-  print_sig ~enable_component_syntax:false {|
+let%expect_test "declare_component" =
+  print_sig {|
     declare export var Baz: component();
     declare var Bar: component();
     declare export default Bar;
@@ -7098,8 +7081,38 @@ let%expect_test "declare_component_disabled" =
         stars = []; strict = true; platform_availability_set = None}}
 
     Local defs:
-    0. Variable {id_loc = [1:19-22]; name = "Baz"; def = (Annot (Any [1:24-35]))}
-    1. Variable {id_loc = [2:12-15]; name = "Bar"; def = (Annot (Any [2:17-28]))} |}]
+    0. Variable {id_loc = [1:19-22];
+         name = "Baz";
+         def =
+         (Annot
+            (ComponentAnnot ([1:24-35],
+               ComponentSig {params_loc = [1:33-35];
+                 tparams = Mono; params = [];
+                 rest_param = None;
+                 renders =
+                 (Annot
+                    (Renders ([1:35],
+                       (TyRef
+                          (Unqualified
+                             BuiltinRef {ref_loc = [1:35]; type_ref = true; name = "React$Node"})),
+                       Flow_ast.Type.Renders.Normal)))}
+               )))}
+    1. Variable {id_loc = [2:12-15];
+         name = "Bar";
+         def =
+         (Annot
+            (ComponentAnnot ([2:17-28],
+               ComponentSig {params_loc = [2:26-28];
+                 tparams = Mono; params = [];
+                 rest_param = None;
+                 renders =
+                 (Annot
+                    (Renders ([2:28],
+                       (TyRef
+                          (Unqualified
+                             BuiltinRef {ref_loc = [2:28]; type_ref = true; name = "React$Node"})),
+                       Flow_ast.Type.Renders.Normal)))}
+               )))} |}]
 
 let%expect_test "render_types" =
   print_sig {|
