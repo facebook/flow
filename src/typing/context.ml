@@ -57,7 +57,6 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  namespaces: bool;
   react_disable_function_components_default_props: bool;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
@@ -273,7 +272,6 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
-    namespaces = Options.namespaces options;
     react_disable_function_components_default_props =
       Options.react_disable_function_components_default_props options;
     react_runtime = Options.react_runtime options;
@@ -618,8 +616,6 @@ let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
-
-let namespaces cx = cx.metadata.namespaces
 
 let jsx cx = cx.metadata.jsx
 

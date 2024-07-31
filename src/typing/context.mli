@@ -94,7 +94,6 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  namespaces: bool;
   react_disable_function_components_default_props: bool;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
@@ -278,8 +277,6 @@ val renders_type_argument_validations :
   t -> (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list
 
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
-
-val namespaces : t -> bool
 
 val verbose : t -> Verbose.t option
 
