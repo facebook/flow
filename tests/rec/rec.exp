@@ -38,12 +38,15 @@ References:
                       ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- exported_eval_values.js:4:20
+Error ------------------------------------------------------------------------------------- exported_eval_values.js:4:36
 
-Internal error: forced read of Env_api.Make.OrdinaryNameLoc entry from component is not yet FullyResolved
+Invalid trivially recursive definition of `$Values`.  [recursive-definition]
 
-   4| export opaque type Value: number = $Values< // todo: internal error
-                         ^^^^^
+                                         v------------------------
+   4| export opaque type Value: number = $Values< // error: cyclic
+   5|   typeof options,
+   6| >;
+      ^
 
 
 Error ------------------------------------------------------------------------------------------------- id_alias.js:2:10

@@ -831,11 +831,9 @@ module Make
         poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (OpaqueKind, t)))
       in
       let () =
-        Flow.(
-          match (underlying_t, super_t) with
-          | (Some l, Some u) -> flow_t cx (l, u)
-          | _ -> ()
-        )
+        match (underlying_t, super_t) with
+        | (Some l, Some u) -> Context.add_post_inference_subtyping_check cx l unknown_use u
+        | _ -> ()
       in
 
       let opaque_type_ast =
