@@ -1,7 +1,0 @@
-[libs]
-lib.js
-
-[options]
-all=true
-no_flowlib=true
-experimental.namespaces=false

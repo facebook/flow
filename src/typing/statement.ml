@@ -2031,10 +2031,6 @@ module Make
         let t =
           Module_info_analyzer.analyze_declare_namespace cx namespace_symbol reason body_statements
         in
-        if not (File_key.is_lib_file (Context.file cx) || Context.namespaces cx) then
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.DeclareNamespace));
         (t, ((name_loc, t), { Ast.Identifier.name; comments }))
       in
       (t, { Ast.Statement.DeclareNamespace.id; body; comments })

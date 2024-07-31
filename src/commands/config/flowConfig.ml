@@ -110,7 +110,6 @@ module Opts = struct
     multi_platform_extensions: string list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
-    namespaces: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -243,7 +242,6 @@ module Opts = struct
       multi_platform_extensions = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
-      namespaces = true;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -920,7 +918,6 @@ module Opts = struct
       ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
         multi_platform_ambient_supports_platform_directory_overrides_parser
       );
-      ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.vscode_detailed_diagnostics",
         boolean (fun opts v -> Ok { opts with vscode_detailed_diagnostics = v })
@@ -1675,8 +1672,6 @@ let multi_platform_ambient_supports_platform_directory_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
-
-let namespaces c = c.options.Opts.namespaces
 
 let no_flowlib c = c.options.Opts.no_flowlib
 
