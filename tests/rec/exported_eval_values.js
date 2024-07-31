@@ -1,7 +1,7 @@
 
 declare const options: {[string]: Value};
 
-export opaque type Value: number = $Values< // todo: internal error
+export opaque type Value: number = $Values< // error: cyclic
   typeof options,
 >;
 
