@@ -131,3 +131,37 @@ declare function tail<T>(xs: [1, ...T, ...]): T;
 {
   const x = tail([1]); // ERROR - underconstrained
 }
+
+// Call rest args
+{
+  const a = <T: [...]>(args: T, f: (...T) => void) => {
+    f(...args); // OK
+    f(0, ...args); // ERROR
+    f(...args, 0); // ERROR
+  };
+  a([1, true], (x, y) => {
+    x as number; // OK
+    y as boolean; // OK
+  });
+
+  const b = <T: [...]>(args: T, f: (number, ...T) => void) => {
+    f(1, ...args); // OK
+  };
+  b([true], (x, y) => {
+    x as number; // OK
+    y as boolean; // OK
+  });
+
+  const c = <T: [number, ...]>(args: T, f: (...T) => void) => {
+    f(...args); // OK
+  };
+  c([true], (x) => {}); // ERROR
+  c([1, true], (x, y) => {
+    x as number; // OK
+    y as boolean; // OK
+  });
+
+  const d = <T: [...]>(args: T, f: (string) => void) => {
+    f(...args); // ERROR
+  };
+}

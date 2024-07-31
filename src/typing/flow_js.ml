@@ -8435,7 +8435,8 @@ struct
       let (used_pairs, unused_parlist) =
         match spread_arg with
         | None -> (used_pairs, unused_parlist)
-        | Some (spread_arg_elemt, _) ->
+        | Some (reason, arrtype, _) ->
+          let spread_arg_elemt = elemt_of_arrtype arrtype in
           (* The spread argument may be an empty array and to be 100% correct, we
            * should flow VoidT to every remaining parameter, however we don't. This
            * is consistent with how we treat arrays almost everywhere else *)
@@ -8443,11 +8444,7 @@ struct
             @ Base.List.map
                 ~f:(fun (_, param) ->
                   let use_op =
-                    Frame
-                      ( FunRestParam
-                          { lower = reason_of_t spread_arg_elemt; upper = reason_of_t param },
-                        use_op
-                      )
+                    Frame (FunRestParam { lower = reason; upper = reason_of_t param }, use_op)
                   in
                   (spread_arg_elemt, UseT (use_op, param)))
                 unused_parlist,
@@ -8507,14 +8504,8 @@ struct
         let elems =
           match spread_arg with
           | None -> List.rev rev_elems
-          | Some (spread_arg_elemt, generic) ->
-            let reason = reason_of_t spread_arg_elemt in
-            let spread_array =
-              DefT
-                ( reason,
-                  ArrT (ArrayAT { elem_t = spread_arg_elemt; tuple_view = None; react_dro = None })
-                )
-            in
+          | Some (reason, arrtype, generic) ->
+            let spread_array = DefT (reason, ArrT arrtype) in
             let spread_array =
               Base.Option.value_map
                 ~f:(fun id ->
@@ -8896,9 +8887,9 @@ struct
             | ResolvedArg (TupleElement { t; _ }, generic) :: rest ->
               flatten cx r ((t, generic) :: args) spread rest
             | ResolvedSpreadArg
-                (_, ArrayAT { tuple_view = Some (TupleView { elements; _ }); _ }, generic)
+                (_, ArrayAT { tuple_view = Some (TupleView { elements; inexact; _ }); _ }, generic)
               :: rest
-            | ResolvedSpreadArg (_, TupleAT { elements; _ }, generic) :: rest ->
+            | ResolvedSpreadArg (_, TupleAT { elements; inexact; _ }, generic) :: rest ->
               let args =
                 List.rev_append
                   (List.map
@@ -8908,44 +8899,60 @@ struct
                   )
                   args
               in
-              flatten cx r args spread rest
+              if inexact then
+                let spread = Some (TypeExSet.empty, None, Generic.ArraySpread.Bottom) in
+                flatten cx r args spread resolved
+              else
+                flatten cx r args spread rest
             | ResolvedSpreadArg (r, _, _) :: _
             | ResolvedAnySpreadArg (r, _) :: _ ->
               (* We weren't able to flatten the call argument list to remove all
                * spreads. This means we need to build a spread argument, with
                * unknown arity. *)
-              let tset = TypeExSet.empty in
-              flatten cx r args (Some (tset, Generic.ArraySpread.Bottom)) resolved
+              let spread = Some (TypeExSet.empty, None, Generic.ArraySpread.Bottom) in
+              flatten cx r args spread resolved
             | [] -> failwith "Empty list already handled")
-          | Some (tset, generic) ->
-            let (elemt, generic', ro, rest) =
+          | Some (tset, last_inexact_tuple, generic) ->
+            let (tset, last_inexact_tuple, generic', ro, rest) =
               match resolved with
               | ResolvedArg (TupleElement { t; _ }, generic) :: rest ->
-                (t, generic, Generic.ArraySpread.NonROSpread, rest)
+                let tset = TypeExSet.add t tset in
+                (tset, last_inexact_tuple, generic, Generic.ArraySpread.NonROSpread, rest)
+              | ResolvedSpreadArg (_, (TupleAT { inexact = true; _ } as arrtype), generic) :: []
+                when TypeExSet.is_empty tset ->
+                (tset, Some arrtype, generic, ro_of_arrtype arrtype, [])
               | ResolvedSpreadArg (_, arrtype, generic) :: rest ->
-                (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype, rest)
+                let tset = TypeExSet.add (elemt_of_arrtype arrtype) tset in
+                (tset, last_inexact_tuple, generic, ro_of_arrtype arrtype, rest)
               | ResolvedAnySpreadArg (reason, any_src) :: rest ->
-                (AnyT.why any_src reason, None, Generic.ArraySpread.NonROSpread, rest)
+                let tset = TypeExSet.add (AnyT.why any_src reason) tset in
+                (tset, last_inexact_tuple, None, Generic.ArraySpread.NonROSpread, rest)
               | [] -> failwith "Empty list already handled"
             in
-            let tset = TypeExSet.add elemt tset in
             let generic =
               Generic.ArraySpread.merge ~printer:(print_if_verbose_lazy cx) generic generic' ro
             in
-            flatten cx r args (Some (tset, generic)) rest
+            flatten cx r args (Some (tset, last_inexact_tuple, generic)) rest
       in
       fun cx ~use_op r resolved ->
         let (args, spread) = flatten cx r [] None resolved in
         let spread =
           Base.Option.map
-            ~f:(fun (tset, generic) ->
+            ~f:(fun (tset, last_inexact_tuple, generic) ->
               let generic = Generic.ArraySpread.to_option generic in
               let r = mk_reason RArray (loc_of_reason r) in
-              ( Tvar.mk_where cx r (fun tvar ->
-                    TypeExSet.iter (fun t -> flow cx (t, UseT (use_op, tvar))) tset
-                ),
-                generic
-              ))
+              let arrtype =
+                match last_inexact_tuple with
+                | Some arrtype -> arrtype
+                | None ->
+                  let elem_t =
+                    Tvar.mk_where cx r (fun tvar ->
+                        TypeExSet.iter (fun t -> flow cx (t, UseT (use_op, tvar))) tset
+                    )
+                  in
+                  ArrayAT { elem_t; tuple_view = None; react_dro = None }
+              in
+              (r, arrtype, generic))
             spread
         in
         (List.rev args, spread)
