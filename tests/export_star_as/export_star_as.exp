@@ -1,3 +1,8 @@
+Error ----------------------------------------------------------------------------------------------------- cycle.js:0:1
+
+Invalid trivially recursive definition of exports.  [recursive-definition]
+
+
 Error ----------------------------------------------------------------------------------------------------- dest.js:4:17
 
 Cannot assign `source.num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -67,4 +72,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors
