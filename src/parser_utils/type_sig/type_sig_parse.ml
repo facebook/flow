@@ -1495,10 +1495,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
-    | T.Component { T.Component.tparams; params; renders; _ } when opts.enable_component_syntax ->
+    | T.Component { T.Component.tparams; params; renders; _ } ->
       let def = component_type opts scope tbls tparams params renders in
       Annot (ComponentAnnot (loc, def))
-    | T.Component _ -> Annot (Any loc)
     | T.Object o -> object_type opts scope tbls xs loc o
     | T.Interface
         {
@@ -4464,10 +4463,7 @@ let declare_component_decl opts scope tbls c_loc decl =
   let sig_loc = push_loc tbls c_loc in
   let id_loc = push_loc tbls id_loc in
   let def =
-    if opts.enable_component_syntax then
-      Some (lazy (splice tbls id_loc (fun tbls -> declare_component_def opts scope tbls decl)))
-    else
-      None
+    Some (lazy (splice tbls id_loc (fun tbls -> declare_component_def opts scope tbls decl)))
   in
   Scope.bind_component scope tbls id_loc sig_loc name def
 

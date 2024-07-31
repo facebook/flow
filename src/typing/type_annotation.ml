@@ -3130,47 +3130,35 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       (cparams, Component_type_params.eval env.cx cparams)
     in
     fun env reason ~id_opt tparams params renders ->
-      if not (Context.component_syntax env.cx) then begin
-        let loc = loc_of_reason reason in
-        Flow_js_utils.add_output
-          env.cx
-          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ComponentSyntax));
-        let t = AnyT.at (AnyError None) loc in
-        ( t,
-          Base.Option.map ~f:Tast_utils.error_mapper#type_params tparams,
-          Tast_utils.error_mapper#component_type_params params,
-          Tast_utils.error_mapper#component_renders_annotation renders
-        )
-      end else
-        let (tparams, env, tparam_asts) = mk_type_param_declarations env tparams in
-        let (cparams, params_ast) = mk_params env params in
-        let (ren_loc, renders_t, renders_ast) =
-          match renders with
-          | Ast.Type.AvailableRenders (loc, annot) ->
-            let (t, renders_ast) = convert_render_type env ~allow_generic_t:true loc annot in
-            (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
-          | Ast.Type.MissingRenders loc ->
-            let ren_reason = mk_reason RReturn loc in
-            let t = ConsGen.get_builtin_type env.cx ren_reason "React$Node" in
-            let renders_t =
-              Flow_js_utils.mk_renders_type env.cx ren_reason RendersNormal ~mk_type_destructor t
-            in
-            (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
-        in
-        let sig_ =
-          {
-            Component_type_sig_types.reason;
-            tparams;
-            cparams;
-            body = ();
-            renders_t;
-            ret_annot_loc = ren_loc;
-            id_opt;
-          }
-        in
-        let loc = loc_of_reason reason in
-        let t = Component_type_sig.component_type env.cx loc sig_ in
-        (t, tparam_asts, params_ast, renders_ast)
+      let (tparams, env, tparam_asts) = mk_type_param_declarations env tparams in
+      let (cparams, params_ast) = mk_params env params in
+      let (ren_loc, renders_t, renders_ast) =
+        match renders with
+        | Ast.Type.AvailableRenders (loc, annot) ->
+          let (t, renders_ast) = convert_render_type env ~allow_generic_t:true loc annot in
+          (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
+        | Ast.Type.MissingRenders loc ->
+          let ren_reason = mk_reason RReturn loc in
+          let t = ConsGen.get_builtin_type env.cx ren_reason "React$Node" in
+          let renders_t =
+            Flow_js_utils.mk_renders_type env.cx ren_reason RendersNormal ~mk_type_destructor t
+          in
+          (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
+      in
+      let sig_ =
+        {
+          Component_type_sig_types.reason;
+          tparams;
+          cparams;
+          body = ();
+          renders_t;
+          ret_annot_loc = ren_loc;
+          id_opt;
+        }
+      in
+      let loc = loc_of_reason reason in
+      let t = Component_type_sig.component_type env.cx loc sig_ in
+      (t, tparam_asts, params_ast, renders_ast)
 
   let mk_super env loc c targs =
     match targs with
