@@ -709,7 +709,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           None
         else
           TypeMap.keys lowers
-          |> List.filter is_proper_def
           |> Flow_js_utils.collect_lowers cx (ISet.singleton id) [] ~filter_empty:false
           |> union_flatten_list
           |> Base.List.filter ~f:(fun t -> not @@ Flow_js_utils.TvarVisitors.has_placeholders cx t)
