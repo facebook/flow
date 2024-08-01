@@ -31,7 +31,8 @@ let rec concretize_and_run_predicate cx trace l variant tvar ~predicate_no_concr
   Flow_js_utils.types_of cx (Context.find_graph cx id)
   |> Base.List.iter ~f:(function
          | GenericT { bound; name; reason; id; no_infer } ->
-           let bound_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+           let bound_tvar_id = Tvar.mk_no_wrap cx reason in
+           let bound_tvar = (reason, bound_tvar_id) in
            concretize_and_run_predicate
              cx
              trace
@@ -39,8 +40,14 @@ let rec concretize_and_run_predicate cx trace l variant tvar ~predicate_no_concr
              variant
              bound_tvar
              ~predicate_no_concretization;
-           let cont = Upper (UseT (unknown_use, OpenT tvar)) in
-           rec_flow cx trace (OpenT bound_tvar, SealGenericT { reason; id; name; cont; no_infer })
+           Flow_js_utils.possible_types cx bound_tvar_id
+           |> Base.List.iter ~f:(fun bound ->
+                  rec_flow_t
+                    cx
+                    trace
+                    ~use_op:unknown_use
+                    (GenericT { reason = reason_of_t bound; name; bound; no_infer; id }, OpenT tvar)
+              )
          | l -> predicate_no_concretization cx trace tvar l
          )
 
