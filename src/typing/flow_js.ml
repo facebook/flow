@@ -6708,21 +6708,27 @@ struct
     | ReactPromoteRendersRepresentation
         { should_distribute = true; promote_structural_components; renders_variant; resolved_elem }
       ->
-      rec_flow
-        cx
-        trace
-        ( t,
-          PromoteRendersRepresentationT
-            {
-              use_op;
-              reason;
-              tout = OpenT tout;
-              resolved_elem;
-              should_distribute = true;
-              promote_structural_components;
-              renders_variant;
-            }
-        )
+      if
+        Context.in_implicit_instantiation cx
+        && TvarVisitors.has_unresolved_tvars_or_placeholders cx t
+      then
+        rec_flow_t cx trace ~use_op:unknown_use (Context.mk_placeholder cx reason, OpenT tout)
+      else
+        rec_flow
+          cx
+          trace
+          ( t,
+            PromoteRendersRepresentationT
+              {
+                use_op;
+                reason;
+                tout = OpenT tout;
+                resolved_elem;
+                should_distribute = true;
+                promote_structural_components;
+                renders_variant;
+              }
+          )
     | _ ->
       let destruct_union ?(f = (fun t -> t)) r members upper =
         let destructor = TypeDestructorT (use_op, reason, d) in
