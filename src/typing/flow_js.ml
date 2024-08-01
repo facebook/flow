@@ -1635,15 +1635,6 @@ struct
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
-        | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; cond_context; _ }) ->
-          if union_optimization_guard cx ~equiv:true (curry (strict_equatable cond_context)) u1 u2
-          then begin
-            if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
-          end else
-            flow_all_in_union cx trace rep1 u
-        | (UnionT _, StrictEqT { reason; cond_context; flip; arg })
-          when needs_resolution arg || is_generic arg ->
-          rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
         | (UnionT (_, _), SentinelPropTestT result) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
         | (UnionT (_, rep), PredicateT (ConcretizeForMaybeOrExistPredicateTest, tvar))
@@ -4469,11 +4460,6 @@ struct
            recorded as lower bound to the target tvar. *)
         | (t, ConcretizeT (reason, ConcretizeForOperatorsChecking tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
-        (**************************)
-        (* relational comparisons *)
-        (**************************)
-        | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
-          flow_strict_eq cx trace reason cond_context flip l r
         (**************************************)
         (* types may be refined by predicates *)
         (**************************************)
@@ -5582,20 +5568,6 @@ struct
       (* END OF PATTERN MATCH *)
     )
 
-  and flow_strict_eq cx trace reason cond_context flip l r =
-    if needs_resolution r || is_generic r then
-      rec_flow cx trace (r, StrictEqT { reason; cond_context; flip = not flip; arg = l })
-    else
-      let (l, r) =
-        if flip then
-          (r, l)
-        else
-          (l, r)
-      in
-      match strict_equatable_error cond_context (l, r) with
-      | Some error -> add_output cx error
-      | None -> ()
-
   (* Returns true when __flow should succeed immediately if EmptyT flows into u. *)
   and empty_success u =
     match u with
@@ -5726,7 +5698,6 @@ struct
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
       | ConcretizeT (_, ConcretizeForOperatorsChecking _)
-      | StrictEqT _
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
@@ -6175,7 +6146,6 @@ struct
       true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
-    | StrictEqT _
     | HasOwnPropT _
     | ExtractReactRefT _
     | ImplementsT _
@@ -9595,14 +9565,17 @@ struct
     flow cx (t, ConcretizeT (reason, mk_concretization_target id));
     Flow_js_utils.possible_types cx id
 
-  and possible_concrete_types_for_inspection cx t =
-    possible_concrete_types (fun ident -> ConcretizeForInspection ident) cx t
-
-  and singleton_concrete_type_for_inspection cx reason t =
-    match possible_concrete_types_for_inspection cx reason t with
+  and singleton_concrete_type mk_concretization_target cx reason t =
+    match possible_concrete_types mk_concretization_target cx reason t with
     | [] -> EmptyT.make reason
     | [t] -> t
     | t1 :: t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
+
+  and possible_concrete_types_for_inspection cx reason t =
+    possible_concrete_types (fun ident -> ConcretizeForInspection ident) cx reason t
+
+  and singleton_concrete_type_for_inspection cx reason t =
+    singleton_concrete_type (fun ident -> ConcretizeForInspection ident) cx reason t
 
   and add_specialized_callee_method_action cx trace l = function
     | CallM { specialized_callee; _ }
@@ -9630,8 +9603,8 @@ module rec FlowJs : Flow_common.S = struct
   let possible_concrete_types_for_computed_props =
     possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)
 
-  let possible_concrete_types_for_operators_checking cx t =
-    possible_concrete_types (fun ident -> ConcretizeForOperatorsChecking ident) cx t
+  let possible_concrete_types_for_operators_checking =
+    possible_concrete_types (fun ident -> ConcretizeForOperatorsChecking ident)
 end
 
 include FlowJs

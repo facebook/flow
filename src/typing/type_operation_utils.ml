@@ -330,24 +330,24 @@ module Operators = struct
         ~check_base
         (t1, t2)
 
+  let eq_needs_concretization = function
+    | OpenT _
+    | GenericT _
+    | EvalT _
+    | TypeAppT _
+    | OptionalT _
+    | UnionT _
+    | MaybeT _
+    | AnnotT _
+    | KeysT _
+    | NullProtoT _ ->
+      true
+    | _ -> false
+
   let check_eq =
     let open Flow_js_utils in
     let get_no_match_error_loc r_pair =
       r_pair |> Flow_error.ordered_reasons |> fst |> loc_of_reason
-    in
-    let needs_concretization = function
-      | OpenT _
-      | GenericT _
-      | EvalT _
-      | TypeAppT _
-      | OptionalT _
-      | UnionT _
-      | MaybeT _
-      | AnnotT _
-      | KeysT _
-      | NullProtoT _ ->
-        true
-      | _ -> false
     in
     let will_fail_check_if_unmatched = function
       | DefT
@@ -399,11 +399,11 @@ module Operators = struct
             cx
             ~no_match_error_loc:(get_no_match_error_loc (TypeUtil.reason_of_t t1, r2))
             cases
-        | (t1, t2) when needs_concretization t1 ->
+        | (t1, t2) when eq_needs_concretization t1 ->
           Base.List.iter
             (Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t1) t1)
             ~f:(fun t1 -> distribute cx (t1, t2))
-        | (t1, t2) when needs_concretization t2 ->
+        | (t1, t2) when eq_needs_concretization t2 ->
           Base.List.iter
             (Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t2) t2)
             ~f:(fun t2 -> distribute cx (t1, t2))
@@ -417,6 +417,132 @@ module Operators = struct
             add_output cx (Error_message.ENonStrictEqualityComparison reasons)
     in
     distribute
+
+  let check_strict_eq =
+    let open Flow_js_utils in
+    let get_no_match_error_loc r_pair =
+      r_pair |> Flow_error.ordered_reasons |> fst |> loc_of_reason
+    in
+    let not_possible_enum_after_concretization = function
+      | DefT (_, EnumValueT _)
+      | DefT (_, EnumObjectT _)
+      | IntersectionT _ ->
+        false
+      | _ -> true
+    in
+    let strict_equatable_error cond_context (l, r) =
+      let comparison_error =
+        let open TypeUtil in
+        lazy
+          (match cond_context with
+          | Some (SwitchTest { case_test_loc; switch_discriminant_loc }) ->
+            let use_op =
+              Op
+                (SwitchRefinementCheck
+                   { test = case_test_loc; discriminant = switch_discriminant_loc }
+                )
+            in
+            Error_message.EIncompatibleWithUseOp
+              { reason_lower = reason_of_t l; reason_upper = reason_of_t r; use_op }
+          | _ ->
+            let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
+            Error_message.EComparison reasons)
+      in
+      match (l, r) with
+      (* We allow comparison between enums and enum values with the same id. *)
+      | ( DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id1; _ }; _ }),
+          DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = id2; _ }; _ })
+        )
+      | ( DefT (_, EnumValueT (ConcreteEnum { enum_id = id1; _ })),
+          DefT (_, EnumValueT (ConcreteEnum { enum_id = id2; _ }))
+        )
+        when ALoc.equal_id id1 id2 ->
+        None
+      (* We allow comparison between abstract and concrete enums and enum values. *)
+      | (DefT (_, EnumObjectT _), DefT (_, EnumObjectT { enum_info = AbstractEnum _; _ }))
+      | (DefT (_, EnumObjectT { enum_info = AbstractEnum _; _ }), DefT (_, EnumObjectT _))
+      | (DefT (_, EnumValueT _), DefT (_, EnumValueT (AbstractEnum _)))
+      | (DefT (_, EnumValueT (AbstractEnum _)), DefT (_, EnumValueT _)) ->
+        None
+      (* We allow the comparison of enums to null and void outside of switches. *)
+      | (DefT (_, EnumValueT _), DefT (_, (NullT | VoidT)))
+      | (DefT (_, (NullT | VoidT)), DefT (_, EnumValueT _)) -> begin
+        match cond_context with
+        | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
+        | None
+        | Some _ ->
+          None
+      end
+      (* We don't allow the comparison of enums and other types in general. *)
+      | (DefT (_, EnumValueT _), _)
+      | (_, DefT (_, EnumValueT _))
+      | (DefT (_, EnumObjectT _), _)
+      | (_, DefT (_, EnumObjectT _)) ->
+        Some (Lazy.force comparison_error)
+      (* We don't check other strict equality comparisons. *)
+      | _ -> None
+    in
+    let rec distribute cx ~cond_context (t1, t2) =
+      match (t1, t2) with
+      | (DefT (_, EmptyT), _)
+      | (_, DefT (_, EmptyT))
+      | (AnyT _, _)
+      | (_, AnyT _) ->
+        ()
+      | (IntersectionT (r1, rep1), t2) ->
+        let cases =
+          Base.List.map (InterRep.members rep1) ~f:(fun t1 () ->
+              distribute cx ~cond_context (t1, t2)
+          )
+        in
+        Speculation_flow.try_custom
+          cx
+          ~no_match_error_loc:(get_no_match_error_loc (r1, TypeUtil.reason_of_t t2))
+          cases
+      | (t1, IntersectionT (r2, rep2)) ->
+        let cases =
+          Base.List.map (InterRep.members rep2) ~f:(fun t2 () ->
+              distribute cx ~cond_context (t1, t2)
+          )
+        in
+        Speculation_flow.try_custom
+          cx
+          ~no_match_error_loc:(get_no_match_error_loc (TypeUtil.reason_of_t t1, r2))
+          cases
+      | (t1, t2) ->
+        let t1_needs_concretization = eq_needs_concretization t1 in
+        let t2_needs_concretization = eq_needs_concretization t2 in
+        if (not t1_needs_concretization) && not t2_needs_concretization then
+          match strict_equatable_error cond_context (t1, t2) with
+          | Some error -> add_output cx error
+          | None -> ()
+        else
+          let t1s =
+            if t1_needs_concretization then
+              Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t1) t1
+            else
+              [t1]
+          in
+          let t2s =
+            if t2_needs_concretization then
+              Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t2) t2
+            else
+              [t2]
+          in
+          (* The strict_eq check will only complain when there is enum on one side. Therefore,
+           * when there are no enums, we only need to check anything. *)
+          if
+            List.for_all not_possible_enum_after_concretization t1s
+            && List.for_all not_possible_enum_after_concretization t2s
+          then
+            ()
+          else
+            Base.List.iter t1s ~f:(fun t1 ->
+                Base.List.iter t2s ~f:(fun t2 -> distribute cx ~cond_context (t1, t2))
+            )
+    in
+
+    (fun ~cond_context -> distribute ~cond_context)
 
   let unary_arith cx reason kind t =
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->

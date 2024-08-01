@@ -96,7 +96,6 @@ and reason_of_use_t = function
   | SetPrivatePropT (_, reason, _, _, _, _, _, _, _) -> reason
   | SetProtoT (reason, _) -> reason
   | SpecializeT (_, _, reason, _, _) -> reason
-  | StrictEqT { reason; _ } -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
   | SuperT (_, reason, _) -> reason
   | TestPropT { reason; _ } -> reason
@@ -264,7 +263,6 @@ let rec util_use_op_of_use_t :
   | DeepReadOnlyT _
   | HooklikeT _
   | PredicateT (_, _)
-  | StrictEqT _
   | ThisSpecializeT (_, _, _)
   | LookupT _
   | ObjRestT (_, _, _, _)

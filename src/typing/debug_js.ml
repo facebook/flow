@@ -867,7 +867,6 @@ and dump_use_t_ (depth, tvars) cx t =
             | None -> kid ret
           end
         t
-    | StrictEqT { arg; _ } -> p ~extra:(kid arg) t
     | ObjKitT (use_op, _, resolve_tool, tool, tout) ->
       p
         ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))

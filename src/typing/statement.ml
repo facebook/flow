@@ -4872,15 +4872,7 @@ module Make
           | Some (SwitchTest _) -> ()
           | _ -> matching_prop_check cx right left)
         cond;
-      let desc =
-        RBinaryOperator
-          ( Flow_ast_utils.string_of_binary_operator operator,
-            desc_of_reason (reason_of_t t1),
-            desc_of_reason (reason_of_t t2)
-          )
-      in
-      let reason = mk_reason desc loc in
-      Flow.flow cx (t1, StrictEqT { reason; cond_context = cond; flip = false; arg = t2 });
+      Operators.check_strict_eq ~cond_context:cond cx (t1, t2);
       (BoolT.at loc, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx left in
