@@ -208,22 +208,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       else
         error_type cx loc (Error_message.ETypeParamArity (loc, n)) t_ast
 
-  let mk_custom_fun cx loc t_ast targs (id_loc, name, comments) kind =
-    check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-        let reason = mk_reason RFunctionType loc in
-        let t = CustomFunT (reason, kind) in
-        ( (loc, t),
-          let open Ast.Type in
-          Generic
-            {
-              Generic.id =
-                Generic.Identifier.Unqualified ((id_loc, t), { Ast.Identifier.name; comments });
-              targs = None;
-              comments = None;
-            }
-        )
-    )
-
   let mk_eval_id cx loc =
     if Type_env.in_toplevel_scope cx then
       Context.make_aloc_id cx loc |> Eval.id_of_aloc_id ~type_sig:false
@@ -665,13 +649,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           {
             Generic.id =
               Generic.Identifier.Unqualified
-                (name_loc, ({ Ast.Identifier.name; comments = id_comments } as id_name));
+                (name_loc, ({ Ast.Identifier.name; comments = _ } as id_name));
             targs;
             comments;
           }
       ) as t_ast ->
       (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
-      let ident = (name_loc, name, id_comments) in
       let convert_type_params ?(env = env) () =
         match targs with
         | None -> ([], None)
@@ -1265,7 +1248,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               let reason = mk_annot_reason RFunctionType loc in
               reconstruct_ast (FunProtoBindT reason) None
           )
-        | "Object$GetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectGetPrototypeOf
         | "React$AbstractComponent" ->
           let reason = mk_reason (RCustom "AbstractComponent") loc in
           (match targs with

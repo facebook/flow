@@ -6258,6 +6258,15 @@ module Make
         )
       in
       (t, None, args)
+    | ("getPrototypeOf", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
+      let (((_, e_t), _) as e_ast) = expression cx e in
+      let t =
+        let reason = mk_reason RPrototype (fst e) in
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+            Flow.flow cx (e_t, GetProtoT (reason, tout))
+        )
+      in
+      (t, None, (args_loc, { ArgList.arguments = [Expression e_ast]; comments }))
     | ("create", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
       let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
@@ -6556,7 +6565,7 @@ module Make
         Base.Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
-    | ( ( "assign" | "create" | "getOwnPropertyNames" | "keys" | "defineProperty"
+    | ( ( "assign" | "create" | "getOwnPropertyNames" | "getPrototypeOf" | "keys" | "defineProperty"
         | "defineProperties" | "freeze" ),
         Some (targs_loc, targs),
         _

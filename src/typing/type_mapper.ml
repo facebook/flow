@@ -158,7 +158,6 @@ class virtual ['a] t =
           t
         else
           NamespaceT namespace_t'
-      | CustomFunT (_r, ObjectGetPrototypeOf) -> t
       | AnyT _ -> t
       | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in

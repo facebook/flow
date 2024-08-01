@@ -179,9 +179,6 @@ module rec TypeTerm : sig
     | NamespaceT of namespace_type
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
-    (* Sigil representing functions that the type system is not expressive
-       enough to annotate, so we customize their behavior internally. *)
-    | CustomFunT of reason * custom_fun_kind (* Predicate types **)
     | AnyT of reason * any_source
 
   and def_t =
@@ -3950,7 +3947,6 @@ let string_of_ctor = function
   | AnyT (_, Untyped) -> "AnyT (untyped)"
   | AnyT (_, Placeholder) -> "AnyT (placeholder)"
   | AnnotT _ -> "AnnotT"
-  | CustomFunT _ -> "CustomFunT"
   | DefT (_, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
   | FunProtoT _ -> "FunProtoT"

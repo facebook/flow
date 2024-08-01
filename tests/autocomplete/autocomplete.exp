@@ -306,54 +306,6 @@ Flags: --pretty
   ]
 }
 
-customfun.js:4:3
-Flags: --pretty
-{
-  "result":[
-    {"name":"async","type":""},
-    {"name":"await","type":""},
-    {"name":"break","type":""},
-    {"name":"case","type":""},
-    {"name":"catch","type":""},
-    {"name":"class","type":""},
-    {"name":"component","type":""},
-    {"name":"const","type":""},
-    {"name":"continue","type":""},
-    {"name":"debugger","type":""},
-    {"name":"declare","type":""},
-    {"name":"default","type":""},
-    {"name":"delete","type":""},
-    {"name":"do","type":""},
-    {"name":"else","type":""},
-    {"name":"enum","type":""},
-    {"name":"export","type":""},
-    {"name":"extends","type":""},
-    {"name":"finally","type":""},
-    {"name":"for","type":""},
-    {"name":"function","type":""},
-    {"name":"hook","type":""},
-    {"name":"if","type":""},
-    {"name":"implements","type":""},
-    {"name":"import","type":""},
-    {"name":"interface","type":""},
-    {"name":"let","type":""},
-    {"name":"new","type":""},
-    {"name":"objectGetPrototypeOf","type":"(o: any) => any"},
-    {"name":"opaque","type":""},
-    {"name":"return","type":""},
-    {"name":"static","type":""},
-    {"name":"switch","type":""},
-    {"name":"throw","type":""},
-    {"name":"try","type":""},
-    {"name":"type","type":""},
-    {"name":"typeof","type":""},
-    {"name":"var","type":""},
-    {"name":"void","type":""},
-    {"name":"while","type":""},
-    {"name":"yield","type":""}
-  ]
-}
-
 issue-1368.js:20:10
 Flags: --pretty
 {
@@ -1526,7 +1478,7 @@ Flags: --pretty
     {"name":"ReferenceError","type":"typeof ReferenceError"},
     {
       "name":"Reflect",
-      "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (o: any) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (target: any, prototype: {[any]: any} | null) => boolean, ...}"
+      "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (o: $NotNullOrVoid) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (target: any, prototype: {[any]: any} | null) => boolean, ...}"
     },
     {"name":"RegExp","type":"typeof RegExp"},
     {"name":"registration","type":"ServiceWorkerRegistration"},

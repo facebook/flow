@@ -774,7 +774,6 @@ and tag_of_t cx t =
   | KeysT (_, _)
   | OpaqueT (_, _)
   | ModuleT _
-  | CustomFunT (_, _)
   | AnyT (_, _) ->
     None
 

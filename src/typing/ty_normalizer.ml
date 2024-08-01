@@ -257,8 +257,6 @@ module Make (I : INPUT) : S = struct
 
   let generic_talias name targs = Ty.mk_generic_talias name targs
 
-  let builtin_t name = generic_talias (Ty.builtin_symbol name) None
-
   let empty_type = Ty.Bot Ty.EmptyType
 
   let mk_empty bot_kind =
@@ -702,7 +700,6 @@ module Make (I : INPUT) : S = struct
               { env with Env.seen_eval_ids = Type.EvalIdSet.add id' env.Env.seen_eval_ids }
             in
             eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
-      | CustomFunT (_, f) -> custom_fun ~env f
       | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
         let env = { env with Env.keep_only_namespace_name = true } in
         cont ~env ?id values_type
@@ -1338,15 +1335,6 @@ module Make (I : INPUT) : S = struct
       in
       generic_talias opaque_symbol targs
 
-    and custom_fun_expanded =
-      Type.(
-        function
-        (* Object.getPrototypeOf: (o: any): any *)
-        | ObjectGetPrototypeOf ->
-          return
-            Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] (ReturnType explicit_any))
-      )
-
     and subst_name ~env loc t bound name =
       match name with
       | Subst_name.Name name
@@ -1396,18 +1384,6 @@ module Make (I : INPUT) : S = struct
         let%map bound = param_bound ~env bound in
         Ty.Infer (symbol, bound)
       | None -> subst_name ~env loc t bound name
-
-    and custom_fun_short =
-      Type.(
-        function
-        | ObjectGetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$GetPrototypeOf"))
-      )
-
-    and custom_fun ~env t =
-      if Env.expand_internal_types env then
-        custom_fun_expanded t
-      else
-        custom_fun_short t
 
     and param_bound ~env = function
       | T.DefT (_, T.MixedT _) -> return None

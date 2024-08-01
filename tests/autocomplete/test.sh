@@ -23,7 +23,6 @@ queries_in_file autocomplete "typeparams.js" --pretty
 queries_in_file autocomplete "typeparams_function.js" --pretty
 queries_in_file autocomplete "generics.js" --pretty
 queries_in_file autocomplete "optional.js" --pretty
-queries_in_file autocomplete "customfun.js" --pretty
 queries_in_file autocomplete "issue-1368.js" --pretty
 queries_in_file autocomplete "if.js" --pretty
 queries_in_file autocomplete "override.js" --pretty

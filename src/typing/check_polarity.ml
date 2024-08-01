@@ -223,9 +223,7 @@ end = struct
         Flow.possible_concrete_types_for_inspection cx r out
         |> Base.List.iter ~f:(check_polarity cx ?trace seen tparams Polarity.Positive)
     (* TODO *)
-    | CustomFunT _
-    | EvalT _ ->
-      ()
+    | EvalT _ -> ()
     (* We only expect types which can appear in annotations. *)
     | (DefT (_, TypeT _) | OpaqueT _ | ThisInstanceT _ | ModuleT _) as t ->
       raise (UnexpectedType (Debug_js.dump_t cx t))
