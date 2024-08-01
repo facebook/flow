@@ -2093,7 +2093,7 @@ let merge_declare_fun file defs =
 let merge_def file reason = function
   | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
   | OpaqueType { id_loc; name; tparams; body; bound } ->
-    let id = Context.make_aloc_id file.cx id_loc in
+    let id = Type.Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc) in
     merge_opaque_type file reason id name tparams bound body
   | Interface { id_loc; name; tparams; def } ->
     let id = Context.make_aloc_id file.cx id_loc in

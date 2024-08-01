@@ -383,7 +383,6 @@ let rec dump_t_ (depth, tvars) cx t =
              (Properties.string_of_id types_tmap)
           )
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
-    | InternalEnforceUnionOptimizedT _ -> p t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =

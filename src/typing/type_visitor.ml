@@ -24,7 +24,6 @@ class ['a] t =
       function
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, t) -> self#def_type cx pole acc t
-      | InternalEnforceUnionOptimizedT _ -> acc
       | FunProtoT _
       | FunProtoBindT _
       | ObjProtoT _

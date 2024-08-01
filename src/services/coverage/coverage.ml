@@ -150,7 +150,6 @@ let visitor =
       | CustomFunT _
       | FunProtoT _
       | FunProtoBindT _
-      | InternalEnforceUnionOptimizedT _
       | ThisInstanceT _
       | KeysT _
       | StrUtilT _

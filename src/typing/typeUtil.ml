@@ -21,7 +21,6 @@ let rec reason_of_t = function
   | DefT (reason, _) -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | GenericT { reason; _ } -> reason
-  | InternalEnforceUnionOptimizedT reason -> reason
   | FunProtoT reason -> reason
   | FunProtoBindT reason -> reason
   | KeysT (reason, _) -> reason
@@ -144,7 +143,6 @@ let rec mod_reason_of_t f = function
   | OptionalT { reason; type_; use_desc } -> OptionalT { reason = f reason; type_; use_desc }
   | EvalT (t, defer_use_t, id) -> EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | GenericT ({ reason; _ } as generic) -> GenericT { generic with reason = f reason }
-  | InternalEnforceUnionOptimizedT reason -> InternalEnforceUnionOptimizedT (f reason)
   | FunProtoT reason -> FunProtoT (f reason)
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)

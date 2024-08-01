@@ -717,17 +717,29 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( OpaqueT (lreason, { opaque_id = id1; opaque_type_args = ltargs; _ }),
         OpaqueT (ureason, { opaque_id = id2; opaque_type_args = utargs; _ })
       )
-      when ALoc.equal_id id1 id2 ->
+      when Opaque.equal_id id1 id2 ->
       flow_type_args cx trace ~use_op lreason ureason ltargs utargs
     (* If the opaque type are from the same logical module, we need to do some structural validation
        in additional to type_args check. *)
     | ( OpaqueT
           ( lreason,
-            { opaque_id = id1; opaque_name = name1; opaque_type_args = ltargs; super_t = super1; _ }
+            {
+              opaque_id = Opaque.UserDefinedOpaqueTypeId id1;
+              opaque_name = name1;
+              opaque_type_args = ltargs;
+              super_t = super1;
+              _;
+            }
           ),
         OpaqueT
           ( ureason,
-            { opaque_id = id2; opaque_name = name2; opaque_type_args = utargs; super_t = super2; _ }
+            {
+              opaque_id = Opaque.UserDefinedOpaqueTypeId id2;
+              opaque_name = name2;
+              opaque_type_args = utargs;
+              super_t = super2;
+              _;
+            }
           )
       )
       when TypeUtil.nominal_id_have_same_logical_module
@@ -2339,7 +2351,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         );
       rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) lreason, u)
     | (FunProtoBindT reason, _) -> rec_flow_t cx trace ~use_op (FunProtoT reason, u)
-    | (InternalEnforceUnionOptimizedT reason, _) ->
+    | (OpaqueT (reason, { opaque_id = Opaque.InternalEnforceUnionOptimized; _ }), _) ->
       add_output
         cx
         (Error_message.EUnionOptimizationOnNonUnion
