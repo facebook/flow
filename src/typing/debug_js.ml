@@ -112,9 +112,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | Untyped -> "Untyped"
     | Placeholder -> "Placeholder"
   in
-  let custom_fun = function
-    | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
-  in
   let instance_t { static = _; super = _; implements = _; inst = { class_id; type_args; _ } } =
     spf
       "[%s] #%s"
@@ -382,7 +379,6 @@ let rec dump_t_ (depth, tvars) cx t =
              (kid values_type)
              (Properties.string_of_id types_tmap)
           )
-    | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =

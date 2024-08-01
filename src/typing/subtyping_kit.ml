@@ -1655,8 +1655,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | (None, None) ->
           ()
       end
-    (* Custom functions are still functions, so they have all the prototype properties *)
-    | (CustomFunT (r, _), AnyT _) -> rec_flow_t cx trace ~use_op (FunProtoT r, u)
     (* unwrap namespace type into object type, drop all information about types in the namespace *)
     | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
       rec_flow_t cx trace ~use_op (values_type, u)

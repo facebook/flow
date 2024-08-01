@@ -147,7 +147,6 @@ let visitor =
         let (t0, (t1, ts)) = InterRep.members_nel rep in
         self#types_nel cx OpAnd (t0, t1 :: ts)
       (* Concrete covered constructors *)
-      | CustomFunT _
       | FunProtoT _
       | FunProtoBindT _
       | ThisInstanceT _

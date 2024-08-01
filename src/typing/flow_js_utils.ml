@@ -132,7 +132,6 @@ end = struct
         | DefT (_, SingletonBigIntT _)
         | GenericT _
         | ModuleT _
-        | CustomFunT _
         | AnyT _
         | FunProtoT _
         | ObjProtoT _
@@ -338,7 +337,6 @@ let is_date = function
 let function_like = function
   | DefT (_, ClassT _)
   | DefT (_, FunT _)
-  | CustomFunT _
   | FunProtoBindT _ ->
     true
   | _ -> false

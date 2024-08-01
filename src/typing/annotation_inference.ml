@@ -881,10 +881,6 @@ module rec ConsGen : S = struct
     | (DefT (r, ReactAbstractComponentT _), (Annot_GetPropT _ | Annot_GetElemT _)) ->
       let statics = Flow_js_utils.lookup_builtin_type cx "React$AbstractComponentStatics" r in
       elab_t cx statics op
-    (****************)
-    (* Custom types *)
-    (****************)
-    | (CustomFunT (r, _), _) when function_like_op op -> elab_t cx (FunProtoT r) op
     (*****************)
     (* ObjTestProtoT *)
     (*****************)

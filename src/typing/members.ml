@@ -611,7 +611,6 @@ let rec extract_type cx this_t =
     let result = mk_type_destructor cx use_op reason t d id in
     extract_type cx result
   | DefT (_, ClassT _)
-  | CustomFunT (_, _)
   | DefT (_, EmptyT)
   | FunProtoBindT _
   | FunProtoT _

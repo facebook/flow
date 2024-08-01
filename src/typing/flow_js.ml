@@ -2945,49 +2945,7 @@ struct
           rec_flow_t cx ~use_op trace (call_this_t, any);
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
           rec_flow_t cx ~use_op trace (AnyT.why src reason_op, OpenT call_tout)
-        (* Special handlers for builtin functions *)
-        | ( CustomFunT (_, ObjectGetPrototypeOf),
-            CallT { use_op; call_action = ConcretizeCallee tout; _ }
-          ) ->
-          rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | ( CustomFunT (_, ObjectGetPrototypeOf),
-            CallT
-              {
-                use_op = _;
-                reason = reason_op;
-                call_action =
-                  Funcalltype { call_targs = None; call_args_tlist = arg :: _; call_tout; _ };
-                return_hint = _;
-              }
-          ) ->
-          let l = extract_non_spread cx arg in
-          rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
-        | ( CustomFunT (_, ObjectGetPrototypeOf),
-            MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
-          ) ->
-          apply_method_action cx trace l use_op reason_call l action
-        (* Custom functions are still functions, so they have all the prototype properties *)
-        | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action)) ->
-          let method_type =
-            Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
-                let u =
-                  GetPropT
-                    {
-                      use_op;
-                      reason = lookup_r;
-                      id = None;
-                      from_annot = false;
-                      propref;
-                      tout;
-                      hint = hint_unavailable;
-                    }
-                in
-                rec_flow cx trace (FunProtoT reason, u)
-            )
-          in
-          apply_method_action cx trace method_type use_op call_r l action
-        | (CustomFunT (r, _), _) when function_like_op u -> rec_flow cx trace (FunProtoT r, u)
         (****************************************)
         (* You can cast an object to a function *)
         (****************************************)
@@ -6147,9 +6105,7 @@ struct
     | CheckReactImmutableT _ ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
-    | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
-    | UseT _ ->
-      true
+    | UseT _ -> true
 
   (* Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
      all types in contravariant positions when t <: any. *)
@@ -6223,8 +6179,6 @@ struct
     | ModuleT _
     | NamespaceT _ ->
       false
-    (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
-    | CustomFunT (_, ObjectGetPrototypeOf)
     | StrUtilT _
     | DefT _
     | AnyT _ ->
