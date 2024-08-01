@@ -100,13 +100,6 @@ end = struct
     f count
 end
 
-(* Sometimes we expect to see only proper def types. Proper def types make sense
-   as use types. *)
-let expect_proper_def t =
-  if not (is_proper_def t) then assert_false (spf "Did not expect %s" (string_of_ctor t))
-
-let expect_proper_def_use t = lift_to_use expect_proper_def t
-
 let subst = Type_subst.subst ~placeholder_no_infer:false
 
 let check_canceled =
@@ -366,11 +359,6 @@ struct
 
       (* Expect that l is a def type. On the other hand, u may be a use type or a
          def type: the latter typically when we have annotations. *)
-
-      (* Types that are classified as def types but don't make sense as use types
-         should not appear as use types. *)
-      expect_proper_def_use u;
-
       if
         match l with
         | AnyT _ ->
@@ -8018,14 +8006,6 @@ struct
     else (
       (* limit recursion depth *)
       RecursionCheck.check cx trace;
-
-      (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
-         t2 and flowing t2 to t1. This also means that any restrictions on such
-         flows should also be enforced here. In particular, we don't expect t1 or t2
-         to be type parameters, and we don't expect t1 or t2 to be def types that
-         don't make sense as use types. See __flow for more details. *)
-      expect_proper_def t1;
-      expect_proper_def t2;
 
       match (t1, t2) with
       | (OpenT (_, id1), OpenT (_, id2)) -> merge_ids cx trace ~use_op id1 id2

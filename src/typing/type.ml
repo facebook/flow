@@ -3822,10 +3822,6 @@ let is_use = function
   | UseT _ -> false
   | _ -> true
 
-(* not all so-called def types can appear as use types *)
-let is_proper_def = function
-  | _ -> true
-
 (* convenience *)
 let is_bot = function
   | DefT (_, EmptyT) -> true
