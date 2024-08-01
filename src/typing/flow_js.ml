@@ -6932,195 +6932,241 @@ struct
             OpenT tout
           )
       | _ ->
-        rec_flow
-          cx
-          trace
-          ( t,
-            match d with
-            | NonMaybeType ->
-              (* We intentionally use `unknown_use` here! When we flow to a tout we never
-               * want to carry a `use_op`. We want whatever `use_op` the tout is used with
-               * to win. *)
-              FilterMaybeT (unknown_use, OpenT tout)
-            | PropertyType { name; _ } ->
-              let reason_op = replace_desc_reason (RProperty (Some name)) reason in
-              GetPropT
-                {
-                  use_op;
-                  reason;
-                  id = None;
-                  from_annot = true;
-                  propref = mk_named_prop ~reason:reason_op name;
-                  tout;
-                  hint = hint_unavailable;
-                }
-            | ElementType { index_type; _ } ->
-              GetElemT
-                {
-                  use_op;
-                  reason;
-                  id = None;
-                  from_annot = true;
-                  access_iterables = false;
-                  key_t = index_type;
-                  tout;
-                }
-            | OptionalIndexedAccessNonMaybeType { index } ->
-              OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
-            | OptionalIndexedAccessResultType { void_reason } ->
-              let void = VoidT.why void_reason in
-              ResolveUnionT
-                {
-                  reason;
-                  resolved = [void];
-                  unresolved = [];
-                  upper = UseT (unknown_use, OpenT tout);
-                  id = Reason.mk_id ();
-                }
-            | SpreadType (options, todo_rev, head_slice) ->
-              Object.(
-                Object.Spread.(
-                  let tool = Resolve Next in
-                  let state =
-                    {
-                      todo_rev;
-                      acc =
-                        Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
-                      spread_id = Reason.mk_id ();
-                      union_reason = None;
-                      curr_resolve_idx = 0;
-                    }
-                  in
-                  ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
-                )
-              )
-            | SpreadTupleType { reason_tuple; reason_spread = _; inexact; resolved_rev; unresolved }
-              ->
-              let elem_t = Tvar.mk cx reason_tuple in
-              ResolveSpreadT
-                ( use_op,
-                  reason_tuple,
-                  {
-                    rrt_resolved = resolved_rev;
-                    rrt_unresolved = unresolved;
-                    rrt_resolve_to =
-                      ResolveSpreadsToTupleType
-                        { id = Reason.mk_id (); inexact; elem_t; tout = OpenT tout };
-                  }
-                )
-            | ReactCheckComponentRef -> ExtractReactRefT (reason, OpenT tout)
-            | ReactCheckComponentConfig pmap ->
-              Object.(
+        (match d with
+        | NonMaybeType ->
+          (* We intentionally use `unknown_use` here! When we flow to a tout we never
+           * want to carry a `use_op`. We want whatever `use_op` the tout is used with
+           * to win. *)
+          rec_flow cx trace (t, FilterMaybeT (unknown_use, OpenT tout))
+        | PropertyType { name; _ } ->
+          let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+          let u =
+            GetPropT
+              {
+                use_op;
+                reason;
+                id = None;
+                from_annot = true;
+                propref = mk_named_prop ~reason:reason_op name;
+                tout;
+                hint = hint_unavailable;
+              }
+          in
+          rec_flow cx trace (t, u)
+        | ElementType { index_type; _ } ->
+          let u =
+            GetElemT
+              {
+                use_op;
+                reason;
+                id = None;
+                from_annot = true;
+                access_iterables = false;
+                key_t = index_type;
+                tout;
+              }
+          in
+          rec_flow cx trace (t, u)
+        | OptionalIndexedAccessNonMaybeType { index } ->
+          rec_flow cx trace (t, OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout })
+        | OptionalIndexedAccessResultType { void_reason } ->
+          let void = VoidT.why void_reason in
+          let u =
+            ResolveUnionT
+              {
+                reason;
+                resolved = [void];
+                unresolved = [];
+                upper = UseT (unknown_use, OpenT tout);
+                id = Reason.mk_id ();
+              }
+          in
+          rec_flow cx trace (t, u)
+        | SpreadType (options, todo_rev, head_slice) ->
+          let u =
+            Object.(
+              Object.Spread.(
                 let tool = Resolve Next in
-                ObjKitT (use_op, reason, tool, Object.ReactCheckComponentConfig pmap, OpenT tout)
+                let state =
+                  {
+                    todo_rev;
+                    acc = Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
+                    spread_id = Reason.mk_id ();
+                    union_reason = None;
+                    curr_resolve_idx = 0;
+                  }
+                in
+                ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
               )
-            | RestType (options, t) ->
-              Object.(
-                Object.Rest.(
-                  let tool = Resolve Next in
-                  let state = One t in
-                  ObjKitT (use_op, reason, tool, Rest (options, state), OpenT tout)
+            )
+          in
+          rec_flow cx trace (t, u)
+        | SpreadTupleType { reason_tuple; reason_spread = _; inexact; resolved_rev; unresolved } ->
+          let elem_t = Tvar.mk cx reason_tuple in
+          let u =
+            ResolveSpreadT
+              ( use_op,
+                reason_tuple,
+                {
+                  rrt_resolved = resolved_rev;
+                  rrt_unresolved = unresolved;
+                  rrt_resolve_to =
+                    ResolveSpreadsToTupleType
+                      { id = Reason.mk_id (); inexact; elem_t; tout = OpenT tout };
+                }
+              )
+          in
+          rec_flow cx trace (t, u)
+        | ReactCheckComponentRef -> rec_flow cx trace (t, ExtractReactRefT (reason, OpenT tout))
+        | ReactCheckComponentConfig pmap ->
+          let u =
+            Object.(
+              let tool = Resolve Next in
+              ObjKitT (use_op, reason, tool, Object.ReactCheckComponentConfig pmap, OpenT tout)
+            )
+          in
+          rec_flow cx trace (t, u)
+        | RestType (options, t') ->
+          let u =
+            Object.(
+              Object.Rest.(
+                let tool = Resolve Next in
+                let state = One t' in
+                ObjKitT (use_op, reason, tool, Rest (options, state), OpenT tout)
+              )
+            )
+          in
+          rec_flow cx trace (t, u)
+        | ExactType ->
+          rec_flow
+            cx
+            trace
+            (t, Object.(ObjKitT (use_op, reason, Resolve Next, MakeExact, OpenT tout)))
+        | ReadOnlyType ->
+          rec_flow
+            cx
+            trace
+            (t, Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout)))
+        | ReactDRO (dro_loc, dro_type) ->
+          rec_flow cx trace (t, DeepReadOnlyT (tout, (dro_loc, dro_type)))
+        | MakeHooklike -> rec_flow cx trace (t, HooklikeT tout)
+        | PartialType ->
+          rec_flow cx trace (t, Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout)))
+        | RequiredType ->
+          rec_flow
+            cx
+            trace
+            (t, Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout)))
+        | ValuesType -> rec_flow cx trace (t, GetValuesT (reason, OpenT tout))
+        | CallType { from_maptype; args } ->
+          let args = Base.List.map ~f:(fun arg -> Arg arg) args in
+          let call_kind =
+            if from_maptype then
+              MapTypeKind
+            else
+              CallTypeKind
+          in
+          let call = mk_functioncalltype ~call_kind reason None args tout in
+          let call = { call with call_strict_arity = false } in
+          let use_op =
+            match use_op with
+            (* The following use ops are for operations that internally delegate to CallType. We
+               don't want to leak the internally delegation to error messages by pushing an
+               additional frame. Alternatively, we could have pushed here and filtered out when
+               rendering error messages, but that seems a bit wasteful. *)
+            | Frame (TupleMapFunCompatibility _, _)
+            | Frame (ObjMapFunCompatibility _, _)
+            | Frame (ObjMapiFunCompatibility _, _) ->
+              use_op
+            (* For external CallType operations, we push an additional frame to distinguish their
+               error messages from those of "normal" calls. *)
+            | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
+          in
+          let u =
+            CallT
+              {
+                use_op;
+                reason;
+                call_action = Funcalltype call;
+                return_hint = Type.hint_unavailable;
+              }
+          in
+          rec_flow cx trace (t, u)
+        | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
+          let u =
+            ConditionalT
+              {
+                use_op;
+                reason;
+                distributive_tparam_name;
+                infer_tparams;
+                extends_t;
+                true_t;
+                false_t;
+                tout;
+              }
+          in
+          rec_flow cx trace (t, u)
+        | TypeMap tmap -> rec_flow cx trace (t, MapTypeT (use_op, reason, tmap, OpenT tout))
+        | ReactElementPropsType ->
+          rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetProps (OpenT tout)))
+        | ReactElementConfigType ->
+          rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig (OpenT tout)))
+        | ReactElementRefType ->
+          rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetRef (OpenT tout)))
+        | ReactPromoteRendersRepresentation
+            { should_distribute; promote_structural_components; renders_variant; resolved_elem } ->
+          let u =
+            PromoteRendersRepresentationT
+              {
+                use_op;
+                reason;
+                tout = OpenT tout;
+                resolved_elem;
+                should_distribute;
+                promote_structural_components;
+                renders_variant;
+              }
+          in
+          rec_flow cx trace (t, u)
+        | ReactConfigType default_props ->
+          rec_flow
+            cx
+            trace
+            (t, ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout)))
+        | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
+          let (property_type, homomorphic) =
+            substitute_mapped_type_distributive_tparams
+              cx
+              ~use_op
+              distributive_tparam_name
+              ~property_type
+              homomorphic
+              ~source:t
+          in
+          let selected_keys_opt =
+            match homomorphic with
+            | SemiHomomorphic t -> Some t
+            | _ -> None
+          in
+          let u =
+            Object.(
+              ObjKitT
+                ( use_op,
+                  reason,
+                  Resolve Next,
+                  Object.ObjectMap
+                    { prop_type = property_type; mapped_type_flags; selected_keys_opt },
+                  OpenT tout
                 )
-              )
-            | ExactType -> Object.(ObjKitT (use_op, reason, Resolve Next, MakeExact, OpenT tout))
-            | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
-            | ReactDRO (dro_loc, dro_type) -> DeepReadOnlyT (tout, (dro_loc, dro_type))
-            | MakeHooklike -> HooklikeT tout
-            | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
-            | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
-            | ValuesType -> GetValuesT (reason, OpenT tout)
-            | CallType { from_maptype; args } ->
-              let args = Base.List.map ~f:(fun arg -> Arg arg) args in
-              let call_kind =
-                if from_maptype then
-                  MapTypeKind
-                else
-                  CallTypeKind
-              in
-              let call = mk_functioncalltype ~call_kind reason None args tout in
-              let call = { call with call_strict_arity = false } in
-              let use_op =
-                match use_op with
-                (* The following use ops are for operations that internally delegate to CallType. We
-                   don't want to leak the internally delegation to error messages by pushing an
-                   additional frame. Alternatively, we could have pushed here and filtered out when
-                   rendering error messages, but that seems a bit wasteful. *)
-                | Frame (TupleMapFunCompatibility _, _)
-                | Frame (ObjMapFunCompatibility _, _)
-                | Frame (ObjMapiFunCompatibility _, _) ->
-                  use_op
-                (* For external CallType operations, we push an additional frame to distinguish their
-                   error messages from those of "normal" calls. *)
-                | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
-              in
-              CallT
-                {
-                  use_op;
-                  reason;
-                  call_action = Funcalltype call;
-                  return_hint = Type.hint_unavailable;
-                }
-            | ConditionalType
-                { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
-              ConditionalT
-                {
-                  use_op;
-                  reason;
-                  distributive_tparam_name;
-                  infer_tparams;
-                  extends_t;
-                  true_t;
-                  false_t;
-                  tout;
-                }
-            | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
-            | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
-            | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
-            | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
-            | ReactPromoteRendersRepresentation
-                { should_distribute; promote_structural_components; renders_variant; resolved_elem }
-              ->
-              PromoteRendersRepresentationT
-                {
-                  use_op;
-                  reason;
-                  tout = OpenT tout;
-                  resolved_elem;
-                  should_distribute;
-                  promote_structural_components;
-                  renders_variant;
-                }
-            | ReactConfigType default_props ->
-              ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
-            | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
-              ->
-              let (property_type, homomorphic) =
-                substitute_mapped_type_distributive_tparams
-                  cx
-                  ~use_op
-                  distributive_tparam_name
-                  ~property_type
-                  homomorphic
-                  ~source:t
-              in
-              let selected_keys_opt =
-                match homomorphic with
-                | SemiHomomorphic t -> Some t
-                | _ -> None
-              in
-              Object.(
-                ObjKitT
-                  ( use_op,
-                    reason,
-                    Resolve Next,
-                    Object.ObjectMap
-                      { prop_type = property_type; mapped_type_flags; selected_keys_opt },
-                    OpenT tout
-                  )
-              )
-            | EnumType ->
-              GetEnumT { use_op; reason; orig_t = Some t; kind = `GetEnumObject; tout = OpenT tout }
-          ))
+            )
+          in
+          rec_flow cx trace (t, u)
+        | EnumType ->
+          let u =
+            GetEnumT { use_op; reason; orig_t = Some t; kind = `GetEnumObject; tout = OpenT tout }
+          in
+          rec_flow cx trace (t, u)))
 
   and eagerly_eval_destructor_if_resolved cx ~trace use_op reason t d tvar =
     eval_destructor cx ~trace use_op reason t d (reason, tvar);
