@@ -20,7 +20,6 @@ type error_kind =
   | BadTypeAlias
   | BadTypeApp
   | BadInlineInterfaceExtends
-  | BadInternalT
   | BadInstanceT
   | BadEvalT
   | BadUse

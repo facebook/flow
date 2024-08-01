@@ -381,7 +381,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         {
           use_op = _;
           reason_op = _;
-          l = InternalEnforceUnionOptimizedT reason;
+          l = OpaqueT (reason, { opaque_id = Opaque.InternalEnforceUnionOptimized; _ });
           union_rep = rep;
           us = _;
         } ->

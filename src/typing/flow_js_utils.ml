@@ -150,8 +150,7 @@ end = struct
         | KeysT _
         | AnnotT _
         | OpaqueT _
-        | NamespaceT _
-        | InternalEnforceUnionOptimizedT _ ->
+        | NamespaceT _ ->
           super#type_ cx pole acc t
     end
 

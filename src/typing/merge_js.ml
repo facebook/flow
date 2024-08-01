@@ -163,7 +163,20 @@ let detect_unused_promises cx =
 
 let enforce_optimize cx loc t =
   let reason = Reason.mk_reason (Reason.RCustom "$Flow$EnforceOptimized") loc in
-  Flow_js.flow_t cx (Type.InternalEnforceUnionOptimizedT reason, t)
+  let internal_t =
+    let open Type in
+    OpaqueT
+      ( reason,
+        {
+          opaque_id = Opaque.InternalEnforceUnionOptimized;
+          underlying_t = None;
+          super_t = None;
+          opaque_type_args = [];
+          opaque_name = "InternalEnforceUnionOptimized";
+        }
+      )
+  in
+  Flow_js.flow_t cx (internal_t, t)
 
 let check_union_opt cx = Context.iter_union_opt cx ~f:(enforce_optimize cx)
 

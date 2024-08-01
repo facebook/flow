@@ -6115,7 +6115,6 @@ struct
     | UseT (_, DefT (_, TypeT _))
     | ValueToTypeReferenceT _
     (* Should never occur, so we just defer to __flow to handle errors *)
-    | UseT (_, InternalEnforceUnionOptimizedT _)
     | UseT (_, ModuleT _)
     | ReactPropsToOut _
     | ReactInToProps _
@@ -6174,6 +6173,7 @@ struct
       (* function types are contravariant in the arguments *)
       any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
+    | OpaqueT (_, { opaque_id = Opaque.InternalEnforceUnionOptimized; _ }) -> false
     (* Some types just need to be expanded and filled with any types *)
     | (DefT (_, ArrT (ArrayAT _)) as t)
     | (DefT (_, ArrT (TupleAT _)) as t)
@@ -6229,8 +6229,7 @@ struct
     | TypeAppT _
     | UnionT _
     | IntersectionT _
-    | ThisTypeAppT _
-    | InternalEnforceUnionOptimizedT _ ->
+    | ThisTypeAppT _ ->
       false
     (* Should never occur as the lower bound of any *)
     | ModuleT _

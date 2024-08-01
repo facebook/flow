@@ -33,7 +33,6 @@ type error_kind =
   | BadTypeAlias
   | BadTypeApp
   | BadInlineInterfaceExtends
-  | BadInternalT
   | BadInstanceT
   | BadEvalT
   | BadUse
@@ -56,7 +55,6 @@ let error_kind_to_string = function
   | BadTypeAlias -> "Bad type alias"
   | BadTypeApp -> "Bad type application"
   | BadInlineInterfaceExtends -> "Bad inline interface extends"
-  | BadInternalT -> "Bad internal type"
   | BadInstanceT -> "Bad instance type"
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
@@ -705,7 +703,6 @@ module Make (I : INPUT) : S = struct
             in
             eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
       | CustomFunT (_, f) -> custom_fun ~env f
-      | InternalEnforceUnionOptimizedT _ -> terr ~kind:BadInternalT (Some t)
       | NamespaceT { namespace_symbol = _; values_type; types_tmap = _ } ->
         let env = { env with Env.keep_only_namespace_name = true } in
         cont ~env ?id values_type

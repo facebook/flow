@@ -179,8 +179,6 @@ module rec TypeTerm : sig
     | NamespaceT of namespace_type
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
-    (* types that should never appear in signatures *)
-    | InternalEnforceUnionOptimizedT of reason
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind (* Predicate types **)
@@ -1514,7 +1512,7 @@ module rec TypeTerm : sig
   }
 
   and opaquetype = {
-    opaque_id: ALoc.id;
+    opaque_id: Opaque.id;
     underlying_t: t option;
     super_t: t option;
     opaque_type_args: (Subst_name.t * reason * t * Polarity.t) list;
@@ -2138,6 +2136,31 @@ end = struct
         Field { preferred_def_locs; key_loc; type_ = f k type_; polarity }
       | p -> p
     )
+end
+
+and Opaque : sig
+  type id =
+    | UserDefinedOpaqueTypeId of ALoc.id
+    (* A special norminal type to test t ~> union optimization *)
+    | InternalEnforceUnionOptimized
+
+  val equal_id : id -> id -> bool
+
+  val string_of_id : id -> string
+end = struct
+  type id =
+    | UserDefinedOpaqueTypeId of ALoc.id
+    | InternalEnforceUnionOptimized
+
+  let equal_id id1 id2 =
+    match (id1, id2) with
+    | (UserDefinedOpaqueTypeId id1, UserDefinedOpaqueTypeId id2) -> ALoc.equal_id id1 id2
+    | (InternalEnforceUnionOptimized, InternalEnforceUnionOptimized) -> true
+    | _ -> false
+
+  let string_of_id = function
+    | UserDefinedOpaqueTypeId id -> "user-defined " ^ ALoc.show_id id
+    | InternalEnforceUnionOptimized -> "InternalEnforceUnionOptimized"
 end
 
 and Eval : sig
@@ -3801,7 +3824,6 @@ let is_use = function
 
 (* not all so-called def types can appear as use types *)
 let is_proper_def = function
-  | InternalEnforceUnionOptimizedT _ -> false
   | _ -> true
 
 (* convenience *)
@@ -3935,7 +3957,6 @@ let string_of_ctor = function
   | CustomFunT _ -> "CustomFunT"
   | DefT (_, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
-  | InternalEnforceUnionOptimizedT _ -> "InternalEnforceUnionOptimizedT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | GenericT _ -> "GenericT"
