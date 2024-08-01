@@ -656,13 +656,6 @@ module rec TypeTerm : sig
       }
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate_concretizer_variant * tvar
-    (* === *)
-    | StrictEqT of {
-        reason: Reason.t;
-        cond_context: cond_context option;
-        flip: bool;
-        arg: t;
-      }
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, targs, tresult) instantiates a polymorphic type
           with type arguments targs, and flows the result into tresult.
@@ -4112,7 +4105,6 @@ let string_of_use_ctor = function
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
-  | StrictEqT _ -> "StrictEqT"
   | ObjKitT _ -> "ObjKitT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
