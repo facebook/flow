@@ -6,6 +6,7 @@
  *)
 
 val init :
+  index_star_exports:bool ->
   workers:MultiWorkerLwt.worker list option ->
   reader:Mutator_state_reader.t ->
   libs:Exports.t ->
@@ -13,10 +14,10 @@ val init :
   Export_search.t Lwt.t
 
 val update :
+  index_star_exports:bool ->
   workers:MultiWorkerLwt.worker list option ->
   reader:Mutator_state_reader.t ->
-  update:Utils_js.FilenameSet.t ->
-  remove:Utils_js.FilenameSet.t ->
+  dirty_files:Utils_js.FilenameSet.t ->
   Export_search.t ->
   Export_search.t Lwt.t
 
