@@ -128,13 +128,10 @@ let export_specifiers info loc source export_kind =
     in
     Base.List.iter ~f:(export_specifier export) specifiers
   (* [declare] export [type] * as id from "source"; *)
-  | E.ExportBatchSpecifier (_, Some (_, { Ast.Identifier.name; _ })) ->
-    let ((_, module_t), _) = Base.Option.value_exn source in
+  | E.ExportBatchSpecifier (_, Some ((_, t), { Ast.Identifier.name; _ })) ->
     (match export_kind with
-    | Ast.Statement.ExportValue ->
-      Module_info.export_type info (OrdinaryName name) ~name_loc:loc module_t
-    | Ast.Statement.ExportType ->
-      Module_info.export_value info (OrdinaryName name) ~name_loc:loc module_t)
+    | Ast.Statement.ExportValue -> Module_info.export_value info (OrdinaryName name) ~name_loc:loc t
+    | Ast.Statement.ExportType -> Module_info.export_type info (OrdinaryName name) ~name_loc:loc t)
   (* [declare] export [type] * from "source"; *)
   | E.ExportBatchSpecifier (_, None) ->
     let ((_, module_t), _) = Base.Option.value_exn source in
