@@ -19,7 +19,14 @@ module.exports = (suite(
     lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/completion with autoimports', [
-      addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+      addFiles(
+        'foo.js',
+        'bar.js',
+        'foobar.js',
+        'functions.js',
+        're-exports.js',
+        'lib/builtins.js',
+      ),
       addCode(`f`),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
@@ -160,7 +167,13 @@ module.exports = (suite(
     ]),
 
     test('textDocument/completion on types', [
-      addFiles('foo.js', 'types.js', 'lib/builtins.js'),
+      addFiles(
+        'foo.js',
+        'types.js',
+        'foobar.js',
+        're-exports.js',
+        'lib/builtins.js',
+      ),
       addCode(`type Test = T`),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
@@ -169,6 +182,28 @@ module.exports = (suite(
         context: {triggerKind: 1},
       }).verifyLSPMessageSnapshot(
         path.join(__dirname, '__snapshots__', 'completion_on_types.json'),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+
+    test('textDocument/completion on types with re-exports', [
+      addFiles('foobar.js', 'functions.js', 're-exports.js'),
+      addCode(`type Test = FooBa`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 17},
+        context: {triggerKind: 1},
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'completion_on_types_with_re_exports.json',
+        ),
         [
           'textDocument/publishDiagnostics',
           'window/showStatus',

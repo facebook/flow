@@ -11,6 +11,8 @@ type export =
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
   | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)
+  | ReExportModule of string
+  | ReExportModuleTypes of string
 [@@deriving show { with_path = false }]
 
 type t = export list [@@deriving show { with_path = false }]
@@ -54,6 +56,9 @@ let pattern_of_index type_sig index =
 
 let pattern_def_of_index type_sig index =
   Type_sig_collections.Pattern_defs.get type_sig.Export_sig.pattern_defs index
+
+let module_ref_of_index type_sig index =
+  Type_sig_collections.Module_refs.get type_sig.Export_sig.module_refs index
 
 module Eval = struct
   open Type_sig
@@ -293,20 +298,29 @@ module ESM = struct
       NamedType name :: acc
 
   let exports type_sig type_exports exports info =
-    (* TODO: re-exports *)
     let (ESModuleInfo
           {
             type_export_keys;
             export_keys;
-            type_stars = _;
-            stars = _;
+            type_stars;
+            stars;
             strict = _;
             platform_availability_set = _;
           }
           ) =
       info
     in
-    let acc = Base.Array.fold2_exn ~init:[] ~f:(fold_name type_sig) export_keys exports in
+    let acc =
+      Base.List.fold stars ~init:[] ~f:(fun acc (_, module_index) ->
+          ReExportModule (module_ref_of_index type_sig module_index) :: acc
+      )
+    in
+    let acc =
+      Base.List.fold type_stars ~init:acc ~f:(fun acc (_, module_index) ->
+          ReExportModule (module_ref_of_index type_sig module_index) :: acc
+      )
+    in
+    let acc = Base.Array.fold2_exn ~init:acc ~f:(fold_name type_sig) export_keys exports in
     Base.Array.fold2_exn ~init:acc ~f:fold_type type_export_keys type_exports
 end
 
@@ -385,13 +399,16 @@ module CJS = struct
       NamedType name :: acc
 
   let exports type_sig type_exports exports info =
-    (* TODO: re-exports *)
-    let (CJSModuleInfo
-          { type_export_keys; type_stars = _; strict = _; platform_availability_set = _ }
-          ) =
+    let (CJSModuleInfo { type_export_keys; type_stars; strict = _; platform_availability_set = _ })
+        =
       info
     in
-    let acc = add_default_exports type_sig [] exports in
+    let acc =
+      Base.List.fold type_stars ~init:[] ~f:(fun acc (_, module_index) ->
+          ReExportModule (module_ref_of_index type_sig module_index) :: acc
+      )
+    in
+    let acc = add_default_exports type_sig acc exports in
     Base.Array.fold2_exn ~init:acc ~f:fold_type type_export_keys type_exports
 end
 

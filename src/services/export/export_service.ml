@@ -49,6 +49,10 @@ let entries_of_exports =
           | Exports.Module (module_name, exports) ->
             let module_name = Modulename.String module_name in
             (has_named, helper ~module_name exports acc)
+          (* TODO: re-exports *)
+          | Exports.ReExportModule _
+          | Exports.ReExportModuleTypes _ ->
+            (has_named, acc)
       )
     in
     if has_named then
@@ -141,6 +145,8 @@ let add_exports_of_builtins lib_exports index =
       | Exports.NamedType name -> Export_index.add name Global NamedType acc
       | Exports.DefaultType _ -> (* impossible *) acc
       | Exports.Default _ -> (* impossible *) acc
+      | Exports.ReExportModule _ -> (* impossible *) acc
+      | Exports.ReExportModuleTypes _ -> (* impossible *) acc
   )
 
 (** [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from

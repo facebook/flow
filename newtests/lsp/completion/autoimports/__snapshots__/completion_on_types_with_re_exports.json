@@ -1,0 +1,110 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "FooBar",
+        "kind": 6,
+        "detail": "Import default type from ./foobar",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 12
+            },
+            "end": {
+              "line": 2,
+              "character": 17
+            }
+          },
+          "newText": "FooBar"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import type FooBar from \"./foobar\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "FooBaAUTO332",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 5,
+              "completion": "FooBar",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      },
+      {
+        "label": "foobar",
+        "kind": 6,
+        "detail": "Import default type from ./foobar",
+        "sortText": "00000000000000000001",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 12
+            },
+            "end": {
+              "line": 2,
+              "character": 17
+            }
+          },
+          "newText": "foobar"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import type foobar from \"./foobar\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "FooBaAUTO332",
+              "index": 1,
+              "session_requests": 1,
+              "typed_length": 5,
+              "completion": "foobar",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
