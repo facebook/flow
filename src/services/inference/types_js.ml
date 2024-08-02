@@ -1247,18 +1247,25 @@ end = struct
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
 
-    Hh_logger.info "Updating index";
     let%lwt exports =
-      with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-          Export_service.update
-            ~workers
-            ~reader
-            ~update:new_or_changed
-            ~remove:deleted
-            env.ServerEnv.exports
+      if Options.autoimports_index_star_exports options then
+        Lwt.return env.ServerEnv.exports
+      else (
+        Hh_logger.info "Updating index";
+        let%lwt exports =
+          with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+              Export_service.update
+                ~index_star_exports:false
+                ~workers
+                ~reader
+                ~dirty_files:(Utils_js.FilenameSet.union new_or_changed deleted)
+                env.ServerEnv.exports
+          )
+        in
+        Hh_logger.info "Done updating index";
+        Lwt.return exports
       )
     in
-    Hh_logger.info "Done updating index";
 
     let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports; coverage } in
     let errors =
@@ -1423,6 +1430,25 @@ end = struct
         ~sig_dependency_graph
     in
 
+    let%lwt exports =
+      if Options.autoimports_index_star_exports options then (
+        Hh_logger.info "Updating index";
+        let%lwt exports =
+          with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+              Export_service.update
+                ~index_star_exports:true
+                ~workers
+                ~reader
+                ~dirty_files:sig_new_or_changed
+                env.ServerEnv.exports
+          )
+        in
+        Hh_logger.info "Done updating index";
+        Lwt.return exports
+      ) else
+        Lwt.return env.ServerEnv.exports
+    in
+
     let%lwt ( errors,
               coverage,
               find_ref_results,
@@ -1467,7 +1493,7 @@ end = struct
 
     (* NOTE: unused fields are left in their initial empty state *)
     Lwt.return
-      ( { env with ServerEnv.checked_files; errors; collated_errors; coverage },
+      ( { env with ServerEnv.checked_files; errors; collated_errors; coverage; exports },
         {
           modified_count;
           deleted_count;
@@ -2042,7 +2068,12 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   Hh_logger.info "Indexing files";
   let%lwt exports =
     with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed
+        Export_service.init
+          ~index_star_exports:(Options.autoimports_index_star_exports options)
+          ~workers
+          ~reader
+          ~libs:lib_exports
+          parsed
     )
   in
 
@@ -2214,7 +2245,12 @@ let init_from_scratch ~profiling ~workers options =
   Hh_logger.info "Indexing files";
   let%lwt exports =
     with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
+        Export_service.init
+          ~index_star_exports:(Options.autoimports_index_star_exports options)
+          ~workers
+          ~reader
+          ~libs:lib_exports
+          parsed_set
     )
   in
   Hh_logger.info "Done";

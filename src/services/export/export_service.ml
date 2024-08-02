@@ -21,8 +21,64 @@ let string_of_modulename modulename =
   (* convert hyphens to camel case *)
   Utils_js.camelize stripped
 
+(** In this module, we will generate a stream of resolved module information, for indexing star
+  * re-exports.
+  * The stream starts from the module we want to export. Given a mref with in the module, it will
+  * resolve information to reach the imported module's export, and so on.
+  * The stream is completely lazy. For modules without star re-exports, it will have zero cost. *)
+module ModuleResolutionLazyStream = struct
+  type stream_result = {
+    parse: [ `typed ] Parsing_heaps.parse_addr;
+    file_key: File_key.t;
+    next: string -> stream_result option;
+  }
+
+  let get_dep_and_next_resolver ~reader ~old =
+    let resolved_modules =
+      if old then
+        Parsing_heaps.Mutator_reader.get_old_resolved_modules_unsafe ~reader Fun.id
+      else
+        Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id
+    in
+    let get_provider =
+      if old then
+        Parsing_heaps.Mutator_reader.get_old_provider ~reader
+      else
+        Parsing_heaps.Mutator_reader.get_provider ~reader
+    in
+    let get_typed_parse =
+      if old then
+        Parsing_heaps.Mutator_reader.get_old_typed_parse ~reader
+      else
+        Parsing_heaps.Mutator_reader.get_typed_parse ~reader
+    in
+    let rec next (file_key, parse) mref : stream_result option =
+      match
+        SMap.find_opt mref (resolved_modules file_key parse)
+        |> Base.Option.bind ~f:Result.to_option
+        |> Base.Option.bind ~f:get_provider
+      with
+      | None -> None
+      | Some dep_file_addr ->
+        (match get_typed_parse dep_file_addr with
+        | None -> None
+        | Some dep_parse ->
+          let file_key = Parsing_heaps.read_file_key dep_file_addr in
+          let next = next (file_key, parse) in
+          Some { parse = dep_parse; file_key; next })
+    in
+    next
+end
+
 let entries_of_exports =
-  let rec helper ~module_name exports (acc : (string * Export_index.kind) list) =
+  let rec helper
+      ~module_name
+      ~get_dep_and_next_resolver
+      ~visited_deps
+      ~include_values
+      ~index_star_exports
+      exports
+      (acc : (string * Export_index.kind) list) =
     let (has_named, acc) =
       Base.List.fold exports ~init:(false, acc) ~f:(fun (has_named, acc) export ->
           match export with
@@ -36,37 +92,110 @@ let entries_of_exports =
             in
             (has_named, acc)
           | Exports.Default name_opt ->
-            let name_from_modulename = string_of_modulename module_name in
-            let acc = (name_from_modulename, Default) :: acc in
-            let acc =
-              match name_opt with
-              | Some name when name <> name_from_modulename -> (name, Default) :: acc
-              | _ -> acc
-            in
-            (has_named, acc)
-          | Exports.Named name -> (true, (name, Named) :: acc)
+            if include_values then
+              let name_from_modulename = string_of_modulename module_name in
+              let acc = (name_from_modulename, Default) :: acc in
+              let acc =
+                match name_opt with
+                | Some name when name <> name_from_modulename -> (name, Default) :: acc
+                | _ -> acc
+              in
+              (has_named, acc)
+            else
+              (has_named, acc)
+          | Exports.Named name ->
+            if include_values then
+              (true, (name, Named) :: acc)
+            else
+              (has_named, acc)
           | Exports.NamedType name -> (has_named, (name, NamedType) :: acc)
           | Exports.Module (module_name, exports) ->
             let module_name = Modulename.String module_name in
-            (has_named, helper ~module_name exports acc)
-          (* TODO: re-exports *)
-          | Exports.ReExportModule _
-          | Exports.ReExportModuleTypes _ ->
-            (has_named, acc)
+            ( has_named,
+              helper
+                ~module_name
+                ~get_dep_and_next_resolver
+                ~visited_deps
+                ~include_values
+                ~index_star_exports
+                exports
+                acc
+            )
+          | Exports.ReExportModule mref ->
+            if index_star_exports then
+              ( has_named,
+                with_reexports
+                  mref
+                  ~module_name
+                  ~get_dep_and_next_resolver
+                  ~visited_deps
+                  ~include_values
+                  ~index_star_exports
+                  acc
+              )
+            else
+              (has_named, acc)
+          | Exports.ReExportModuleTypes mref ->
+            if index_star_exports then
+              ( has_named,
+                with_reexports
+                  mref
+                  ~module_name
+                  ~get_dep_and_next_resolver
+                  ~visited_deps
+                  ~include_values:false
+                  ~index_star_exports
+                  acc
+              )
+            else
+              (has_named, acc)
       )
     in
     if has_named then
       (string_of_modulename module_name, Namespace) :: acc
     else
       acc
+  and with_reexports
+      mref
+      ~module_name
+      ~get_dep_and_next_resolver
+      ~visited_deps
+      ~include_values
+      ~index_star_exports
+      acc =
+    match get_dep_and_next_resolver mref with
+    | None -> acc
+    | Some { ModuleResolutionLazyStream.parse; file_key; next } ->
+      (* Guard against potential re-exports cycle *)
+      if Utils_js.FilenameSet.mem file_key visited_deps then
+        acc
+      else
+        helper
+          ~module_name
+          ~get_dep_and_next_resolver:next
+          ~visited_deps:(Utils_js.FilenameSet.add file_key visited_deps)
+          ~include_values
+          ~index_star_exports
+          (Parsing_heaps.read_exports parse)
+          acc
   in
-  (fun ~module_name exports -> helper ~module_name exports [])
+  fun ~index_star_exports ~module_name ~get_dep_and_next_resolver exports ->
+    helper
+      ~module_name
+      ~get_dep_and_next_resolver
+      ~visited_deps:Utils_js.FilenameSet.empty
+      ~include_values:true
+      ~index_star_exports
+      exports
+      []
 
 (** [add_exports ~source ~module_name exports index] adds [exports] to [index].
     For default and namespace exports, [module_name] is used as the exported name
     (converted to a valid identifier firist). *)
-let add_exports ~source ~module_name exports index =
-  let names = entries_of_exports ~module_name exports in
+let add_exports ~index_star_exports ~source ~module_name ~get_dep_and_next_resolver exports index =
+  let names =
+    entries_of_exports ~index_star_exports ~module_name ~get_dep_and_next_resolver exports
+  in
   Base.List.fold names ~init:index ~f:(fun acc (name, kind) -> Export_index.add name source kind acc)
 
 let add_imports imports resolved_modules provider (index : Export_index.t) =
@@ -120,7 +249,7 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
 (** [add_exports_of_checked_file file_key parse haste_info index] extracts the
     exports of [file_key] from its [parse] entry in shared memory. [haste_info]
     is used to fetch the module name from [file_key]. *)
-let add_exports_of_checked_file file_key parse haste_info index =
+let add_exports_of_checked_file ~index_star_exports ~reader ~old file_key parse haste_info index =
   let source = Export_index.File_key file_key in
   let exports = Parsing_heaps.read_exports parse in
   let module_name =
@@ -130,17 +259,26 @@ let add_exports_of_checked_file file_key parse haste_info index =
       Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
-  add_exports ~source ~module_name exports index
+  let get_dep_and_next_resolver =
+    ModuleResolutionLazyStream.get_dep_and_next_resolver ~reader ~old (file_key, parse)
+  in
+  add_exports ~index_star_exports ~source ~module_name ~get_dep_and_next_resolver exports index
 
 (** Adds builtins to [index]. See [Exports.of_builtins] for how libdefs
     are converted as if they "export" things. *)
-let add_exports_of_builtins lib_exports index =
+let add_exports_of_builtins ~index_star_exports lib_exports index =
   Base.List.fold lib_exports ~init:index ~f:(fun acc export ->
       match export with
       | Exports.Module (module_name, exports) ->
         let source = Export_index.Builtin module_name in
         let module_name = Modulename.String module_name in
-        add_exports ~source ~module_name exports acc
+        add_exports
+          ~index_star_exports
+          ~source
+          ~module_name
+          ~get_dep_and_next_resolver:(fun _ -> None)
+          exports
+          acc
       | Exports.Named name -> Export_index.add name Global Named acc
       | Exports.NamedType name -> Export_index.add name Global NamedType acc
       | Exports.DefaultType _ -> (* impossible *) acc
@@ -152,8 +290,10 @@ let add_exports_of_builtins lib_exports index =
 (** [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from
     shared memory and adds all of the current exports to [exports_to_add], and all of the
     previous exports to [exports_to_remove]. *)
-let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
-  function
+let index_file
+    ~index_star_exports
+    ~reader
+    (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) = function
   | File_key.ResourceFile _f ->
     (* TODO: where does filename need to be searchable? *)
     (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove)
@@ -178,7 +318,14 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
               parse
           in
           let provider = Parsing_heaps.Mutator_reader.get_old_provider ~reader in
-          ( add_exports_of_checked_file file_key parse haste_info exports_to_remove,
+          ( add_exports_of_checked_file
+              ~index_star_exports
+              ~reader
+              ~old:true
+              file_key
+              parse
+              haste_info
+              exports_to_remove,
             add_imports imports resolved_modules provider imports_to_remove
           )
         | None ->
@@ -194,7 +341,14 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
             Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file_key parse
           in
           let provider = Parsing_heaps.Mutator_reader.get_provider ~reader in
-          ( add_exports_of_checked_file file_key parse haste_info exports_to_add,
+          ( add_exports_of_checked_file
+              ~index_star_exports
+              ~reader
+              ~old:false
+              file_key
+              parse
+              haste_info
+              exports_to_add,
             add_imports imports resolved_modules provider imports_to_add
           )
         | None ->
@@ -209,7 +363,7 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
     filename; it would be expensive to walk the entire export index to check each exported
     name to see if a changed file used to export it. Instead, we re-index the previous
     version of the file to know what to remove. *)
-let index ~workers ~reader parsed :
+let index ~index_star_exports ~workers ~reader parsed :
     (Export_index.t * Export_index.t * Export_index.t * Export_index.t) Lwt.t =
   let total_count = Utils_js.FilenameSet.cardinal parsed in
   let parsed = Utils_js.FilenameSet.elements parsed in
@@ -217,7 +371,7 @@ let index ~workers ~reader parsed :
   let job ~reader files =
     let init = (Export_index.empty, Export_index.empty, Export_index.empty, Export_index.empty) in
     let (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
-      Base.List.fold files ~init ~f:(index_file ~reader)
+      Base.List.fold files ~init ~f:(index_file ~index_star_exports ~reader)
     in
     let count = Base.List.length files in
     (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, count)
@@ -282,11 +436,11 @@ let index ~workers ~reader parsed :
 
 (** Initializes an [Export_search.t] with the exports of all of the [parsed] files
     as well as the builtin libdefs. *)
-let init ~workers ~reader ~libs parsed =
+let init ~index_star_exports ~workers ~reader ~libs parsed =
   let%lwt (exports_to_add, _exports_to_remove, imports_to_add, _imports_to_remove) =
-    index ~workers ~reader parsed
+    index ~index_star_exports ~workers ~reader parsed
   in
-  let exports_to_add = add_exports_of_builtins libs exports_to_add in
+  let exports_to_add = add_exports_of_builtins ~index_star_exports libs exports_to_add in
   let final_export_index = Export_index.merge_export_import imports_to_add exports_to_add in
   (* TODO: assert that _exports_to_remove is empty? should be on init *)
   let search = Export_search.init final_export_index in
@@ -295,10 +449,9 @@ let init ~workers ~reader ~libs parsed =
 
 (** [update ~changed previous] updates the exports for all of the [changed] files
     in the [previous] [Export_search.t]. *)
-let update ~workers ~reader ~update ~remove previous : Export_search.t Lwt.t =
-  let dirty_files = Utils_js.FilenameSet.union update remove in
+let update ~index_star_exports ~workers ~reader ~dirty_files previous : Export_search.t Lwt.t =
   let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
-    index ~workers ~reader dirty_files
+    index ~index_star_exports ~workers ~reader dirty_files
   in
   let result =
     previous
