@@ -1475,6 +1475,7 @@ let make_options
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
+    opt_autoimports_index_star_exports = FlowConfig.autoimports_index_star_exports flowconfig;
     opt_autoimports_min_characters =
       Base.Option.value (FlowConfig.autoimports_min_characters flowconfig) ~default:0;
     opt_autoimports_ranked_by_usage = FlowConfig.autoimports_ranked_by_usage flowconfig;
