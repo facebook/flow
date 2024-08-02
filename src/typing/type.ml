@@ -841,15 +841,6 @@ module rec TypeTerm : sig
         use_op: use_op;
         dro_loc: ALoc.t;
       }
-    | PromoteRendersRepresentationT of {
-        use_op: use_op;
-        reason: reason;
-        tout: t;
-        resolved_elem: t option;
-        should_distribute: bool;
-        promote_structural_components: bool;
-        renders_variant: renders_variant;
-      }
     (* When extracting the props of an abstract component, we don't want to produce empty, even
        when the config type of the component is empty, because that would allow unsound access
        to the props. This utility passes through everything else but converts empty to mixed.
@@ -1677,6 +1668,7 @@ module rec TypeTerm : sig
      * of type inspection. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
     | ConcretizeForInspection of ident
+    | ConcretizeForRenderType of ident
     | ConcretizeComputedPropsT of ident
     | ConcretizeForOperatorsChecking of ident
 
@@ -4082,6 +4074,7 @@ let string_of_use_ctor = function
       (match c with
       | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
       | ConcretizeForInspection _ -> "ConcretizeForInspection"
+      | ConcretizeForRenderType _ -> "ConcretizeForRenderType"
       | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
       | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking")
   | LookupT _ -> "LookupT"
@@ -4141,7 +4134,6 @@ let string_of_use_ctor = function
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
   | CheckReactImmutableT _ -> "CheckReactImmutableT"
-  | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
   | ExitRendersT _ -> "ExitRendersT"

@@ -187,7 +187,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | CheckUnusedPromiseT _ -> _TODO
   | WriteComputedObjPropCheckT _ -> ()
   | CheckReactImmutableT _ -> ()
-  | PromoteRendersRepresentationT { tout; _ } -> resolve tout
   | ConvertEmptyPropsToMixedT (_, tout) -> resolve tout
   | TryRenderTypePromotionT _ -> ()
   | ExitRendersT { renders_reason = _; u } -> default_resolve_touts ~flow cx loc u
