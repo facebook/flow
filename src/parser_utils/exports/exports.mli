@@ -11,6 +11,8 @@ type export =
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
   | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)
+  | ReExportModule of string
+  | ReExportModuleTypes of string
 [@@deriving show { with_path = false }]
 
 type t = export list [@@deriving show { with_path = false }]

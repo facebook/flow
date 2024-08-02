@@ -186,6 +186,8 @@ end = struct
       | Named str -> Named (intern t str)
       | NamedType str -> NamedType (intern t str)
       | Module (str, exports) -> Module (intern t str, normalize_exports t exports)
+      | ReExportModule str -> ReExportModule (intern t str)
+      | ReExportModuleTypes str -> ReExportModuleTypes (intern t str)
     in
     (fun exports -> Base.List.map ~f exports)
 
