@@ -574,9 +574,9 @@ Cannot cast `rendersMaybeUnion` to renders `MenuItem` because a value that rende
        ^^^^^^^^^^^^^^^^^
 
 References:
-   renders_maybe.js:38:34
+   renders_maybe.js:38:44
    38| declare const rendersMaybeUnion: renders? (MenuItem | Bar);
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                  ^^^^^^^^^^^^^^ [1]
    renders_maybe.js:39:22
    39| rendersMaybeUnion as renders MenuItem; // ERROR
                             ^^^^^^^^^^^^^^^^ [2]
@@ -1372,13 +1372,11 @@ References:
    renders_to_renders.js:105:31
    105|   declare const mixedElement: React$MixedElement;
                                       ^^^^^^^^^^^^^^^^^^ [1]
-   renders_to_renders.js:107:19
-                          v--------
-   107|   mixedElement as renders (
+   renders_to_renders.js:108:5
+            v--------------------------
    108|     | React$Element<typeof Foo>
    109|     | React$Element<typeof Bar>
-   110|   ); // ERROR
-          ^ [2]
+            --------------------------^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:116:3
@@ -1390,9 +1388,11 @@ Cannot cast `rendersFooOrBar` to empty because `React.Element` [1] is incompatib
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:149:35
-   149| declare type React$MixedElement = React$Element<React$ElementType>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   renders_to_renders.js:22:3
+          v--------------------------
+    22|   | React$Element<typeof Foo>
+    23|   | React$Element<typeof Bar>
+          --------------------------^ [1]
    renders_to_renders.js:116:22
    116|   rendersFooOrBar as empty; // ERROR
                              ^^^^^ [2]
@@ -1400,7 +1400,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
 
-Cannot cast `rendersNode` to `React.MixedElement` because undefined [1] is incompatible with `React.Element` [2].
+Cannot cast `rendersNode` to `React.MixedElement` because `$Iterable` [1] is incompatible with `React.Element` [2].
 [incompatible-cast]
 
    renders_to_renders.js:119:3
@@ -1408,81 +1408,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because undefined [1] is incom
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:16:5
-    16|   | void
-            ^^^^ [1]
-   renders_to_renders.js:119:18
-   119|   rendersNode as React$MixedElement; // ERROR
-                         ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
-
-Cannot cast `rendersNode` to `React.MixedElement` because null [1] is incompatible with `React.Element` [2].
-[incompatible-cast]
-
-   renders_to_renders.js:119:3
-   119|   rendersNode as React$MixedElement; // ERROR
-          ^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:17:5
-    17|   | null
-            ^^^^ [1]
-   renders_to_renders.js:119:18
-   119|   rendersNode as React$MixedElement; // ERROR
-                         ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
-
-Cannot cast `rendersNode` to `React.MixedElement` because boolean [1] is incompatible with `React.Element` [2].
-[incompatible-cast]
-
-   renders_to_renders.js:119:3
-   119|   rendersNode as React$MixedElement; // ERROR
-          ^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:18:5
-    18|   | boolean
-            ^^^^^^^ [1]
-   renders_to_renders.js:119:18
-   119|   rendersNode as React$MixedElement; // ERROR
-                         ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
-
-Cannot cast `rendersNode` to `React.MixedElement` because number [1] is incompatible with `React.Element` [2].
-[incompatible-cast]
-
-   renders_to_renders.js:119:3
-   119|   rendersNode as React$MixedElement; // ERROR
-          ^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:19:5
-    19|   | number
-            ^^^^^^ [1]
-   renders_to_renders.js:119:18
-   119|   rendersNode as React$MixedElement; // ERROR
-                         ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
-
-Cannot cast `rendersNode` to `React.MixedElement` because string [1] is incompatible with `React.Element` [2].
-[incompatible-cast]
-
-   renders_to_renders.js:119:3
-   119|   rendersNode as React$MixedElement; // ERROR
-          ^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-    20|   | string
-            ^^^^^^ [1]
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
    renders_to_renders.js:119:18
    119|   rendersNode as React$MixedElement; // ERROR
                          ^^^^^^^^^^^^^^^^^^ [2]
@@ -1498,9 +1426,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because `React.Portal` [1] is 
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:22:5
-    22|   | React$Portal
-            ^^^^^^^^^^^^ [1]
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
    renders_to_renders.js:119:18
    119|   rendersNode as React$MixedElement; // ERROR
                          ^^^^^^^^^^^^^^^^^^ [2]
@@ -1508,7 +1436,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
 
-Cannot cast `rendersNode` to `React.MixedElement` because `$Iterable` [1] is incompatible with `React.Element` [2].
+Cannot cast `rendersNode` to `React.MixedElement` because boolean [1] is incompatible with `React.Element` [2].
 [incompatible-cast]
 
    renders_to_renders.js:119:3
@@ -1516,9 +1444,81 @@ Cannot cast `rendersNode` to `React.MixedElement` because `$Iterable` [1] is inc
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:23:5
-    23|   | Iterable<?React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:119:18
+   119|   rendersNode as React$MixedElement; // ERROR
+                         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
+
+Cannot cast `rendersNode` to `React.MixedElement` because null [1] is incompatible with `React.Element` [2].
+[incompatible-cast]
+
+   renders_to_renders.js:119:3
+   119|   rendersNode as React$MixedElement; // ERROR
+          ^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:119:18
+   119|   rendersNode as React$MixedElement; // ERROR
+                         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
+
+Cannot cast `rendersNode` to `React.MixedElement` because number [1] is incompatible with `React.Element` [2].
+[incompatible-cast]
+
+   renders_to_renders.js:119:3
+   119|   rendersNode as React$MixedElement; // ERROR
+          ^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:119:18
+   119|   rendersNode as React$MixedElement; // ERROR
+                         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
+
+Cannot cast `rendersNode` to `React.MixedElement` because string [1] is incompatible with `React.Element` [2].
+[incompatible-cast]
+
+   renders_to_renders.js:119:3
+   119|   rendersNode as React$MixedElement; // ERROR
+          ^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:119:18
+   119|   rendersNode as React$MixedElement; // ERROR
+                         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:119:3
+
+Cannot cast `rendersNode` to `React.MixedElement` because undefined [1] is incompatible with `React.Element` [2].
+[incompatible-cast]
+
+   renders_to_renders.js:119:3
+   119|   rendersNode as React$MixedElement; // ERROR
+          ^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
    renders_to_renders.js:119:18
    119|   rendersNode as React$MixedElement; // ERROR
                          ^^^^^^^^^^^^^^^^^^ [2]
@@ -1545,67 +1545,16 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
 
-Cannot cast `rendersNullOrNull` to null because undefined [1] is incompatible with null [2]. [incompatible-cast]
+Cannot cast `rendersNullOrNull` to null because `$Iterable` [1] is incompatible with null [2]. [incompatible-cast]
 
    renders_to_renders.js:122:3
    122|   rendersNullOrNull as null; // ERROR
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:16:5
-    16|   | void
-            ^^^^ [1]
-   renders_to_renders.js:122:24
-   122|   rendersNullOrNull as null; // ERROR
-                               ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
-
-Cannot cast `rendersNullOrNull` to null because boolean [1] is incompatible with null [2]. [incompatible-cast]
-
-   renders_to_renders.js:122:3
-   122|   rendersNullOrNull as null; // ERROR
-          ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:18:5
-    18|   | boolean
-            ^^^^^^^ [1]
-   renders_to_renders.js:122:24
-   122|   rendersNullOrNull as null; // ERROR
-                               ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
-
-Cannot cast `rendersNullOrNull` to null because number [1] is incompatible with null [2]. [incompatible-cast]
-
-   renders_to_renders.js:122:3
-   122|   rendersNullOrNull as null; // ERROR
-          ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:19:5
-    19|   | number
-            ^^^^^^ [1]
-   renders_to_renders.js:122:24
-   122|   rendersNullOrNull as null; // ERROR
-                               ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
-
-Cannot cast `rendersNullOrNull` to null because string [1] is incompatible with null [2]. [incompatible-cast]
-
-   renders_to_renders.js:122:3
-   122|   rendersNullOrNull as null; // ERROR
-          ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-    20|   | string
-            ^^^^^^ [1]
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:122:24
    122|   rendersNullOrNull as null; // ERROR
                                ^^^^ [2]
@@ -1620,9 +1569,9 @@ Cannot cast `rendersNullOrNull` to null because `React.Element` [1] is incompati
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:21:5
-    21|   | React$Element<any>
-            ^^^^^^^^^^^^^^^^^^ [1]
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:122:24
    122|   rendersNullOrNull as null; // ERROR
                                ^^^^ [2]
@@ -1637,9 +1586,9 @@ Cannot cast `rendersNullOrNull` to null because `React.Portal` [1] is incompatib
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:22:5
-    22|   | React$Portal
-            ^^^^^^^^^^^^ [1]
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:122:24
    122|   rendersNullOrNull as null; // ERROR
                                ^^^^ [2]
@@ -1647,16 +1596,67 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
 
-Cannot cast `rendersNullOrNull` to null because `$Iterable` [1] is incompatible with null [2]. [incompatible-cast]
+Cannot cast `rendersNullOrNull` to null because boolean [1] is incompatible with null [2]. [incompatible-cast]
 
    renders_to_renders.js:122:3
    122|   rendersNullOrNull as null; // ERROR
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:23:5
-    23|   | Iterable<?React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
+   renders_to_renders.js:122:24
+   122|   rendersNullOrNull as null; // ERROR
+                               ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
+
+Cannot cast `rendersNullOrNull` to null because number [1] is incompatible with null [2]. [incompatible-cast]
+
+   renders_to_renders.js:122:3
+   122|   rendersNullOrNull as null; // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
+   renders_to_renders.js:122:24
+   122|   rendersNullOrNull as null; // ERROR
+                               ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
+
+Cannot cast `rendersNullOrNull` to null because string [1] is incompatible with null [2]. [incompatible-cast]
+
+   renders_to_renders.js:122:3
+   122|   rendersNullOrNull as null; // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
+   renders_to_renders.js:122:24
+   122|   rendersNullOrNull as null; // ERROR
+                               ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:122:3
+
+Cannot cast `rendersNullOrNull` to null because undefined [1] is incompatible with null [2]. [incompatible-cast]
+
+   renders_to_renders.js:122:3
+   122|   rendersNullOrNull as null; // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:121:45
+   121|   declare const rendersNullOrNull: renders (null | null); // invalid-render
+                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:122:24
    122|   rendersNullOrNull as null; // ERROR
                                ^^^^ [2]
@@ -1671,107 +1671,11 @@ Cannot get `rendersFooOrBar.props` because property `props` is missing in `React
                           ^^^^^
 
 References:
-   <BUILTINS>/react.js:149:35
-   149| declare type React$MixedElement = React$Element<React$ElementType>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in undefined [1]. [incompatible-use]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:16:5
-    16|   | void
-            ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in null [1]. [incompatible-use]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:17:5
-    17|   | null
-            ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `Boolean` [1]. [prop-missing]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:18:5
-    18|   | boolean
-            ^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `Number` [1]. [prop-missing]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:19:5
-    19|   | number
-            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `String` [1]. [prop-missing]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-    20|   | string
-            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:21:5
-    21|   | React$Element<any>
-            ^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `React.Portal` [1]. [incompatible-use]
-
-   renders_to_renders.js:124:15
-   124|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:22:5
-    22|   | React$Portal
-            ^^^^^^^^^^^^ [1]
+   renders_to_renders.js:22:3
+          v--------------------------
+    22|   | React$Element<typeof Foo>
+    23|   | React$Element<typeof Bar>
+          --------------------------^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
@@ -1783,9 +1687,107 @@ Cannot get `rendersNode.props` because property `props` is missing in `$Iterable
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:23:5
-    23|   | Iterable<?React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in `Boolean` [1]. [prop-missing]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in `Number` [1]. [prop-missing]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in `React.Portal` [1]. [incompatible-use]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in `String` [1]. [prop-missing]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in null [1]. [incompatible-use]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
+
+Cannot get `rendersNode.props` because property `props` is missing in undefined [1]. [incompatible-use]
+
+   renders_to_renders.js:124:15
+   124|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   renders_to_renders.js:20:36
+    20| declare const rendersNode: renders React$Node; // invalid-render
+                                           ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:130:3

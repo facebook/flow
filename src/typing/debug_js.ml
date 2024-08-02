@@ -959,7 +959,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | WriteComputedObjPropCheckT { reason; _ } ->
       spf "WriteComputedObjPropCheckT (%s)" (string_of_reason reason)
     | CheckReactImmutableT _ -> "CheckReactImmutableT"
-    | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
     | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
     | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
     | ExitRendersT _ -> "ExitRendersT"
