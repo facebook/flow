@@ -224,13 +224,13 @@ undefined. [incompatible-return]
                                  ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ implicit_void.js:403:35
+Error ------------------------------------------------------------------------------------------ implicit_void.js:403:38
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-return]
 
-   403| function g20(x: number, y: bool): number { // Error
-                                          ^^^^^^ [1]
+   403| function g20(x: number, y: boolean): number { // Error
+                                             ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ implicit_void.js:415:38

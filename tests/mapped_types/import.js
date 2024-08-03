@@ -14,7 +14,7 @@ import type {
   ({foo: 3, bar: 'str', baz: true}: MappedO); // OK
 
   declare const mapped: MappedO;
-  (mapped: {foo: number, bar?: string, +baz: bool}); // OK
+  (mapped: {foo: number, bar?: string, +baz: boolean}); // OK
   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
   mapped.baz = true; // ERROR
 }
@@ -23,7 +23,7 @@ import type {
 {
   ({foo: undefined, bar: undefined, baz: undefined}: AddOptional); // OK
   declare const addOptional: AddOptional;
-  (addOptional: {foo?: number, bar?: string, +baz?: bool}); // OK
+  (addOptional: {foo?: number, bar?: string, +baz?: boolean}); // OK
   addOptional.baz = true; // ERROR
 }
 
@@ -37,26 +37,26 @@ import type {
 }
 
 // All of these tests are the same as above but use a parameterize type alias
-type O = {foo: number, bar?: string, +baz: bool};
-// No modifiers parameterized 
+type O = {foo: number, bar?: string, +baz: boolean};
+// No modifiers parameterized
 {
   ({foo: 3, bar: 'str', baz: true}: ParameterizedId<O>); // OK
 
   declare const mapped: ParameterizedId<O>;
-  (mapped: {foo: number, bar?: string, +baz: bool}); // OK
+  (mapped: {foo: number, bar?: string, +baz: boolean}); // OK
   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
   mapped.baz = true; // ERROR
 }
 
-// Add optional parameterized 
+// Add optional parameterized
 {
   ({foo: undefined, bar: undefined, baz: undefined}: ParameterizedPartial<O>); // OK
   declare const addOptional: ParameterizedPartial<O>;
-  (addOptional: {foo?: number, bar?: string, +baz?: bool}); // OK
+  (addOptional: {foo?: number, bar?: string, +baz?: boolean}); // OK
   addOptional.baz = true; // ERROR
 }
 
-// Add readonly parameterized 
+// Add readonly parameterized
 {
   ({foo: 3, bar: undefined, baz: true}: ParameterizedReadonly<O>);
   declare const readonly: ParameterizedReadonly<O>;

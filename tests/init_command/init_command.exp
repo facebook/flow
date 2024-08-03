@@ -9,6 +9,11 @@ Default .flowconfig looks like this:
 [libs]
 
 [lints]
+untyped-type-import=error
+deprecated-type-bool=error
+deprecated-type-dollar-call=error
+deprecated-type-dollar-objmap=error
+deprecated-type-predicate=error
 
 [options]
 

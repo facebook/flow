@@ -1,13 +1,6 @@
-[ignore]
-
-[include]
-
-[libs]
-
-[lints]
-
 [options]
 all=true
 no_flowlib=false
 
-[strict]
+[lints]
+deprecated-type=off

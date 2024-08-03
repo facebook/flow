@@ -1,3 +1,6 @@
 [options]
 all=true
 no_flowlib=false
+
+[lints]
+deprecated-type-predicate=off

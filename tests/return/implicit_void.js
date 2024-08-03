@@ -400,7 +400,7 @@ function g19(x: string): number { // Error
 }
 g19('b');
 
-function g20(x: number, y: bool): number { // Error
+function g20(x: number, y: boolean): number { // Error
   switch (x) {
     case 1:
       if (y) {

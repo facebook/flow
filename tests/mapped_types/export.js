@@ -1,4 +1,4 @@
-type O = {foo: number, bar?: string, +baz: bool};
+type O = {foo: number, bar?: string, +baz: boolean};
 
 export type MappedO = {[key in keyof O]: O[key]};
 export type AddOptional = {[key in keyof O]?: O[key]};

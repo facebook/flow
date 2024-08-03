@@ -2,3 +2,6 @@
 all=true
 exact_by_default=false
 no_flowlib=false
+
+[lints]
+deprecated-type-dollar-objmap=off
