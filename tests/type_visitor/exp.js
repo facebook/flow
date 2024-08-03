@@ -1,2 +1,2 @@
 //@flow
-export type Config<T> = React$ElementConfig<T>;
+export type Config<T> = React.ElementConfig<T>;

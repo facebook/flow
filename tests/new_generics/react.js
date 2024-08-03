@@ -45,8 +45,8 @@ function HOC<Config, Instance>(
 }
 
 function HOC2<Props: {}, DefaultProps: {}, Instance>(
-  x: React.AbstractComponent<React$Config<Props, DefaultProps>, Instance>,
-): React.AbstractComponent<React$Config<Props, DefaultProps>, Instance> {
+  x: React.AbstractComponent<React.Config<Props, DefaultProps>, Instance>,
+): React.AbstractComponent<React.Config<Props, DefaultProps>, Instance> {
   return x;
 }
 

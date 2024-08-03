@@ -437,9 +437,9 @@ Cannot cast `y` to `C` because `Props` [1] is incompatible with `C` [2]. [incomp
          ^
 
 References:
-   config.js:9:15
-    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
-                     ^^^^^ [1]
+   config.js:11:6
+   11|   y: React.Config<P, D>,
+            ^^^^^^^^^^^^^^^^^^ [1]
    config.js:16:8
    16|   y as C; // error, generics don't match
               ^ [2]
@@ -455,9 +455,9 @@ Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Pro
          ^
 
 References:
-   config.js:9:15
-    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
-                     ^^^^^ [1]
+   config.js:11:6
+   11|   y: React.Config<P, D>,
+            ^^^^^^^^^^^^^^^^^^ [1]
    config.js:18:8
    18|   y as NotTheRightConfig; // Error, configs don't match
               ^^^^^^^^^^^^^^^^^ [2]
@@ -473,9 +473,9 @@ Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Pro
          ^
 
 References:
-   config.js:9:15
-    9| function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
-                     ^^^^^ [1]
+   config.js:11:6
+   11|   y: React.Config<P, D>,
+            ^^^^^^^^^^^^^^^^^^ [1]
    config.js:18:8
    18|   y as NotTheRightConfig; // Error, configs don't match
               ^^^^^^^^^^^^^^^^^ [2]
@@ -483,38 +483,38 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- config.js:19:3
 
-Cannot cast `z` to config of React component because property `bar` is missing in `NotTheRightConfig` [1] but exists in
+Cannot cast `z` to `React.Config` because property `bar` is missing in `NotTheRightConfig` [1] but exists in
 `Props` [2]. [prop-missing]
 
    config.js:19:3
-   19|   z as React$Config<Props, DefaultProps>; // Error, configs don't match
+   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
          ^
 
 References:
    config.js:12:6
    12|   z: W,
             ^ [1]
-   config.js:19:21
-   19|   z as React$Config<Props, DefaultProps>; // Error, configs don't match
-                           ^^^^^ [2]
+   config.js:19:8
+   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- config.js:19:3
 
-Cannot cast `z` to config of React component because property `foo` is missing in `NotTheRightConfig` [1] but exists in
+Cannot cast `z` to `React.Config` because property `foo` is missing in `NotTheRightConfig` [1] but exists in
 `Props` [2]. [prop-missing]
 
    config.js:19:3
-   19|   z as React$Config<Props, DefaultProps>; // Error, configs don't match
+   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
          ^
 
 References:
    config.js:12:6
    12|   z: W,
             ^ [1]
-   config.js:19:21
-   19|   z as React$Config<Props, DefaultProps>; // Error, configs don't match
-                           ^^^^^ [2]
+   config.js:19:8
+   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:15:13

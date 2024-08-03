@@ -27,16 +27,16 @@ declare function ObjMap<T>($ObjMap<T, <V>(V) => void>): T;
 ObjMap({}); // Error: T under constrained.
 declare function Values<T>($Values<T>): T;
 Values(3); // Error: T under constrained.
-declare function ElementRef<T>(React$ElementRef<T>): T;
+declare function ElementRef<T>(React.ElementRef<T>): T;
 ElementRef(1); // Error: T under constrained.
-declare function ElementProps<T>(React$ElementProps<T>): T;
-ElementProps({foo: 3}) as React$AbstractComponent<
+declare function ElementProps<T>(React.ElementProps<T>): T;
+ElementProps({foo: 3}) as React.AbstractComponent<
   {foo: number},
   mixed,
   React$Node,
 >; // ok
-declare function ElementConfig<T>(React$ElementConfig<T>): T;
-ElementConfig({foo: 3}) as React$AbstractComponent<
+declare function ElementConfig<T>(React.ElementConfig<T>): T;
+ElementConfig({foo: 3}) as React.AbstractComponent<
   {foo: number},
   mixed,
   React$Node,

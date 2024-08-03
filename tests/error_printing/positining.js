@@ -23,7 +23,7 @@ type Props = {
   selectedValue: X,
 };
 
-declare var x: $RelayProps<React$ElementConfig<(Props) => React.Node>, {}>;
+declare var x: $RelayProps<React.ElementConfig<(Props) => React.Node>, {}>;
 
 x as $RelayProps<Props>;
 
