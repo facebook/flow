@@ -20,7 +20,7 @@ let p: PAny = 42;
 if (s) {
   p = 'a';
 } else {
-  (p: bool); // all ok
+  (p: boolean); // all ok
 }
 
 component C(ref: React.RefSetter<React.RefOf<A>>) {

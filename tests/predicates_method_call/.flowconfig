@@ -1,12 +1,5 @@
-[ignore]
-
-[include]
-
-[libs]
-
-[lints]
-
 [options]
 all=true
 
-[strict]
+[lints]
+deprecated-type-predicate=off

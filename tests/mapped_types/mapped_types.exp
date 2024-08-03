@@ -708,7 +708,7 @@ Cannot cast `mapped` to object type because string [1] is incompatible with empt
 
 References:
    export.js:1:30
-    1| type O = {foo: number, bar?: string, +baz: bool};
+    1| type O = {foo: number, bar?: string, +baz: boolean};
                                     ^^^^^^ [1]
    import.js:18:30
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -726,7 +726,7 @@ Cannot cast `mapped` to object type because undefined [1] is incompatible with e
 
 References:
    export.js:1:30
-    1| type O = {foo: number, bar?: string, +baz: bool};
+    1| type O = {foo: number, bar?: string, +baz: boolean};
                                     ^^^^^^ [1]
    import.js:18:30
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -762,8 +762,8 @@ Cannot cast `mapped` to object type because boolean [1] is incompatible with emp
 
 References:
    export.js:1:44
-    1| type O = {foo: number, bar?: string, +baz: bool};
-                                                  ^^^^ [1]
+    1| type O = {foo: number, bar?: string, +baz: boolean};
+                                                  ^^^^^^^ [1]
    import.js:18:43
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                                  ^^^^^ [2]
@@ -780,7 +780,7 @@ Cannot cast `mapped` to object type because number [1] is incompatible with empt
 
 References:
    export.js:1:16
-    1| type O = {foo: number, bar?: string, +baz: bool};
+    1| type O = {foo: number, bar?: string, +baz: boolean};
                       ^^^^^^ [1]
    import.js:18:18
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -856,7 +856,7 @@ Cannot cast `mapped` to object type because string [1] is incompatible with empt
 
 References:
    import.js:40:30
-   40| type O = {foo: number, bar?: string, +baz: bool};
+   40| type O = {foo: number, bar?: string, +baz: boolean};
                                     ^^^^^^ [1]
    import.js:47:30
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -874,7 +874,7 @@ Cannot cast `mapped` to object type because undefined [1] is incompatible with e
 
 References:
    import.js:40:30
-   40| type O = {foo: number, bar?: string, +baz: bool};
+   40| type O = {foo: number, bar?: string, +baz: boolean};
                                     ^^^^^^ [1]
    import.js:47:30
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -892,8 +892,8 @@ Cannot cast `mapped` to object type because boolean [1] is incompatible with emp
 
 References:
    import.js:40:44
-   40| type O = {foo: number, bar?: string, +baz: bool};
-                                                  ^^^^ [1]
+   40| type O = {foo: number, bar?: string, +baz: boolean};
+                                                  ^^^^^^^ [1]
    import.js:47:43
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                                  ^^^^^ [2]
@@ -910,7 +910,7 @@ Cannot cast `mapped` to object type because number [1] is incompatible with empt
 
 References:
    import.js:40:16
-   40| type O = {foo: number, bar?: string, +baz: bool};
+   40| type O = {foo: number, bar?: string, +baz: boolean};
                       ^^^^^^ [1]
    import.js:47:18
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR

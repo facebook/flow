@@ -23,7 +23,13 @@ type warning = int * string
 
 type error = int * string
 
-let default_explicit_values = LintMap.singleton Lints.UntypedTypeImport (Severity.Err, None)
+let default_explicit_values =
+  LintMap.empty
+  |> LintMap.add Lints.(DeprecatedType DeprecatedBool) (Severity.Err, None)
+  |> LintMap.add Lints.(DeprecatedType DeprecatedDollarCall) (Severity.Err, None)
+  |> LintMap.add Lints.(DeprecatedType DeprecatedDollarObjMap) (Severity.Err, None)
+  |> LintMap.add Lints.(DeprecatedType DeprecatedPredicate) (Severity.Err, None)
+  |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 
 let ignored_by_all =
   [Lints.ImplicitInexactObject; Lints.AmbiguousObjectType; Lints.UninitializedInstanceProperty]
