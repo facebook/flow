@@ -30,5 +30,5 @@ component Test() {
 declare const C: React.AbstractComponent<{foo: string}>;
 const el = <C foo="str" />;
 el.props.bar; // error
-const el_empty: React.Element<React$AbstractComponent<empty>> = el;
+const el_empty: React.Element<React.AbstractComponent<empty>> = el;
 el_empty.props.bar; // error

@@ -40,6 +40,24 @@ References:
                                        ^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
+
+Cannot call `foo` with `bar(...)` bound to the first parameter because `React.ComponentType` [1] is incompatible with
+class `C` [2]. [incompatible-call]
+
+   error_positions.js:11:6
+   11| (foo(bar(C)): F<typeof C>); // error on call
+            ^^^^^^
+
+References:
+   error_positions.js:7:67
+    7| declare function bar<P>(React$ComponentType<{ m: number, ...P}>): React$ComponentType<P>;
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:11:17
+   11| (foo(bar(C)): F<typeof C>); // error on call
+                       ^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ error_positions.js:16:1
 
 Cannot call `spread` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may
@@ -372,4 +390,4 @@ References:
 
 
 
-Found 21 errors
+Found 22 errors

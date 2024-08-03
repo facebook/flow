@@ -1339,11 +1339,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:51:2
 
-Cannot cast `Baz` to AbstractComponent because instance of component Baz [1] is incompatible with empty [2].
+Cannot cast `Baz` to `React.AbstractComponent` because instance of component Baz [1] is incompatible with empty [2].
 [incompatible-cast]
 
    errors.js:51:2
-   51| (Baz: React$AbstractComponent<mixed, empty>);
+   51| (Baz: React.AbstractComponent<mixed, empty>);
         ^^^
 
 References:
@@ -1351,22 +1351,22 @@ References:
     6| component Baz() {
        ^^^^^^^^^^^^^^^ [1]
    errors.js:51:38
-   51| (Baz: React$AbstractComponent<mixed, empty>);
+   51| (Baz: React.AbstractComponent<mixed, empty>);
                                             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- errors.js:51:2
 
-Cannot cast `Baz` to AbstractComponent because mixed [1] is incompatible with props of component Baz [2].
+Cannot cast `Baz` to `React.AbstractComponent` because mixed [1] is incompatible with props of component Baz [2].
 [incompatible-cast]
 
    errors.js:51:2
-   51| (Baz: React$AbstractComponent<mixed, empty>);
+   51| (Baz: React.AbstractComponent<mixed, empty>);
         ^^^
 
 References:
    errors.js:51:31
-   51| (Baz: React$AbstractComponent<mixed, empty>);
+   51| (Baz: React.AbstractComponent<mixed, empty>);
                                      ^^^^^ [1]
    errors.js:6:1
     6| component Baz() {
@@ -2432,7 +2432,7 @@ Cannot get `el_empty.props` because property `props` is missing in `React.Elemen
 
 References:
    poly.js:33:17
-   33| const el_empty: React.Element<React$AbstractComponent<empty>> = el;
+   33| const el_empty: React.Element<React.AbstractComponent<empty>> = el;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -2786,10 +2786,11 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to AbstractComponent because component Reffed [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `Foo` to `React.AbstractComponent` because component Reffed [1] is incompatible with string [2].
+[incompatible-cast]
 
    refs.js:12:2
-   12| (Foo: React$AbstractComponent<empty, string>); // err
+   12| (Foo: React.AbstractComponent<empty, string>); // err
         ^^^
 
 References:
@@ -2797,16 +2798,17 @@ References:
     3| component Foo(ref: {current: typeof Reffed}) { return null };
                                     ^^^^^^^^^^^^^ [1]
    refs.js:12:38
-   12| (Foo: React$AbstractComponent<empty, string>); // err
+   12| (Foo: React.AbstractComponent<empty, string>); // err
                                             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to AbstractComponent because component Reffed [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `Bar` to `React.AbstractComponent` because component Reffed [1] is incompatible with string [2].
+[incompatible-cast]
 
    refs.js:15:2
-   15| (Bar: React$AbstractComponent<empty, string>); // err
+   15| (Bar: React.AbstractComponent<empty, string>); // err
         ^^^
 
 References:
@@ -2814,16 +2816,17 @@ References:
     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                             ^^^^^^^^^^^^^ [1]
    refs.js:15:38
-   15| (Bar: React$AbstractComponent<empty, string>); // err
+   15| (Bar: React.AbstractComponent<empty, string>); // err
                                             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to AbstractComponent because component Reffed [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `Baz` to `React.AbstractComponent` because component Reffed [1] is incompatible with string [2].
+[incompatible-cast]
 
    refs.js:17:2
-   17| (Baz: React$AbstractComponent<empty, string>); // err
+   17| (Baz: React.AbstractComponent<empty, string>); // err
         ^^^
 
 References:
@@ -2831,7 +2834,7 @@ References:
     8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
                                           ^^^^^^^^^^^^^ [1]
    refs.js:17:38
-   17| (Baz: React$AbstractComponent<empty, string>); // err
+   17| (Baz: React.AbstractComponent<empty, string>); // err
                                             ^^^^^^ [2]
 
 

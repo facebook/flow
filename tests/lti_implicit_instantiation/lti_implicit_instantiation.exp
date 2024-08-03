@@ -523,7 +523,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    upper_non_t.js:30:29
-   30| declare function ElementRef<T>(React$ElementRef<T>): T;
+   30| declare function ElementRef<T>(React.ElementRef<T>): T;
                                    ^ [1]
    upper_non_t.js:31:1
    31| ElementRef(1); // Error: T under constrained.
