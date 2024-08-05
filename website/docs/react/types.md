@@ -167,16 +167,23 @@ const children: React.ChildrenArray<number> = [[1, 2], 3, [4, 5]];
 const array: Array<number> = React.Children.toArray(children);
 ```
 
-## `React.AbstractComponent<Config, Instance>` {#toc-react-abstractcomponent}
+## `React.AbstractComponent<Config, Instance, Renders>` {#toc-react-abstractcomponent}
 
-`React.AbstractComponent<Config, Instance>` represents a component with
-a config of type Config and instance of type Instance.
+:::tip
+In Flow v0.243.0+, consider using [Component Types](../component-types) instead, which will make
+it easier to migrate your Flow code to React 19.
+:::
+
+`React.AbstractComponent<Config, Instance, Renders>` represents a component with
+a config of type Config and instance of type Instance that renders something of type Renders.
 
 The `Config` of a component is the type of the object you need to pass in to JSX in order
 to create an element with that component. The `Instance` of a component is the type of the value
 that is written to the `current` field of a ref object passed into the `ref` prop in JSX.
+`Renders` is a [Component Syntax](../component-syntax) feature that allows you to specify what your
+component renders via [Render Types](../render-types)
 
-Config is required, but Instance is optional and defaults to mixed.
+Config is required, but Instance is optional and defaults to mixed and Renders is optional and defaults to React.Node.
 
 A class or function component with config `Config` may be used in places that expect
 `React.AbstractComponent<Config>`.
@@ -198,7 +205,7 @@ The definition for `React.ElementType` is roughly:
 ```js
 type ElementType =
   | string
-  | React.AbstractComponent<empty, mixed>;
+  | React.AbstractComponent<empty, mixed, React.Node>;
 ```
 
 ## `React.Key` {#toc-react-key}
