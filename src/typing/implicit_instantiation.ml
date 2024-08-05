@@ -491,7 +491,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     let rest_type l rest =
       let open Object in
       Tvar.mk_where cx r (fun tout ->
-          let u = ObjKitT (unknown_use, r, Resolve Next, Rest (Rest.Omit, Rest.One rest), tout) in
+          let u =
+            ObjKitT (unknown_use, r, Resolve Next, Rest (Rest.SpreadReversal, Rest.One rest), tout)
+          in
           Flow.flow cx (l, u)
       )
     in
