@@ -1,18 +1,18 @@
 // Unlike Pick, omit is not homomorphic and has no special behavior for
-// modifier preservation or distributivity
+// distributivity
 type O = {foo: string, bar: number, baz: number};
 
 type OmitFoo = Omit<O, 'foo'>;
 declare const noFoo: OmitFoo;
 noFoo.foo; // ERROR
-(noFoo: {bar: number, baz: number}); // OK
+noFoo as {bar: number, baz: number}; // OK
 
 type OmitFooAndBar = Omit<O, 'foo' | 'bar'>;
 declare const noFooOrBar: OmitFooAndBar;
 noFooOrBar.foo; // ERROR
 noFooOrBar.bar; // ERROR
 noFooOrBar.baz; // OK
-(noFooOrBar:{baz: number}); // OK
+noFooOrBar as {baz: number}; // OK
 
 const o: Omit<{ foo?: string, bar: number; }, "bar"> = {}; // OK
 
@@ -26,8 +26,10 @@ interface I {
 type OmitInterface = Omit<I, 'foo'>;
 {
   declare const noFoo: OmitInterface;
-  (noFoo: interface {bar: number; baz: number}); // OK
+  noFoo as interface {bar: number; baz: number}; // OK
   noFoo.foo; // ERROR: omitted
+  noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
+  class K implements OmitInterface {bar: number; baz: number} // OK
 }
 
 // Instances
@@ -40,6 +42,25 @@ class C {
 type OmitInstance = Omit<C, 'foo'>;
 {
   declare const noFoo: OmitInstance;
-  (noFoo: interface {bar: number; baz: number}); // OK
+  noFoo as interface {bar: number; baz: number}; // OK
   noFoo.foo; // ERROR: omitted
+  noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
+}
+
+// Omit preserves polarity
+{
+  declare const x: Omit<{+foo: 1, bar: 2}, 'bar'>;
+  x as {+foo: 1}; // OK
+  x as {foo: 1}; // ERROR
+}
+
+// Omit on inexact inputs results in exact outputs
+{
+  declare const x: Omit<{foo: 1, bar: 2, ...}, 'bar'>;
+  x as {foo: 1}; // OK
+}
+
+// Omitting non-existent property
+{
+  declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR
 }

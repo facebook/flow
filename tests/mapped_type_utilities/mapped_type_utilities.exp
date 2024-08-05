@@ -54,18 +54,86 @@ References:
                               ^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- omit.js:44:9
+Error ----------------------------------------------------------------------------------------------------- omit.js:31:3
+
+Cannot cast `noFoo` to object type because `Pick` [1] is not a subtype of object type [2]. Class instances are not
+subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+   omit.js:31:3
+   31|   noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
+         ^^^^^
+
+References:
+   omit.js:28:24
+   28|   declare const noFoo: OmitInterface;
+                              ^^^^^^^^^^^^^ [1]
+   omit.js:31:12
+   31|   noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- omit.js:46:9
 
 Cannot get `noFoo.foo` because property `foo` is missing in `Pick` [1]. [prop-missing]
 
-   omit.js:44:9
-   44|   noFoo.foo; // ERROR: omitted
+   omit.js:46:9
+   46|   noFoo.foo; // ERROR: omitted
                ^^^
 
 References:
-   omit.js:42:24
-   42|   declare const noFoo: OmitInstance;
+   omit.js:44:24
+   44|   declare const noFoo: OmitInstance;
                               ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- omit.js:47:3
+
+Cannot cast `noFoo` to object type because `Pick` [1] is not a subtype of object type [2]. Class instances are not
+subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+   omit.js:47:3
+   47|   noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
+         ^^^^^
+
+References:
+   omit.js:44:24
+   44|   declare const noFoo: OmitInstance;
+                              ^^^^^^^^^^^^ [1]
+   omit.js:47:12
+   47|   noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- omit.js:54:3
+
+Cannot cast `x` to object type because property `foo` is read-only in `Pick` [1] but writable in object type [2].
+[incompatible-variance]
+
+   omit.js:54:3
+   54|   x as {foo: 1}; // ERROR
+         ^
+
+References:
+   omit.js:52:20
+   52|   declare const x: Omit<{+foo: 1, bar: 2}, 'bar'>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   omit.js:54:8
+   54|   x as {foo: 1}; // ERROR
+              ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- omit.js:65:43
+
+Cannot instantiate `Omit` because property `xxx` is missing in object type [1] in type argument `Keys`. [prop-missing]
+
+   omit.js:65:43
+   65|   declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR
+                                                 ^^^^^
+
+References:
+   omit.js:65:25
+   65|   declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR
+                               ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- pick.js:8:10
@@ -175,4 +243,4 @@ References:
 
 
 
-Found 12 errors
+Found 16 errors
