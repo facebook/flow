@@ -270,6 +270,7 @@ and utility =
   | Required of t
   | Exact of t
   | Diff of t * t
+  | Omit of t * t
   | Rest of t * t
   | ElementType of t * t
   | Enum of t
@@ -693,6 +694,7 @@ class ['A] comparator_ty =
       | Enum _ -> 27
       | StringPrefix _ -> 28
       | StringSuffix _ -> 29
+      | Omit _ -> 30
 
     method tag_of_polarity _ =
       function
@@ -844,6 +846,7 @@ let string_of_utility_ctor = function
   | Exact _ -> "$Exact"
   | Enum _ -> "Enum"
   | Diff _ -> "$Diff"
+  | Omit _ -> "Omit"
   | Rest _ -> "$Rest"
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
@@ -870,6 +873,7 @@ let types_of_utility = function
   | Required t -> Some [t]
   | Exact t -> Some [t]
   | Diff (t1, t2) -> Some [t1; t2]
+  | Omit (t1, t2) -> Some [t1; t2]
   | Rest (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
   | Enum t -> Some [t]

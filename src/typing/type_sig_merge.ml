@@ -736,6 +736,34 @@ and merge_annot env file = function
     Type.(
       EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id)
     )
+  | Omit (loc, t1, t2) ->
+    let reason = Reason.(mk_reason (RType (OrdinaryName "Omit")) loc) in
+    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
+    let t1 = merge env file t1 in
+    let t2 = merge env file t2 in
+    let id = eval_id_of_aloc file loc in
+    let t2 =
+      Type.(
+        EvalT
+          ( t2,
+            TypeDestructorT
+              ( unknown_use,
+                reason,
+                (* `{[K in Keys]: mixed}` *)
+                MappedType
+                  {
+                    homomorphic = Unspecialized;
+                    property_type = MixedT.make reason;
+                    mapped_type_flags = { optional = KeepOptionality; variance = Polarity.Neutral };
+                    distributive_tparam_name = None;
+                  }
+              ),
+            Type.Eval.generate_id ()
+          )
+      )
+    in
+
+    Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Omit, t2)), id))
   | ReadOnly (loc, t) ->
     let reason = Reason.(mk_reason RReadOnlyType loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

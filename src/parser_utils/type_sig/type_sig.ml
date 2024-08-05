@@ -563,6 +563,7 @@ type ('loc, 'a) annot =
     }
   | NonMaybeType of 'loc * 'a
   | Diff of 'loc * 'a * 'a
+  | Omit of 'loc * 'a * 'a
   | ReadOnly of 'loc * 'a
   | Partial of 'loc * 'a
   | Required of 'loc * 'a

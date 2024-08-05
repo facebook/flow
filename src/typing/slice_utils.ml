@@ -815,7 +815,7 @@ let object_rest
         props = props1;
         flags = flags1;
         generics = generics1;
-        interface = _;
+        interface;
         reachable_targs;
       }
       {
@@ -914,7 +914,8 @@ let object_rest
             Some p
           (* If neither object has the prop then we don't add a prop to our
            * result here. *)
-          | ((Sound | IgnoreExactAndOwn | SpreadReversal | ReactConfigMerge _), None, None, _) ->
+          | ((Sound | IgnoreExactAndOwn | SpreadReversal | Omit | ReactConfigMerge _), None, None, _)
+            ->
             None
           (* If our first object has a prop and our second object does not have that
            * prop then we will copy over that prop. If the first object's prop is
@@ -943,6 +944,14 @@ let object_rest
               else
                 Field
                   { preferred_def_locs = None; key_loc; type_ = t; polarity = Polarity.Positive }
+            in
+            Some p
+          | (Omit, Some { Object.prop_t = t; is_method; is_own = _; polarity; key_loc }, None, _) ->
+            let p =
+              if is_method then
+                Method { key_loc; type_ = t }
+              else
+                Field { preferred_def_locs = None; key_loc; type_ = t; polarity }
             in
             Some p
           | ( Sound,
@@ -975,7 +984,7 @@ let object_rest
                   }
             in
             Some p
-          | (SpreadReversal, Some _, Some _, _) -> None
+          | ((SpreadReversal | Omit), Some _, Some _, _) -> None
           (* React config merging is special. We are trying to solve for C
            * in the equation (where ... represents spread instead of rest):
            *
@@ -1037,7 +1046,7 @@ let object_rest
                   }
             in
             Some p
-          | (SpreadReversal, None, _, _) -> None
+          | ((SpreadReversal | Omit), None, _, _) -> None
           (* Consider this case:
            *
            *     {...{p}, ...C} = {}
@@ -1085,9 +1094,10 @@ let object_rest
           }
     in
     let obj_kind =
-      match (flags1.obj_kind, dict) with
-      | (Exact, _) -> Exact
-      | (Indexed _, Some d) -> Indexed d
+      match (flags1.obj_kind, dict, merge_mode) with
+      | (Exact, _, _) -> Exact
+      | (Indexed _, Some d, _) -> Indexed d
+      | (Inexact, _, Omit) -> Exact
       | _ -> Inexact
     in
     let flags = { frozen = false; obj_kind; react_dro = flags1.react_dro } in
@@ -1095,11 +1105,16 @@ let object_rest
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT r1 in
     let call = None in
+    let (reason, interface) =
+      match merge_mode with
+      | Omit -> (reason, interface)
+      | _ -> (r1, None)
+    in
     mk_object_type
       cx
-      ~reason:r1
+      ~reason
       ~invalidate_aliases:true
-      ~interface:None
+      ~interface
         (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
       ~reachable_targs
       ~kind:Subst_name.Spread
