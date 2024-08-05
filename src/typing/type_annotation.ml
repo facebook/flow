@@ -969,6 +969,43 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 )
                 targs
           )
+        | "$Omit" ->
+          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+              let (t1, t2, targs) =
+                match convert_type_params () with
+                | ([t1; t2], targs) -> (t1, t2, targs)
+                | _ -> assert false
+              in
+              let reason = mk_reason (RType (OrdinaryName "Omit")) loc in
+              let t2 =
+                (* `{[K in Keys]: mixed}` *)
+                mk_type_destructor
+                  cx
+                  (Op (EvalMappedType { mapped_type = reason }))
+                  reason
+                  t2
+                  (MappedType
+                     {
+                       homomorphic = Unspecialized;
+                       property_type = MixedT.make reason;
+                       mapped_type_flags =
+                         { optional = KeepOptionality; variance = Polarity.Neutral };
+                       distributive_tparam_name = None;
+                     }
+                  )
+                  (Type.Eval.generate_id ())
+              in
+              reconstruct_ast
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (RestType (Type.Object.Rest.Omit, t2))
+                   (mk_eval_id cx loc)
+                )
+                targs
+          )
         (* $ReadOnly<T> *)
         | "$ReadOnly" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

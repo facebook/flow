@@ -2936,6 +2936,7 @@ and Object : sig
       | IgnoreExactAndOwn
       | SpreadReversal
       | ReactConfigMerge of Polarity.t
+      | Omit
   end
 
   module ReactConfig : sig

@@ -1632,6 +1632,9 @@ module Make (I : INPUT) : S = struct
       | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Diff (ty, ty'))
+      | T.RestType (T.Object.Rest.Omit, t') ->
+        let%map ty' = type__ ~env t' in
+        Ty.Utility (Ty.Omit (ty, ty'))
       | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
       | T.SpreadTupleType { inexact; resolved_rev; unresolved; _ } ->
         tuple_spread ~env ~inexact ty resolved_rev unresolved
