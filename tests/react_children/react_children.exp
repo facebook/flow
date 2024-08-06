@@ -198,8 +198,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:767:44
-   767|       count(children: ChildrenArray<any>): number,
+   <BUILTINS>/react.js:800:44
+   800|       count(children: ChildrenArray<any>): number,
                                                    ^^^^^^ [1]
    api.js:32:15
     32| function s(x: string) {}
@@ -1086,8 +1086,8 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
 
 References:
    tabs.js:17:5
-   17|   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   17|   | ExactReactElement_DEPRECATED<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
                ^^ [3]
@@ -1108,8 +1108,8 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
 
 References:
    tabs.js:17:5
-   17|   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   17|   | ExactReactElement_DEPRECATED<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    tabs.js:31:15
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
                      ^^ [3]
@@ -1130,8 +1130,8 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
 
 References:
    tabs.js:17:5
-   17|   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   17|   | ExactReactElement_DEPRECATED<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    tabs.js:32:21
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
                            ^^ [3]
@@ -1157,8 +1157,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:18:5
     18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
@@ -1182,8 +1182,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:68:9
     68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1216,8 +1216,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:73:3
     73|   <NotTab/>
@@ -1692,8 +1692,8 @@ Cannot create `View` element because in property `children`: [incompatible-type]
 
 References:
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    view.js:10:5
    10|   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -1714,8 +1714,8 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [3]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:36:8
@@ -1733,8 +1733,8 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [3]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:37:8
@@ -1752,8 +1752,8 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [3]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
@@ -1768,8 +1768,8 @@ Cannot create `View` element because in property `children`: [incompatible-type]
 
 References:
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    view.js:38:8
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
               ^ [3]
@@ -1796,8 +1796,8 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [3]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:40:8
@@ -1818,8 +1818,8 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [3]
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

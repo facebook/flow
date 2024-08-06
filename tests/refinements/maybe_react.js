@@ -5,7 +5,7 @@ type Node =
   | boolean
   | number
   | string
-  | React$Element<any>
+  | ExactReactElement_DEPRECATED<any>
   | Iterable<?React$Node>;
 
 type Props = {|
@@ -25,4 +25,4 @@ declare const m: MaybeFun;
 type MaybeComponent = ?(React.AbstractComponent<{}>);
 
 declare const C: MaybeComponent;
-(C && <C />: ?React.Element<$NonMaybeType<MaybeComponent>>); // ok
+(C && <C />: ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>); // ok

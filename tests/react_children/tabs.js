@@ -14,7 +14,7 @@ type TabBarNode =
   | void
   | null
   | boolean
-  | React$Element<typeof Tab>
+  | ExactReactElement_DEPRECATED<typeof Tab>
   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
                        // `Iterable<T>` because `strings` are `Iterable<string>`
                        // which is then `Iterable<Iterable<string>>` recursively

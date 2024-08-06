@@ -22,7 +22,7 @@ type CheckedReactElement<
   // $FlowFixMe
   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
 > =
-  React$Element<Comp>;
+  ExactReactElement_DEPRECATED<Comp>;
 
 declare opaque type React$CreateElement:
   & (<

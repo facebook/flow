@@ -1,3 +1,3 @@
 var React = require('react');
-(<fbt />: React$Element<any>);
+(<fbt />: React$MixedElement);
 (<fbt />: number); // Error: ReactElement ~> number

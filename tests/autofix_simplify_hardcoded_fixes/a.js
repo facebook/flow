@@ -1,5 +1,5 @@
 // @flow
 
-declare function f(): React$Element<'a'> | React$Element<'b'>;
+declare function f(): ExactReactElement_DEPRECATED<'a'> | ExactReactElement_DEPRECATED<'b'>;
 
 module.exports = f();

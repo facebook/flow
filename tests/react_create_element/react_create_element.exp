@@ -340,8 +340,8 @@ References:
    test.js:34:74
     34| (React.createElement(A, {foo: 1, bar: 2}): React.Element<Class<A>, {foo: boolean, bar: number}>); // error
                                                                                  ^^^^^^^ [4]
-   <BUILTINS>/react.js:147:69
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:69
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [5]
 
 
@@ -368,8 +368,8 @@ References:
    test.js:35:74
     35| (React.createElement(B, {foo: 1, bar: 2}): React.Element<typeof B, {foo: boolean, bar: number}>); // error
                                                                                  ^^^^^^^ [4]
-   <BUILTINS>/react.js:147:69
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:69
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [5]
 
 

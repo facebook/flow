@@ -65,7 +65,7 @@ type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C>
 'C' defined at component.js:15:73
 'ConcretizedPolyComponent' defined at component.js:15:5
 'Poly' defined at component.js:9:0
-'React$Element' defined at (lib) react.js:147:20
+'React$Element' defined at (lib) react.js:150:20
 'React$Node' defined at (lib) react.js:15:13
 
 component.js:15:6,15:29
