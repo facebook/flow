@@ -67,6 +67,7 @@ type error_code =
   | IncompatibleTypeGuard
   | IncompatibleUse
   | IncompatibleVariance
+  | InternalType
   | InvalidCallUtil
   | InvalidCatchParameterAnnotation
   | InvalidCompare
@@ -185,6 +186,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
   | Lints.UntypedImport -> UntypedImport
   | Lints.NonstrictImport -> NonstrictImport
+  | Lints.InternalType -> InternalType
   | Lints.UnclearType -> UnclearType
   | Lints.DeprecatedType _ -> DeprecatedType
   | Lints.UnsafeGettersSetters -> UnsafeGettersSetters
@@ -282,6 +284,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleTypeGuard -> "incompatible-type-guard"
   | IncompatibleUse -> "incompatible-use"
   | IncompatibleVariance -> "incompatible-variance"
+  | InternalType -> "internal-type"
   | InvalidCallUtil -> "invalid-call-util"
   | InvalidCatchParameterAnnotation -> "invalid-catch-parameter-annotation"
   | InvalidCompare -> "invalid-compare"

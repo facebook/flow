@@ -443,6 +443,8 @@ let builtins cx = Lazy.force cx.ccx.builtins
 
 let file cx = cx.file
 
+let is_lib_file cx = File_key.is_lib_file cx.file
+
 let in_dirlist cx dirs =
   match dirs with
   | [] -> false
@@ -526,7 +528,7 @@ let is_verbose cx =
   match cx.metadata.verbose with
   | None -> false
   | Some { Verbose.focused_files = None; enabled_during_flowlib; _ } ->
-    enabled_during_flowlib || not (File_key.is_lib_file (file cx))
+    enabled_during_flowlib || not (is_lib_file cx)
   | Some { Verbose.focused_files = Some files; enabled_during_flowlib; _ } ->
     let file = file cx in
     if File_key.is_lib_file file then

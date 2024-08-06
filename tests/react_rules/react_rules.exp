@@ -12,6 +12,15 @@ References:
          ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ dro.js:1:18
+
+`$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
+[internal-type]
+
+   1| declare const a: $ReactDeepReadOnly<{x: {y: number}}>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------- dro.js:2:5
 
 Cannot assign `42` to `a.x.y` because property `y` is not writable. [cannot-write]
@@ -26,6 +35,15 @@ Cannot assign `42` to `a.x` because property `x` is not writable. [cannot-write]
 
    3| a.x = 42; // error
         ^
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:5:18
+
+`$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
+[internal-type]
+
+   5| declare const x: $ReactDeepReadOnly<{x: {a: number}, y: Array<{w: {v: number}}>}>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:10:2
@@ -77,12 +95,39 @@ Cannot assign `42` to `x.x` because property `x` is not writable. [cannot-write]
          ^
 
 
+Error ----------------------------------------------------------------------------------------------------- dro.js:16:19
+
+`$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
+[internal-type]
+
+   16| declare const rr: $ReactDeepReadOnly<{current: number}>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:19:19
+
+`$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
+[internal-type]
+
+   19| declare const w3: $ReactDeepReadOnly<{a: {b: number}, c: number}>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ dro.js:22:6
 
 Cannot assign `42` to `w2.a.b` because property `b` is not writable. [cannot-write]
 
    22| w2.a.b = 42; // error
             ^
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:24:19
+
+`$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
+[internal-type]
+
+   24| declare const v3: $ReactDeepReadOnly<Array<{a: number}>>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:27:7
@@ -753,4 +798,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 57 errors
+Found 62 errors

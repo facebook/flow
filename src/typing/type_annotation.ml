@@ -1018,6 +1018,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           )
         (* $ReactDeepReadOnly<T> *)
         | "$ReactDeepReadOnly" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 (loc, Flow_intermediate_error_types.DollarReactDeepReadOnly)
+              );
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
@@ -1265,6 +1271,14 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               reconstruct_ast (AnyT.make AnnotatedAny reason) None
           )
         | "$EnumValue" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 ( loc,
+                   Flow_intermediate_error_types.DollarUtilityTypeWithNonDollarAliases "EnumValue"
+                 )
+              );
           let reason = mk_annot_reason (REnum { name = None }) loc in
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -1272,6 +1286,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               reconstruct_ast (DefT (reason, EnumValueT (AbstractEnum { representation_t }))) targs
           )
         | "$Enum" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 (loc, Flow_intermediate_error_types.DollarUtilityTypeWithNonDollarAliases "Enum")
+              );
           let reason = mk_annot_reason (REnum { name = None }) loc in
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -1340,6 +1360,15 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
               )
               targs)
         | "React$Config" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 ( loc,
+                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
+                     "Config"
+                 )
+              );
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (ts, targs) = convert_type_params () in
               let props = List.nth ts 0 in
@@ -1357,6 +1386,15 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 targs
           )
         | "React$ElementProps" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 ( loc,
+                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
+                     "ElementProps"
+                 )
+              );
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
@@ -1373,6 +1411,15 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 targs
           )
         | "React$ElementConfig" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 ( loc,
+                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
+                     "ElementConfig"
+                 )
+              );
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
@@ -1389,6 +1436,15 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                 targs
           )
         | "React$ElementRef" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 ( loc,
+                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
+                     "ElementRef"
+                 )
+              );
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in

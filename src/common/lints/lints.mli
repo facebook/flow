@@ -37,6 +37,7 @@ type lint_kind =
   | UntypedTypeImport
   | UntypedImport
   | NonstrictImport
+  | InternalType
   | UnclearType
   | DeprecatedType of deprecated_type_kind
   | UnsafeGettersSetters

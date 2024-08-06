@@ -45,6 +45,11 @@ type context_dependent_unsupported_statement =
   | UnsupportedStatementInDeclareModule of string
   | UnsupportedStatementInDeclareNamespace of string
 
+type internal_type =
+  | DollarReactDeepReadOnly
+  | DollarUtilityTypeWithNonDollarAliases of string
+  | ReactDollarUtilityTypesWithNonDollarAliases of string
+
 type unsupported_syntax =
   | AnnotationInsideDestructuring
   | AsConstOnNonLiteral
@@ -710,6 +715,7 @@ type 'loc message =
     }
   | MessageInvalidTupleTypeSpread of 'loc virtual_reason
   | MessageTupleElementAfterInexactSpread
+  | MessageInternalType of internal_type
   | MessageInvalidTypeCastingSyntax of Options.CastingSyntax.t
   | MessageInvalidTypeGuardFunctionKind of string
   | MessageInvalidTypeGuardFunctionWritten of {

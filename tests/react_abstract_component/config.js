@@ -5,30 +5,30 @@ type DefaultProps = {foo: number};
 type Config = {+foo?: number, +bar: number};
 
 declare var x: Config;
-declare var y: React$Config<Props, DefaultProps>;
-x as React$Config<Props, DefaultProps>;
+declare var y: React.Config<Props, DefaultProps>;
+x as React.Config<Props, DefaultProps>;
 y as Config;
 
 type NotTheRightConfig = {+baz: number, +qux: number};
 y as NotTheRightConfig; // Error, configs don't match
 
 declare var z: NotTheRightConfig;
-z as React$Config<Props, DefaultProps>; // Error, configs don't match
+z as React.Config<Props, DefaultProps>; // Error, configs don't match
 
-function HOC<Config, Instance, TRenders: React$Node>(
-  x: React$AbstractComponent<Config, Instance, TRenders>,
-): React$AbstractComponent<Config, Instance, TRenders> {
+function HOC<Config, Instance, TRenders: React.Node>(
+  x: React.AbstractComponent<Config, Instance, TRenders>,
+): React.AbstractComponent<Config, Instance, TRenders> {
   return x;
 }
 
-function HOC2<Props: {}, DefaultProps: {}, Instance, TRenders: React$Node>(
-  x: React$AbstractComponent<
-    React$Config<Props, DefaultProps>,
+function HOC2<Props: {}, DefaultProps: {}, Instance, TRenders: React.Node>(
+  x: React.AbstractComponent<
+    React.Config<Props, DefaultProps>,
     Instance,
     TRenders,
   >,
-): React$AbstractComponent<
-  React$Config<Props, DefaultProps>,
+): React.AbstractComponent<
+  React.Config<Props, DefaultProps>,
   Instance,
   TRenders,
 > {

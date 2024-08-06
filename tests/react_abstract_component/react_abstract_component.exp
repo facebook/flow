@@ -310,9 +310,9 @@ Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Pro
        ^
 
 References:
-   config.js:8:29
-    8| declare var y: React$Config<Props, DefaultProps>;
-                                   ^^^^^ [1]
+   config.js:8:16
+    8| declare var y: React.Config<Props, DefaultProps>;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    config.js:13:6
    13| y as NotTheRightConfig; // Error, configs don't match
             ^^^^^^^^^^^^^^^^^ [2]
@@ -328,9 +328,9 @@ Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Pro
        ^
 
 References:
-   config.js:8:29
-    8| declare var y: React$Config<Props, DefaultProps>;
-                                   ^^^^^ [1]
+   config.js:8:16
+    8| declare var y: React.Config<Props, DefaultProps>;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    config.js:13:6
    13| y as NotTheRightConfig; // Error, configs don't match
             ^^^^^^^^^^^^^^^^^ [2]
@@ -338,38 +338,38 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- config.js:16:1
 
-Cannot cast `z` to config of React component because property `bar` is missing in `NotTheRightConfig` [1] but exists in
+Cannot cast `z` to `React.Config` because property `bar` is missing in `NotTheRightConfig` [1] but exists in
 `Props` [2]. [prop-missing]
 
    config.js:16:1
-   16| z as React$Config<Props, DefaultProps>; // Error, configs don't match
+   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
        ^
 
 References:
    config.js:15:16
    15| declare var z: NotTheRightConfig;
                       ^^^^^^^^^^^^^^^^^ [1]
-   config.js:16:19
-   16| z as React$Config<Props, DefaultProps>; // Error, configs don't match
-                         ^^^^^ [2]
+   config.js:16:6
+   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- config.js:16:1
 
-Cannot cast `z` to config of React component because property `foo` is missing in `NotTheRightConfig` [1] but exists in
+Cannot cast `z` to `React.Config` because property `foo` is missing in `NotTheRightConfig` [1] but exists in
 `Props` [2]. [prop-missing]
 
    config.js:16:1
-   16| z as React$Config<Props, DefaultProps>; // Error, configs don't match
+   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
        ^
 
 References:
    config.js:15:16
    15| declare var z: NotTheRightConfig;
                       ^^^^^^^^^^^^^^^^^ [1]
-   config.js:16:19
-   16| z as React$Config<Props, DefaultProps>; // Error, configs don't match
-                         ^^^^^ [2]
+   config.js:16:6
+   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- config.js:47:13
@@ -403,9 +403,9 @@ References:
    config.js:52:12
    52| const _f = <WrappedComponent2 />; // Error missing bar
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
-   config.js:49:32
-   49| const WrappedComponent2 = HOC2<{foo: number, bar: number}, {foo: number}, _>(
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   config.js:31:3
+   31|   React.Config<Props, DefaultProps>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:17:13
@@ -516,13 +516,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    destructors.js:18:1
-   18| 3 as React$ElementRef<typeof C>; // Error, 3 is not void.
+   18| 3 as React.ElementRef<typeof C>; // Error, 3 is not void.
        ^ [1]
 
 References:
-   destructors.js:7:3
-    7|   void,
-         ^^^^ [2]
+   destructors.js:18:6
+   18| 3 as React.ElementRef<typeof C>; // Error, 3 is not void.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:25:2
@@ -531,13 +531,13 @@ Cannot cast object literal to `React.ElementConfig` because property `bar` is mi
 in object type [2]. [prop-missing]
 
    destructors.js:25:2
-   25| ({baz: 3}) as React$ElementConfig<typeof C>; // Error, bar missing
+   25| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
         ^^^^^^^^ [1]
 
 References:
-   destructors.js:6:3
-    6|   {foo?: number, bar: number},
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   destructors.js:25:15
+   25| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13
@@ -864,16 +864,16 @@ Cannot call `foo` with `ref` bound to `a` because `HTMLElement` [1] is incompati
 [incompatible-call]
 
    strict.js:9:5
-     9| foo(ref);
-            ^^^
+   9| foo(ref);
+          ^^^
 
 References:
-   <BUILTINS>/react-dom.js:677:13
-   677|   instance: HTMLElement,
-                    ^^^^^^^^^^^ [1]
+   strict.js:8:19
+   8| declare var ref: ?React.ElementRef<React$ElementType>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    strict.js:7:26
-     7| declare function foo(a: ?React$Component<any, any>): void;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   7| declare function foo(a: ?React$Component<any, any>): void;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
@@ -882,16 +882,16 @@ Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with
 [incompatible-call]
 
    strict.js:9:5
-     9| foo(ref);
-            ^^^
+   9| foo(ref);
+          ^^^
 
 References:
-   <BUILTINS>/react.js:136:36
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                           ^^^^^ [1]
+   strict.js:8:19
+   8| declare var ref: ?React.ElementRef<React$ElementType>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    strict.js:7:26
-     7| declare function foo(a: ?React$Component<any, any>): void;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   7| declare function foo(a: ?React$Component<any, any>): void;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:9

@@ -2900,6 +2900,21 @@ let to_printable_error :
           code replacement_name;
           text ".";
         ])
+    | MessageInternalType DollarReactDeepReadOnly ->
+      [
+        code "$ReactDeepReadOnly";
+        text " is a secret internal Flow type exposed for testing purposes. ";
+        text "There will be no stability guarantees.";
+      ]
+    | MessageInternalType (DollarUtilityTypeWithNonDollarAliases name) ->
+      [code ("$" ^ name); text " is an internal Flow type. Use "; code name; text " instead."]
+    | MessageInternalType (ReactDollarUtilityTypesWithNonDollarAliases name) ->
+      [
+        code ("React$" ^ name);
+        text " is an internal Flow type. Use ";
+        code ("React." ^ name);
+        text " instead.";
+      ]
     | MessageInvalidArgument { lower; upper } ->
       [ref lower; text " is not a valid argument of "; ref upper]
     | MessageInvalidCatchParameterAnnotation ->
