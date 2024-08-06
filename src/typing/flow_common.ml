@@ -281,6 +281,16 @@ module type S = sig
 
   val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 
+  val possible_concrete_types_for_predicate :
+    predicate_concretizer_variant:Type.predicate_concretizer_variant ->
+    Context.t ->
+    Reason.reason ->
+    Type.t ->
+    Type.t list
+
+  val possible_concrete_types_for_sentinel_prop_test :
+    Context.t -> Reason.reason -> Type.t -> Type.t list
+
   val possible_concrete_types_for_render_type : Context.t -> Reason.reason -> Type.t -> Type.t list
 
   val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t

@@ -26,9 +26,7 @@ let concretization_variant_of_predicate = function
 
 let rec concretize_and_run_predicate cx trace l variant tvar ~predicate_no_concretization =
   let reason = reason_of_t l in
-  let id = Tvar.mk_no_wrap cx reason in
-  rec_flow cx trace (l, PredicateT (variant, (reason, id)));
-  Flow_js_utils.types_of cx (Context.find_graph cx id)
+  possible_concrete_types_for_predicate cx reason ~predicate_concretizer_variant:variant l
   |> Base.List.iter ~f:(function
          | GenericT { bound; name; reason; id; no_infer } ->
            let bound_tvar_id = Tvar.mk_no_wrap cx reason in
@@ -53,14 +51,12 @@ let rec concretize_and_run_predicate cx trace l variant tvar ~predicate_no_concr
 
 and concretize_binary_rhs_and_run_binary_predicate cx trace l r sense b tvar =
   let reason = reason_of_t r in
-  let id = Tvar.mk_no_wrap cx reason in
   let variant =
     match b with
     | InstanceofTest -> ConcretizeRHSForInstanceOfPredicateTest
     | SentinelProp _ -> ConcretizeRHSForSentinelPropPredicateTest
   in
-  rec_flow cx trace (r, PredicateT (variant, (reason, id)));
-  Flow_js_utils.types_of cx (Context.find_graph cx id)
+  possible_concrete_types_for_predicate cx reason ~predicate_concretizer_variant:variant r
   |> Base.List.iter ~f:(fun r -> binary_predicate cx trace sense b l r tvar)
 
 (* t - predicate output recipient (normally a tvar)
@@ -790,9 +786,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
 
 and concretize_and_run_sentinel_prop_test cx trace reason ~orig_obj ~sense ~sentinel input result =
-  let id = Tvar.mk_no_wrap cx reason in
-  rec_flow cx trace (input, SentinelPropTestT (reason, id));
-  Flow_js_utils.types_of cx (Context.find_graph cx id)
+  possible_concrete_types_for_sentinel_prop_test cx reason input
   |> Base.List.iter ~f:(function
          | UnionT (r, rep) ->
            let l = orig_obj in

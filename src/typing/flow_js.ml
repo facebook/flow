@@ -483,6 +483,20 @@ struct
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
         | (UnionT (_, _), ConcretizeT (r, ConcretizeForRenderType id)) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (r, id))
+        | (UnionT (_, _), ConcretizeT (reason, ConcretizeForSentinelPropTest tvar))
+        (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
+           prevents a drastic blowup of cases which can cause perf problems. *)
+        | ( UnionT (_, _),
+            ConcretizeT
+              (reason, ConcretizeForPredicate (ConcretizeRHSForSentinelPropPredicateTest, tvar))
+          ) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
+        | ( UnionT (_, rep),
+            ConcretizeT
+              (reason, ConcretizeForPredicate (ConcretizeForMaybeOrExistPredicateTest, tvar))
+          )
+          when UnionRep.is_optimized_finally rep ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         | (UnionT (_, urep), ConcretizeT _) -> flow_all_in_union cx trace urep u
         | (MaybeT (lreason, t), ConcretizeT _) ->
           let lreason = replace_desc_reason RNullOrVoid lreason in
@@ -1625,11 +1639,6 @@ struct
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
-        | (UnionT (_, _), SentinelPropTestT result) ->
-          rec_flow_t ~use_op:unknown_use cx trace (l, OpenT result)
-        | (UnionT (_, rep), PredicateT (ConcretizeForMaybeOrExistPredicateTest, tvar))
-          when UnionRep.is_optimized_finally rep ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
         (* Shortcut for indexed accesses with the same type as the dict key. *)
         | ( UnionT _,
             ElemT
@@ -1676,9 +1685,6 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
         | (UnionT (_, rep), _)
           when match u with
-               (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
-                  prevents a drastic blowup of cases which can cause perf problems. *)
-               | PredicateT (ConcretizeRHSForSentinelPropPredicateTest, _)
                | WriteComputedObjPropCheckT _
                | ExtractReactRefT _ ->
                  false
@@ -1815,8 +1821,8 @@ struct
              )
         (* predicates: prevent a predicate upper bound from prematurely decomposing
            an intersection lower bound *)
-        | (IntersectionT _, PredicateT (_, tout)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tout)
+        | (IntersectionT _, ConcretizeT (reason, ConcretizeForPredicate (_, tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         (* ObjAssignFromT copies multiple properties from its incoming LB.
            Here we simulate a merged object type by iterating over the
            entire intersection. *)
@@ -2305,7 +2311,7 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Special case for `_ instanceof C` where C is polymorphic *)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
-            PredicateT (ConcretizeRHSForInstanceOfPredicateTest, _)
+            ConcretizeT (_, ConcretizeForPredicate (ConcretizeRHSForInstanceOfPredicateTest, _))
           ) ->
           let l =
             instantiate_poly_default_args
@@ -2317,8 +2323,8 @@ struct
               (tparams_loc, ids, t)
           in
           rec_flow cx trace (l, u)
-        | (DefT (_, PolyT _), PredicateT (_, t)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT t)
+        | (DefT (_, PolyT _), ConcretizeT (reason, ConcretizeForPredicate (_, tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         (* The rules below are hit when a polymorphic type appears outside a
            type application expression - i.e. not followed by a type argument list
            delimited by angle brackets.
@@ -4189,9 +4195,9 @@ struct
         (* opaque types part 2 *)
         (***********************)
 
-        (* Don't refine opaque types based on its bound *)
-        | (OpaqueT _, PredicateT (_, tvar)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
+        (* Predicate_kit should not see unwrapped opaque type *)
+        | (OpaqueT _, ConcretizeT (reason, ConcretizeForPredicate (_, tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         | (OpaqueT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
@@ -4217,11 +4223,12 @@ struct
            recorded as lower bound to the target tvar. *)
         | (t, ConcretizeT (reason, ConcretizeForOperatorsChecking tvar)) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
-        (**************************************)
-        (* types may be refined by predicates *)
-        (**************************************)
-        | (_, PredicateT (_, tvar)) -> rec_flow_t cx trace ~use_op:unknown_use (l, OpenT tvar)
-        | (_, SentinelPropTestT result) -> rec_flow_t cx trace ~use_op:unknown_use (l, OpenT result)
+        (**************************************************************************)
+        (* final shared concretization point for predicate and sentinel prop test *)
+        (**************************************************************************)
+        | (_, ConcretizeT (reason, ConcretizeForPredicate (_, tvar)))
+        | (_, ConcretizeT (reason, ConcretizeForSentinelPropTest tvar)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, OpenT (reason, tvar))
         (******************************)
         (* functions statics - part B *)
         (******************************)
@@ -5846,14 +5853,12 @@ struct
     | ObjTestT _
     | OptionalChainT _
     | OptionalIndexedAccessT _
-    | PredicateT _
     | PrivateMethodT _
     | ReactKitT _
     | ReposLowerT _
     | ReposUseT _
     | ResolveSpreadT _
     | SealGenericT _
-    | SentinelPropTestT _
     | SetElemT _
     | SetPropT _
     | SpecializeT _
@@ -9488,6 +9493,14 @@ module rec FlowJs : Flow_common.S = struct
 
   let possible_concrete_types_for_imports_exports =
     possible_concrete_types (fun ident -> ConcretizeForImportsExports ident)
+
+  let possible_concrete_types_for_predicate ~predicate_concretizer_variant =
+    possible_concrete_types (fun ident ->
+        ConcretizeForPredicate (predicate_concretizer_variant, ident)
+    )
+
+  let possible_concrete_types_for_sentinel_prop_test =
+    possible_concrete_types (fun ident -> ConcretizeForSentinelPropTest ident)
 
   let possible_concrete_types_for_computed_props =
     possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)

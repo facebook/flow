@@ -649,8 +649,6 @@ module rec TypeTerm : sig
         reason: reason;
         t_out: use_t;
       }
-    (* operation specifying a type refinement via a predicate *)
-    | PredicateT of predicate_concretizer_variant * tvar
     (* operation on polymorphic types *)
     (* SpecializeT(_, _, _, targs, tresult) instantiates a polymorphic type
           with type arguments targs, and flows the result into tresult.
@@ -752,7 +750,6 @@ module rec TypeTerm : sig
     | ReactKitT of use_op * reason * React.tool
     (* tools for preprocessing types *)
     | ConcretizeT of reason * concretization_target
-    | SentinelPropTestT of tvar
     | OptionalChainT of {
         reason: reason;
         lhs_reason: reason;
@@ -1668,6 +1665,8 @@ module rec TypeTerm : sig
      * of type inspection. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
     | ConcretizeForInspection of ident
+    | ConcretizeForPredicate of predicate_concretizer_variant * ident
+    | ConcretizeForSentinelPropTest of ident
     | ConcretizeForRenderType of ident
     | ConcretizeComputedPropsT of ident
     | ConcretizeForOperatorsChecking of ident
@@ -4040,6 +4039,12 @@ let string_of_use_op_rec : use_op -> string =
       spf "%s(%s)" (string_of_frame_use_op use_op) acc
   )
 
+let string_of_predicate_concretizer_variant = function
+  | ConcretizeForGeneralPredicateTest -> "ConcretizeForGeneralPredicateTest"
+  | ConcretizeForMaybeOrExistPredicateTest -> "ConcretizeForMaybeOrExistPredicateTest"
+  | ConcretizeRHSForInstanceOfPredicateTest -> "ConcretizeRHSForInstanceOfPredicateTest"
+  | ConcretizeRHSForSentinelPropPredicateTest -> "ConcretizeRHSForSentinelPropPredicateTest"
+
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
   | ArrRestT _ -> "ArrRestT"
@@ -4075,6 +4080,9 @@ let string_of_use_ctor = function
       (match c with
       | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
       | ConcretizeForInspection _ -> "ConcretizeForInspection"
+      | ConcretizeForPredicate (v, _) ->
+        "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
+      | ConcretizeForSentinelPropTest _ -> "ConcretizeForPredicate"
       | ConcretizeForRenderType _ -> "ConcretizeForRenderType"
       | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
       | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking")
@@ -4089,7 +4097,6 @@ let string_of_use_ctor = function
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OptionalChainT _ -> "OptionalChainT"
-  | PredicateT _ -> "PredicateT"
   | ReactKitT _ -> "ReactKitT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
@@ -4106,7 +4113,6 @@ let string_of_use_ctor = function
         | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
         | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
       end
-  | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
   | SetPrivatePropT _ -> "SetPrivatePropT"
@@ -4175,12 +4181,6 @@ let rec string_of_predicate = function
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
   | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
-
-let string_of_predicate_concretizer_variant = function
-  | ConcretizeForGeneralPredicateTest -> "ConcretizeForGeneralPredicateTest"
-  | ConcretizeForMaybeOrExistPredicateTest -> "ConcretizeForMaybeOrExistPredicateTest"
-  | ConcretizeRHSForInstanceOfPredicateTest -> "ConcretizeRHSForInstanceOfPredicateTest"
-  | ConcretizeRHSForSentinelPropPredicateTest -> "ConcretizeRHSForSentinelPropPredicateTest"
 
 let string_of_type_t_kind = function
   | TypeAliasKind -> "TypeAliasKind"
