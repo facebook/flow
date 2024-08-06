@@ -3,4 +3,4 @@ type Y = renders {}; // ERROR: not subtype of React$Node, invalid-render
 
 component Foo() { return null }
 
-type Z = renders React$Element<typeof Foo>; // OK!
+type Z = renders ExactReactElement_DEPRECATED<typeof Foo>; // OK!

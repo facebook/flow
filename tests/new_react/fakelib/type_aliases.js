@@ -1,1 +1,1 @@
-type $jsx<C> = React$Element<C>;
+type $jsx<C> = ExactReactElement_DEPRECATED<C>;

@@ -250,11 +250,11 @@ References:
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:3:1
 
-Cannot cast `x` to renders `React.Element` because object type [1] does not render `React.Element` [2].
+Cannot cast `x` to renders `ExactReactElement_DEPRECATED` because object type [1] does not render `React.Element` [2].
 [incompatible-cast]
 
    no_spoofing_element_types.js:3:1
-   3| x as renders React$Element<typeof Foo>; // ERROR!
+   3| x as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
       ^
 
 References:
@@ -262,8 +262,8 @@ References:
    2| declare const x: {+type: typeof Foo};
                        ^^^^^^^^^^^^^^^^^^^ [1]
    no_spoofing_element_types.js:3:14
-   3| x as renders React$Element<typeof Foo>; // ERROR!
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   3| x as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- no_spoofing_element_types.js:3:14
@@ -272,13 +272,13 @@ Cannot use `React.Element` [1] as the type argument of renders type. Only elemen
 appear in renders but function [2] is not a component-syntax component. [invalid-render]
 
    no_spoofing_element_types.js:3:14
-   3| x as renders React$Element<typeof Foo>; // ERROR!
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   3| x as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   no_spoofing_element_types.js:3:28
-   3| x as renders React$Element<typeof Foo>; // ERROR!
-                                 ^^^^^^^^^^ [2]
+   no_spoofing_element_types.js:3:43
+   3| x as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
+                                                ^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:7:1
@@ -915,8 +915,8 @@ Cannot use string [1] as the type argument of renders type. [invalid-render]
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:38:3
 
 Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incompatible-cast]
- - Either `React.Element` [1] does not render `React.Element` [2].
- - Or `React.Element` [1] does not render `React.Element` [3].
+ - Either `ExactReactElement_DEPRECATED` [1] does not render `ExactReactElement_DEPRECATED` [2].
+ - Or `ExactReactElement_DEPRECATED` [1] does not render `ExactReactElement_DEPRECATED` [3].
 
    renders_to_renders.js:38:3
    38|   rendersFooOrBar as typeof rendersFooOrRendersBar; // ERROR
@@ -924,92 +924,92 @@ Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incom
 
 References:
    renders_to_renders.js:26:5
-   26|   | renders React$Element<typeof Foo>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   26|   | renders ExactReactElement_DEPRECATED<typeof Foo>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    renders_to_renders.js:27:5
-   27|   | renders React$Element<typeof Bar>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   27|   | renders ExactReactElement_DEPRECATED<typeof Bar>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:44:3
 
-Cannot cast `rendersFoo` to renders `React.Element` because `React.Element` [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `rendersFoo` to renders `ExactReactElement_DEPRECATED` because `ExactReactElement_DEPRECATED` [1] does not
+render `ExactReactElement_DEPRECATED` [2]. [incompatible-cast]
 
    renders_to_renders.js:44:3
-   44|   rendersFoo as renders React$Element<typeof Bar>; // ERROR
+   44|   rendersFoo as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
          ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:44:17
-   44|   rendersFoo as renders React$Element<typeof Bar>; // ERROR
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   44|   rendersFoo as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:45:3
 
-Cannot cast `rendersFoo` to renders `React.Element` because `React.Element` [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `rendersFoo` to renders `ExactReactElement_DEPRECATED` because `ExactReactElement_DEPRECATED` [1] does not
+render `ExactReactElement_DEPRECATED` [2]. [incompatible-cast]
 
    renders_to_renders.js:45:3
-   45|   rendersFoo as renders React$Element<typeof Bar>; // ERROR
+   45|   rendersFoo as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
          ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:45:17
-   45|   rendersFoo as renders React$Element<typeof Bar>; // ERROR
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   45|   rendersFoo as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:47:3
 
-Cannot cast `rendersFoo` to renders renders `React.Element` because `React.Element` [1] does not render
-`React.Element` [2]. [incompatible-cast]
+Cannot cast `rendersFoo` to renders renders `ExactReactElement_DEPRECATED` because `ExactReactElement_DEPRECATED` [1]
+does not render `ExactReactElement_DEPRECATED` [2]. [incompatible-cast]
 
    renders_to_renders.js:47:3
-   47|   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
+   47|   rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
          ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:47:26
-   47|   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   47|   rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:47:26
 
-Cannot use renders `React.Element` [1] as the type argument of renders type. [invalid-render]
+Cannot use renders `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. [invalid-render]
 
-   47|   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   47|   rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:48:3
 
-Cannot cast `rendersFoo` to renders renders `React.Element` because `React.Element` [1] does not render
-`React.Element` [2]. [incompatible-cast]
+Cannot cast `rendersFoo` to renders renders `ExactReactElement_DEPRECATED` because `ExactReactElement_DEPRECATED` [1]
+does not render `ExactReactElement_DEPRECATED` [2]. [incompatible-cast]
 
    renders_to_renders.js:48:3
-   48|   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
+   48|   rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
          ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:48:26
-   48|   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   48|   rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:48:26
 
-Cannot use renders `React.Element` [1] as the type argument of renders type. [invalid-render]
+Cannot use renders `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. [invalid-render]
 
-   48|   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   48|   rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:49:25
 
-Cannot use renders `React.Element` [1] as the type argument of renders type. [invalid-render]
+Cannot use renders `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. [invalid-render]
 
    49|   rendersBaz as renders typeof rendersFoo; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^ [1]
@@ -1021,11 +1021,11 @@ Cannot use null [1] as the type argument of renders type. Only elements of a com
 renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
 
    renders_to_renders.js:56:5
-           v--------------------------
-   56|     | React$Element<typeof Foo>
+           v-----------------------------------------
+   56|     | ExactReactElement_DEPRECATED<typeof Foo>
    57|     | null  // invalid-render
-   58|     | React$Element<typeof Bar>
-           --------------------------^
+   58|     | ExactReactElement_DEPRECATED<typeof Bar>
+           -----------------------------------------^
 
 References:
    renders_to_renders.js:57:7
@@ -1043,8 +1043,8 @@ appear in renders but string [2] is not a component-syntax component. [invalid-r
                                 ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:149:49
-   149| declare type React$MixedElement = React$Element<React$ElementType>;
+   <BUILTINS>/react.js:166:49
+   166| declare type React$MixedElement = React$Element<React$ElementType>;
                                                         ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1171,20 +1171,20 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:62:3
 
 Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either `React.Element` [1] does not render `React.Element` [2].
- - Or `React.Element` [1] does not render `React.Element` [3].
+ - Either `ExactReactElement_DEPRECATED` [1] does not render `ExactReactElement_DEPRECATED` [2].
+ - Or `ExactReactElement_DEPRECATED` [1] does not render `ExactReactElement_DEPRECATED` [3].
 
    renders_to_renders.js:62:3
-   62|   rendersQux as renders (React$Element<typeof Foo> | React$Element<typeof Baz>); // ERROR
+   62|   rendersQux as renders (ExactReactElement_DEPRECATED<typeof Foo> | ExactReactElement_DEPRECATED<typeof Baz>); // ERROR
          ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:62:26
-   62|   rendersQux as renders (React$Element<typeof Foo> | React$Element<typeof Baz>); // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   renders_to_renders.js:62:54
-   62|   rendersQux as renders (React$Element<typeof Foo> | React$Element<typeof Baz>); // ERROR
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   62|   rendersQux as renders (ExactReactElement_DEPRECATED<typeof Foo> | ExactReactElement_DEPRECATED<typeof Baz>); // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   renders_to_renders.js:62:69
+   62|   rendersQux as renders (ExactReactElement_DEPRECATED<typeof Foo> | ExactReactElement_DEPRECATED<typeof Baz>); // ERROR
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:63:26
@@ -1202,13 +1202,13 @@ Cannot use null [1] as the type argument of renders type. Only elements of a com
 renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
 
    renders_to_renders.js:66:27
-   66|   component A1() renders (React$Element<typeof A0> | null) { // invalide-render
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   66|   component A1() renders (ExactReactElement_DEPRECATED<typeof A0> | null) { // invalide-render
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:66:54
-   66|   component A1() renders (React$Element<typeof A0> | null) { // invalide-render
-                                                            ^^^^ [1]
+   renders_to_renders.js:66:69
+   66|   component A1() renders (ExactReactElement_DEPRECATED<typeof A0> | null) { // invalide-render
+                                                                           ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:70:16
@@ -1245,35 +1245,35 @@ Cannot use null [1] as the type argument of renders type. Only elements of a com
 renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
 
    renders_to_renders.js:72:17
-   72|   x as renders (null | React$Element<typeof A1>);  // type checks, but invalid-render
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   72|   x as renders (null | ExactReactElement_DEPRECATED<typeof A1>);  // type checks, but invalid-render
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    renders_to_renders.js:72:17
-   72|   x as renders (null | React$Element<typeof A1>);  // type checks, but invalid-render
+   72|   x as renders (null | ExactReactElement_DEPRECATED<typeof A1>);  // type checks, but invalid-render
                        ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:78:3
 
-Cannot cast `rendersBazOrBaz` to renders `React.Element` because `React.Element` [1] does not render
-`React.Element` [2]. [incompatible-cast]
+Cannot cast `rendersBazOrBaz` to renders `ExactReactElement_DEPRECATED` because `ExactReactElement_DEPRECATED` [1] does
+not render `ExactReactElement_DEPRECATED` [2]. [incompatible-cast]
 
    renders_to_renders.js:78:3
-   78|   rendersBazOrBaz as renders React$Element<typeof Bar>; // ERROR
+   78|   rendersBazOrBaz as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
          ^^^^^^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:78:22
-   78|   rendersBazOrBaz as renders React$Element<typeof Bar>; // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   78|   rendersBazOrBaz as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:92:3
 
 Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either `React.Element` [1] does not render `React.Element` [2].
- - Or `React.Element` [1] does not render `React.Element` [3].
+ - Either `ExactReactElement_DEPRECATED` [1] does not render `ExactReactElement_DEPRECATED` [2].
+ - Or `ExactReactElement_DEPRECATED` [1] does not render `ExactReactElement_DEPRECATED` [3].
 
    renders_to_renders.js:92:3
    92|   rendersFooOrBar as renders (
@@ -1281,11 +1281,11 @@ Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
 
 References:
    renders_to_renders.js:93:7
-   93|     | React$Element<typeof Foo>
-             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   93|     | ExactReactElement_DEPRECATED<typeof Foo>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    renders_to_renders.js:94:7
-   94|     | React$Element<typeof Baz>
-             ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   94|     | ExactReactElement_DEPRECATED<typeof Baz>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:100:19
@@ -1299,11 +1299,11 @@ renders. If you want to express the idea of rendering zero or one item, please u
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:101:3
 
-Cannot cast `Foo` to renders `React.Element` because component Foo [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `Foo` to renders `ExactReactElement_DEPRECATED` because component Foo [1] does not render
+`ExactReactElement_DEPRECATED` [2]. [incompatible-cast]
 
    renders_to_renders.js:101:3
-   101|   Foo as renders React$Element<typeof Foo>; // ERROR
+   101|   Foo as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR
           ^^^
 
 References:
@@ -1311,8 +1311,8 @@ References:
      2| component Foo() renders null { // invalid-render
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:101:10
-   101|   Foo as renders React$Element<typeof Foo>; // ERROR
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   101|   Foo as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:102:17
@@ -1354,9 +1354,9 @@ appear in renders but function type [2] is not a component-syntax component. [in
                        ^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:103:34
-   103|   declare const x: React$Element<() => React$Node>;
-                                         ^^^^^^^^^^^^^^^^ [2]
+   renders_to_renders.js:103:49
+   103|   declare const x: ExactReactElement_DEPRECATED<() => React$Node>;
+                                                        ^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:107:3
@@ -1373,10 +1373,10 @@ References:
    105|   declare const mixedElement: React$MixedElement;
                                       ^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:108:5
-            v--------------------------
-   108|     | React$Element<typeof Foo>
-   109|     | React$Element<typeof Bar>
-            --------------------------^ [2]
+            v-----------------------------------------
+   108|     | ExactReactElement_DEPRECATED<typeof Foo>
+   109|     | ExactReactElement_DEPRECATED<typeof Bar>
+            -----------------------------------------^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:116:3
@@ -1389,10 +1389,10 @@ Cannot cast `rendersFooOrBar` to empty because `React.Element` [1] is incompatib
 
 References:
    renders_to_renders.js:22:3
-          v--------------------------
-    22|   | React$Element<typeof Foo>
-    23|   | React$Element<typeof Bar>
-          --------------------------^ [1]
+          v-----------------------------------------
+    22|   | ExactReactElement_DEPRECATED<typeof Foo>
+    23|   | ExactReactElement_DEPRECATED<typeof Bar>
+          -----------------------------------------^ [1]
    renders_to_renders.js:116:22
    116|   rendersFooOrBar as empty; // ERROR
                              ^^^^^ [2]
@@ -1672,10 +1672,10 @@ Cannot get `rendersFooOrBar.props` because property `props` is missing in `React
 
 References:
    renders_to_renders.js:22:3
-          v--------------------------
-    22|   | React$Element<typeof Foo>
-    23|   | React$Element<typeof Bar>
-          --------------------------^ [1]
+          v-----------------------------------------
+    22|   | ExactReactElement_DEPRECATED<typeof Foo>
+    23|   | ExactReactElement_DEPRECATED<typeof Bar>
+          -----------------------------------------^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:124:15
@@ -1799,8 +1799,8 @@ Cannot cast `rendersBaz` to empty because `React.Element` [1] is incompatible wi
           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:149:35
-   149| declare type React$MixedElement = React$Element<React$ElementType>;
+   <BUILTINS>/react.js:166:35
+   166| declare type React$MixedElement = React$Element<React$ElementType>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:130:17
    130|   rendersBaz as empty; // ERROR
@@ -1816,28 +1816,28 @@ Cannot get `rendersBaz.props` because property `props` is missing in `React.Elem
                      ^^^^^
 
 References:
-   <BUILTINS>/react.js:149:35
-   149| declare type React$MixedElement = React$Element<React$ElementType>;
+   <BUILTINS>/react.js:166:35
+   166| declare type React$MixedElement = React$Element<React$ElementType>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- union_promotion.js:6:2
 
-Cannot cast `a` to renders `React.Element` because: [incompatible-cast]
+Cannot cast `a` to renders `ExactReactElement_DEPRECATED` because: [incompatible-cast]
  - Either `Baz` [1] does not render `typeof Foo` [2].
  - Or `Baz` [1] does not render `typeof Bar` [3].
 
    union_promotion.js:6:2
-   6| (a: renders React$Element<typeof Foo | typeof Bar>); // ERROR
+   6| (a: renders ExactReactElement_DEPRECATED<typeof Foo | typeof Bar>); // ERROR
        ^ [1]
 
 References:
-   union_promotion.js:6:27
-   6| (a: renders React$Element<typeof Foo | typeof Bar>); // ERROR
-                                ^^^^^^^^^^ [2]
-   union_promotion.js:6:40
-   6| (a: renders React$Element<typeof Foo | typeof Bar>); // ERROR
-                                             ^^^^^^^^^^ [3]
+   union_promotion.js:6:42
+   6| (a: renders ExactReactElement_DEPRECATED<typeof Foo | typeof Bar>); // ERROR
+                                               ^^^^^^^^^^ [2]
+   union_promotion.js:6:55
+   6| (a: renders ExactReactElement_DEPRECATED<typeof Foo | typeof Bar>); // ERROR
+                                                            ^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- validation/autofixable.js:7:23

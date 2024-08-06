@@ -9,8 +9,8 @@ Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompat
          ^
 
 References:
-   <BUILTINS>/react.js:368:34
-   368|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:401:34
+   401|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [1]
    contravariant_refsetter.js:11:39
     11| (x: React.RefSetter<number | string | boolean>); // ERROR
@@ -48,8 +48,8 @@ References:
    contravariant_refsetter.js:7:18
      7| declare const y: React$RefSetter<number | string>;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:174:6
-   174|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -68,8 +68,8 @@ References:
    contravariant_refsetter.js:7:18
      7| declare const y: React$RefSetter<number | string>;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:173:5
-   173|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    contravariant_refsetter.js:12:39
     12| (y: React.RefSetter<number | string | boolean>); // ERROR
@@ -162,19 +162,19 @@ References:
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
-Cannot cast `<div />` to `React.Element` because `div` [1] is incompatible with string literal `span` [2] in type
-argument `ElementType` [3]. [incompatible-cast]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
+in type argument `ElementType` [3]. [incompatible-cast]
 
    createElement_invalid_implicit.js:2:4
-     2|   <div /> as React$Element<'span'>; // missing React, jsx still checked
+     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
            ^^^ [1]
 
 References:
-   createElement_invalid_implicit.js:2:28
-     2|   <div /> as React$Element<'span'>; // missing React, jsx still checked
-                                   ^^^^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   createElement_invalid_implicit.js:2:43
+     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
+                                                  ^^^^^^ [2]
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -182,25 +182,25 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve name `React`. [cannot-resolve-name]
 
-   2|   <div /> as React$Element<'span'>; // missing React, jsx still checked
+   2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
         ^^^^^^^
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
 
-Cannot cast `<div />` to `React.Element` because `div` [1] is incompatible with string literal `span` [2] in type
-argument `ElementType` [3]. [incompatible-cast]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
+in type argument `ElementType` [3]. [incompatible-cast]
 
    createElement_invalid_implicit.js:7:4
-     7|   <div /> as React$Element<'span'>; // missing createElement, jsx still checked
+     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
            ^^^ [1]
 
 References:
-   createElement_invalid_implicit.js:7:28
-     7|   <div /> as React$Element<'span'>; // missing createElement, jsx still checked
-                                   ^^^^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   createElement_invalid_implicit.js:7:43
+     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
+                                                  ^^^^^^ [2]
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -209,7 +209,7 @@ Error --------------------------------------------------------------------------
 Cannot create `div` element because property `createElement` is missing in object literal [1]. [prop-missing]
 
    createElement_invalid_implicit.js:7:4
-   7|   <div /> as React$Element<'span'>; // missing createElement, jsx still checked
+   7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
          ^^^
 
 References:
@@ -225,7 +225,7 @@ Cannot create react element because the `createElement` property of `React` [1] 
 [invalid-react-create-element]
 
    createElement_invalid_implicit.js:7:3
-   7|   <div /> as React$Element<'span'>; // missing createElement, jsx still checked
+   7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
         ^^^^^^^
 
 References:
@@ -236,19 +236,19 @@ References:
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
 
-Cannot cast `<div />` to `React.Element` because `div` [1] is incompatible with string literal `span` [2] in type
-argument `ElementType` [3]. [incompatible-cast]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
+in type argument `ElementType` [3]. [incompatible-cast]
 
    createElement_invalid_implicit.js:12:4
-    12|   <div /> as React$Element<'span'>; // bad createElement, jsx still checked
+    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
            ^^^ [1]
 
 References:
-   createElement_invalid_implicit.js:12:28
-    12|   <div /> as React$Element<'span'>; // bad createElement, jsx still checked
-                                   ^^^^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   createElement_invalid_implicit.js:12:43
+    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
+                                                  ^^^^^^ [2]
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -259,7 +259,7 @@ Cannot create react element because the `createElement` property of `React` [1] 
 [invalid-react-create-element]
 
    createElement_invalid_implicit.js:12:3
-   12|   <div /> as React$Element<'span'>; // bad createElement, jsx still checked
+   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
          ^^^^^^^
 
 References:
@@ -536,8 +536,8 @@ References:
    element_with_component_type.js:3:35
      3| class Foo extends React.Component<{a: number}> {}
                                           ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:147:36
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -557,8 +557,8 @@ References:
    element_with_component_type.js:6:51
      6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                                           ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:147:69
-   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:150:69
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -1291,11 +1291,11 @@ Cannot create `Foo` element because in property `key`: [incompatible-type]
                   ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:155:26
-   155| declare type React$Key = string | number;
+   <BUILTINS>/react.js:172:26
+   172| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:155:35
-   155| declare type React$Key = string | number;
+   <BUILTINS>/react.js:172:35
+   172| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1310,11 +1310,11 @@ Cannot create `FooExact` element because in property `key`: [incompatible-type]
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:155:26
-   155| declare type React$Key = string | number;
+   <BUILTINS>/react.js:172:26
+   172| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:155:35
-   155| declare type React$Key = string | number;
+   <BUILTINS>/react.js:172:35
+   172| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1467,8 +1467,8 @@ References:
    ref.js:3:7
      3| class Foo extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:164:5
-   164|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1481,8 +1481,8 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [inc
                           ^^^
 
 References:
-   <BUILTINS>/react.js:165:39
-   165|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:182:39
+   182|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:11:24
     11| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -1528,8 +1528,8 @@ References:
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
               ^^^^^^^^ [2]
-   <BUILTINS>/react.js:164:5
-   164|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1547,11 +1547,11 @@ References:
    ref.js:22:22
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                              ^^^^^^^^ [1]
-   <BUILTINS>/react.js:165:39
-   165|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:182:39
+   182|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [2]
-   <BUILTINS>/react.js:164:5
-   164|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1566,8 +1566,8 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:164:5
-   164|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
@@ -1605,8 +1605,8 @@ References:
    useCallback_hook.js:4:3
      4|   React.useCallback(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:886:33
-   886|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   <BUILTINS>/react.js:919:33
+   919|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1685,8 +1685,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1750,8 +1750,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:811:28
-   811|     declare hook useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:844:28
+   844|     declare hook useContext<T>(context: React$Context<T>): T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1764,8 +1764,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:811:28
-   811|     declare hook useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:844:28
+   844|     declare hook useContext<T>(context: React$Context<T>): T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1795,8 +1795,8 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                       ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1809,12 +1809,12 @@ Cannot call `React.useEffect` because function [1] requires another argument. [i
                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:862:27
+   <BUILTINS>/react.js:895:27
                                   v
-   862|     declare hook useEffect(
-   863|       create: () => MaybeCleanUpFn,
-   864|       inputs?: ?$ReadOnlyArray<mixed>,
-   865|     ): void;
+   895|     declare hook useEffect(
+   896|       create: () => MaybeCleanUpFn,
+   897|       inputs?: ?$ReadOnlyArray<mixed>,
+   898|     ): void;
             ------^ [1]
 
 
@@ -1828,8 +1828,8 @@ Cannot call `React.useEffect` with `1` bound to `create` because number [1] is i
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:863:15
-   863|       create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:896:15
+   896|       create: () => MaybeCleanUpFn,
                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1843,8 +1843,8 @@ type [2]. [incompatible-call]
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:864:17
-   864|       inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:897:17
+   897|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1860,11 +1860,11 @@ Cannot call `React.useEffect` with async function bound to `create` because in t
                                      ^ [1]
 
 References:
-   <BUILTINS>/react.js:437:41
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:41
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:437:33
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:33
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [3]
 
 
@@ -1882,11 +1882,11 @@ References:
    useEffect_hook.js:23:31
     23|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
                                       ^^^ [1]
-   <BUILTINS>/react.js:437:47
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:47
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
-   <BUILTINS>/react.js:437:33
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:33
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [4]
 
 
@@ -1899,13 +1899,13 @@ Cannot call `React.useImperativeHandle` because function [1] requires another ar
                 ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:908:37
+   <BUILTINS>/react.js:941:37
                                             v---
-   908|     declare hook useImperativeHandle<T>(
-   909|       ref: React$RefSetter<T> | null | void,
-   910|       create: () => T,
-   911|       inputs: ?$ReadOnlyArray<mixed>,
-   912|     ): void;
+   941|     declare hook useImperativeHandle<T>(
+   942|       ref: React$RefSetter<T> | null | void,
+   943|       create: () => T,
+   944|       inputs: ?$ReadOnlyArray<mixed>,
+   945|     ): void;
             ------^ [1]
 
 
@@ -1930,8 +1930,8 @@ References:
    useImperativeHandle_hook.js:28:14
     28|   const ref: {current: null | Interface } = React.createRef();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:174:6
-   174|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1949,8 +1949,8 @@ References:
    useImperativeHandle_hook.js:31:21
     31|   const refSetter = (instance: null | Interface) => {};
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:173:5
-   173|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    useImperativeHandle_hook.js:32:47
     32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1969,12 +1969,12 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
                 ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:875:33
+   <BUILTINS>/react.js:908:33
                                         v
-   875|     declare hook useLayoutEffect(
-   876|       create: () => MaybeCleanUpFn,
-   877|       inputs?: ?$ReadOnlyArray<mixed>,
-   878|     ): void;
+   908|     declare hook useLayoutEffect(
+   909|       create: () => MaybeCleanUpFn,
+   910|       inputs?: ?$ReadOnlyArray<mixed>,
+   911|     ): void;
             ------^ [1]
 
 
@@ -1988,8 +1988,8 @@ type [2]. [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/react.js:876:15
-   876|       create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:909:15
+   909|       create: () => MaybeCleanUpFn,
                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2003,8 +2003,8 @@ type [2]. [incompatible-call]
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:877:17
-   877|       inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:910:17
+   910|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2021,11 +2021,11 @@ Cannot call `React.useLayoutEffect` with async function bound to `create` becaus
                                            ^ [1]
 
 References:
-   <BUILTINS>/react.js:437:41
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:41
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:437:33
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:33
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [3]
 
 
@@ -2043,11 +2043,11 @@ References:
    useLayoutEffect_hook.js:23:37
     23|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
                                             ^^^ [1]
-   <BUILTINS>/react.js:437:47
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:47
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
-   <BUILTINS>/react.js:437:33
-   437|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:470:33
+   470|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [4]
 
 
@@ -2060,12 +2060,12 @@ Cannot call `React.useMemo` because function [1] requires another argument. [inc
                 ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:897:25
+   <BUILTINS>/react.js:930:25
                                 v---
-   897|     declare hook useMemo<T>(
-   898|       create: () => T,
-   899|       inputs: ?$ReadOnlyArray<mixed>,
-   900|     ): T;
+   930|     declare hook useMemo<T>(
+   931|       create: () => T,
+   932|       inputs: ?$ReadOnlyArray<mixed>,
+   933|     ): T;
             ---^ [1]
 
 
@@ -2096,8 +2096,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2111,8 +2111,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2126,8 +2126,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2141,8 +2141,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2156,8 +2156,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2171,8 +2171,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2186,8 +2186,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2201,8 +2201,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2216,8 +2216,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1049:26
-   1049|   declare export default typeof React;
+   <BUILTINS>/react.js:1082:26
+   1082|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2233,31 +2233,31 @@ Cannot call `React.useReducer` because: [incompatible-call]
                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:831:28
+   <BUILTINS>/react.js:864:28
                                    v------
-   831|     declare hook useReducer<S, A>(
-   832|       reducer: (S, A) => S,
-   833|       initialState: S,
-   834|     ): [S, Dispatch<A>];
+   864|     declare hook useReducer<S, A>(
+   865|       reducer: (S, A) => S,
+   866|       initialState: S,
+   867|     ): [S, Dispatch<A>];
             ------------------^ [1]
    useReducer_hook.js:4:3
      4|   React.useReducer(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:836:28
+   <BUILTINS>/react.js:869:28
                                    v------
-   836|     declare hook useReducer<S, A>(
-   837|       reducer: (S, A) => S,
-   838|       initialState: S,
-   839|       init: void,
-   840|     ): [S, Dispatch<A>];
+   869|     declare hook useReducer<S, A>(
+   870|       reducer: (S, A) => S,
+   871|       initialState: S,
+   872|       init: void,
+   873|     ): [S, Dispatch<A>];
             ------------------^ [3]
-   <BUILTINS>/react.js:842:28
+   <BUILTINS>/react.js:875:28
                                    v---------
-   842|     declare hook useReducer<S, A, I>(
-   843|       reducer: (S, A) => S,
-   844|       initialArg: I,
-   845|       init: (I) => S,
-   846|     ): [S, Dispatch<A>];
+   875|     declare hook useReducer<S, A, I>(
+   876|       reducer: (S, A) => S,
+   877|       initialArg: I,
+   878|       init: (I) => S,
+   879|     ): [S, Dispatch<A>];
             ------------------^ [4]
 
 
@@ -2468,8 +2468,8 @@ References:
    useState_hook.js:5:42
       5| const [count, setCount] = React.useState<number>(1);
                                                   ^^^^^^ [2]
-   <BUILTINS>/react.js:1041:39
-   1041|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+   <BUILTINS>/react.js:1074:39
+   1074|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
                                                ^^^^^^ [3]
 
 
@@ -2538,11 +2538,11 @@ Cannot call `use` with `null` bound to `usable` because: [incompatible-call]
               ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:400:28
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:28
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:400:42
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:42
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2557,11 +2557,11 @@ Cannot call `use` with `undefined` bound to `usable` because: [incompatible-call
               ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:400:28
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:28
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:400:42
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:42
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2577,11 +2577,11 @@ Cannot call `use` with `0` bound to `usable` because: [incompatible-call]
               ^ [1]
 
 References:
-   <BUILTINS>/react.js:400:28
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:28
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:400:42
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:42
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2596,11 +2596,11 @@ Cannot call `use` with object literal bound to `usable` because: [incompatible-c
               ^^ [1]
 
 References:
-   <BUILTINS>/react.js:400:28
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:28
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:400:42
-   400|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:433:42
+   433|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 

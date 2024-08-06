@@ -15,7 +15,7 @@ takesTop(<Component1 a={1}/>);
 takesTop(<Component2 b={"B"}/>);
 takesTop(<div/>)
 
-function takesAny(e : React$Element<any>) {
+function takesAny(e : ExactReactElement_DEPRECATED<any>) {
 }
 
 takesAny(<Component1 a={1}/>);

@@ -1537,6 +1537,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                  { loc; kind = Flow_intermediate_error_types.IncorrectType.TSNonNullable }
               )
               t_ast
+        (* Reference to other global types, but for some of them we might do some extra processing *)
+        | "React$Element" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType (loc, Flow_intermediate_error_types.ReactDollarElement));
+          local_generic_type ()
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end
