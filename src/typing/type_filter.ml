@@ -9,10 +9,20 @@ open Reason
 open Type
 open TypeUtil
 
+type filter_result =
+  | TypeFilterResult of {
+      type_: Type.t;
+      changed: bool;
+    }
+
+let changed_result type_ = TypeFilterResult { type_; changed = true }
+
+let unchanged_result type_ = TypeFilterResult { type_; changed = false }
+
 let recurse_into_union cx filter_fn ((r, ts) : reason * Type.t list) =
-  let new_ts =
+  let (new_ts, changed) =
     List.fold_left
-      (fun new_ts t ->
+      (fun (new_ts, changed_acc) t ->
         let t =
           match t with
           | OpenT (_, id) ->
@@ -26,20 +36,21 @@ let recurse_into_union cx filter_fn ((r, ts) : reason * Type.t list) =
           | _ -> t
         in
         match filter_fn cx t with
-        | DefT (_, EmptyT) -> new_ts
-        | filtered_type -> filtered_type :: new_ts)
-      []
+        | TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> (new_ts, changed_acc || changed)
+        | TypeFilterResult { type_ = filtered_type; changed } ->
+          (filtered_type :: new_ts, changed_acc || changed))
+      ([], false)
       ts
   in
   let new_ts = List.rev new_ts in
   match new_ts with
-  | [] -> DefT (r, EmptyT)
-  | [t] -> t
-  | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
+  | [] -> TypeFilterResult { type_ = DefT (r, EmptyT); changed }
+  | [t] -> TypeFilterResult { type_ = t; changed }
+  | t0 :: t1 :: ts -> TypeFilterResult { type_ = UnionT (r, UnionRep.make t0 t1 ts); changed }
 
 let recurse_into_intersection cx =
-  let rec helper filter_fn r acc = function
-    | [] -> List.rev acc
+  let rec helper filter_fn r (t_acc, changed_acc) = function
+    | [] -> (List.rev t_acc, changed_acc)
     | t :: ts -> begin
       let t =
         match t with
@@ -54,68 +65,75 @@ let recurse_into_intersection cx =
         | _ -> t
       in
       match filter_fn t with
-      | DefT (_, EmptyT) -> []
-      | filtered_type -> helper filter_fn r (filtered_type :: acc) ts
+      | TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> ([], changed_acc || changed)
+      | TypeFilterResult { type_ = filtered_type; changed } ->
+        helper filter_fn r (filtered_type :: t_acc, changed_acc || changed) ts
     end
   in
   fun filter_fn ((r, ts) : reason * Type.t list) ->
-    match helper filter_fn r [] ts with
-    | [] -> DefT (r, EmptyT)
-    | [t] -> t
-    | t0 :: t1 :: ts -> IntersectionT (r, InterRep.make t0 t1 ts)
+    match helper filter_fn r ([], false) ts with
+    | ([], changed) -> TypeFilterResult { type_ = DefT (r, EmptyT); changed }
+    | ([t], changed) -> TypeFilterResult { type_ = t; changed }
+    | (t0 :: t1 :: ts, changed) ->
+      TypeFilterResult { type_ = IntersectionT (r, InterRep.make t0 t1 ts); changed }
 
 let filter_opaque filter_fn reason ({ underlying_t; super_t; _ } as opq) =
   match underlying_t with
   | Some underlying_t
     when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason) -> begin
     match filter_fn underlying_t with
-    | DefT (_, EmptyT) -> DefT (reason, EmptyT)
-    | t -> OpaqueT (reason, { opq with underlying_t = Some t })
+    | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      DefT (reason, EmptyT) |> changed_result
+    | TypeFilterResult { type_ = t; changed } ->
+      TypeFilterResult { type_ = OpaqueT (reason, { opq with underlying_t = Some t }); changed }
   end
   | _ -> begin
     let super_t = Base.Option.value ~default:(DefT (reason, MixedT Mixed_everything)) super_t in
     match filter_fn super_t with
-    | DefT (_, EmptyT) -> DefT (reason, EmptyT)
-    | t -> OpaqueT (reason, { opq with super_t = Some t })
+    | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      DefT (reason, EmptyT) |> changed_result
+    | TypeFilterResult { type_ = t; changed } ->
+      TypeFilterResult { type_ = OpaqueT (reason, { opq with super_t = Some t }); changed }
   end
 
 let map_poly ~f t =
   match t with
   | DefT (r, PolyT ({ t_out; _ } as poly)) -> begin
     match f t_out with
-    | DefT (_, EmptyT) as empty -> empty
-    | t_out -> DefT (r, PolyT { poly with t_out })
+    | TypeFilterResult { type_ = DefT (_, EmptyT) as empty; changed = _ } -> changed_result empty
+    | TypeFilterResult { type_ = t_out; changed } ->
+      TypeFilterResult { type_ = DefT (r, PolyT { poly with t_out }); changed }
   end
-  | _ -> t
+  | _ -> unchanged_result t
 
 let rec exists cx t =
   if TypeUtil.is_falsy t then
-    DefT (reason_of_t t, EmptyT)
+    changed_result (DefT (reason_of_t t, EmptyT))
   else
     match t with
     (* unknown things become truthy *)
     | OpaqueT (r, opq) -> filter_opaque (exists cx) r opq
     | UnionT (r, rep) -> recurse_into_union cx exists (r, UnionRep.members rep)
-    | MaybeT (_, t) -> t
+    | MaybeT (_, t) -> changed_result t
     | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists cx t
-    | DefT (r, BoolT None) -> DefT (r, BoolT (Some true))
-    | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy)
-    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
-    | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
+    | DefT (r, BoolT None) -> DefT (r, BoolT (Some true)) |> changed_result
+    | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy) |> changed_result
+    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy) |> changed_result
+    | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) -> recurse_into_intersection cx (exists cx) (r, InterRep.members rep)
     (* truthy things pass through *)
-    | t -> t
+    | t -> unchanged_result t
 
 let rec not_exists cx t =
   if TypeUtil.is_falsy t then
     (* falsy things pass through *)
-    t
+    unchanged_result t
   else
     match t with
     | DefT (_, PolyT _) -> map_poly ~f:(not_exists cx) t
     | OpaqueT (r, opq) -> filter_opaque (not_exists cx) r opq
-    | AnyT (r, _) -> DefT (r, EmptyT)
+    | AnyT (r, _) -> DefT (r, EmptyT) |> changed_result
     | UnionT (r, rep) -> recurse_into_union cx not_exists (r, UnionRep.members rep)
     (* truthy things get removed *)
     | DefT
@@ -141,100 +159,108 @@ let rec not_exists cx t =
               | AbstractEnum { representation_t = DefT (_, BigIntT Truthy) } )
           | MixedT Mixed_truthy )
         ) ->
-      DefT (r, EmptyT)
-    | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
-    | ThisInstanceT (reason, _, _, _) -> DefT (reason, EmptyT)
+      DefT (r, EmptyT) |> changed_result
+    | DefT (reason, ClassT _) -> DefT (reason, EmptyT) |> changed_result
+    | ThisInstanceT (reason, _, _, _) -> DefT (reason, EmptyT) |> changed_result
     (* unknown boolies become falsy *)
-    | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [not_exists cx t])
-    | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
-    | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, OrdinaryName "")))
-    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
+    | MaybeT (r, t) ->
+      let (TypeFilterResult { type_ = t; changed }) = not_exists cx t in
+      TypeFilterResult
+        { type_ = UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [t]); changed }
+    | DefT (r, BoolT None) -> DefT (r, BoolT (Some false)) |> changed_result
+    | DefT (r, StrT AnyLiteral) ->
+      DefT (r, StrT (Literal (None, OrdinaryName ""))) |> changed_result
+    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0")))) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) ->
       recurse_into_intersection cx (not_exists cx) (r, InterRep.members rep)
     (* things that don't track truthiness pass through *)
-    | t -> t
+    | t -> unchanged_result t
 
 let rec maybe cx = function
-  | OpaqueT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
+  | OpaqueT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) []) |> changed_result
   | UnionT (r, rep) -> recurse_into_union cx maybe (r, UnionRep.members rep)
-  | MaybeT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
-  | DefT (r, MixedT Mixed_everything) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
-  | DefT (r, MixedT Mixed_truthy) -> EmptyT.why r
-  | DefT (r, MixedT Mixed_non_maybe) -> EmptyT.why r
-  | DefT (r, MixedT Mixed_non_void) -> DefT (r, NullT)
-  | DefT (r, MixedT Mixed_non_null) -> DefT (r, VoidT)
-  | DefT (_, NullT) as t -> t
-  | DefT (_, VoidT) as t -> t
-  | OptionalT { reason = r; type_ = _; use_desc } -> VoidT.why_with_use_desc ~use_desc r
-  | AnyT _ as t -> t
-  | DefT (r, _) -> EmptyT.why r
+  | MaybeT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) []) |> changed_result
+  | DefT (r, MixedT Mixed_everything) ->
+    UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) []) |> changed_result
+  | DefT (r, MixedT Mixed_truthy) -> EmptyT.why r |> changed_result
+  | DefT (r, MixedT Mixed_non_maybe) -> EmptyT.why r |> changed_result
+  | DefT (r, MixedT Mixed_non_void) -> DefT (r, NullT) |> changed_result
+  | DefT (r, MixedT Mixed_non_null) -> DefT (r, VoidT) |> changed_result
+  | DefT (_, NullT) as t -> unchanged_result t
+  | DefT (_, VoidT) as t -> unchanged_result t
+  | OptionalT { reason = r; type_ = _; use_desc } ->
+    VoidT.why_with_use_desc ~use_desc r |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | DefT (r, _) -> EmptyT.why r |> changed_result
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason |> changed_result
 
 let rec not_maybe cx = function
   | OpaqueT (r, opq) -> filter_opaque (not_maybe cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx not_maybe (r, UnionRep.members rep)
-  | MaybeT (_, t) -> t
+  | MaybeT (_, t) -> changed_result t
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_maybe cx t
-  | DefT (r, (NullT | VoidT)) -> DefT (r, EmptyT)
-  | DefT (r, MixedT Mixed_truthy) -> DefT (r, MixedT Mixed_truthy)
-  | DefT (r, MixedT Mixed_non_maybe) -> DefT (r, MixedT Mixed_non_maybe)
+  | DefT (r, (NullT | VoidT)) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, MixedT Mixed_truthy) -> DefT (r, MixedT Mixed_truthy) |> unchanged_result
+  | DefT (r, MixedT Mixed_non_maybe) -> DefT (r, MixedT Mixed_non_maybe) |> unchanged_result
   | DefT (r, MixedT Mixed_everything)
   | DefT (r, MixedT Mixed_non_void)
   | DefT (r, MixedT Mixed_non_null) ->
-    DefT (r, MixedT Mixed_non_maybe)
-  | t -> t
+    DefT (r, MixedT Mixed_non_maybe) |> changed_result
+  | t -> unchanged_result t
 
 let null = function
   | OpaqueT (r, _)
   | OptionalT { reason = _; type_ = MaybeT (r, _); use_desc = _ }
   | MaybeT (r, _) ->
-    NullT.why r
-  | DefT (_, NullT) as t -> t
+    NullT.why r |> changed_result
+  | DefT (_, NullT) as t -> t |> unchanged_result
   | DefT (r, MixedT Mixed_everything)
   | DefT (r, MixedT Mixed_non_void) ->
-    NullT.why r
-  | AnyT _ as t -> t
-  | DefT (r, _) -> EmptyT.why r
+    NullT.why r |> changed_result
+  | AnyT _ as t -> t |> changed_result
+  | DefT (r, _) -> EmptyT.why r |> changed_result
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason |> changed_result
 
 let rec not_null cx = function
-  | MaybeT (r, t) -> UnionT (r, UnionRep.make (VoidT.why r) t [])
+  | MaybeT (r, t) -> UnionT (r, UnionRep.make (VoidT.why r) t []) |> changed_result
   | OptionalT { reason; type_ = t; use_desc } ->
-    OptionalT { reason; type_ = not_null cx t; use_desc }
+    let (TypeFilterResult { type_ = t; changed }) = not_null cx t in
+    TypeFilterResult { type_ = OptionalT { reason; type_ = t; use_desc }; changed }
   | UnionT (r, rep) -> recurse_into_union cx not_null (r, UnionRep.members rep)
-  | DefT (r, NullT) -> DefT (r, EmptyT)
-  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_null)
-  | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe)
-  | t -> t
+  | DefT (r, NullT) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_null) |> changed_result
+  | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe) |> changed_result
+  | t -> unchanged_result t
 
 let undefined = function
   | OpaqueT (r, _)
   | MaybeT (r, _) ->
-    VoidT.why r
-  | DefT (_, VoidT) as t -> t
-  | OptionalT { reason = r; type_ = _; use_desc } -> VoidT.why_with_use_desc ~use_desc r
+    VoidT.why r |> changed_result
+  | DefT (_, VoidT) as t -> unchanged_result t
+  | OptionalT { reason = r; type_ = _; use_desc } ->
+    VoidT.why_with_use_desc ~use_desc r |> changed_result
   | DefT (r, MixedT Mixed_everything)
   | DefT (r, MixedT Mixed_non_null) ->
-    VoidT.why r
-  | AnyT _ as t -> t
-  | DefT (r, _) -> EmptyT.why r
+    VoidT.why r |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | DefT (r, _) -> EmptyT.why r |> changed_result
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason |> changed_result
 
 let rec not_undefined cx = function
-  | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) t [])
+  | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) t []) |> changed_result
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_undefined cx t
   | UnionT (r, rep) -> recurse_into_union cx not_undefined (r, UnionRep.members rep)
-  | DefT (r, VoidT) -> DefT (r, EmptyT)
-  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_void)
-  | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe)
-  | t -> t
+  | DefT (r, VoidT) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_void) |> changed_result
+  | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe) |> changed_result
+  | t -> unchanged_result t
 
 let string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
@@ -242,20 +268,23 @@ let string_literal expected_loc sense expected t =
   match t with
   | DefT (_, StrT (Literal (_, actual))) ->
     if actual = expected then
-      t
+      unchanged_result t
     else
       DefT (mk_reason expected_desc expected_loc, StrT (Literal (Some sense, expected)))
+      |> changed_result
   | DefT (r, StrT Truthy) when expected <> OrdinaryName "" ->
-    DefT (lit_reason r, StrT (Literal (None, expected)))
-  | DefT (r, StrT AnyLiteral) -> DefT (lit_reason r, StrT (Literal (None, expected)))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, StrT (Literal (None, expected)))
-  | AnyT _ as t -> t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    DefT (lit_reason r, StrT (Literal (None, expected))) |> changed_result
+  | DefT (r, StrT AnyLiteral) ->
+    DefT (lit_reason r, StrT (Literal (None, expected))) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, StrT (Literal (None, expected))) |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_string_literal expected = function
-  | DefT (r, StrT (Literal (_, actual))) when actual = expected -> DefT (r, EmptyT)
-  | t -> t
+  | DefT (r, StrT (Literal (_, actual))) when actual = expected ->
+    DefT (r, EmptyT) |> changed_result
+  | t -> unchanged_result t
 
 let number_literal expected_loc sense expected t =
   let (_, expected_raw) = expected in
@@ -264,19 +293,22 @@ let number_literal expected_loc sense expected t =
   match t with
   | DefT (_, NumT (Literal (_, (_, actual_raw)))) ->
     if actual_raw = expected_raw then
-      t
+      unchanged_result t
     else
       DefT (mk_reason expected_desc expected_loc, NumT (Literal (Some sense, expected)))
+      |> changed_result
   | DefT (r, NumT Truthy) when snd expected <> "0" ->
-    DefT (lit_reason r, NumT (Literal (None, expected)))
-  | DefT (r, NumT AnyLiteral) -> DefT (lit_reason r, NumT (Literal (None, expected)))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, NumT (Literal (None, expected)))
-  | AnyT _ as t -> t
-  | _ -> DefT (reason_of_t t, EmptyT)
+    DefT (lit_reason r, NumT (Literal (None, expected))) |> changed_result
+  | DefT (r, NumT AnyLiteral) ->
+    DefT (lit_reason r, NumT (Literal (None, expected))) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, NumT (Literal (None, expected))) |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_number_literal expected = function
-  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, EmptyT)
-  | t -> t
+  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected ->
+    DefT (r, EmptyT) |> changed_result
+  | t -> unchanged_result t
 
 let bigint_literal expected_loc sense expected t =
   let (_, expected_raw) = expected in
@@ -285,58 +317,62 @@ let bigint_literal expected_loc sense expected t =
   match t with
   | DefT (_, BigIntT (Literal (_, (_, actual_raw)))) ->
     if actual_raw = expected_raw then
-      t
+      unchanged_result t
     else
       DefT (mk_reason expected_desc expected_loc, BigIntT (Literal (Some sense, expected)))
+      |> changed_result
   | DefT (r, BigIntT Truthy) when snd expected <> "0n" ->
-    DefT (lit_reason r, BigIntT (Literal (None, expected)))
-  | DefT (r, BigIntT AnyLiteral) -> DefT (lit_reason r, BigIntT (Literal (None, expected)))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BigIntT (Literal (None, expected)))
-  | AnyT _ as t -> t
-  | _ -> DefT (reason_of_t t, EmptyT)
+    DefT (lit_reason r, BigIntT (Literal (None, expected))) |> changed_result
+  | DefT (r, BigIntT AnyLiteral) ->
+    DefT (lit_reason r, BigIntT (Literal (None, expected))) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BigIntT (Literal (None, expected))) |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_bigint_literal expected = function
-  | DefT (r, BigIntT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, EmptyT)
-  | t -> t
+  | DefT (r, BigIntT (Literal (_, actual))) when snd actual = snd expected ->
+    DefT (r, EmptyT) |> changed_result
+  | t -> unchanged_result t
 
 let true_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true))
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true))
-  | AnyT _ as t -> t
-  | t -> DefT (reason_of_t t, EmptyT)
+  | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true)) |> unchanged_result
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true)) |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_true t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT)
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
-  | t -> t
+  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)) |> changed_result
+  | t -> unchanged_result t
 
 let false_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false))
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false))
-  | AnyT _ as t -> t
-  | t -> DefT (reason_of_t t, EmptyT)
+  | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false)) |> unchanged_result
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false)) |> changed_result
+  | AnyT _ as t -> unchanged_result t
+  | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_false t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT)
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
-  | t -> t
+  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)) |> changed_result
+  | t -> unchanged_result t
 
 let boolean loc t =
   match t with
-  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_desc_new_reason BoolT.desc r, BoolT (Some true))
+  | DefT (r, MixedT Mixed_truthy) ->
+    DefT (replace_desc_new_reason BoolT.desc r, BoolT (Some true)) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RBoolean loc, BoolT None)
+    DefT (mk_reason RBoolean loc, BoolT None) |> changed_result
   | DefT (_, BoolT _)
   | DefT
       ( _,
@@ -344,9 +380,9 @@ let boolean loc t =
           ( ConcreteEnum { representation_t = DefT (_, BoolT _); _ }
           | AbstractEnum { representation_t = DefT (_, BoolT _) } )
       ) ->
-    t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_boolean t =
   match t with
@@ -357,15 +393,16 @@ let not_boolean t =
           | AbstractEnum { representation_t = DefT (_, BoolT _) } )
       )
   | DefT (_, BoolT _) ->
-    DefT (reason_of_t t, EmptyT)
-  | _ -> t
+    DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let string loc t =
   match t with
-  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_desc_new_reason StrT.desc r, StrT Truthy)
+  | DefT (r, MixedT Mixed_truthy) ->
+    DefT (replace_desc_new_reason StrT.desc r, StrT Truthy) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RString loc, StrT AnyLiteral)
+    DefT (mk_reason RString loc, StrT AnyLiteral) |> changed_result
   | StrUtilT _
   | DefT (_, StrT _)
   | DefT
@@ -374,9 +411,9 @@ let string loc t =
           ( ConcreteEnum { representation_t = DefT (_, StrT _); _ }
           | AbstractEnum { representation_t = DefT (_, StrT _) } )
       ) ->
-    t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_string t =
   match t with
@@ -388,28 +425,29 @@ let not_string t =
           | AbstractEnum { representation_t = DefT (_, StrT _) } )
       )
   | DefT (_, StrT _) ->
-    DefT (reason_of_t t, EmptyT)
-  | _ -> t
+    DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let symbol loc t =
   match t with
-  | DefT (_, SymbolT) -> t
+  | DefT (_, SymbolT) -> unchanged_result t
   | DefT (_, MixedT _)
   | AnyT _ ->
-    SymbolT.why (mk_reason RSymbol loc)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    SymbolT.why (mk_reason RSymbol loc) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_symbol t =
   match t with
-  | DefT (_, SymbolT) -> DefT (reason_of_t t, EmptyT)
-  | _ -> t
+  | DefT (_, SymbolT) -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let number loc t =
   match t with
-  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_desc_new_reason NumT.desc r, NumT Truthy)
+  | DefT (r, MixedT Mixed_truthy) ->
+    DefT (replace_desc_new_reason NumT.desc r, NumT Truthy) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RNumber loc, NumT AnyLiteral)
+    DefT (mk_reason RNumber loc, NumT AnyLiteral) |> changed_result
   | DefT (_, NumT _)
   | DefT
       ( _,
@@ -417,9 +455,9 @@ let number loc t =
           ( ConcreteEnum { representation_t = DefT (_, NumT _); _ }
           | AbstractEnum { representation_t = DefT (_, NumT _) } )
       ) ->
-    t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_number t =
   match t with
@@ -430,15 +468,16 @@ let not_number t =
           | AbstractEnum { representation_t = DefT (_, NumT _) } )
       )
   | DefT (_, NumT _) ->
-    DefT (reason_of_t t, EmptyT)
-  | _ -> t
+    DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let bigint loc t =
   match t with
-  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_desc_new_reason BigIntT.desc r, BigIntT Truthy)
+  | DefT (r, MixedT Mixed_truthy) ->
+    DefT (replace_desc_new_reason BigIntT.desc r, BigIntT Truthy) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RBigInt loc, BigIntT AnyLiteral)
+    DefT (mk_reason RBigInt loc, BigIntT AnyLiteral) |> changed_result
   | DefT (_, BigIntT _)
   | DefT
       ( _,
@@ -446,9 +485,9 @@ let bigint loc t =
           ( ConcreteEnum { representation_t = DefT (_, BigIntT _); _ }
           | AbstractEnum { representation_t = DefT (_, BigIntT _) } )
       ) ->
-    t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_bigint t =
   match t with
@@ -459,8 +498,8 @@ let not_bigint t =
           | AbstractEnum { representation_t = DefT (_, BigIntT _) } )
       )
   | DefT (_, BigIntT _) ->
-    DefT (reason_of_t t, EmptyT)
-  | _ -> t
+    DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let rec object_ cx t =
   match t with
@@ -482,40 +521,41 @@ let rec object_ cx t =
       | Mixed_truthy
       | Mixed_non_maybe
       | Mixed_non_null ->
-        obj
+        obj |> changed_result
       | Mixed_function
       | Mixed_everything
       | Mixed_non_void ->
         let reason = replace_desc_new_reason RUnion (reason_of_t t) in
-        UnionT (reason, UnionRep.make (NullT.why r) obj [])
+        UnionT (reason, UnionRep.make (NullT.why r) obj []) |> changed_result
     end
   | DefT (_, (ObjT _ | ArrT _ | NullT | InstanceT _ | EnumObjectT _))
   | AnyT _ ->
-    t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | _ -> DefT (reason_of_t t, EmptyT)
+    unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let rec not_object t =
   match t with
   | DefT (_, PolyT _) -> map_poly ~f:not_object t
-  | AnyT _ -> DefT (reason_of_t t, EmptyT)
-  | DefT (_, (ObjT _ | ArrT _ | NullT | InstanceT _ | EnumObjectT _)) -> DefT (reason_of_t t, EmptyT)
-  | _ -> t
+  | AnyT _ -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | DefT (_, (ObjT _ | ArrT _ | NullT | InstanceT _ | EnumObjectT _)) ->
+    DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let rec function_ = function
   | DefT (_, PolyT _) as t -> map_poly ~f:function_ t
   | DefT (r, MixedT _) ->
-    DefT (replace_desc_new_reason (RFunction RUnknown) r, MixedT Mixed_function)
-  | (DefT (_, (FunT _ | ClassT _)) | AnyT _) as t -> t
-  | DefT (r, _) -> DefT (r, EmptyT)
-  | t -> DefT (reason_of_t t, EmptyT)
+    DefT (replace_desc_new_reason (RFunction RUnknown) r, MixedT Mixed_function) |> changed_result
+  | (DefT (_, (FunT _ | ClassT _)) | AnyT _) as t -> unchanged_result t
+  | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
+  | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let rec not_function t =
   match t with
   | DefT (_, PolyT _) -> map_poly ~f:not_function t
-  | AnyT _ -> DefT (reason_of_t t, EmptyT)
-  | DefT (_, (FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
-  | _ -> t
+  | AnyT _ -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | DefT (_, (FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let array t =
   match t with
@@ -534,16 +574,17 @@ let array t =
       ( replace_desc_new_reason RROArrayType r,
         ArrT (ROArrayAT (DefT (r, MixedT Mixed_everything), None))
       )
+    |> changed_result
   | DefT (_, ArrT _)
   | AnyT _ ->
-    t
-  | _ -> DefT (reason_of_t t, EmptyT)
+    unchanged_result t
+  | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_array t =
   match t with
-  | AnyT _ -> DefT (reason_of_t t, EmptyT)
-  | DefT (_, ArrT _) -> DefT (reason_of_t t, EmptyT)
-  | _ -> t
+  | AnyT _ -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | DefT (_, ArrT _) -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
 
 let sentinel_refinement =
   let open UnionEnum in
@@ -561,22 +602,22 @@ let sentinel_refinement =
     | _ -> false
   in
   fun v reason l sense enum ->
-    let rec loop enum =
+    let rec filtered_loop enum =
       match (v, enum) with
-      | (_, One e) when enum_match sense (v, e) && not sense -> []
-      | (DefT (_, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> []
-      | (DefT (_, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> []
-      | (DefT (_, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> []
+      | (_, One e) when enum_match sense (v, e) && not sense -> true
+      | (DefT (_, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> true
+      | (DefT (_, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> true
+      | (DefT (_, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> true
       | (DefT (_, BigIntT _), One (BigInt sentinel)) when enum_match sense (v, BigInt sentinel) ->
-        []
+        true
       | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many enums) when sense
         ->
         UnionEnumSet.elements enums
-        |> Base.List.concat_map ~f:(fun enum ->
+        |> Base.List.for_all ~f:(fun enum ->
                if enum_match sense (v, enum) |> not then
-                 loop (One enum)
+                 filtered_loop (One enum)
                else
-                 []
+                 true
            )
       | (DefT (_, StrT _), One (Str _))
       | (DefT (_, NumT _), One (Num _))
@@ -585,18 +626,21 @@ let sentinel_refinement =
       | (DefT (_, NullT), One Null)
       | (DefT (_, VoidT), One Void)
       | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many _) ->
-        [l]
+        false
       (* types don't match (would've been matched above) *)
       (* we don't prune other types like objects or instances, even though
          a test like `if (ObjT === StrT)` seems obviously unreachable, but
          we have to be wary of toString and valueOf on objects/instances. *)
-      | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _) when sense -> []
+      | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _) when sense -> true
       | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _)
       | _ ->
         (* property exists, but is not something we can use for refinement *)
-        [l]
+        false
     in
-    TypeUtil.union_of_ts reason (loop enum)
+    if filtered_loop enum then
+      EmptyT.why reason |> changed_result
+    else
+      unchanged_result l
 
 (* Type guard filtering *)
 

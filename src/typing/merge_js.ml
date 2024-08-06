@@ -92,11 +92,20 @@ let detect_sketchy_null_checks cx tast =
           in
           let exists_check =
             match Type_filter.maybe cx t with
-            | DefT (_, EmptyT) -> exists_check
+            | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } -> exists_check
             | _ -> { exists_check with null_loc = t_loc }
           in
+          let type_of_filtering_result (Type_filter.TypeFilterResult { type_; changed = _ }) =
+            type_
+          in
           let exists_check =
-            match t |> Type_filter.not_exists cx |> Type_filter.not_maybe cx with
+            match
+              t
+              |> Type_filter.not_exists cx
+              |> type_of_filtering_result
+              |> Type_filter.not_maybe cx
+              |> type_of_filtering_result
+            with
             | DefT (_, BoolT _) -> { exists_check with bool_loc = t_loc }
             | DefT (_, StrT _) -> { exists_check with string_loc = t_loc }
             | DefT (_, NumT _) -> { exists_check with number_loc = t_loc }

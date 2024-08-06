@@ -5,75 +5,82 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val exists : Context.t -> Type.t -> Type.t
+type filter_result =
+  | TypeFilterResult of {
+      type_: Type.t;
+      changed: bool;
+    }
 
-val not_exists : Context.t -> Type.t -> Type.t
+val exists : Context.t -> Type.t -> filter_result
 
-val maybe : Context.t -> Type.t -> Type.t
+val not_exists : Context.t -> Type.t -> filter_result
 
-val not_maybe : Context.t -> Type.t -> Type.t
+val maybe : Context.t -> Type.t -> filter_result
 
-val null : Type.t -> Type.t
+val not_maybe : Context.t -> Type.t -> filter_result
 
-val not_null : Context.t -> Type.t -> Type.t
+val null : Type.t -> filter_result
 
-val undefined : Type.t -> Type.t
+val not_null : Context.t -> Type.t -> filter_result
 
-val not_undefined : Context.t -> Type.t -> Type.t
+val undefined : Type.t -> filter_result
 
-val string_literal : ALoc.t -> bool -> Reason.name -> Type.t -> Type.t
+val not_undefined : Context.t -> Type.t -> filter_result
 
-val not_string_literal : Reason.name -> Type.t -> Type.t
+val string_literal : ALoc.t -> bool -> Reason.name -> Type.t -> filter_result
 
-val number_literal : ALoc.t -> bool -> Type.number_literal -> Type.t -> Type.t
+val not_string_literal : Reason.name -> Type.t -> filter_result
 
-val not_number_literal : Type.number_literal -> Type.t -> Type.t
+val number_literal : ALoc.t -> bool -> Type.number_literal -> Type.t -> filter_result
 
-val bigint_literal : ALoc.t -> bool -> Type.bigint_literal -> Type.t -> Type.t
+val not_number_literal : Type.number_literal -> Type.t -> filter_result
 
-val not_bigint_literal : Type.bigint_literal -> Type.t -> Type.t
+val bigint_literal : ALoc.t -> bool -> Type.bigint_literal -> Type.t -> filter_result
 
-val true_ : Type.t -> Type.t
+val not_bigint_literal : Type.bigint_literal -> Type.t -> filter_result
 
-val not_true : Type.t -> Type.t
+val true_ : Type.t -> filter_result
 
-val false_ : Type.t -> Type.t
+val not_true : Type.t -> filter_result
 
-val not_false : Type.t -> Type.t
+val false_ : Type.t -> filter_result
 
-val boolean : ALoc.t -> Type.t -> Type.t
+val not_false : Type.t -> filter_result
 
-val not_boolean : Type.t -> Type.t
+val boolean : ALoc.t -> Type.t -> filter_result
 
-val string : ALoc.t -> Type.t -> Type.t
+val not_boolean : Type.t -> filter_result
 
-val not_string : Type.t -> Type.t
+val string : ALoc.t -> Type.t -> filter_result
 
-val symbol : ALoc.t -> Type.t -> Type.t
+val not_string : Type.t -> filter_result
 
-val not_symbol : Type.t -> Type.t
+val symbol : ALoc.t -> Type.t -> filter_result
 
-val number : ALoc.t -> Type.t -> Type.t
+val not_symbol : Type.t -> filter_result
 
-val not_number : Type.t -> Type.t
+val number : ALoc.t -> Type.t -> filter_result
 
-val bigint : ALoc.t -> Type.t -> Type.t
+val not_number : Type.t -> filter_result
 
-val not_bigint : Type.t -> Type.t
+val bigint : ALoc.t -> Type.t -> filter_result
 
-val object_ : Context.t -> Type.t -> Type.t
+val not_bigint : Type.t -> filter_result
 
-val not_object : Type.t -> Type.t
+val object_ : Context.t -> Type.t -> filter_result
 
-val function_ : Type.t -> Type.t
+val not_object : Type.t -> filter_result
 
-val not_function : Type.t -> Type.t
+val function_ : Type.t -> filter_result
 
-val array : Type.t -> Type.t
+val not_function : Type.t -> filter_result
 
-val not_array : Type.t -> Type.t
+val array : Type.t -> filter_result
 
-val sentinel_refinement : Type.t -> Reason.t -> Type.t -> bool -> Type.UnionEnum.star -> Type.t
+val not_array : Type.t -> filter_result
+
+val sentinel_refinement :
+  Type.t -> Reason.t -> Type.t -> bool -> Type.UnionEnum.star -> filter_result
 
 module TypeTag : sig
   type t
