@@ -24,7 +24,10 @@ module FlowConstraint = struct
        corresponding typing rules are already sufficiently robust. *)
     | (OpenT _, _)
     | (_, UseT (_, OpenT _))
-    | (_, ReposUseT _) ->
+    | (_, ReposUseT _)
+    (* Don't cache concretization constraints, since the concretization operation should already
+     * have defense against bad cyclic types. *)
+    | (_, ConcretizeT _) ->
       false
     | _ ->
       (* Use ops are purely for better error messages: they should have no
