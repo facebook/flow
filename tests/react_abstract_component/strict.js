@@ -5,7 +5,7 @@ const c = <Component f = {3}/>;
 (c : React$Element<React$ElementType>);
 
 declare function foo(a: ?React$Component<any, any>): void;
-declare var ref: ?React$ElementRef<React$ElementType>;
+declare var ref: ?React.ElementRef<React$ElementType>;
 foo(ref);
 
 class Component2 extends React.Component<{}> {};

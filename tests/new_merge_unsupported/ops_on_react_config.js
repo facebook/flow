@@ -3,7 +3,7 @@ const React = require('react');
 type Props = {f: number, g: number};
 type DefaultProps = {f: number};
 
-type T = React$Config<Props, DefaultProps>;
+type T = React.Config<Props, DefaultProps>;
 declare var t: T;
 
 // Annot_SpecializeT

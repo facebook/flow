@@ -37,6 +37,7 @@ type lint_kind =
   | UntypedTypeImport
   | UntypedImport
   | NonstrictImport
+  | InternalType
   | UnclearType
   | DeprecatedType of deprecated_type_kind
   | UnsafeGettersSetters
@@ -86,6 +87,7 @@ let string_of_kind = function
   | UntypedTypeImport -> "untyped-type-import"
   | UntypedImport -> "untyped-import"
   | NonstrictImport -> "nonstrict-import"
+  | InternalType -> "internal-type"
   | UnclearType -> "unclear-type"
   | DeprecatedType kind -> string_of_deprecated_type_kind kind
   | UnsafeGettersSetters -> "unsafe-getters-setters"
@@ -129,6 +131,7 @@ let kinds_of_string = function
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | "nonstrict-import" -> Some [NonstrictImport]
   | "untyped-import" -> Some [UntypedImport]
+  | "internal-type" -> Some [InternalType]
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" ->
     Some

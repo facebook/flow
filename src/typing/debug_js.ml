@@ -1621,6 +1621,7 @@ let dump_error_message =
     | EUntypedImport (loc, module_name) ->
       spf "EUntypedImport (%s, %s)" (string_of_aloc loc) module_name
     | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
+    | EInternalType (loc, _) -> spf "EInternalType (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
     | EDeprecatedDollarCall loc -> spf "EDeprecatedDollarCall (%s)" (string_of_aloc loc)

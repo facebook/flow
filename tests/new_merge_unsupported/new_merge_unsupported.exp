@@ -709,13 +709,13 @@ Cannot use class extends on config of React component [1] in an export position.
 annotation for class extends [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:10:25
-   10| export class x1 extends ((0: any): T) {}
-                               ^^^^^^^^^^^^^ [2]
+    10| export class x1 extends ((0: any): T) {}
+                                ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:36
@@ -738,13 +738,13 @@ Cannot use property `f` on config of React component [1] in an export position. 
 annotation for property `f` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:13:19
-   13| export const x2 = t.f;
-                         ^^^ [2]
+    13| export const x2 = t.f;
+                          ^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:19
@@ -753,13 +753,13 @@ Cannot use computed property on config of React component [1] in an export posit
 annotation for computed property [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:16:19
-   16| export const x3 = t[('': string)];
-                         ^^^^^^^^^^^^^^^ [2]
+    16| export const x3 = t[('': string)];
+                          ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:26
@@ -776,13 +776,13 @@ Cannot use spread on config of React component [1] in an export position. Please
 spread [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:19:19
-   19| export const x4 = { ...t };
-                         ^^^^^^^^ [2]
+    19| export const x4 = { ...t };
+                          ^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:22:17
@@ -791,13 +791,13 @@ Cannot use exact on config of React component [1] in an export position. Please 
 exact [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:22:17
-   22| declare var y5: $Exact<T>;
-                       ^^^^^^^^^ [2]
+    22| declare var y5: $Exact<T>;
+                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:26:17
@@ -806,13 +806,13 @@ Cannot use statics on config of React component [1] in an export position. Pleas
 for statics [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:26:17
-   26| declare var y6: Class<T>;
-                       ^^^^^^^^ [2]
+    26| declare var y6: Class<T>;
+                        ^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:27:19
@@ -849,13 +849,13 @@ Cannot use property `f` on config of React component [1] in an export position. 
 annotation for property `f` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:32:19
-   32| export const x7 = y7.f;
-                         ^^^^ [2]
+    32| export const x7 = y7.f;
+                          ^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:35:37
@@ -864,13 +864,13 @@ Cannot use prototype on config of React component [1] in an export position. Ple
 for prototype [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:35:37
-   35| declare export var x8: { __proto__: T };
-                                           ^ [2]
+    35| declare export var x8: { __proto__: T };
+                                            ^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
@@ -879,13 +879,13 @@ Cannot use mixins on config of React component [1] in an export position. Please
 mixins [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:38:32
-   38| declare export class x9 mixins t {}
-                                      ^ [2]
+    38| declare export class x9 mixins t {}
+                                       ^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
@@ -908,13 +908,13 @@ Cannot use unary minus on config of React component [1] in an export position. P
 annotation for unary minus [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:41:20
-   41| export const x10 = -t;
-                          ^^ [2]
+    41| export const x10 = -t;
+                           ^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:21
@@ -937,13 +937,13 @@ Cannot use unary not on config of React component [1] in an export position. Ple
 for unary not [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:44:20
-   44| export const x11 = !t;
-                          ^^ [2]
+    44| export const x11 = !t;
+                           ^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:47:18
@@ -952,13 +952,13 @@ Cannot use `$KeyMirror` on config of React component [1] in an export position. 
 annotation for `$KeyMirror` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:47:18
-   47| declare var y12: $KeyMirror<T>;
-                        ^^^^^^^^^^^^^ [2]
+    47| declare var y12: $KeyMirror<T>;
+                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:18
@@ -967,13 +967,13 @@ Cannot use `$ObjMapConst` on config of React component [1] in an export position
 annotation for `$ObjMapConst` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:51:18
-   51| declare var y13: $ObjMapConst<T, any>;
-                        ^^^^^^^^^^^^^^^^^^^^ [2]
+    51| declare var y13: $ObjMapConst<T, any>;
+                         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:55:18
@@ -982,13 +982,13 @@ Cannot use key set on config of React component [1] in an export position. Pleas
 for key set [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:55:18
-   55| declare var y14: $Keys<T>;
-                        ^^^^^^^^ [2]
+    55| declare var y14: $Keys<T>;
+                         ^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:6:10
-    6| type T = React$Config<Props, DefaultProps>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:391:53
+   391|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

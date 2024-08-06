@@ -27,8 +27,11 @@ class mapper target_loc ~incorrect_name ~replacement_name =
         | _ -> super#generic_type loc t
   end
 
-let convert_type kind ast loc =
-  let incorrect_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
-  let replacement_name = Flow_intermediate_error_types.IncorrectType.replacement_of_kind kind in
+let convert_type ~incorrect_name ~replacement_name ast loc =
   let mapper = new mapper loc ~incorrect_name ~replacement_name in
   mapper#program ast
+
+let convert_incorrect_type kind ast loc =
+  let incorrect_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
+  let replacement_name = Flow_intermediate_error_types.IncorrectType.replacement_of_kind kind in
+  convert_type ~incorrect_name ~replacement_name ast loc

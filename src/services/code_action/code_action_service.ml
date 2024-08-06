@@ -826,7 +826,49 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
         {
           title;
           diagnostic_title;
-          transform = untyped_ast_transform (Autofix_type_name.convert_type kind);
+          transform = untyped_ast_transform (Autofix_type_name.convert_incorrect_type kind);
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EInternalType
+      ( error_loc,
+        Flow_intermediate_error_types.DollarUtilityTypeWithNonDollarAliases replacement_name
+      ) ->
+    let incorrect_name = "$" ^ replacement_name in
+    let title = Printf.sprintf "Convert to `%s`" replacement_name in
+    let diagnostic_title = Printf.sprintf "convert_dollar_%s_type" replacement_name in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title;
+          diagnostic_title;
+          transform =
+            untyped_ast_transform (Autofix_type_name.convert_type ~incorrect_name ~replacement_name);
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EInternalType
+      ( error_loc,
+        Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
+          replacement_name_without_react
+      ) ->
+    let incorrect_name = "React$" ^ replacement_name_without_react in
+    let replacement_name = "React." ^ replacement_name_without_react in
+    let title = Printf.sprintf "Convert to `%s`" replacement_name in
+    let diagnostic_title =
+      Printf.sprintf "convert_react_dollar_%s_type" replacement_name_without_react
+    in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title;
+          diagnostic_title;
+          transform =
+            untyped_ast_transform (Autofix_type_name.convert_type ~incorrect_name ~replacement_name);
           target_loc = error_loc;
         };
       ]
