@@ -129,7 +129,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ImplementsT _ -> ()
   | MixinT (_, t) -> resolve t
   | ToStringT { t_out; _ } -> default_resolve_touts ~flow cx loc t_out
-  | PredicateT (_, tvar) -> resolve_tvar tvar
   | SpecializeT (_, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k
   | ValueToTypeReferenceT (_, _, _, t) -> resolve t
@@ -158,7 +157,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     resolve t
   | ReactKitT (_, _, tool) -> resolve_react_tool tool
   | ConcretizeT _ -> _TODO
-  | SentinelPropTestT tvar -> resolve_tvar tvar
   | OptionalChainT { t_out; voided_out; _ } ->
     resolve voided_out;
     default_resolve_touts ~flow cx loc t_out

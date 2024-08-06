@@ -400,7 +400,6 @@ and dump_use_t_ (depth, tvars) cx t =
   let kid t = dump_t_ (depth - 1, tvars) cx t in
   let use_kid use_t = dump_use_t_ (depth - 1, tvars) cx use_t in
   let tvar id = dump_tvar_ (depth - 1, tvars) cx id in
-  let tout (reason, id) = spf "(%s, %s)" (string_of_reason reason) (tvar id) in
   let normalized_prop p = dump_normalized_prop_ (depth - 1, tvars) cx p in
   let string_of_use_op = string_of_use_op_rec in
   let call_arg_kid = function
@@ -819,11 +818,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(kid index_type) t
     | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex name; _ } ->
       p ~extra:(display_string_of_name name) t
-    | PredicateT (pred, arg) ->
-      p
-        ~reason:false
-        ~extra:(spf "%s, %s" (string_of_predicate_concretizer_variant pred) (tout arg))
-        t
     | ReactKitT (use_op, _, tool) ->
       p t ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
     | ReactPropsToOut (_, props)
@@ -845,7 +839,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _ ->
         p ~extra:(string_of_use_op use_op) t)
-    | SentinelPropTestT result -> p ~reason:false ~extra:(spf "%s" (tout result)) t
     | SuperT _ -> p t
     | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | SetElemT (_, _, ix, _, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t

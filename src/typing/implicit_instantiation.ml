@@ -359,9 +359,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | EnumCastT _
     | EnumExhaustiveCheckT _
     | GetEnumT _
-    | PredicateT _
     | CondT _
-    | SentinelPropTestT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
     | CheckReactImmutableT _
