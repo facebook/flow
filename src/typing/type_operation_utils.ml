@@ -572,12 +572,12 @@ module Operators = struct
                   a truthy && b ~> b
                   a && b ~> a falsy | b *)
                match Type_filter.exists cx left with
-               | DefT (_, EmptyT) ->
+               | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                  (* falsy *)
                  Predicate_kit.predicate cx left (NotP ExistsP) tout
                | _ ->
                  (match Type_filter.not_exists cx left with
-                 | DefT (_, EmptyT) ->
+                 | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                    (* truthy *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
@@ -594,12 +594,12 @@ module Operators = struct
                   a falsy || b ~> b
                   a || b ~> a truthy | b *)
                match Type_filter.not_exists cx left with
-               | DefT (_, EmptyT) ->
+               | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                  (* truthy *)
                  Predicate_kit.predicate cx left ExistsP tout
                | _ ->
                  (match Type_filter.exists cx left with
-                 | DefT (_, EmptyT) ->
+                 | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                    (* falsy *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
@@ -613,14 +613,14 @@ module Operators = struct
         Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
         |> Base.List.iter ~f:(fun left ->
                match Type_filter.maybe cx left with
-               | DefT (_, EmptyT)
+               | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ }
                (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
-               | AnyT _ ->
+               | Type_filter.TypeFilterResult { type_ = AnyT _; changed = _ } ->
                  (* not-nullish *)
                  Predicate_kit.predicate cx left (NotP MaybeP) tout
                | _ ->
                  (match Type_filter.not_maybe cx left with
-                 | DefT (_, EmptyT) ->
+                 | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                    (* nullish *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->

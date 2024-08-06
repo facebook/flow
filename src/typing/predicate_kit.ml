@@ -24,7 +24,28 @@ let concretization_variant_of_predicate = function
     ConcretizeForMaybeOrExistPredicateTest
   | _ -> ConcretizeForGeneralPredicateTest
 
-let flow_to_predicate_result cx t result_tvar = Flow_js.flow_t cx (t, OpenT result_tvar)
+let flow_to_predicate_result_no_change_tracking_TODO cx t result_tvar =
+  Flow_js.flow_t cx (t, OpenT result_tvar)
+
+(* TODO: Make it actually record it once we start to report to the external users of predicate_kit
+ * that the refinement actually does something *)
+let report_changes_to_input () = ()
+
+let flow_filtering_result_to_predicate_result
+    cx (Type_filter.TypeFilterResult { type_; changed = _ }) result_tvar =
+  Flow_js.flow_t cx (type_, OpenT result_tvar)
+
+let flow_unchanged_filtering_result_to_predicate_result cx type_ result_tvar =
+  flow_filtering_result_to_predicate_result
+    cx
+    (Type_filter.TypeFilterResult { type_; changed = false })
+    result_tvar
+
+let flow_changed_filtering_result_to_predicate_result cx type_ result_tvar =
+  flow_filtering_result_to_predicate_result
+    cx
+    (Type_filter.TypeFilterResult { type_; changed = true })
+    result_tvar
 
 let rec concretize_and_run_predicate cx trace l variant result_tvar ~predicate_no_concretization =
   let reason = reason_of_t l in
@@ -42,7 +63,7 @@ let rec concretize_and_run_predicate cx trace l variant result_tvar ~predicate_n
              ~predicate_no_concretization;
            Flow_js_utils.possible_types cx bound_tvar_id
            |> Base.List.iter ~f:(fun bound ->
-                  flow_to_predicate_result
+                  flow_to_predicate_result_no_change_tracking_TODO
                     cx
                     (GenericT { reason = reason_of_t bound; name; bound; no_infer; id })
                     result_tvar
@@ -113,124 +134,133 @@ and predicate_no_concretization cx trace result_tvar l ~p =
   (***********************)
   (* typeof _ ~ "boolean" *)
   (***********************)
-  | BoolP loc -> flow_to_predicate_result cx (Type_filter.boolean loc l) result_tvar
-  | NotP (BoolP _) -> flow_to_predicate_result cx (Type_filter.not_boolean l) result_tvar
+  | BoolP loc ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.boolean loc l) result_tvar
+  | NotP (BoolP _) ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.not_boolean l) result_tvar
   (***********************)
   (* typeof _ ~ "string" *)
   (***********************)
-  | StrP loc -> flow_to_predicate_result cx (Type_filter.string loc l) result_tvar
-  | NotP (StrP _) -> flow_to_predicate_result cx (Type_filter.not_string l) result_tvar
+  | StrP loc -> flow_filtering_result_to_predicate_result cx (Type_filter.string loc l) result_tvar
+  | NotP (StrP _) ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.not_string l) result_tvar
   (***********************)
   (* typeof _ ~ "symbol" *)
   (***********************)
-  | SymbolP loc -> flow_to_predicate_result cx (Type_filter.symbol loc l) result_tvar
-  | NotP (SymbolP _) -> flow_to_predicate_result cx (Type_filter.not_symbol l) result_tvar
+  | SymbolP loc ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.symbol loc l) result_tvar
+  | NotP (SymbolP _) ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.not_symbol l) result_tvar
   (*********************)
   (* _ ~ "some string" *)
   (*********************)
   | SingletonStrP (expected_loc, sense, lit) ->
     let filtered_str = Type_filter.string_literal expected_loc sense (OrdinaryName lit) l in
-    flow_to_predicate_result cx filtered_str result_tvar
+    flow_filtering_result_to_predicate_result cx filtered_str result_tvar
   | NotP (SingletonStrP (_, _, lit)) ->
     let filtered_str = Type_filter.not_string_literal (OrdinaryName lit) l in
-    flow_to_predicate_result cx filtered_str result_tvar
+    flow_filtering_result_to_predicate_result cx filtered_str result_tvar
   (*********************)
   (* _ ~ some number n *)
   (*********************)
   | SingletonNumP (expected_loc, sense, lit) ->
     let filtered_num = Type_filter.number_literal expected_loc sense lit l in
-    flow_to_predicate_result cx filtered_num result_tvar
+    flow_filtering_result_to_predicate_result cx filtered_num result_tvar
   | NotP (SingletonNumP (_, _, lit)) ->
     let filtered_num = Type_filter.not_number_literal lit l in
-    flow_to_predicate_result cx filtered_num result_tvar
+    flow_filtering_result_to_predicate_result cx filtered_num result_tvar
   (***********************)
   (* typeof _ ~ "number" *)
   (***********************)
-  | NumP loc -> flow_to_predicate_result cx (Type_filter.number loc l) result_tvar
-  | NotP (NumP _) -> flow_to_predicate_result cx (Type_filter.not_number l) result_tvar
+  | NumP loc -> flow_filtering_result_to_predicate_result cx (Type_filter.number loc l) result_tvar
+  | NotP (NumP _) ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.not_number l) result_tvar
   (*********************)
   (* _ ~ some bigint n *)
   (*********************)
   | SingletonBigIntP (expected_loc, sense, lit) ->
     let filtered_bigint = Type_filter.bigint_literal expected_loc sense lit l in
-    flow_to_predicate_result cx filtered_bigint result_tvar
+    flow_filtering_result_to_predicate_result cx filtered_bigint result_tvar
   | NotP (SingletonBigIntP (_, _, lit)) ->
     let filtered_bigint = Type_filter.not_bigint_literal lit l in
-    flow_to_predicate_result cx filtered_bigint result_tvar
+    flow_filtering_result_to_predicate_result cx filtered_bigint result_tvar
   (***********************)
   (* typeof _ ~ "bigint" *)
   (***********************)
-  | BigIntP loc -> flow_to_predicate_result cx (Type_filter.bigint loc l) result_tvar
-  | NotP (BigIntP _) -> flow_to_predicate_result cx (Type_filter.not_bigint l) result_tvar
+  | BigIntP loc ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.bigint loc l) result_tvar
+  | NotP (BigIntP _) ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.not_bigint l) result_tvar
   (***********************)
   (* typeof _ ~ "function" *)
   (***********************)
-  | FunP -> flow_to_predicate_result cx (Type_filter.function_ l) result_tvar
-  | NotP FunP -> flow_to_predicate_result cx (Type_filter.not_function l) result_tvar
+  | FunP -> flow_filtering_result_to_predicate_result cx (Type_filter.function_ l) result_tvar
+  | NotP FunP ->
+    flow_filtering_result_to_predicate_result cx (Type_filter.not_function l) result_tvar
   (***********************)
   (* typeof _ ~ "object" *)
   (***********************)
-  | ObjP -> flow_to_predicate_result cx (Type_filter.object_ cx l) result_tvar
-  | NotP ObjP -> flow_to_predicate_result cx (Type_filter.not_object l) result_tvar
+  | ObjP -> flow_filtering_result_to_predicate_result cx (Type_filter.object_ cx l) result_tvar
+  | NotP ObjP -> flow_filtering_result_to_predicate_result cx (Type_filter.not_object l) result_tvar
   (*******************)
   (* Array.isArray _ *)
   (*******************)
-  | ArrP -> flow_to_predicate_result cx (Type_filter.array l) result_tvar
-  | NotP ArrP -> flow_to_predicate_result cx (Type_filter.not_array l) result_tvar
+  | ArrP -> flow_filtering_result_to_predicate_result cx (Type_filter.array l) result_tvar
+  | NotP ArrP -> flow_filtering_result_to_predicate_result cx (Type_filter.not_array l) result_tvar
   (***********************)
   (* typeof _ ~ "undefined" *)
   (***********************)
   | VoidP ->
     let filtered = Type_filter.undefined l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | NotP VoidP ->
     let filtered = Type_filter.not_undefined cx l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   (********)
   (* null *)
   (********)
   | NullP ->
     let filtered = Type_filter.null l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | NotP NullP ->
     let filtered = Type_filter.not_null cx l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   (*********)
   (* maybe *)
   (*********)
   | MaybeP ->
     let filtered = Type_filter.maybe cx l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | NotP MaybeP ->
     let filtered = Type_filter.not_maybe cx l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   (********)
   (* true *)
   (********)
   | SingletonBoolP (_, true) ->
     let filtered = Type_filter.true_ l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | NotP (SingletonBoolP (_, true)) ->
     let filtered = Type_filter.not_true l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   (*********)
   (* false *)
   (*********)
   | SingletonBoolP (_, false) ->
     let filtered = Type_filter.false_ l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | NotP (SingletonBoolP (_, false)) ->
     let filtered = Type_filter.not_false l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   (************************)
   (* truthyness *)
   (************************)
   | ExistsP ->
     let filtered = Type_filter.exists cx l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | NotP ExistsP ->
     let filtered = Type_filter.not_exists cx l in
-    flow_to_predicate_result cx filtered result_tvar
+    flow_filtering_result_to_predicate_result cx filtered result_tvar
   | PropExistsP (key, r) -> prop_exists_test cx trace key r true l result_tvar
   | NotP (PropExistsP (key, r)) -> prop_exists_test cx trace key r false l result_tvar
   | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l result_tvar
@@ -282,7 +312,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
         | (Some (None, _), _) ->
           let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
           add_output cx msg;
-          flow_to_predicate_result cx tin result_tvar
+          flow_unchanged_filtering_result_to_predicate_result cx tin result_tvar
         | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
           let key = (OrdinaryName name, []) in
           let preds =
@@ -301,24 +331,29 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
                 (concretization_variant_of_predicate p)
                 result_tvar
                 ~predicate_no_concretization:(predicate_no_concretization ~p)
-            | None -> flow_to_predicate_result cx tin result_tvar
+            | None ->
+              flow_filtering_result_to_predicate_result
+                cx
+                (Type_filter.TypeFilterResult { type_ = tin; changed = false })
+                result_tvar
           end
         | ( Some (Some name, _),
             TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
           ) ->
-          let t =
+          let filter_result =
             if param_name <> name then
               (* This is not the refined parameter. *)
-              tin
+              Type_filter.TypeFilterResult { type_ = tin; changed = false }
             else if sense then
-              intersect cx tin type_guard
+              let type_ = intersect cx tin type_guard in
+              Type_filter.TypeFilterResult { type_; changed = type_ == tin }
             else if not one_sided then
               type_guard_diff cx tin type_guard
             else
               (* Do not refine else branch on one-sided type-guard *)
-              tin
+              Type_filter.TypeFilterResult { type_ = tin; changed = false }
           in
-          flow_to_predicate_result cx t result_tvar
+          flow_filtering_result_to_predicate_result cx filter_result result_tvar
       end
       | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }) as fun_t ->
         let tvar = (reason, Tvar.mk_no_wrap cx reason) in
@@ -338,7 +373,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
         let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
         call_latent_pred cx trace t_ ~use_op ~reason ~targs:None ~argts ~sense ~idx tin result_tvar
       (* Fall through all the remaining cases *)
-      | _ -> flow_to_predicate_result cx tin result_tvar
+      | _ -> flow_unchanged_filtering_result_to_predicate_result cx tin result_tvar
       )
 
 (* This utility is expected to be used when we a variable of type [t1] is refined
@@ -404,9 +439,9 @@ and intersect cx t1 t2 =
 and type_guard_diff cx t1 t2 =
   if TypeUtil.quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
     let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
-    DefT (r, EmptyT)
+    Type_filter.TypeFilterResult { type_ = DefT (r, EmptyT); changed = true }
   else
-    t1
+    Type_filter.TypeFilterResult { type_ = t1; changed = false }
 
 and prop_exists_test cx trace key reason sense obj result_tvar =
   prop_exists_test_generic key reason cx trace result_tvar obj sense (ExistsP, NotP ExistsP) obj
@@ -432,7 +467,7 @@ and prop_exists_test_generic key reason cx trace result_tvar orig_obj sense (pre
         |> List.iter (fun t -> guard cx trace t pred orig_obj result_tvar)
       | None ->
         (* prop cannot be read *)
-        flow_to_predicate_result cx orig_obj result_tvar;
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar;
         add_output
           cx
           (Error_message.EPropNotReadable
@@ -441,9 +476,9 @@ and prop_exists_test_generic key reason cx trace result_tvar orig_obj sense (pre
     | None when Obj_type.is_exact flags.obj_kind ->
       (* prop is absent from exact object type *)
       if sense then
-        ()
+        report_changes_to_input ()
       else
-        flow_to_predicate_result cx orig_obj result_tvar
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar
     | None ->
       (* prop is absent from inexact object type *)
       (* TODO: possibly unsound to filter out orig_obj here, but if we don't,
@@ -453,7 +488,8 @@ and prop_exists_test_generic key reason cx trace result_tvar orig_obj sense (pre
          unsoundness with slightly more work, but will wait until a
          refactoring of property lookup lands to revisit. Tracked by
          #11301092. *)
-      if orig_obj = obj then flow_to_predicate_result cx orig_obj result_tvar)
+      if orig_obj = obj then
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar)
   | DefT (_, ArrT (TupleAT { elements; _ })) when is_str_intlike key ->
     let i = int_of_string key in
     (match Base.List.nth elements i with
@@ -468,7 +504,7 @@ and prop_exists_test_generic key reason cx trace result_tvar orig_obj sense (pre
         possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
         |> List.iter (fun t -> guard cx trace t pred orig_obj result_tvar)
       else (
-        flow_to_predicate_result cx orig_obj result_tvar;
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar;
         add_output
           cx
           (Error_message.ETupleElementNotReadable { use_op = unknown_use; reason; index = i; name })
@@ -476,9 +512,9 @@ and prop_exists_test_generic key reason cx trace result_tvar orig_obj sense (pre
     | None ->
       (* Element is absent from tuple type. *)
       if sense then
-        ()
+        report_changes_to_input ()
       else
-        flow_to_predicate_result cx orig_obj result_tvar)
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar)
   | IntersectionT (_, rep) ->
     (* For an intersection of object types, try the test for each object type in
        turn, while recording the original intersection so that we end up with
@@ -492,7 +528,7 @@ and prop_exists_test_generic key reason cx trace result_tvar orig_obj sense (pre
            in
            possible_concrete_types_for_inspection cx reason obj |> List.iter f
        )
-  | _ -> flow_to_predicate_result cx orig_obj result_tvar
+  | _ -> flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar
 
 and binary_predicate cx trace sense test left right result_tvar =
   match test with
@@ -556,7 +592,7 @@ and instanceof_test cx trace result_tvar = function
     ) ->
     (* TODO: intersection *)
     if is_same_instance_type instance_a instance_c then
-      flow_to_predicate_result cx c result_tvar
+      flow_unchanged_filtering_result_to_predicate_result cx c result_tvar
     else
       (* Recursively check whether super(C) extends A, with enough context. **)
       concretize_and_run_predicate
@@ -594,12 +630,18 @@ and instanceof_test cx trace result_tvar = function
     )
   (* We hit the root class, so C is not a subclass of A **)
   | (true, DefT (_, NullT), InternalExtendsOperand (r, _, a)) ->
-    flow_to_predicate_result cx (reposition cx ~trace (loc_of_reason r) a) result_tvar
+    flow_changed_filtering_result_to_predicate_result
+      cx
+      (reposition cx ~trace (loc_of_reason r) a)
+      result_tvar
   (* If we're refining `mixed` or `any` with instanceof A, then flow A to the result *)
   | (true, (DefT (_, MixedT _) | AnyT _), TypeOperand (DefT (class_reason, ClassT a))) ->
     let desc = reason_of_t a |> desc_of_reason in
     let loc = loc_of_reason class_reason in
-    flow_to_predicate_result cx (reposition cx ~trace ~desc loc a) result_tvar
+    flow_changed_filtering_result_to_predicate_result
+      cx
+      (reposition cx ~trace ~desc loc a)
+      result_tvar
   (* Prune the type when any other `instanceof` check succeeds (since this is
      impossible). *)
   | (true, _, _) -> ()
@@ -636,9 +678,12 @@ and instanceof_test cx trace result_tvar = function
       )
   | (false, ObjProtoT _, InternalExtendsOperand (r, c, _)) ->
     (* We hit the root class, so C is not a subclass of A **)
-    flow_to_predicate_result cx (reposition cx ~trace (loc_of_reason r) c) result_tvar
+    flow_unchanged_filtering_result_to_predicate_result
+      cx
+      (reposition cx ~trace (loc_of_reason r) c)
+      result_tvar
   (* Don't refine the type when any other `instanceof` check fails. **)
-  | (false, left, _) -> flow_to_predicate_result cx left result_tvar
+  | (false, left, _) -> flow_unchanged_filtering_result_to_predicate_result cx left result_tvar
 
 and sentinel_prop_test key cx trace result_tvar (sense, obj, t) =
   sentinel_prop_test_generic key cx trace result_tvar obj (sense, obj, t)
@@ -718,7 +763,8 @@ and sentinel_prop_test_generic key cx trace result_tvar orig_obj =
          intersection. It is easy to avoid this unsoundness with slightly
          more work, but will wait until a refactoring of property lookup
          lands to revisit. Tracked by #11301092. *)
-      if orig_obj = obj then flow_to_predicate_result cx orig_obj result_tvar
+      if orig_obj = obj then
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar
   in
   let flow_sentinel_tuple sense elements tuple sentinel =
     let i = int_of_string key in
@@ -744,7 +790,9 @@ and sentinel_prop_test_generic key cx trace result_tvar orig_obj =
           (Error_message.ETupleElementNotReadable
              { use_op = unknown_use; reason = reason_of_t tuple; index = i; name }
           )
-    | None -> if orig_obj = tuple then flow_to_predicate_result cx orig_obj result_tvar
+    | None ->
+      if orig_obj = tuple then
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar
   in
   let sentinel_of_literal = function
     | DefT (_, StrT (Literal (_, value)))
@@ -809,9 +857,11 @@ and sentinel_prop_test_generic key cx trace result_tvar orig_obj =
            )
       | _ ->
         (* not enough info to refine *)
-        flow_to_predicate_result cx orig_obj result_tvar
+        flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar
     end
-    | None -> (* not enough info to refine *) flow_to_predicate_result cx orig_obj result_tvar
+    | None ->
+      (* not enough info to refine *)
+      flow_unchanged_filtering_result_to_predicate_result cx orig_obj result_tvar
 
 and concretize_and_run_sentinel_prop_test
     cx trace reason ~orig_obj ~sense ~sentinel input result_tvar =
@@ -836,7 +886,8 @@ and concretize_and_run_sentinel_prop_test
                   UnionRep.quick_mem_enum ~quick_subtype:TypeUtil.quick_subtype (DefT (r, def)) rep
                 with
                | UnionRep.No -> () (* provably unreachable, so prune *)
-               | UnionRep.Yes -> flow_to_predicate_result cx l result_tvar
+               | UnionRep.Yes ->
+                 flow_unchanged_filtering_result_to_predicate_result cx l result_tvar
                | UnionRep.Conditional _
                | UnionRep.Unknown ->
                  (* inconclusive: the union is not concretized *)
@@ -877,7 +928,8 @@ and concretize_and_run_sentinel_prop_test
                begin
                  match acc with
                  | UnionRep.No -> () (* provably unreachable, so prune *)
-                 | UnionRep.Yes -> flow_to_predicate_result cx l result_tvar
+                 | UnionRep.Yes ->
+                   flow_unchanged_filtering_result_to_predicate_result cx l result_tvar
                  | UnionRep.Conditional _
                  | UnionRep.Unknown ->
                    (* inconclusive: the union is not concretized *)
@@ -897,10 +949,10 @@ and concretize_and_run_sentinel_prop_test
              (* for l.key !== sentinel where l.key is a union, we can't really prove
                 that the check is guaranteed to fail (assuming the union doesn't
                 degenerate to a singleton) *)
-             flow_to_predicate_result cx l result_tvar
+             flow_unchanged_filtering_result_to_predicate_result cx l result_tvar
          | l ->
            let t = Type_filter.sentinel_refinement l reason orig_obj sense sentinel in
-           flow_to_predicate_result cx t result_tvar
+           flow_filtering_result_to_predicate_result cx t result_tvar
          )
 
 (**********)
@@ -910,23 +962,27 @@ and guard cx trace source pred input result_tvar =
   match pred with
   | ExistsP -> begin
     match Type_filter.exists cx source with
-    | DefT (_, EmptyT) -> ()
-    | _ -> flow_to_predicate_result cx input result_tvar
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      report_changes_to_input ()
+    | _ -> flow_unchanged_filtering_result_to_predicate_result cx input result_tvar
   end
   | NotP ExistsP -> begin
     match Type_filter.not_exists cx source with
-    | DefT (_, EmptyT) -> ()
-    | _ -> flow_to_predicate_result cx input result_tvar
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      report_changes_to_input ()
+    | _ -> flow_unchanged_filtering_result_to_predicate_result cx input result_tvar
   end
   | MaybeP -> begin
     match Type_filter.maybe cx source with
-    | DefT (_, EmptyT) -> ()
-    | _ -> flow_to_predicate_result cx input result_tvar
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      report_changes_to_input ()
+    | _ -> flow_unchanged_filtering_result_to_predicate_result cx input result_tvar
   end
   | NotP MaybeP -> begin
     match Type_filter.not_maybe cx source with
-    | DefT (_, EmptyT) -> ()
-    | _ -> flow_to_predicate_result cx input result_tvar
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      report_changes_to_input ()
+    | _ -> flow_unchanged_filtering_result_to_predicate_result cx input result_tvar
   end
   | NotP (NotP p) -> guard cx trace source p input result_tvar
   | _ ->

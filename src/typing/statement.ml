@@ -3881,7 +3881,7 @@ module Make
               | AnyT _ -> ()
               | _ ->
                 (match Type_filter.not_exists cx concretized_cond_t with
-                | DefT (_, EmptyT) ->
+                | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                   Flow_js.add_output
                     cx
                     (Error_message.EUnnecessaryInvariant
