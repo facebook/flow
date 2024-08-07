@@ -784,10 +784,19 @@ let create_typed_runner_config
                Parsing_heaps.read_dependency
                file
         in
+        let log msg =
+          if glean_log then
+            Utils_js.prerr_endlinef "%s: %s" msg (File_key.to_string file)
+          else
+            ()
+        in
+        log "scope info";
         let scope_info =
           Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
         in
+        log "module documentations";
         let module_documentation = module_documentations ~root ~write_root ~ast ~file in
+        log "declaration info";
         let (declaration_info, member_declaration_info, type_declaration_info) =
           declaration_infos
             ~scope_info
@@ -801,13 +810,16 @@ let create_typed_runner_config
             ~typed_ast
             ~ast
         in
+        log "type import declaration";
         let type_import_declaration =
           type_import_declarations ~root ~write_root ~resolved_modules ~file_sig
         in
         let loc_source = fst ast |> Loc.source in
+        log "source of exports";
         let source_of_export =
           source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_modules ~reader
         in
+        log "source of type exports";
         let source_of_type_export =
           source_of_type_exports
             ~root
@@ -818,20 +830,26 @@ let create_typed_runner_config
             ~type_sig
             ~resolved_modules
         in
+        log "local declaration reference";
         let local_declaration_reference =
           local_declaration_references ~root ~write_root ~scope_info
         in
+        log "import declaration";
         let import_declaration =
           import_declarations ~root ~write_root ~resolved_modules ~file_sig
         in
+        log "member declaration reference";
         let member_declaration_reference =
           member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
         in
+        log "type declaration reference";
         let type_declaration_reference =
           type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast
         in
+        log "file of string module";
         let file_of_string_module = file_of_string_modules ~root ~write_root ~options ~file in
         let file_lines = file_liness ~root ~write_root ~file in
+        log "outputting";
         let output_file =
           let file_name = Printf.sprintf "%d.json" (Unix.getpid ()) in
           Filename.concat output_dir file_name
@@ -877,6 +895,7 @@ let create_typed_runner_config
         output_string out_channel ",";
         output_facts "src.FileLines.1" file_lines;
         close_out out_channel;
+        log "done";
         { files_analyzed = 1; json_filenames = SSet.singleton output_file }
       in
       if glean_timeout > 0 then
