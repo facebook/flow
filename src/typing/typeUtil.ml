@@ -70,7 +70,7 @@ and reason_of_use_t = function
   | GetStaticsT (reason, _) -> reason
   | HasOwnPropT (_, reason, _) -> reason
   | ImplementsT (_, t) -> reason_of_t t
-  | ConcretizeT (reason, _) -> reason
+  | ConcretizeT (reason, _, _) -> reason
   | LookupT { reason; _ } -> reason
   | MapTypeT (_, reason, _, _) -> reason
   | MethodT (_, reason, _, _, _) -> reason
@@ -273,7 +273,7 @@ let rec util_use_op_of_use_t :
         target_module_t = _;
         tout = _;
       }
-  | ConcretizeT (_, _)
+  | ConcretizeT (_, _, _)
   | ExtractReactRefT _
   | OptionalChainT _
   | CondT (_, _, _, _)

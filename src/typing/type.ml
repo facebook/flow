@@ -749,7 +749,7 @@ module rec TypeTerm : sig
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
     | ReactKitT of use_op * reason * React.tool
     (* tools for preprocessing types *)
-    | ConcretizeT of reason * concretization_target
+    | ConcretizeT of reason * concretization_kind * TypeCollector.t
     | OptionalChainT of {
         reason: reason;
         lhs_reason: reason;
@@ -1659,19 +1659,17 @@ module rec TypeTerm : sig
   and custom_fun_kind = (* builtins *)
     | ObjectGetPrototypeOf
 
-  and concretization_target =
-    | ConcretizeForImportsExports of ident
+  and concretization_kind =
+    | ConcretizeForImportsExports
     (* The purpose of this utility is to concretize a resolved type for the purpose
      * of type inspection. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
-    | ConcretizeForInspection of ident
-    | ConcretizeForPredicate of predicate_concretizer_variant * ident
-    | ConcretizeForSentinelPropTest of ident
-    | ConcretizeForRenderType of ident
-    | ConcretizeComputedPropsT of ident
-    | ConcretizeForOperatorsChecking of ident
-
-  and intersection_preprocess_tool = ConcretizeTypes of concretization_target
+    | ConcretizeForInspection
+    | ConcretizeForPredicate of predicate_concretizer_variant
+    | ConcretizeForSentinelPropTest
+    | ConcretizeForRenderType
+    | ConcretizeComputedPropsT
+    | ConcretizeForOperatorsChecking
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no
@@ -1737,6 +1735,10 @@ module rec TypeTerm : sig
     | MappedTypeKind
     | RenderTypeKind
   (* T/U in renders T/renders (T | U). Render types do not require type arguments for polymorphic components *)
+
+  external use_t_compare : use_t -> use_t -> int = "caml_fast_generic_compare" [@@noalloc]
+
+  external type_term_compare : t -> t -> int = "caml_fast_generic_compare" [@@noalloc]
 end =
   TypeTerm
 
@@ -3044,24 +3046,12 @@ and UnaryArithKind : sig
 end =
   UnaryArithKind
 
-let unknown_use = TypeTerm.(Op UnknownUse)
-
-let name_of_propref = function
-  | TypeTerm.Named { name; _ } -> Some name
-  | TypeTerm.Computed _ -> None
-
-external use_t_compare : TypeTerm.use_t -> TypeTerm.use_t -> int = "caml_fast_generic_compare"
-  [@@noalloc]
-
-external type_term_compare : TypeTerm.t -> TypeTerm.t -> int = "caml_fast_generic_compare"
-  [@@noalloc]
-
-module UseTypeSet : Flow_set.S with type elt = TypeTerm.use_t = Flow_set.Make (struct
+and UseTypeSet : (Flow_set.S with type elt = TypeTerm.use_t) = Flow_set.Make (struct
   type elt = TypeTerm.use_t
 
   type t = elt
 
-  let compare = use_t_compare
+  let compare = TypeTerm.use_t_compare
 end)
 
 (* The typechecking algorithm often needs to maintain sets of types, or more
@@ -3069,20 +3059,48 @@ end)
    information to types).
    Type terms may also contain internal sets or maps.
 *)
-module TypeSet : Flow_set.S with type elt = TypeTerm.t = Flow_set.Make (struct
+and TypeSet : (Flow_set.S with type elt = TypeTerm.t) = Flow_set.Make (struct
   type elt = TypeTerm.t
 
   type t = elt
 
-  let compare = type_term_compare
+  let compare = TypeTerm.type_term_compare
 end)
+
+and TypeCollector : sig
+  type t
+
+  val create : unit -> t
+
+  val add : t -> TypeTerm.t -> unit
+
+  val collect : t -> TypeTerm.t list
+
+  val iter : t -> f:(TypeTerm.t -> unit) -> unit
+end = struct
+  type t = TypeSet.t ref
+
+  let create () = ref TypeSet.empty
+
+  let add collector t = collector := TypeSet.add t !collector
+
+  let collect collector = TypeSet.elements !collector
+
+  let iter collector ~f = TypeSet.iter f !collector
+end
+
+let unknown_use = TypeTerm.(Op UnknownUse)
+
+let name_of_propref = function
+  | TypeTerm.Named { name; _ } -> Some name
+  | TypeTerm.Computed _ -> None
 
 module TypeMap = Flow_map.Make (struct
   type key = TypeTerm.t
 
   type t = key
 
-  let compare = type_term_compare
+  let compare = TypeTerm.type_term_compare
 end)
 
 module Constraint = struct
@@ -3096,7 +3114,7 @@ module Constraint = struct
     let compare (x, assoc1) (y, assoc2) =
       let v = [%derive.ord: (int * int) option] assoc1 assoc2 in
       if v = 0 then
-        use_t_compare x y
+        TypeTerm.use_t_compare x y
       else
         v
   end
@@ -4074,18 +4092,18 @@ let string_of_use_ctor = function
   | GetStaticsT _ -> "GetStaticsT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | ImplementsT _ -> "ImplementsT"
-  | ConcretizeT (_, c) ->
+  | ConcretizeT (_, c, _) ->
     spf
       "ConcretizeT %s"
       (match c with
-      | ConcretizeForImportsExports _ -> "ConcretizeForImportsExports"
-      | ConcretizeForInspection _ -> "ConcretizeForInspection"
-      | ConcretizeForPredicate (v, _) ->
+      | ConcretizeForImportsExports -> "ConcretizeForImportsExports"
+      | ConcretizeForInspection -> "ConcretizeForInspection"
+      | ConcretizeForPredicate v ->
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
-      | ConcretizeForSentinelPropTest _ -> "ConcretizeForPredicate"
-      | ConcretizeForRenderType _ -> "ConcretizeForRenderType"
-      | ConcretizeComputedPropsT _ -> "ConcretizeComputedPropsT"
-      | ConcretizeForOperatorsChecking _ -> "ConcretizeForOperatorsChecking")
+      | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
+      | ConcretizeForRenderType -> "ConcretizeForRenderType"
+      | ConcretizeComputedPropsT -> "ConcretizeComputedPropsT"
+      | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking")
   | LookupT _ -> "LookupT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"
