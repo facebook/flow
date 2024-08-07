@@ -93,3 +93,8 @@ Run with `yarn run flow-codemod convertShapeToPartial`.
 Converts usages of the old casting syntax `(x: T)` to the new casting syntax `x as T`.
 
 Run with `yarn run flow-codemod typeCastToAsExpression`.
+
+### Migrate internal Flow types for React to public-facing ones
+Converts usages of the internal React types like `React$Node` to public facing ones like `React.Node`.
+
+Run with `yarn run flow-codemod replaceReactDollarUtilityTypes`.
