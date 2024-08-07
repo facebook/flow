@@ -2001,10 +2001,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | Ast.Type.Renders.Star -> RRenderStarType arg_desc
     in
     let reason = mk_reason reason_desc loc in
-    let renders_reason = reason_of_t t in
-    let node = ConsGen.get_builtin_type env.cx renders_reason "React$Node" in
-    let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
-    Context.add_post_inference_subtyping_check env.cx t use_op node;
     let renders_variant =
       let open Ast.Type in
       match variant with
