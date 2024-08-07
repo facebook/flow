@@ -446,9 +446,11 @@ let validate_renders_type_arguments cx =
         )
   in
   let validate_element ~allow_generic loc renders_variant = function
-    | GenericT { reason; _ } ->
+    | GenericT { reason; bound; _ } ->
       if allow_generic then
-        ()
+        let node = Flow_js.get_builtin_type cx reason "React$Node" in
+        let use_op = Op (RenderTypeInstantiation { render_type = reason }) in
+        Flow_js.flow cx (bound, UseT (use_op, node))
       else
         Flow_js_utils.add_output
           cx

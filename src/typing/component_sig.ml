@@ -128,15 +128,6 @@ module Make
     let (config, instance) =
       F.config_and_instance cx ~config_reason ~instance_reason ~tparams cparams
     in
-    let () =
-      (* render types must be a subtype of React.Node
-       * TODO(jmbrown): This check can be skipped if we track whether or not the renders type was
-       * explicitly annotated *)
-      let renders_reason = TypeUtil.reason_of_t renders_t in
-      let t = Flow.get_builtin_type cx (TypeUtil.reason_of_t renders_t) "React$Node" in
-      let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
-      Context.add_post_inference_subtyping_check cx renders_t use_op t
-    in
     let component_kind =
       match id_opt with
       | None -> Structural
