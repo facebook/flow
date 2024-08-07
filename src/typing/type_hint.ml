@@ -602,7 +602,7 @@ and type_of_hint_decomposition cx op reason t =
             Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
               cx
               reason
-              (Predicate_kit.predicate cx t predicate)))
+              (Predicate_kit.run_predicate_for_filtering cx t predicate)))
       | Simplify_Callee reason ->
         let simplify fn = get_t cx (simplify_callee cx reason unknown_use fn) in
         (match simplify t with

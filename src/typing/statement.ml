@@ -7811,7 +7811,7 @@ module Make
                     Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
                       cx
                       tg_reason
-                      (Predicate_kit.predicate cx type_guard neg_pred)
+                      (Predicate_kit.run_predicate_for_filtering cx type_guard neg_pred)
                 in
                 if
                   not

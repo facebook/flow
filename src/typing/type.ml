@@ -3082,7 +3082,9 @@ end = struct
 
   let create () = ref TypeSet.empty
 
-  let add collector t = collector := TypeSet.add t !collector
+  let add collector = function
+    | TypeTerm.(DefT (_, EmptyT)) -> ()
+    | t -> collector := TypeSet.add t !collector
 
   let collect collector = TypeSet.elements !collector
 

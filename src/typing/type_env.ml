@@ -344,15 +344,14 @@ let refine cx reason loc refi res =
         match predicate with
         | None -> t
         | Some predicate ->
-          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
-            cx
-            reason
-            (Predicate_kit.predicate cx t predicate)
+          (match Predicate_kit.run_predicate_track_changes cx t predicate reason with
+          | Predicate_kit.TypeUnchanged t -> t
+          | Predicate_kit.TypeChanged t ->
+            Context.add_refined_location cx loc;
+            t)
       in
       match res with
-      | Ok t ->
-        Context.add_refined_location cx loc;
-        Ok (map_t t)
+      | Ok t -> Ok (map_t t)
       | Error (t, errs) -> Error (map_t t, errs))
     ~default:res
     refi
