@@ -1,3 +1,26 @@
+### 0.243.0
+
+Likely to cause new Flow errors:
+* All `deprecated-type` and `untyped-type-import` lint are on and at error level by default.
+* Use of some internal types of Flow that have other identical public-facing variants (e.g. `React$ElementConfig` vs `React.ElementConfig`) are now a lint error that's enabled by default. To disable it, set `internal-type=off` in the lints section of the flowconfig. For now, these types are still allowed in libdef files, but we plan to also disallow it in the future. To codemod existing code, get the latest `flow-upgrade` package and run `yarn run flow-codemod replaceReactDollarUtilityTypes`
+* Direct use of `React$Element` type is banned via the `internal-type` lint. The `React.Element` alias still exists for now, but it is marked with `@deprecated` in the jsdoc. Please read the jsdoc for better alternatives. A global alias `ExactReactElement_DEPRECATED` is added to help you clearly mark the use of exact React element types, and you should use it to replace `React.Element` that you cannot replace without compromising runtime type safety.
+* Flow now consistently errors on bad comparison with enums [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SUEogABABBdnAekAHS+whE7IAQjz+T5VuyACoARnZAF4ueyAD6igDcApWxhlACZFaLVVzNVABRonlRsOzbPZ2RJZcgZbKTebcJbrdBbRJdY7pbqTfbFQqlfb1eyAPTh9mzBpwCD5QbsqAQdkmSgQSi8JMQADuqeoGZIWvlwZD-ojUbTGYFuRADRMJDjUCSGXsJhA9KAA)
+
+New Features:
+* Allow generic bound by inexact tuple as function rest args. [This example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZlduuSMTBJC-Mgz4sHwNSBos6A6u9w1mbGqJUoBaCRHEzrcDEgBrbAk62mPhXFxJ91v7x+fRHEp3gxCKBgNpUU7nAF5KBQA7tEhUJ4VJqmDA+SEgIEwsBwhHHCCMTZQbjHOoYCrooHwmDYY4Ie5HSgkY5kCQM7ZXKH5E7MdJwMgAgC+-EgGiSMCByjg0AABBgADwAFWQ0oA2lZ1QBdAB8AAoqAgSMqFbxpTBlTr1VYFQBKaUAXi10oaEDgbFtwAAOlBpaaLer9SRrQBuaUAelD0oACiwGlL8oNZd6TJQIJQTVAIAB3aUAeQA0l6BV7ciAGiYSFKoEkMvYTCABUA) now works.
+* Support for `declare component` statement and `component` type is enabled by default.
+* Flow now provide the "insert inferred type as type cast" code action. You only need to select the expression in the editor to trigger the code action.
+
+Notable bug fixes:
+* Fixed a bug that causes an internal error. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABLZ7JzYfC7MhOcAANr2UxQBAAXSFADVuDJ6QBuAA6UDVsIwAEcZJyVsZOfLcDIhcIRDdOQBeTkAEiNMhIAB5OQB6F2ckyUCCUIVgWhPbK8TlQCASTkVPFQbge6jetWcvWrCAwPlwuDQEi8NUAPiVuRADRMJHTUCSGXsJhA9KAA)
+
+Misc:
+* `experimental.namespaces` config option is removed. Namespaces support is enabled by default in the previous release.
+
+Library Definitions:
+* Add `.replaceChildren` method type definition for dom nodes.
+* `Object.getPrototypeof` is still special cased, but the special-casing is only available for a syntactic `Object.getPrototypeof(...)` call. If you try to use `Object.getPrototypeof` in some other ways (e.g. `const f = Object.getPrototypeof; f(...)`), you will get a a less precise and accurate typing for it. The `Object$GetPrototypeOf` type, which was used to back the special case behavior, is removed.
+
 ### 0.242.1
 
 New Features:
