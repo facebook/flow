@@ -254,7 +254,7 @@ let type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast =
 
 let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
   let open Ty_members in
-  match extract ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig scheme with
+  match extract ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig ~max_depth:40 scheme with
   | Error _ -> []
   | Ok { members; _ } ->
     Base.Option.value
