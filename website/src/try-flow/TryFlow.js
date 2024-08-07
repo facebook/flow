@@ -95,6 +95,11 @@ const initialState: InitialStateFromHash = initialStateFromURI || {
   config: null,
 };
 
+const REFINED_VALUE_DECORATION_OPTIONS = {
+  hoverMessage: {value: 'Refined value'},
+  inlineClassName: styles.refinedValueDecoration,
+};
+
 export default component TryFlow(
   defaultFlowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
@@ -108,6 +113,7 @@ export default component TryFlow(
   const [flowVersion, setFlowVersion] = useState(
     initialState.version || defaultFlowVersion,
   );
+  const editorRef = useRef(null);
   const [errors, setErrors] = useState<$ReadOnlyArray<FlowJsError>>([]);
   const [internalError, setInternalError] = useState('');
   const [cursorPosition, setCursorPosition] =
@@ -156,6 +162,24 @@ export default component TryFlow(
     }
   }
 
+  function semanticDecorations(flowService: FlowJsServices, model: any) {
+    const decorations =
+      flowService.semanticDecorations?.('-', model.getValue()).decorations ||
+      [];
+    const refinedValueDecorations = [];
+    for (const decoration of decorations) {
+      switch (decoration.kind) {
+        case 'refined-value':
+          refinedValueDecorations.push({
+            range: decoration.range,
+            options: REFINED_VALUE_DECORATION_OPTIONS,
+          });
+          break;
+      }
+    }
+    editorRef.current?.createDecorationsCollection(refinedValueDecorations);
+  }
+
   function forceRecheck() {
     setAutoCompleteFunction(flowService);
     setGetDefFunction(flowService);
@@ -201,6 +225,7 @@ export default component TryFlow(
         };
       });
       monaco.editor.setModelMarkers(model, 'default', markers);
+      semanticDecorations(flowService, model);
       setInternalError('');
       setErrors(errors);
       if (flowService?.supportsParse) {
@@ -231,6 +256,7 @@ export default component TryFlow(
     editor.onDidChangeCursorPosition(e => {
       setCursorPosition(e.position);
     });
+    editorRef.current = editor;
   }
 
   return (

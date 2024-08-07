@@ -99,6 +99,13 @@ export default class FlowJsServices {
     return this._flow.typeAtPos(filename, body, line, col, this.config);
   }
 
+  semanticDecorations(
+    filename: string,
+    body: string,
+  ): {decorations: $ReadOnlyArray<{kind: 'refined-value', range: any}>} {
+    return this._flow.semanticDecorations(filename, body, this.config);
+  }
+
   signatureHelp(
     filename: string,
     body: string,

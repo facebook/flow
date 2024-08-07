@@ -504,6 +504,24 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
           (loc, Ok result)
       end
 
+let refined_locations filename content js_config_object =
+  let filename = File_key.SourceFile filename in
+  let root = File_path.dummy_path in
+  match parse_content filename content with
+  | Error _ -> []
+  | Ok (ast, file_sig) ->
+    let (_, docblock) =
+      Docblock_parser.(
+        parse_docblock
+          ~max_tokens:docblock_max_tokens
+          ~file_options:Files.default_options
+          filename
+          content
+      )
+    in
+    let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+    Base.List.map ~f:loc_of_aloc (Context.refined_locations cx |> Loc_collections.ALocSet.elements)
+
 let signature_help filename content line col js_config_object :
     ((ServerProt.Response.func_details_result list * int) option, string) result =
   let filename = File_key.SourceFile filename in
@@ -596,6 +614,17 @@ let loc_as_range_to_json loc =
       ("startColumn", JSON_Number (string_of_int (loc.start.column + 1)));
       ("endLineNumber", JSON_Number (string_of_int loc._end.line));
       ("endColumn", JSON_Number (string_of_int loc._end.column));
+    ]
+
+let loc_as_range_end_inclusive_to_json loc =
+  let open Hh_json in
+  let open Loc in
+  JSON_Object
+    [
+      ("startLineNumber", JSON_Number (string_of_int loc.start.line));
+      ("startColumn", JSON_Number (string_of_int (loc.start.column + 1)));
+      ("endLineNumber", JSON_Number (string_of_int loc._end.line));
+      ("endColumn", JSON_Number (string_of_int (loc._end.column + 1)));
     ]
 
 let completion_item_to_json
@@ -721,6 +750,27 @@ let get_def js_file js_content js_line js_col js_config_object =
     |> js_of_json
   | Error msg -> failwith msg
 
+let semantic_decorations js_file js_content js_config_object =
+  let open Hh_json in
+  let filename = Js.to_string js_file in
+  let content = Js.to_string js_content in
+  let json =
+    if Js.Unsafe.get js_config_object "experimental.semantic_decorations" |> Js.to_bool then
+      let decorations =
+        Base.List.map (refined_locations filename content js_config_object) ~f:(fun loc ->
+            JSON_Object
+              [
+                ("kind", JSON_String "refined-value");
+                ("range", loc_as_range_end_inclusive_to_json loc);
+              ]
+        )
+      in
+      JSON_Object [("decorations", JSON_Array decorations)]
+    else
+      JSON_Object [("decorations", JSON_Array [])]
+  in
+  js_of_json json
+
 let signature_help js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
   let content = Js.to_string js_content in
@@ -821,6 +871,13 @@ let () =
     "desc": "Show the underlying type representation for debugging purposes."
   },
   {
+    "key": "experimental.semantic_decorations",
+    "kind": "option",
+    "type": "bool",
+    "default": false,
+    "desc": "Apply some decorations in the playground editor based on semantic information."
+  },
+  {
     "key": "deprecated-type",
     "kind": "lint",
     "type": "bool",
@@ -908,6 +965,8 @@ let () = Js.Unsafe.set exports "parse" (Js.wrap_callback Flow_parser_js.parse)
 let () = Js.Unsafe.set exports "autocomplete" (Js.wrap_callback autocomplete)
 
 let () = Js.Unsafe.set exports "getDef" (Js.wrap_callback get_def)
+
+let () = Js.Unsafe.set exports "semanticDecorations" (Js.wrap_callback semantic_decorations)
 
 let () = Js.Unsafe.set exports "signatureHelp" (Js.wrap_callback signature_help)
 

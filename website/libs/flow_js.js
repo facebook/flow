@@ -90,6 +90,11 @@ declare type FlowJs = {
     col: number,
     options: {[string]: mixed},
   ): string,
+  semanticDecorations(
+    filename: string,
+    body: string,
+    options: {[string]: mixed},
+  ): {decorations: $ReadOnlyArray<{kind: 'refined-value', range: any}>},
   signatureHelp(
     filename: string,
     body: string,
