@@ -95,7 +95,6 @@ export function load(
         version === 'master'
           ? withBaseUrl('/flow/master/flow.js')
           : `${versionedUnpkgComUrl(version)}/flow.js`,
-        ,
       ],
       resolve,
     );

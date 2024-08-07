@@ -196,3 +196,7 @@
 .msgType {
     cursor: pointer;
 }
+
+.refinedValueDecoration {
+    background-color: rgba(156, 204, 44, 0.25) !important;
+}
