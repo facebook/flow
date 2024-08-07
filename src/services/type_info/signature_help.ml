@@ -155,7 +155,7 @@ module Callee_finder = struct
   class finder ~loc_of_aloc ~(cx : Context.t) (cursor : Loc.t) =
     object (this)
       inherit
-        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Typed_ast_finder.enclosing_node_mapper as super
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
       method on_loc_annot x = x
 

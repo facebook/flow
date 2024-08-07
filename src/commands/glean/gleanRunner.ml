@@ -50,7 +50,7 @@ end
 class member_searcher add_member =
   object (_this)
     inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Typed_ast_finder.enclosing_node_mapper as super
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     method on_loc_annot x = x
 
@@ -556,7 +556,7 @@ let local_declaration_references ~root ~write_root ~scope_info =
 class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_info ~add_type_info =
   object (_this)
     inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Typed_ast_finder.enclosing_node_mapper as super
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     method on_loc_annot x = x
 
