@@ -392,7 +392,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
               Type_filter.TypeFilterResult { type_ = tin; changed = false }
             else if sense then
               let type_ = intersect cx tin type_guard in
-              Type_filter.TypeFilterResult { type_; changed = type_ == tin }
+              Type_filter.TypeFilterResult { type_; changed = type_ != tin }
             else if not one_sided then
               type_guard_diff cx tin type_guard
             else
