@@ -47,11 +47,14 @@ exact-some-obj["Exact object:
 exact-empty-obj["Exact empty object:
   {}"]
 exact-empty-obj --> inexact-empty-obj
-roarray["$ReadOnlyArray&lt;T>"] --> empty-interface
-tuple["Tuple:
-  [T, T]"]
-tuple --> roarray
-array["Array&lt;T>"] --> roarray
+roarray-mixed["$ReadOnlyArray&lt;mixed>"] --> empty-interface
+inexact-empty-tuple["Inexact empty tuple:
+  [...]"]
+some-tuple["Tuple:
+  [string, number]"]
+inexact-empty-tuple --> roarray-mixed
+some-tuple --> inexact-empty-tuple
+some-array["Array&lt;string>"] --> roarray-mixed
 
 any-func["Function:
   (...$ReadOnlyArray&lt;empty>) => mixed"]
@@ -71,8 +74,8 @@ empty --> true
 empty --> false
 empty --> exact-some-obj
 empty --> exact-empty-obj
-empty --> tuple
-empty --> array
+empty --> some-tuple
+empty --> some-array
 empty --> string
 empty --> number
 empty --> bigint
@@ -96,9 +99,10 @@ click false "../../types/literals"
 click union "../../types/unions"
 click inter "../../types/intersections"
 click maybe "../../types/maybe"
-click array "../../types/arrays"
-click roarray "../../types/arrays/#toc-readonlyarray"
-click tuple "../../types/tuples"
+click some-array "../../types/arrays"
+click roarray-mixed "../../types/arrays/#toc-readonlyarray"
+click inexact-empty-tuple "../../types/tuples/#inexact-tuples"
+click some-tuple "../../types/tuples"
 click someclass "../../types/classes"
 click empty-interface "../../types/interfaces"
 click some-interface "../../types/interfaces"
