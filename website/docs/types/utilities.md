@@ -560,6 +560,47 @@ import typeof * as T from 'my-module';
 export type MyModuleType = T;
 ```
 
+## `StringPrefix` and `StringSuffix` <SinceVersion version="0.242" />
+The `StringPrefix` and `StringSuffix` types represent strings with the specified prefix or suffix, respectively.
+Their first type argument must be a string literal type, representing the prefix or suffix.
+
+You could use `StringPrefix` to define a type that accepts strings which start with `data-`:
+
+```js flow-check
+type DataProp = StringPrefix<'data-'>;
+'data-foo' as DataProp; // OK
+'data-bar' as DataProp; // OK
+'random string' as DataProp; // ERROR
+```
+
+You could use `StringSuffix` to define a type that accepts strings which end with `!`:
+
+```js flow-check
+type Exclaim = StringSuffix<'!'>;
+'yay!' as Exclaim; // OK
+'woo!' as Exclaim; // OK
+'random string' as Exclaim; // ERROR
+```
+
+You can combine these with [intersection types](../intersections):
+
+```js flow-check
+type CSSVar = StringPrefix<'var(--'> & StringSuffix<')'>;
+'var(--color)' as CSSVar; // OK
+'random string' as CSSVar; // ERROR
+```
+
+Both utilities accept an optional second type argument, which is the type of the remainder:
+
+```js flow-check
+type Price = StringPrefix<'$', '1' | '2'>;
+'$1' as Price; // OK
+'$2' as Price; // OK
+'$999' as Price; // ERROR
+```
+
+When not specified, the type of the remainder is just `string`.
+
 ## Deprecated utility types
 
 ### `$PropertyType<T, k>` {#toc-propertytype}
