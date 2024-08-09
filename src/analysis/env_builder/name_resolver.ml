@@ -103,7 +103,7 @@ type env_val = {
 
 type read_entry = {
   def_loc: ALoc.t option;
-  binding_kind_opt: Bindings.kind option;
+  val_binding_kind: Val.val_binding_kind;
   value: Val.t;
   name: string option;
 }
@@ -1099,8 +1099,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method values : Env_api.values =
         L.LMap.map
-          (fun { def_loc; value; binding_kind_opt; name } ->
-            Val.simplify def_loc binding_kind_opt name value)
+          (fun { def_loc; value; val_binding_kind; name } ->
+            Val.simplify def_loc val_binding_kind name value)
           env_state.values
 
       method write_entries : Env_api.env_entry EnvMap.t = env_state.write_entries
@@ -2219,7 +2219,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let values =
           L.LMap.add
             loc
-            { def_loc; value = v; binding_kind_opt = Some kind; name = Some name }
+            { def_loc; value = v; val_binding_kind = Val.SourceLevelBinding kind; name = Some name }
             env_state.values
         in
         env_state <- { env_state with values }
@@ -3451,7 +3451,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                         {
                           def_loc = None;
                           value = discriminant;
-                          binding_kind_opt = None;
+                          val_binding_kind = Val.InternalBinding;
                           name = None;
                         }
                         env_state.values;
@@ -3519,7 +3519,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   let values =
                     L.LMap.add
                       case_loc
-                      { def_loc = None; value = refined_v; binding_kind_opt = None; name = None }
+                      {
+                        def_loc = None;
+                        value = refined_v;
+                        val_binding_kind = Val.InternalBinding;
+                        name = None;
+                      }
                       env_state.values
                   in
                   env_state <- { env_state with values }
@@ -3760,7 +3765,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                         super#component_body_with_params ~component_loc body params;
 
                         let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
-                        let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
+                        let { Env_api.write_locs; _ } =
+                          Val.simplify None Val.InternalBinding None !val_ref
+                        in
                         let (locs, undeclared) =
                           Base.List.fold
                             ~init:([], false)
@@ -3878,7 +3885,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                           body;
 
                         let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
-                        let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
+                        let { Env_api.write_locs; _ } =
+                          Val.simplify None Val.InternalBinding None !val_ref
+                        in
                         let (locs, undeclared) =
                           Base.List.fold
                             ~init:([], false)
@@ -5211,7 +5220,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 {
                   def_loc = None;
                   value = refined_v;
-                  binding_kind_opt = Some Bindings.Const;
+                  val_binding_kind = Val.SourceLevelBinding Bindings.Const;
                   name = None;
                 }
                 env_state.values
@@ -5513,7 +5522,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           else
             !val_ref
         in
-        let v = Val.simplify def_loc (Some kind) (Some name) v in
+        let v = Val.simplify def_loc (Val.SourceLevelBinding kind) (Some name) v in
         v
 
       method! declare_module _loc ({ Ast.Statement.DeclareModule.id = _; body; _ } as m) =
@@ -5592,7 +5601,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   {
                     Env_api.def_loc = None;
                     write_locs = [Env_api.Unreachable loc];
-                    val_kind = None;
+                    val_kind = Env_api.Value;
                     name = Some name;
                     id = None;
                   }

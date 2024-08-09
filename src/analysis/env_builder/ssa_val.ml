@@ -325,15 +325,23 @@ let rec simplify_val t =
         raise Env_api.(Env_invariant (None, Impossible "A normalized value cannot be a PHI")))
     (WriteSet.elements vals)
 
+type val_binding_kind =
+  (* A source level binding is something we can point to a user and say that the definition
+   * come from there. For refined reads of these bindings, they can be highlighted in IDEs. *)
+  | SourceLevelBinding of Bindings.kind
+  (* Internal bindings are completely internal to Flow. We abuse the same read-write analysis
+   * to do our own analysis, and a user would never consider these to be actual reads. *)
+  | InternalBinding
+
 (* Simplification converts a Val.t to a list of locations. *)
-let simplify def_loc binding_kind_opt name value =
+let simplify def_loc val_binding_kind name value =
   let write_locs = simplify_val value in
   let val_kind =
-    match binding_kind_opt with
-    | Some (Bindings.Type { imported; type_only_namespace }) ->
-      Some (Env_api.Type { imported; type_only_namespace })
-    | Some _ -> Some Env_api.Value
-    | None -> None
+    match val_binding_kind with
+    | SourceLevelBinding (Bindings.Type { imported; type_only_namespace }) ->
+      Env_api.Type { imported; type_only_namespace }
+    | SourceLevelBinding _ -> Env_api.Value
+    | InternalBinding -> Env_api.Internal
   in
   { Env_api.def_loc; write_locs; val_kind; name; id = Some value.id }
 

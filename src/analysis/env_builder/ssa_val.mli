@@ -60,7 +60,11 @@ val illegal_write : ALoc.t virtual_reason -> t
 
 val of_write : write_state -> t
 
-val simplify : ALoc.t option -> Bindings.kind option -> string option -> t -> Env_api.read
+type val_binding_kind =
+  | SourceLevelBinding of Bindings.kind
+  | InternalBinding
+
+val simplify : ALoc.t option -> val_binding_kind -> string option -> t -> Env_api.read
 
 val id_of_val : t -> int
 

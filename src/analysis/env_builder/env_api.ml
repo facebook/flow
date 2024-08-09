@@ -101,11 +101,12 @@ module type S = sig
         type_only_namespace: bool;
       }
     | Value
+    | Internal
 
   type read = {
     def_loc: L.t option;
     write_locs: write_locs;
-    val_kind: val_kind option;
+    val_kind: val_kind;
     name: string option;
     id: int option;
   }
@@ -454,11 +455,12 @@ module Make
         type_only_namespace: bool;
       }
     | Value
+    | Internal
 
   type read = {
     def_loc: L.t option;
     write_locs: write_locs;
-    val_kind: val_kind option;
+    val_kind: val_kind;
     name: string option;
     id: int option;
   }

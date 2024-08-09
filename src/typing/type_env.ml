@@ -335,7 +335,10 @@ let predicate_of_refinement cx =
   in
   pred
 
-let refine cx reason loc refi res =
+(* actual_source_read reports whether the environment entry read is actually meaningful in the
+ * source code. e.g. foo.bar is an actual read, but a switch statement is not an actual read, but
+ * it's a synthetic read generated in the env builder so we check other things. *)
+let refine cx ~actual_source_read reason loc refi res =
   Base.Option.value_map
     ~f:(fun predicate ->
       let map_t t =
@@ -347,7 +350,7 @@ let refine cx reason loc refi res =
           (match Predicate_kit.run_predicate_track_changes cx t predicate reason with
           | Predicate_kit.TypeUnchanged t -> t
           | Predicate_kit.TypeChanged t ->
-            Context.add_refined_location cx loc;
+            if actual_source_read then Context.add_refined_location cx loc;
             t)
       in
       match res with
@@ -356,7 +359,7 @@ let refine cx reason loc refi res =
     ~default:res
     refi
 
-let res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
+let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
   let { Loc_env.var_info; _ } = env in
   let find_write_exn kind reason =
     let loc = Reason.loc_of_reason reason in
@@ -504,14 +507,16 @@ let res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
           | Some t -> t)
       | _ -> Lazy.force t
     in
-    t |> refine cx reason loc refi
+    (* When val_kind = Internal, the read is a synthetic read and it's internal to Flow.
+     * For these reads, we will not highlight refined values. *)
+    t |> refine cx ~actual_source_read:(val_kind <> Env_api.Internal) reason loc refi
   in
   match res_of_state write_locs val_id refi with
   | Ok t -> Ok (Tvar_resolver.resolved_t cx t)
   | Error (t, err) -> Error (Tvar_resolver.resolved_t cx t, err)
 
-let type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
-  res_of_state ~lookup_mode cx env loc reason write_locs val_id refi
+let type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
+  res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
   |> Flow_js_utils.apply_env_errors cx loc
 
 let read_entry ~lookup_mode cx loc reason =
@@ -520,7 +525,7 @@ let read_entry ~lookup_mode cx loc reason =
   | Error loc -> Error loc
   | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
     (match (val_kind, name, def_loc, lookup_mode) with
-    | ( Some (Env_api.Type { imported; type_only_namespace }),
+    | ( Env_api.Type { imported; type_only_namespace },
         Some name,
         Some def_loc,
         (ForValue | ForTypeof)
@@ -535,7 +540,9 @@ let read_entry ~lookup_mode cx loc reason =
            )
         );
       Ok (AnyT.at (AnyError None) loc)
-    | _ -> Ok (type_of_state ~lookup_mode cx env loc reason write_locs id None))
+    | _ ->
+      let t = type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs id None in
+      Ok t)
 
 let read_entry_exn ~lookup_mode cx loc reason =
   with_debug_exn cx loc (fun () ->
@@ -594,10 +601,11 @@ let type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_r
     Error invalid_writes
   else
     let lookup_mode = LookupMode.ForValue in
-    Ok
-      ( type_of_state ~lookup_mode cx env return_loc reason pos_write_locs None None,
-        read_to_predicate cx var_info neg_refi
-      )
+    let val_kind = Env_api.Internal in
+    let t =
+      type_of_state ~lookup_mode ~val_kind cx env return_loc reason pos_write_locs None None
+    in
+    Ok (t, read_to_predicate cx var_info neg_refi)
 
 let ref_entry_exn ~lookup_mode cx loc reason =
   let t = read_entry_exn ~lookup_mode cx loc reason in
@@ -641,11 +649,12 @@ let intrinsic_ref cx ?desc name loc =
     | Error loc -> Error loc
     | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
       (match (val_kind, name, def_loc) with
-      | (Some (Env_api.Type { imported = _; type_only_namespace = _ }), Some _, Some _)
+      | (Env_api.Type { imported = _; type_only_namespace = _ }, Some _, Some _)
       | (_, _, None) ->
         Error loc
       | (_, _, Some def_loc) ->
-        Ok (res_of_state ~lookup_mode:ForValue cx env loc reason write_locs id None, def_loc))
+        let t = res_of_state ~lookup_mode:ForValue ~val_kind cx env loc reason write_locs id None in
+        Ok (t, def_loc))
   in
   match read with
   | Error _ -> None
