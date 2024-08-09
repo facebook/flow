@@ -248,12 +248,59 @@ e as [0, foo?: 1, bar?: 2]; // ERROR
 e as Array<number | void>; // OK
 ```
 
+## Inexact tuples
+Inexact tuple types work like [inexact objects](../objects#exact-and-inexact-object-types): they allow for unknown members at the end of the tuple.
+
+```js flow-check
+[] as [...]; // OK
+[1] as [...]; // OK
+[1] as [number, ...]; // OK
+```
+
+All tuples are subtypes of the inexact empty tuple `[...]`.
+
+If you spread an inexact tuple, the result is also inexact.
+You cannot define elements after the spread of an inexact tuple, since we wouldn't know at what index they should be.
+
+```js flow-check
+declare const x: [1, ...];
+const y = [0, ...x];
+y as [0, 1]; // ERROR: it's inexact
+y as [0, 1, ...]; // OK
+
+[...x, 2]; // ERROR: can't have element after inexact spread
+```
+
+Inexact tuples allow you to require that a generic is a tuple, e.g.
+
+```js flow-check
+function mapTupleArray<T: [...], R>(
+  tuples: Array<T>, // An array of tuples
+  f: (...T) => R, // Function args match the tuple's types
+): Array<R> {
+  return tuples.map(args => f(...args));
+}
+mapTupleArray(
+  [[1, 'hi'], [3, 'bye']],
+  (x: number, y: string) => y.length === x,
+); // OK
+
+declare const arrays: Array<Array<number>>;
+mapTupleArray(arrays, (x: number, y: number) => x + y); // ERROR: array is not a tuple
+```
+
 ## Adoption
 
 To use labeled tuple elements (including optional elements and variance annotations on elements) and tuple spread elements,
 you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.212.0
+- `flow` and `flow-parser`: 0.212
 - `prettier`: 3
-- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
-- `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
+- `babel` with `babel-plugin-syntax-hermes-parser` (v0.15). See [our Babel guide](../../tools/babel/) for setup instructions.
+- `eslint` with `hermes-eslint` (v0.15). See [our ESLint guide](../../tools/eslint/) for setup instructions.
+
+To use inexact tuples, upgrade to:
+- `flow` and `flow-parser`: 0.243
+- `prettier`: 3.3
+- `babel` with `babel-plugin-syntax-hermes-parser` (v0.23). See [our Babel guide](../../tools/babel/) for setup instructions.
+- `eslint` with `hermes-eslint` (v0.23). See [our ESLint guide](../../tools/eslint/) for setup instructions.
