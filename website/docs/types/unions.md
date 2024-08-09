@@ -3,6 +3,8 @@ title: Unions
 slug: /types/unions
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Sometimes it's useful to create a type which is ***one of*** a set of other
 types. For example, you might want to write a function which accepts a set of
 primitive value types. For this Flow supports **union types**.
@@ -175,7 +177,7 @@ know which object we're using based on the `type` property.
 
 ```js flow-check
 type Response =
-  | {type: 'success', value: 23}
+  | {type: 'success', value: number}
   | {type: 'error', error: string};
 
 function handleResponse(response: Response) {
@@ -248,3 +250,45 @@ function handleResponse(response: Response) {
 
 With exact object types, we cannot have additional properties, so the objects
 conflict with one another and we are able to distinguish which is which.
+
+## Disjoint tuple unions
+
+Like disjoint object unions explained above, you can also define disjoint tuple unions (support in Flow version <SinceVersion version="0.240" />).
+These are unions of tuple types, where each tuple is tagged by a particular element. For example:
+
+```js flow-check
+type Response =
+  | ['success', number]
+  | ['error', string];
+
+function handleResponse(response: Response) {
+  if (response[0] === 'success') {
+    const value: number = response[1]; // Works!
+  } else {
+    const error: string = response[1]; // Works!
+  }
+}
+```
+
+This feature is particularly useful for function arguments, which are tuples.
+Note the use of [tuple element labels](../tuples/#tuple-element-labels) to make the code more clear.
+
+```js flow-check
+function prettyPrint(
+  ...args: ['currency', dollars: number, cents: number]
+         | ['choice', boolean]
+): string {
+  switch (args[0]) {
+    case 'currency':
+      return args[1] + '.' + args[2];
+    case 'choice':
+      return args[1] ? 'yes' : 'no';
+  }
+}
+// Argument types based on the first arg
+prettyPrint("currency", 1, 50); // OK
+prettyPrint("choice", true); // OK
+
+prettyPrint("currency", 1); // ERROR - missing arg
+prettyPrint("currency", true); // ERROR - wrong type arg
+```
