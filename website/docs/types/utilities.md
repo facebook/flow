@@ -30,7 +30,8 @@ If you want to create an enum type, [Flow Enums](../../enums) might be a better 
 
 ## `$Values<T>` {#toc-values}
 
-`$Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](../objects/):
+`$Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](../objects/),
+or the elements of an [array](../arrays) or [tuple](../tuples) type (support for arrays and tuples in Flow version <SinceVersion version="0.240" />):
 
 ```js flow-check
 type Props = {
@@ -47,7 +48,18 @@ const age: Prop$Values = 42;  // Works
 const fn: Prop$Values = true; // Error!
 ```
 
-Note that using `$Values` on the [`typeof`](../typeof) an object literal will result in a type more general than you might expect:
+For arrays and tuples:
+```js flow-check
+type Arr = Array<string>;
+type Str = $Values<Arr>; //=> string
+'s' as Str; // OK
+
+type Tup = [1, 2];
+type Num = $Values<Tup>; //=> 1 | 2
+1 as Num; // OK
+```
+
+Note that using `$Values` on the [`typeof`](../typeof) an object or array literal will result in a type more general than you might expect:
 
 ```js flow-check
 const obj = {
