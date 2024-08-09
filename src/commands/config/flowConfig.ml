@@ -90,7 +90,6 @@ module Opts = struct
     haste_paths_includes: string list;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
-    inexact_tuple_types_syntax: bool;
     jest_integration: bool;
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
@@ -223,7 +222,6 @@ module Opts = struct
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       ignore_non_literal_requires = false;
       include_warnings = false;
-      inexact_tuple_types_syntax = true;
       jest_integration = false;
       lazy_mode = None;
       log_saving = SMap.empty;
@@ -949,9 +947,6 @@ module Opts = struct
       ("gc.worker.space_overhead", gc_worker_space_overhead_parser);
       ("gc.worker.window_size", gc_worker_window_size_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
-      ( "inexact_tuple_types_syntax",
-        boolean (fun opts v -> Ok { opts with inexact_tuple_types_syntax = v })
-      );
       ("jest_integration", boolean (fun opts v -> Ok { opts with jest_integration = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log_saving", log_saving_parser);
@@ -1633,8 +1628,6 @@ let haste_paths_includes c = c.options.Opts.haste_paths_includes
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
-
-let inexact_tuple_types_syntax c = c.options.Opts.inexact_tuple_types_syntax
 
 let jest_integration c = c.options.Opts.jest_integration
 

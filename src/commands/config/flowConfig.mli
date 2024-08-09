@@ -156,8 +156,6 @@ val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool
 
-val inexact_tuple_types_syntax : config -> bool
-
 val jest_integration : config -> bool
 
 val lazy_mode : config -> lazy_mode option

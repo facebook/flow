@@ -3899,8 +3899,6 @@ let to_printable_error :
       [text "The parameter passed to "; code "import"; text " must be a string literal."]
     | MessageUnsupportedSyntax InvariantSpreadArgument ->
       [text "Unsupported arguments in call to "; code "invariant"; text "."]
-    | MessageUnsupportedSyntax InexactTupleType ->
-      [text "Inexact tuple types are not supported, remove the "; code "..."; text "."]
     | MessageUnsupportedSyntax JSXTypeArgs -> [text "Flow doesn't support JSX type arguments."]
     | MessageUnsupportedSyntax MetaPropertyExpression -> [text "Not supported."]
     | MessageUnsupportedSyntax MultipleIndexers -> [text "Multiple indexers are not supported."]
