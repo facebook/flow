@@ -114,6 +114,7 @@ export default component TryFlow(
     initialState.version || defaultFlowVersion,
   );
   const editorRef = useRef(null);
+  const previousDecorationsRef = useRef(null);
   const [errors, setErrors] = useState<$ReadOnlyArray<FlowJsError>>([]);
   const [internalError, setInternalError] = useState('');
   const [cursorPosition, setCursorPosition] =
@@ -177,7 +178,13 @@ export default component TryFlow(
           break;
       }
     }
-    editorRef.current?.createDecorationsCollection(refinedValueDecorations);
+
+    const editor = editorRef.current;
+    if (editor == null) return;
+    previousDecorationsRef.current?.clear();
+    previousDecorationsRef.current = editor.createDecorationsCollection(
+      refinedValueDecorations,
+    );
   }
 
   function forceRecheck() {
