@@ -715,7 +715,7 @@ and instanceof_test cx trace result_collector = function
       result_collector
   (* Prune the type when any other `instanceof` check succeeds (since this is
      impossible). *)
-  | (true, _, _) -> ()
+  | (true, _, _) -> report_changes_to_input result_collector
   (* Like above, now suppose that we have an instance x of class C, and we
      check whether x is _not_ `instanceof` class A. To decide what the
      appropriate refinement for x should be, we need to decide whether C
@@ -736,7 +736,7 @@ and instanceof_test cx trace result_collector = function
       (InternalExtendsOperand (_, _, DefT (_, InstanceT { inst = instance_a; _ })) as right)
     ) ->
     if is_same_instance_type instance_a instance_c then
-      ()
+      report_changes_to_input result_collector
     else
       concretize_and_run_predicate
         cx
@@ -954,7 +954,9 @@ and concretize_and_run_sentinel_prop_test
                (match
                   UnionRep.quick_mem_enum ~quick_subtype:TypeUtil.quick_subtype (DefT (r, def)) rep
                 with
-               | UnionRep.No -> () (* provably unreachable, so prune *)
+               | UnionRep.No ->
+                 (* provably unreachable, so prune *)
+                 report_changes_to_input result_collector
                | UnionRep.Yes ->
                  report_unchanged_filtering_result_to_predicate_result l result_collector
                | UnionRep.Conditional _
@@ -996,7 +998,9 @@ and concretize_and_run_sentinel_prop_test
                in
                begin
                  match acc with
-                 | UnionRep.No -> () (* provably unreachable, so prune *)
+                 | UnionRep.No ->
+                   (* provably unreachable, so prune *)
+                   report_changes_to_input result_collector
                  | UnionRep.Yes ->
                    report_unchanged_filtering_result_to_predicate_result l result_collector
                  | UnionRep.Conditional _
