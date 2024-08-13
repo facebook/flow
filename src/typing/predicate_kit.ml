@@ -748,8 +748,9 @@ and instanceof_test cx trace result_collector = function
           instanceof_test cx trace tvar (false, l, right)
       )
   | (false, ObjProtoT _, InternalExtendsOperand (r, c, _)) ->
-    (* We hit the root class, so C is not a subclass of A **)
-    report_unchanged_filtering_result_to_predicate_result
+    (* We hit the root class, so C is not a subclass of A.
+     * In this case, we will refine the input to C **)
+    report_changed_filtering_result_to_predicate_result
       (reposition cx ~trace (loc_of_reason r) c)
       result_collector
   (* Don't refine the type when any other `instanceof` check fails. **)
