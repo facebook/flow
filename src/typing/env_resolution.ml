@@ -865,13 +865,14 @@ let resolve_op_assign cx ~exp_loc lhs op rhs =
   | Assignment.OrAssign
   | Assignment.NullishAssign ->
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
-    let (((_, rhs_t), _), right_abnormal) =
+    let (((_, rhs_t), _), right_throws) =
       Abnormal.catch_expr_control_flow_exception (fun () -> Statement.expression cx rhs)
     in
     let rhs_t =
-      match right_abnormal with
-      | Some Abnormal.Throw -> EmptyT.at exp_loc
-      | None -> rhs_t
+      if right_throws then
+        EmptyT.at exp_loc
+      else
+        rhs_t
     in
     (match op with
     | Assignment.NullishAssign -> Operators.logical_nullish_coalesce cx reason lhs_t rhs_t

@@ -7,8 +7,6 @@
 
 (* we model abnormal control flows using exceptions during traversal *)
 
-type t = Throw
-
 type payload = ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
 exception Exn of payload
@@ -19,9 +17,9 @@ let (catch_stmt_control_flow_exception, catch_expr_control_flow_exception) =
   let catch_control_flow_exception p f =
     try
       let res = f () in
-      (res, None)
+      (res, false)
     with
-    | Exn payload -> (p payload, Some Throw)
+    | Exn payload -> (p payload, true)
     | exn -> raise exn
   in
   ( catch_control_flow_exception (function (loc, exp) ->
@@ -37,5 +35,5 @@ let (catch_stmt_control_flow_exception, catch_expr_control_flow_exception) =
 
 let try_with_abnormal_exn ~f ~on_abnormal_exn () =
   try f () with
-  | Exn payload -> on_abnormal_exn (payload, Throw)
+  | Exn payload -> on_abnormal_exn payload
   | exc -> raise exc

@@ -2972,19 +2972,19 @@ module Make
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let reason = mk_reason RConditional loc in
       let test = condition ~cond:OtherTest cx test in
-      let ((((_, t1), _) as consequent), then_abnormal) =
+      let ((((_, t1), _) as consequent), then_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx consequent)
       in
-      let ((((_, t2), _) as alternate), else_abnormal) =
+      let ((((_, t2), _) as alternate), else_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx alternate)
       in
       let combined_type =
-        match (then_abnormal, else_abnormal) with
-        | (Some Abnormal.Throw, None) -> t2
-        | (None, Some Abnormal.Throw) -> t1
-        | (Some Abnormal.Throw, Some Abnormal.Throw) -> EmptyT.at loc
+        match (then_throws, else_throws) with
+        | (true, false) -> t2
+        | (false, true) -> t1
         (* Both sides threw--see below for where we re-raise *)
-        | (None, None) -> UnionT (reason, UnionRep.make t1 t2 [])
+        | (true, true) -> EmptyT.at loc
+        | (false, false) -> UnionT (reason, UnionRep.make t1 t2 [])
         (* NOTE: In general it is dangerous to express the least upper bound of
            some types as a union: it might pin down the least upper bound
            prematurely (before all the types have been inferred), and when the
@@ -3011,12 +3011,10 @@ module Make
         ((loc, combined_type), Conditional { Conditional.test; consequent; alternate; comments })
       in
       (* handle control flow in cases where we've thrown from both sides *)
-      begin
-        match (then_abnormal, else_abnormal) with
-        | (Some then_exn, Some else_exn) when then_exn = else_exn ->
-          Abnormal.throw_expr_control_flow_exception loc ast
-        | _ -> ast
-      end
+      if then_throws && else_throws then
+        Abnormal.throw_expr_control_flow_exception loc ast
+      else
+        ast
     | Assignment { Assignment.operator; left; right; comments } ->
       let (t, left, right) = assignment cx loc (left, operator, right) in
       ((loc, t), Assignment { Assignment.operator; left; right; comments })
@@ -4923,37 +4921,40 @@ module Make
     | Or ->
       let () = check_default_pattern cx left right in
       let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
-      let ((((_, t2), _) as right), right_abnormal) =
+      let ((((_, t2), _) as right), right_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond right)
       in
       let t2 =
-        match right_abnormal with
-        | Some Abnormal.Throw -> EmptyT.at loc
-        | None -> t2
+        if right_throws then
+          EmptyT.at loc
+        else
+          t2
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
     | And ->
       let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
-      let ((((_, t2), _) as right), right_abnormal) =
+      let ((((_, t2), _) as right), right_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond right)
       in
       let t2 =
-        match right_abnormal with
-        | Some Abnormal.Throw -> EmptyT.at loc
-        | None -> t2
+        if right_throws then
+          EmptyT.at loc
+        else
+          t2
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
     | NullishCoalesce ->
       let (((_, t1), _) as left) = expression cx left in
-      let ((((_, t2), _) as right), right_abnormal) =
+      let ((((_, t2), _) as right), right_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () -> expression cx right)
       in
       let t2 =
-        match right_abnormal with
-        | Some Abnormal.Throw -> EmptyT.at loc
-        | None -> t2
+        if right_throws then
+          EmptyT.at loc
+        else
+          t2
       in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
       ( Operators.logical_nullish_coalesce cx reason t1 t2,
@@ -5273,26 +5274,28 @@ module Make
       | Some left_expr ->
         (match op with
         | Assignment.NullishAssign ->
-          let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
+          let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
           let rhs_t =
-            match right_abnormal with
-            | Some Abnormal.Throw -> EmptyT.at loc
-            | None -> rhs_t
+            if right_throws then
+              EmptyT.at loc
+            else
+              rhs_t
           in
           let result_t = Operators.logical_nullish_coalesce cx reason lhs_t rhs_t in
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
           let ((_, lhs_t), _) = condition ~cond:OtherTest cx left_expr in
-          let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
+          let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
           let rhs_t =
-            match right_abnormal with
-            | Some Abnormal.Throw -> EmptyT.at loc
-            | None -> rhs_t
+            if right_throws then
+              EmptyT.at loc
+            else
+              rhs_t
           in
           let result_t = Operators.logical_and cx reason lhs_t rhs_t in
           let () = update_env result_t in
@@ -5300,13 +5303,14 @@ module Make
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
           let ((_, lhs_t), _) = condition ~cond:OtherTest cx left_expr in
-          let ((((_, rhs_t), _) as rhs_ast), right_abnormal) =
+          let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
           let rhs_t =
-            match right_abnormal with
-            | Some Abnormal.Throw -> EmptyT.at loc
-            | None -> rhs_t
+            if right_throws then
+              EmptyT.at loc
+            else
+              rhs_t
           in
           let result_t = Operators.logical_or cx reason lhs_t rhs_t in
           let () = update_env result_t in

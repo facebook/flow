@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = Throw
-
 type payload = ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
 val throw_expr_control_flow_exception :
@@ -14,10 +12,10 @@ val throw_expr_control_flow_exception :
 
 val catch_stmt_control_flow_exception :
   (unit -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t) ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t * t option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t * bool
 
 val catch_expr_control_flow_exception :
   (unit -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t * t option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t * bool
 
-val try_with_abnormal_exn : f:(unit -> 'a) -> on_abnormal_exn:(payload * t -> 'a) -> unit -> 'a
+val try_with_abnormal_exn : f:(unit -> 'a) -> on_abnormal_exn:(payload -> 'a) -> unit -> 'a
