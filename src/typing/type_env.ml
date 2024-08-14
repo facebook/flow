@@ -348,7 +348,7 @@ let refine cx ~actual_source_read reason loc refi res =
         | None -> t
         | Some predicate ->
           (match Predicate_kit.run_predicate_track_changes cx t predicate reason with
-          | Predicate_kit.TypeUnchanged t -> t
+          | Predicate_kit.TypeUnchanged _t -> t
           | Predicate_kit.TypeChanged t ->
             if actual_source_read then Context.add_refined_location cx loc;
             t)
