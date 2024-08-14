@@ -749,7 +749,12 @@ module rec TypeTerm : sig
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
     | ReactKitT of use_op * reason * React.tool
     (* tools for preprocessing types *)
-    | ConcretizeT of reason * concretization_kind * TypeCollector.t
+    | ConcretizeT of {
+        reason: reason;
+        kind: concretization_kind;
+        seen: ISet.t ref;
+        collector: TypeCollector.t;
+      }
     | OptionalChainT of {
         reason: reason;
         lhs_reason: reason;
@@ -4094,10 +4099,10 @@ let string_of_use_ctor = function
   | GetStaticsT _ -> "GetStaticsT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | ImplementsT _ -> "ImplementsT"
-  | ConcretizeT (_, c, _) ->
+  | ConcretizeT { kind; _ } ->
     spf
       "ConcretizeT %s"
-      (match c with
+      (match kind with
       | ConcretizeForImportsExports -> "ConcretizeForImportsExports"
       | ConcretizeForInspection -> "ConcretizeForInspection"
       | ConcretizeForPredicate v ->
