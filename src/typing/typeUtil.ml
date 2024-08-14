@@ -932,3 +932,10 @@ let normalize_jsx_children_prop loc_children jsx_children =
              )
          )
       )
+
+let map_property ~f prop =
+  match prop with
+  | OrdinaryField { type_; polarity } -> OrdinaryField { type_ = f type_; polarity }
+  | SyntheticField { get_type; set_type } ->
+    SyntheticField
+      { get_type = Base.Option.map ~f get_type; set_type = Base.Option.map ~f set_type }

@@ -132,3 +132,11 @@ component WriteToComponentProperty(x: {}) {
   x.constructor = () => {}; // error cannot write to constructor property
   return null;
 }
+
+{
+  type M = { x: number };
+  type N = $ReadOnlyArray<M>;
+  type O = { n: N };
+  declare const obj: React$Immutable<O>;
+  ({ n: obj.n }) as React$Immutable<O>; // ok
+}
