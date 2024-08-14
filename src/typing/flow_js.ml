@@ -446,16 +446,32 @@ struct
         (* process Y ~> U *)
         (******************)
         | (OpenT (r, tvar), t2) ->
-          let t2 =
-            match desc_of_reason r with
-            | RTypeParam _ -> mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam, op)) t2
-            | _ -> t2
-          in
-          let (id1, constraints1) = Context.find_constraints cx tvar in
-          (match constraints1 with
-          | Unresolved bounds1 -> edges_and_flows_to_t cx trace (id1, bounds1) t2
-          | Resolved t1 -> rec_flow cx trace (t1, t2)
-          | FullyResolved s1 -> rec_flow cx trace (Context.force_fully_resolved_tvar cx s1, t2))
+          if
+            (* We have some simple tvar id based concretization. Bad cyclic types can only
+             * come from indirections through OpenT, most of them are already defended with
+             * Flow_js_utils.InvalidCyclicTypeValidation and turned to any, but there are gaps
+             * (especially EvalT from type sig), so we defend it again here. *)
+            match t2 with
+            | ConcretizeT { reason = _; kind = _; seen; collector = _ } ->
+              ISet.mem tvar !seen
+              ||
+              ( seen := ISet.add tvar !seen;
+                false
+              )
+            | _ -> false
+          then
+            ()
+          else
+            let t2 =
+              match desc_of_reason r with
+              | RTypeParam _ -> mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam, op)) t2
+              | _ -> t2
+            in
+            let (id1, constraints1) = Context.find_constraints cx tvar in
+            (match constraints1 with
+            | Unresolved bounds1 -> edges_and_flows_to_t cx trace (id1, bounds1) t2
+            | Resolved t1 -> rec_flow cx trace (t1, t2)
+            | FullyResolved s1 -> rec_flow cx trace (Context.force_fully_resolved_tvar cx s1, t2))
         (******************)
         (* process L ~> X *)
         (******************)
@@ -481,18 +497,33 @@ struct
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
-        | (UnionT (_, _), ConcretizeT (_, ConcretizeForRenderType, collector)) ->
+        | ( UnionT (_, _),
+            ConcretizeT { reason = _; kind = ConcretizeForRenderType; seen = _; collector }
+          ) ->
           TypeCollector.add collector l
-        | (UnionT (_, _), ConcretizeT (_, ConcretizeForSentinelPropTest, collector))
+        | ( UnionT (_, _),
+            ConcretizeT { reason = _; kind = ConcretizeForSentinelPropTest; seen = _; collector }
+          )
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
            prevents a drastic blowup of cases which can cause perf problems. *)
         | ( UnionT (_, _),
             ConcretizeT
-              (_, ConcretizeForPredicate ConcretizeRHSForSentinelPropPredicateTest, collector)
+              {
+                reason = _;
+                kind = ConcretizeForPredicate ConcretizeRHSForSentinelPropPredicateTest;
+                seen = _;
+                collector;
+              }
           ) ->
           TypeCollector.add collector l
         | ( UnionT (_, rep),
-            ConcretizeT (_, ConcretizeForPredicate ConcretizeForMaybeOrExistPredicateTest, collector)
+            ConcretizeT
+              {
+                reason = _;
+                kind = ConcretizeForPredicate ConcretizeForMaybeOrExistPredicateTest;
+                seen = _;
+                collector;
+              }
           )
           when UnionRep.is_optimized_finally rep ->
           TypeCollector.add collector l
@@ -1329,7 +1360,8 @@ struct
           )
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, ConcretizeT (_, ConcretizeForImportsExports, collector)) ->
+        | (t, ConcretizeT { reason = _; kind = ConcretizeForImportsExports; seen = _; collector })
+          ->
           TypeCollector.add collector t
         (* Namespace and type qualification *)
         | ( NamespaceT { namespace_symbol = _; values_type; types_tmap },
@@ -1439,7 +1471,8 @@ struct
           | _ -> ())
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, ConcretizeT (_, ConcretizeForInspection, collector)) -> TypeCollector.add collector t
+        | (t, ConcretizeT { reason = _; kind = ConcretizeForInspection; seen = _; collector }) ->
+          TypeCollector.add collector t
         (* helpers *)
         | ( DefT (reason_o, ObjT { props_tmap = mapr; flags; _ }),
             HasOwnPropT (use_op, reason_op, key)
@@ -1819,7 +1852,9 @@ struct
              )
         (* predicates: prevent a predicate upper bound from prematurely decomposing
            an intersection lower bound *)
-        | (IntersectionT _, ConcretizeT (_, ConcretizeForPredicate _, collector)) ->
+        | ( IntersectionT _,
+            ConcretizeT { reason = _; kind = ConcretizeForPredicate _; seen = _; collector }
+          ) ->
           TypeCollector.add collector l
         (* ObjAssignFromT copies multiple properties from its incoming LB.
            Here we simulate a merged object type by iterating over the
@@ -1855,7 +1890,9 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | (IntersectionT _, ConcretizeT (_, ConcretizeForOperatorsChecking, collector)) ->
+        | ( IntersectionT _,
+            ConcretizeT { reason = _; kind = ConcretizeForOperatorsChecking; seen = _; collector }
+          ) ->
           TypeCollector.add collector l
         | (IntersectionT (r, rep), u) ->
           let u' =
@@ -2309,7 +2346,13 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Special case for `_ instanceof C` where C is polymorphic *)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
-            ConcretizeT (_, ConcretizeForPredicate ConcretizeRHSForInstanceOfPredicateTest, _)
+            ConcretizeT
+              {
+                reason = _;
+                kind = ConcretizeForPredicate ConcretizeRHSForInstanceOfPredicateTest;
+                seen = _;
+                collector = _;
+              }
           ) ->
           let l =
             instantiate_poly_default_args
@@ -2321,7 +2364,9 @@ struct
               (tparams_loc, ids, t)
           in
           rec_flow cx trace (l, u)
-        | (DefT (_, PolyT _), ConcretizeT (_, ConcretizeForPredicate _, collector)) ->
+        | ( DefT (_, PolyT _),
+            ConcretizeT { reason = _; kind = ConcretizeForPredicate _; seen = _; collector }
+          ) ->
           TypeCollector.add collector l
         (* The rules below are hit when a polymorphic type appears outside a
            type application expression - i.e. not followed by a type argument list
@@ -2562,7 +2607,8 @@ struct
           ) ->
           add_output cx (Error_message.ECannotCallReactComponent { reason = r });
           rec_flow_t cx trace ~use_op (AnyT.error reason, OpenT call_tout)
-        | (_, ConcretizeT (_, ConcretizeForRenderType, collector)) -> TypeCollector.add collector l
+        | (_, ConcretizeT { reason = _; kind = ConcretizeForRenderType; seen = _; collector }) ->
+          TypeCollector.add collector l
         (******************)
         (* React GetProps *)
         (******************)
@@ -3879,7 +3925,8 @@ struct
           ) ->
           add_specialized_callee_method_action cx trace (AnyT.untyped reason_call) action
         (* computed properties *)
-        | (t, ConcretizeT (_, ConcretizeComputedPropsT, collector)) -> TypeCollector.add collector t
+        | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
+          TypeCollector.add collector t
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)
@@ -4192,7 +4239,9 @@ struct
         (***********************)
 
         (* Predicate_kit should not see unwrapped opaque type *)
-        | (OpaqueT _, ConcretizeT (_, ConcretizeForPredicate _, collector)) ->
+        | ( OpaqueT _,
+            ConcretizeT { reason = _; kind = ConcretizeForPredicate _; seen = _; collector }
+          ) ->
           TypeCollector.add collector l
         | (OpaqueT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
@@ -4217,13 +4266,15 @@ struct
             )
         (* Concretize types for type operation purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, ConcretizeT (_, ConcretizeForOperatorsChecking, collector)) ->
+        | (t, ConcretizeT { reason = _; kind = ConcretizeForOperatorsChecking; seen = _; collector })
+          ->
           TypeCollector.add collector t
         (**************************************************************************)
         (* final shared concretization point for predicate and sentinel prop test *)
         (**************************************************************************)
-        | (_, ConcretizeT (_, ConcretizeForPredicate _, collector))
-        | (_, ConcretizeT (_, ConcretizeForSentinelPropTest, collector)) ->
+        | (_, ConcretizeT { reason = _; kind = ConcretizeForPredicate _; seen = _; collector })
+        | (_, ConcretizeT { reason = _; kind = ConcretizeForSentinelPropTest; seen = _; collector })
+          ->
           TypeCollector.add collector l
         (******************************)
         (* functions statics - part B *)
@@ -5457,7 +5508,7 @@ struct
       match u with
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
-      | ConcretizeT (_, ConcretizeForOperatorsChecking, _)
+      | ConcretizeT { reason = _; kind = ConcretizeForOperatorsChecking; seen = _; collector = _ }
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
@@ -9447,9 +9498,9 @@ struct
     | exception Flow_js_utils.SpeculationSingletonError -> false
     | _ -> true
 
-  and possible_concrete_types concretization_target cx reason t =
+  and possible_concrete_types kind cx reason t =
     let collector = TypeCollector.create () in
-    flow cx (t, ConcretizeT (reason, concretization_target, collector));
+    flow cx (t, ConcretizeT { reason; kind; seen = ref ISet.empty; collector });
     TypeCollector.collect collector
 
   and singleton_concrete_type mk_concretization_target cx reason t =

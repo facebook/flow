@@ -30,9 +30,9 @@ Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empt
        ^^^^^^^^^^^
 
 References:
-   exported_eval_values.js:2:35
-    2| declare const options: {[string]: Value};
-                                         ^^^^^ [1]
+   exported_eval_values.js:2:42
+    2| declare export const options: {[string]: Value};
+                                                ^^^^^ [1]
    eval_values.js:11:16
    11| options.foo as empty; // error
                       ^^^^^ [2]
@@ -47,6 +47,14 @@ Invalid trivially recursive definition of `$Values`.  [recursive-definition]
    5|   typeof options,
    6| >;
       ^
+
+
+Error ------------------------------------------------------------------------------------ exported_eval_values.js:14:22
+
+Invalid trivially recursive definition of `$Values`.  [recursive-definition]
+
+   14| export type Result = $Values<typeof Results>; // error: cyclic
+                            ^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- id_alias.js:2:10
@@ -468,4 +476,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 33 errors
+Found 34 errors
