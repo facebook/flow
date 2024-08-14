@@ -83,6 +83,10 @@ module type BASE = sig
     Type.t
 
   val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t
+
+  val mk_react_dro : Context.t -> Type.use_op -> Type.react_dro -> Type.t -> Type.t
+
+  val mk_hooklike : Context.t -> Type.use_op -> Type.t -> Type.t
 end
 
 module type BUILTINS = sig

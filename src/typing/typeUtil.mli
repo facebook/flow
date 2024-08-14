@@ -129,3 +129,5 @@ val normalize_jsx_children_prop : ALoc.t -> Type.t list -> Type.t option
 val dro_strict : Type.react_dro -> bool
 
 val dro_of_type : Type.t -> Type.react_dro option
+
+val map_property : f:(Type.t -> Type.t) -> Type.property_type -> Type.property_type

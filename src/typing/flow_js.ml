@@ -238,6 +238,7 @@ struct
       let react_dro =
         match obj_t with
         | OpenT _ -> failwith "Expected concrete type"
+        | DefT (_, InstanceT inst) -> inst.inst.inst_react_dro
         | DefT (_, ObjT o) -> o.flags.react_dro
         | _ -> None
       in
@@ -3412,7 +3413,7 @@ struct
            with reads of those properties through X as soon as O2 is resolved. To
            avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,ObjAssign);
            when O2 is resolved, we make the switch. **)
-        | ( DefT (lreason, ObjT { props_tmap = mapr; flags; _ }),
+        | ( DefT (lreason, ObjT { props_tmap = mapr; flags = { react_dro; _ } as flags; _ }),
             ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _)
           ) ->
           Context.iter_props cx mapr (fun name p ->
@@ -3427,6 +3428,21 @@ struct
               match Property.read_t p with
               | Some t ->
                 let propref = mk_named_prop ~reason:reason_prop name in
+
+                let t =
+                  match react_dro with
+                  | Some dro when not (is_exception_to_react_dro propref) ->
+                    mk_react_dro cx use_op dro t
+                  | _ -> t
+                in
+                let t =
+                  match propref with
+                  | Named { name = OrdinaryName name; _ }
+                    when Context.hook_compatibility cx && Flow_ast_utils.hook_name name ->
+                    mk_hooklike cx use_op t
+                  | _ -> t
+                in
+
                 let t = filter_optional cx ~trace reason_prop t in
                 rec_flow
                   cx
