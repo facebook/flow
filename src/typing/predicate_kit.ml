@@ -65,6 +65,7 @@ let rec concretize_and_run_predicate
              bound_result_collector
              ~predicate_no_concretization;
            let changed = !changed in
+           if changed then report_changes_to_input result_collector;
            TypeCollector.iter bound_type_collector ~f:(fun bound ->
                let type_ = GenericT { reason = reason_of_t bound; name; bound; no_infer; id } in
                report_filtering_result_to_predicate_result
