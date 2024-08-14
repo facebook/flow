@@ -491,9 +491,9 @@ Cannot compare number [1] with property `field` of `obj` [2] because number [1] 
                                             ^ [1]
 
 References:
-   test.js:99:24
-   99| if (obj.field === 1 || obj.field === 2) {} // error
-                              ^^^ [2]
+   test.js:98:13
+   98| declare var obj: Obj;
+                   ^^^ [2]
    test.js:97:22
    97| type Obj = { field : string };
                             ^^^^^^ [3]
