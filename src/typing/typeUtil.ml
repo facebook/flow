@@ -116,7 +116,6 @@ and reason_of_use_t = function
   | WriteComputedObjPropCheckT { reason; _ } -> reason
   | CheckReactImmutableT { lower_reason = reason; _ } -> reason
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
-  | TryRenderTypePromotionT { reason; _ } -> reason
   | ExitRendersT { renders_reason; _ } -> renders_reason
   | EvalTypeDestructorT { reason; _ } -> reason
 
@@ -238,8 +237,6 @@ let rec util_use_op_of_use_t :
   | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
   | ObjAssignToT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignToT (op, r, t1, t2, k))
   | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
-  | TryRenderTypePromotionT ({ use_op; _ } as contents) ->
-    util use_op (fun use_op -> TryRenderTypePromotionT { contents with use_op })
   | ValueToTypeReferenceT (use_op, reason, kind, t) ->
     util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
   | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })

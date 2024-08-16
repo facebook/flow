@@ -850,16 +850,6 @@ module rec TypeTerm : sig
        to the props. This utility passes through everything else but converts empty to mixed.
        A better approach here may be to prevent these kinds of operations entirely *)
     | ConvertEmptyPropsToMixedT of reason * t
-    (* Given an ObjT props ~> RendersT, we emit an props.type ~> TryRenderTypePromotionT u
-     * to try to promote the element type into a render type. If no suitable type is found
-     * then we try normal structural subtyping against the render type *)
-    | TryRenderTypePromotionT of {
-        use_op: use_op;
-        reason: reason;
-        reason_obj: reason;
-        tried_promotion: bool;
-        upper_renders: canonical_renders_form;
-      }
     | ExitRendersT of {
         renders_reason: reason;
         u: use_t;
@@ -4165,7 +4155,6 @@ let string_of_use_ctor = function
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
   | CheckReactImmutableT _ -> "CheckReactImmutableT"
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
-  | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
   | ExitRendersT _ -> "ExitRendersT"
   | EvalTypeDestructorT _ -> "EvalTypeDestructorT"
 

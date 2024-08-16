@@ -186,6 +186,5 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | WriteComputedObjPropCheckT _ -> ()
   | CheckReactImmutableT _ -> ()
   | ConvertEmptyPropsToMixedT (_, tout) -> resolve tout
-  | TryRenderTypePromotionT _ -> ()
   | ExitRendersT { renders_reason = _; u } -> default_resolve_touts ~flow cx loc u
   | EvalTypeDestructorT _ -> ()

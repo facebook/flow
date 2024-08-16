@@ -599,6 +599,59 @@ module Make (Flow : INPUT) : OUTPUT = struct
       flow_to_mutable_child cx trace use_op lit1 t1 t2;
       array_flow cx trace use_op lit1 r1 ~index:(index + 1) (ts1, e1, ts2, e2)
 
+  let try_promote_render_type_from_react_element_type
+      cx trace ~use_op (elem_reason, opq) (renders_r, upper_renders) =
+    let possibly_promoted =
+      match opq with
+      | {
+       super_t = Some (DefT (_, ObjT { props_tmap; _ }));
+       opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
+       _;
+      } ->
+        (match Context.find_monomorphized_component cx props_tmap with
+        | Some mono_component ->
+          get_builtin_typeapp cx elem_reason "React$ComponentRenders" [mono_component]
+        | None ->
+          (* We only want to promote if this is actually a React of a component, otherwise we want
+           * to flow the original object to the tout.
+           *
+           * We perform a speculative subtyping check and then use ComponentRenders to
+           * extract the render type of the component. This type gets concretized, and we continue
+           * with renders subtyping if we get a RendersT from ComponentRenders, otherwise we error,
+           * as we've already checked for structural compatibility in subtyping kit. *)
+          let top_abstract_component =
+            let config = EmptyT.why renders_r in
+            let instance = MixedT.why renders_r in
+            let renders = get_builtin_type cx renders_r "React$Node" in
+            DefT
+              ( renders_r,
+                ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+              )
+          in
+          if speculative_subtyping_succeeds cx component_t top_abstract_component then
+            get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
+          else
+            OpaqueT (elem_reason, opq))
+      | _ -> OpaqueT (elem_reason, opq)
+    in
+    let use_op = Frame (RendersCompatibility, use_op) in
+    possible_concrete_types_for_inspection cx elem_reason possibly_promoted
+    |> Base.List.iter ~f:(function
+           | AnyT _ as l -> rec_flow_t cx trace ~use_op (l, DefT (renders_r, RendersT upper_renders))
+           | DefT (_, RendersT _) as l ->
+             let l = reposition_reason cx ~trace elem_reason ~use_desc:true l in
+             let renders_t = DefT (renders_r, RendersT upper_renders) in
+             rec_flow_t cx trace ~use_op (l, renders_t)
+           (* We did not successfully promote the React.Element and we have a RendersT on the RHS.
+            * so this is an error *)
+           | _ ->
+             add_output
+               cx
+               (Error_message.EIncompatibleWithUseOp
+                  { reason_lower = elem_reason; reason_upper = renders_r; use_op }
+               )
+           )
+
   let check_dro_subtyping cx use_op l u trace =
     match (l, u) with
     | ((AnyT _ | AnnotT _), _)
@@ -1490,24 +1543,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       rec_flow_t cx trace ~use_op (t, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | ( OpaqueT (reason_opaque, { opaque_id; _ }),
+    | ( OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)),
         DefT (renders_r, RendersT (NominalRenders _ as form))
       )
       when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
-      rec_flow
+      try_promote_render_type_from_react_element_type
         cx
         trace
-        ( l,
-          TryRenderTypePromotionT
-            {
-              use_op = Frame (RendersCompatibility, use_op);
-              reason = renders_r;
-              reason_obj = reason_opaque;
-              upper_renders = form;
-              tried_promotion = false;
-            }
-        )
-    | ( OpaqueT (reason_opaque, { opaque_id; _ }),
+        ~use_op
+        (reason_opaque, opq)
+        (renders_r, form)
+    | ( OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)),
         DefT
           ( renders_r,
             RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t } as form)
@@ -1515,19 +1561,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
       if not (speculative_subtyping_succeeds cx l t) then
-        rec_flow
+        try_promote_render_type_from_react_element_type
           cx
           trace
-          ( l,
-            TryRenderTypePromotionT
-              {
-                use_op = Frame (RendersCompatibility, use_op);
-                reason = renders_r;
-                reason_obj = reason_opaque;
-                upper_renders = form;
-                tried_promotion = false;
-              }
-          )
+          ~use_op
+          (reason_opaque, opq)
+          (renders_r, form)
     (* given x <: y, x <: renders y. The only case in which this is not true is when `x` is a component reference,
      * Foo <: renders Foo fails in that case. Since the RHS is in its canonical form we know that we're safe
      * to Flow the LHS to the structural type on the RHS *)

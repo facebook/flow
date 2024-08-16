@@ -364,7 +364,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | CheckReactImmutableT _
     | ConvertEmptyPropsToMixedT _
     | ValueToTypeReferenceT _
-    | TryRenderTypePromotionT _
     | ExitRendersT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)
     | SpecializeT _
