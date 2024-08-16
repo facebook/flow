@@ -131,7 +131,7 @@ render_types.js:8:6,8:6
 
 render_types.js:10:6
 Flags:
-type U = renders Bar | Foo
+type U = renders (Bar | Foo)
 
 'Bar' defined at render_types.js:10:9
 'Foo' defined at render_types.js:10:9
@@ -204,7 +204,7 @@ render_types.js:30:36,30:39
 
 render_types.js:35:6
 Flags:
-type UnionPoly = renders Poly | Poly2
+type UnionPoly = renders (Poly | Poly2)
 
 'Poly' defined at render_types.js:35:17
 'Poly2' defined at render_types.js:35:17
