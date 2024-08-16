@@ -630,6 +630,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
           in
           if speculative_subtyping_succeeds cx component_t top_abstract_component then
             get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
+          else if
+            speculative_subtyping_succeeds
+              cx
+              component_t
+              (DefT (elem_reason, SingletonStrT (OrdinaryName "svg")))
+          then
+            DefT (elem_reason, RendersT (InstrinsicRenders "svg"))
           else
             OpaqueT (elem_reason, opq))
       | _ -> OpaqueT (elem_reason, opq)
@@ -1544,7 +1551,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (t, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
     | ( OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)),
-        DefT (renders_r, RendersT (NominalRenders _ as form))
+        DefT (renders_r, RendersT ((InstrinsicRenders _ | NominalRenders _) as form))
       )
       when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
       try_promote_render_type_from_react_element_type
@@ -1594,7 +1601,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
            }
         )
     (* Exiting the renders world *)
-    | (DefT (r, RendersT (NominalRenders _)), u) ->
+    | (DefT (r, RendersT (InstrinsicRenders _ | NominalRenders _)), u) ->
       let mixed_element = get_builtin_type cx r "React$MixedElement" in
       rec_flow_t cx trace ~use_op (mixed_element, u)
     | ( DefT

@@ -108,6 +108,8 @@ declare const rendersBazOrBaz: renders (
     | Foo
     | Bar
   ); // ERROR
+  declare const anyElement: ExactReactElement_DEPRECATED<any>;
+  anyElement as renders Foo; // ok
 }
 
 /* Exit Structural Render Types */

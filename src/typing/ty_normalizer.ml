@@ -777,6 +777,7 @@ module Make (I : INPUT) : S = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
+      | DefT (_, RendersT (InstrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
       | DefT (r, RendersT (NominalRenders { renders_id = _; renders_name; _ })) ->
         let symbol =
           Reason_utils.component_symbol

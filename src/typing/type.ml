@@ -269,6 +269,7 @@ module rec TypeTerm : sig
    *  * renders number would produce a Structural number
    *)
   and canonical_renders_form =
+    | InstrinsicRenders of string
     | NominalRenders of {
         renders_id: ALoc.id;
         renders_name: string;

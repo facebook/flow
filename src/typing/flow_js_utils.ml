@@ -3001,6 +3001,9 @@ let promote_renders_representation_strict =
            }
         );
       special_error_acc
+    | DefT (reason, SingletonStrT (OrdinaryName "svg")) ->
+      TypeCollector.add type_collector (DefT (reason, RendersT (InstrinsicRenders "svg")));
+      special_error_acc
     | OpaqueT
         ( element_r,
           {
