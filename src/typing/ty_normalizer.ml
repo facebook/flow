@@ -796,6 +796,18 @@ module Make (I : INPUT) : S = struct
           | T.RendersStar -> Ty.RendersStar
         in
         return (Ty.Renders (ty, variant))
+      | DefT (r, RendersT DefaultRenders) ->
+        let ty =
+          Ty.Generic
+            ( Reason_utils.component_symbol
+                env
+                "React.Node"
+                (mk_reason (RComponent (OrdinaryName "React$Node")) (loc_of_reason r)),
+              Ty.ComponentKind,
+              None
+            )
+        in
+        return (Ty.Renders (ty, Ty.RendersNormal))
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env ~from_value:false c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
       | OpaqueT (r, o) -> opaque_t ~env r o

@@ -1474,9 +1474,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT
           ( _,
             RendersT
-              (StructuralRenders
-                { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ }
-                )
+              ( StructuralRenders
+                  { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ }
+              | DefaultRenders )
           )
       ) ->
       ()
@@ -1484,7 +1484,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT
           ( _,
             RendersT
-              (StructuralRenders { renders_variant = RendersStar; renders_structural_type = _ })
+              ( StructuralRenders { renders_variant = RendersStar; renders_structural_type = _ }
+              | DefaultRenders )
           )
       ) ->
       rec_flow_t cx trace ~use_op (t, u)
@@ -1533,6 +1534,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       ) ->
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, t)
+    | (l, DefT (renders_r, RendersT DefaultRenders)) ->
+      rec_flow_t
+        cx
+        trace
+        ~use_op:(Frame (RendersCompatibility, use_op))
+        (l, get_builtin_type cx renders_r ~use_desc:true "React$Node")
     | (l, DefT (_, RendersT _)) ->
       add_output
         cx

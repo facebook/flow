@@ -346,6 +346,7 @@ class virtual ['a] t =
           form
         else
           StructuralRenders { renders_variant; renders_structural_type = renders_structural_type' }
+      | DefaultRenders -> form
 
     method defer_use_type cx map_cx t =
       match t with

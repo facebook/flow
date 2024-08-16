@@ -339,6 +339,7 @@ let rec dump_t_ (depth, tvars) cx t =
         (_, RendersT (StructuralRenders { renders_variant = RendersStar; renders_structural_type }))
       ->
       p t ~extra:(spf "Structural(Star, %s)" (kid renders_structural_type))
+    | DefT (_, RendersT DefaultRenders) -> p t ~extra:"Default"
     | KeysT (_, arg) -> p ~extra:(kid arg) t
     | StrUtilT { reason = _; op; remainder } ->
       let (op, arg) =

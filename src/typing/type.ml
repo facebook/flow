@@ -262,6 +262,7 @@ module rec TypeTerm : sig
    * components always use a render type as the `super`.
    *
    * Given component Foo:
+   *  * Omitting render declaration would produce DefaultRenders
    *  * renders Foo would produce NominalRenders
    *  * renders (Foo | Foo) would produce a Structural UnionT with two Nominal elements
    *  * renders (Foo | number) would produce a Structural UnionT with number and Nominal Foo
@@ -277,6 +278,7 @@ module rec TypeTerm : sig
         renders_variant: renders_variant;
         renders_structural_type: t;
       }
+    | DefaultRenders
 
   and renders_variant =
     | RendersNormal

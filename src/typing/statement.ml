@@ -7573,16 +7573,10 @@ module Make
             in
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
-            let ret_reason = mk_reason RReturn loc in
-            let t = Flow.get_builtin_type cx ret_reason "React$Node" in
-            let renders_t =
-              Flow_js_utils.mk_renders_type
-                cx
-                ret_reason
-                RendersNormal
-                ~mk_type_destructor:Flow.mk_possibly_evaluated_destructor
-                t
+            let reason =
+              Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React$Node"))) loc)
             in
+            let renders_t = DefT (reason, RendersT DefaultRenders) in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
         let (id_loc, ({ Ast.Identifier.name; comments = _ } as name_ast)) = id in
