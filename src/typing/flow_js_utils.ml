@@ -2926,6 +2926,19 @@ let promote_renders_representation_strict =
           );
         special_error_acc
       )
+    | DefT (r, RendersT DefaultRenders) ->
+      TypeCollector.add type_collector (AnyT.error reason);
+      add_output
+        cx
+        (Error_message.EInvalidRendersTypeArgument
+           {
+             loc = arg_loc;
+             renders_variant = ast_render_variant_of_render_variant renders_variant;
+             invalid_render_type_kind = Flow_intermediate_error_types.UncategorizedInvalidRenders;
+             invalid_type_reasons = Nel.one r;
+           }
+        );
+      special_error_acc
     | t ->
       TypeCollector.add type_collector (AnyT.error reason);
       add_output
@@ -3100,22 +3113,6 @@ let promote_renders_representation_strict =
       TypeCollector.collect type_collector |> union_of_ts reason
     in
     DefT (reason, RendersT (StructuralRenders { renders_variant; renders_structural_type }))
-
-let mk_renders_type cx reason renders_variant ~mk_type_destructor t =
-  mk_type_destructor
-    cx
-    unknown_use (* not used *)
-    reason
-    t
-    (ReactPromoteRendersRepresentation
-       {
-         should_distribute = true;
-         promote_structural_components = false;
-         renders_variant;
-         resolved_elem = None;
-       }
-    )
-    (Eval.generate_id ())
 
 let mk_non_generic_render_type
     cx reason renders_variant ?force_post_component ~concretize ~is_iterable_for_better_error t =

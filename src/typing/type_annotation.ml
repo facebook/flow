@@ -3231,11 +3231,10 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           let (t, renders_ast) = convert_render_type env ~allow_generic_t:true loc annot in
           (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
         | Ast.Type.MissingRenders loc ->
-          let ren_reason = mk_reason RReturn loc in
-          let t = ConsGen.get_builtin_type env.cx ren_reason "React$Node" in
-          let renders_t =
-            Flow_js_utils.mk_renders_type env.cx ren_reason RendersNormal ~mk_type_destructor t
+          let reason =
+            Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React$Node"))) loc)
           in
+          let renders_t = DefT (reason, RendersT DefaultRenders) in
           (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
       in
       let sig_ =

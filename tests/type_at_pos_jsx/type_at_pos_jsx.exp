@@ -87,14 +87,15 @@ jsx_instantiation.js:41:17,41:19
 
 jsx_instantiation.js:55:6
 Flags:
-React$AbstractComponent<{+x: string, +y: number}, mixed, renders React$Node>
+React$AbstractComponent<{+x: string, +y: number}, mixed, renders React.Node>
 | React$AbstractComponent<
   {+x: number | string, +y: number | string},
   mixed,
-  renders React$Node,
+  renders React.Node,
 >
 
-'React$Node' defined at (lib) react.js:15:13
+'React.Node' defined at jsx_instantiation.js:3:37
+'React.Node' defined at jsx_instantiation.js:5:40
 
 jsx_instantiation.js:55:6,55:9
 
@@ -103,10 +104,16 @@ Flags:
 React$AbstractComponent<
   {+x: number | string, +y: number | string},
   mixed,
-  renders React$Node,
+  renders React.Node,
+>
+| React$AbstractComponent<
+  {+x: number | string, +y: number | string},
+  mixed,
+  renders React.Node,
 >
 
-'React$Node' defined at (lib) react.js:15:13
+'React.Node' defined at jsx_instantiation.js:3:37
+'React.Node' defined at jsx_instantiation.js:6:45
 
 jsx_instantiation.js:57:6,57:9
 
@@ -128,10 +135,11 @@ jsx_instantiation.js:69:5,69:9
 
 jsx_instantiation.js:71:5
 Flags:
-React$AbstractComponent<{+x: T, +y: T}, mixed, renders React$Node>
-& React$AbstractComponent<{+x: T, +y: S}, mixed, renders React$Node>
+React$AbstractComponent<{+x: T, +y: T}, mixed, renders React.Node>
+& React$AbstractComponent<{+x: T, +y: S}, mixed, renders React.Node>
 
-'React$Node' defined at (lib) react.js:15:13
+'React.Node' defined at jsx_instantiation.js:6:45
+'React.Node' defined at jsx_instantiation.js:7:48
 
 jsx_instantiation.js:71:5,71:9
 
@@ -161,14 +169,15 @@ jsx_instantiation.js:83:6,83:11
 
 jsx_instantiation.js:90:6
 Flags:
-React$AbstractComponent<{+x: string, +y: number}, mixed, renders React$Node>
+React$AbstractComponent<{+x: string, +y: number}, mixed, renders React.Node>
 | React$AbstractComponent<
   {+x: number | string, +y: number | string},
   mixed,
-  renders React$Node,
+  renders React.Node,
 >
 
-'React$Node' defined at (lib) react.js:15:13
+'React.Node' defined at jsx_instantiation.js:3:37
+'React.Node' defined at jsx_instantiation.js:5:40
 
 jsx_instantiation.js:90:6,90:8
 

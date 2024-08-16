@@ -994,15 +994,9 @@ and merge_annot env file = function
         | Flow_ast.Type.Renders.Star -> Type.RendersStar
       in
       ConsGen.mk_non_generic_render_type file.cx reason ~renders_variant t)
-  | ComponentMissingRenders { loc; arg } ->
-    let t = merge { env with in_renders_arg = true } file arg in
-    let reason =
-      Reason.(mk_annot_reason (RRenderType (desc_of_reason (TypeUtil.reason_of_t t))) loc)
-    in
-    let mk_type_destructor _cx use_op reason t destructor id =
-      Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
-    in
-    Flow_js_utils.mk_renders_type file.cx reason Type.RendersNormal ~mk_type_destructor t
+  | ComponentMissingRenders loc ->
+    let reason = Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React$Node"))) loc) in
+    Type.(DefT (reason, RendersT DefaultRenders))
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     let statics = merge_fun_statics env file reason SMap.empty in

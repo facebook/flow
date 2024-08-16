@@ -746,14 +746,7 @@ let%expect_test "component_param_typeof_reference" =
                          Polarity.Neutral)) };
                     proto = ObjAnnotImplicitProto})}
              ];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [2:86];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:86]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [2:86]))}}
 
   |}]
 
@@ -5772,14 +5765,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
          def =
          ComponentSig {params_loc = [9:23-25];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [9:25];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [9:25]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [9:25]))}}
     6. EnumBinding {id_loc = [10:15-16];
          name = "A"; rep = StringRep {truthy = true};
          members = { "B" -> [10:19-20] };
@@ -6715,14 +6701,7 @@ let%expect_test "component" =
          def =
          ComponentSig {params_loc = [1:13-15];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [1:15];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:15]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [1:15]))}}
 
   |}]
 
@@ -6767,13 +6746,7 @@ let%expect_test "component2" =
            rest_param =
            (Some ComponentRestParam {
                    t = (TyRef (Unqualified LocalRef {ref_loc = [2:35-39]; index = 0}))});
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [2:40];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:40]; type_ref = true; name = "React$Node"}))})}}
+           renders = (Annot (ComponentMissingRenders [2:40]))}}
 
   |}]
 
@@ -6805,14 +6778,7 @@ let%expect_test "component3" =
          def =
          ComponentSig {params_loc = [1:17-19];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [1:19];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:19]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [1:19]))}}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-69];
          def =
@@ -6898,27 +6864,13 @@ let%expect_test "component_5" =
          def =
          ComponentSig {params_loc = [1:21-23];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [1:23];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:23]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [1:23]))}}
     1. ComponentBinding {id_loc = [2:25-28];
          name = "Bar"; fn_loc = [2:15-31];
          def =
          ComponentSig {params_loc = [2:29-31];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [2:31];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:31]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [2:31]))}}
 
   |}]
 
@@ -6985,27 +6937,13 @@ let%expect_test "declare_component" =
          def =
          ComponentSig {params_loc = [1:29-31];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [1:31];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:31]; type_ref = true; name = "React$Node"}))})}}
+           rest_param = None; renders = (Annot (ComponentMissingRenders [1:31]))}}
     1. ComponentBinding {id_loc = [2:33-36];
          name = "Bar"; fn_loc = [2:23-40];
          def =
          ComponentSig {params_loc = [2:37-39];
            tparams = Mono; params = [];
-           rest_param = None;
-           renders =
-           (Annot
-              ComponentMissingRenders {
-                loc = [2:39];
-                arg =
-                (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:39]; type_ref = true; name = "React$Node"}))})}} |}]
+           rest_param = None; renders = (Annot (ComponentMissingRenders [2:39]))}} |}]
 
 let%expect_test "component_type" =
   print_sig {|
@@ -7057,15 +6995,7 @@ let%expect_test "component_type" =
             (ComponentAnnot ([4:17-28],
                ComponentSig {params_loc = [4:26-28];
                  tparams = Mono; params = [];
-                 rest_param = None;
-                 renders =
-                 (Annot
-                    ComponentMissingRenders {
-                      loc = [4:28];
-                      arg =
-                      (TyRef
-                         (Unqualified
-                            BuiltinRef {ref_loc = [4:28]; type_ref = true; name = "React$Node"}))})}
+                 rest_param = None; renders = (Annot (ComponentMissingRenders [4:28]))}
                )))} |}]
 
 let%expect_test "declare_component" =
@@ -7094,15 +7024,7 @@ let%expect_test "declare_component" =
             (ComponentAnnot ([1:24-35],
                ComponentSig {params_loc = [1:33-35];
                  tparams = Mono; params = [];
-                 rest_param = None;
-                 renders =
-                 (Annot
-                    ComponentMissingRenders {
-                      loc = [1:35];
-                      arg =
-                      (TyRef
-                         (Unqualified
-                            BuiltinRef {ref_loc = [1:35]; type_ref = true; name = "React$Node"}))})}
+                 rest_param = None; renders = (Annot (ComponentMissingRenders [1:35]))}
                )))}
     1. Variable {id_loc = [2:12-15];
          name = "Bar";
@@ -7111,15 +7033,7 @@ let%expect_test "declare_component" =
             (ComponentAnnot ([2:17-28],
                ComponentSig {params_loc = [2:26-28];
                  tparams = Mono; params = [];
-                 rest_param = None;
-                 renders =
-                 (Annot
-                    ComponentMissingRenders {
-                      loc = [2:28];
-                      arg =
-                      (TyRef
-                         (Unqualified
-                            BuiltinRef {ref_loc = [2:28]; type_ref = true; name = "React$Node"}))})}
+                 rest_param = None; renders = (Annot (ComponentMissingRenders [2:28]))}
                )))} |}]
 
 let%expect_test "render_types" =

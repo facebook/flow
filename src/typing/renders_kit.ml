@@ -48,6 +48,14 @@ module Make (Flow : INPUT) = struct
         let u_type = reconstruct_render_type reasonu u in
         let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
         rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u_type)
+    | (DefaultRenders, StructuralRenders { renders_variant = _; renders_structural_type = t }) ->
+      (* This is not necessary for correctness, since it will eventually fail at the end.
+       * However, this is helpful for generating a more detailed error if t is a union. *)
+      rec_flow_t
+        cx
+        trace
+        ~use_op:(Frame (RendersCompatibility, use_op))
+        (reconstruct_render_type reasonl l, t)
     | ( StructuralRenders
           { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ },
         NominalRenders _
@@ -103,5 +111,16 @@ module Make (Flow : INPUT) = struct
             StructuralRenders { renders_variant = RendersMaybe; renders_structural_type = t }
           ),
           (reasonu, u)
+        )
+    | ((NominalRenders _ | StructuralRenders _ | DefaultRenders), DefaultRenders) -> ()
+    | (DefaultRenders, _) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           {
+             reason_lower = reasonl;
+             reason_upper = reasonu;
+             use_op = Frame (RendersCompatibility, use_op);
+           }
         )
 end
