@@ -272,9 +272,6 @@ val post_inference_polarity_checks :
 
 val post_inference_validation_flows : t -> (Type.t * Type.use_t) list
 
-val renders_type_argument_validations :
-  t -> (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list
-
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
 val verbose : t -> Verbose.t option
@@ -348,9 +345,6 @@ val add_post_inference_polarity_check :
 val add_post_inference_validation_flow : t -> Type.t -> Type.use_t -> unit
 
 val add_post_inference_subtyping_check : t -> Type.t -> Type.use_op -> Type.t -> unit
-
-val add_renders_type_argument_validation :
-  t -> allow_generic_t:bool -> ALoc.t -> Flow_ast.Type.Renders.variant -> Type.t -> unit
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 

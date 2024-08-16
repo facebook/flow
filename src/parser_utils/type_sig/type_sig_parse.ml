@@ -1746,8 +1746,7 @@ and component_type =
     | Ast.Type.MissingRenders loc ->
       let loc = push_loc tbls loc in
       let arg = maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node" in
-      let variant = Ast.Type.Renders.Normal in
-      Annot (Renders { loc; arg; variant; allow_generic_t = true })
+      Annot (ComponentMissingRenders { loc; arg })
   in
   fun opts
       scope
@@ -3611,8 +3610,7 @@ and component_def =
     | Ast.Type.MissingRenders loc ->
       let loc = push_loc tbls loc in
       let arg = maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node" in
-      let variant = Ast.Type.Renders.Normal in
-      Annot (Renders { loc; arg; variant; allow_generic_t = true })
+      Annot (ComponentMissingRenders { loc; arg })
   in
   fun opts scope tbls f ->
     let {
