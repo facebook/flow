@@ -24,6 +24,42 @@ module Make (Flow : INPUT) = struct
 
   let rec rec_renders cx trace ~use_op ((reasonl, l), (reasonu, u)) =
     match (l, u) with
+    | (InstrinsicRenders n1, InstrinsicRenders n2) ->
+      if n1 = n2 then
+        ()
+      else
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EIncompatibleWithUseOp
+             {
+               reason_lower = reasonl;
+               reason_upper = reasonu;
+               use_op = Frame (RendersCompatibility, use_op);
+             }
+          )
+    | (InstrinsicRenders _, StructuralRenders { renders_variant = _; renders_structural_type = t })
+      ->
+      if not (speculative_subtyping_succeeds cx (reconstruct_render_type reasonl l) t) then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EIncompatibleWithUseOp
+             {
+               reason_lower = reasonl;
+               reason_upper = reasonu;
+               use_op = Frame (RendersCompatibility, use_op);
+             }
+          )
+    | (InstrinsicRenders _, NominalRenders _)
+    | (_, InstrinsicRenders _) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           {
+             reason_lower = reasonl;
+             reason_upper = reasonu;
+             use_op = Frame (RendersCompatibility, use_op);
+           }
+        )
     | ( NominalRenders { renders_id = id1; renders_name = _; renders_super },
         NominalRenders { renders_id = id2; renders_name = _; renders_super = _ }
       ) ->
@@ -112,7 +148,10 @@ module Make (Flow : INPUT) = struct
           ),
           (reasonu, u)
         )
-    | ((NominalRenders _ | StructuralRenders _ | DefaultRenders), DefaultRenders) -> ()
+    | ( (InstrinsicRenders _ | NominalRenders _ | StructuralRenders _ | DefaultRenders),
+        DefaultRenders
+      ) ->
+      ()
     | (DefaultRenders, _) ->
       Flow_js_utils.add_output
         cx

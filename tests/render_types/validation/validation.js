@@ -6,7 +6,7 @@ declare function Baz(): React$Node;
 declare class Boz extends React$Component<{}> {}
 
 type ReactElementAlias<T> = React.Element<T>;
-
+type RGood0 = renders 'svg'; // ok
 type RGood1 = renders React.Element<typeof Foo>; // ok
 type RGood2 = renders React.Element<typeof Foo | typeof Bar>; // ok
 type RGood3 = renders React.Element<typeof Foo> | React.Element<typeof Bar>; // ok
@@ -14,7 +14,7 @@ type RGood4 = renders ReactElementAlias<typeof Foo>; // ok
 type RGood5 = renders ReactElementAlias<typeof Foo | typeof Bar>; // ok
 type RGood6 = renders ReactElementAlias<typeof Foo> | ReactElementAlias<typeof Bar>; // ok
 type RGood7 = component () renders React.Element<typeof Foo>; // ok
-
+type RBad0 = renders React.Element<'svg'>; // error
 type RBad1 = renders React.Element<typeof Baz>; // error
 type RBad2 = renders React.Element<typeof Boz>; // error
 type RBad3 = renders 1; // error
