@@ -115,8 +115,6 @@ module type SUBTYPING = sig
   val possible_concrete_types_for_imports_exports :
     Context.t -> Reason.reason -> Type.t -> Type.t list
 
-  val possible_concrete_types_for_render_type : Context.t -> Reason.reason -> Type.t -> Type.t list
-
   val possible_concrete_types_for_operators_checking :
     Context.t -> Reason.reason -> Type.t -> Type.t list
 
@@ -294,8 +292,6 @@ module type S = sig
 
   val possible_concrete_types_for_sentinel_prop_test :
     Context.t -> Reason.reason -> Type.t -> Type.t list
-
-  val possible_concrete_types_for_render_type : Context.t -> Reason.reason -> Type.t -> Type.t list
 
   val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t
 

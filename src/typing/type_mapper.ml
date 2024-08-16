@@ -688,14 +688,6 @@ class virtual ['a] t =
               mapped_type_flags;
               homomorphic = homomorphic';
             }
-      | ReactPromoteRendersRepresentation
-          { should_distribute; promote_structural_components; renders_variant; resolved_elem } ->
-        let resolved_elem' = OptionUtils.ident_map (self#type_ cx map_cx) resolved_elem in
-        if resolved_elem' == resolved_elem then
-          t
-        else
-          ReactPromoteRendersRepresentation
-            { should_distribute; promote_structural_components; renders_variant; resolved_elem }
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType ->

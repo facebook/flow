@@ -499,10 +499,6 @@ struct
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
         | ( UnionT (_, _),
-            ConcretizeT { reason = _; kind = ConcretizeForRenderType; seen = _; collector }
-          ) ->
-          TypeCollector.add collector l
-        | ( UnionT (_, _),
             ConcretizeT { reason = _; kind = ConcretizeForSentinelPropTest; seen = _; collector }
           )
         (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
@@ -2608,8 +2604,6 @@ struct
           ) ->
           add_output cx (Error_message.ECannotCallReactComponent { reason = r });
           rec_flow_t cx trace ~use_op (AnyT.error reason, OpenT call_tout)
-        | (_, ConcretizeT { reason = _; kind = ConcretizeForRenderType; seen = _; collector }) ->
-          TypeCollector.add collector l
         (******************)
         (* React GetProps *)
         (******************)
@@ -2678,30 +2672,54 @@ struct
             TryRenderTypePromotionT
               { use_op; reason; reason_obj; upper_renders; tried_promotion = false }
           ) ->
-          let promotion_eval_t =
-            EvalT
-              ( l,
-                TypeDestructorT
-                  ( use_op,
-                    reason,
-                    ReactPromoteRendersRepresentation
-                      {
-                        should_distribute = true;
-                        promote_structural_components = true;
-                        renders_variant = RendersNormal;
-                        resolved_elem = None;
-                      }
-                  ),
-                Eval.generate_id ()
-              )
+          let u =
+            TryRenderTypePromotionT
+              { use_op; reason; reason_obj; upper_renders; tried_promotion = true }
           in
-          rec_flow
-            cx
-            trace
-            ( promotion_eval_t,
-              TryRenderTypePromotionT
-                { use_op; reason; reason_obj; upper_renders; tried_promotion = true }
-            )
+          (match l with
+          | OpaqueT
+              ( elem_reason,
+                {
+                  opaque_id;
+                  super_t = Some (DefT (_, ObjT { props_tmap; _ }));
+                  opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
+                  _;
+                }
+              ) as l
+            when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
+            (match Context.find_monomorphized_component cx props_tmap with
+            | Some mono_component ->
+              let render_type =
+                get_builtin_typeapp cx elem_reason "React$ComponentRenders" [mono_component]
+              in
+              rec_flow cx trace (render_type, u)
+            | None ->
+              (* We only want to promote if this is actually a React of a component, otherwise we want
+               * to flow the original object to the tout.
+               *
+               * We perform a speculative subtyping check and then use ComponentRenders to
+               * extract the render type of the component. This type gets forwarded to
+               * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
+               * from ComponentRenders, otherwise we error, as we've already checked for structural
+               * compatibility in subtyping kit. *)
+              let top_abstract_component =
+                let config = EmptyT.why reason in
+                let instance = MixedT.why reason in
+                let renders = get_builtin_type cx reason "React$Node" in
+                DefT
+                  ( reason,
+                    ReactAbstractComponentT
+                      { config; instance; renders; component_kind = Structural }
+                  )
+              in
+              if speculative_subtyping_succeeds cx component_t top_abstract_component then
+                let render_type =
+                  get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
+                in
+                rec_flow cx trace (render_type, u)
+              else
+                rec_flow cx trace (l, u))
+          | _ -> rec_flow cx trace (l, u))
         (**** Renders Subtyping Cont. *****)
         (* We successfully promoted an ObjT to a Render type. Proceed with normal RendersT subtyping *)
         | ( DefT (_, RendersT _),
@@ -6525,26 +6543,6 @@ struct
       in
       (* Intentional unknown_use for the tout Flow *)
       rec_flow cx trace (t, UseT (unknown_use, OpenT tout))
-    | ReactPromoteRendersRepresentation
-        { should_distribute = true; promote_structural_components; renders_variant; resolved_elem }
-      ->
-      if
-        Context.in_implicit_instantiation cx
-        && TvarVisitors.has_unresolved_tvars_or_placeholders cx t
-      then
-        rec_flow_t cx trace ~use_op:unknown_use (Context.mk_placeholder cx reason, OpenT tout)
-      else
-        promote_renders_reprensentation
-          cx
-          trace
-          ~use_op
-          ~reason
-          ~resolved_elem
-          ~should_distribute:true
-          ~promote_structural_components
-          ~renders_variant
-          t
-          (OpenT tout)
     | _ ->
       let destruct_union ?(f = (fun t -> t)) r members upper =
         let destructor = TypeDestructorT (use_op, reason, d) in
@@ -6905,19 +6903,6 @@ struct
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig (OpenT tout)))
         | ReactElementRefType ->
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetRef (OpenT tout)))
-        | ReactPromoteRendersRepresentation
-            { should_distribute; promote_structural_components; renders_variant; resolved_elem } ->
-          promote_renders_reprensentation
-            cx
-            trace
-            ~use_op
-            ~reason
-            ~resolved_elem
-            ~should_distribute
-            ~promote_structural_components
-            ~renders_variant
-            t
-            (OpenT tout)
         | ReactConfigType default_props ->
           rec_flow
             cx
@@ -7118,149 +7103,6 @@ struct
         )
     in
     rec_flow cx trace (tc, ThisSpecializeT (reason_tapp, this, k))
-
-  (****************)
-  (* render types *)
-  (****************)
-  and promote_renders_reprensentation
-      cx
-      trace
-      ~use_op
-      ~reason
-      ~resolved_elem
-      ~should_distribute
-      ~promote_structural_components
-      ~renders_variant
-      input
-      tout =
-    let on_concretized = function
-      | UnionT (reason, rep) ->
-        let renders_reason = reason in
-        let rep =
-          UnionRep.ident_map
-            (fun t ->
-              let reason = update_desc_reason (fun desc -> RRenderType desc) (reason_of_t t) in
-              let destructor =
-                TypeDestructorT
-                  ( unknown_use,
-                    reason,
-                    ReactPromoteRendersRepresentation
-                      {
-                        should_distribute = false;
-                        promote_structural_components;
-                        renders_variant;
-                        resolved_elem;
-                      }
-                  )
-              in
-              EvalT (t, destructor, Eval.generate_id ()))
-            rep
-        in
-        let reason = update_desc_reason (fun desc -> RRenderType desc) reason in
-        let t =
-          if should_distribute then
-            DefT
-              ( renders_reason,
-                RendersT
-                  (StructuralRenders
-                     { renders_variant; renders_structural_type = UnionT (reason, rep) }
-                  )
-              )
-          else
-            UnionT (reason, rep)
-        in
-        rec_flow_t cx trace ~use_op:unknown_use (t, tout)
-      | DefT
-          ( _,
-            ReactAbstractComponentT
-              { component_kind = Nominal (renders_id, renders_name, _); renders = renders_super; _ }
-          )
-        when Option.is_some resolved_elem ->
-        let result =
-          let t =
-            DefT (reason, RendersT (NominalRenders { renders_id; renders_name; renders_super }))
-          in
-          if should_distribute then
-            DefT
-              (reason, RendersT (StructuralRenders { renders_variant; renders_structural_type = t }))
-          else
-            t
-        in
-        (* Intentional unknown_use when flowing to tout *)
-        rec_flow_t cx trace ~use_op:unknown_use (result, tout)
-      | OpaqueT
-          ( elem_reason,
-            {
-              opaque_id;
-              super_t = Some (DefT (_, ObjT { props_tmap; _ }));
-              opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
-              _;
-            }
-          ) as l
-        when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
-        (match Context.find_monomorphized_component cx props_tmap with
-        | Some mono_component ->
-          let render_type =
-            get_builtin_typeapp cx elem_reason "React$ComponentRenders" [mono_component]
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
-        | None ->
-          if promote_structural_components then
-            (* We only want to promote if this is actually a React of a component, otherwise we want
-             * to flow the original object to the tout.
-             *
-             * We perform a speculative subtyping check and then use ComponentRenders to
-             * extract the render type of the component. This type gets forwarded to
-             * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
-             * from ComponentRenders, otherwise we error, as we've already checked for structural
-             * compatibility in subtyping kit. *)
-            let top_abstract_component =
-              let config = EmptyT.why reason in
-              let instance = MixedT.why reason in
-              let renders = get_builtin_type cx reason "React$Node" in
-              DefT
-                ( reason,
-                  ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
-                )
-            in
-            if speculative_subtyping_succeeds cx component_t top_abstract_component then
-              let render_type =
-                get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
-              in
-              rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
-            else
-              rec_flow_t cx trace ~use_op:unknown_use (l, tout)
-          else
-            promote_renders_reprensentation
-              cx
-              trace
-              ~use_op
-              ~reason
-              ~resolved_elem:(Some l)
-              ~should_distribute
-              ~promote_structural_components
-              ~renders_variant
-              component_t
-              tout)
-      | DefT (_, (RendersT _ as renders)) ->
-        rec_flow_t cx trace ~use_op:unknown_use (DefT (reason, renders), tout)
-      | l ->
-        let result =
-          let t =
-            match resolved_elem with
-            | Some t -> t
-            | None -> l
-          in
-          if should_distribute then
-            DefT
-              (reason, RendersT (StructuralRenders { renders_variant; renders_structural_type = t }))
-          else
-            t
-        in
-        (* Intentional unknown_use when flowing to tout *)
-        rec_flow_t cx trace ~use_op:unknown_use (result, tout)
-    in
-    possible_concrete_types_for_render_type cx reason input |> Base.List.iter ~f:on_concretized
 
   (*********)
   (* enums *)
@@ -9527,9 +9369,6 @@ struct
 
   and possible_concrete_types_for_inspection cx reason t =
     possible_concrete_types ConcretizeForInspection cx reason t
-
-  and possible_concrete_types_for_render_type cx reason t =
-    possible_concrete_types ConcretizeForRenderType cx reason t
 
   and singleton_concrete_type_for_inspection cx reason t =
     singleton_concrete_type ConcretizeForInspection cx reason t
