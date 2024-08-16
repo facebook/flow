@@ -208,7 +208,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         | RendersMaybe -> "renders?"
         | RendersStar -> "renders*"
       in
-      fuse [Atom renders_str; space; type_ ~depth t]
+      fuse [Atom renders_str; space; type_with_parens ~depth t]
   and type_generic ~depth (s, _, targs) =
     let name = identifier (local_name_of_symbol s) in
     type_reference ~depth name targs
