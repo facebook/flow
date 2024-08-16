@@ -749,12 +749,11 @@ let%expect_test "component_param_typeof_reference" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [2:86];
+              ComponentMissingRenders {
+                loc = [2:86];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:86]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [2:86]; type_ref = true; name = "React$Node"}))})}}
 
   |}]
 
@@ -5776,12 +5775,11 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [9:25];
+              ComponentMissingRenders {
+                loc = [9:25];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [9:25]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [9:25]; type_ref = true; name = "React$Node"}))})}}
     6. EnumBinding {id_loc = [10:15-16];
          name = "A"; rep = StringRep {truthy = true};
          members = { "B" -> [10:19-20] };
@@ -6720,12 +6718,11 @@ let%expect_test "component" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [1:15];
+              ComponentMissingRenders {
+                loc = [1:15];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:15]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [1:15]; type_ref = true; name = "React$Node"}))})}}
 
   |}]
 
@@ -6772,12 +6769,11 @@ let%expect_test "component2" =
                    t = (TyRef (Unqualified LocalRef {ref_loc = [2:35-39]; index = 0}))});
            renders =
            (Annot
-              Renders {loc = [2:40];
+              ComponentMissingRenders {
+                loc = [2:40];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:40]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [2:40]; type_ref = true; name = "React$Node"}))})}}
 
   |}]
 
@@ -6812,12 +6808,11 @@ let%expect_test "component3" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [1:19];
+              ComponentMissingRenders {
+                loc = [1:19];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:19]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [1:19]; type_ref = true; name = "React$Node"}))})}}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-69];
          def =
@@ -6906,12 +6901,11 @@ let%expect_test "component_5" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [1:23];
+              ComponentMissingRenders {
+                loc = [1:23];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:23]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [1:23]; type_ref = true; name = "React$Node"}))})}}
     1. ComponentBinding {id_loc = [2:25-28];
          name = "Bar"; fn_loc = [2:15-31];
          def =
@@ -6920,12 +6914,11 @@ let%expect_test "component_5" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [2:31];
+              ComponentMissingRenders {
+                loc = [2:31];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:31]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [2:31]; type_ref = true; name = "React$Node"}))})}}
 
   |}]
 
@@ -6995,12 +6988,11 @@ let%expect_test "declare_component" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [1:31];
+              ComponentMissingRenders {
+                loc = [1:31];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [1:31]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                   (Unqualified BuiltinRef {ref_loc = [1:31]; type_ref = true; name = "React$Node"}))})}}
     1. ComponentBinding {id_loc = [2:33-36];
          name = "Bar"; fn_loc = [2:23-40];
          def =
@@ -7009,12 +7001,11 @@ let%expect_test "declare_component" =
            rest_param = None;
            renders =
            (Annot
-              Renders {loc = [2:39];
+              ComponentMissingRenders {
+                loc = [2:39];
                 arg =
                 (TyRef
-                   (Unqualified BuiltinRef {ref_loc = [2:39]; type_ref = true; name = "React$Node"}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}} |}]
+                   (Unqualified BuiltinRef {ref_loc = [2:39]; type_ref = true; name = "React$Node"}))})}} |}]
 
 let%expect_test "component_type" =
   print_sig {|
@@ -7069,13 +7060,12 @@ let%expect_test "component_type" =
                  rest_param = None;
                  renders =
                  (Annot
-                    Renders {loc = [4:28];
+                    ComponentMissingRenders {
+                      loc = [4:28];
                       arg =
                       (TyRef
                          (Unqualified
-                            BuiltinRef {ref_loc = [4:28]; type_ref = true; name = "React$Node"}));
-                      variant = Flow_ast.Type.Renders.Normal;
-                      allow_generic_t = true})}
+                            BuiltinRef {ref_loc = [4:28]; type_ref = true; name = "React$Node"}))})}
                )))} |}]
 
 let%expect_test "declare_component" =
@@ -7107,13 +7097,12 @@ let%expect_test "declare_component" =
                  rest_param = None;
                  renders =
                  (Annot
-                    Renders {loc = [1:35];
+                    ComponentMissingRenders {
+                      loc = [1:35];
                       arg =
                       (TyRef
                          (Unqualified
-                            BuiltinRef {ref_loc = [1:35]; type_ref = true; name = "React$Node"}));
-                      variant = Flow_ast.Type.Renders.Normal;
-                      allow_generic_t = true})}
+                            BuiltinRef {ref_loc = [1:35]; type_ref = true; name = "React$Node"}))})}
                )))}
     1. Variable {id_loc = [2:12-15];
          name = "Bar";
@@ -7125,13 +7114,12 @@ let%expect_test "declare_component" =
                  rest_param = None;
                  renders =
                  (Annot
-                    Renders {loc = [2:28];
+                    ComponentMissingRenders {
+                      loc = [2:28];
                       arg =
                       (TyRef
                          (Unqualified
-                            BuiltinRef {ref_loc = [2:28]; type_ref = true; name = "React$Node"}));
-                      variant = Flow_ast.Type.Renders.Normal;
-                      allow_generic_t = true})}
+                            BuiltinRef {ref_loc = [2:28]; type_ref = true; name = "React$Node"}))})}
                )))} |}]
 
 let%expect_test "render_types" =

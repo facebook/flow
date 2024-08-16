@@ -106,7 +106,7 @@ component.js:27:6,27:14
 
 render_types.js:1:6
 Flags:
-type X = renders null
+type X = renders any
 
 'X' defined at render_types.js:1:5
 
@@ -114,7 +114,7 @@ render_types.js:1:6,1:6
 
 render_types.js:3:6
 Flags:
-type Y = renders null | number
+type Y = renders any
 
 'Y' defined at render_types.js:3:5
 
@@ -124,17 +124,17 @@ render_types.js:8:6
 Flags:
 type Z = renders Foo
 
-'Foo' defined at render_types.js:5:0
+'Foo' defined at render_types.js:8:9
 'Z' defined at render_types.js:8:5
 
 render_types.js:8:6,8:6
 
 render_types.js:10:6
 Flags:
-type U = renders Foo | Bar
+type U = renders Bar | Foo
 
-'Bar' defined at render_types.js:6:0
-'Foo' defined at render_types.js:5:0
+'Bar' defined at render_types.js:10:9
+'Foo' defined at render_types.js:10:9
 'U' defined at render_types.js:10:5
 
 render_types.js:10:6,10:6
@@ -144,7 +144,7 @@ Flags:
 type V = renders Foo | Bar
 
 'Bar' defined at render_types.js:6:0
-'Foo' defined at render_types.js:5:0
+'Foo' defined at render_types.js:12:9
 'V' defined at render_types.js:12:5
 
 render_types.js:12:6,12:6
@@ -153,7 +153,7 @@ render_types.js:15:6
 Flags:
 type MaybeRenders = renders? Foo
 
-'Foo' defined at render_types.js:5:0
+'Foo' defined at render_types.js:15:20
 'MaybeRenders' defined at render_types.js:15:5
 
 render_types.js:15:6,15:17
@@ -162,7 +162,7 @@ render_types.js:18:6
 Flags:
 type StarRenders = renders* Foo
 
-'Foo' defined at render_types.js:5:0
+'Foo' defined at render_types.js:18:19
 'StarRenders' defined at render_types.js:18:5
 
 render_types.js:18:6,18:16
@@ -171,16 +171,16 @@ render_types.js:21:6
 Flags:
 type RendersElement = renders Foo
 
-'Foo' defined at render_types.js:5:0
+'Foo' defined at render_types.js:21:22
 'RendersElement' defined at render_types.js:21:5
 
 render_types.js:21:6,21:19
 
 render_types.js:25:6
 Flags:
-type PolyElement = renders Poly<number>
+type PolyElement = renders Poly
 
-'Poly' defined at render_types.js:24:0
+'Poly' defined at render_types.js:25:19
 'PolyElement' defined at render_types.js:25:5
 
 render_types.js:25:6,25:16
@@ -189,7 +189,7 @@ render_types.js:28:6
 Flags:
 type PolyElementNoTargs = renders Poly
 
-'Poly' defined at render_types.js:24:0
+'Poly' defined at render_types.js:28:26
 'PolyElementNoTargs' defined at render_types.js:28:5
 
 render_types.js:28:6,28:23
@@ -206,8 +206,8 @@ render_types.js:35:6
 Flags:
 type UnionPoly = renders Poly | Poly2
 
-'Poly' defined at render_types.js:24:0
-'Poly2' defined at render_types.js:33:0
+'Poly' defined at render_types.js:35:17
+'Poly2' defined at render_types.js:35:17
 'UnionPoly' defined at render_types.js:35:5
 
 render_types.js:35:6,35:14
@@ -223,31 +223,15 @@ render_types.js:8:7 = {
           "kind":"Renders",
           "argument":{
             "kind":"Generic",
-            "type":{"provenance":{"kind":"Local","loc":"render_types.js:5:1-15"},"name":"Foo"},
-            "generic_kind":"type alias"
+            "type":{"provenance":{"kind":"Local","loc":"render_types.js:8:10-20"},"name":"Foo"},
+            "generic_kind":"component"
           },
           "variant":"normal"
         }
       },
       "type":"type Z = renders Foo"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{"provenance":{"kind":"Local","loc":"render_types.js:8:6"},"name":"Z"},
-        "typeParams":null,
-        "body":{
-          "kind":"Renders",
-          "argument":{
-            "kind":"Generic",
-            "type":{"provenance":{"kind":"Local","loc":"render_types.js:5:1-15"},"name":"Foo"},
-            "generic_kind":"type alias"
-          },
-          "variant":"normal"
-        }
-      },
-      "type":"type Z = renders Foo"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{

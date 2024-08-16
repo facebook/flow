@@ -1,10 +1,10 @@
 //@flow
-component Foo() renders null { // invalid-render
-  return null;
-}
-component Bar() renders React$Node { // invalid-render
-  return null;
-}
+component FooBad() renders null { /* invalid-render */ return null; }
+component Foo() { return null; }
+
+component BarBad() renders React$Node { /* invalid-render */ return null; }
+component Bar() {  return null; }
+
 component Baz() renders Foo {
   return null as any;
 }
@@ -44,8 +44,8 @@ declare const rendersBazOrBaz: renders (
   rendersFoo as renders Bar; // ERROR
   rendersFoo as renders Bar; // ERROR
   rendersBaz as typeof rendersFoo; // OK
-  rendersFoo as renders (renders Bar); // ERROR
-  rendersFoo as renders (renders Bar); // ERROR
+  rendersFoo as renders (renders Bar); // invalid-renders turns RHS any
+  rendersFoo as renders (renders Bar); // invalid-renders turns RHS any
   rendersBaz as renders typeof rendersFoo; // type checks, but invalid-render
 }
 
@@ -116,10 +116,10 @@ declare const rendersBazOrBaz: renders (
   rendersFooOrBar as empty; // ERROR
   rendersFooOrBar as React$Node; // OK
   rendersFooOrBar as React$Node; // OK
-  rendersNode as React$MixedElement; // ERROR
+  rendersNode as React$MixedElement; // invalid-render of rendersNode makes LHS any
   rendersNode as React$Node; // OK
   declare const rendersNullOrNull: renders (null | null); // invalid-render
-  rendersNullOrNull as null; // ERROR
+  rendersNullOrNull as null; // invalid-render of rendersNullOrNull makes LHS any
   rendersFooOrBar.props; // ERROR
   rendersNode.props; // ERROR
 }

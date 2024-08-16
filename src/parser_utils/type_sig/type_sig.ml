@@ -574,6 +574,10 @@ type ('loc, 'a) annot =
       variant: Flow_ast.Type.Renders.variant;
       allow_generic_t: bool;
     }
+  | ComponentMissingRenders of {
+      loc: 'loc;
+      arg: 'a;
+    }
   | Values of 'loc * 'a
   | Exact of 'loc * 'a
   | Rest of 'loc * 'a * 'a

@@ -173,8 +173,6 @@ type component_t = {
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
-  mutable renders_type_argument_validations:
-    (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list;
   mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   mutable env_type_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
@@ -366,7 +364,6 @@ let make_ccx () =
     post_component_tvar_forcing_states = [];
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
-    renders_type_argument_validations = [];
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     missing_local_annot_lower_bounds = ALocFuzzyMap.empty;
@@ -588,8 +585,6 @@ let post_inference_polarity_checks cx = cx.ccx.post_inference_polarity_checks
 
 let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
 
-let renders_type_argument_validations cx = cx.ccx.renders_type_argument_validations
-
 let env_cache_find_opt cx ~for_value id =
   let cache =
     if for_value then
@@ -705,10 +700,6 @@ let add_post_inference_validation_flow cx t use_t =
 
 let add_post_inference_subtyping_check cx l use_op u =
   add_post_inference_validation_flow cx l (Type.UseT (use_op, u))
-
-let add_renders_type_argument_validation cx ~allow_generic_t loc variant t =
-  cx.ccx.renders_type_argument_validations <-
-    (loc, variant, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
 
 let add_env_cache_entry cx ~for_value id t =
   if for_value then

@@ -3266,6 +3266,7 @@ end
 module AConstraint = struct
   type op =
     | Annot_ConcretizeForImportsExports of Reason.t * (TypeTerm.t -> TypeTerm.t)
+    | Annot_ConcretizeForInspection of Reason.t * TypeCollector.t
     (* Imports *)
     | Annot_ImportNamedT of Reason.t * TypeTerm.import_kind * string * string * bool
     | Annot_ImportModuleNsT of Reason.t * symbol * bool
@@ -3398,6 +3399,7 @@ module AConstraint = struct
     | Annot_ThisSpecializeT _ -> "Annot_ThisSpecializeT"
     | Annot_UseT_TypeT _ -> "Annot_UseT_TypeT"
     | Annot_ConcretizeForImportsExports _ -> "Annot_ConcretizeForImportsExports"
+    | Annot_ConcretizeForInspection _ -> "Annot_ConcretizeForInspection"
     | Annot_CJSRequireT _ -> "Annot_CJSRequireT"
     | Annot_ImportTypeofT _ -> "Annot_ImportTypeofT"
     | Annot_ImportNamedT _ -> "Annot_ImportNamedT"
@@ -3431,6 +3433,7 @@ module AConstraint = struct
 
   let reason_of_op = function
     | Annot_ConcretizeForImportsExports (r, _)
+    | Annot_ConcretizeForInspection (r, _)
     | Annot_SpecializeT (_, r, _, _)
     | Annot_ThisSpecializeT (r, _)
     | Annot_UseT_TypeT (r, _)
@@ -3479,6 +3482,7 @@ module AConstraint = struct
     | Annot_ThisSpecializeT _
     | Annot_UseT_TypeT _
     | Annot_ConcretizeForImportsExports _
+    | Annot_ConcretizeForInspection _
     | Annot_CJSRequireT _
     | Annot_ImportTypeofT _
     | Annot_ImportNamedT _

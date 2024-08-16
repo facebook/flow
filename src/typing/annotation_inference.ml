@@ -16,6 +16,7 @@ let object_like_op = function
   | Annot_ThisSpecializeT _
   | Annot_UseT_TypeT _
   | Annot_ConcretizeForImportsExports _
+  | Annot_ConcretizeForInspection _
   | Annot_CJSRequireT _
   | Annot_ImportTypeofT _
   | Annot_ImportNamedT _
@@ -134,6 +135,9 @@ module type S = sig
   val copy_named_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
 
   val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+
+  val mk_non_generic_render_type :
+    Context.t -> Reason.t -> renders_variant:renders_variant -> Type.t -> Type.t
 
   val arith : Context.t -> Reason.t -> Type.t -> Type.t -> Type.ArithKind.t -> Type.t
 
@@ -530,6 +534,15 @@ module rec ConsGen : S = struct
     | (EvalT (_, TypeDestructorT (_, reason, TypeMap (ObjectMapi _)), _), _) ->
       error_unsupported ~suggestion:"$KeyMirror" cx reason op
     | (EvalT (_, TypeDestructorT (_, reason, _), _), _) -> error_unsupported cx reason op
+    | (OpenT (reason, id), Annot_ConcretizeForInspection (_, _)) ->
+      let t = elab_open cx ~seen reason id op in
+      (match t with
+      | OpenT (_, id) ->
+        (* Force the type so that the concretized results are eagarly added to the collector *)
+        let (_ : Type.t) = get_fully_resolved_type cx id in
+        ()
+      | _ -> ());
+      t
     | (OpenT (reason, id), _) -> elab_open cx ~seen reason id op
     | (AnnotT (r, t, _), _) ->
       let t = reposition cx (loc_of_reason r) t in
@@ -772,6 +785,12 @@ module rec ConsGen : S = struct
       (* Handling intersections as inputs would require use of speculation. Instead,
        * we ask the user to provide a simpler type. *)
       error_unsupported cx reason op
+    (***************************)
+    (* ConcretizeForInspection *)
+    (***************************)
+    | (l, Annot_ConcretizeForInspection (_, c)) ->
+      TypeCollector.add c l;
+      l
     (*************)
     (* Unary not *)
     (*************)
@@ -1315,6 +1334,22 @@ module rec ConsGen : S = struct
 
   and copy_type_exports cx ~from_ns reason ~module_t =
     elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
+
+  and mk_non_generic_render_type cx reason ~renders_variant t =
+    let concretize cx t =
+      let c = TypeCollector.create () in
+      let (_ : Type.t) = elab_t cx t (Annot_ConcretizeForInspection (reason_of_t t, c)) in
+      TypeCollector.collect c
+    in
+    let is_iterable_for_better_error _ _ = false in
+    Flow_js_utils.mk_non_generic_render_type
+      cx
+      reason
+      renders_variant
+      ~force_post_component:false
+      ~concretize
+      ~is_iterable_for_better_error
+      t
 
   and arith cx reason lhs_t rhs_t kind =
     elab_t cx lhs_t (Annot_ArithT { reason; flip = false; rhs_t; kind })
