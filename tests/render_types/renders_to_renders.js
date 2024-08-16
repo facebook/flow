@@ -5,30 +5,30 @@ component Foo() renders null { // invalid-render
 component Bar() renders React$Node { // invalid-render
   return null;
 }
-component Baz() renders ExactReactElement_DEPRECATED<typeof Foo> {
+component Baz() renders Foo {
   return null as any;
 }
 component Qux() renders (
-  | ExactReactElement_DEPRECATED<typeof Foo>
-  | ExactReactElement_DEPRECATED<typeof Bar>
+  | Foo
+  | Bar
 ) {
   return null as any;
 }
 
-declare const rendersFoo: renders ExactReactElement_DEPRECATED<typeof Foo>;
-declare const rendersBaz: renders ExactReactElement_DEPRECATED<typeof Baz>;
+declare const rendersFoo: renders Foo;
+declare const rendersBaz: renders Baz;
 declare const rendersNode: renders React$Node; // invalid-render
 declare const rendersFooOrBar: renders (
-  | ExactReactElement_DEPRECATED<typeof Foo>
-  | ExactReactElement_DEPRECATED<typeof Bar>
+  | Foo
+  | Bar
 );
 declare const rendersFooOrRendersBar:
-  | renders ExactReactElement_DEPRECATED<typeof Foo>
-  | renders ExactReactElement_DEPRECATED<typeof Bar>;
-declare const rendersQux: renders ExactReactElement_DEPRECATED<typeof Qux>;
+  | renders Foo
+  | renders Bar;
+declare const rendersQux: renders Qux;
 declare const rendersBazOrBaz: renders (
-  | ExactReactElement_DEPRECATED<typeof Baz>
-  | ExactReactElement_DEPRECATED<typeof Baz>
+  | Baz
+  | Baz
 );
 
 /* Renders ~> Union */
@@ -41,11 +41,11 @@ declare const rendersBazOrBaz: renders (
 
 /* Nominal ~> Nominal */
 {
-  rendersFoo as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
-  rendersFoo as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
+  rendersFoo as renders Bar; // ERROR
+  rendersFoo as renders Bar; // ERROR
   rendersBaz as typeof rendersFoo; // OK
-  rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
-  rendersFoo as renders (renders ExactReactElement_DEPRECATED<typeof Bar>); // ERROR
+  rendersFoo as renders (renders Bar); // ERROR
+  rendersFoo as renders (renders Bar); // ERROR
   rendersBaz as renders typeof rendersFoo; // type checks, but invalid-render
 }
 
@@ -53,60 +53,60 @@ declare const rendersBazOrBaz: renders (
 {
   rendersFoo as typeof rendersFooOrBar; // OK
   rendersFoo as renders (
-    | ExactReactElement_DEPRECATED<typeof Foo>
+    | Foo
     | null  // invalid-render
-    | ExactReactElement_DEPRECATED<typeof Bar>
+    | Bar
   ); // OK
   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-  rendersQux as renders (ExactReactElement_DEPRECATED<typeof Foo> | ExactReactElement_DEPRECATED<typeof Bar>); // OK
-  rendersQux as renders (ExactReactElement_DEPRECATED<typeof Foo> | ExactReactElement_DEPRECATED<typeof Baz>); // ERROR
+  rendersQux as renders (Foo | Bar); // OK
+  rendersQux as renders (Foo | Baz); // ERROR
   component A0() renders null { // invalid-render
     return null;
   }
-  component A1() renders (ExactReactElement_DEPRECATED<typeof A0> | null) { // invalide-render
+  component A1() renders (A0 | null) { // invalide-render
     return null;
   }
-  declare const x: renders ExactReactElement_DEPRECATED<typeof A1>; // OK
+  declare const x: renders A1; // OK
   x as renders null; // type checks, but invalid-render
   x as renders (null | null);  // type checks, but invalid-render
-  x as renders (null | ExactReactElement_DEPRECATED<typeof A1>);  // type checks, but invalid-render
+  x as renders (null | A1);  // type checks, but invalid-render
 }
 
 /* Structural ~> Nominal */
 {
-  rendersBazOrBaz as renders ExactReactElement_DEPRECATED<typeof Foo>; // OK
-  rendersBazOrBaz as renders ExactReactElement_DEPRECATED<typeof Bar>; // ERROR
+  rendersBazOrBaz as renders Foo; // OK
+  rendersBazOrBaz as renders Bar; // ERROR
 }
 
 /* Structural ~> Structural */
 {
   rendersFooOrBar as typeof rendersFooOrBar; // OK
   rendersBazOrBaz as renders (
-    | ExactReactElement_DEPRECATED<typeof Foo>
-    | ExactReactElement_DEPRECATED<typeof Baz>
+    | Foo
+    | Baz
   ); // OK
   rendersFooOrBar as renders (
     | ExactReactElement_DEPRECATED<typeof Foo>
-    | ExactReactElement_DEPRECATED<typeof Bar>
+    | Bar
   ); // OK
   rendersFooOrBar as renders (
-    | ExactReactElement_DEPRECATED<typeof Foo>
-    | ExactReactElement_DEPRECATED<typeof Baz>
+    | Foo
+    | Baz
   ); // ERROR
 }
 
 /* Enter Structural Render Types */
 {
   null as renders null; // type checks, but invalid-render
-  Foo as renders ExactReactElement_DEPRECATED<typeof Foo>; // ERROR
+  Foo as renders Foo; // ERROR
   3 as renders (null | number); // type checks, but invalid-render
   declare const x: ExactReactElement_DEPRECATED<() => React$Node>;
   x as renders typeof x; // type checks, but invalid-render
   declare const mixedElement: React$MixedElement;
   // The test below ensures repositioning does not hit unsoundness in speculation
   mixedElement as renders (
-    | ExactReactElement_DEPRECATED<typeof Foo>
-    | ExactReactElement_DEPRECATED<typeof Bar>
+    | Foo
+    | Bar
   ); // ERROR
 }
 
