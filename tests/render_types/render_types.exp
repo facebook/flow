@@ -336,6 +336,15 @@ References:
                                     ^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- poly_component_type.js:20:77
+
+Cannot use `T` [1] as the type argument of renders type. Generic render types are not allowed with `renders*`.
+[invalid-render]
+
+   20| declare const Poly3: component<T: React.Node = void>(children?: T) renders* T; // banned
+                                                                                   ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- poly_no_args.js:4:10
 
 Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
@@ -2057,7 +2066,7 @@ References:
 
 
 
-Found 150 errors
+Found 151 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

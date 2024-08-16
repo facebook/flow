@@ -3141,6 +3141,8 @@ let to_printable_error :
             code "renders*";
             text " instead.";
           ]
+        | (InvalidRendersGenericT, Flow_ast.Type.Renders.Star) ->
+          [text " Generic render types are not allowed with "; code "renders*"; text "."]
         | (InvalidRendersGenericT, _) ->
           [
             text " Generic render types are only allowed in rendering declaration of ";

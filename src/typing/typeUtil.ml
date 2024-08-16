@@ -953,7 +953,7 @@ let mk_possibly_generic_render_type ~allow_generic_t ~variant reason t =
         None
       | Some (hd :: tl) -> Some (hd, tl)
   in
-  if allow_generic_t then
+  if allow_generic_t && variant <> Flow_ast.Type.Renders.Star then
     match singleton_or_union_of_generic_t t with
     | Some generic_ts ->
       let t =
@@ -967,15 +967,7 @@ let mk_possibly_generic_render_type ~allow_generic_t ~variant reason t =
           |> List.cons (DefT (reason, BoolT (Some false)))
           |> List.rev
           |> union_of_ts reason
-        | Renders.Star ->
-          union_of_ts
-            reason
-            [
-              DefT (reason, ArrT (ROArrayAT (t, None)));
-              DefT (reason, NullT);
-              DefT (reason, VoidT);
-              DefT (reason, BoolT (Some false));
-            ]
+        | Renders.Star -> failwith "Already banned above"
       in
       Some
         (DefT
