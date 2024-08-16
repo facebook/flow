@@ -1534,8 +1534,8 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       Annot (Intersection { loc; t0; t1; ts = List.rev ts_rev })
     | T.Typeof { T.Typeof.argument = t; targs; _ } -> typeof opts scope tbls xs loc t targs
     | T.Renders { T.Renders.operator_loc = _; comments = _; argument; variant } ->
-      let t = annot opts scope tbls xs argument in
-      Annot (Renders (loc, t, variant))
+      let arg = annot opts scope tbls xs argument in
+      Annot (Renders { loc; arg; variant; allow_generic_t = false })
     | T.Keyof { T.Keyof.argument; comments = _ } ->
       let t = annot opts scope tbls xs argument in
       Annot (Keys (loc, t))
@@ -1741,17 +1741,13 @@ and component_type =
     | Ast.Type.AvailableRenders
         (loc, { Ast.Type.Renders.operator_loc = _; comments = _; variant; argument }) ->
       let loc = push_loc tbls loc in
-      let t = annot opts scope tbls xs argument in
-      Annot (Renders (loc, t, variant))
+      let arg = annot opts scope tbls xs argument in
+      Annot (Renders { loc; arg; variant; allow_generic_t = true })
     | Ast.Type.MissingRenders loc ->
       let loc = push_loc tbls loc in
-      Annot
-        (Renders
-           ( loc,
-             maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node",
-             Ast.Type.Renders.Normal
-           )
-        )
+      let arg = maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node" in
+      let variant = Ast.Type.Renders.Normal in
+      Annot (Renders { loc; arg; variant; allow_generic_t = true })
   in
   fun opts
       scope
@@ -3610,17 +3606,13 @@ and component_def =
     | Ast.Type.AvailableRenders
         (loc, { Ast.Type.Renders.operator_loc = _; comments = _; variant; argument }) ->
       let loc = push_loc tbls loc in
-      let t = annot opts scope tbls xs argument in
-      Annot (Renders (loc, t, variant))
+      let arg = annot opts scope tbls xs argument in
+      Annot (Renders { loc; arg; variant; allow_generic_t = true })
     | Ast.Type.MissingRenders loc ->
       let loc = push_loc tbls loc in
-      Annot
-        (Renders
-           ( loc,
-             maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node",
-             Ast.Type.Renders.Normal
-           )
-        )
+      let arg = maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node" in
+      let variant = Ast.Type.Renders.Normal in
+      Annot (Renders { loc; arg; variant; allow_generic_t = true })
   in
   fun opts scope tbls f ->
     let {

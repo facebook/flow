@@ -1986,7 +1986,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
   and convert_render_type
       env ~allow_generic_t loc { Ast.Type.Renders.operator_loc; comments; argument; variant } =
     let (((argument_loc, t), _) as t_ast) = convert { env with in_renders_arg = true } argument in
-    Context.add_renders_type_argument_validation env.cx ~allow_generic_t argument_loc variant t;
     let reason_desc =
       let arg_desc = desc_of_reason (reason_of_t t) in
       match variant with
@@ -1995,17 +1994,31 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | Ast.Type.Renders.Star -> RRenderStarType arg_desc
     in
     let reason = mk_reason reason_desc loc in
-    let renders_variant =
-      let open Ast.Type in
-      match variant with
-      | Renders.Normal -> RendersNormal
-      | Renders.Maybe -> RendersMaybe
-      | Renders.Star -> RendersStar
-    in
-    let renders_t =
-      Flow_js_utils.mk_renders_type env.cx reason renders_variant ~mk_type_destructor t
-    in
-    (renders_t, { Ast.Type.Renders.operator_loc; comments; argument = t_ast; variant })
+    match TypeUtil.mk_possibly_generic_render_type ~allow_generic_t ~variant reason t with
+    | Some t' ->
+      let node = Flow_js.get_builtin_type env.cx reason "React$Node" in
+      let use_op = Op (RenderTypeInstantiation { render_type = reason }) in
+      Context.add_post_inference_subtyping_check env.cx t use_op node;
+      (t', { Ast.Type.Renders.operator_loc; comments; argument = t_ast; variant })
+    | None ->
+      Context.add_renders_type_argument_validation
+        env.cx
+        ~allow_generic_t:false
+        argument_loc
+        variant
+        t;
+      let reason = mk_reason reason_desc loc in
+      let renders_variant =
+        let open Ast.Type in
+        match variant with
+        | Renders.Normal -> RendersNormal
+        | Renders.Maybe -> RendersMaybe
+        | Renders.Star -> RendersStar
+      in
+      let renders_t =
+        Flow_js_utils.mk_renders_type env.cx reason renders_variant ~mk_type_destructor t
+      in
+      (renders_t, { Ast.Type.Renders.operator_loc; comments; argument = t_ast; variant })
 
   and convert_object =
     let obj_proto_t = ObjProtoT (locationless_reason RObjectPrototype) in

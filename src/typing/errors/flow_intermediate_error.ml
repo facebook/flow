@@ -3143,8 +3143,9 @@ let to_printable_error :
           ]
         | (InvalidRendersGenericT, _) ->
           [
+            text " Generic render types are only allowed in rendering declaration of ";
             text
-              " Generic type renders are only allowed in rendering declaration of component syntax components.";
+              "component syntax components, and only one or a union of generic types are permitted.";
           ]
         | (UncategorizedInvalidRenders, _) -> []
       in
