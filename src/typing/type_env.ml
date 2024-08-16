@@ -189,26 +189,22 @@ let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
  *  all the incoming writes as lower bounds. In the future, however, we
  *  may want to compute a more specific least upper bound for these writes.
  *)
-let phi cx reason ts =
-  match ts with
-  | [t] -> t
+let phi cx reason states =
+  match states with
+  | [s] -> s
   | _ ->
     let tvar = Tvar.mk cx reason in
-    let errs =
+    let actually_refined_ref = ref false in
+    let errors =
       Base.List.concat_map
-        ~f:(function
-          | Ok t ->
-            Flow_js.flow_t cx (t, tvar);
-            []
-          | Error (t, errs) ->
-            Flow_js.flow_t cx (t, tvar);
-            Nel.to_list errs)
-        ts
+        ~f:(fun (Context.PossiblyRefinedWriteState { t; errors; actually_refined }) ->
+          Flow_js.flow_t cx (t, tvar);
+          actually_refined_ref := !actually_refined_ref || actually_refined;
+          errors)
+        states
     in
     Tvar_resolver.resolve cx tvar;
-    (match errs with
-    | [] -> Ok tvar
-    | hd :: tl -> Error (tvar, (hd, tl)))
+    Context.PossiblyRefinedWriteState { t = tvar; errors; actually_refined = !actually_refined_ref }
 
 let read_pred_func_info_exn cx loc =
   let f () = ALocMap.find loc (Context.environment cx).Loc_env.pred_func_map in
@@ -341,49 +337,53 @@ let predicate_of_refinement cx =
 let refine cx ~actual_source_read reason loc refi res =
   Base.Option.value_map
     ~f:(fun predicate ->
-      let map_t t =
+      let (Context.PossiblyRefinedWriteState { t; errors; actually_refined }) = res in
+      let (t, actually_refined') =
         let predicate = predicate |> snd |> predicate_of_refinement cx in
         let reason = mk_reason (RRefined (desc_of_reason reason)) loc in
         match predicate with
-        | None -> t
+        | None -> (t, false)
         | Some predicate ->
           (match Predicate_kit.run_predicate_track_changes cx t predicate reason with
-          | Predicate_kit.TypeUnchanged _t -> t
-          | Predicate_kit.TypeChanged t ->
-            if actual_source_read then Context.add_refined_location cx loc;
-            t)
+          | Predicate_kit.TypeUnchanged _t -> (t, false)
+          | Predicate_kit.TypeChanged t -> (t, actual_source_read))
       in
-      match res with
-      | Ok t -> Ok (map_t t)
-      | Error (t, errs) -> Error (map_t t, errs))
+      Context.PossiblyRefinedWriteState
+        { t; errors; actually_refined = actually_refined || actually_refined' })
     ~default:res
     refi
 
-let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
+let possibly_refined_write_state_of_state
+    ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
   let { Loc_env.var_info; _ } = env in
   let find_write_exn kind reason =
     let loc = Reason.loc_of_reason reason in
     checked_find_loc_env_write cx kind loc
   in
-  let rec res_of_state states val_id refi =
-    let t =
+  let base_possibly_refined_write_state ?(errors = []) t =
+    Context.PossiblyRefinedWriteState { t; errors; actually_refined = false }
+  in
+  let rec loop states val_id refi =
+    let state =
       lazy
         (Base.List.map
            ~f:(fun entry ->
              match (entry, lookup_mode) with
              | (Env_api.Undefined reason, _)
              | (Env_api.Uninitialized reason, _) ->
-               Ok Type.(VoidT.make reason)
-             | (Env_api.Number reason, _) -> Ok Type.(NumT.make reason)
+               Type.(VoidT.make reason) |> base_possibly_refined_write_state
+             | (Env_api.Number reason, _) ->
+               Type.(NumT.make reason) |> base_possibly_refined_write_state
              | (Env_api.DeclaredFunction loc, _) ->
-               Ok (provider_type_for_def_loc ~intersect:true cx env loc)
+               provider_type_for_def_loc ~intersect:true cx env loc
+               |> base_possibly_refined_write_state
              | (Env_api.Undeclared (_name, def_loc), ForType) ->
-               Ok (checked_find_loc_env_write cx Env_api.OrdinaryNameLoc def_loc)
+               checked_find_loc_env_write cx Env_api.OrdinaryNameLoc def_loc
+               |> base_possibly_refined_write_state
              | (Env_api.Undeclared (name, def_loc), (ForValue | ForTypeof)) ->
-               Error
-                 ( Type.(AnyT.make (AnyError None) reason),
-                   Nel.one (Env_api.ReferencedBeforeDeclaration { name; def_loc })
-                 )
+               base_possibly_refined_write_state
+                 ~errors:[Env_api.ReferencedBeforeDeclaration { name; def_loc }]
+                 Type.(AnyT.make (AnyError None) reason)
              | (Env_api.With_ALoc.EmptyArray { reason; arr_providers = _ }, _)
              | (Env_api.With_ALoc.Write reason, _) ->
                Debug_js.Verbose.print_if_verbose_lazy
@@ -396,7 +396,7 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                        (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                    ]
                    );
-               Ok (find_write_exn Env_api.OrdinaryNameLoc reason)
+               find_write_exn Env_api.OrdinaryNameLoc reason |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.IllegalWrite reason, _) ->
                Debug_js.Verbose.print_if_verbose_lazy
                  cx
@@ -408,14 +408,19 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                        (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                    ]
                    );
-               Ok Type.(AnyT.make (AnyError None) reason)
+               Type.(AnyT.make (AnyError None) reason) |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.Refinement { refinement_id; writes; write_id }, _) ->
-               find_refi var_info refinement_id |> Base.Option.some |> res_of_state writes write_id
+               find_refi var_info refinement_id |> Base.Option.some |> loop writes write_id
              | (Env_api.With_ALoc.Global name, (ForValue | ForTypeof)) ->
-               Flow_js_utils.lookup_builtin_value_result cx name reason
+               (match Flow_js_utils.lookup_builtin_value_result cx name reason with
+               | Ok t -> base_possibly_refined_write_state t
+               | Error (t, errs) -> base_possibly_refined_write_state ~errors:(Nel.to_list errs) t)
              | (Env_api.With_ALoc.Global name, ForType) ->
-               Flow_js_utils.lookup_builtin_type_result cx name reason
-             | (Env_api.With_ALoc.GlobalThis reason, _) -> Ok (ObjProtoT reason)
+               (match Flow_js_utils.lookup_builtin_type_result cx name reason with
+               | Ok t -> base_possibly_refined_write_state t
+               | Error (t, errs) -> base_possibly_refined_write_state ~errors:(Nel.to_list errs) t)
+             | (Env_api.With_ALoc.GlobalThis reason, _) ->
+               ObjProtoT reason |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.IllegalThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -425,7 +430,7 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                      (Reason.string_of_aloc loc)
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Ok Type.(AnyT.make (AnyError None) reason)
+               Type.(AnyT.make (AnyError None) reason) |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.FunctionThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -435,7 +440,7 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                      (Reason.string_of_aloc loc)
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Ok (find_write_exn Env_api.FunctionThisLoc reason)
+               find_write_exn Env_api.FunctionThisLoc reason |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.ClassInstanceThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -445,7 +450,8 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                      (Reason.string_of_aloc loc)
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Ok (find_write_exn Env_api.ClassInstanceThisLoc reason)
+               find_write_exn Env_api.ClassInstanceThisLoc reason
+               |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.ClassStaticThis reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -455,7 +461,7 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                      (Reason.string_of_aloc loc)
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Ok (find_write_exn Env_api.ClassStaticThisLoc reason)
+               find_write_exn Env_api.ClassStaticThisLoc reason |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.ClassInstanceSuper reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -465,7 +471,8 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                      (Reason.string_of_aloc loc)
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Ok (find_write_exn Env_api.ClassInstanceSuperLoc reason)
+               find_write_exn Env_api.ClassInstanceSuperLoc reason
+               |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.ClassStaticSuper reason, _) ->
                Debug_js.Verbose.print_if_verbose
                  cx
@@ -475,22 +482,25 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
                      (Reason.string_of_aloc loc)
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
-               Ok (find_write_exn Env_api.ClassStaticSuperLoc reason)
-             | (Env_api.With_ALoc.ModuleScoped _, _) -> Ok Type.(AnyT.at AnnotatedAny loc)
+               find_write_exn Env_api.ClassStaticSuperLoc reason
+               |> base_possibly_refined_write_state
+             | (Env_api.With_ALoc.ModuleScoped _, _) ->
+               Type.(AnyT.at AnnotatedAny loc) |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.Unreachable loc, _) ->
                let reason = mk_reason (RCustom "unreachable value") loc in
-               Ok (EmptyT.make reason)
+               EmptyT.make reason |> base_possibly_refined_write_state
              | (Env_api.With_ALoc.Projection loc, _) ->
-               Ok (checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc))
+               checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc
+               |> base_possibly_refined_write_state)
            states
         |> phi cx reason
         )
     in
-    let t =
+    let state =
       match val_id with
       | Some id ->
         if Context.typing_mode cx <> Context.CheckingMode then
-          Lazy.force t
+          Lazy.force state
         else
           let for_value =
             match lookup_mode with
@@ -501,23 +511,38 @@ let res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
           in
           (match Context.env_cache_find_opt cx ~for_value id with
           | None ->
-            let t = Lazy.force t in
-            Context.add_env_cache_entry cx ~for_value id t;
-            t
-          | Some t -> t)
-      | _ -> Lazy.force t
+            let state = Lazy.force state in
+            Context.add_env_cache_entry cx ~for_value id state;
+            state
+          | Some state -> state)
+      | _ -> Lazy.force state
     in
     (* When val_kind = Internal, the read is a synthetic read and it's internal to Flow.
      * For these reads, we will not highlight refined values. *)
-    t |> refine cx ~actual_source_read:(val_kind <> Env_api.Internal) reason loc refi
+    state |> refine cx ~actual_source_read:(val_kind <> Env_api.Internal) reason loc refi
   in
-  match res_of_state write_locs val_id refi with
-  | Ok t -> Ok (Tvar_resolver.resolved_t cx t)
-  | Error (t, err) -> Error (Tvar_resolver.resolved_t cx t, err)
+  let (Context.PossiblyRefinedWriteState { t; actually_refined; _ } as state) =
+    loop write_locs val_id refi
+  in
+  Tvar_resolver.resolve cx t;
+  if actually_refined then Context.add_refined_location cx loc;
+  state
 
 let type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
-  res_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi
-  |> Flow_js_utils.apply_env_errors cx loc
+  let (Context.PossiblyRefinedWriteState { t; errors; actually_refined = _ }) =
+    possibly_refined_write_state_of_state
+      ~lookup_mode
+      ~val_kind
+      cx
+      env
+      loc
+      reason
+      write_locs
+      val_id
+      refi
+  in
+  List.iter (Flow_js_utils.emit_cacheable_env_error cx loc) errors;
+  t
 
 let read_entry ~lookup_mode cx loc reason =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
@@ -653,12 +678,24 @@ let intrinsic_ref cx ?desc name loc =
       | (_, _, None) ->
         Error loc
       | (_, _, Some def_loc) ->
-        let t = res_of_state ~lookup_mode:ForValue ~val_kind cx env loc reason write_locs id None in
+        let t =
+          possibly_refined_write_state_of_state
+            ~lookup_mode:ForValue
+            ~val_kind
+            cx
+            env
+            loc
+            reason
+            write_locs
+            id
+            None
+        in
         Ok (t, def_loc))
   in
   match read with
   | Error _ -> None
-  | Ok ((Ok x | Error (x, _)), def_loc) -> Some (Flow_js.reposition cx loc x, def_loc)
+  | Ok (Context.PossiblyRefinedWriteState { t; _ }, def_loc) ->
+    Some (Flow_js.reposition cx loc t, def_loc)
 
 let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
   let t = query_var ~lookup_mode cx name ?desc loc in

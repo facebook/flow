@@ -112,6 +112,13 @@ end
 
 type sig_t = Type.TypeContext.t
 
+type possibly_refined_write_state =
+  | PossiblyRefinedWriteState of {
+      t: Type.t;
+      errors: Env_api.cacheable_env_error list;
+      actually_refined: bool;
+    }
+
 type master_context =
   | EmptyMasterContext
   | NonEmptyMasterContext of {
@@ -173,8 +180,8 @@ type component_t = {
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
-  mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
-  mutable env_type_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
+  mutable env_value_cache: possibly_refined_write_state IMap.t;
+  mutable env_type_cache: possibly_refined_write_state IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
   mutable annot_graph: Type.AConstraint.t IMap.t;
   (* Used to power an autofix that takes the lower bounds of types where we emit missing-local-annot
