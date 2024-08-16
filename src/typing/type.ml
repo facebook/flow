@@ -249,8 +249,8 @@ module rec TypeTerm : sig
       }
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
-   * The subtyping rules are much simpler to understand in these forms, so we use the
-   * ReactPromoteRendersRepresentation type destructor to take a syntactic render type and turn it
+   * The subtyping rules are much simpler to understand in these forms, so we use the render type
+   * normalization logic defined in flow_js_utils to take a syntactic render type and turn it
    * into a RendersT (it will ALWAYS return a RendersT) of one of the canonical forms.
    *
    * The Structural (t) form guarantees that if you evaluate t you will not
@@ -1608,12 +1608,6 @@ module rec TypeTerm : sig
     | ReactElementPropsType
     | ReactElementConfigType
     | ReactElementRefType
-    | ReactPromoteRendersRepresentation of {
-        should_distribute: bool;
-        promote_structural_components: bool;
-        renders_variant: renders_variant;
-        resolved_elem: t option;
-      }
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
@@ -1674,7 +1668,6 @@ module rec TypeTerm : sig
     | ConcretizeForInspection
     | ConcretizeForPredicate of predicate_concretizer_variant
     | ConcretizeForSentinelPropTest
-    | ConcretizeForRenderType
     | ConcretizeComputedPropsT
     | ConcretizeForOperatorsChecking
 
@@ -4114,7 +4107,6 @@ let string_of_use_ctor = function
       | ConcretizeForPredicate v ->
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
       | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
-      | ConcretizeForRenderType -> "ConcretizeForRenderType"
       | ConcretizeComputedPropsT -> "ConcretizeComputedPropsT"
       | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking")
   | LookupT _ -> "LookupT"

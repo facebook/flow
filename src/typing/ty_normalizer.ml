@@ -409,15 +409,13 @@ module Make (I : INPUT) : S = struct
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
-        | ReactPromoteRendersRepresentation _
         | ReactConfigType _ ->
           false)
       )
     | Env.EvaluateAll ->
       (match d with
       | T.ReactDRO _
-      | T.MakeHooklike
-      | T.ReactPromoteRendersRepresentation _ ->
+      | T.MakeHooklike ->
         false
       | _ -> true)
 
@@ -1654,14 +1652,6 @@ module Make (I : INPUT) : S = struct
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
-      | T.ReactPromoteRendersRepresentation { renders_variant; _ } ->
-        let variant =
-          match renders_variant with
-          | T.RendersNormal -> Ty.RendersNormal
-          | T.RendersMaybe -> Ty.RendersMaybe
-          | T.RendersStar -> Ty.RendersStar
-        in
-        return (Ty.Renders (ty, variant))
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in

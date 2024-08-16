@@ -1490,7 +1490,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       rec_flow_t cx trace ~use_op (t, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | (OpaqueT (reason_opaque, _), DefT (renders_r, RendersT (NominalRenders _ as form))) ->
+    | ( OpaqueT (reason_opaque, { opaque_id; _ }),
+        DefT (renders_r, RendersT (NominalRenders _ as form))
+      )
+      when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
       rec_flow
         cx
         trace
@@ -1504,12 +1507,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
               tried_promotion = false;
             }
         )
-    | ( OpaqueT (reason_opaque, _),
+    | ( OpaqueT (reason_opaque, { opaque_id; _ }),
         DefT
           ( renders_r,
             RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t } as form)
           )
-      ) ->
+      )
+      when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
       if not (speculative_subtyping_succeeds cx l t) then
         rec_flow
           cx
