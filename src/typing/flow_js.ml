@@ -2668,78 +2668,6 @@ struct
         | (DefT (r, _), (ReactPropsToOut (reason_op, props) | ReactInToProps (reason_op, props))) ->
           ReactJs.err_incompatible cx ~use_op:unknown_use r (React.GetProps props);
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
-        | ( _,
-            TryRenderTypePromotionT
-              { use_op; reason; reason_obj; upper_renders; tried_promotion = false }
-          ) ->
-          let u =
-            TryRenderTypePromotionT
-              { use_op; reason; reason_obj; upper_renders; tried_promotion = true }
-          in
-          (match l with
-          | OpaqueT
-              ( elem_reason,
-                {
-                  opaque_id;
-                  super_t = Some (DefT (_, ObjT { props_tmap; _ }));
-                  opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
-                  _;
-                }
-              ) as l
-            when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
-            (match Context.find_monomorphized_component cx props_tmap with
-            | Some mono_component ->
-              let render_type =
-                get_builtin_typeapp cx elem_reason "React$ComponentRenders" [mono_component]
-              in
-              rec_flow cx trace (render_type, u)
-            | None ->
-              (* We only want to promote if this is actually a React of a component, otherwise we want
-               * to flow the original object to the tout.
-               *
-               * We perform a speculative subtyping check and then use ComponentRenders to
-               * extract the render type of the component. This type gets forwarded to
-               * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
-               * from ComponentRenders, otherwise we error, as we've already checked for structural
-               * compatibility in subtyping kit. *)
-              let top_abstract_component =
-                let config = EmptyT.why reason in
-                let instance = MixedT.why reason in
-                let renders = get_builtin_type cx reason "React$Node" in
-                DefT
-                  ( reason,
-                    ReactAbstractComponentT
-                      { config; instance; renders; component_kind = Structural }
-                  )
-              in
-              if speculative_subtyping_succeeds cx component_t top_abstract_component then
-                let render_type =
-                  get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
-                in
-                rec_flow cx trace (render_type, u)
-              else
-                rec_flow cx trace (l, u))
-          | _ -> rec_flow cx trace (l, u))
-        (**** Renders Subtyping Cont. *****)
-        (* We successfully promoted an ObjT to a Render type. Proceed with normal RendersT subtyping *)
-        | ( DefT (_, RendersT _),
-            TryRenderTypePromotionT
-              { use_op; reason; reason_obj; upper_renders; tried_promotion = true }
-          ) ->
-          let l = reposition_reason cx ~trace reason_obj ~use_desc:true l in
-          let renders_t = DefT (reason, RendersT upper_renders) in
-          rec_flow_t cx trace ~use_op (l, renders_t)
-        (* We did not successfully promote the ObjT and we have a RendersT on the RHS. We already
-         * tried to do structural subtyping, so this is an error *)
-        | ( _,
-            TryRenderTypePromotionT
-              { use_op; reason; reason_obj; upper_renders = _; tried_promotion = true }
-          ) ->
-          add_output
-            cx
-            (Error_message.EIncompatibleWithUseOp
-               { reason_lower = reason_obj; reason_upper = reason; use_op }
-            )
         (***********************************************)
         (* function types deconstruct into their parts *)
         (***********************************************)
@@ -5863,11 +5791,6 @@ struct
     let covariant_flow ~use_op t = rec_flow_t cx trace ~use_op (any, t) in
     let contravariant_flow ~use_op t = rec_flow_t cx trace ~use_op (t, any) in
     match u with
-    | TryRenderTypePromotionT { use_op; reason_obj; reason = _; upper_renders; tried_promotion = _ }
-      ->
-      let renders = DefT (reason_obj, RendersT upper_renders) in
-      covariant_flow ~use_op renders;
-      true
     | ExitRendersT { renders_reason = _; u } -> any_propagated cx trace any u
     | UseT (use_op, DefT (_, ArrT (ROArrayAT (t, _)))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *) ->

@@ -968,7 +968,6 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "WriteComputedObjPropCheckT (%s)" (string_of_reason reason)
     | CheckReactImmutableT _ -> "CheckReactImmutableT"
     | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
-    | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
     | ExitRendersT _ -> "ExitRendersT"
     | EvalTypeDestructorT { destructor = s; tout = (r, x); _ } ->
       p
