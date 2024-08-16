@@ -857,17 +857,20 @@ let lookup_builtin_type_result cx x reason =
   | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
   | None -> lookup_builtin_name_error x (loc_of_reason reason)
 
-let apply_env_errors cx loc = function
-  | Ok t -> t
-  | Error (t, errs) ->
-    Nel.iter (emit_cacheable_env_error cx loc) errs;
-    t
-
-let lookup_builtin_value cx x reason =
-  lookup_builtin_value_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
-
-let lookup_builtin_type cx x reason =
-  lookup_builtin_type_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
+let (lookup_builtin_value, lookup_builtin_type) =
+  let apply_errors cx reason = function
+    | Ok t -> t
+    | Error (t, errs) ->
+      Nel.iter (emit_cacheable_env_error cx (loc_of_reason reason)) errs;
+      t
+  in
+  let lookup_builtin_value cx x reason =
+    lookup_builtin_value_result cx x reason |> apply_errors cx reason
+  in
+  let lookup_builtin_type cx x reason =
+    lookup_builtin_type_result cx x reason |> apply_errors cx reason
+  in
+  (lookup_builtin_value, lookup_builtin_type)
 
 let lookup_builtin_value_opt cx x =
   let builtins = Context.builtins cx in

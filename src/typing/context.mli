@@ -39,6 +39,13 @@ end
  * perf-file bases, like the ability to munge underscores. *)
 type t
 
+type possibly_refined_write_state =
+  | PossiblyRefinedWriteState of {
+      t: Type.t;
+      errors: Env_api.cacheable_env_error list;
+      actually_refined: bool;
+    }
+
 (* 2. Per-component information is needed during constraint solving, which
  * happens outside the context of any specific file -- specifically when dealing
  * with constraints between files in a cycle. *)
@@ -390,8 +397,7 @@ val run_in_signature_tvar_env : t -> (unit -> 'a) -> 'a
 
 val run_in_hint_eval_mode : t -> (unit -> 'a) -> 'a
 
-val add_env_cache_entry :
-  t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
+val add_env_cache_entry : t -> for_value:bool -> int -> possibly_refined_write_state -> unit
 
 val add_hint_eval_cache_entry : t -> int -> Type.t option -> unit
 
@@ -475,8 +481,7 @@ val force_fully_resolved_tvar : t -> Type.Constraint.ForcingState.t -> Type.t
 
 val find_resolved : t -> Type.t -> Type.t option
 
-val env_cache_find_opt :
-  t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
+val env_cache_find_opt : t -> for_value:bool -> int -> possibly_refined_write_state option
 
 val hint_eval_cache_find_opt : t -> int -> Type.t option option
 
