@@ -939,3 +939,54 @@ let map_property ~f prop =
   | SyntheticField { get_type; set_type } ->
     SyntheticField
       { get_type = Base.Option.map ~f get_type; set_type = Base.Option.map ~f set_type }
+
+let mk_possibly_generic_render_type ~allow_generic_t ~variant reason t =
+  let singleton_or_union_of_generic_t =
+    let rec loop acc t =
+      match (acc, t) with
+      | (None, _) -> None
+      | (Some l, GenericT _) -> Some (t :: l)
+      | (acc, UnionT (_, rep)) -> UnionRep.members rep |> Base.List.fold ~init:acc ~f:loop
+      | _ -> None
+    in
+    fun t ->
+      match loop (Some []) t with
+      | None
+      | Some [] ->
+        None
+      | Some (hd :: tl) -> Some (hd, tl)
+  in
+  if allow_generic_t then
+    match singleton_or_union_of_generic_t t with
+    | Some generic_ts ->
+      let t =
+        let open Flow_ast.Type in
+        match variant with
+        | Renders.Normal -> t
+        | Renders.Maybe ->
+          Nel.to_list generic_ts
+          |> List.cons (DefT (reason, NullT))
+          |> List.cons (DefT (reason, VoidT))
+          |> List.cons (DefT (reason, BoolT (Some false)))
+          |> List.rev
+          |> union_of_ts reason
+        | Renders.Star ->
+          union_of_ts
+            reason
+            [
+              DefT (reason, ArrT (ROArrayAT (t, None)));
+              DefT (reason, NullT);
+              DefT (reason, VoidT);
+              DefT (reason, BoolT (Some false));
+            ]
+      in
+      Some
+        (DefT
+           ( reason,
+             RendersT
+               (StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t })
+           )
+        )
+    | None -> None
+  else
+    None
