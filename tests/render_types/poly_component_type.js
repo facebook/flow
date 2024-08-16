@@ -16,3 +16,5 @@ declare const Poly2: component<T: React.Node = void>(children?: T) renders? T;
 <Poly2><Button /></Poly2> as renders? Button; // OK
 <Poly2><Button /></Poly2> as renders* NotAButton; // ERROR
 <Poly2><Button /></Poly2> as renders* Button; // OK
+
+declare const Poly3: component<T: React.Node = void>(children?: T) renders* T; // banned
