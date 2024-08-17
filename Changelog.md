@@ -1,3 +1,14 @@
+### 0.244.0
+
+Likely to cause new Flow errors:
+* The `inexact_tuple_types_syntax` option (which was on by default) is now deleted. Make sure you are using `hermes-parser` and related packages at version >= 0.23.0
+* Render types will no longer allow specific renders wrapping more general renders like `renders React.Element<React.AbstractComponent<{}, mixed, renders* A>>`. Invalid render types will behave like any.
+* Some previously allowed generic render types are no longer allowed ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZlduuSMTBJC-Mgz4sHwNSBos6A6u9w1mbGqJUoBaCRHEzrcDEgBrbAk62mPhXFxJ91v7x+fRHEp3gxCKBgNpUU7nAF5KBQA7tEhUJ4VJqmDA+SEgIEwsBwhHHCCMTZQbjHOoYCrooHwmDYY4Ie5HSgkY5kCQM7ZXKH5E7MdJwMgAgC+-EgGiSa1wVGwAAJICJGNALFKAGLEACMAB4ACrIKUAJVYyisADkIBoAHwACgAlFKWFANIypZqANxSgD0bql9jgryl3CIAHdSgAde0HCUsGXpeUwnzK4gAJi1Ov10WNpuwlptdodJAA-E7XR6vVlff6IEG2KHxZKo3KFXGVRAAMzJvUGmIm83W22CXMAKkL7s93rLrwrIbDINrspjiqbABYtaqUx30xpeE6E6u013Mz2cyYSIOLZrVVKAD5bq1Fkel3B+8eV6vhmfRhsSKUAISobdThr3LNezDR1T0veMIFVG9hylKAKylTBoUnXIQAaI84GgJIMnsEwQAFIA)). This ensures that generic render types are only used to model transparent components like `React.Fragment`.
+* `renders* T` where `T` is generic is now banned.
+
+Notable bug fixes:
+* Render type with union type arguments will be correctly wrapped with parentheses.
+
 ### 0.243.0
 
 Likely to cause new Flow errors:
