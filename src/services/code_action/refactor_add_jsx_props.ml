@@ -78,8 +78,14 @@ let name_of_attribute attribute =
     name_of_jsx_id namespace ^ "." ^ name_of_jsx_id name
   | Opening.SpreadAttribute _ -> "_"
 
-let get_existing_attributes_names cx ~tast attributes =
+let get_existing_attributes_names cx ~tast attributes children =
   let open Ast.JSX in
+  let init_set =
+    if List.is_empty (snd children) then
+      SSet.empty
+    else
+      SSet.singleton "children"
+  in
   List.fold_left
     (fun acc attr ->
       match attr with
@@ -94,7 +100,7 @@ let get_existing_attributes_names cx ~tast attributes =
           | Some names -> SSet.union names acc
           | None -> acc)
         | None -> acc))
-    SSet.empty
+    init_set
     attributes
 
 let attr_compare x y =
@@ -133,7 +139,9 @@ class mapper cx ~snippets_enabled ~tast target_loc =
         match attributes_from_conf_opt with
         | None -> elt
         | Some attributes_from_conf ->
-          let existing_attributes_names = get_existing_attributes_names cx ~tast attributes in
+          let existing_attributes_names =
+            get_existing_attributes_names cx ~tast attributes elt.children
+          in
           let new_attrs =
             SSet.diff attributes_from_conf existing_attributes_names
             |> SSet.elements

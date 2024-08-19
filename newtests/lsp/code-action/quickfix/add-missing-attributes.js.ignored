@@ -61,3 +61,8 @@ function test12(Foo: React.AbstractComponent<Props1>): any {
     const obj = {bar: "2"};
     return <Foo {...obj} />; // add 'foo'
 }
+
+function test13() {
+    declare component Foo(foo: number, children: React.Node);
+    return <Foo><div/></Foo>;
+}
