@@ -75,6 +75,46 @@ declare type UserID = number;
 This tells Flow that any code within the project can reference the `UserID`
 global type -- which, in this case, is just an alias for `number`.
 
+## Declaring A Global Namespace {#toc-declaring-a-global-namespace}
+
+A namespace defines a collection of values and types:
+
+```js flow-check
+declare namespace Foo {
+  declare const bar: string;
+  type Baz = number;
+}
+
+Foo.bar as Foo.Baz; // error
+```
+
+To declare a global namespace that should be accessible throughout your project,
+use the `declare namespace` syntax in a libdef file:
+
+**flow-typed/myLibDef.js**
+```js flow-check
+declare namespace Foo {
+  declare const bar: string;
+  type Baz = number;
+}
+```
+
+This tells Flow that any code within the project can reference the `Foo` global
+namespace.
+
+If a declared namespace only contains type declarations, then the namespace itself
+can only be used in a type context.
+
+**flow-typed/myTypeOnlyNamespace.js**
+```js flow-check
+declare namespace TypeOnlyFoo {
+  type Baz = number;
+}
+
+TypeOnlyFoo; // error
+type T = TypeOnlyFoo.Baz; // ok
+```
+
 ## Declaring A Module {#toc-declaring-a-module}
 
 Often, third-party code is organized in terms of modules rather than globals. To
