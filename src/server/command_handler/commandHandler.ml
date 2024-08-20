@@ -2266,6 +2266,31 @@ let handle_persistent_get_def
     Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
+let loc_to_vscode_linked_location_in_markdown ~default_uri (loc : Loc.t) : string option =
+  let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
+  match source with
+  | None -> None
+  | Some file ->
+    (* We'll use default_uri here as we don't expect this to fail *)
+    let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
+    let lib =
+      if File_key.is_lib_file file then
+        "(lib) "
+      else
+        ""
+    in
+    let basename = Filename.basename (File_key.to_string file) in
+    Some
+      (Printf.sprintf
+         "[`%s%s:%d:%d`](%s%s)"
+         lib
+         basename
+         line
+         column
+         (DocumentUri.to_string location.Location.uri)
+         (Loc.start_pos_to_string_for_vscode_loc_uri_fragment loc)
+      )
+
 let handle_persistent_infer_type
     ~options ~reader ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let open TextDocumentPositionParams in
@@ -2320,29 +2345,10 @@ let handle_persistent_infer_type
           ( [MarkedCode ("flow", result)],
             Base.Option.value_map refs ~default:[] ~f:(fun refs ->
                 Base.List.map refs ~f:(fun (name, loc) ->
-                    let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
-                    match source with
+                    match loc_to_vscode_linked_location_in_markdown ~default_uri loc with
                     | None -> []
-                    | Some file ->
-                      (* We'll use default_uri here as we don't expect this to fail *)
-                      let location =
-                        Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc
-                      in
-                      let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
-                      let basename =
-                        File_path.basename (File_path.make (File_key.to_string file))
-                      in
-                      let str =
-                        spf
-                          "`%s` defined at [`%s%s:%d:%d`](%s%s)"
-                          name
-                          lib
-                          basename
-                          line
-                          column
-                          (DocumentUri.to_string location.Location.uri)
-                          (Loc.start_pos_to_string_for_vscode_loc_uri_fragment loc)
-                      in
+                    | Some loc_str ->
+                      let str = spf "`%s` defined at %s" name loc_str in
                       [MarkedString str]
                 )
             )
