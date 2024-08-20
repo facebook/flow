@@ -1223,13 +1223,10 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
     )
 
 let vscode_detailed_diagnostics ~options client =
-  let client_config = Persistent_connection.client_config client in
   let lsp_initialize_params = Persistent_connection.lsp_initialize_params client in
-  Persistent_connection.Client_config.detailed_error_rendering_merge_with_options
-    ~flowconfig_enabled:(Options.vscode_detailed_diagnostics options)
-    ~client_init_options_enabled:
-      Lsp.Initialize.(lsp_initialize_params.initializationOptions.detailedErrorRendering)
-    client_config
+  Base.Option.value
+    Lsp.Initialize.(lsp_initialize_params.initializationOptions.detailedErrorRendering)
+    ~default:(Options.vscode_detailed_diagnostics options)
 
 let rank_autoimports_by_usage ~options client =
   let client_config = Persistent_connection.client_config client in
@@ -2217,18 +2214,6 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
   | _ ->
     let client_config = client_config client in
     let json = Some settings in
-    let client_config =
-      match Jget.val_opt json "detailedErrorRendering" with
-      | Some (Hh_json.JSON_String "true")
-      | Some (Hh_json.JSON_Bool true) ->
-        { client_config with Client_config.detailed_error_rendering = Client_config.True }
-      | Some (Hh_json.JSON_String "false")
-      | Some (Hh_json.JSON_Bool false) ->
-        { client_config with Client_config.detailed_error_rendering = Client_config.False }
-      | Some _
-      | None ->
-        { client_config with Client_config.detailed_error_rendering = Client_config.Default }
-    in
     let suggest = Jget.obj_opt json "suggest" in
     let client_config =
       match Jget.bool_opt suggest "autoImports" with

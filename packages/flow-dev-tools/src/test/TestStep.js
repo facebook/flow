@@ -460,7 +460,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  lspStartAndConnect: (?number, ?{}) => TestStepSecondStage = (
+  lspStartAndConnect: (?number, ?{...}) => TestStepSecondStage = (
     timeoutMsOpt,
     initParamsOpt,
   ) => {

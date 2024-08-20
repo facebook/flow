@@ -10,6 +10,7 @@ const {suite, test} = require('../../Tester');
 module.exports = (suite(
   ({
     lspStartAndConnect,
+    lspInitializeParams,
     lspRequestAndWaitUntilResponse,
     lspNotification,
     addFile,
@@ -35,17 +36,10 @@ module.exports = (suite(
     ).flowConfig('_flowconfig_enabled'),
 
     test('textDocument/publishDiagnostics flowconfig enabled, client enabled', [
-      lspStartAndConnect(),
-      lspNotification('workspace/didChangeConfiguration', {
-        settings: {detailedErrorRendering: true},
-      }).verifyAllLSPMessagesInStep(
-        [],
-        [
-          'textDocument/publishDiagnostics',
-          'window/showStatus',
-          '$/cancelRequest',
-        ],
-      ),
+      lspStartAndConnect(null, {
+        ...lspInitializeParams,
+        initializationOptions: {detailedErrorRendering: true},
+      }),
       addFile('file_with_simple_error.js')
         .waitUntilLSPMessage(
           9000,
@@ -61,17 +55,10 @@ module.exports = (suite(
     test(
       'textDocument/publishDiagnostics flowconfig enabled, client disabled',
       [
-        lspStartAndConnect(),
-        lspNotification('workspace/didChangeConfiguration', {
-          settings: {detailedErrorRendering: false},
-        }).verifyAllLSPMessagesInStep(
-          [],
-          [
-            'textDocument/publishDiagnostics',
-            'window/showStatus',
-            '$/cancelRequest',
-          ],
-        ),
+        lspStartAndConnect(null, {
+          ...lspInitializeParams,
+          initializationOptions: {detailedErrorRendering: false},
+        }),
         addFile('file_with_simple_error.js')
           .waitUntilLSPMessage(
             9000,
@@ -105,17 +92,10 @@ module.exports = (suite(
     test(
       'textDocument/publishDiagnostics flowconfig disabled, client enabled',
       [
-        lspStartAndConnect(),
-        lspNotification('workspace/didChangeConfiguration', {
-          settings: {detailedErrorRendering: true},
-        }).verifyAllLSPMessagesInStep(
-          [],
-          [
-            'textDocument/publishDiagnostics',
-            'window/showStatus',
-            '$/cancelRequest',
-          ],
-        ),
+        lspStartAndConnect(null, {
+          ...lspInitializeParams,
+          initializationOptions: {detailedErrorRendering: true},
+        }),
         addFile('file_with_simple_error.js')
           .waitUntilLSPMessage(
             9000,
@@ -132,17 +112,10 @@ module.exports = (suite(
     test(
       'textDocument/publishDiagnostics flowconfig disabled, client disabled',
       [
-        lspStartAndConnect(),
-        lspNotification('workspace/didChangeConfiguration', {
-          settings: {detailedErrorRendering: false},
-        }).verifyAllLSPMessagesInStep(
-          [],
-          [
-            'textDocument/publishDiagnostics',
-            'window/showStatus',
-            '$/cancelRequest',
-          ],
-        ),
+        lspStartAndConnect(null, {
+          ...lspInitializeParams,
+          initializationOptions: {detailedErrorRendering: false},
+        }),
         addFile('file_with_simple_error.js')
           .waitUntilLSPMessage(
             9000,

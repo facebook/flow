@@ -14,20 +14,10 @@ module Client_config = struct
     | False
 
   type t = {
-    detailed_error_rendering: client_toggle;
     rank_autoimports_by_usage: client_toggle;
     suggest_autoimports: bool;
     show_suggest_ranking_info: bool;
   }
-
-  let detailed_error_rendering { detailed_error_rendering; _ } = detailed_error_rendering
-
-  let detailed_error_rendering_merge_with_options
-      ~flowconfig_enabled ~client_init_options_enabled { detailed_error_rendering; _ } =
-    match detailed_error_rendering with
-    | Default -> Base.Option.value client_init_options_enabled ~default:flowconfig_enabled
-    | True -> true
-    | False -> false
 
   let rank_autoimports_by_usage { rank_autoimports_by_usage; _ } = rank_autoimports_by_usage
 
@@ -114,11 +104,9 @@ let send_errors =
         Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
     in
     let vscode_detailed_diagnostics =
-      Client_config.detailed_error_rendering_merge_with_options
-        ~flowconfig_enabled:flowconfig_vscode_detailed_diagnostics
-        ~client_init_options_enabled:
-          Lsp.Initialize.(client.lsp_initialize_params.initializationOptions.detailedErrorRendering)
-        client.client_config
+      Base.Option.value
+        Lsp.Initialize.(client.lsp_initialize_params.initializationOptions.detailedErrorRendering)
+        ~default:flowconfig_vscode_detailed_diagnostics
     in
     let diagnostics =
       Flow_lsp_conversions.diagnostics_of_flow_errors
@@ -152,8 +140,7 @@ let add_client client_id lsp_initialize_params =
       type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
       client_config =
         {
-          Client_config.detailed_error_rendering = Client_config.Default;
-          suggest_autoimports = true;
+          Client_config.suggest_autoimports = true;
           rank_autoimports_by_usage = Client_config.Default;
           show_suggest_ranking_info = false;
         };
@@ -284,18 +271,11 @@ let client_did_change_configuration (client : single_client) (new_config : Clien
   Hh_logger.info "Client #%d changed configuration" client.client_id;
   let old_config = client.client_config in
 
-  let old_detailed_error_rendering = Client_config.detailed_error_rendering old_config in
-  let new_detailed_error_rendering = Client_config.detailed_error_rendering new_config in
   let client_toggle_to_string = function
     | Client_config.Default -> "default"
     | Client_config.True -> "true"
     | Client_config.False -> "false"
   in
-  if old_detailed_error_rendering <> new_detailed_error_rendering then
-    Hh_logger.info
-      "  detailed_error_rendering: %s -> %s"
-      (client_toggle_to_string old_detailed_error_rendering)
-      (client_toggle_to_string new_detailed_error_rendering);
 
   let old_suggest_autoimports = Client_config.suggest_autoimports old_config in
   let new_suggest_autoimports = Client_config.suggest_autoimports new_config in
