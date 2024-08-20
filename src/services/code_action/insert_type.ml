@@ -431,8 +431,8 @@ class mapper ~strict ~synth_type ~casting_syntax target =
       p'
   end
 
-let type_lookup_at_location cx typed_ast loc =
-  match Typed_ast_finder.find_exact_match_annotation cx typed_ast (ALoc.of_loc loc) with
+let type_lookup_at_location typed_ast loc =
+  match Typed_ast_finder.find_exact_match_annotation typed_ast (ALoc.of_loc loc) with
   | Some p -> p
   | None -> raise @@ unexpected @@ UnknownTypeAtPoint loc
 
@@ -649,8 +649,7 @@ let insert_type
     ?remote_converter
     ast
     target
-    (fun location -> type_lookup_at_location cx typed_ast location
-  )
+    (type_lookup_at_location typed_ast)
 
 let insert_type_t
     ~cx

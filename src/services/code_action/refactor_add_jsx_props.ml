@@ -94,7 +94,7 @@ let get_existing_attributes_names cx ~tast attributes children =
       | Opening.Attribute (_, { Attribute.name = Attribute.NamespacedName _; _ }) ->
         acc (* non-react jsx *)
       | Opening.SpreadAttribute (_, { SpreadAttribute.argument = (expr_loc, _); _ }) ->
-        (match Typed_ast_finder.find_exact_match_annotation cx tast (ALoc.of_loc expr_loc) with
+        (match Typed_ast_finder.find_exact_match_annotation tast (ALoc.of_loc expr_loc) with
         | Some t ->
           (match get_obj_prop_names ~include_optional:true cx (TypeUtil.reason_of_t t) t with
           | Some names -> SSet.union names acc
@@ -132,7 +132,7 @@ class mapper cx ~snippets_enabled ~tast target_loc =
       match name with
       | Identifier (id_loc, _) when (not found) && Loc.contains id_loc target_loc -> begin
         let attributes_from_conf_opt =
-          match Typed_ast_finder.find_exact_match_annotation cx tast (ALoc.of_loc id_loc) with
+          match Typed_ast_finder.find_exact_match_annotation tast (ALoc.of_loc id_loc) with
           | Some t -> get_required_attribute_names cx loc t
           | None -> None
         in

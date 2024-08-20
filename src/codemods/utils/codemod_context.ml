@@ -28,7 +28,7 @@ module Typed = struct
   let ty_at_loc norm_opts ccx loc =
     let { cx; file_sig; typed_ast; _ } = ccx in
     let aloc = ALoc.of_loc loc in
-    match Typed_ast_finder.find_exact_match_annotation cx typed_ast aloc with
+    match Typed_ast_finder.find_exact_match_annotation typed_ast aloc with
     | None -> Error MissingTypeAnnotation
     | Some t ->
       let genv =

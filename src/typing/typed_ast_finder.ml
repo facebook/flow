@@ -219,35 +219,25 @@ class type_parameter_mapper =
 module ExactMatchQuery = struct
   exception Found of Type.t
 
-  let found ~tparams_rev:_ t = raise (Found t)
+  class exact_match_searcher (target_loc : ALoc.t) =
+    object
+      inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
 
-  class exact_match_searcher cx (target_loc : ALoc.t) =
-    object (self)
-      inherit type_parameter_mapper as super
+      method on_loc_annot loc = loc
 
-      method! type_param ((_, { Ast.Type.TypeParam.name = (loc, _); _ }) as tparam) =
-        if target_loc = loc then (
-          let tparam = self#make_typeparam tparam in
-          rev_bound_tparams <- tparam :: rev_bound_tparams;
-          self#annot_with_tparams (found (mk_bound_t cx tparam))
-        ) else
-          super#type_param tparam
-
-      method! on_type_annot annot =
+      method on_type_annot annot =
         let (loc, t) = annot in
         if target_loc = loc then
-          self#annot_with_tparams (found t)
+          raise (Found t)
         else
-          super#on_type_annot annot
+          annot
     end
 
-  let find cx typed_ast aloc =
-    let searcher = new exact_match_searcher cx aloc in
-    try
-      ignore (searcher#program typed_ast);
-      None
-    with
-    | Found t -> Some t
+  let find typed_ast aloc =
+    let searcher = new exact_match_searcher aloc in
+    match searcher#program typed_ast with
+    | exception Found t -> Some t
+    | _ -> None
 end
 
 let find_exact_match_annotation = ExactMatchQuery.find

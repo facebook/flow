@@ -15,8 +15,8 @@ let import_mode_to_import_kind =
   | Ty.TypeMode -> ImportType
   | Ty.TypeofMode -> ImportTypeof
 
-let add_bind_ident_from_typed_ast cx typed_ast name import_mode loc acc =
-  match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
+let add_bind_ident_from_typed_ast typed_ast name import_mode loc acc =
+  match Typed_ast_finder.find_exact_match_annotation typed_ast loc with
   | Some t -> (name, loc, import_mode, t) :: acc
   | None -> acc
 
@@ -66,7 +66,7 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
                   remote_name
                   acc
               | Some typed_ast ->
-                add_bind_ident_from_typed_ast cx typed_ast local_name import_mode local_loc acc)
+                add_bind_ident_from_typed_ast typed_ast local_name import_mode local_loc acc)
             acc
             imported_locs_nel)
         remote_map
@@ -115,12 +115,12 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
     | Error _ -> acc
   end
 
-let add_require_bindings_from_typed_ast cx ~typed_ast ~import_mode binding acc =
+let add_require_bindings_from_typed_ast ~typed_ast ~import_mode binding acc =
   let rec loop binding acc =
     match binding with
     | BindIdent (loc, name) ->
       let loc = ALoc.of_loc loc in
-      add_bind_ident_from_typed_ast cx typed_ast name import_mode loc acc
+      add_bind_ident_from_typed_ast typed_ast name import_mode loc acc
     | BindNamed map -> List.fold_left (fun acc (_, binding) -> loop binding acc) acc map
   in
   loop binding acc
@@ -132,8 +132,7 @@ let add_require_bindings cx ~typed_ast ~import_mode ~source bindings_opt acc =
         let (loc, name) = source in
         let loc = ALoc.of_loc loc in
         add_require_bindings_from_exports_map cx loc name bindings acc
-      | Some typed_ast ->
-        add_require_bindings_from_typed_ast cx ~typed_ast ~import_mode bindings acc
+      | Some typed_ast -> add_require_bindings_from_typed_ast ~typed_ast ~import_mode bindings acc
   )
 
 let add_import_bindings cx ~typed_ast acc require =
