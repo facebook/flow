@@ -58,6 +58,10 @@ val debug_to_string : ?include_source:bool -> t -> string
 (* Relatively compact; suitable for use as a unique string identifier *)
 val to_string_no_source : t -> string
 
+(* In VSCode, clicking file://foo.js#L1,1 will jump the specific line and column.
+ * This function generates the fragment part (starting with #). *)
+val start_pos_to_string_for_vscode_loc_uri_fragment : t -> string
+
 val mk_loc : ?source:File_key.t -> int * int -> int * int -> t
 
 val source : t -> File_key.t option

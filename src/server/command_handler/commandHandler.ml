@@ -2349,15 +2349,14 @@ let handle_persistent_infer_type
                       in
                       let str =
                         spf
-                          "`%s` defined at [`%s%s:%d:%d`](%s#L%d,%d)"
+                          "`%s` defined at [`%s%s:%d:%d`](%s%s)"
                           name
                           lib
                           basename
                           line
                           column
                           (DocumentUri.to_string location.Location.uri)
-                          line
-                          column
+                          (Loc.start_pos_to_string_for_vscode_loc_uri_fragment loc)
                       in
                       [MarkedString str]
                 )

@@ -160,6 +160,17 @@ let to_string_no_source loc =
   else
     Printf.sprintf "%d:%d-%d" line start end_
 
+let start_pos_to_string_for_vscode_loc_uri_fragment loc =
+  let line = loc.start.line in
+  let start = loc.start.column + 1 in
+  let (line, start) =
+    if line <= 0 then
+      (0, 0)
+    else
+      (line, start)
+  in
+  Printf.sprintf "#L%d,%d" line start
+
 let mk_loc ?source (start_line, start_column) (end_line, end_column) =
   {
     source;
