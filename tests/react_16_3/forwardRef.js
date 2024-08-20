@@ -26,7 +26,7 @@ type FooProps = {|foo: number|};
 const UnionRef = React.forwardRef<
   FooProps,
   HTMLButtonElement | HTMLAnchorElement,
->((props: FooProps, ref): React.Element<'button' | 'a'> => {
+>((props: FooProps, ref): React.MixedElement => {
   if (props.foo === 0) {
     return <a {...props} ref={ref} />;
   }

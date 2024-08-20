@@ -1,8 +1,10 @@
 lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}, null>}
 lazy_ref.js:14:9,14:9
-lazy_ref.js:19:9 = Promise<{+default: (x: Props) => Element<(x: Props) => Node>}>
+lazy_ref.js:19:9 = Promise<
+  {+default: (x: Props) => ExactReactElement_DEPRECATED<(x: Props) => Node>},
+>
 
-'Element' defined at (lib) react.js:390:22
+'ExactReactElement_DEPRECATED' defined at (lib) react.js:164:13
 'Node' defined at (lib) react.js:402:22
 'Promise' defined at (lib) core.js:1972:14
 'Props' defined at exports-component.js:5:5

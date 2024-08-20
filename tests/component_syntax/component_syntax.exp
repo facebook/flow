@@ -2408,34 +2408,6 @@ References:
                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- poly.js:32:4
-
-Cannot get `el.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
-
-   poly.js:32:4
-   32| el.props.bar; // error
-          ^^^^^
-
-References:
-   poly.js:31:12
-   31| const el = <C foo="str" />;
-                  ^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- poly.js:34:10
-
-Cannot get `el_empty.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
-
-   poly.js:34:10
-   34| el_empty.props.bar; // error
-                ^^^^^
-
-References:
-   poly.js:33:17
-   33| const el_empty: React.Element<React.AbstractComponent<empty>> = el;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:43
 
 Cannot assign `Foo` to `a` because mixed [1] is incompatible with props of component Foo [2]. [incompatible-type]
@@ -3379,7 +3351,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 224 errors
+Found 222 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

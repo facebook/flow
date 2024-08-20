@@ -1,7 +1,7 @@
 function promotion_on_cyclic_1() {
   declare component Foo();
 
-  type T = React.Element<React.AbstractComponent<empty, mixed, T>>;
+  type T = ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, T>>;
   declare const recursiveElement: T;
   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
 }
@@ -12,7 +12,7 @@ function promotion_on_cyclic_2() {
   declare component Foo();
   declare component Bar() renders Bar;
 
-  type T = React.Element<typeof Bar>;
+  type T = ExactReactElement_DEPRECATED<typeof Bar>;
   declare const recursiveElement: T;
   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
 }

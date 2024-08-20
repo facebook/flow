@@ -12,7 +12,7 @@ function ex1() {
   let Component = ({prop}: Props) => { return <>{prop}</> }
   // `Component` has type`React.ComponentType<Props>`
   let element = <Component {...props} />
-  // `element` has type `React.Element<React.ComponentType<Props>>`
+  // `element` has type `React$Element<React.ComponentType<Props>>`
 
   type OtherProps = {| other_prop: string |};
   declare var OtherComponent: (OtherProps) => React.Node;

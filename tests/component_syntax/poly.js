@@ -16,7 +16,7 @@ component BRB<TValue: string>(foo: TValue) { return null };
 
 type BRBT<TValue: string> = component(foo:TValue);
 
-component Foo<TValue: string>(setTV: TValue => void, children: React.ChildrenArray<React.Element<BRBT<TValue>>>) {
+component Foo<TValue: string>(setTV: TValue => void, children: React.ChildrenArray<ExactReactElement_DEPRECATED<BRBT<TValue>>>) {
     return null;
  }
 
@@ -29,6 +29,3 @@ component Test() {
 
 declare const C: React.AbstractComponent<{foo: string}>;
 const el = <C foo="str" />;
-el.props.bar; // error
-const el_empty: React.Element<React.AbstractComponent<empty>> = el;
-el_empty.props.bar; // error

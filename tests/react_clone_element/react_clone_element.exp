@@ -1,4 +1,4 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:20:7
+Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either function type [1] requires another argument from call of method `cloneElement` [2].
@@ -6,8 +6,8 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or function type [4] requires another argument from call of method `cloneElement` [2].
  - Or function type [5] requires another argument from call of method `cloneElement` [2].
 
-   test.js:20:7
-    20| React.cloneElement(); // Error: Needs a minimum of two arguments.
+   test.js:19:7
+    19| React.cloneElement(); // Error: Needs a minimum of two arguments.
               ^^^^^^^^^^^^
 
 References:
@@ -19,8 +19,8 @@ References:
    282|     ...children: $ReadOnlyArray<React$Node>
    283|   ) => E)
           -----^ [1]
-   test.js:20:1
-    20| React.cloneElement(); // Error: Needs a minimum of two arguments.
+   test.js:19:1
+    19| React.cloneElement(); // Error: Needs a minimum of two arguments.
         ^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:284:6
              v----------------------------------------------------------------------
@@ -49,7 +49,7 @@ References:
           -----^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:21:7
+Error ----------------------------------------------------------------------------------------------------- test.js:20:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either string [1] is incompatible with `React.Element` [2].
@@ -57,13 +57,13 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or string [1] is incompatible with `React.Element` [4].
  - Or string [1] is incompatible with `React.Element` [5].
 
-   test.js:21:7
-    21| React.cloneElement('nope'); // Error: Not a valid element type.
+   test.js:20:7
+    20| React.cloneElement('nope'); // Error: Not a valid element type.
               ^^^^^^^^^^^^
 
 References:
-   test.js:21:20
-    21| React.cloneElement('nope'); // Error: Not a valid element type.
+   test.js:20:20
+    20| React.cloneElement('nope'); // Error: Not a valid element type.
                            ^^^^^^ [1]
    <BUILTINS>/react.js:279:36
    279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
@@ -79,7 +79,7 @@ References:
                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:22:7
+Error ----------------------------------------------------------------------------------------------------- test.js:21:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either object literal [1] is incompatible with `React.Element` [2].
@@ -87,13 +87,13 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or object literal [1] is incompatible with `React.Element` [4].
  - Or object literal [1] is incompatible with `React.Element` [5].
 
-   test.js:22:7
-    22| React.cloneElement({ type: any }); // Error: Not a valid element type.
+   test.js:21:7
+    21| React.cloneElement({ type: any }); // Error: Not a valid element type.
               ^^^^^^^^^^^^
 
 References:
-   test.js:22:20
-    22| React.cloneElement({ type: any }); // Error: Not a valid element type.
+   test.js:21:20
+    21| React.cloneElement({ type: any }); // Error: Not a valid element type.
                            ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:279:36
    279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
@@ -109,44 +109,44 @@ References:
                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:26:8
+Error ----------------------------------------------------------------------------------------------------- test.js:25:8
 
 Cannot call `React.cloneElement` because `A` [1] is incompatible with `B` [2] in type argument `C` [3].
 [incompatible-call]
 
-   test.js:26:8
-    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
+   test.js:25:8
+    25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
                ^^^^^^^^^^^^
 
 References:
-   test.js:14:30
-    14| declare var a: Element<Class<A>>;
-                                     ^ [1]
-   test.js:26:39
-    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
-                                              ^ [2]
-   <BUILTINS>/react.js:390:32
-   390|   declare export type Element<+C, +P = React$ElementProps<C>> = React$Element<C, P>;
-                                       ^ [3]
+   test.js:13:51
+    13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                          ^ [1]
+   test.js:25:60
+    25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
+                                                                   ^ [2]
+   <BUILTINS>/react.js:164:44
+   164| declare type ExactReactElement_DEPRECATED<+C, +P = React$ElementProps<C>> = React$Element<C, P>;
+                                                   ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:32:7
+Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either property `bar` is missing in object type [1] but exists in object literal [2].
  - Or property `bar` is missing in object type [3] but exists in object literal [2].
  - Or property `bar` is missing in object type [4] but exists in object literal [2].
 
-   test.js:32:7
-    32| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
+   test.js:31:7
+    31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:286:32
    286|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:32:23
-    32| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
+   test.js:31:23
+    31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
                               ^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:290:31
    290|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
@@ -156,90 +156,90 @@ References:
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:33:7
+Error ----------------------------------------------------------------------------------------------------- test.js:32:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either string [1] is incompatible with number [2] in property `foo`.
  - Or statics of `A` [3] is incompatible with string [4].
 
-   test.js:33:7
-    33| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+   test.js:32:7
+    32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
               ^^^^^^^^^^^^
 
 References:
-   test.js:33:29
-    33| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+   test.js:32:29
+    32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
                                     ^^^ [1]
-   test.js:6:39
-     6| class A extends React.Component<{foo: number}, void> {}
+   test.js:5:39
+     5| class A extends React.Component<{foo: number}, void> {}
                                               ^^^^^^ [2]
-   test.js:14:24
-    14| declare var a: Element<Class<A>>;
-                               ^^^^^^^^ [3]
+   test.js:13:45
+    13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                    ^^^^^^^^ [3]
    <BUILTINS>/react-dom.js:167:4
    167|   [string]: ReactDOM$HTMLElementJSXIntrinsic,
            ^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:39:7
+Error ----------------------------------------------------------------------------------------------------- test.js:38:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either string [1] is incompatible with number [2] in property `foo`.
  - Or statics of `B` [3] is incompatible with string [4].
 
-   test.js:39:7
-    39| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+   test.js:38:7
+    38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
               ^^^^^^^^^^^^
 
 References:
-   test.js:39:29
-    39| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+   test.js:38:29
+    38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
                                     ^^^ [1]
-   test.js:7:39
-     7| class B extends React.Component<{foo: number, bar: number}, void> {}
+   test.js:6:39
+     6| class B extends React.Component<{foo: number, bar: number}, void> {}
                                               ^^^^^^ [2]
-   test.js:15:24
-    15| declare var b: Element<Class<B>>;
-                               ^^^^^^^^ [3]
+   test.js:14:45
+    14| declare var b: ExactReactElement_DEPRECATED<Class<B>>;
+                                                    ^^^^^^^^ [3]
    <BUILTINS>/react-dom.js:167:4
    167|   [string]: ReactDOM$HTMLElementJSXIntrinsic,
            ^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:45:7
+Error ----------------------------------------------------------------------------------------------------- test.js:44:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either string [1] is incompatible with number [2] in property `children`.
  - Or statics of `C` [3] is incompatible with string [4].
 
-   test.js:45:7
-    45| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+   test.js:44:7
+    44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
               ^^^^^^^^^^^^
 
 References:
-   test.js:45:34
-    45| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+   test.js:44:34
+    44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
                                          ^^^^ [1]
-   test.js:8:44
-     8| class C extends React.Component<{children: number}, void> {}
+   test.js:7:44
+     7| class C extends React.Component<{children: number}, void> {}
                                                    ^^^^^^ [2]
-   test.js:16:24
-    16| declare var c: Element<Class<C>>;
-                               ^^^^^^^^ [3]
+   test.js:15:45
+    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                    ^^^^^^^^ [3]
    <BUILTINS>/react-dom.js:167:4
    167|   [string]: ReactDOM$HTMLElementJSXIntrinsic,
            ^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:49:7
+Error ----------------------------------------------------------------------------------------------------- test.js:48:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either no more than 2 arguments are expected by function type [1].
  - Or no more than 3 arguments are expected by function type [2].
  - Or property `0` is missing in `Number` [3].
 
-   test.js:49:7
-    49| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+   test.js:48:7
+    48| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
               ^^^^^^^^^^^^
 
 References:
@@ -258,9 +258,38 @@ References:
    291|     children: NoInfer<Props>['children']
    292|   ) => E)
           -----^ [2]
-   test.js:8:44
-     8| class C extends React.Component<{children: number}, void> {}
+   test.js:7:44
+     7| class C extends React.Component<{children: number}, void> {}
                                                    ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:49:7
+
+Cannot call `React.cloneElement` because: [incompatible-call]
+ - Either statics of `C` [1] is incompatible with key set [2] in type argument `ElementType` [3].
+ - Or no more than 2 arguments are expected by function type [4].
+
+   test.js:49:7
+    49| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+              ^^^^^^^^^^^^
+
+References:
+   test.js:15:45
+    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                    ^^^^^^^^ [1]
+   <BUILTINS>/react.js:279:10
+   279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                           ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:284:6
+             v----------------------------------------------------------------------
+   284|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
+   285|     element: E,
+   286|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   287|   ) => E)
+          -----^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:7
@@ -270,13 +299,13 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or no more than 2 arguments are expected by function type [4].
 
    test.js:50:7
-    50| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+    50| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
               ^^^^^^^^^^^^
 
 References:
-   test.js:16:24
-    16| declare var c: Element<Class<C>>;
-                               ^^^^^^^^ [1]
+   test.js:15:45
+    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                    ^^^^^^^^ [1]
    <BUILTINS>/react.js:279:10
    279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -292,76 +321,47 @@ References:
           -----^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:51:7
-
-Cannot call `React.cloneElement` because: [incompatible-call]
- - Either statics of `C` [1] is incompatible with key set [2] in type argument `ElementType` [3].
- - Or no more than 2 arguments are expected by function type [4].
-
-   test.js:51:7
-    51| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
-              ^^^^^^^^^^^^
-
-References:
-   test.js:16:24
-    16| declare var c: Element<Class<C>>;
-                               ^^^^^^^^ [1]
-   <BUILTINS>/react.js:279:10
-   279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-                 ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:150:36
-   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:284:6
-             v----------------------------------------------------------------------
-   284|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
-   285|     element: E,
-   286|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
-   287|   ) => E)
-          -----^ [4]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:55:7
+Error ----------------------------------------------------------------------------------------------------- test.js:54:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either number [1] is incompatible with array type [2] in property `children`.
  - Or statics of `D` [3] is incompatible with string [4].
 
-   test.js:55:7
-    55| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+   test.js:54:7
+    54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
               ^^^^^^^^^^^^
 
 References:
-   test.js:55:34
-    55| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+   test.js:54:34
+    54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
                                          ^^ [1]
-   test.js:9:44
-     9| class D extends React.Component<{children: Array<number>}, void> {}
+   test.js:8:44
+     8| class D extends React.Component<{children: Array<number>}, void> {}
                                                    ^^^^^^^^^^^^^ [2]
-   test.js:17:24
-    17| declare var d: Element<Class<D>>;
-                               ^^^^^^^^ [3]
+   test.js:16:45
+    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                    ^^^^^^^^ [3]
    <BUILTINS>/react-dom.js:167:4
    167|   [string]: ReactDOM$HTMLElementJSXIntrinsic,
            ^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:57:7
+Error ----------------------------------------------------------------------------------------------------- test.js:56:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either number [1] is incompatible with array type [2].
  - Or no more than 2 arguments are expected by function type [3].
 
-   test.js:57:7
-    57| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+   test.js:56:7
+    56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
               ^^^^^^^^^^^^
 
 References:
-   test.js:57:27
-    57| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+   test.js:56:27
+    56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
                                   ^^ [1]
-   test.js:9:44
-     9| class D extends React.Component<{children: Array<number>}, void> {}
+   test.js:8:44
+     8| class D extends React.Component<{children: Array<number>}, void> {}
                                                    ^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:284:6
              v----------------------------------------------------------------------
@@ -372,6 +372,34 @@ References:
           -----^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:57:7
+
+Cannot call `React.cloneElement` because: [incompatible-call]
+ - Either statics of `D` [1] is incompatible with key set [2] in type argument `ElementType` [3].
+ - Or number [4] is incompatible with array type [5].
+
+   test.js:57:7
+    57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+              ^^^^^^^^^^^^
+
+References:
+   test.js:16:45
+    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                    ^^^^^^^^ [1]
+   <BUILTINS>/react.js:279:10
+   279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:150:36
+   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                           ^^^^^^^^^^^ [3]
+   test.js:57:34
+    57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+                                         ^^ [4]
+   test.js:8:44
+     8| class D extends React.Component<{children: Array<number>}, void> {}
+                                                   ^^^^^^^^^^^^^ [5]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:58:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
@@ -379,97 +407,69 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or number [4] is incompatible with array type [5].
 
    test.js:58:7
-    58| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+    58| React.cloneElement(d, null, 42); // Error: `children` is an array.
               ^^^^^^^^^^^^
 
 References:
-   test.js:17:24
-    17| declare var d: Element<Class<D>>;
-                               ^^^^^^^^ [1]
+   test.js:16:45
+    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                    ^^^^^^^^ [1]
    <BUILTINS>/react.js:279:10
    279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   test.js:58:34
-    58| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
-                                         ^^ [4]
-   test.js:9:44
-     9| class D extends React.Component<{children: Array<number>}, void> {}
-                                                   ^^^^^^^^^^^^^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:59:7
-
-Cannot call `React.cloneElement` because: [incompatible-call]
- - Either statics of `D` [1] is incompatible with key set [2] in type argument `ElementType` [3].
- - Or number [4] is incompatible with array type [5].
-
-   test.js:59:7
-    59| React.cloneElement(d, null, 42); // Error: `children` is an array.
-              ^^^^^^^^^^^^
-
-References:
-   test.js:17:24
-    17| declare var d: Element<Class<D>>;
-                               ^^^^^^^^ [1]
-   <BUILTINS>/react.js:279:10
-   279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-                 ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:150:36
-   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
-   test.js:59:29
-    59| React.cloneElement(d, null, 42); // Error: `children` is an array.
+   test.js:58:29
+    58| React.cloneElement(d, null, 42); // Error: `children` is an array.
                                     ^^ [4]
-   test.js:9:44
-     9| class D extends React.Component<{children: Array<number>}, void> {}
+   test.js:8:44
+     8| class D extends React.Component<{children: Array<number>}, void> {}
                                                    ^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:71:7
+Error ----------------------------------------------------------------------------------------------------- test.js:70:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either string [1] is incompatible with number [2] in property `p`.
  - Or function [3] is incompatible with string [4].
 
-   test.js:71:7
-    71| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
+   test.js:70:7
+    70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
               ^^^^^^^^^^^^
 
 References:
-   test.js:71:40
-    71| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
+   test.js:70:40
+    70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
                                                ^^^^^ [1]
-   test.js:70:26
-    70| function SFC(props: { p: number }) { return null };
+   test.js:69:26
+    69| function SFC(props: { p: number }) { return null };
                                  ^^^^^^ [2]
-   test.js:70:1
-    70| function SFC(props: { p: number }) { return null };
+   test.js:69:1
+    69| function SFC(props: { p: number }) { return null };
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react-dom.js:167:4
    167|   [string]: ReactDOM$HTMLElementJSXIntrinsic,
            ^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:77:7
+Error ----------------------------------------------------------------------------------------------------- test.js:76:7
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either property `bar` is missing in object type [1] but exists in object literal [2].
  - Or property `bar` is missing in object type [3] but exists in object literal [2].
  - Or property `bar` is missing in object type [4] but exists in object literal [2].
 
-   test.js:77:7
-    77| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+   test.js:76:7
+    76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:286:32
    286|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:77:27
-    77| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+   test.js:76:27
+    76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
                                   ^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:290:31
    290|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
@@ -479,7 +479,7 @@ References:
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:93:9
+Error ----------------------------------------------------------------------------------------------------- test.js:92:9
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either AbstractComponent [1] is incompatible with key set [2] in type argument `ElementType` [3].
@@ -487,8 +487,8 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or string [1] is incompatible with AbstractComponent [5] in type argument `ElementType` [3].
  - Or string [1] is incompatible with AbstractComponent [6] in type argument `ElementType` [3].
 
-   test.js:93:9
-    93|   React.cloneElement(el); // ERROR
+   test.js:92:9
+    92|   React.cloneElement(el); // ERROR
                 ^^^^^^^^^^^^
 
 References:
@@ -512,15 +512,15 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:94:9
+Error ----------------------------------------------------------------------------------------------------- test.js:93:9
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either string [1] is incompatible with AbstractComponent [2] in type argument `ElementType` [3].
  - Or string [1] is incompatible with AbstractComponent [4] in type argument `ElementType` [3].
  - Or string [1] is incompatible with AbstractComponent [5] in type argument `ElementType` [3].
 
-   test.js:94:9
-    94|   React.cloneElement(el, {}); // ERROR
+   test.js:93:9
+    93|   React.cloneElement(el, {}); // ERROR
                 ^^^^^^^^^^^^
 
 References:
@@ -541,7 +541,7 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:100:9
+Error ----------------------------------------------------------------------------------------------------- test.js:99:9
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either undefined [1] is incompatible with `React.Element` [2].
@@ -549,13 +549,13 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or undefined [1] is incompatible with `React.Element` [4].
  - Or undefined [1] is incompatible with `React.Element` [5].
 
-   test.js:100:9
-   100|   React.cloneElement(el); // ERROR
+   test.js:99:9
+    99|   React.cloneElement(el); // ERROR
                 ^^^^^^^^^^^^
 
 References:
-   test.js:99:21
-    99|   declare const el: React.Node;
+   test.js:98:21
+    98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:279:36
    279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
@@ -571,7 +571,7 @@ References:
                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:101:9
+Error ---------------------------------------------------------------------------------------------------- test.js:100:9
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either undefined [1] is incompatible with `React.Element` [2].
@@ -579,13 +579,13 @@ Cannot call `React.cloneElement` because: [incompatible-call]
  - Or undefined [1] is incompatible with `React.Element` [4].
  - Or undefined [1] is incompatible with `React.Element` [5].
 
-   test.js:101:9
-   101|   React.cloneElement(el, {}); // ERROR
+   test.js:100:9
+   100|   React.cloneElement(el, {}); // ERROR
                 ^^^^^^^^^^^^
 
 References:
-   test.js:99:21
-    99|   declare const el: React.Node;
+   test.js:98:21
+    98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:279:36
    279|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(

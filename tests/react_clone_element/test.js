@@ -1,5 +1,4 @@
 import * as React from 'react';
-import type {Element} from 'react';
 
 declare var any: any;
 
@@ -11,19 +10,19 @@ class E extends React.Component<{foo: number, bar: number}, void> {
   static defaultProps: {bar: number} = {bar: 42};
 }
 
-declare var a: Element<Class<A>>;
-declare var b: Element<Class<B>>;
-declare var c: Element<Class<C>>;
-declare var d: Element<Class<D>>;
-declare var e: Element<Class<E>>;
+declare var a: ExactReactElement_DEPRECATED<Class<A>>;
+declare var b: ExactReactElement_DEPRECATED<Class<B>>;
+declare var c: ExactReactElement_DEPRECATED<Class<C>>;
+declare var d: ExactReactElement_DEPRECATED<Class<D>>;
+declare var e: ExactReactElement_DEPRECATED<Class<E>>;
 
 React.cloneElement(); // Error: Needs a minimum of two arguments.
 React.cloneElement('nope'); // Error: Not a valid element type.
 React.cloneElement({ type: any }); // Error: Not a valid element type.
 React.cloneElement(a); // OK: `a` is an element.
 
-(React.cloneElement(a): Element<Class<A>>); // OK
-(React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
+(React.cloneElement(a): ExactReactElement_DEPRECATED<Class<A>>); // OK
+(React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
 
 React.cloneElement(a, {}); // OK
 React.cloneElement(a, undefined); // OK
@@ -72,7 +71,7 @@ React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
 
 // Exact
 declare function Exact({|foo: number|}): void;
-declare const exact: Element<typeof Exact>;
+declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
 React.cloneElement(exact, {foo: 1}); // OK
 React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
 
@@ -82,8 +81,8 @@ type CompProps = $ReadOnly<{|
   bar: string,
 |}>;
 {
-  declare function Comp(CompProps): React.Element<'div'>;
-  declare const el: React.Element<typeof Comp>;
+  declare function Comp(CompProps): ExactReactElement_DEPRECATED<'div'>;
+  declare const el: ExactReactElement_DEPRECATED<typeof Comp>;
   React.cloneElement(el, {foo: 'hi'}); // OK
 }
 
@@ -107,8 +106,8 @@ function cloneUnionElement() {
   declare component B(...props: { foo: number });
 
   declare var element:
-    | React.Element<Class<A>>
-    | React.Element<typeof B>;
+    | ExactReactElement_DEPRECATED<Class<A>>
+    | ExactReactElement_DEPRECATED<typeof B>;
 
   React.cloneElement(element); // OK
   React.cloneElement(element, {foo: 1}); // OK
@@ -116,8 +115,8 @@ function cloneUnionElement() {
   type Wrap<T> = { f: T }['f'];
 
   declare var wrappedElement: Wrap<
-    | React.Element<Class<A>>
-    | React.Element<typeof B>
+    | ExactReactElement_DEPRECATED<Class<A>>
+    | ExactReactElement_DEPRECATED<typeof B>
   >;
 
   // Tests that wrapping does not affect result

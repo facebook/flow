@@ -6,7 +6,7 @@ component Foo() {return 0}
 declare function Bar(): React$Node;
 
 type RBad0 = renders React.Node; // no fix
-type RBad1 = renders React.Element<typeof Bar>; // no fix
+type RBad1 = renders ExactReactElement_DEPRECATED<typeof Bar>; // no fix
 type RBad2 = renders (Foo | null | void | false); // -> renders? Foo
 type RBad3 = renders (null | void | false); // no fix
 type RBad4 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>); // -> renders* Foo

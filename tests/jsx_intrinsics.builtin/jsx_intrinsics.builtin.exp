@@ -1,60 +1,60 @@
-Error ----------------------------------------------------------------------------------------------------- main.js:10:4
+Error ------------------------------------------------------------------------------------------------------ main.js:9:4
 
 Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is incompatible with `CustomComponentNope` [2]
 in type argument `ElementType` [3]. [incompatible-type-arg]
 
-   main.js:10:4
-    10|   <CustomComponent prop="asdf" />; // Error: Bad class type
+   main.js:9:4
+     9|   <CustomComponent prop="asdf" />; // Error: Bad class type
            ^^^^^^^^^^^^^^^
 
 References:
-   main.js:4:7
-     4| class CustomComponent extends React.Component<{prop: string}, void> {}
+   main.js:3:7
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [1]
-   main.js:5:7
-     5| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+   main.js:4:7
+     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:12:3
+Error ----------------------------------------------------------------------------------------------------- main.js:11:3
 
 Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
 type [2] in type argument `P` [3]. [prop-missing]
 
-   main.js:12:3
-    12|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+   main.js:11:3
+    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   main.js:4:47
-     4| class CustomComponent extends React.Component<{prop: string}, void> {}
+   main.js:3:47
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                       ^^^^^^^^^^^^^^ [1]
-   main.js:11:38
-    11| var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                             ^^^^^^^^^^^^^^^ [2]
+   main.js:10:59
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:69
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:12:4
+Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
 Cannot assign `<CustomComponent />` to `c` because property `prop` is missing in object type [1] but exists in object
 type [2] in type argument `Props` [3] of type argument `ElementType` [4]. [prop-missing]
 
-   main.js:12:4
-    12|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+   main.js:11:4
+    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
            ^^^^^^^^^^^^^^^
 
 References:
-   main.js:11:38
-    11| var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                             ^^^^^^^^^^^^^^^ [1]
-   main.js:4:47
-     4| class CustomComponent extends React.Component<{prop: string}, void> {}
+   main.js:10:59
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^ [1]
+   main.js:3:47
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                       ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:30:31
     30| declare class React$Component<Props, State = void> {
@@ -64,22 +64,22 @@ References:
                                            ^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:12:4
+Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
 Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
 type [2] in type argument `Props` [3] of type argument `ElementType` [4]. [prop-missing]
 
-   main.js:12:4
-    12|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+   main.js:11:4
+    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
            ^^^^^^^^^^^^^^^
 
 References:
-   main.js:4:47
-     4| class CustomComponent extends React.Component<{prop: string}, void> {}
+   main.js:3:47
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                       ^^^^^^^^^^^^^^ [1]
-   main.js:11:38
-    11| var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                             ^^^^^^^^^^^^^^^ [2]
+   main.js:10:59
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:30:31
     30| declare class React$Component<Props, State = void> {
                                       ^^^^^ [3]
@@ -88,19 +88,19 @@ References:
                                            ^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:19:27
+Error ---------------------------------------------------------------------------------------------------- main.js:18:48
 
 Cannot assign `<div />` to `e` because `div` [1] is incompatible with string literal `span` [2] in type argument
 `ElementType` [3]. [incompatible-type-arg]
 
-   main.js:19:27
-    19| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                                  ^^^ [1]
+   main.js:18:48
+    18| var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
+                                                       ^^^ [1]
 
 References:
-   main.js:19:16
-    19| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                       ^^^^^^ [2]
+   main.js:18:37
+    18| var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
+                                            ^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]

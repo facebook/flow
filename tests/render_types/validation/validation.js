@@ -5,25 +5,25 @@ component Bar<T>() {return 0}
 declare function Baz(): React$Node;
 declare class Boz extends React$Component<{}> {}
 
-type ReactElementAlias<T> = React.Element<T>;
+type ReactElementAlias<T> = ExactReactElement_DEPRECATED<T>;
 type RGood0 = renders 'svg'; // ok
-type RGood1 = renders React.Element<typeof Foo>; // ok
-type RGood2 = renders React.Element<typeof Foo | typeof Bar>; // ok
-type RGood3 = renders React.Element<typeof Foo> | React.Element<typeof Bar>; // ok
+type RGood1 = renders ExactReactElement_DEPRECATED<typeof Foo>; // ok
+type RGood2 = renders ExactReactElement_DEPRECATED<typeof Foo | typeof Bar>; // ok
+type RGood3 = renders ExactReactElement_DEPRECATED<typeof Foo> | ExactReactElement_DEPRECATED<typeof Bar>; // ok
 type RGood4 = renders ReactElementAlias<typeof Foo>; // ok
 type RGood5 = renders ReactElementAlias<typeof Foo | typeof Bar>; // ok
 type RGood6 = renders ReactElementAlias<typeof Foo> | ReactElementAlias<typeof Bar>; // ok
-type RGood7 = component () renders React.Element<typeof Foo>; // ok
-type RBad0 = renders React.Element<'svg'>; // error
-type RBad1 = renders React.Element<typeof Baz>; // error
-type RBad2 = renders React.Element<typeof Boz>; // error
+type RGood7 = component () renders ExactReactElement_DEPRECATED<typeof Foo>; // ok
+type RBad0 = renders ExactReactElement_DEPRECATED<'svg'>; // error
+type RBad1 = renders ExactReactElement_DEPRECATED<typeof Baz>; // error
+type RBad2 = renders ExactReactElement_DEPRECATED<typeof Boz>; // error
 type RBad3 = renders 1; // error
 type RBad4 = renders React$Node; // error
 type RBad5 = renders Error; // error
-type RBad6 = component () renders React.Element<typeof Baz>; // error
+type RBad6 = component () renders ExactReactElement_DEPRECATED<typeof Baz>; // error
 
-component GoodComponentRenders() renders React.Element<typeof Foo> {return <Foo />} // ok
-component BadComponentRenders() renders React.Element<typeof Baz> {return <Baz />} // error
+component GoodComponentRenders() renders Foo {return <Foo />} // ok
+component BadComponentRenders() renders ExactReactElement_DEPRECATED<typeof Baz> {return <Baz />} // error
 
 component PermittedGenericRenders1<T: React$Node>(children: T) renders T { return children } // ok
 component PermittedGenericRenders2<T: React$Node>(children: T) renders (T | T) { return children } // ok
@@ -33,13 +33,13 @@ component BannedGenericRenders2<T: React$Node>(children: T) renders? (T | GoodCo
 type BannedGenericRenders3<T: React$Node> = renders T; // error
 
 type BadSpecificRenders1 = renders (false | null | void); // error
-type BadSpecificRenders2 = renders (Array<React.Element<typeof Foo>>); // error
-type BadSpecificRenders3 = renders ($ReadOnlyArray<React.Element<typeof Foo>>); // error
-type BadSpecificRenders4 = renders (Iterable<React.Element<typeof Foo>>); // error
-type BadSpecificRenders5 = renders (React.ChildrenArray<React.Element<typeof Foo>>); // error
-type BadSpecificRenders6 = renders (React.ChildrenArray<React.Element<typeof Foo> | null>); // error
+type BadSpecificRenders2 = renders (Array<ExactReactElement_DEPRECATED<typeof Foo>>); // error
+type BadSpecificRenders3 = renders ($ReadOnlyArray<ExactReactElement_DEPRECATED<typeof Foo>>); // error
+type BadSpecificRenders4 = renders (Iterable<ExactReactElement_DEPRECATED<typeof Foo>>); // error
+type BadSpecificRenders5 = renders (React.ChildrenArray<ExactReactElement_DEPRECATED<typeof Foo>>); // error
+type BadSpecificRenders6 = renders (React.ChildrenArray<ExactReactElement_DEPRECATED<typeof Foo> | null>); // error
 
-type BadUnion = renders React.Element<typeof Bar | typeof Baz>; // error
+type BadUnion = renders ExactReactElement_DEPRECATED<typeof Bar | typeof Baz>; // error
 
-type BadStructuralComponent = renders React.Element<React.AbstractComponent<empty, mixed, number>>; // error
-type GoodStructuralComponent = renders React.Element<React.AbstractComponent<empty, mixed, renders Foo>>; // ok
+type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, number>>; // error
+type GoodStructuralComponent = renders ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, renders Foo>>; // ok
