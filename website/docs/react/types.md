@@ -97,55 +97,12 @@ All `react-dom` JSX intrinsics have `React.Node` as their children type.
 
 ## `React.MixedElement` {#toc-react-mixedelement}
 
-The most general type of all React elements (similar to `mixed` for all values). `React.MixedElement` is defined as
-`React.Element<React.ElementType>`.
+The most general type of all React elements (similar to `mixed` for all values).
 
 A common use case of this type is when we want to annotate an element with a type that hides the element details. For example
 ```js
 const element: React.MixedElement = <div />;
 ```
-
-## `React.Element<typeof Component>` {#toc-react-element}
-
-A React element is the type for the value of a JSX element:
-
-```js
-const element: React.Element<'div'> = <div />;
-```
-
-`React.Element<typeof Component>` is also the return type of
-`React.createElement()`/`React.jsx()`.
-
-A `React.Element` takes a single type argument,
-`typeof Component`. `typeof Component` is the component type of the React
-element. For an intrinsic element, `typeof Component` will be the string literal
-for the intrinsic you used. Here are a few examples with DOM intrinsics:
-
-```js
-<div /> as React.Element<'div'>; // OK
-<span /> as React.Element<'span'>; // OK
-<div /> as React.Element<'span'>; // Error: div is not a span.
-```
-
-`typeof Component` can also be your React class component or function component.
-
-```js
-function Foo(props: {}) {}
-class Bar extends React.Component<{}> {}
-
-<Foo /> as React.Element<typeof Foo>; // OK
-<Bar /> as React.Element<typeof Bar>; // OK
-<Foo /> as React.Element<typeof Bar>; // Error: Foo is not Bar
-```
-
-Take note of the `typeof`, it is required! We want to get the
-type *of* the value `Foo`. `Foo as Foo` is an error because `Foo` cannot be used
-as a type, so the following is correct: `Foo as typeof Foo`.
-
-`Bar` without `typeof` would be the type of an instance of `Bar`: `new Bar() as Bar`.
-We want the type *of* `Bar` not the type of an instance of `Bar`.
-`Class<Bar>` would also work here, but we prefer `typeof` for consistency
-with function components.
 
 ## `React.ChildrenArray<T>` {#toc-react-childrenarray}
 
@@ -337,3 +294,51 @@ type *of* a React component so you need to use `typeof` as in
 
 Calculates a config object from props and default props. This is most useful for annotating
 HOCs that are abstracted over configs. See our [docs on writing HOCs](../hoc) for more information.
+
+## `ExactReactElement_DEPRECATED<typeof Component>` {#toc-react-element}
+
+:::warning
+This is an exact replacement of the removed 'React.Element' type since 0.245.
+You should use `React.MixedElement` or `React.Node` instead.
+If you want to enforce design system constraints, use [render types](../render-types) instead.
+:::
+
+A React element is the type for the value of a JSX element:
+
+```js
+const element: ExactReactElement_DEPRECATED<'div'> = <div />;
+```
+
+`ExactReactElement_DEPRECATED<typeof Component>` is also the return type of
+`React.createElement()`/`React.jsx()`.
+
+A `ExactReactElement_DEPRECATED` takes a single type argument,
+`typeof Component`. `typeof Component` is the component type of the React
+element. For an intrinsic element, `typeof Component` will be the string literal
+for the intrinsic you used. Here are a few examples with DOM intrinsics:
+
+```js
+<div /> as ExactReactElement_DEPRECATED<'div'>; // OK
+<span /> as ExactReactElement_DEPRECATED<'span'>; // OK
+<div /> as ExactReactElement_DEPRECATED<'span'>; // Error: div is not a span.
+```
+
+`typeof Component` can also be your React class component or function component.
+
+```js
+function Foo(props: {}) {}
+class Bar extends React.Component<{}> {}
+
+<Foo /> as ExactReactElement_DEPRECATED<typeof Foo>; // OK
+<Bar /> as ExactReactElement_DEPRECATED<typeof Bar>; // OK
+<Foo /> as ExactReactElement_DEPRECATED<typeof Bar>; // Error: Foo is not Bar
+```
+
+Take note of the `typeof`, it is required! We want to get the
+type *of* the value `Foo`. `Foo as Foo` is an error because `Foo` cannot be used
+as a type, so the following is correct: `Foo as typeof Foo`.
+
+`Bar` without `typeof` would be the type of an instance of `Bar`: `new Bar() as Bar`.
+We want the type *of* `Bar` not the type of an instance of `Bar`.
+`Class<Bar>` would also work here, but we prefer `typeof` for consistency
+with function components.
