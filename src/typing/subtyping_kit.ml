@@ -649,7 +649,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
              let l = reposition_reason cx ~trace elem_reason ~use_desc:true l in
              let renders_t = DefT (renders_r, RendersT upper_renders) in
              rec_flow_t cx trace ~use_op (l, renders_t)
-           (* We did not successfully promote the React.Element and we have a RendersT on the RHS.
+           (* We did not successfully promote the React$Element and we have a RendersT on the RHS.
             * so this is an error *)
            | _ ->
              add_output

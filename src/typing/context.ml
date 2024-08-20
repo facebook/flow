@@ -193,7 +193,7 @@ type component_t = {
   mutable in_implicit_instantiation: bool;
   (* Temporarily allow method unbinding in the following locs *)
   mutable allow_method_unbinding: ALocSet.t;
-  (* React.Element does not store the monomorphized version of a component to support
+  (* React$Element does not store the monomorphized version of a component to support
    * cloning polymorphic elements. We need to know the monomorphized version of a component
    * to determine the render type of an element of a polymorphic component, so we keep track
    * of the monomorphized version here by mapping the Element's object id to the monomorphized

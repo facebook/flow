@@ -1024,7 +1024,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
     | Some props ->
       (* The return of a React component when it is createElement-ed isn't actually the return type denoted on the
-       * component. Instead, it is a React.Element<typeof Component>. In order to get the
+       * component. Instead, it is a React$Element<typeof Component>. In order to get the
        * polarities for the type parameters in the return, it is sufficient to look at the Props
        * type and use the polarities there.
        *

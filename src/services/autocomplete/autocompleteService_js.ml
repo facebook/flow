@@ -1331,7 +1331,7 @@ let autocomplete_unqualified_type
   (* The value-level identifiers we suggest in type autocompletion:
       - classes
       - enums
-      - react.element shorthand
+      - React$Element shorthand
       - modules (followed by a dot) *)
   let (items_rev, errors_to_log) =
     value_identifiers

@@ -1070,7 +1070,7 @@ class type_normalization_hardcoded_fixes_mapper
             ts_without_array_empty
         in
 
-        (* React.MixedElement | React.Element<'div'> becomes just React.MixedElement *)
+        (* React.MixedElement | ExactReactElement_DEPRECATED<'div'> becomes just React.MixedElement *)
         let ts =
           let react_element_def_loc =
             List.find_map
@@ -1079,7 +1079,7 @@ class type_normalization_hardcoded_fixes_mapper
                     ( {
                         Ty.sym_name =
                           Reason.OrdinaryName
-                            ("Element" | "MixedElement" | "React.Element" | "React.MixedElement");
+                            ("ExactReactElement_DEPRECATED" | "MixedElement" | "React.MixedElement");
                         sym_provenance = Ty_symbol.Library _;
                         sym_def_loc;
                         _;
@@ -1101,7 +1101,8 @@ class type_normalization_hardcoded_fixes_mapper
                       ( {
                           Ty.sym_name =
                             Reason.OrdinaryName
-                              ("Element" | "MixedElement" | "React.Element" | "React.MixedElement");
+                              ( "ExactReactElement_DEPRECATED" | "MixedElement"
+                              | "React.MixedElement" );
                           sym_provenance = Ty_symbol.Library _;
                           sym_def_loc;
                           _;
@@ -1138,7 +1139,7 @@ class type_normalization_hardcoded_fixes_mapper
           | _ -> ts
         in
 
-        (* React.Node | React.Element<'div'> becomes just React.Node *)
+        (* React.Node | ExactReactElement_DEPRECATED<'div'> becomes just React.Node *)
         let has_react_node =
           List.exists
             (function
@@ -1164,7 +1165,7 @@ class type_normalization_hardcoded_fixes_mapper
                     ( {
                         Ty.sym_name =
                           Reason.OrdinaryName
-                            ("Element" | "MixedElement" | "React.Element" | "React.MixedElement");
+                            ("ExactReactElement_DEPRECATED" | "MixedElement" | "React.MixedElement");
                         sym_provenance = Ty_symbol.Library _;
                         sym_def_loc;
                         _;
@@ -1215,7 +1216,7 @@ class type_normalization_hardcoded_fixes_mapper
       | Ty.Bool _
       | Ty.Str _ ->
         PreserveLiterals.enforce ~mode:preserve_literals t
-      (* E.g. React$Element<'div'> will become React.Element<'div'> *)
+      (* E.g. React$Element<'div'> will become React.MixedElement *)
       | Ty.Generic
           ( ( {
                 Ty.sym_name = Reason.OrdinaryName ("React$Element" | "ExactReactElement_DEPRECATED");
