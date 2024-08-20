@@ -403,10 +403,6 @@ Flags: --pretty
     },
     {"name":"Context","type":"type Context<T> = React$Context<T>"},
     {
-      "name":"Element",
-      "type":"type Element<+C, +P = React$ElementProps<C>> = React$Element<C, P>"
-    },
-    {
       "name":"ElementConfig",
       "type":"type ElementConfig<C> = React$ElementConfig<C>"
     },
