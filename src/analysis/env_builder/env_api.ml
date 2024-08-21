@@ -169,7 +169,11 @@ module type S = sig
         }
     [@@deriving show { with_path = false }]
 
-    type refinement = L.LSet.t * refinement_kind
+    type refinement = {
+      (* Locations that we can point to the user where the refinement happens. *)
+      refining_locs: L.LSet.t;
+      kind: refinement_kind;
+    }
   end
 
   type refinement_kind = Refi.refinement_kind
@@ -444,7 +448,11 @@ module Make
         }
     [@@deriving show { with_path = false }]
 
-    type refinement = L.LSet.t * refinement_kind
+    type refinement = {
+      (* Locations that we can point to the user where the refinement happens. *)
+      refining_locs: L.LSet.t;
+      kind: refinement_kind;
+    }
   end
 
   include Refi
@@ -610,7 +618,8 @@ module Make
     match write_loc with
     | Refinement { refinement_id; writes; write_id = _ } ->
       let writes = writes |> List.map (refinements_of_write_loc env) |> List.flatten in
-      (refinement_of_id refinement_id |> snd) :: writes
+      let { refining_locs = _; kind } = refinement_of_id refinement_id in
+      kind :: writes
     | _ -> []
 
   let rec show_refinement_kind_without_locs = function

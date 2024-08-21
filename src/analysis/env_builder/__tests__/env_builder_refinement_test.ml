@@ -60,8 +60,8 @@ let print_values refinement_of_id =
       let loc = Reason.loc_of_reason reason in
       Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
     | Refinement { refinement_id; writes; write_id = _ } ->
-      let refinement = refinement_of_id refinement_id in
-      let refinement_str = show_refinement_kind_without_locs (snd refinement) in
+      let { Env_api.Refi.kind; _ } = refinement_of_id refinement_id in
+      let refinement_str = show_refinement_kind_without_locs kind in
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | FunctionThis _ -> "This(function)"

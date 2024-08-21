@@ -43,7 +43,7 @@ type possibly_refined_write_state =
   | PossiblyRefinedWriteState of {
       t: Type.t;
       errors: Env_api.cacheable_env_error list;
-      actually_refined: bool;
+      actually_refined_refining_locs: ALocSet.t option;
     }
 
 (* 2. Per-component information is needed during constraint solving, which
@@ -299,7 +299,7 @@ val voidable_checks : t -> voidable_check list
 
 val reachable_deps : t -> Utils_js.FilenameSet.t
 
-val refined_locations : t -> ALocSet.t
+val refined_locations : t -> ALocSet.t ALocMap.t
 
 val environment : t -> Loc_env.t
 
@@ -361,7 +361,7 @@ val add_monomorphized_component : t -> Type.Properties.id -> Type.t -> unit
 
 val add_reachable_dep : t -> File_key.t -> unit
 
-val add_refined_location : t -> ALoc.t -> unit
+val add_refined_location : t -> ALoc.t -> ALocSet.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 

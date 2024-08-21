@@ -1430,7 +1430,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | None -> ()
             | Some key ->
               let pred = LatentR { func; targs; arguments; index } in
-              this#add_single_refinement key (L.LSet.singleton callee_loc, pred);
+              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) pred;
               this#add_pred_func_info callee_loc (call_exp, func, targs, arguments))
           refinement_keys_by_arg
 
@@ -1542,8 +1542,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | AndR (r1, r2) -> refine_undefined r1 && refine_undefined r2
           | _ -> false
         in
-        let (_, id) = this#refinement_of_id id in
-        refine_undefined id
+        let { Env_api.Refi.refining_locs = _; kind } = this#refinement_of_id id in
+        refine_undefined kind
 
       method private providers_of_def_loc def_loc =
         let providers =
@@ -2513,7 +2513,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 ignore (this#expression_refinement left_expr)
               | NullishAssign ->
                 ignore (this#expression left_expr);
-                this#add_refinement_to_expr left_expr (L.LSet.singleton left_loc, NotR MaybeR)
+                this#add_refinement_to_expr
+                  left_expr
+                  ~refining_locs:(L.LSet.singleton left_loc)
+                  (NotR MaybeR)
               | _ -> ()));
             let env1 = this#env_snapshot_without_latest_refinements in
             let env1_with_refinements = this#env_snapshot in
@@ -4567,8 +4570,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                    _;
                   }
                     when Val.is_undeclared_or_skipped !val_ref ->
-                    refinement
-                    |> fst
+                    let { Env_api.Refi.refining_locs; kind = _ } = refinement in
+                    refining_locs
                     |> L.LSet.iter (fun loc ->
                            add_output
                              Error_message.(
@@ -4661,28 +4664,41 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               :: List.tl env_state.latest_refinements;
           }
 
-      method add_single_refinement key refi = this#commit_refinement (this#start_refinement key refi)
+      method add_single_refinement key ~refining_locs refi_kind =
+        this#commit_refinement (this#start_refinement key ~refining_locs refi_kind)
 
       method add_pred_func_info key info =
         env_state <- { env_state with pred_func_map = L.LMap.add key info env_state.pred_func_map }
 
-      method start_refinement { RefinementKey.loc; lookup } refi =
-        LookupMap.singleton lookup (loc, refi)
+      method start_refinement { RefinementKey.loc; lookup } ~refining_locs refi_kind =
+        LookupMap.singleton lookup (loc, { Env_api.Refi.refining_locs; kind = refi_kind })
 
-      method extend_refinement { RefinementKey.loc; lookup } refi refis =
+      method extend_refinement { RefinementKey.loc; lookup } ~refining_locs refi_kind refis =
         LookupMap.union
-          ~combine:(fun _ (loc1, (locs1, refi1)) (loc2, (locs2, refi2)) ->
+          ~combine:
+            (fun _
+                 (loc1, { Env_api.Refi.refining_locs = locs1; kind = refi1 })
+                 (loc2, { Env_api.Refi.refining_locs = locs2; kind = refi2 }) ->
             if loc1 <> loc2 then raise Env_api.(Env_invariant (Some loc, Impossible "Loc mismatch"));
-            Some (loc1, (L.LSet.union locs1 locs2, AndR (refi1, refi2))))
+            Some
+              ( loc1,
+                {
+                  Env_api.Refi.refining_locs = L.LSet.union locs1 locs2;
+                  kind = AndR (refi1, refi2);
+                }
+              ))
           refis
-          (LookupMap.singleton lookup (loc, refi))
+          (LookupMap.singleton lookup (loc, { Env_api.Refi.refining_locs; kind = refi_kind }))
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
         let { val_ref; _ } = this#env_read name in
         if not (Val.is_undeclared_or_skipped !val_ref) then
-          this#add_single_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR)
+          this#add_single_refinement
+            (RefinementKey.of_name name loc)
+            ~refining_locs:(L.LSet.singleton loc)
+            TruthyR
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
@@ -4694,7 +4710,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ) ->
           this#add_single_refinement
             (RefinementKey.of_name name id_loc)
-            (L.LSet.singleton loc, TruthyR)
+            ~refining_locs:(L.LSet.singleton loc)
+            TruthyR
         | _ -> ()
 
       method private merge
@@ -4733,10 +4750,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#merge_self_refinement_scope new_latest_refinements
 
       (* Refines an expr if that expr has a refinement key, othewise does nothing *)
-      method add_refinement_to_expr expr refinement =
+      method add_refinement_to_expr expr ~refining_locs refi_kind =
         match RefinementKey.of_expression expr with
         | None -> ()
-        | Some refinement_key -> this#add_single_refinement refinement_key refinement
+        | Some refinement_key -> this#add_single_refinement refinement_key ~refining_locs refi_kind
 
       method logical_refinement expr =
         let { Flow_ast.Expression.Logical.operator; left = (loc, _) as left; right; comments = _ } =
@@ -4790,7 +4807,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                like an unlikely way for nullish coalescing to be used. Instead, we simply add a
                NotR MaybeR refinement to the left *)
             ignore (this#expression left);
-            this#add_refinement_to_expr left (L.LSet.singleton loc, NotR MaybeR);
+            this#add_refinement_to_expr left ~refining_locs:(L.LSet.singleton loc) (NotR MaybeR);
             let nullish = this#peek_new_refinements () in
             let env1 = this#env_snapshot_without_latest_refinements in
             this#negate_new_refinements ();
@@ -4802,7 +4819,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#pop_refinement_scope ();
             this#pop_refinement_scope ();
             this#push_refinement_scope empty_refinements;
-            this#add_refinement_to_expr left (L.LSet.singleton loc, TruthyR);
+            this#add_refinement_to_expr left ~refining_locs:(L.LSet.singleton loc) TruthyR;
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#push_refinement_scope empty_refinements;
@@ -4842,7 +4859,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               else
                 NotR MaybeR
             in
-            this#extend_refinement key (L.LSet.singleton loc, refinement) refis
+            this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
         in
         let will_negate = strict <> sense in
         let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
@@ -4870,7 +4887,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 else
                   NotR MaybeR
               in
-              this#extend_refinement key (L.LSet.singleton loc, refinement) refis
+              this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           in
           ignore @@ this#optional_chain expr;
           let will_negate = sense in
@@ -4906,7 +4923,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             else
               NotR ref
           in
-          this#add_single_refinement refinement_key (L.LSet.singleton loc, refinement);
+          this#add_single_refinement refinement_key ~refining_locs:(L.LSet.singleton loc) refinement;
           if sense && undef then this#negate_new_refinements ()
         | _ -> ignore @@ this#optional_chain arg
 
@@ -4928,7 +4945,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               | None -> ()
               | Some def_loc -> add_literal_subtype_test def_loc refinement)
             | _ -> ());
-            this#extend_refinement key (L.LSet.singleton loc, refinement) refis
+            this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           | _ -> refis
         in
         ignore @@ this#optional_chain expr;
@@ -4980,7 +4997,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 else
                   refinement
               in
-              this#extend_refinement refinement_key (L.LSet.singleton loc, refinement) refis
+              this#extend_refinement
+                refinement_key
+                ~refining_locs:(L.LSet.singleton loc)
+                refinement
+                refis
             | _ -> refis
           in
           match expr' with
@@ -5024,7 +5045,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               else
                 NotR (SentinelR (prop_name, other_loc))
             in
-            this#start_refinement refinement_key (L.LSet.singleton loc, refinement)
+            this#start_refinement refinement_key ~refining_locs:(L.LSet.singleton loc) refinement
           | None -> LookupMap.empty
         in
         let refis =
@@ -5097,7 +5118,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               env_state.write_entries
           in
           env_state <- { env_state with write_entries };
-          this#add_single_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)
+          this#add_single_refinement
+            refinement_key
+            ~refining_locs:(L.LSet.singleton loc)
+            (InstanceOfR instance)
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
@@ -5143,7 +5167,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             match RefinementKey.of_expression arg with
             | None -> LookupMap.empty
             | Some refinement_key ->
-              this#start_refinement refinement_key (L.LSet.singleton loc, IsArrayR)
+              this#start_refinement refinement_key ~refining_locs:(L.LSet.singleton loc) IsArrayR
           in
 
           ignore @@ this#expression callee;
@@ -5290,14 +5314,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | None -> ignore @@ this#member_property property
           | Some refinement_key_obj ->
             if optional then
-              this#add_single_refinement refinement_key_obj (L.LSet.singleton loc, NotR MaybeR);
+              this#add_single_refinement
+                refinement_key_obj
+                ~refining_locs:(L.LSet.singleton loc)
+                (NotR MaybeR);
             ignore @@ this#member_property property;
             let refis =
               Base.Option.value_map
                 ~f:(fun propname ->
                   this#extend_refinement
                     refinement_key_obj
-                    (L.LSet.singleton loc, PropExistsR { propname; loc })
+                    ~refining_locs:(L.LSet.singleton loc)
+                    (PropExistsR { propname; loc })
                     refis)
                 ~default:refis
                 propname
@@ -5343,7 +5371,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let refis =
             match RefinementKey.of_expression (loc, expr) with
             | None -> LookupMap.empty
-            | Some key -> this#start_refinement key (L.LSet.singleton loc, TruthyR)
+            | Some key -> this#start_refinement key ~refining_locs:(L.LSet.singleton loc) TruthyR
           in
           ignore @@ this#record_member_read expression;
           this#member_expression_refinement loc expr refis;
@@ -5392,7 +5420,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore (this#expression_refinement left)
         | Flow_ast.Expression.Logical.NullishCoalesce ->
           ignore (this#expression left);
-          this#add_refinement_to_expr left (L.LSet.singleton loc, NotR MaybeR));
+          this#add_refinement_to_expr left ~refining_locs:(L.LSet.singleton loc) (NotR MaybeR));
         let env1 = this#env_snapshot_without_latest_refinements in
         let env1_with_refinements = this#env_snapshot in
         (match operator with
@@ -5422,16 +5450,26 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         function
         | BASE refinement -> refinement
         | AND (id1, id2) ->
-          let (locs1, ref1) = this#chain_to_refinement (imap_find id1 env_state.refinement_heap) in
-          let (locs2, ref2) = this#chain_to_refinement (imap_find id2 env_state.refinement_heap) in
-          (L.LSet.union locs1 locs2, AndR (ref1, ref2))
+          let { Env_api.Refi.refining_locs = locs1; kind = ref1 } =
+            this#chain_to_refinement (imap_find id1 env_state.refinement_heap)
+          in
+          let { Env_api.Refi.refining_locs = locs2; kind = ref2 } =
+            this#chain_to_refinement (imap_find id2 env_state.refinement_heap)
+          in
+          { Env_api.Refi.refining_locs = L.LSet.union locs1 locs2; kind = AndR (ref1, ref2) }
         | OR (id1, id2) ->
-          let (locs1, ref1) = this#chain_to_refinement (imap_find id1 env_state.refinement_heap) in
-          let (locs2, ref2) = this#chain_to_refinement (imap_find id2 env_state.refinement_heap) in
-          (L.LSet.union locs1 locs2, OrR (ref1, ref2))
+          let { Env_api.Refi.refining_locs = locs1; kind = ref1 } =
+            this#chain_to_refinement (imap_find id1 env_state.refinement_heap)
+          in
+          let { Env_api.Refi.refining_locs = locs2; kind = ref2 } =
+            this#chain_to_refinement (imap_find id2 env_state.refinement_heap)
+          in
+          { Env_api.Refi.refining_locs = L.LSet.union locs1 locs2; kind = OrR (ref1, ref2) }
         | NOT id ->
-          let (locs, ref) = this#chain_to_refinement (imap_find id env_state.refinement_heap) in
-          (locs, NotR ref)
+          let { Env_api.Refi.refining_locs = locs; kind = ref } =
+            this#chain_to_refinement (imap_find id env_state.refinement_heap)
+          in
+          { Env_api.Refi.refining_locs = locs; kind = NotR ref }
 
       method refinement_of_id id =
         let chain = imap_find id env_state.refinement_heap in

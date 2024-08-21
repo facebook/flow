@@ -519,7 +519,7 @@ let refined_locations filename content js_config_object =
       )
     in
     let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
-    Base.List.map ~f:loc_of_aloc (Context.refined_locations cx |> Loc_collections.ALocSet.elements)
+    Base.List.map ~f:loc_of_aloc (Context.refined_locations cx |> Loc_collections.ALocMap.keys)
 
 let signature_help filename content line col js_config_object :
     ((ServerProt.Response.func_details_result list * int) option, string) result =

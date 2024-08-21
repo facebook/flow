@@ -65,7 +65,8 @@ let rec debug_write_state get_refi = function
     Utils_js.spf "illegal write at %s" (ALoc.debug_to_string loc)
   | Refinement { refinement_id; val_t } ->
     let refinement_kind =
-      refinement_id |> get_refi |> snd |> Env_api.show_refinement_kind_without_locs
+      let { Env_api.Refi.refining_locs = _; kind } = get_refi refinement_id in
+      Env_api.show_refinement_kind_without_locs kind
     in
     let write_str = debug_to_string get_refi val_t in
     Utils_js.spf "{refinement = %s; write = %s}" refinement_kind write_str

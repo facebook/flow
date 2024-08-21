@@ -184,6 +184,13 @@ let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
 (*  Reading  *)
 (*************)
 
+let merge_actually_refined_refining_locs = function
+  | (None, (Some _ as l))
+  | ((Some _ as l), None) ->
+    l
+  | (None, None) -> None
+  | (Some l1, Some l2) -> Some (ALocSet.union l1 l2)
+
 (** Computes the phi type for a node given all its lower bounds
  *  Currently, this just produces a new type variable with the types of
  *  all the incoming writes as lower bounds. In the future, however, we
@@ -194,17 +201,20 @@ let phi cx reason states =
   | [s] -> s
   | _ ->
     let tvar = Tvar.mk cx reason in
-    let actually_refined_ref = ref false in
+    let actually_refined_refining_locs_ref = ref None in
     let errors =
       Base.List.concat_map
-        ~f:(fun (Context.PossiblyRefinedWriteState { t; errors; actually_refined }) ->
+        ~f:(fun (Context.PossiblyRefinedWriteState { t; errors; actually_refined_refining_locs }) ->
           Flow_js.flow_t cx (t, tvar);
-          actually_refined_ref := !actually_refined_ref || actually_refined;
+          actually_refined_refining_locs_ref :=
+            merge_actually_refined_refining_locs
+              (!actually_refined_refining_locs_ref, actually_refined_refining_locs);
           errors)
         states
     in
     Tvar_resolver.resolve cx tvar;
-    Context.PossiblyRefinedWriteState { t = tvar; errors; actually_refined = !actually_refined_ref }
+    Context.PossiblyRefinedWriteState
+      { t = tvar; errors; actually_refined_refining_locs = !actually_refined_refining_locs_ref }
 
 let read_pred_func_info_exn cx loc =
   let f () = ALocMap.find loc (Context.environment cx).Loc_env.pred_func_map in
@@ -336,20 +346,32 @@ let predicate_of_refinement cx =
  * it's a synthetic read generated in the env builder so we check other things. *)
 let refine cx ~actual_source_read reason loc refi res =
   Base.Option.value_map
-    ~f:(fun predicate ->
-      let (Context.PossiblyRefinedWriteState { t; errors; actually_refined }) = res in
-      let (t, actually_refined') =
-        let predicate = predicate |> snd |> predicate_of_refinement cx in
+    ~f:(fun { Env_api.Refi.refining_locs; kind } ->
+      let (Context.PossiblyRefinedWriteState { t; errors; actually_refined_refining_locs }) = res in
+      let (t, actually_refined_refining_locs') =
+        let predicate = predicate_of_refinement cx kind in
         let reason = mk_reason (RRefined (desc_of_reason reason)) loc in
         match predicate with
-        | None -> (t, false)
+        | None -> (t, None)
         | Some predicate ->
           (match Predicate_kit.run_predicate_track_changes cx t predicate reason with
-          | Predicate_kit.TypeUnchanged _t -> (t, false)
-          | Predicate_kit.TypeChanged t -> (t, actual_source_read))
+          | Predicate_kit.TypeUnchanged _t -> (t, None)
+          | Predicate_kit.TypeChanged t ->
+            ( t,
+              if actual_source_read then
+                Some refining_locs
+              else
+                None
+            ))
       in
       Context.PossiblyRefinedWriteState
-        { t; errors; actually_refined = actually_refined || actually_refined' })
+        {
+          t;
+          errors;
+          actually_refined_refining_locs =
+            merge_actually_refined_refining_locs
+              (actually_refined_refining_locs, actually_refined_refining_locs');
+        })
     ~default:res
     refi
 
@@ -361,7 +383,7 @@ let possibly_refined_write_state_of_state
     checked_find_loc_env_write cx kind loc
   in
   let base_possibly_refined_write_state ?(errors = []) t =
-    Context.PossiblyRefinedWriteState { t; errors; actually_refined = false }
+    Context.PossiblyRefinedWriteState { t; errors; actually_refined_refining_locs = None }
   in
   let rec loop states val_id refi =
     let state =
@@ -521,15 +543,17 @@ let possibly_refined_write_state_of_state
      * For these reads, we will not highlight refined values. *)
     state |> refine cx ~actual_source_read:(val_kind <> Env_api.Internal) reason loc refi
   in
-  let (Context.PossiblyRefinedWriteState { t; actually_refined; _ } as state) =
+  let (Context.PossiblyRefinedWriteState { t; actually_refined_refining_locs; _ } as state) =
     loop write_locs val_id refi
   in
   Tvar_resolver.resolve cx t;
-  if actually_refined then Context.add_refined_location cx loc;
+  Base.Option.iter actually_refined_refining_locs ~f:(fun locs ->
+      Context.add_refined_location cx loc locs
+  );
   state
 
 let type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
-  let (Context.PossiblyRefinedWriteState { t; errors; actually_refined = _ }) =
+  let (Context.PossiblyRefinedWriteState { t; errors; actually_refined_refining_locs = _ }) =
     possibly_refined_write_state_of_state
       ~lookup_mode
       ~val_kind
@@ -580,7 +604,8 @@ let read_to_predicate cx var_info ({ Env_api.write_locs; _ }, _, _) =
   let predicates =
     Base.List.filter_map write_locs ~f:(function
         | Env_api.With_ALoc.Refinement { refinement_id; _ } ->
-          find_refi var_info refinement_id |> snd |> predicate_of_refinement cx
+          let { Env_api.Refi.refining_locs = _; kind } = find_refi var_info refinement_id in
+          predicate_of_refinement cx kind
         | _ -> None
         )
   in

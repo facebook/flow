@@ -107,6 +107,6 @@ val is_declared_function : t -> bool
 
 val is_projection : t -> bool
 
-val debug_to_string : (int -> 'a * Env_api.refinement_kind) -> t -> string
+val debug_to_string : (int -> Env_api.refinement) -> t -> string
 
 val clear : unit -> unit

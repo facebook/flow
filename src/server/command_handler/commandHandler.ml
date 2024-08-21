@@ -2969,7 +2969,7 @@ let handle_persistent_semantic_decorations
     | Ok (Parse_artifacts _, Typecheck_artifacts { cx; _ }) ->
       let decorations =
         Base.List.map
-          (Context.refined_locations cx |> ALocSet.elements)
+          (Context.refined_locations cx |> ALocMap.keys)
           ~f:(fun loc ->
             {
               SemanticDecorations.range = Lsp.loc_to_lsp_range (loc_of_aloc loc);
