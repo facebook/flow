@@ -425,6 +425,7 @@ module Initialize : sig
   and initializationOptions = {
     liveSyntaxErrors: bool;
     detailedErrorRendering: bool option;
+    refinementInformationOnHover: bool;
   }
 
   and client_capabilities = {

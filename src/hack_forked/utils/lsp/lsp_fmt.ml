@@ -1413,6 +1413,10 @@ let parse_initialize (params : json option) : Initialize.params =
             | Some "true" -> Some true
             | Some "false" -> Some false
             | _ -> None));
+        refinementInformationOnHover =
+          (match Jget.bool_opt json "refinementInformationOnHover" with
+          | Some b -> b
+          | None -> false);
       }
     and parse_capabilities json =
       {

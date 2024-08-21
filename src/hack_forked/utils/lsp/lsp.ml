@@ -571,6 +571,7 @@ module Initialize = struct
   and initializationOptions = {
     liveSyntaxErrors: bool;
     detailedErrorRendering: bool option;
+    refinementInformationOnHover: bool;
   }
 
   and client_capabilities = {
