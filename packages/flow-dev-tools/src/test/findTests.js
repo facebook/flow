@@ -111,7 +111,7 @@ async function findTestsByRun(
     return new Set();
   }
 
-  const results = await glob(format('%s/*/results.json', runDir), {
+  const results = await glob(format('%s/**/results.json', runDir), {
     cwd: __dirname,
   });
 
