@@ -14,10 +14,11 @@ val type_at_pos :
   verbose_normalizer:bool ->
   no_typed_ast_for_imports:bool ->
   include_refs:(ALoc.t -> Loc.t) option ->
+  include_refinement_info:(ALoc.t -> Loc.t) option ->
   File_key.t ->
   int ->
   int ->
-  (Loc.t * Ty.type_at_pos_result option) * (string * Hh_json.json) list
+  (Loc.t * Ty.type_at_pos_result option * Loc.t list) * (string * Hh_json.json) list
 
 val dump_types :
   evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->

@@ -28,6 +28,7 @@ let type_at_pos
     ~verbose_normalizer
     ~no_typed_ast_for_imports
     ~include_refs
+    ~include_refinement_info
     file
     line
     col =
@@ -76,7 +77,16 @@ let type_at_pos
       in
       (json_data, loc, Some tys)
   in
-  ((loc, ty), json_data)
+  let refining_locs =
+    match include_refinement_info with
+    | None -> []
+    | Some loc_of_aloc ->
+      let open Loc_collections in
+      ALocMap.find_opt (ALoc.of_loc loc) (Context.refined_locations cx)
+      |> Base.Option.value_map ~default:[] ~f:ALocSet.elements
+      |> List.map loc_of_aloc
+  in
+  ((loc, ty, refining_locs), json_data)
 
 let dump_types ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)

@@ -260,6 +260,7 @@ module Response = struct
     type t = {
       loc: Loc.t;
       tys: payload;
+      refining_locs: Loc.t list;
       documentation: string option;
     }
   end

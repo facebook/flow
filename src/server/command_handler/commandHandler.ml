@@ -639,7 +639,7 @@ let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, lin
   )
 
 let infer_type_to_response
-    ~reader ~json ~expanded ~exact_by_default ~strip_root loc documentation tys =
+    ~reader ~json ~expanded ~exact_by_default ~strip_root loc refining_locs documentation tys =
   let module Ty_debug = Ty_debug.Make (struct
     let aloc_to_loc = Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
   end) in
@@ -674,7 +674,7 @@ let infer_type_to_response
          )
         )
   in
-  { ServerProt.Response.InferType.loc; tys; documentation }
+  { ServerProt.Response.InferType.loc; tys; refining_locs; documentation }
 
 let infer_type
     ~(options : Options.t)
@@ -682,6 +682,7 @@ let infer_type
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_parse_artifacts_cache
+    ~include_refinement_info
     input : ServerProt.Response.infer_type_response * Hh_json.json option =
   let {
     ServerProt.Infer_type_options.input = file_input;
@@ -710,7 +711,14 @@ let infer_type
       else
         ServerProt.Response.InferType.Friendly None
     in
-    let response = { ServerProt.Response.InferType.loc = Loc.none; tys; documentation = None } in
+    let response =
+      {
+        ServerProt.Response.InferType.loc = Loc.none;
+        tys;
+        refining_locs = [];
+        documentation = None;
+      }
+    in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
   | Ok (file_key, content) ->
@@ -745,11 +753,16 @@ let infer_type
         | Some (loc, type_str) ->
           ( Ok
               ServerProt.Response.InferType.
-                { loc; tys = Friendly (Some { type_str; refs = None }); documentation = None },
+                {
+                  loc;
+                  tys = Friendly (Some { type_str; refs = None });
+                  refining_locs = [];
+                  documentation = None;
+                },
             None
           )
       else
-        let ((loc, tys), type_at_pos_json_props) =
+        let ((loc, tys, refining_locs), type_at_pos_json_props) =
           Type_info_service.type_at_pos
             ~cx
             ~file_sig
@@ -759,6 +772,12 @@ let infer_type
             ~verbose_normalizer
             ~no_typed_ast_for_imports
             ~include_refs:(Some (Parsing_heaps.Reader.loc_of_aloc ~reader))
+            ~include_refinement_info:
+              ( if include_refinement_info then
+                Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
+              else
+                None
+              )
             file_key
             line
             column
@@ -809,6 +828,7 @@ let infer_type
             ~exact_by_default
             ~strip_root
             loc
+            refining_locs
             documentation
             tys
         in
@@ -1228,6 +1248,10 @@ let vscode_detailed_diagnostics ~options client =
     Lsp.Initialize.(lsp_initialize_params.initializationOptions.detailedErrorRendering)
     ~default:(Options.vscode_detailed_diagnostics options)
 
+let refinement_info_on_hover client =
+  let lsp_initialize_params = Persistent_connection.lsp_initialize_params client in
+  Lsp.Initialize.(lsp_initialize_params.initializationOptions.refinementInformationOnHover)
+
 let rank_autoimports_by_usage ~options client =
   let client_config = Persistent_connection.client_config client in
   match Persistent_connection.Client_config.rank_autoimports_by_usage client_config with
@@ -1383,7 +1407,14 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~
 let handle_infer_type ~options ~reader ~profiling ~env input =
   let (result, json_data) =
     try_with_json (fun () ->
-        infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
+        infer_type
+          ~options
+          ~reader
+          ~env
+          ~profiling
+          ~type_parse_artifacts_cache:None
+          ~include_refinement_info:true
+          input
     )
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
@@ -2323,11 +2354,18 @@ let handle_persistent_infer_type
     }
   in
   let (result, extra_data) =
-    infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache input
+    infer_type
+      ~options
+      ~reader
+      ~env
+      ~profiling
+      ~type_parse_artifacts_cache
+      ~include_refinement_info:(refinement_info_on_hover client)
+      input
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok { ServerProt.Response.InferType.loc; tys; documentation } ->
+  | Ok { ServerProt.Response.InferType.loc; tys; refining_locs; documentation } ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
     let default_uri = params.textDocument.TextDocumentIdentifier.uri in
@@ -2337,6 +2375,17 @@ let handle_persistent_infer_type
         None
       else
         Some location.Lsp.Location.range
+    in
+    let refinement_info =
+      let refining_locs =
+        Base.List.filter_map
+          refining_locs
+          ~f:(loc_to_vscode_linked_location_in_markdown ~default_uri)
+      in
+      if Base.List.is_empty refining_locs then
+        []
+      else
+        [MarkedString (spf "Refined at %s" (Base.String.concat ~sep:", " refining_locs))]
     in
     let contents =
       let (types, refs) =
@@ -2356,7 +2405,7 @@ let handle_persistent_infer_type
         | _ -> ([], [])
       in
       let docs = Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc) in
-      match Base.List.concat ([types] @ refs @ [docs]) with
+      match Base.List.concat ([types] @ refs @ [refinement_info] @ [docs]) with
       | [] -> [MarkedString "?"]
       | _ :: _ as contents -> contents
     in

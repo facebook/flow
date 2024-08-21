@@ -57,7 +57,7 @@ let spec =
   }
 
 let handle_response ~file_contents ~pretty ~strip_root response =
-  let { ServerProt.Response.InferType.loc; tys; documentation } = response in
+  let { ServerProt.Response.InferType.loc; tys; refining_locs; documentation } = response in
   match tys with
   | ServerProt.Response.InferType.JSON json ->
     let open Hh_json in
@@ -95,19 +95,24 @@ let handle_response ~file_contents ~pretty ~strip_root response =
       else
         spf "\n%s" (Reason.range_string_of_loc ~strip_root loc)
     in
+    let str_of_loc loc =
+      let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
+      match source with
+      | Some file ->
+        let path = File_key.to_string file in
+        let basename = File_path.basename (File_path.make path) in
+        let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
+        Some (Utils_js.spf "%s%s:%d:%d" lib basename line column)
+      | None -> None
+    in
     let refs =
       match refs with
       | None -> ""
       | Some refs ->
         let refs =
           Base.List.concat_map refs ~f:(fun (name, loc) ->
-              let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
-              match source with
-              | Some file ->
-                let path = File_key.to_string file in
-                let basename = File_path.basename (File_path.make path) in
-                let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
-                [Utils_js.spf "'%s' defined at %s%s:%d:%d" name lib basename line column]
+              match str_of_loc loc with
+              | Some s -> [Utils_js.spf "'%s' defined at %s" name s]
               | None -> []
           )
         in
@@ -115,7 +120,13 @@ let handle_response ~file_contents ~pretty ~strip_root response =
         | [] -> ""
         | _ -> "\n\n" ^ String.concat "\n" refs ^ "\n")
     in
-    print_endline (doc ^ ty ^ refs ^ range)
+    let refinement_info =
+      let refining_locs = Base.List.filter_map refining_locs ~f:str_of_loc in
+      match refining_locs with
+      | [] -> ""
+      | _ -> spf "\n\nRefined at %s\n" (Base.String.concat ~sep:", " refining_locs)
+    in
+    print_endline (doc ^ ty ^ refs ^ refinement_info ^ range)
 
 let handle_error err ~json ~pretty =
   if json then
