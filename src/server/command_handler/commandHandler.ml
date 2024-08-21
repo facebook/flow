@@ -2967,16 +2967,8 @@ let handle_persistent_semantic_decorations
       let metadata = with_data ~extra_data metadata in
       Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:msg metadata)
     | Ok (Parse_artifacts _, Typecheck_artifacts { cx; _ }) ->
-      let decorations =
-        Base.List.map
-          (Context.refined_locations cx |> ALocMap.keys)
-          ~f:(fun loc ->
-            {
-              SemanticDecorations.range = Lsp.loc_to_lsp_range (loc_of_aloc loc);
-              kind = SemanticDecorations.RefinedValue;
-            })
-      in
-      let r = SemanticDecorationsResult { SemanticDecorations.decorations } in
+      let decorations = Semantic_decorations.compute_from_context cx ~loc_of_aloc in
+      let r = SemanticDecorationsResult decorations in
       let response = ResponseMessage (id, r) in
       let json_props = [("result", Hh_json.JSON_String "SUCCESS")] in
       let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
