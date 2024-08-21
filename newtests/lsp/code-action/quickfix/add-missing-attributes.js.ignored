@@ -66,3 +66,26 @@ function test13() {
     declare component Foo(foo: number, children: React.Node);
     return <Foo><div/></Foo>;
 }
+
+declare component Foo(
+    a0: string,
+    a1: string,
+    a2: string,
+    a3: string,
+    b1: string,
+    b2: string,
+    c1: string,
+    c2: string,
+);
+
+function test14() {
+    return <Foo a1={''} b1={''} c1={''}>
+        <div></div>
+    </Foo>;
+}
+
+function test15(props: {a2: string}) {
+    return <Foo a1={''} {...props} b1={''} c1={''}>
+        <div></div>
+    </Foo>;
+}

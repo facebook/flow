@@ -1,0 +1,81 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Add missing attributes",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 81,
+                  "character": 15
+                },
+                "end": {
+                  "line": 81,
+                  "character": 15
+                }
+              },
+              "newText": " a0={a0}"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 81,
+                  "character": 23
+                },
+                "end": {
+                  "line": 81,
+                  "character": 23
+                }
+              },
+              "newText": " a2={a2}"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 81,
+                  "character": 23
+                },
+                "end": {
+                  "line": 81,
+                  "character": 23
+                }
+              },
+              "newText": " a3={a3}"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 81,
+                  "character": 31
+                },
+                "end": {
+                  "line": 81,
+                  "character": 31
+                }
+              },
+              "newText": " b2={b2}"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 81,
+                  "character": 39
+                },
+                "end": {
+                  "line": 81,
+                  "character": 39
+                }
+              },
+              "newText": " c2={c2}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

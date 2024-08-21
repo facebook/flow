@@ -350,10 +350,16 @@ let add_jsx_props_code_actions ~snippets_enabled ~cx ~ast ~typed_ast ~options ur
   if Options.add_missing_attributes_quickfix options then
     match Refactor_add_jsx_props.fill_props cx ~snippets_enabled ~ast ~tast:typed_ast loc with
     | None -> []
-    | Some ast' ->
-      ast'
-      |> Flow_ast_differ.program ast
-      |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+    | Some xs ->
+      xs
+      |> Base.List.map ~f:(fun (loc, attr) ->
+             let text =
+               Js_layout_generator.jsx_opening_attr ~opts:(layout_options options) attr
+               |> Ast_diff_printer.text_of_layout
+               |> ( ^ ) " " (* prefix with space *)
+             in
+             (loc, text)
+         )
       |> flow_loc_patch_to_lsp_edits
       |> fun edits ->
       let open Lsp in

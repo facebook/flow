@@ -12,14 +12,14 @@
               "range": {
                 "start": {
                   "line": 39,
-                  "character": 11
+                  "character": 15
                 },
                 "end": {
                   "line": 39,
-                  "character": 18
+                  "character": 15
                 }
               },
-              "newText": "<Foo foo={foo} />"
+              "newText": " foo={foo}"
             }
           ]
         }

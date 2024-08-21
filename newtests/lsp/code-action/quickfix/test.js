@@ -1747,7 +1747,7 @@ module.exports = (suite(
         ),
         lspStartAndConnect(),
       ].concat(
-        [12, 17, 22, 27, 31, 35, 39, 43, 47, 51, 56, 61, 66].map(
+        [12, 17, 22, 27, 31, 35, 39, 43, 47, 51, 56, 61, 66, 81, 87].map(
           (i: number, idx: number) =>
             lspRequestAndWaitUntilResponse('textDocument/codeAction', {
               textDocument: {

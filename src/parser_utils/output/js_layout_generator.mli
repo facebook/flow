@@ -124,6 +124,9 @@ val jsx_child :
 
 val jsx_closing : (Loc.t, Loc.t) Flow_ast.JSX.Closing.t -> Layout.layout_node
 
+val jsx_opening_attr :
+  opts:opts -> (Loc.t, Loc.t) Flow_ast.JSX.Opening.attribute -> Layout.layout_node
+
 val function_params :
   ?ctxt:expression_context ->
   opts:opts ->

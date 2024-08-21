@@ -103,7 +103,7 @@ let get_existing_attributes_names cx ~tast attributes children =
     init_set
     attributes
 
-let attr_compare x y =
+let attr_compare (_, x) (_, y) =
   (* Ensure regular attributes come first *)
   let open Ast.JSX in
   match (x, y) with
@@ -111,26 +111,40 @@ let attr_compare x y =
   | (Opening.Attribute _, Opening.SpreadAttribute _) -> -1
   | _ -> compare (name_of_attribute x) (name_of_attribute y)
 
-let concat_and_sort_attrs ~exising_attrs ~new_attrs =
-  if Base.List.is_sorted ~compare:attr_compare exising_attrs then
-    Base.List.sort ~compare:attr_compare (exising_attrs @ new_attrs)
-  else
-    exising_attrs @ new_attrs
+let loc_of_attr = function
+  | Ast.JSX.Opening.SpreadAttribute (loc, _) -> loc
+  | Ast.JSX.Opening.Attribute (loc, _) -> loc
+
+let concat_and_sort_attrs ~init_loc ~existing_attrs ~new_attrs =
+  let existing_attrs = Base.List.map ~f:(fun a -> (`Existing, a)) existing_attrs in
+  let new_attrs = Base.List.map ~f:(fun a -> (`New, a)) new_attrs in
+  let attrs =
+    if Base.List.is_sorted ~compare:attr_compare existing_attrs then
+      Base.List.sort ~compare:attr_compare (existing_attrs @ new_attrs)
+    else
+      existing_attrs @ new_attrs
+  in
+  let (_, rev_attrs) =
+    Base.List.fold_left attrs ~init:(init_loc, []) ~f:(fun (prev_loc, acc) (k, attr) ->
+        match k with
+        | `Existing -> (loc_of_attr attr, acc)
+        | `New -> (prev_loc, (Loc.end_loc prev_loc, attr) :: acc)
+    )
+  in
+  List.rev rev_attrs
+
+exception Found of (Loc.t * (Loc.t, Loc.t) Ast.JSX.Opening.attribute) list
 
 class mapper cx ~snippets_enabled ~tast target_loc =
   object (_this)
     inherit Flow_ast_contains_mapper.mapper target_loc as super
 
-    val mutable found = false
-
-    method was_found = found
-
     method! jsx_element loc elt =
       let open Ast.JSX in
       let elt = super#jsx_element loc elt in
-      let (annot', { Opening.name; targs; self_closing; attributes }) = elt.opening_element in
+      let (_annot', { Opening.name; attributes; _ }) = elt.opening_element in
       match name with
-      | Identifier (id_loc, _) when (not found) && Loc.contains id_loc target_loc -> begin
+      | Identifier (id_loc, _) when Loc.contains id_loc target_loc -> begin
         let attributes_from_conf_opt =
           match Typed_ast_finder.find_exact_match_annotation tast (ALoc.of_loc id_loc) with
           | Some t -> get_required_attribute_names cx loc t
@@ -148,19 +162,22 @@ class mapper cx ~snippets_enabled ~tast target_loc =
             |> Base.List.sort ~compare:String.compare
             |> Base.List.mapi ~f:(mk_attribute ~snippets_enabled)
           in
-          if List.is_empty new_attrs then
-            elt
-          else begin
-            found <- true;
-            let attributes = concat_and_sort_attrs ~exising_attrs:attributes ~new_attrs in
-            let opening_element = (annot', { Opening.name; targs; self_closing; attributes }) in
-            { elt with Ast.JSX.opening_element }
-          end
+          if not (List.is_empty new_attrs) then
+            raise
+              (Found
+                 (concat_and_sort_attrs
+                    ~init_loc:(Loc.end_loc id_loc)
+                    ~existing_attrs:attributes
+                    ~new_attrs
+                 )
+              );
+          elt
       end
       | _ -> elt
   end
 
 let fill_props cx ~snippets_enabled ~ast ~tast target_loc =
   let mapper = new mapper cx ~snippets_enabled ~tast target_loc in
-  let tast' = mapper#program ast in
-  Base.Option.some_if mapper#was_found tast'
+  match mapper#program ast with
+  | exception Found xs -> Some xs
+  | _ -> None
