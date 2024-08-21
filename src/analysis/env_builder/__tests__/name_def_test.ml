@@ -30,8 +30,6 @@ module Context = struct
 
   let add_literal_subtypes _ _ = ()
 
-  let add_matching_props _ _ = ()
-
   let add_exhaustive_check _ _ _ = ()
 
   let exhaustive_check _ _ = ([], false)
