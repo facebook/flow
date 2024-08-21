@@ -57,9 +57,9 @@ let spec =
   }
 
 let handle_response ~file_contents ~pretty ~strip_root response =
-  let (ServerProt.Response.Infer_type_response { loc; tys; documentation }) = response in
+  let { ServerProt.Response.InferType.loc; tys; documentation } = response in
   match tys with
-  | ServerProt.Response.Infer_type_JSON json ->
+  | ServerProt.Response.InferType.JSON json ->
     let open Hh_json in
     let open Reason in
     let offset_table =
@@ -78,10 +78,10 @@ let handle_response ~file_contents ~pretty ~strip_root response =
     in
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
-  | ServerProt.Response.Infer_type_string tys ->
+  | ServerProt.Response.InferType.Friendly tys ->
     let (ty, refs) =
       match tys with
-      | Some result -> result
+      | Some { ServerProt.Response.InferType.type_str; refs } -> (type_str, refs)
       | _ -> ("(unknown)", None)
     in
     let doc =

@@ -247,18 +247,24 @@ module Response = struct
 
   type get_def_response = (Loc.t list, string) result
 
-  type infer_type_response_payload =
-    | Infer_type_string of (string * (string * Loc.t) list option (* refs *)) option
-    | Infer_type_JSON of Hh_json.json
+  module InferType = struct
+    type friendly_response = {
+      type_str: string;
+      refs: (string * Loc.t) list option;
+    }
 
-  type infer_type_response_ok =
-    | Infer_type_response of {
-        loc: Loc.t;
-        tys: infer_type_response_payload;
-        documentation: string option;
-      }
+    type payload =
+      | Friendly of friendly_response option
+      | JSON of Hh_json.json
 
-  type infer_type_response = (infer_type_response_ok, string) result
+    type t = {
+      loc: Loc.t;
+      tys: payload;
+      documentation: string option;
+    }
+  end
+
+  type infer_type_response = (InferType.t, string) result
 
   type insert_type_response = (Replacement_printer.patch, string) result
 

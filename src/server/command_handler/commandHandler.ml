@@ -665,12 +665,16 @@ let infer_type_to_response
           JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", evaluated)]
         | None -> JSON_Null
       in
-      ServerProt.Response.Infer_type_JSON json
+      ServerProt.Response.InferType.JSON json
     else
-      ServerProt.Response.Infer_type_string
-        (Base.Option.map tys ~f:(Ty_printer.string_of_type_at_pos_result ~exact_by_default))
+      ServerProt.Response.InferType.Friendly
+        (Base.Option.map tys ~f:(fun r ->
+             let (type_str, refs) = Ty_printer.string_of_type_at_pos_result ~exact_by_default r in
+             { ServerProt.Response.InferType.type_str; refs }
+         )
+        )
   in
-  ServerProt.Response.Infer_type_response { loc; tys; documentation }
+  { ServerProt.Response.InferType.loc; tys; documentation }
 
 let infer_type
     ~(options : Options.t)
@@ -702,13 +706,11 @@ let infer_type
     (* TODO: wow, this is a shady way to return no result! *)
     let tys =
       if json then
-        ServerProt.Response.Infer_type_JSON Hh_json.JSON_Null
+        ServerProt.Response.InferType.JSON Hh_json.JSON_Null
       else
-        ServerProt.Response.Infer_type_string None
+        ServerProt.Response.InferType.Friendly None
     in
-    let response =
-      ServerProt.Response.Infer_type_response { loc = Loc.none; tys; documentation = None }
-    in
+    let response = { ServerProt.Response.InferType.loc = Loc.none; tys; documentation = None } in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
   | Ok (file_key, content) ->
@@ -740,12 +742,10 @@ let infer_type
         | None ->
           let json_props = add_cache_hit_data_to_json [] did_hit_cache in
           (Error "Cannot dump type", Some (Hh_json.JSON_Object json_props))
-        | Some (loc, t) ->
+        | Some (loc, type_str) ->
           ( Ok
-              ServerProt.Response.(
-                Infer_type_response
-                  { loc; tys = Infer_type_string (Some (t, None)); documentation = None }
-              ),
+              ServerProt.Response.InferType.
+                { loc; tys = Friendly (Some { type_str; refs = None }); documentation = None },
             None
           )
       else
@@ -2327,7 +2327,7 @@ let handle_persistent_infer_type
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok (ServerProt.Response.Infer_type_response { loc; tys; documentation }) ->
+  | Ok { ServerProt.Response.InferType.loc; tys; documentation } ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
     let default_uri = params.textDocument.TextDocumentIdentifier.uri in
@@ -2341,8 +2341,8 @@ let handle_persistent_infer_type
     let contents =
       let (types, refs) =
         match tys with
-        | ServerProt.Response.Infer_type_string (Some (result, refs)) ->
-          ( [MarkedCode ("flow", result)],
+        | ServerProt.Response.InferType.(Friendly (Some { type_str; refs })) ->
+          ( [MarkedCode ("flow", type_str)],
             Base.Option.value_map refs ~default:[] ~f:(fun refs ->
                 Base.List.map refs ~f:(fun (name, loc) ->
                     match loc_to_vscode_linked_location_in_markdown ~default_uri loc with
@@ -2362,7 +2362,7 @@ let handle_persistent_infer_type
     in
     let r =
       match (range, tys, documentation) with
-      | (None, ServerProt.Response.Infer_type_string None, None) -> None
+      | (None, ServerProt.Response.InferType.Friendly None, None) -> None
       | (_, _, _) -> Some { Lsp.Hover.contents; range }
     in
     let response = ResponseMessage (id, HoverResult r) in
