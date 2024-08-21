@@ -4554,11 +4554,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let (applied, changeset, map) =
           LookupMap.fold
             (fun key (loc, refinement) (applied, changeset, map) ->
-              (* Prevent refinement on undeclared const/let.
-                 We should only error if the undeclared const/let is in the same activation scope
-                 as the current one. Although we have no information about the current scope, this
-                 is not a problem. We will force initialization for all bindings before we visit a
-                 lambda. *)
+              (* Prevent refinement on undeclared const/let. *)
               let should_not_refine =
                 let { RefinementKey.base; projections } = key in
                 if projections = [] then
@@ -4566,19 +4562,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   | {
                    val_ref;
                    kind = Bindings.(Const | Let | DeclaredConst | DeclaredLet);
-                   def_loc = Some def_loc;
+                   def_loc = Some _;
                    _;
                   }
                     when Val.is_undeclared_or_skipped !val_ref ->
-                    let { Env_api.Refi.refining_locs; kind = _ } = refinement in
-                    refining_locs
-                    |> L.LSet.iter (fun loc ->
-                           add_output
-                             Error_message.(
-                               EBindingError
-                                 (EReferencedBeforeDeclaration, loc, OrdinaryName base, def_loc)
-                             )
-                       );
                     true
                   | _ -> false
                 else
