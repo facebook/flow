@@ -2368,7 +2368,7 @@ let handle_persistent_infer_type
       omit_targ_defaults = false;
       wait_for_recheck = None;
       verbose_normalizer = false;
-      max_depth = 50;
+      max_depth = 40;
       json = false;
       strip_root = None;
       expanded = false;

@@ -71,7 +71,7 @@ let default_options =
     optimize_types = true;
     preserve_inferred_literal_types = false;
     verbose_normalizer = false;
-    max_depth = Some 50;
+    max_depth = Some 40;
     toplevel_is_type_identifier_reference = false;
   }
 

@@ -489,7 +489,7 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
           ~omit_targ_defaults:false
           ~typed_ast
           ~verbose_normalizer:false
-          ~max_depth:50
+          ~max_depth:40
           ~no_typed_ast_for_imports:false
           ~include_refs:None
           loc

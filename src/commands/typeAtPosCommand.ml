@@ -41,7 +41,7 @@ let spec =
              "--omit-typearg-defaults"
              truthy
              ~doc:"Omit type arguments when defaults exist and match the provided type argument"
-        |> flag "--max-depth" (required ~default:50 int) ~doc:"Maximum depth of type (default 50)"
+        |> flag "--max-depth" (required ~default:40 int) ~doc:"Maximum depth of type (default 40)"
         |> flag "--verbose-normalizer" truthy ~doc:"Print verbose info during normalization"
         |> flag
              "--debug-print-internal-repr"
