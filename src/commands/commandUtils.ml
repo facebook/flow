@@ -1427,6 +1427,8 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.haste_paths_includes flowconfig);
     opt_file_options = file_options;
+    opt_linked_editing_range_optimizations =
+      FlowConfig.linked_editing_range_optimizations flowconfig;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;

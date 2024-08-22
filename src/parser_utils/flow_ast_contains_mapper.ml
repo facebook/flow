@@ -13,11 +13,11 @@ class mapper target =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-    method target_contains loc = Loc.contains target loc
+    method private target_contains loc = Loc.contains target loc
 
-    method target_contained_by loc = Loc.contains loc target
+    method private target_contained_by loc = Loc.contains loc target
 
-    method is_target loc = Loc.equal target loc
+    method private is_target loc = Loc.equal target loc
 
     method! program ((l, { Flow_ast.Program.all_comments; _ }) as x) =
       if

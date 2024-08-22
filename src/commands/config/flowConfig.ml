@@ -92,6 +92,7 @@ module Opts = struct
     include_warnings: bool;
     jest_integration: bool;
     lazy_mode: lazy_mode option;
+    linked_editing_range_optimizations: bool;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
     max_files_checked_per_worker: int;
@@ -225,6 +226,7 @@ module Opts = struct
       jest_integration = false;
       lazy_mode = None;
       log_saving = SMap.empty;
+      linked_editing_range_optimizations = false;
       long_lived_workers = false;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
@@ -950,6 +952,9 @@ module Opts = struct
       ("jest_integration", boolean (fun opts v -> Ok { opts with jest_integration = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log_saving", log_saving_parser);
+      ( "linked_editing_range_optimizations",
+        boolean (fun opts v -> Ok { opts with linked_editing_range_optimizations = v })
+      );
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("merge_timeout", merge_timeout_parser);
@@ -1632,6 +1637,8 @@ let include_warnings c = c.options.Opts.include_warnings
 let jest_integration c = c.options.Opts.jest_integration
 
 let lazy_mode c = c.options.Opts.lazy_mode
+
+let linked_editing_range_optimizations c = c.options.Opts.linked_editing_range_optimizations
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities

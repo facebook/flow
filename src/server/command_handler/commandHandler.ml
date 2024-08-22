@@ -1210,6 +1210,7 @@ let auto_close_jsx ~options ~env ~profiling ~params ~client =
     end
 
 let linked_editing_range ~options ~env ~profiling ~params ~client =
+  let use_optimizations = Options.linked_editing_range_optimizations options in
   let text_document = params.TextDocumentPositionParams.textDocument in
   let file_input = file_input_of_text_document_identifier ~client text_document in
   match of_file_input ~options ~env file_input with
@@ -1218,22 +1219,44 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
     let extra_data = json_of_skipped reason in
     (Ok None, extra_data)
   | Ok (filename, contents) ->
-    let (parse_result, parse_errors) =
-      Type_contents.parse_contents ~options ~profiling contents filename
+    let cache = Persistent_connection.type_parse_artifacts_cache client in
+    let (ast_opt, has_parse_errors) =
+      let cached_result =
+        if use_optimizations then
+          FilenameCache.get_from_cache filename cache
+        else
+          None
+      in
+      match cached_result with
+      | Some (Ok (Parse_artifacts { ast; parse_errors; _ }, _)) ->
+        (Some ast, not (List.is_empty parse_errors))
+      | Some (Error _)
+      | None ->
+        let (parse_result, parse_errors) =
+          Type_contents.parse_contents ~options ~profiling contents filename
+        in
+        let has_parse_errors = not (Flow_error.ErrorSet.is_empty parse_errors) in
+        begin
+          match parse_result with
+          | None -> (None, has_parse_errors)
+          | Some (Parse_artifacts { ast; _ }) -> (Some ast, has_parse_errors)
+        end
     in
-    if not (Flow_error.ErrorSet.is_empty parse_errors) then
+    if has_parse_errors then
       (* If there are parse errors, we can't necessarily match opening/closing tags in the way a user might expect. *)
       (Ok None, None)
     else (
-      match parse_result with
+      match ast_opt with
       | None -> (Ok None, None)
-      | Some (Parse_artifacts { ast; _ }) ->
+      | Some ast ->
         let result =
           let target_pos =
             Lsp.lsp_position_to_flow_position params.TextDocumentPositionParams.position
           in
           let target_loc = Loc.cursor (Some filename) target_pos.Loc.line target_pos.Loc.column in
-          let linked_locs = Linked_editing_jsx.get_linked_locs ast target_loc in
+          let linked_locs =
+            Linked_editing_jsx.get_linked_locs ~use_contains_mapper:use_optimizations ast target_loc
+          in
           Base.Option.map linked_locs ~f:(fun linked_locs ->
               let ranges = Base.List.map linked_locs ~f:Lsp.loc_to_lsp_range in
               { LinkedEditingRange.ranges; wordPattern = None }
