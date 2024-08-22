@@ -16,6 +16,9 @@
     "vscode-jsonrpc": "^6.0.0",
     "vscode-uri": "^2.1.2"
   },
+  "bin": {
+    "flow-dev-tools": "./bin/tool"
+  },
   "scripts": {
     "test": "node src/__tests__/all-tests.js"
   },
