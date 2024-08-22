@@ -1247,10 +1247,10 @@ let%expect_test "optional_chain_lit" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 17) to (2, 18) => {
-          {refinement = And (And (Not (Maybe), PropExistsR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (And (Not (Maybe), PropTruthyR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 21) to (2, 22) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropExistsR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_not_lit" =
@@ -1265,10 +1265,10 @@ let%expect_test "optional_chain_not_lit" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 17) to (2, 18) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropExistsR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 21) to (2, 22) => {
-          {refinement = And (And (Not (Maybe), PropExistsR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (And (Not (Maybe), PropTruthyR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_member_base" =
@@ -1301,7 +1301,7 @@ let%expect_test "optional_chain_with_call" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 23) to (2, 24) => {
-          {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (Not (Maybe), PropTruthyR (foo)); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 27) to (2, 28) => {
           (1, 4) to (1, 5): (`x`)
@@ -1319,7 +1319,7 @@ let%expect_test "optional_multiple_chains" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 31) to (2, 32) => {
-          {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (Not (Maybe), PropTruthyR (foo)); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 35) to (2, 36) => {
           (1, 4) to (1, 5): (`x`)
@@ -1355,7 +1355,7 @@ x.foo && x|};
           (1, 4) to (1, 5): (`x`)
         };
         (2, 9) to (2, 10) => {
-          {refinement = PropExistsR (foo); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = PropTruthyR (foo); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_standalone" =
@@ -1370,7 +1370,7 @@ x?.foo && x|};
           (1, 4) to (1, 5): (`x`)
         };
         (2, 10) to (2, 11) => {
-          {refinement = And (Not (Maybe), PropExistsR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (Not (Maybe), PropTruthyR (foo)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "no_sentinel_in_non_strict" =
@@ -5891,10 +5891,10 @@ if (x.foo) {
     (2, 6) to (2, 7): (`x`)
   };
   (5, 2) to (5, 3) => {
-    {refinement = PropExistsR (foo); writes = (2, 6) to (2, 7): (`x`)}
+    {refinement = PropTruthyR (foo); writes = (2, 6) to (2, 7): (`x`)}
   };
   (6, 2) to (6, 3) => {
-    {refinement = PropExistsR (foo); writes = (2, 6) to (2, 7): (`x`)}
+    {refinement = PropTruthyR (foo); writes = (2, 6) to (2, 7): (`x`)}
   };
   (6, 2) to (6, 7) => {
     {refinement = Truthy; writes = projection at (4, 4) to (4, 9)}
@@ -6195,10 +6195,10 @@ if (!x.a) { x.c; } else { x.b; }
           Global x
         };
         (2, 12) to (2, 13) => {
-          {refinement = Not (PropExistsR (a)); writes = Global x}
+          {refinement = Not (PropTruthyR (a)); writes = Global x}
         };
         (2, 26) to (2, 27) => {
-          {refinement = PropExistsR (a); writes = Global x}
+          {refinement = PropTruthyR (a); writes = Global x}
         }] |}]
 
 let%expect_test "conjunct" =
@@ -6214,25 +6214,25 @@ else
           Global x
         };
         (2, 11) to (2, 12) => {
-          {refinement = PropExistsR (a); writes = Global x}
+          {refinement = PropTruthyR (a); writes = Global x}
         };
         (3, 4) to (3, 5) => {
-          {refinement = And (PropExistsR (a), PropExistsR (b)); writes = Global x}
+          {refinement = And (PropTruthyR (a), PropTruthyR (b)); writes = Global x}
         };
         (3, 4) to (3, 7) => {
           {refinement = Truthy; writes = projection at (2, 4) to (2, 7)}
         };
         (3, 9) to (3, 10) => {
-          {refinement = And (PropExistsR (a), PropExistsR (b)); writes = Global x}
+          {refinement = And (PropTruthyR (a), PropTruthyR (b)); writes = Global x}
         };
         (3, 9) to (3, 12) => {
           {refinement = Truthy; writes = projection at (2, 11) to (2, 14)}
         };
         (5, 4) to (5, 5) => {
-          {refinement = Or (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+          {refinement = Or (Not (PropTruthyR (a)), Not (PropTruthyR (b))); writes = Global x}
         };
         (5, 9) to (5, 10) => {
-          {refinement = Or (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+          {refinement = Or (Not (PropTruthyR (a)), Not (PropTruthyR (b))); writes = Global x}
         }] |}]
 
 let%expect_test "disjunct" =
@@ -6248,22 +6248,22 @@ else
           Global x
         };
         (2, 11) to (2, 12) => {
-          {refinement = Not (PropExistsR (a)); writes = Global x}
+          {refinement = Not (PropTruthyR (a)); writes = Global x}
         };
         (3, 4) to (3, 5) => {
-          {refinement = Or (PropExistsR (a), PropExistsR (b)); writes = Global x}
+          {refinement = Or (PropTruthyR (a), PropTruthyR (b)); writes = Global x}
         };
         (3, 9) to (3, 10) => {
-          {refinement = Or (PropExistsR (a), PropExistsR (b)); writes = Global x}
+          {refinement = Or (PropTruthyR (a), PropTruthyR (b)); writes = Global x}
         };
         (5, 4) to (5, 5) => {
-          {refinement = And (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+          {refinement = And (Not (PropTruthyR (a)), Not (PropTruthyR (b))); writes = Global x}
         };
         (5, 4) to (5, 7) => {
           {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
         };
         (5, 9) to (5, 10) => {
-          {refinement = And (Not (PropExistsR (a)), Not (PropExistsR (b))); writes = Global x}
+          {refinement = And (Not (PropTruthyR (a)), Not (PropTruthyR (b))); writes = Global x}
         };
         (5, 9) to (5, 12) => {
           {refinement = Not (Truthy); writes = projection at (2, 11) to (2, 14)}
@@ -6282,31 +6282,31 @@ else
           Global x
         };
         (2, 12) to (2, 13) => {
-          {refinement = Not (PropExistsR (a)); writes = Global x}
+          {refinement = Not (PropTruthyR (a)); writes = Global x}
         };
         (2, 20) to (2, 21) => {
-          {refinement = Or (PropExistsR (a), PropExistsR (b)); writes = Global x}
+          {refinement = Or (PropTruthyR (a), PropTruthyR (b)); writes = Global x}
         };
         (3, 4) to (3, 5) => {
-          {refinement = And (Or (PropExistsR (a), PropExistsR (b)), PropExistsR (c)); writes = Global x}
+          {refinement = And (Or (PropTruthyR (a), PropTruthyR (b)), PropTruthyR (c)); writes = Global x}
         };
         (3, 9) to (3, 10) => {
-          {refinement = And (Or (PropExistsR (a), PropExistsR (b)), PropExistsR (c)); writes = Global x}
+          {refinement = And (Or (PropTruthyR (a), PropTruthyR (b)), PropTruthyR (c)); writes = Global x}
         };
         (3, 14) to (3, 15) => {
-          {refinement = And (Or (PropExistsR (a), PropExistsR (b)), PropExistsR (c)); writes = Global x}
+          {refinement = And (Or (PropTruthyR (a), PropTruthyR (b)), PropTruthyR (c)); writes = Global x}
         };
         (3, 14) to (3, 17) => {
           {refinement = Truthy; writes = projection at (2, 20) to (2, 23)}
         };
         (5, 4) to (5, 5) => {
-          {refinement = Or (And (Not (PropExistsR (a)), Not (PropExistsR (b))), Not (PropExistsR (c))); writes = Global x}
+          {refinement = Or (And (Not (PropTruthyR (a)), Not (PropTruthyR (b))), Not (PropTruthyR (c))); writes = Global x}
         };
         (5, 9) to (5, 10) => {
-          {refinement = Or (And (Not (PropExistsR (a)), Not (PropExistsR (b))), Not (PropExistsR (c))); writes = Global x}
+          {refinement = Or (And (Not (PropTruthyR (a)), Not (PropTruthyR (b))), Not (PropTruthyR (c))); writes = Global x}
         };
         (5, 14) to (5, 15) => {
-          {refinement = Or (And (Not (PropExistsR (a)), Not (PropExistsR (b))), Not (PropExistsR (c))); writes = Global x}
+          {refinement = Or (And (Not (PropTruthyR (a)), Not (PropTruthyR (b))), Not (PropTruthyR (c))); writes = Global x}
         }] |}]
 
 let%expect_test "changeset" =
@@ -6326,13 +6326,13 @@ x.a;
           {refinement = Truthy; writes = Global x}
         };
         (3, 4) to (3, 5) => {
-          {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
+          {refinement = And (Truthy, PropTruthyR (a)); writes = Global x}
         };
         (3, 4) to (3, 7) => {
           {refinement = Truthy; writes = projection at (2, 9) to (2, 12)}
         };
         (5, 4) to (5, 5) => {
-          {refinement = Or (Not (Truthy), Not (PropExistsR (a))); writes = Global x}
+          {refinement = Or (Not (Truthy), Not (PropTruthyR (a))); writes = Global x}
         };
         (6, 0) to (6, 1) => {
           Global x
@@ -6352,13 +6352,13 @@ x.a;
           Global x
         };
         (3, 4) to (3, 5) => {
-          {refinement = PropExistsR (a); writes = Global x}
+          {refinement = PropTruthyR (a); writes = Global x}
         };
         (3, 4) to (3, 7) => {
           {refinement = Truthy; writes = projection at (2, 4) to (2, 7)}
         };
         (5, 4) to (5, 5) => {
-          {refinement = Not (PropExistsR (a)); writes = Global x}
+          {refinement = Not (PropTruthyR (a)); writes = Global x}
         };
         (5, 4) to (5, 7) => {
           {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
@@ -6379,7 +6379,7 @@ x.a;
           Global x
         };
         (3, 4) to (3, 5) => {
-          {refinement = PropExistsR (a); writes = Global x}
+          {refinement = PropTruthyR (a); writes = Global x}
         };
         (4, 0) to (4, 1) => {
           Global x
@@ -6408,22 +6408,22 @@ if(x && x.a) {
           {refinement = Truthy; writes = Global x}
         };
         (3, 5) to (3, 6) => {
-          {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
+          {refinement = And (Truthy, PropTruthyR (a)); writes = Global x}
         };
         (3, 10) to (3, 11) => {
-          {refinement = Truthy; writes = {refinement = And (Truthy, PropExistsR (a)); writes = Global x}}
+          {refinement = Truthy; writes = {refinement = And (Truthy, PropTruthyR (a)); writes = Global x}}
         };
         (3, 10) to (3, 13) => {
           {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}
         };
         (5, 4) to (5, 5) => {
-          {refinement = Or (Not (Truthy), Not (PropExistsR (a))); writes = {refinement = And (Truthy, PropExistsR (a)); writes = Global x}}
+          {refinement = Or (Not (Truthy), Not (PropTruthyR (a))); writes = {refinement = And (Truthy, PropTruthyR (a)); writes = Global x}}
         };
         (5, 4) to (5, 7) => {
           {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}
         };
         (7, 2) to (7, 3) => {
-          {refinement = And (Truthy, PropExistsR (a)); writes = Global x}
+          {refinement = And (Truthy, PropTruthyR (a)); writes = Global x}
         };
         (7, 2) to (7, 5) => {
           {refinement = Truthy; writes = projection at (2, 8) to (2, 11)}
@@ -6469,19 +6469,19 @@ x?.y.z?.w(x.y.z);
           (2, 12) to (2, 13): (`x`)
         };
         (3, 7) to (3, 8) => {
-          {refinement = And (Not (Maybe), PropExistsR (y)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (Not (Maybe), PropTruthyR (y)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (4, 0) to (4, 1) => {
           (2, 12) to (2, 13): (`x`)
         };
         (4, 10) to (4, 11) => {
-          {refinement = And (Not (Maybe), PropExistsR (y)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (Not (Maybe), PropTruthyR (y)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (4, 10) to (4, 13) => {
-          {refinement = PropExistsR (z); writes = projection at (4, 0) to (4, 4)}
+          {refinement = PropTruthyR (z); writes = projection at (4, 0) to (4, 4)}
         };
         (4, 10) to (4, 15) => {
-          {refinement = And (Not (Maybe), PropExistsR (w)); writes = projection at (4, 0) to (4, 6)}
+          {refinement = And (Not (Maybe), PropTruthyR (w)); writes = projection at (4, 0) to (4, 6)}
         };
         (5, 1) to (5, 2) => {
           (2, 12) to (2, 13): (`x`)
@@ -6509,19 +6509,19 @@ x.a;
           (2, 12) to (2, 13): (`x`)
         };
         (4, 2) to (4, 3) => {
-          {refinement = And (And (Not (Maybe), PropExistsR (a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (And (Not (Maybe), PropTruthyR (a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
         };
         (5, 2) to (5, 3) => {
-          {refinement = And (And (Not (Maybe), PropExistsR (a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (And (Not (Maybe), PropTruthyR (a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
         };
         (5, 2) to (5, 5) => {
           {refinement = 42; writes = projection at (3, 4) to (3, 8)}
         };
         (7, 2) to (7, 3) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropExistsR (a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (8, 2) to (8, 3) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropExistsR (a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (10, 0) to (10, 1) => {
           (2, 12) to (2, 13): (`x`)
@@ -6827,7 +6827,7 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
           (4, 4) to (4, 7): (some property)
         };
         (5, 13) to (5, 14) => {
-          {refinement = PropExistsR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
+          {refinement = PropTruthyR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
         };
         (5, 13) to (5, 16) => {
           {refinement = Truthy; writes = (4, 4) to (4, 7): (some property)}
@@ -6839,7 +6839,7 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
           (5, 4) to (5, 7): (some property)
         };
         (6, 13) to (6, 14) => {
-          {refinement = Not (PropExistsR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
+          {refinement = Not (PropTruthyR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
         };
         (6, 13) to (6, 16) => {
           {refinement = Not (Truthy); writes = (5, 4) to (5, 7): (some property)}
@@ -6901,7 +6901,7 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
           (4, 4) to (4, 7): (some property)
         };
         (5, 13) to (5, 14) => {
-          {refinement = PropExistsR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
+          {refinement = PropTruthyR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
         };
         (5, 13) to (5, 16) => {
           {refinement = Truthy; writes = (4, 4) to (4, 7): (some property)}
@@ -6913,7 +6913,7 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
           (5, 4) to (5, 7): (some property)
         };
         (6, 13) to (6, 14) => {
-          {refinement = Not (PropExistsR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
+          {refinement = Not (PropTruthyR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
         };
         (6, 13) to (6, 16) => {
           {refinement = Not (Truthy); writes = (5, 4) to (5, 7): (some property)}
@@ -7343,5 +7343,5 @@ component Component() {
           (32, 8) to (32, 12): (`ref6`)
         };
         (34, 4) to (34, 8) => {
-          {refinement = Not (PropExistsR (current)); writes = (32, 8) to (32, 12): (`ref6`)}
+          {refinement = Not (PropTruthyR (current)); writes = (32, 8) to (32, 12): (`ref6`)}
         }] |}]

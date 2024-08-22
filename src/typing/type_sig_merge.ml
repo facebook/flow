@@ -1719,7 +1719,7 @@ and merge_predicate env file (loc, p) =
     | NotP p ->
       let (pos, neg) = pred p in
       (neg, pos)
-    | ExistsP key -> singleton key Type.ExistsP
+    | TruthyP key -> singleton key Type.TruthyP
     | InstanceofP (key, t) ->
       let t = merge env file t in
       singleton key Type.(BinaryP (InstanceofTest, t))

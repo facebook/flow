@@ -164,7 +164,7 @@ class ['a] t =
       | OrP (p1, p2) -> self#list (self#predicate cx) acc [p1; p2]
       | NotP p -> self#predicate cx acc p
       | BinaryP (_, t) -> self#type_ cx P.Positive acc t
-      | ExistsP -> acc
+      | TruthyP -> acc
       | NullP -> acc
       | MaybeP -> acc
       | SingletonBoolP _ -> acc
@@ -180,7 +180,7 @@ class ['a] t =
       | SymbolP _ -> acc
       | VoidP -> acc
       | ArrP -> acc
-      | PropExistsP _ -> acc
+      | PropTruthyP _ -> acc
       | PropNonMaybeP _ -> acc
       | LatentP ((lazy (_, _, t, targs, argts)), _) ->
         let acc = self#type_ cx P.Positive acc t in

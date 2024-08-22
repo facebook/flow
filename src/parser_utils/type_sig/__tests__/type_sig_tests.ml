@@ -4482,7 +4482,7 @@ let%expect_test "getter_setter" =
                       Annot (String [14:11-17]))))) }})}
   |}]
 
-let%expect_test "predicate_exists" =
+let%expect_test "predicate_truthy" =
   print_sig {|
     export default function(x: ?string): mixed %checks {
       return x;
@@ -4504,7 +4504,7 @@ let%expect_test "predicate_exists" =
                    ];
                  rest_param = None; this_param = None;
                  return = (Annot (Mixed [1:37-42]));
-                 predicate = (Some (Predicate ([2:2-11], (Some (ExistsP "x")))));
+                 predicate = (Some (Predicate ([2:2-11], (Some (TruthyP "x")))));
                  effect = ArbitraryEffect};
                statics = {}})}
         |];

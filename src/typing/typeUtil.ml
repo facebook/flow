@@ -747,7 +747,7 @@ let push_type_alias_reason r t =
 let rec eq_predicate (p1, p2) =
   match (p1, p2) with
   (* trivial *)
-  | (ExistsP, ExistsP)
+  | (TruthyP, TruthyP)
   | (NullP, NullP)
   | (MaybeP, MaybeP)
   | (BoolP _, BoolP _)
@@ -767,7 +767,7 @@ let rec eq_predicate (p1, p2) =
   | (SingletonStrP (_, s1, v1), SingletonStrP (_, s2, v2)) -> s1 = s2 && v1 = v2
   | (SingletonNumP (_, s1, v1), SingletonNumP (_, s2, v2)) -> s1 = s2 && v1 = v2
   | (LatentP (c1, i1), LatentP (c2, i2)) -> c1 == c2 && i1 = i2
-  | (PropExistsP (s1, _), PropExistsP (s2, _)) -> s1 = s2
+  | (PropTruthyP (s1, _), PropTruthyP (s2, _)) -> s1 = s2
   | (PropNonMaybeP (s1, _), PropNonMaybeP (s2, _)) -> s1 = s2
   (* Complex *)
   | (BinaryP (b1, OpenT (_, id1)), BinaryP (b2, OpenT (_, id2))) -> b1 = b2 && id1 = id2

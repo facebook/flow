@@ -896,7 +896,7 @@ class virtual ['a] t =
           p
         else
           BinaryP (test, t')
-      | ExistsP
+      | TruthyP
       | NullP
       | MaybeP
       | SingletonBoolP _
@@ -913,7 +913,7 @@ class virtual ['a] t =
       | VoidP
       | ArrP
       | PropNonMaybeP _
-      | PropExistsP _ ->
+      | PropTruthyP _ ->
         p
       | LatentP ((lazy (use_op, loc, t, targs, argts)), i) ->
         let t' = self#type_ cx map_cx t in

@@ -571,17 +571,17 @@ module Operators = struct
                (* a falsy && b ~> a
                   a truthy && b ~> b
                   a && b ~> a falsy | b *)
-               match Type_filter.exists cx left with
+               match Type_filter.truthy cx left with
                | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                  (* falsy *)
-                 Predicate_kit.run_predicate_for_filtering cx left (NotP ExistsP) tout
+                 Predicate_kit.run_predicate_for_filtering cx left (NotP TruthyP) tout
                | _ ->
-                 (match Type_filter.not_exists cx left with
+                 (match Type_filter.not_truthy cx left with
                  | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                    (* truthy *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
-                   Predicate_kit.run_predicate_for_filtering cx left (NotP ExistsP) tout;
+                   Predicate_kit.run_predicate_for_filtering cx left (NotP TruthyP) tout;
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
            )
     )
@@ -593,17 +593,17 @@ module Operators = struct
                (* a truthy || b ~> a
                   a falsy || b ~> b
                   a || b ~> a truthy | b *)
-               match Type_filter.not_exists cx left with
+               match Type_filter.not_truthy cx left with
                | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                  (* truthy *)
-                 Predicate_kit.run_predicate_for_filtering cx left ExistsP tout
+                 Predicate_kit.run_predicate_for_filtering cx left TruthyP tout
                | _ ->
-                 (match Type_filter.exists cx left with
+                 (match Type_filter.truthy cx left with
                  | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                    (* falsy *)
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout))
                  | _ ->
-                   Predicate_kit.run_predicate_for_filtering cx left ExistsP tout;
+                   Predicate_kit.run_predicate_for_filtering cx left TruthyP tout;
                    Flow.flow cx (right, UseT (unknown_use, OpenT tout)))
            )
     )

@@ -233,7 +233,7 @@ struct
             | SingletonNumR _
             | SingletonBigIntR _
             | PropNullishR _
-            | PropExistsR _ ->
+            | PropTruthyR _ ->
               ()
           in
           Base.List.iter ~f:writes_of_refinement refinements;

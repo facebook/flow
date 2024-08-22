@@ -106,35 +106,35 @@ let map_poly ~f t =
   end
   | _ -> unchanged_result t
 
-let rec exists cx t =
+let rec truthy cx t =
   if TypeUtil.is_falsy t then
     changed_result (DefT (reason_of_t t, EmptyT))
   else
     match t with
     (* unknown things become truthy *)
-    | OpaqueT (r, opq) -> filter_opaque (exists cx) r opq
-    | UnionT (r, rep) -> recurse_into_union cx exists (r, UnionRep.members rep)
+    | OpaqueT (r, opq) -> filter_opaque (truthy cx) r opq
+    | UnionT (r, rep) -> recurse_into_union cx truthy (r, UnionRep.members rep)
     | MaybeT (_, t) -> changed_result t
-    | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists cx t
+    | OptionalT { reason = _; type_ = t; use_desc = _ } -> truthy cx t
     | DefT (r, BoolT None) -> DefT (r, BoolT (Some true)) |> changed_result
     | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy) |> changed_result
     | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy) |> changed_result
     | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
-    | IntersectionT (r, rep) -> recurse_into_intersection cx (exists cx) (r, InterRep.members rep)
+    | IntersectionT (r, rep) -> recurse_into_intersection cx (truthy cx) (r, InterRep.members rep)
     (* truthy things pass through *)
     | t -> unchanged_result t
 
-let rec not_exists cx t =
+let rec not_truthy cx t =
   if TypeUtil.is_falsy t then
     (* falsy things pass through *)
     unchanged_result t
   else
     match t with
-    | DefT (_, PolyT _) -> map_poly ~f:(not_exists cx) t
-    | OpaqueT (r, opq) -> filter_opaque (not_exists cx) r opq
+    | DefT (_, PolyT _) -> map_poly ~f:(not_truthy cx) t
+    | OpaqueT (r, opq) -> filter_opaque (not_truthy cx) r opq
     | AnyT (r, _) -> DefT (r, EmptyT) |> changed_result
-    | UnionT (r, rep) -> recurse_into_union cx not_exists (r, UnionRep.members rep)
+    | UnionT (r, rep) -> recurse_into_union cx not_truthy (r, UnionRep.members rep)
     (* truthy things get removed *)
     | DefT
         ( r,
@@ -164,7 +164,7 @@ let rec not_exists cx t =
     | ThisInstanceT (reason, _, _, _) -> DefT (reason, EmptyT) |> changed_result
     (* unknown boolies become falsy *)
     | MaybeT (r, t) ->
-      let (TypeFilterResult { type_ = t; changed }) = not_exists cx t in
+      let (TypeFilterResult { type_ = t; changed }) = not_truthy cx t in
       TypeFilterResult
         { type_ = UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [t]); changed }
     | DefT (r, BoolT None) -> DefT (r, BoolT (Some false)) |> changed_result
@@ -173,7 +173,7 @@ let rec not_exists cx t =
     | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0")))) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) ->
-      recurse_into_intersection cx (not_exists cx) (r, InterRep.members rep)
+      recurse_into_intersection cx (not_truthy cx) (r, InterRep.members rep)
     (* things that don't track truthiness pass through *)
     | t -> unchanged_result t
 

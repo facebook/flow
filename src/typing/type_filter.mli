@@ -11,9 +11,9 @@ type filter_result =
       changed: bool;
     }
 
-val exists : Context.t -> Type.t -> filter_result
+val truthy : Context.t -> Type.t -> filter_result
 
-val not_exists : Context.t -> Type.t -> filter_result
+val not_truthy : Context.t -> Type.t -> filter_result
 
 val maybe : Context.t -> Type.t -> filter_result
 

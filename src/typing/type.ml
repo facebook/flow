@@ -990,7 +990,7 @@ module rec TypeTerm : sig
     (* mechanism to handle binary tests where both sides need to be evaluated *)
     | BinaryP of binary_test * t
     (* Only track locations of existence checks created when walking the AST *)
-    | ExistsP (* truthy *)
+    | TruthyP (* truthy *)
     | NullP (* null *)
     | MaybeP (* null or undefined *)
     | SingletonBoolP of ALoc.t * bool (* true or false *)
@@ -1006,8 +1006,8 @@ module rec TypeTerm : sig
     | SymbolP of ALoc.t (* symbol *)
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
-    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
-    | PropExistsP of string * reason
+    (* `if (a.b)` yields `flow (a, PredicateT(PropTruthyP ("b"), tout))` *)
+    | PropTruthyP of string * reason
     (* `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))` *)
     | PropNonMaybeP of string * reason
     (* Encondes the latent predicate associated with the [index]-th parameter
@@ -4171,7 +4171,7 @@ let rec string_of_predicate = function
     spf "left operand of %s with right operand = OpenT(%d)" (string_of_binary_test b) id
   | BinaryP (b, t) ->
     spf "left operand of %s with right operand = %s" (string_of_binary_test b) (string_of_ctor t)
-  | ExistsP -> "truthy"
+  | TruthyP -> "truthy"
   | NullP -> "null"
   | MaybeP -> "null or undefined"
   | SingletonBoolP (_, false) -> "false"
@@ -4190,7 +4190,7 @@ let rec string_of_predicate = function
   | SymbolP _ -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
-  | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
+  | PropTruthyP (key, _) -> spf "prop `%s` is truthy" key
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
   | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i

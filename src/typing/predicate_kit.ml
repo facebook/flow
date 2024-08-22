@@ -19,8 +19,8 @@ type instanceof_rhs =
 let concretization_variant_of_predicate = function
   | MaybeP
   | NotP MaybeP
-  | ExistsP
-  | NotP ExistsP ->
+  | TruthyP
+  | NotP TruthyP ->
     ConcretizeForMaybeOrExistPredicateTest
   | _ -> ConcretizeForGeneralPredicateTest
 
@@ -270,14 +270,14 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (************************)
   (* truthyness *)
   (************************)
-  | ExistsP ->
-    let filtered = Type_filter.exists cx l in
+  | TruthyP ->
+    let filtered = Type_filter.truthy cx l in
     report_filtering_result_to_predicate_result filtered result_collector
-  | NotP ExistsP ->
-    let filtered = Type_filter.not_exists cx l in
+  | NotP TruthyP ->
+    let filtered = Type_filter.not_truthy cx l in
     report_filtering_result_to_predicate_result filtered result_collector
-  | PropExistsP (key, r) -> prop_exists_test cx trace key r true l result_collector
-  | NotP (PropExistsP (key, r)) -> prop_exists_test cx trace key r false l result_collector
+  | PropTruthyP (key, r) -> prop_truthy_test cx trace key r true l result_collector
+  | NotP (PropTruthyP (key, r)) -> prop_truthy_test cx trace key r false l result_collector
   | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l result_collector
   | NotP (PropNonMaybeP (key, r)) -> prop_non_maybe_test cx trace key r false l result_collector
   (* classical logic i guess *)
@@ -501,7 +501,7 @@ and type_guard_diff cx t1 t2 =
   else
     Type_filter.TypeFilterResult { type_ = t1; changed = false }
 
-and prop_exists_test cx trace key reason sense obj result_collector =
+and prop_truthy_test cx trace key reason sense obj result_collector =
   prop_exists_test_generic
     key
     reason
@@ -510,7 +510,7 @@ and prop_exists_test cx trace key reason sense obj result_collector =
     result_collector
     obj
     sense
-    (ExistsP, NotP ExistsP)
+    (TruthyP, NotP TruthyP)
     obj
 
 and prop_non_maybe_test cx trace key reason sense obj result_collector =
@@ -1034,14 +1034,14 @@ and concretize_and_run_sentinel_prop_test
 (**********)
 and guard cx trace source pred input result_collector =
   match pred with
-  | ExistsP -> begin
-    match Type_filter.exists cx source with
+  | TruthyP -> begin
+    match Type_filter.truthy cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
       report_changes_to_input result_collector
     | _ -> report_unchanged_filtering_result_to_predicate_result input result_collector
   end
-  | NotP ExistsP -> begin
-    match Type_filter.not_exists cx source with
+  | NotP TruthyP -> begin
+    match Type_filter.not_truthy cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
       report_changes_to_input result_collector
     | _ -> report_unchanged_filtering_result_to_predicate_result input result_collector

@@ -3878,7 +3878,7 @@ module Make
               (* any will fail the test below, but it's not always truthy. *)
               | AnyT _ -> ()
               | _ ->
-                (match Type_filter.not_exists cx concretized_cond_t with
+                (match Type_filter.not_truthy cx concretized_cond_t with
                 | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
                   Flow_js.add_output
                     cx

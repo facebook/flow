@@ -521,7 +521,7 @@ let effect_visitor cx is_hook rrid tast =
           | AndR (l, r) -> not_refines_safe l && not_refines_safe r
           | OrR (l, r) -> not_refines_safe l || not_refines_safe r
           | NotR r -> not (refines_safe r)
-          | PropExistsR { propname = "current"; _ } -> false
+          | PropTruthyR { propname = "current"; _ } -> false
           | _ -> true
         in
 

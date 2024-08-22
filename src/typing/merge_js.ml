@@ -101,7 +101,7 @@ let detect_sketchy_null_checks cx tast =
           let exists_check =
             match
               t
-              |> Type_filter.not_exists cx
+              |> Type_filter.not_truthy cx
               |> type_of_filtering_result
               |> Type_filter.not_maybe cx
               |> type_of_filtering_result

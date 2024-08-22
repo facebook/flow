@@ -5312,7 +5312,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   this#extend_refinement
                     refinement_key_obj
                     ~refining_locs:(L.LSet.singleton loc)
-                    (PropExistsR { propname; loc })
+                    (PropTruthyR { propname; loc })
                     refis)
                 ~default:refis
                 propname
@@ -5353,7 +5353,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           expression
         | Member _
         | OptionalMember _ ->
-          (* Add a PropExists refinement to the object and a
+          (* Add a PropTruthy refinement to the object and a
            * Truthy heap refinement to the access *)
           let refis =
             match RefinementKey.of_expression (loc, expr) with

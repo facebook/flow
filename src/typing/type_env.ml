@@ -293,7 +293,7 @@ let predicate_of_refinement cx =
       (match pred r with
       | None -> None
       | Some p -> Some (NotP p))
-    | TruthyR -> Some ExistsP
+    | TruthyR -> Some TruthyP
     | NullR -> Some NullP
     | UndefinedR -> Some VoidP
     | MaybeR -> Some MaybeP
@@ -336,8 +336,8 @@ let predicate_of_refinement cx =
     | PropNullishR { propname; loc } ->
       Some
         (NotP (PropNonMaybeP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)))
-    | PropExistsR { propname; loc } ->
-      Some (PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
+    | PropTruthyR { propname; loc } ->
+      Some (PropTruthyP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
   in
   pred
 

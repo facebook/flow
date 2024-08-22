@@ -163,7 +163,7 @@ module type S = sig
           arguments: (L.t, L.t) Ast.Expression.ArgList.t;
           index: int;
         }
-      | PropExistsR of {
+      | PropTruthyR of {
           propname: string;
           loc: L.t;
         }
@@ -442,7 +442,7 @@ module Make
           arguments: (L.t, L.t) Ast.Expression.ArgList.t;
           index: int;
         }
-      | PropExistsR of {
+      | PropTruthyR of {
           propname: string;
           loc: L.t;
         }
@@ -667,7 +667,7 @@ module Make
     | PropNullishR { propname = prop; _ } -> Printf.sprintf "PropNullishR %s" prop
     | LatentR { func = _; targs = _; arguments = _; index } ->
       Printf.sprintf "LatentR (index = %i)" index
-    | PropExistsR { propname; loc = _ } -> Printf.sprintf "PropExistsR (%s)" propname
+    | PropTruthyR { propname; loc = _ } -> Printf.sprintf "PropTruthyR (%s)" propname
 end
 
 module With_Loc =
