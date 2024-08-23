@@ -1392,6 +1392,8 @@ let make_options
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.hook_compatibility_excludes flowconfig);
+    opt_dev_only_refinement_info_as_errors =
+      FlowConfig.dev_only_refinement_info_as_errors flowconfig;
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_jest_integration = FlowConfig.jest_integration flowconfig;

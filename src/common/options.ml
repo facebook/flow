@@ -81,6 +81,7 @@ type t = {
   opt_hook_compatibility: bool;
   opt_react_rules: react_rules list;
   opt_debug: bool;
+  opt_dev_only_refinement_info_as_errors: bool;
   opt_enable_const_params: bool;
   opt_enable_jest_integration: bool;
   opt_enable_relay_integration: bool;
@@ -214,6 +215,8 @@ let typecheck_component_syntax_in_file opts file =
   component_syntax opts || File_key.is_lib_file file
 
 let react_rules opts = opts.opt_react_rules
+
+let dev_only_refinement_info_as_errors opts = opts.opt_dev_only_refinement_info_as_errors
 
 let enable_const_params opts = opts.opt_enable_const_params
 

@@ -2431,6 +2431,9 @@ let to_printable_error :
         text "Deprecated type. Use type guards instead. ";
         text "See https://flow.org/en/docs/types/type-guards/ for more information on type guards.";
       ]
+    | MessageDevOnlyRefinedLocInfo { refining_locs } ->
+      text "Refined at" :: Base.List.map refining_locs ~f:no_desc_ref
+    | MessageDevOnlyInvalidatedRefinementInfo -> [text "Refinement invalidated."]
     | MessageDocblockError err ->
       (match err with
       | MultipleFlowAttributes ->

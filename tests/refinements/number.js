@@ -97,7 +97,7 @@ let tests = [
   },
 
   function(mode: Mode) {
-    switch (mode) {
+    switch (mode) { // TODO: switch stmt should not be considered as refined
       case 0:
         (mode: 0);
         break;

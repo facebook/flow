@@ -50,7 +50,7 @@ function list(n: number): OCamlList {
   return { kind: "nil" };
 }
 function length(l: OCamlList): number {
-  switch (l.kind) {
+  switch (l.kind) { // todo: l.kind should not be considered to be invalidated
   case "cons": return 1 + length(l.next);
   default: return 0;
   }

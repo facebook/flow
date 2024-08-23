@@ -86,6 +86,7 @@ type metadata = {
   hook_compatibility: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
+  dev_only_refinement_info_as_errors: bool;
   enable_as_const: bool;
   enable_const_params: bool;
   enable_enums: bool;
@@ -176,6 +177,8 @@ val hook_compatibility : t -> bool
 val react_rule_enabled : t -> Options.react_rules -> bool
 
 val react_rules_always : t -> bool
+
+val dev_only_refinement_info_as_errors : t -> bool
 
 val enable_as_const : t -> bool
 

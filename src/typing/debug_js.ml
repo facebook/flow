@@ -1922,6 +1922,10 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
+    | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
+      spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
+    | EDevOnlyInvalidatedRefinementInfo { read_loc } ->
+      spf "EDevOnlyInvalidatedRefinementInfo {read_loc=%s}" (string_of_aloc read_loc)
     | ETemporaryHardcodedErrorForPrototyping (reason, _) ->
       spf "ETemporaryHardcodedErrorForPrototyping (%s, _)" (dump_reason cx reason)
 

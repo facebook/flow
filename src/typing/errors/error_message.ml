@@ -621,6 +621,11 @@ and 'loc t' =
       arg: 'loc virtual_reason;
     }
   | ECannotCallReactComponent of { reason: 'loc virtual_reason }
+  | EDevOnlyRefinedLocInfo of {
+      refined_loc: 'loc;
+      refining_locs: 'loc list;
+    }
+  | EDevOnlyInvalidatedRefinementInfo of { read_loc: 'loc }
   (* As the name suggest, don't use this for production purposes, but feel free to use it to
    * quickly test out some ideas. *)
   | ETemporaryHardcodedErrorForPrototyping of 'loc virtual_reason * string
@@ -1377,6 +1382,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnionOptimizationOnNonUnion { loc; arg } ->
     EUnionOptimizationOnNonUnion { loc = f loc; arg = map_reason arg }
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
+  | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
+    EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
+  | EDevOnlyInvalidatedRefinementInfo { read_loc } ->
+    EDevOnlyInvalidatedRefinementInfo { read_loc = f read_loc }
   | ETemporaryHardcodedErrorForPrototyping (r, s) ->
     ETemporaryHardcodedErrorForPrototyping (map_reason r, s)
 
@@ -1507,6 +1516,8 @@ let util_use_op_of_msg nope util = function
     )
   | EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc } ->
     util use_op (fun use_op -> EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc })
+  | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs = _ }
+  | EDevOnlyInvalidatedRefinementInfo { read_loc = _ }
   | ETemporaryHardcodedErrorForPrototyping (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1875,6 +1886,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
+  | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
+  | EDevOnlyInvalidatedRefinementInfo { read_loc } -> Some read_loc
   | EUnableToSpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
@@ -2140,6 +2153,10 @@ let friendly_message_of_msg = function
         suggestion = None;
         use_op = Base.Option.value ~default:unknown_use use_op;
       }
+  | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs } ->
+    Normal (MessageDevOnlyRefinedLocInfo { refining_locs })
+  | EDevOnlyInvalidatedRefinementInfo { read_loc = _ } ->
+    Normal MessageDevOnlyInvalidatedRefinementInfo
   | ETemporaryHardcodedErrorForPrototyping (_, str) ->
     Normal (MessagePlainTextReservedForInternalErrorOnly str)
   | EExportValueAsType (_, export_name) ->
@@ -2963,6 +2980,8 @@ let error_code_of_message err : error_code option =
   | EComparison _ ->
     Some InvalidCompare
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
+  | EDevOnlyRefinedLocInfo _ -> None
+  | EDevOnlyInvalidatedRefinementInfo _ -> None
   | ETemporaryHardcodedErrorForPrototyping (_, _) -> None
   | EIncorrectTypeWithReplacement { kind; _ } ->
     (match IncorrectType.error_type_of_kind kind with

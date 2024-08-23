@@ -94,6 +94,8 @@ val hook_compatibility : config -> bool
 
 val react_rules : config -> Options.react_rules list
 
+val dev_only_refinement_info_as_errors : config -> bool
+
 val emoji : config -> bool option
 
 val enable_as_const : config -> bool option

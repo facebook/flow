@@ -58,6 +58,7 @@ module Opts = struct
     hook_compatibility_includes: string list;
     hook_compatibility_excludes: string list;
     react_rules: Options.react_rules list;
+    dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_as_const: bool option;
     enable_const_params: bool option;
@@ -191,6 +192,7 @@ module Opts = struct
       hook_compatibility_includes = [];
       hook_compatibility_excludes = [];
       react_rules = [];
+      dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_as_const = None;
       enable_const_params = None;
@@ -884,6 +886,9 @@ module Opts = struct
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("casting_syntax", casting_syntax_parser);
       ("component_syntax", component_syntax_parser);
+      ( "dev_only.refinement_info_as_errors",
+        boolean (fun opts v -> Ok { opts with dev_only_refinement_info_as_errors = v })
+      );
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
@@ -1574,6 +1579,8 @@ let hook_compatibility_excludes c = c.options.Opts.hook_compatibility_excludes
 let hook_compatibility c = c.options.Opts.hook_compatibility
 
 let react_rules c = c.options.Opts.react_rules
+
+let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_info_as_errors
 
 let emoji c = c.options.Opts.emoji
 

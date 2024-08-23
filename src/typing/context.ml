@@ -42,6 +42,7 @@ type metadata = {
   hook_compatibility: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
+  dev_only_refinement_info_as_errors: bool;
   enable_as_const: bool;
   enable_const_params: bool;
   enable_enums: bool;
@@ -263,6 +264,7 @@ let metadata_of_options options =
     hook_compatibility = Options.hook_compatibility options;
     react_rules = Options.react_rules options;
     react_rules_always = false;
+    dev_only_refinement_info_as_errors = Options.dev_only_refinement_info_as_errors options;
     enable_as_const = Options.as_const options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
@@ -470,6 +472,8 @@ let hook_compatibility cx =
 let react_rules_always cx = cx.metadata.react_rules_always
 
 let react_rule_enabled cx rule = List.mem rule cx.metadata.react_rules
+
+let dev_only_refinement_info_as_errors cx = cx.metadata.dev_only_refinement_info_as_errors
 
 let enable_as_const cx = cx.metadata.enable_as_const
 

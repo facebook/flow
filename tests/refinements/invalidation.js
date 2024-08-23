@@ -43,7 +43,7 @@ type A = {b?: {c: boolean}};
   // and a function call correctly invalidating the refinement.
   if (1)                                      a.b.c;   // error
   if (a.b)                                    a.b.c;   // ok
-  if (a.b) { f();                             a.b.c; } // error
+  if (a.b) { f();                             a.b.c; } // error, todo: a should not be considered as refined, many similar issues below
 
   // The refinement should stay invalidated anywhere that the control
   // flow could reach after the function call (without passing through

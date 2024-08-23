@@ -535,6 +535,30 @@ let check_spread_prop_keys cx tast =
     let (_ : _ Ast.Program.t) = checker#program tast in
     ()
 
+let emit_refinement_information_as_errors =
+  let open Loc_collections in
+  let emit_refined_locations_info cx =
+    ALocMap.iter
+      (fun refined_loc refining_locs ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EDevOnlyRefinedLocInfo { refined_loc; refining_locs = ALocSet.elements refining_locs }
+          ))
+      (Context.refined_locations cx)
+  in
+  let emit_invalidated_locations_info cx =
+    ALocSet.iter
+      (fun read_loc ->
+        Flow_js_utils.add_output cx Error_message.(EDevOnlyInvalidatedRefinementInfo { read_loc }))
+      (Context.aggressively_invalidated_locations cx)
+  in
+  fun cx ->
+    if Context.dev_only_refinement_info_as_errors cx then (
+      emit_refined_locations_info cx;
+      emit_invalidated_locations_info cx
+    )
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -567,7 +591,8 @@ let post_merge_checks cx ast tast metadata =
   detect_literal_subtypes cx;
   detect_unused_promises cx;
   check_union_opt cx;
-  check_spread_prop_keys cx tast
+  check_spread_prop_keys cx tast;
+  emit_refinement_information_as_errors cx
 
 (* Check will lazily create types for the checked file's dependencies. These
  * types are created in the dependency's context and need to be copied into the
