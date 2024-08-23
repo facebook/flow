@@ -21,7 +21,7 @@
     case 'xxx': break; // ERROR
   }
 
-  switch (x[0]) { // todo: switch stmt should not be considered as refined
+  switch (x[0]) {
     case 'a': break;
     case 'b': break;
     case 'xxx': break; // ERROR

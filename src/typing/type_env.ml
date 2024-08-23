@@ -341,10 +341,7 @@ let predicate_of_refinement cx =
   in
   pred
 
-(* actual_source_read reports whether the environment entry read is actually meaningful in the
- * source code. e.g. foo.bar is an actual read, but a switch statement is not an actual read, but
- * it's a synthetic read generated in the env builder so we check other things. *)
-let refine cx ~actual_source_read reason loc refi res =
+let refine cx reason loc refi res =
   Base.Option.value_map
     ~f:(fun { Env_api.Refi.refining_locs; kind } ->
       let (Context.PossiblyRefinedWriteState { t; errors; actually_refined_refining_locs }) = res in
@@ -356,13 +353,7 @@ let refine cx ~actual_source_read reason loc refi res =
         | Some predicate ->
           (match Predicate_kit.run_predicate_track_changes cx t predicate reason with
           | Predicate_kit.TypeUnchanged _t -> (t, None)
-          | Predicate_kit.TypeChanged t ->
-            ( t,
-              if actual_source_read then
-                Some refining_locs
-              else
-                None
-            ))
+          | Predicate_kit.TypeChanged t -> (t, Some refining_locs))
       in
       Context.PossiblyRefinedWriteState
         {
@@ -539,16 +530,16 @@ let possibly_refined_write_state_of_state
           | Some state -> state)
       | _ -> Lazy.force state
     in
-    (* When val_kind = Internal, the read is a synthetic read and it's internal to Flow.
-     * For these reads, we will not highlight refined values. *)
-    state |> refine cx ~actual_source_read:(val_kind <> Env_api.Internal) reason loc refi
+    state |> refine cx reason loc refi
   in
   let (Context.PossiblyRefinedWriteState { t; actually_refined_refining_locs; _ } as state) =
     loop write_locs val_id refi
   in
   Tvar_resolver.resolve cx t;
   Base.Option.iter actually_refined_refining_locs ~f:(fun locs ->
-      Context.add_refined_location cx loc locs
+      (* When val_kind = Internal, the read is a synthetic read and it's internal to Flow.
+       * For these reads, we should not highlight refined values. *)
+      if val_kind <> Env_api.Internal then Context.add_refined_location cx loc locs
   );
   state
 

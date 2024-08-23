@@ -8077,33 +8077,6 @@ References:
                       ^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:100:5
-
-Refined at [1] [2]
-
-   number.js:100:5
-            v-----------------------------------------------------------------------
-   100|     switch (mode) { // TODO: switch stmt should not be considered as refined
-   101|       case 0:
-   102|         (mode: 0);
-   103|         break;
-   104|
-   105|       case 1:
-   106|       case 2:
-   107|         (mode: 1 | 2);
-   108|         break;
-   109|     }
-            ^
-
-References:
-   number.js:101:12
-   101|       case 0:
-                   ^ [1]
-   number.js:105:12
-   105|       case 1:
-                   ^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- number.js:102:10
 
 Refined at [1]
@@ -8695,31 +8668,12 @@ References:
                                                     ^^^ [4]
 
 
-Error --------------------------------------------------------------------------------- object_union_number_keys.js:24:3
-
-Refined at [1]
-
-   object_union_number_keys.js:24:3
-         v-----------------------------------------------------------------------
-   24|   switch (x[0]) { // todo: switch stmt should not be considered as refined
-   25|     case 'a': break;
-   26|     case 'b': break;
-   27|     case 'xxx': break; // ERROR
-   28|   }
-         ^
-
-References:
-   object_union_number_keys.js:19:10
-   19|     case 'a': break;
-                ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:24:11
 
 Refined at [1] [2]
 
    object_union_number_keys.js:24:11
-   24|   switch (x[0]) { // todo: switch stmt should not be considered as refined
+   24|   switch (x[0]) {
                  ^
 
 References:
@@ -8733,16 +8687,19 @@ References:
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:24:11
 
-Refined at [1]
+Refined at [1] [2]
 
    object_union_number_keys.js:24:11
-   24|   switch (x[0]) { // todo: switch stmt should not be considered as refined
+   24|   switch (x[0]) {
                  ^^^^
 
 References:
    object_union_number_keys.js:19:10
    19|     case 'a': break;
                 ^^^ [1]
+   object_union_number_keys.js:20:10
+   20|     case 'b': break;
+                ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:27:10
@@ -8759,7 +8716,7 @@ Cannot compare string [1] with property `0` of `x` [2] because: [incompatible-ty
 
 References:
    object_union_number_keys.js:24:11
-   24|   switch (x[0]) { // todo: switch stmt should not be considered as refined
+   24|   switch (x[0]) {
                  ^ [2]
    object_union_number_keys.js:2:24
     2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
@@ -10147,33 +10104,6 @@ References:
    string.js:95:16
    95|     } else if (s === "d") {
                       ^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- string.js:101:5
-
-Refined at [1] [2]
-
-   string.js:101:5
-            v-----------------------------------------------------------------------
-   101|     switch (mode) { // todo: switch stmt should not be considered as refined
-   102|       case "a":
-   103|         (mode: "a");
-   104|         break;
-   105|
-   106|       case "b":
-   107|       case "c":
-   108|         (mode: "b" | "c");
-   109|         break;
-   110|     }
-            ^
-
-References:
-   string.js:102:12
-   102|       case "a":
-                   ^^^ [1]
-   string.js:106:12
-   106|       case "b":
-                   ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- string.js:103:10
@@ -14900,7 +14830,7 @@ References:
 
 
 
-Found 1043 errors
+Found 1040 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
