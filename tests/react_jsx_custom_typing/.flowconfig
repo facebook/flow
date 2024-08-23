@@ -1,0 +1,7 @@
+[options]
+all=true
+no_flowlib=false
+react.custom_jsx_typing=true
+
+[libs]
+react.js

@@ -212,6 +212,8 @@ val node_resolver_dirnames : config -> string list
 
 val node_resolver_root_relative_dirnames : config -> string list
 
+val react_custom_jsx_typing : config -> bool
+
 val react_disable_function_components_default_props : config -> bool
 
 val react_runtime : config -> Options.react_runtime

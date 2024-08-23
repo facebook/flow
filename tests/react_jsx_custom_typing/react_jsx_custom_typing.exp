@@ -1,0 +1,191 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:3
+
+Cannot cast `<Com />` to number literal `1` because number literal `3` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   test.js:4:3
+   4|   <Com foo="">{1}{2}</Com> as 1; // missing React, jsx still checked
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   react.js:3:93
+   3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                                                  ^ [1]
+   test.js:4:31
+   4|   <Com foo="">{1}{2}</Com> as 1; // missing React, jsx still checked
+                                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:4:3
+
+Cannot resolve name `React`. [cannot-resolve-name]
+
+   4|   <Com foo="">{1}{2}</Com> as 1; // missing React, jsx still checked
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+Cannot cast `<Com />` to number literal `1` because number literal `3` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   test.js:9:3
+   9|   <Com foo="">{1}{2}</Com> as 1; // missing createElement, jsx still checked
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   react.js:3:93
+   3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                                                  ^ [1]
+   test.js:9:31
+   9|   <Com foo="">{1}{2}</Com> as 1; // missing createElement, jsx still checked
+                                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:4
+
+Cannot create `Com` element because property `createElement` is missing in object literal [1]. [prop-missing]
+
+   test.js:9:4
+   9|   <Com foo="">{1}{2}</Com> as 1; // missing createElement, jsx still checked
+         ^^^
+
+References:
+   test.js:8:17
+   8|   const React = {};
+                      ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+Cannot create react element because the `createElement` property of `React` [1] is incompatible with builtin
+`React.createElement` type. Please check the `React` [1] identifier in scope to ensure it is the right one.
+[invalid-react-create-element]
+
+   test.js:9:3
+   9|   <Com foo="">{1}{2}</Com> as 1; // missing createElement, jsx still checked
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:8:9
+   8|   const React = {};
+              ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:3
+
+Cannot cast `<Com />` to number literal `1` because number literal `3` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   test.js:14:3
+   14|   <Com foo="">{1}{2}</Com> as 1; // bad createElement, jsx still checked
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   react.js:3:93
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                                                   ^ [1]
+   test.js:14:31
+   14|   <Com foo="">{1}{2}</Com> as 1; // bad createElement, jsx still checked
+                                     ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:3
+
+Cannot create react element because the `createElement` property of `React` [1] is incompatible with builtin
+`React.createElement` type. Please check the `React` [1] identifier in scope to ensure it is the right one.
+[invalid-react-create-element]
+
+   test.js:14:3
+   14|   <Com foo="">{1}{2}</Com> as 1; // bad createElement, jsx still checked
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:13:9
+   13|   const React = { createElement: 'hi' };
+               ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:3
+
+Cannot cast `<Com />` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
+[incompatible-cast]
+
+   test.js:21:3
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   react.js:3:93
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                                                   ^ [1]
+   test.js:21:39
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+                                             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:4
+
+Cannot create `Com` element because property `bar` is missing in object type [1] but exists in props [2] in the second
+argument. [prop-missing]
+
+   test.js:21:4
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+          ^^^
+
+References:
+   react.js:3:53
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                           ^^^^^^^^^^^^^ [1]
+   test.js:21:3
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:13
+
+Cannot create `Com` element because number [1] is incompatible with string [2] in property `foo` of the second argument.
+[incompatible-type]
+
+   test.js:21:13
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+                   ^ [1]
+
+References:
+   react.js:3:59
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:24
+
+Cannot create `Com` element because number [1] is incompatible with number literal `1` [2] in the third argument.
+[incompatible-type]
+
+   test.js:21:24
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+                              ^ [1]
+
+References:
+   react.js:3:76
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                                  ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:27
+
+Cannot create `Com` element because number [1] is incompatible with number literal `2` [2] in the fourth argument.
+[incompatible-type]
+
+   test.js:21:27
+   21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
+                                 ^ [1]
+
+References:
+   react.js:3:87
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                                                             ^ [2]
+
+
+
+Found 12 errors

@@ -116,6 +116,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
+    react_custom_jsx_typing: bool;
     react_disable_function_components_default_props: bool;
     react_runtime: Options.react_runtime;
     recursion_limit: int;
@@ -248,6 +249,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
+      react_custom_jsx_typing = false;
       react_disable_function_components_default_props = true;
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
@@ -975,6 +977,9 @@ module Opts = struct
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
+      ( "react.custom_jsx_typing",
+        boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
+      );
       ( "react.disable_function_components_default_props",
         boolean (fun opts v -> Ok { opts with react_disable_function_components_default_props = v })
       );
@@ -1684,6 +1689,8 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
+
+let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 
 let react_disable_function_components_default_props c =
   c.options.Opts.react_disable_function_components_default_props

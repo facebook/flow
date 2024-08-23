@@ -123,6 +123,7 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
+    react_custom_jsx_typing = false;
     react_disable_function_components_default_props = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;

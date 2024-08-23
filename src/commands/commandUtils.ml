@@ -1447,6 +1447,7 @@ let make_options
       Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
     opt_ban_spread_key_props =
       Base.Option.value (FlowConfig.ban_spread_key_props flowconfig) ~default:false;
+    opt_react_custom_jsx_typing = FlowConfig.react_custom_jsx_typing flowconfig;
     opt_react_disable_function_components_default_props =
       FlowConfig.react_disable_function_components_default_props flowconfig;
     opt_react_runtime = FlowConfig.react_runtime flowconfig;

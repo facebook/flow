@@ -5428,29 +5428,32 @@ module Make
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let props =
-      match react_jsx_normalize_children_prop cx loc_children unresolved_params with
-      | None -> NullT.at expr_loc
-      | Some fragment_children_prop ->
-        let reason_props = mk_reason RReactProps loc_children in
-        let props =
-          NameUtils.Map.singleton
-            (OrdinaryName "children")
-            (Type.Field
-               {
-                 preferred_def_locs = None;
-                 key_loc = None;
-                 type_ = fragment_children_prop;
-                 polarity = Polarity.Neutral;
-               }
-            )
-        in
-        Obj_type.mk_with_proto
-          cx
-          reason_props
-          ~obj_kind:Exact
-          ~frozen:false
-          ~props
-          (ObjProtoT reason_props)
+      if Context.react_custom_jsx_typing cx then
+        NullT.at expr_loc
+      else
+        match react_jsx_normalize_children_prop cx loc_children unresolved_params with
+        | None -> NullT.at expr_loc
+        | Some fragment_children_prop ->
+          let reason_props = mk_reason RReactProps loc_children in
+          let props =
+            NameUtils.Map.singleton
+              (OrdinaryName "children")
+              (Type.Field
+                 {
+                   preferred_def_locs = None;
+                   key_loc = None;
+                   type_ = fragment_children_prop;
+                   polarity = Polarity.Neutral;
+                 }
+              )
+          in
+          Obj_type.mk_with_proto
+            cx
+            reason_props
+            ~obj_kind:Exact
+            ~frozen:false
+            ~props
+            (ObjProtoT reason_props)
     in
     let (t, _) =
       react_jsx_desugar
@@ -5461,6 +5464,7 @@ module Make
         fragment_t
         None
         props
+        unresolved_params
     in
     Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
@@ -5552,7 +5556,7 @@ module Make
             match Context.jsx cx with
             | Options.Jsx_react ->
               let (loc_element, _loc_opening, loc_children) = locs in
-              react_jsx_desugar cx name ~loc_element ~loc_children c targs_opt o
+              react_jsx_desugar cx name ~loc_element ~loc_children c targs_opt o unresolved_params
             | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
               non_react_jsx_desugar
                 cx
@@ -5578,7 +5582,7 @@ module Make
         let m_expr = jsx_title_member_to_expression member in
         let ((m_loc, t), m_expr') = expression cx m_expr in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName name))) t in
-        let (o, attributes', _unresolved_params, children) =
+        let (o, attributes', unresolved_params, children) =
           jsx_mk_props
             cx
             reason
@@ -5588,7 +5592,9 @@ module Make
             attributes
             children
         in
-        let (t, _) = react_jsx_desugar cx ~loc_element ~loc_children name c targs_opt o in
+        let (t, _) =
+          react_jsx_desugar cx ~loc_element ~loc_children name c targs_opt o unresolved_params
+        in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
           | Some member -> member
@@ -5684,10 +5690,12 @@ module Make
 
   and jsx_mk_props cx reason ~check_expression ~collapse_children name attributes children =
     let open Ast.JSX in
-    let is_react = Context.jsx cx = Options.Jsx_react in
+    let is_builtin_react =
+      Context.jsx cx = Options.Jsx_react && not (Context.react_custom_jsx_typing cx)
+    in
     let reason_props =
       replace_desc_reason
-        ( if is_react then
+        ( if is_builtin_react then
           RReactProps
         else
           RJSXElementProps name
@@ -5795,7 +5803,7 @@ module Make
       | [] -> acc
       (* We add children to the React.createElement() call for React. Not to the
        * props as other JSX users may support. *)
-      | _ when is_react ->
+      | _ when is_builtin_react ->
         (match react_jsx_normalize_children_prop cx loc_children unresolved_params with
         | None -> acc
         | Some children_prop ->
@@ -5820,59 +5828,94 @@ module Make
     in
     (t, attributes, unresolved_params, children)
 
-  and react_jsx_normalize_children_prop cx loc_children children =
-    children
-    |> Base.List.map ~f:(function
-           | UnresolvedArg (TupleElement { t; _ }, _) -> t
-           | UnresolvedSpreadArg a ->
-             Flow.add_output
-               cx
-               (Error_message.EUnsupportedSyntax
-                  (loc_children, Flow_intermediate_error_types.SpreadArgument)
-               );
-             reason_of_t a |> AnyT.error
-           )
-    |> TypeUtil.normalize_jsx_children_prop loc_children
+  and jsx_normalize_children_prop cx loc_children children =
+    Base.List.map children ~f:(function
+        | UnresolvedArg (TupleElement { t; _ }, _) -> t
+        | UnresolvedSpreadArg a ->
+          Flow.add_output
+            cx
+            (Error_message.EUnsupportedSyntax
+               (loc_children, Flow_intermediate_error_types.SpreadArgument)
+            );
+          reason_of_t a |> AnyT.error
+        )
 
-  and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props =
+  and react_jsx_normalize_children_prop cx loc_children children =
+    TypeUtil.normalize_jsx_children_prop
+      loc_children
+      (jsx_normalize_children_prop cx loc_children children)
+
+  and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children =
     let return_hint = Type_env.get_hint cx loc_element in
     let reason =
       mk_reason
         (RReactElement { name_opt = Some (OrdinaryName name); from_component_syntax = false })
         loc_element
     in
+    let reason_jsx = mk_reason (RFunction RNormal) loc_element in
+    let lazy_custom_jsx_factory_type =
+      lazy (Flow.get_builtin_type cx reason_jsx ~use_desc:false "React$CustomJSXFactory")
+    in
     let (tout, instantiated_component, use_op) =
-      let reason_jsx = mk_reason (RFunction RNormal) loc_element in
       let reason_c = reason_of_t component_t in
       let use_op =
         Op
           (ReactCreateElementCall { op = reason_jsx; component = reason_c; children = loc_children })
       in
-      let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
-      let specialized_component = Context.new_specialized_callee cx in
-      Flow.flow
-        cx
-        ( component_t,
-          ReactKitT
-            ( use_op,
-              reason,
-              React.CreateElement
-                {
-                  component = component_t;
-                  jsx_props = props;
-                  tout;
-                  targs = targs_opt;
-                  return_hint;
-                  record_monomorphized_result = false;
-                  inferred_targs = None;
-                  specialized_component = Some specialized_component;
-                }
-            )
-        );
-      let specialized_component_t =
-        Flow_js_utils.CalleeRecorder.type_for_tast_opt reason_c specialized_component
-      in
-      (tout, specialized_component_t, use_op)
+      if Context.react_custom_jsx_typing cx then (
+        let tout_tvar = (reason, Tvar.mk_no_wrap cx reason) in
+        let tout = OpenT tout_tvar in
+        Flow.flow
+          cx
+          ( Lazy.force lazy_custom_jsx_factory_type,
+            CallT
+              {
+                use_op;
+                reason;
+                call_action =
+                  Funcalltype
+                    (mk_functioncalltype
+                       ~call_kind:RegularCallKind
+                       reason
+                       targs_opt
+                       ([Arg component_t; Arg props]
+                       @ Base.List.map children ~f:(function
+                             | UnresolvedArg (TupleElement { t; _ }, _) -> Arg t
+                             | UnresolvedSpreadArg t -> SpreadArg t
+                             )
+                       )
+                       tout_tvar
+                    );
+                return_hint;
+              }
+          );
+        (tout, None, use_op)
+      ) else
+        let tout = OpenT (reason, Tvar.mk_no_wrap cx reason) in
+        let specialized_component = Context.new_specialized_callee cx in
+        Flow.flow
+          cx
+          ( component_t,
+            ReactKitT
+              ( use_op,
+                reason,
+                React.CreateElement
+                  {
+                    component = component_t;
+                    jsx_props = props;
+                    tout;
+                    targs = targs_opt;
+                    return_hint;
+                    record_monomorphized_result = false;
+                    inferred_targs = None;
+                    specialized_component = Some specialized_component;
+                  }
+              )
+          );
+        let specialized_component_t =
+          Flow_js_utils.CalleeRecorder.type_for_tast_opt reason_c specialized_component
+        in
+        (tout, specialized_component_t, use_op)
     in
     (match Context.react_runtime cx with
     | Options.ReactRuntimeAutomatic ->
@@ -5898,14 +5941,13 @@ module Make
           (mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element, "createElement")
       in
       if
-        not
-          (Speculation_flow.is_flow_successful
-             cx
-             create_element_t
-             (UseT
-                (unknown_use, Flow.get_builtin_type cx reason ~use_desc:false "React$CreateElement")
-             )
-          )
+        let expected =
+          if Context.react_custom_jsx_typing cx then
+            Lazy.force lazy_custom_jsx_factory_type
+          else
+            Flow.get_builtin_type cx reason ~use_desc:false "React$CreateElement"
+        in
+        not (Speculation_flow.is_flow_successful cx create_element_t (UseT (unknown_use, expected)))
       then
         Flow_js_utils.add_output
           cx
