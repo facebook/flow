@@ -3873,7 +3873,7 @@ indexed-access-1.js:8:12
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"detail":": string | void"},
+  "labelDetails":{"detail":"?: string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -4881,7 +4881,7 @@ indexed-access-2.js:4:13
 Flags: --lsp
 {
   "label":"\"bar\"",
-  "labelDetails":{"detail":": string | void"},
+  "labelDetails":{"detail":"?: string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -5002,7 +5002,7 @@ indexed-access-optional-1.js:7:14
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"detail":": void | string"},
+  "labelDetails":{"detail":"?: void | string"},
   "kind":13,
   "detail":"void | string",
   "sortText":"00000000000000000000",
@@ -6006,7 +6006,7 @@ indexed-access-optional-2.js:4:15
 Flags: --lsp
 {
   "label":"\"bar\"",
-  "labelDetails":{"detail":": void | string"},
+  "labelDetails":{"detail":"?: void | string"},
   "kind":13,
   "detail":"void | string",
   "sortText":"00000000000000000000",

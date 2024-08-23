@@ -2,7 +2,7 @@ bracket_syntax_1.js:5:5
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"detail":": string | void"},
+  "labelDetails":{"detail":"?: string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -91,7 +91,7 @@ bracket_syntax_2.js:5:14
 Flags: --lsp
 {
   "label":"\"bar\"",
-  "labelDetails":{"detail":": string | void"},
+  "labelDetails":{"detail":"?: string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",

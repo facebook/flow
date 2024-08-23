@@ -7,6 +7,7 @@
 
 type 'a member_info = {
   ty: 'a;
+  optional: bool;
   def_locs: ALoc.t list;
       (** The location where the member is defined. There may be multiple in cases
           involving unions (e.g., `{ foo: string } | { foo: number }`). *)
@@ -68,9 +69,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     | Field { t; optional = false; _ }
     | Get t
     | Set t ->
-      t
-    | Field { t; optional = true; _ } -> Union (false, t, Void, [])
-    | Method ft -> Fun ft
+      (t, false)
+    | Field { t; optional = true; _ } -> (Union (false, t, Void, []), true)
+    | Method ft -> (Fun ft, false)
   in
   let members_of_obj obj_props =
     obj_props
@@ -78,17 +79,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
            let (mems2, errs2) =
              match prop with
              | NamedProp { name; prop; inherited; source; def_locs } ->
-               ( NameUtils.Map.singleton
-                   name
-                   {
-                     ty = ty_of_named_prop prop;
-                     inherited;
-                     source;
-                     from_nullable = false;
-                     def_locs;
-                   },
-                 []
-               )
+               let (ty, optional) = ty_of_named_prop prop in
+               let prop = { ty; optional; inherited; source; from_nullable = false; def_locs } in
+               (NameUtils.Map.singleton name prop, [])
              | SpreadProp ty -> members_of_ty ty
              (* TODO(jmbrown): Mapped Type autocomplete *)
              | MappedTypeProp _ -> (NameUtils.Map.empty, [])
@@ -103,10 +96,19 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> List.fold_right
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
-              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_locs = dl },
+              | ( Some
+                    {
+                      ty;
+                      optional = opt;
+                      inherited = id;
+                      source = src;
+                      from_nullable = fn;
+                      def_locs = dl;
+                    },
                   Some
                     {
                       ty = tys;
+                      optional = opts;
                       inherited = ids;
                       source = srcs;
                       from_nullable = fns;
@@ -120,6 +122,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                 Some
                   {
                     ty = Nel.cons ty tys;
+                    optional = opt || opts;
                     inherited = id && ids;
                     source = merge_sources src srcs;
                     from_nullable = fn || fns;
@@ -138,10 +141,19 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> List.fold_right
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
-              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_locs = dl },
+              | ( Some
+                    {
+                      ty;
+                      optional = opt;
+                      inherited = id;
+                      source = src;
+                      from_nullable = fn;
+                      def_locs = dl;
+                    },
                   Some
                     {
                       ty = tys;
+                      optional = opts;
                       inherited = ids;
                       source = srcs;
                       from_nullable = fns;
@@ -155,6 +167,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                 Some
                   {
                     ty = Nel.cons ty tys;
+                    optional = opt || opts;
                     inherited = id && ids;
                     source = merge_sources src srcs;
                     from_nullable = fn && fns;
@@ -208,6 +221,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
             (Fun.const
                {
                  ty;
+                 optional = false;
                  inherited = true;
                  source = PrimitiveProto "Object";
                  from_nullable = false;
@@ -221,6 +235,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
             (Fun.const
                {
                  ty = Bot EmptyType;
+                 optional = false;
                  inherited = true;
                  source = PrimitiveProto "Object";
                  from_nullable = true;

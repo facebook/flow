@@ -154,9 +154,9 @@ let text_edit ?insert_text name (insert, replace) =
   let newText = Base.Option.value ~default:name insert_text in
   { ServerProt.Response.newText; insert; replace }
 
-let detail_of_ty ~exact_by_default ty =
+let detail_of_ty ~exact_by_default ~optional ty =
   let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
-  let detail = ": " ^ type_ in
+  let detail = Utils_js.ite optional "?" "" ^ ": " ^ type_ in
   (* [detail] is rendered immediately after the name, with no space.
      We add a [:] so it renders like an annotation *)
   (Some type_, Some detail)
@@ -179,7 +179,7 @@ let detail_of_ty_decl ~exact_by_default d =
          and could include the RHS too like we do for variables. *)
       None
     | Ty.VariableDecl (_, ty) ->
-      let (_, detail) = detail_of_ty ~exact_by_default ty in
+      let (_, detail) = detail_of_ty ~exact_by_default ~optional:false ty in
       detail
   in
   (Some type_, detail)
@@ -247,8 +247,9 @@ let autocomplete_create_result
     ~exact_by_default
     ~log_info
     (name, edit_locs)
+    ?(optional = false)
     ty =
-  let (itemDetail, labelDetail) = detail_of_ty ~exact_by_default ty in
+  let (itemDetail, labelDetail) = detail_of_ty ~exact_by_default ~optional ty in
   let kind = Some (lsp_completion_of_type ty) in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
@@ -1505,7 +1506,12 @@ let autocomplete_member
     let items =
       mems
       |> Base.List.map
-           ~f:(fun (name, documentation_and_tags, Ty_members.{ ty; source; from_nullable; _ }) ->
+           ~f:(fun
+                ( name,
+                  documentation_and_tags,
+                  Ty_members.{ ty; optional; def_locs = _; inherited = _; source; from_nullable }
+                )
+              ->
              let rank =
                match source with
                | Ty.PrimitiveProto _ -> 1
@@ -1546,6 +1552,7 @@ let autocomplete_member
                  ~exact_by_default
                  ~log_info:"member"
                  (name, edit_locs)
+                 ~optional
                  ty
              | (false, _, Some _, _, _)
              | (_, true, Some _, _, _) ->
@@ -1559,6 +1566,7 @@ let autocomplete_member
                  ~exact_by_default
                  ~log_info:"bracket syntax member"
                  (insert_text, edit_locs)
+                 ~optional
                  ty
              | (false, _, None, Some member_loc, false)
              | (_, true, None, Some member_loc, false) ->
@@ -1571,6 +1579,7 @@ let autocomplete_member
                  ~exact_by_default
                  ~log_info:"dot-member switched to bracket-syntax member"
                  (insert_text, (edit_loc, edit_loc))
+                 ~optional
                  ty
              | (true, false, _, Some member_loc, _) ->
                let opt_chain_name =
@@ -1588,6 +1597,7 @@ let autocomplete_member
                  ~exact_by_default
                  ~log_info:"start optional chain"
                  (opt_chain_name, (edit_loc, edit_loc))
+                 ~optional
                  opt_chain_ty
          )
     in
@@ -1809,7 +1819,14 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
   | Ok (mems, errors_to_log) ->
     let items =
       mems
-      |> Base.List.map ~f:(fun (name, documentation_and_tags, Ty_members.{ ty; _ }) ->
+      |> Base.List.map
+           ~f:(fun
+                ( name,
+                  documentation_and_tags,
+                  Ty_members.
+                    { ty; optional; def_locs = _; inherited = _; source = _; from_nullable = _ }
+                )
+              ->
              let insert_text =
                if has_value then
                  name
@@ -1822,6 +1839,7 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
                ~exact_by_default
                ~log_info:"jsx attribute"
                (name, edit_locs)
+               ~optional
                ty
          )
     in
@@ -1866,7 +1884,19 @@ let unused_super_methods ~typing ~edit_locs ~exclude_keys enclosing_class_t =
   let items =
     mems
     |> Base.List.filter_map
-         ~f:(fun (name, documentation_and_tags, { Ty_members.ty; def_locs; _ }) ->
+         ~f:(fun
+              ( name,
+                documentation_and_tags,
+                {
+                  Ty_members.ty;
+                  def_locs;
+                  optional = _;
+                  inherited = _;
+                  source = _;
+                  from_nullable = _;
+                }
+              )
+            ->
            let open Base.Option in
            (* Find the AST node for member we want to override *)
            def_locs |> Base.List.hd >>| loc_of_aloc >>= Find_method.find ~get_ast_from_shared_mem
@@ -1939,7 +1969,14 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
     in
     let items =
       mems
-      |> Base.List.map ~f:(fun (name, documentation_and_tags, Ty_members.{ ty; _ }) ->
+      |> Base.List.map
+           ~f:(fun
+                ( name,
+                  documentation_and_tags,
+                  Ty_members.
+                    { ty; optional; def_locs = _; inherited = _; source = _; from_nullable = _ }
+                )
+              ->
              let rank = 0 in
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              if name_is_valid_identifier then
@@ -1949,6 +1986,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
                  ~exact_by_default
                  ~log_info:"object key"
                  (name, edit_locs)
+                 ~optional
                  ty
              else
                let insert_text =
@@ -1961,6 +1999,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
                  ~exact_by_default
                  ~log_info:"bracket syntax object key"
                  (insert_text, edit_locs)
+                 ~optional
                  ty
          )
     in

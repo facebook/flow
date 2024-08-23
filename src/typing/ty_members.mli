@@ -7,6 +7,7 @@
 
 type 'a member_info = {
   ty: 'a;
+  optional: bool;
   def_locs: ALoc.t list;
   inherited: bool;
   source: Ty.prop_source;
