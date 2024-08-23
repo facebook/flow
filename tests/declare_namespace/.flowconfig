@@ -1,6 +1,3 @@
-[libs]
-lib.js
-
 [options]
 all=true
 enums=true
