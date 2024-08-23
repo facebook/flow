@@ -12,6 +12,42 @@ let markup_string str = { Lsp.MarkupContent.kind = Lsp.MarkupKind.Markdown; valu
 let selection_range_of_loc ?parent (loc : Loc.t) : Lsp.SelectionRange.selection_range =
   { Lsp.SelectionRange.range = Lsp.loc_to_lsp_range loc; parent }
 
+let func_details_result_to_lsp =
+  let open Lsp.SignatureHelp in
+  function
+  | ServerProt.Response.SigHelpFunc { param_tys; return_ty; func_documentation } ->
+    let doc_opt = Base.Option.map ~f:(fun doc -> Documentation.MarkupContent (markup_string doc)) in
+    let label_buf = Buffer.create 20 in
+    Buffer.add_string label_buf "(";
+    let parameters =
+      param_tys
+      |> Base.List.mapi
+           ~f:(fun i { ServerProt.Response.param_name; param_ty; param_documentation } ->
+             let label = Printf.sprintf "%s: %s" param_name param_ty in
+             if i > 0 then Buffer.add_string label_buf ", ";
+             Buffer.add_string label_buf label;
+             { parinfo_label = String label; parinfo_documentation = doc_opt param_documentation }
+         )
+    in
+    Buffer.add_string label_buf "): ";
+    Buffer.add_string label_buf return_ty;
+    let siginfo_label = Buffer.contents label_buf in
+    let siginfo_documentation = doc_opt func_documentation in
+    { siginfo_label; siginfo_documentation; parameters }
+  | ServerProt.Response.SigHelpJsxAttr { documentation; name; ty; optional } ->
+    let doc_opt =
+      Base.Option.map ~f:(fun doc -> Documentation.MarkupContent (markup_string doc)) documentation
+    in
+    let label_buf = Buffer.create 20 in
+    let parameters =
+      let label = Printf.sprintf "%s%s: %s" name (Utils_js.ite optional "?" "") ty in
+      Buffer.add_string label_buf label;
+      [{ parinfo_label = String label; parinfo_documentation = doc_opt }]
+    in
+    let siginfo_label = Buffer.contents label_buf in
+    let siginfo_documentation = None in
+    { siginfo_label; siginfo_documentation; parameters }
+
 let flow_signature_help_to_lsp
     (details : (ServerProt.Response.func_details_result list * int) option) :
     Lsp.SignatureHelp.result =
@@ -20,34 +56,7 @@ let flow_signature_help_to_lsp
   | Some (signatures, active_parameter) ->
     let open Lsp.SignatureHelp in
     let signatures =
-      Base.List.fold_left
-        signatures
-        ~f:(fun acc { ServerProt.Response.param_tys; return_ty; func_documentation } ->
-          let doc_opt =
-            Base.Option.map ~f:(fun doc -> Documentation.MarkupContent (markup_string doc))
-          in
-          let label_buf = Buffer.create 20 in
-          Buffer.add_string label_buf "(";
-          let parameters =
-            param_tys
-            |> Base.List.mapi
-                 ~f:(fun i { ServerProt.Response.param_name; param_ty; param_documentation } ->
-                   let label = Printf.sprintf "%s: %s" param_name param_ty in
-                   if i > 0 then Buffer.add_string label_buf ", ";
-                   Buffer.add_string label_buf label;
-                   {
-                     parinfo_label = String label;
-                     parinfo_documentation = doc_opt param_documentation;
-                   }
-               )
-          in
-          Buffer.add_string label_buf "): ";
-          Buffer.add_string label_buf return_ty;
-          let siginfo_label = Buffer.contents label_buf in
-          let siginfo_documentation = doc_opt func_documentation in
-          let signature = { siginfo_label; siginfo_documentation; parameters } in
-          signature :: acc)
-        ~init:[]
+      Base.List.fold_left signatures ~f:(fun acc x -> func_details_result_to_lsp x :: acc) ~init:[]
     in
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 

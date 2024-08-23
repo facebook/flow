@@ -123,17 +123,77 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
   in
   let return_ty = string_of_return_t ~exact_by_default return in
   let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
-  { ServerProt.Response.param_tys; return_ty; func_documentation }
+  ServerProt.Response.SigHelpFunc { param_tys; return_ty; func_documentation }
 
 (* given a Loc.t within a function call or `new` expression, returns the type of the function/constructor being called *)
 module Callee_finder = struct
-  type t = {
-    type_: Type.t;
-    active_parameter: int;
-    loc: Loc.t;
-  }
+  type t =
+    | FunCallData of {
+        type_: Type.t;
+        active_parameter: int;
+        loc: Loc.t;
+      }
+    | JsxAttrData of {
+        name: string;
+        sigs: (Type.t * bool) list;
+      }
 
   exception Found of t option
+
+  let rec get_prop_of_obj cx name reason t =
+    Flow_js.possible_concrete_types_for_inspection cx reason t
+    |> Base.List.concat_map ~f:(fun t ->
+           get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t |> Base.Option.to_list
+       )
+    |> function
+    | [] -> None
+    | [t] -> Some t
+    | ts ->
+      let opt = Base.List.map ~f:snd ts |> Base.List.fold_left ~init:false ~f:( || ) in
+      let ts = Base.List.map ~f:fst ts in
+      Some (TypeUtil.union_of_ts reason ts, opt)
+
+  and get_prop_of_obj_no_union cx name reason t =
+    let open Type in
+    match t with
+    | GenericT { bound = t; _ } -> get_prop_of_obj cx name reason t
+    | DefT (_, ObjT { props_tmap; _ }) ->
+      Base.Option.value_map (Context.get_prop cx props_tmap name) ~default:None ~f:(fun prop ->
+          match Property.read_t prop with
+          | Some (OptionalT { type_ = t; _ }) -> Some (t, true)
+          | Some t -> Some (t, false)
+          | None -> None
+      )
+    | IntersectionT (_, rep) ->
+      let (ts_rev, opt) =
+        Base.List.fold_left (InterRep.members rep) ~init:([], false) ~f:(fun (ts, opt) t ->
+            match get_prop_of_obj cx name reason t with
+            | Some (t, opt') -> (t :: ts, opt || opt')
+            | None -> (ts, opt)
+        )
+      in
+      begin
+        match List.rev ts_rev with
+        | [] -> None
+        | [t] -> Some (t, opt)
+        | t0 :: t1 :: ts ->
+          let r = Reason.(locationless_reason (RCustom "intersection")) in
+          Some (IntersectionT (r, InterRep.make t0 t1 ts), opt)
+      end
+    | _ -> None
+
+  let get_prop_of_obj_toplevel cx name reason t =
+    Flow_js.possible_concrete_types_for_inspection cx reason t
+    |> Base.List.concat_map ~f:(fun t ->
+           get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t |> Base.Option.to_list
+       )
+
+  let get_attribute_type cx loc t name =
+    let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
+    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
+    let id = Type.Eval.generate_id () in
+    let conf = Flow_js.mk_type_destructor cx use_op reason t Type.ReactElementConfigType id in
+    get_prop_of_obj_toplevel cx name reason conf
 
   (* find the argument whose Loc contains `loc`, or the first one past it.
      the latter covers the `f(x,| y)` case, where your cursor is after the
@@ -187,7 +247,7 @@ module Callee_finder = struct
             let active_parameter = find_argument ~loc_of_aloc cursor arguments 0 in
             let loc = loc_of_aloc callee_loc in
             let type_ = get_callee_type () in
-            raise (Found (Some { type_; active_parameter; loc }))
+            raise (Found (Some (FunCallData { type_; active_parameter; loc })))
           else
             recurse ()
 
@@ -259,16 +319,44 @@ module Callee_finder = struct
         match body with
         | Flow_ast.Function.BodyBlock (loc, _) when this#covers_target loc -> raise (Found None)
         | _ -> body
+
+      method! jsx_element ((loc, _) as annot) elt =
+        let open Flow_ast.JSX in
+        let elt = super#jsx_element annot elt in
+        let (_, { Opening.name = elt_name; attributes; _ }) = elt.opening_element in
+        Base.List.iter attributes ~f:(function
+            | Flow_ast.JSX.Opening.SpreadAttribute _ -> ()
+            | Flow_ast.JSX.Opening.Attribute attr ->
+              let (_, { Flow_ast.JSX.Attribute.name = attr_name; value }) = attr in
+              Base.Option.iter value ~f:(function
+                  | Flow_ast.JSX.Attribute.StringLiteral ((attr_loc, _), _)
+                  | Flow_ast.JSX.Attribute.ExpressionContainer ((attr_loc, _), _)
+                  ->
+                  if this#covers_target attr_loc then (
+                    match (elt_name, attr_name) with
+                    | ( Identifier _,
+                        Attribute.Identifier ((key_loc, _), { Identifier.name = "key" as name; _ })
+                      ) ->
+                      (* 'key' is special-cased *)
+                      let reason_key = Reason.mk_reason (Reason.RCustom "React key") key_loc in
+                      let t = TypeUtil.maybe (Flow_js.get_builtin_type cx reason_key "React$Key") in
+                      raise (Found (Some (JsxAttrData { name; sigs = [(t, true)] })))
+                    | (Identifier ((_, t), _), Attribute.Identifier (_, { Identifier.name; _ })) ->
+                      let ts = get_attribute_type cx loc t (Reason.OrdinaryName name) in
+                      raise (Found (Some (JsxAttrData { name; sigs = ts })))
+                    | _ -> raise (Found None)
+                  )
+                  )
+            );
+        elt
     end
 
   let find_opt ~loc_of_aloc ~cx ~typed_ast loc =
     let finder = new finder ~loc_of_aloc ~cx loc in
-    try
-      let _ = finder#program typed_ast in
-      None
-    with
-    | Found (Some { type_; active_parameter; loc }) -> Some (type_, active_parameter, loc)
-    | Found None -> None
+    match finder#program typed_ast with
+    | exception Found (Some data) -> Some data
+    | exception Found None -> None
+    | _ -> None
 end
 
 let rec collect_functions ~jsdoc ~exact_by_default acc = function
@@ -300,7 +388,7 @@ let rec fix_alias_reason cx t =
 
 let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~loc_of_aloc ~cx ~typed_ast loc with
-  | Some (t, active_parameter, callee_loc) ->
+  | Some (Callee_finder.FunCallData { type_ = t; active_parameter; loc = callee_loc }) ->
     let t' = fix_alias_reason cx t in
     let norm_options = Ty_normalizer_env.default_options in
     let genv =
@@ -333,4 +421,26 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
       | funs -> Ok (Some (funs, active_parameter)))
     | Ok _ -> Ok None
     | Error err -> Error err)
+  | Some (Callee_finder.JsxAttrData { name; sigs = ts }) ->
+    let norm_options = Ty_normalizer_env.default_options in
+    let genv =
+      Ty_normalizer_flow.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
+    in
+    let tys =
+      Base.List.concat_map
+        ~f:(fun (t, optional) ->
+          match Ty_normalizer_flow.from_type genv t with
+          | Ok (Ty.Type ty) ->
+            let exact_by_default = Context.exact_by_default cx in
+            let ty = string_of_ty ~exact_by_default ty in
+            let loc = loc_of_aloc (TypeUtil.loc_of_t t) in
+            let jsdoc = Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem loc in
+            let documentation = Base.Option.value_map ~default:None ~f:Jsdoc.description jsdoc in
+            [ServerProt.Response.SigHelpJsxAttr { documentation; name; ty; optional }]
+          | Ok _
+          | Error _ ->
+            [])
+        ts
+    in
+    Ok (Some (tys, 0))
   | None -> Ok None

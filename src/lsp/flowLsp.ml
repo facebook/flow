@@ -803,7 +803,7 @@ let do_initialize params : Initialize.result =
                 ];
               completionItem = { CompletionOptions.labelDetailsSupport = true };
             };
-        signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
+        signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","; "{"] };
         definitionProvider = true;
         typeDefinitionProvider = false;
         referencesProvider = true;

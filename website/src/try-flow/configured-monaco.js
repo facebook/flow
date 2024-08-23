@@ -203,7 +203,7 @@ monaco.languages.registerHoverProvider('flow', {
   },
 });
 monaco.languages.registerSignatureHelpProvider('flow', {
-  signatureHelpTriggerCharacters: ['(', ','],
+  signatureHelpTriggerCharacters: ['(', ',', '{'],
   provideSignatureHelp(model, position) {
     try {
       const result = signatureHelpFunctionForMonaco(model.getValue(), position);

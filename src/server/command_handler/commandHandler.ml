@@ -2649,11 +2649,13 @@ let handle_persistent_signaturehelp_lsp
               details_list
               ~f:
                 ServerProt.Response.(
-                  fun { func_documentation; param_tys; _ } ->
+                  function
+                  | SigHelpFunc { func_documentation; param_tys; _ } ->
                     Base.Option.is_some func_documentation
                     || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
                            Base.Option.is_some param_documentation
                        )
+                  | SigHelpJsxAttr { documentation; _ } -> Base.Option.is_some documentation
                 )
         in
         let extra_data =

@@ -189,11 +189,18 @@ module Response = struct
     param_ty: string;
   }
 
-  type func_details_result = {
-    func_documentation: string option;
-    param_tys: func_param_result list;
-    return_ty: string;
-  }
+  type func_details_result =
+    | SigHelpFunc of {
+        func_documentation: string option;
+        param_tys: func_param_result list;
+        return_ty: string;
+      }
+    | SigHelpJsxAttr of {
+        documentation: string option;
+        name: string;
+        ty: string;
+        optional: bool;
+      }
 
   type textedit = Loc.t * string [@@deriving eq, show]
 

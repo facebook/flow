@@ -683,45 +683,56 @@ let completion_item_to_json
   in
   JSON_Object props
 
-let signature_to_json { ServerProt.Response.func_documentation; param_tys; return_ty } =
+let signature_to_json =
   let open Hh_json in
   let open Utils_js in
-  let documentation_props = function
-    | None -> []
-    | Some doc -> [("documentation", JSON_Object [("value", JSON_String doc)])]
-  in
-  let props = documentation_props func_documentation in
-  let props =
-    ( "parameters",
-      JSON_Array
-        (Base.List.map
-           param_tys
-           ~f:(fun { ServerProt.Response.param_documentation; param_name; param_ty } ->
-             JSON_Object
-               (("label", JSON_String (spf "%s: %s" param_name param_ty))
-               :: documentation_props param_documentation
-               )
-         )
-        )
-    )
-    :: props
-  in
-  let props =
-    let sig_str =
-      Utils_js.spf
-        "(%s): %s"
-        (Base.List.map
-           param_tys
-           ~f:(fun { ServerProt.Response.param_documentation = _; param_name; param_ty } ->
-             spf "%s: %s" param_name param_ty
-         )
-        |> Base.String.concat ~sep:", "
-        )
-        return_ty
+  function
+  | ServerProt.Response.SigHelpFunc { param_tys; return_ty; func_documentation } ->
+    let documentation_props = function
+      | None -> []
+      | Some doc -> [("documentation", JSON_Object [("value", JSON_String doc)])]
     in
-    ("label", JSON_String sig_str) :: props
-  in
-  JSON_Object props
+    let props = documentation_props func_documentation in
+    let props =
+      ( "parameters",
+        JSON_Array
+          (Base.List.map
+             param_tys
+             ~f:(fun { ServerProt.Response.param_documentation; param_name; param_ty } ->
+               JSON_Object
+                 (("label", JSON_String (spf "%s: %s" param_name param_ty))
+                 :: documentation_props param_documentation
+                 )
+           )
+          )
+      )
+      :: props
+    in
+    let props =
+      let sig_str =
+        Utils_js.spf
+          "(%s): %s"
+          (Base.List.map
+             param_tys
+             ~f:(fun { ServerProt.Response.param_documentation = _; param_name; param_ty } ->
+               spf "%s: %s" param_name param_ty
+           )
+          |> Base.String.concat ~sep:", "
+          )
+          return_ty
+      in
+      ("label", JSON_String sig_str) :: props
+    in
+    JSON_Object props
+  | ServerProt.Response.SigHelpJsxAttr { name; ty; optional; documentation = doc } ->
+    let documentation = function
+      | None -> []
+      | Some doc -> [("documentation", JSON_Object [("value", JSON_String doc)])]
+    in
+    let props = [] in
+    let label = ("label", JSON_String (spf "%s%s: %s" name (Utils_js.ite optional "?" "") ty)) in
+    let props = ("parameters", JSON_Array [JSON_Object (label :: documentation doc)]) :: props in
+    JSON_Object (label :: props)
 
 let autocomplete js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
