@@ -2581,89 +2581,98 @@ let handle_persistent_signaturehelp_lsp
       file_input_of_text_document_position ~client params.SignatureHelp.loc
   in
   let (line, col) = Flow_lsp_conversions.position_of_document_position params.SignatureHelp.loc in
-  let fn_content =
-    match file_input with
-    | File_input.FileContent (fn, content) -> Ok (fn, content)
-    | File_input.FileName fn ->
-      (try Ok (Some fn, Sys_utils.cat fn) with
-      | e ->
-        let e = Exception.wrap e in
-        Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
-  in
-  match fn_content with
-  | Error (reason, stack) -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason ~stack metadata)
-  | Ok (filename, contents) ->
-    let path =
-      match filename with
-      | Some filename -> filename
-      | None -> "-"
+  (* Temporary killswitch for JSX *)
+  match params.SignatureHelp.context with
+  | Some { SignatureHelp.triggerCharacter = Some "{"; _ }
+    when not (Options.signature_help_for_jsx options) ->
+    Lwt.return
+      (LspProt.LspFromServer (Some (ResponseMessage (id, SignatureHelpResult None))), metadata)
+  | _ ->
+    let fn_content =
+      match file_input with
+      | File_input.FileContent (fn, content) -> Ok (fn, content)
+      | File_input.FileName fn ->
+        (try Ok (Some fn, Sys_utils.cat fn) with
+        | e ->
+          let e = Exception.wrap e in
+          Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
     in
-    let path = File_key.SourceFile path in
-    let (file_artifacts_result, did_hit_cache) =
-      let parse_result = lazy (Type_contents.parse_contents ~options ~profiling contents path) in
-      let type_parse_artifacts_cache =
-        Some (Persistent_connection.type_parse_artifacts_cache client)
+    (match fn_content with
+    | Error (reason, stack) ->
+      Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason ~stack metadata)
+    | Ok (filename, contents) ->
+      let path =
+        match filename with
+        | Some filename -> filename
+        | None -> "-"
       in
-      type_parse_artifacts_with_cache
-        ~options
-        ~profiling
-        ~type_parse_artifacts_cache
-        env.master_cx
-        path
-        parse_result
-    in
-    let metadata =
-      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-      let json = Hh_json.JSON_Object json_props in
-      with_data ~extra_data:(Some json) metadata
-    in
-    (match file_artifacts_result with
-    | Error _parse_errors ->
-      Lwt.return
-        (mk_lsp_error_response
-           ~id:(Some id)
-           ~reason:"Couldn't parse file in parse_artifacts"
-           metadata
-        )
-    | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
-      let func_details =
-        let cursor_loc = Loc.cursor (Some path) line col in
-        Signature_help.find_signatures
-          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-          ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-          ~cx
-          ~file_sig
-          ~ast
-          ~typed_ast
-          cursor_loc
+      let path = File_key.SourceFile path in
+      let (file_artifacts_result, did_hit_cache) =
+        let parse_result = lazy (Type_contents.parse_contents ~options ~profiling contents path) in
+        let type_parse_artifacts_cache =
+          Some (Persistent_connection.type_parse_artifacts_cache client)
+        in
+        type_parse_artifacts_with_cache
+          ~options
+          ~profiling
+          ~type_parse_artifacts_cache
+          env.master_cx
+          path
+          parse_result
       in
-      (match func_details with
-      | Ok details ->
-        let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
-        let response = ResponseMessage (id, r) in
-        let has_any_documentation =
-          match details with
-          | None -> false
-          | Some (details_list, _) ->
-            Base.List.exists
-              details_list
-              ~f:
-                ServerProt.Response.(
-                  function
-                  | SigHelpFunc { func_documentation; param_tys; _ } ->
-                    Base.Option.is_some func_documentation
-                    || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
-                           Base.Option.is_some param_documentation
-                       )
-                  | SigHelpJsxAttr { documentation; _ } -> Base.Option.is_some documentation
-                )
+      let metadata =
+        let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+        let json = Hh_json.JSON_Object json_props in
+        with_data ~extra_data:(Some json) metadata
+      in
+      (match file_artifacts_result with
+      | Error _parse_errors ->
+        Lwt.return
+          (mk_lsp_error_response
+             ~id:(Some id)
+             ~reason:"Couldn't parse file in parse_artifacts"
+             metadata
+          )
+      | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
+        let func_details =
+          let cursor_loc = Loc.cursor (Some path) line col in
+          Signature_help.find_signatures
+            ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+            ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
+            ~cx
+            ~file_sig
+            ~ast
+            ~typed_ast
+            cursor_loc
         in
-        let extra_data =
-          Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
-        in
-        Lwt.return (LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
-      | Error _ ->
-        Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata)))
+        (match func_details with
+        | Ok details ->
+          let r = SignatureHelpResult (Flow_lsp_conversions.flow_signature_help_to_lsp details) in
+          let response = ResponseMessage (id, r) in
+          let has_any_documentation =
+            match details with
+            | None -> false
+            | Some (details_list, _) ->
+              Base.List.exists
+                details_list
+                ~f:
+                  ServerProt.Response.(
+                    function
+                    | SigHelpFunc { func_documentation; param_tys; _ } ->
+                      Base.Option.is_some func_documentation
+                      || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
+                             Base.Option.is_some param_documentation
+                         )
+                    | SigHelpJsxAttr { documentation; _ } -> Base.Option.is_some documentation
+                  )
+          in
+          let extra_data =
+            Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
+          in
+          Lwt.return (LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
+        | Error _ ->
+          Lwt.return
+            (mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata))))
 
 let get_file_artifacts ~options ~client ~profiling ~env pos :
     ((Types_js_types.file_artifacts * File_key.t) option, string) result * Hh_json.json option =

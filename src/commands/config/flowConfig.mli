@@ -242,6 +242,8 @@ val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int
 
+val signature_help_for_jsx : config -> bool
+
 val strict_es6_import_export : config -> bool
 
 val strict_es6_import_export_excludes : config -> string list

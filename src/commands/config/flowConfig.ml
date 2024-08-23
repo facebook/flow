@@ -130,6 +130,7 @@ module Opts = struct
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
     shm_heap_size: int;
+    signature_help_for_jsx: bool;
     strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
@@ -263,6 +264,7 @@ module Opts = struct
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
+      signature_help_for_jsx = true;
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
@@ -999,6 +1001,7 @@ module Opts = struct
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
+      ("signature_help_for_jsx", boolean (fun opts v -> Ok { opts with signature_help_for_jsx = v }));
       ("suppress_type", suppress_types_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
@@ -1721,6 +1724,8 @@ let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 
 let shm_heap_size c = c.options.Opts.shm_heap_size
+
+let signature_help_for_jsx c = c.options.Opts.signature_help_for_jsx
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 

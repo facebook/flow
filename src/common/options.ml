@@ -147,6 +147,7 @@ type t = {
   opt_strict_es6_import_export_excludes: string list;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
+  opt_signature_help_for_jsx: bool;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
@@ -343,6 +344,8 @@ let should_munge_underscores opts = opts.opt_munge_underscores
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 
 let should_strip_root opts = opts.opt_strip_root
+
+let signature_help_for_jsx opts = opts.opt_signature_help_for_jsx
 
 let slow_to_check_logging opts = opts.opt_slow_to_check_logging
 
