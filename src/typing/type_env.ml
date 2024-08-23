@@ -672,7 +672,6 @@ let get_refinement cx key ~hover_loc_opt ~refi_loc =
     None
 
 let get_var ?(lookup_mode = ForValue) cx name loc =
-  ignore lookup_mode;
   let name = OrdinaryName name in
   read_entry_exn ~lookup_mode cx loc (mk_reason (RIdentifier name) loc)
 

@@ -1061,10 +1061,10 @@ module Scope = struct
             | FunBinding _
             | ComponentBinding _
             | EnumBinding _
-            | NamespaceBinding _
             | DeclareFunBinding _ ->
               acc
-            | TypeBinding { id_loc; _ } ->
+            | TypeBinding { id_loc; _ }
+            | NamespaceBinding { id_loc; _ } ->
               SMap.add name (id_loc, val_ref ~type_only:true scope id_loc name) acc)
           | RemoteBinding _ -> acc)
         types

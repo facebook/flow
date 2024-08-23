@@ -6658,6 +6658,26 @@ type T = F.T;
           (3, 18) to (3, 19): (`F`)
         }] |}]
 
+let%expect_test "declare_type_only_namespace" =
+  print_ssa_test {|
+declare namespace F1 {
+  declare type T = string;
+}
+declare namespace F2 {
+  type T = string;
+}
+type T1 = F1.T;
+type T2 = F2.T;
+|};
+    [%expect {|
+      [
+        (8, 10) to (8, 12) => {
+          (2, 18) to (2, 20): (`F1`)
+        };
+        (9, 10) to (9, 12) => {
+          (5, 18) to (5, 20): (`F2`)
+        }] |}]
+
 let%expect_test "delete_member" =
   print_ssa_test {|
 delete foo.bar;

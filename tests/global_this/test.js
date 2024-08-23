@@ -6,3 +6,5 @@ window.myGlobal as Opaque; // ok
 window.myGlobal as globalThis.Opaque; // ok: this is weird, but TS also supports this
 window.myGlobal as empty; // error
 globalThis.myGlobal as empty; // error
+
+HTMLElement as globalThis.React.Node; // error
