@@ -268,6 +268,7 @@ module Response = struct
       loc: Loc.t;
       tys: payload;
       refining_locs: Loc.t list;
+      refinement_invalidated: bool;
       documentation: string option;
     }
   end

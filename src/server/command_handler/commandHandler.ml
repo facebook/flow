@@ -639,7 +639,16 @@ let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, lin
   )
 
 let infer_type_to_response
-    ~reader ~json ~expanded ~exact_by_default ~strip_root loc refining_locs documentation tys =
+    ~reader
+    ~json
+    ~expanded
+    ~exact_by_default
+    ~strip_root
+    loc
+    refining_locs
+    refinement_invalidated
+    documentation
+    tys =
   let module Ty_debug = Ty_debug.Make (struct
     let aloc_to_loc = Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
   end) in
@@ -674,7 +683,7 @@ let infer_type_to_response
          )
         )
   in
-  { ServerProt.Response.InferType.loc; tys; refining_locs; documentation }
+  { ServerProt.Response.InferType.loc; tys; refining_locs; refinement_invalidated; documentation }
 
 let infer_type
     ~(options : Options.t)
@@ -716,6 +725,7 @@ let infer_type
         ServerProt.Response.InferType.loc = Loc.none;
         tys;
         refining_locs = [];
+        refinement_invalidated = false;
         documentation = None;
       }
     in
@@ -757,12 +767,13 @@ let infer_type
                   loc;
                   tys = Friendly (Some { type_str; refs = None });
                   refining_locs = [];
+                  refinement_invalidated = false;
                   documentation = None;
                 },
             None
           )
       else
-        let ((loc, tys, refining_locs), type_at_pos_json_props) =
+        let ((loc, tys, refining_locs, refinement_invalidated), type_at_pos_json_props) =
           Type_info_service.type_at_pos
             ~cx
             ~file_sig
@@ -829,6 +840,7 @@ let infer_type
             ~strip_root
             loc
             refining_locs
+            refinement_invalidated
             documentation
             tys
         in
@@ -2388,7 +2400,14 @@ let handle_persistent_infer_type
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok { ServerProt.Response.InferType.loc; tys; refining_locs; documentation } ->
+  | Ok
+      {
+        ServerProt.Response.InferType.loc;
+        tys;
+        refining_locs;
+        refinement_invalidated;
+        documentation;
+      } ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
     let default_uri = params.textDocument.TextDocumentIdentifier.uri in
@@ -2398,6 +2417,15 @@ let handle_persistent_infer_type
         None
       else
         Some location.Lsp.Location.range
+    in
+    let invalidation_info =
+      if refinement_invalidated then
+        [
+          MarkedString
+            "Refinement invalidated. Refactor this property to a constant to keep refinements.";
+        ]
+      else
+        []
     in
     let refinement_info =
       let refining_locs =
@@ -2428,7 +2456,9 @@ let handle_persistent_infer_type
         | _ -> ([], [])
       in
       let docs = Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc) in
-      match Base.List.concat ([types] @ refs @ [refinement_info] @ [docs]) with
+      match
+        Base.List.concat ([invalidation_info] @ [types] @ refs @ [refinement_info] @ [docs])
+      with
       | [] -> [MarkedString "?"]
       | _ :: _ as contents -> contents
     in

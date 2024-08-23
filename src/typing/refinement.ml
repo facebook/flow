@@ -21,12 +21,12 @@ module Keys = struct
   let rec key ~allow_optional =
     let open Ast.Expression in
     function
-    | (_, This _) ->
+    | (hover_loc, This _) ->
       (* treat this as a property chain, in terms of refinement lifetime *)
-      Some (Reason.internal_name "this", [])
-    | (_, Super _) ->
+      Some (Some hover_loc, (Reason.internal_name "this", []))
+    | (hover_loc, Super _) ->
       (* treat this as a property chain, in terms of refinement lifetime *)
-      Some (Reason.internal_name "super", [])
+      Some (Some hover_loc, (Reason.internal_name "super", []))
     | (_, Identifier id) -> key_of_identifier id
     | (_, OptionalMember { OptionalMember.member; _ }) when allow_optional ->
       key_of_member ~allow_optional member
@@ -35,39 +35,41 @@ module Keys = struct
       (* other LHSes unsupported currently/here *)
       None
 
-  and key_of_identifier (_, { Ast.Identifier.name; comments = _ }) =
+  and key_of_identifier (hover_loc, { Ast.Identifier.name; comments = _ }) =
     if name = "undefined" then
       None
     else
-      Some (Reason.OrdinaryName name, [])
+      Some (Some hover_loc, (Reason.OrdinaryName name, []))
 
   and key_of_member ~allow_optional { Ast.Expression.Member._object; property; _ } =
     let open Ast.Expression.Member in
     match property with
-    | PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
-    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ }) ->
+    | PropertyIdentifier (hover_loc, { Ast.Identifier.name; comments = _ })
+    | PropertyExpression
+        (hover_loc, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ }) ->
       (match key ~allow_optional _object with
-      | Some (base, chain) -> Some (base, Key.Prop name :: chain)
+      | Some (_, (base, chain)) -> Some (Some hover_loc, (base, Key.Prop name :: chain))
       | None -> None)
     | PropertyExpression
-        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw = _; comments = _ }) ->
+        (hover_loc, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw = _; comments = _ })
+      ->
       if Js_number.is_float_safe_integer value then
         let name = Dtoa.ecma_string_of_float value in
         match key ~allow_optional _object with
-        | Some (base, chain) -> Some (base, Key.Prop name :: chain)
+        | Some (_, (base, chain)) -> Some (Some hover_loc, (base, Key.Prop name :: chain))
         | None -> None
       else
         None
     | PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ }) ->
       (match key ~allow_optional _object with
-      | Some (base, chain) -> Some (base, Key.PrivateField name :: chain)
+      | Some (_, (base, chain)) -> Some (None, (base, Key.PrivateField name :: chain))
       | None -> None)
     | PropertyExpression index ->
       (* foo.bar[baz] -> Chain [Index baz; Id bar; Id foo] *)
       (match key ~allow_optional _object with
-      | Some (base, chain) ->
+      | Some (_, (base, chain)) ->
         (match key ~allow_optional index with
-        | Some key -> Some (base, Key.Elem key :: chain)
+        | Some (_, key) -> Some (None, (base, Key.Elem key :: chain))
         | None -> None)
       | None -> None)
 end
@@ -75,7 +77,7 @@ end
 include Keys
 
 (* get type refinement for expression, if it exists *)
-let get ~allow_optional cx expr loc =
+let get ~allow_optional cx expr refi_loc =
   match key ~allow_optional expr with
-  | Some k -> Type_env.get_refinement cx k loc
+  | Some (hover_loc_opt, k) -> Type_env.get_refinement cx k ~hover_loc_opt ~refi_loc
   | None -> None

@@ -18,7 +18,7 @@ val type_at_pos :
   File_key.t ->
   int ->
   int ->
-  (Loc.t * Ty.type_at_pos_result option * Loc.t list) * (string * Hh_json.json) list
+  (Loc.t * Ty.type_at_pos_result option * Loc.t list * bool) * (string * Hh_json.json) list
 
 val dump_types :
   evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->

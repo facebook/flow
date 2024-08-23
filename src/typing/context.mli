@@ -304,6 +304,8 @@ val reachable_deps : t -> Utils_js.FilenameSet.t
 
 val refined_locations : t -> ALocSet.t ALocMap.t
 
+val aggressively_invalidated_locations : t -> ALocSet.t
+
 val environment : t -> Loc_env.t
 
 val typing_mode : t -> typing_mode
@@ -365,6 +367,8 @@ val add_monomorphized_component : t -> Type.Properties.id -> Type.t -> unit
 val add_reachable_dep : t -> File_key.t -> unit
 
 val add_refined_location : t -> ALoc.t -> ALocSet.t -> unit
+
+val add_aggressively_invalidated_location : t -> ALoc.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 

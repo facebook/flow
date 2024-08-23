@@ -214,6 +214,7 @@ module type S = sig
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
+    env_refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     env_entries: env_entry EnvMap.t;
     predicate_refinement_maps: predicate_refinement_maps;
     type_guard_consistency_maps: type_guard_consistency_maps;
@@ -507,6 +508,7 @@ module Make
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
+    env_refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     env_entries: env_entry EnvMap.t;
     predicate_refinement_maps: predicate_refinement_maps;
     type_guard_consistency_maps: type_guard_consistency_maps;
@@ -527,6 +529,7 @@ module Make
       scopes = Scope_builder.Acc.init;
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
+      env_refinement_invalidation_info = L.LMap.empty;
       env_entries = EnvMap.empty;
       predicate_refinement_maps = L.LMap.empty;
       type_guard_consistency_maps = L.LMap.empty;

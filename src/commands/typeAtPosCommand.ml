@@ -57,7 +57,15 @@ let spec =
   }
 
 let handle_response ~file_contents ~pretty ~strip_root response =
-  let { ServerProt.Response.InferType.loc; tys; refining_locs; documentation } = response in
+  let {
+    ServerProt.Response.InferType.loc;
+    tys;
+    refining_locs;
+    refinement_invalidated = _;
+    documentation;
+  } =
+    response
+  in
   match tys with
   | ServerProt.Response.InferType.JSON json ->
     let open Hh_json in

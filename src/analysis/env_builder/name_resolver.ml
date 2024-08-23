@@ -12,6 +12,7 @@
  * need to modify the ssa_builder as well, but not necessarily with identical changes.*)
 
 module ALocSet = Loc_collections.ALocSet
+module ALocMap = Loc_collections.ALocMap
 
 let statement_error = ()
 
@@ -90,7 +91,7 @@ module LookupMap = WrappedMap.Make (struct
   let compare = Stdlib.compare
 end)
 
-type heap_refinement_map = Val.t HeapRefinementMap.t
+type heap_refinement_map = (Val.t, Refinement_invalidation.t) result HeapRefinementMap.t
 
 type env_val = {
   val_ref: Val.t ref;
@@ -381,8 +382,10 @@ let smap_find x t =
 
 let heap_map_find x t =
   match HeapRefinementMap.find_opt x t with
-  | Some r -> r
-  | None -> raise Env_api.(Env_invariant (None, Impossible "heap entry missing in map"))
+  | Some (Ok r) -> r
+  | Some (Error _)
+  | None ->
+    raise Env_api.(Env_invariant (None, Impossible "heap entry missing in map"))
 
 let imap_find x t =
   match IMap.find_opt x t with
@@ -606,6 +609,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     (* We maintain a map of read locations to raw Val.t and their def locs terms, which are
        simplified to lists of write locations once the analysis is done. *)
     values: read_entry L.LMap.t;
+    (* Should not be used for normal checking. It's not comprehensive but it would be helpful
+     * to tell user on hover with certainty that certain values they want to stay refined are
+     * invalidated. *)
+    refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
     write_entries: Env_api.env_entry EnvMap.t;
@@ -901,7 +908,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           writes_by_closure_provider_val = None;
           def_loc = None;
           heap_refinements =
-            ref (HeapRefinementMap.singleton [RefinementKey.Prop "exports"] (Val.global "exports"));
+            ref
+              (HeapRefinementMap.singleton
+                 [RefinementKey.Prop "exports"]
+                 (Ok (Val.global "exports"))
+              );
           kind = Bindings.Var;
         }
     else
@@ -1076,6 +1087,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names program_loc in
         {
           values = L.LMap.empty;
+          refinement_invalidation_info = L.LMap.empty;
           write_entries = EnvMap.empty;
           predicate_refinement_maps = L.LMap.empty;
           type_guard_consistency_maps = L.LMap.empty;
@@ -1102,6 +1114,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (fun { def_loc; value; val_binding_kind; name } ->
             Val.simplify def_loc val_binding_kind name value)
           env_state.values
+
+      method refinement_invalidation_info = env_state.refinement_invalidation_info
 
       method write_entries : Env_api.env_entry EnvMap.t = env_state.write_entries
 
@@ -1230,9 +1244,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             let env_val = unrefine refinements_by_key lookup_key !val_ref in
             let unrefined_heap_refinements =
               HeapRefinementMap.mapi
-                (fun projections v ->
-                  let lookup_key = RefinementKey.lookup_of_name_with_projections name projections in
-                  unrefine refinements_by_key lookup_key v)
+                (fun projections -> function
+                  | Error invalidation_info -> Error invalidation_info
+                  | Ok v ->
+                    let lookup_key =
+                      RefinementKey.lookup_of_name_with_projections name projections
+                    in
+                    Ok (unrefine refinements_by_key lookup_key v))
                 !heap_refinements
             in
             { PartialEnvSnapshot.env_val; heap_refinements = unrefined_heap_refinements; def_loc })
@@ -1251,8 +1269,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
          *)
         HeapRefinementMap.merge (fun _ refinement1 refinement2 ->
             match (refinement1, refinement2) with
-            | (Some v1, Some v2) -> Some (Val.merge v1 v2)
-            | _ -> None
+            | (Some (Ok v1), Some (Ok v2)) -> Some (Ok (Val.merge v1 v2))
+            | (Some (Error invalidation_info), Some (Ok _))
+            | (Some (Ok _), Some (Error invalidation_info)) ->
+              Some (Error invalidation_info)
+            | (Some (Error info1), Some (Error info2)) -> Some (Error (ALocMap.union info1 info2))
+            | (None, _)
+            | (_, None) ->
+              None
         )
 
       method merge_remote_env (env : PartialEnvSnapshot.t) : unit =
@@ -1379,15 +1403,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 match
                   (HeapRefinementMap.find_opt projections !heap_refinements, create_val_for_heap)
                 with
-                | (Some heap_val, _) ->
+                | (Some (Ok heap_val), _) ->
                   let (res, val_) = f heap_val in
-                  (Some (res, None), HeapRefinementMap.add projections val_ !heap_refinements)
-                | (None, Some (lazy default)) ->
+                  (Some (res, None), HeapRefinementMap.add projections (Ok val_) !heap_refinements)
+                | ((None | Some (Error _)), Some (lazy default)) ->
                   let (res, val_) = f default in
                   ( Some (res, Some default),
-                    HeapRefinementMap.add projections val_ !heap_refinements
+                    HeapRefinementMap.add projections (Ok val_) !heap_refinements
                   )
-                | (None, None) -> (None, !heap_refinements)
+                | ((None | Some (Error _)), None) -> (None, !heap_refinements)
               in
               heap_refinements := new_heap_refinements;
               res)
@@ -1398,7 +1422,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         ()
 
-      method get_val_of_expression expr =
+      (**
+       * None -> no val for expr
+       * Some (Ok v) -> val for exp
+       * Some (Error info) -> no val for expr, but we would get refinements
+       * if we don't aggressively invalidate heap refinements. info contains
+       * information on the invalidation
+       *)
+      method get_val_of_expression_with_invalidated_refinement_snapshot expr =
         match RefinementKey.of_expression expr with
         | None -> None
         | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
@@ -1409,11 +1440,22 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               PartialEnvSnapshot.entry_of_env_val env_val
             in
             (match projections with
-            | [] -> Some env_val
+            | [] -> Some (Ok env_val)
             | _ ->
-              heap_refinements
-              |> HeapRefinementMap.find_opt projections
-              |> Base.Option.filter ~f:(fun v -> not @@ Val.is_projection v)))
+              (match HeapRefinementMap.find_opt projections heap_refinements with
+              | None -> None
+              | Some (Ok v) ->
+                if Val.is_projection v then
+                  None
+                else
+                  Some (Ok v)
+              | Some (Error info) -> Some (Error info))))
+
+      method get_val_of_expression expr =
+        match this#get_val_of_expression_with_invalidated_refinement_snapshot expr with
+        | None -> None
+        | Some (Error _) -> None
+        | Some (Ok v) -> Some v
 
       (* Function calls may introduce refinements if the function called is a
        * predicate function. The EnvBuilder has no idea if a function is a
@@ -1436,12 +1478,32 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
 
-      method havoc_all_heap_refinements () =
+      method invalidate_heap_refinements ~invalidation_info heap_refinements =
+        heap_refinements :=
+          HeapRefinementMap.map (fun _ -> Error invalidation_info) !heap_refinements
+
+      method invalidate_all_heap_refinements_for_property_assignment loc =
+        let invalidation_info =
+          Refinement_invalidation.singleton ~reason:Refinement_invalidation.PropertyAssignment ~loc
+        in
         FullEnv.update_env
-          ~f:(fun _ { heap_refinements; _ } -> this#havoc_heap_refinements heap_refinements)
+          ~f:(fun _ { heap_refinements; _ } ->
+            this#invalidate_heap_refinements ~invalidation_info heap_refinements)
           env_state.env
 
-      method havoc_current_env ~all ~loc =
+      method havoc_current_env ~invalidation_reason ~loc =
+        let invalidation_info =
+          Refinement_invalidation.singleton ~reason:invalidation_reason ~loc
+        in
+        let all =
+          match invalidation_reason with
+          | Refinement_invalidation.Yield -> true
+          | Refinement_invalidation.FunctionCall
+          | Refinement_invalidation.ConstructorCall
+          | Refinement_invalidation.Await
+          | Refinement_invalidation.PropertyAssignment ->
+            false
+        in
         let havoced_ids =
           FullEnv.fold_current_function_scope_values env_state.env ~init:ISet.empty ~f:(fun acc -> function
             | { kind = Bindings.Internal; _ } -> acc
@@ -1453,7 +1515,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 heap_refinements;
                 kind = _;
               } ->
-              this#havoc_heap_refinements heap_refinements;
               let uninitialized_writes =
                 lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
               in
@@ -1473,11 +1534,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     ~f:(fun acc write -> Val.merge acc (Val.of_write write))
                     (Lazy.force uninitialized_writes)
               in
-              if this#should_invalidate ~all def_loc then begin
+              if this#should_invalidate ~all def_loc then (
+                this#havoc_heap_refinements heap_refinements;
                 val_ref := havoc_ref;
                 ISet.add (Val.base_id_of_val havoc_ref) acc
-              end else
+              ) else (
+                this#invalidate_heap_refinements ~invalidation_info heap_refinements;
                 acc
+              )
           )
         in
         Base.Option.iter env_state.type_guard_name ~f:(fun (TGinfo { id; havoced; _ }) ->
@@ -2340,20 +2404,29 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         |> ignore;
         jsx_mem_expr
 
-      method havoc_heap_refinements_using_name ~private_ name =
+      method invalidate_heap_refinements_using_name ~invalidation_loc:loc ~private_ name =
+        let invalidation_info =
+          Refinement_invalidation.singleton ~reason:Refinement_invalidation.PropertyAssignment ~loc
+        in
         FullEnv.update_env
           ~f:(fun _ { heap_refinements; _ } ->
             heap_refinements :=
-              HeapRefinementMap.filter
-                (fun projections _ ->
-                  not (RefinementKey.proj_uses_propname ~private_ name projections))
+              HeapRefinementMap.mapi
+                (fun projections -> function
+                  | Error existing_invalidation_info ->
+                    Error (ALocMap.union existing_invalidation_info invalidation_info)
+                  | Ok v ->
+                    if not (RefinementKey.proj_uses_propname ~private_ name projections) then
+                      Ok v
+                    else
+                      Error invalidation_info)
                 !heap_refinements)
           env_state.env
 
       (* This function should be called _after_ a member expression is assigned a value.
        * It havocs other heap refinements depending on the name of the member and then adds
        * a write to the heap refinement entry for that member expression *)
-      method assign_expression lhs rhs =
+      method assign_expression ~assign_loc lhs rhs =
         match lhs with
         | (loc, Flow_ast.Expression.Member member) ->
           (* Use super member to visit sub-expressions to avoid record a read of the member. *)
@@ -2361,7 +2434,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ this#expression rhs;
           let reason = mk_reason RSomeProperty loc in
           let assigned_val = Val.one reason in
-          this#assign_member ~delete:false member loc assigned_val reason;
+          this#assign_member ~delete:false member ~assign_loc ~lhs_loc:loc assigned_val reason;
           begin
             match rhs with
             | (fun_loc, Ast.Expression.ArrowFunction _) ->
@@ -2374,8 +2447,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           end
         | _ -> statement_error
 
-      method assign_member ~delete lhs_member lhs_loc assigned_val val_reason =
-        this#post_assignment_heap_refinement_havoc lhs_member;
+      method assign_member ~delete lhs_member ~assign_loc ~lhs_loc assigned_val val_reason =
+        this#post_assignment_heap_refinement_havoc ~assign_loc lhs_member;
         (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
         let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
         let open Flow_ast.Expression in
@@ -2406,7 +2479,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       (* This method is called after assigning a member expression but _before_ the refinement for
        * that assignment is recorded. *)
       method post_assignment_heap_refinement_havoc
-          (lhs : (ALoc.t, ALoc.t) Flow_ast.Expression.Member.t) =
+          ~assign_loc (lhs : (ALoc.t, ALoc.t) Flow_ast.Expression.Member.t) =
         let open Flow_ast.Expression in
         match lhs with
         | {
@@ -2422,7 +2495,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
            * y.foo = 4;
            * (x.foo: 3) // MUST error!
            *)
-          this#havoc_heap_refinements_using_name name ~private_:true
+          this#invalidate_heap_refinements_using_name
+            name
+            ~invalidation_loc:assign_loc
+            ~private_:true
         | {
          Member._object;
          property = Member.PropertyIdentifier (_, { Flow_ast.Identifier.name; _ });
@@ -2431,12 +2507,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (* As in the previous case, we can't know if this object is aliased nor what property
            * is being written. We are forced to conservatively havoc ALL heap refinements in this
            * situation. *)
-          this#havoc_heap_refinements_using_name name ~private_:false
+          this#invalidate_heap_refinements_using_name
+            name
+            ~invalidation_loc:assign_loc
+            ~private_:false
         | { Member._object; property = Member.PropertyExpression _; _ } ->
-          this#havoc_all_heap_refinements ()
+          this#invalidate_all_heap_refinements_for_property_assignment assign_loc
 
       (* Order of evaluation matters *)
-      method! assignment _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
+      method! assignment assign_loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
         let { operator; left = (left_loc, _) as left; right; comments = _ } = expr in
         (match left with
@@ -2472,7 +2551,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 ignore @@ this#binding_pattern_track_object_destructuring ?kind:None ~acc:right left
               | (_, Expression e) ->
                 (* given `o.x = e`, read o then read e *)
-                this#assign_expression e right
+                this#assign_expression ~assign_loc e right
             end
           | Some
               ( PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign | ModAssign
@@ -2489,7 +2568,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               | (_, Expression e) ->
                 (* given `o.x += e`, read o then read e *)
                 ignore @@ this#pattern_expression e;
-                this#assign_expression e right
+                this#assign_expression ~assign_loc e right
               | (_, (Object _ | Array _)) -> statement_error
             end
           | Some ((OrAssign | AndAssign | NullishAssign) as operator) ->
@@ -2543,7 +2622,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | (loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
               let reason = mk_reason RSomeProperty loc in
               let assigned_val = Val.one reason in
-              this#assign_member ~delete:false mem loc assigned_val reason
+              this#assign_member ~delete:false mem ~assign_loc ~lhs_loc:loc assigned_val reason
             | (_, Ast.Pattern.Identifier _) -> ignore @@ this#assignment_pattern left
             | _ -> statement_error)
         end;
@@ -2939,17 +3018,33 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 HeapRefinementMap.merge
                   (fun key refined_heap_val1 refined_heap_val2 ->
                     match (refined_heap_val1, refined_heap_val2) with
-                    | (Some refined_heap_val1, Some refined_heap_val2) ->
+                    | (Some (Ok refined_heap_val1), Some (Ok refined_heap_val2)) ->
                       let heap_val1 = heap_map_find key heap_entries1 in
                       let heap_val2 = heap_map_find key heap_entries2 in
                       if Val.id_of_val heap_val1 = Val.id_of_val heap_val2 then
                         if Val.is_projection heap_val1 then
                           None
                         else
-                          Some heap_val1
+                          Some (Ok heap_val1)
                       else
-                        Some (Val.merge refined_heap_val1 refined_heap_val2)
-                    | _ -> None)
+                        Some (Ok (Val.merge refined_heap_val1 refined_heap_val2))
+                    | (Some (Ok _), Some (Error invalidation_info)) ->
+                      let heap_val1 = heap_map_find key heap_entries1 in
+                      if Val.is_projection heap_val1 then
+                        None
+                      else
+                        Some (Error invalidation_info)
+                    | (Some (Error invalidation_info), Some (Ok _)) ->
+                      let heap_val2 = heap_map_find key heap_entries2 in
+                      if Val.is_projection heap_val2 then
+                        None
+                      else
+                        Some (Error invalidation_info)
+                    | (Some (Error info1), Some (Error info2)) ->
+                      Some (Error (ALocMap.union info1 info2))
+                    | (None, _)
+                    | (_, None) ->
+                      None)
                   refined_heap_entries1
                   refined_heap_entries2;
               if Val.id_of_val value1 = Val.id_of_val value2 then
@@ -3009,14 +3104,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 let acc =
                   HeapRefinementMap.fold
                     (fun k heap_refinement1 acc ->
-                      let heap_refinement2_opt = HeapRefinementMap.find_opt k heap_refinements2 in
-                      match heap_refinement2_opt with
-                      | None -> RefinementKey.{ base = name; projections = k } :: acc
-                      | Some heap_refinement2 ->
-                        if Val.id_of_val heap_refinement1 = Val.id_of_val heap_refinement2 then
-                          acc
-                        else
-                          RefinementKey.{ base = name; projections = k } :: acc)
+                      match heap_refinement1 with
+                      | Error _ -> acc
+                      | Ok heap_refinement1 ->
+                        (match HeapRefinementMap.find_opt k heap_refinements2 with
+                        | None
+                        | Some (Error _) ->
+                          RefinementKey.{ base = name; projections = k } :: acc
+                        | Some (Ok heap_refinement2) ->
+                          if Val.id_of_val heap_refinement1 = Val.id_of_val heap_refinement2 then
+                            acc
+                          else
+                            RefinementKey.{ base = name; projections = k } :: acc))
                     heap_refinements1
                     acc
                 in
@@ -4194,7 +4293,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               error_todo
             | (Some _, _) -> error_todo
           else
-            this#havoc_current_env ~all:false ~loc;
+            this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc;
           expr
         end
 
@@ -4219,7 +4318,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! new_ loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
         ignore @@ super#new_ loc expr;
-        this#havoc_current_env ~all:false ~loc;
+        this#havoc_current_env ~invalidation_reason:Refinement_invalidation.ConstructorCall ~loc;
         expr
 
       method private delete loc argument =
@@ -4243,7 +4342,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               };
             add_output err)
         | (_, Flow_ast.Expression.Member member) ->
-          this#assign_member ~delete:true member loc undefined undefined_reason
+          this#assign_member
+            ~delete:true
+            member
+            ~assign_loc:loc
+            ~lhs_loc:loc
+            undefined
+            undefined_reason
         | _ -> ()
 
       method! unary_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Unary.t) =
@@ -4251,7 +4356,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let { argument; operator; comments = _ } = expr in
           ignore @@ this#expression argument;
           match operator with
-          | Await -> this#havoc_current_env ~all:false ~loc
+          | Await -> this#havoc_current_env ~invalidation_reason:Refinement_invalidation.Await ~loc
           | Delete -> this#delete loc argument
           | _ -> ()
         );
@@ -4260,7 +4365,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         this#any_identifier loc next_var_name;
         ignore @@ super#yield loc expr;
-        this#havoc_current_env ~all:true ~loc;
+        this#havoc_current_env ~invalidation_reason:Refinement_invalidation.Yield ~loc;
         expr
 
       method! object_key_computed (key : ('loc, 'loc) Ast.ComputedKey.t) =
@@ -5191,7 +5296,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ this#expression callee;
           ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
-          this#havoc_current_env ~all:false ~loc;
+          this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc;
           this#apply_latent_refinements refinement_keys (loc, call) callee targs arguments
         | _ -> ignore @@ this#call loc call
 
@@ -5212,7 +5317,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         match expr with
         | OptionalMember _
         | Member _ ->
-          (match this#get_val_of_expression (loc, expr) with
+          (match this#get_val_of_expression_with_invalidated_refinement_snapshot (loc, expr) with
           | None ->
             (* In some cases, we may re-visit the same expression multiple times via different
                environments--for example, visiting the discriminant of a switch statement. In
@@ -5222,7 +5327,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                values that may have previously existed but no longer do. *)
             let values = L.LMap.remove loc env_state.values in
             env_state <- { env_state with values }
-          | Some refined_v ->
+          | Some (Error invalidation_info) ->
+            let values = L.LMap.remove loc env_state.values in
+            let refinement_invalidation_info =
+              L.LMap.add loc invalidation_info env_state.refinement_invalidation_info
+            in
+            env_state <- { env_state with values; refinement_invalidation_info }
+          | Some (Ok refined_v) ->
             (* We model a heap refinement as a separate const binding. We prefer this over using
              * None so that we can report errors when using this value in a type position *)
             let values =
@@ -5269,7 +5380,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#commit_refinement refi;
             let _targs' = Base.Option.map ~f:this#call_type_args targs in
             let _arguments' = this#arg_list arguments in
-            this#havoc_current_env ~all:false ~loc
+            this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc
           | Member mem -> ignore @@ this#member loc mem
           | Call call -> ignore @@ this#call loc call
           | _ -> ignore @@ this#expression (loc, expr)
@@ -5845,6 +5956,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         Env_api.scopes;
         ssa_values;
         env_values = dead_code_marker#values;
+        env_refinement_invalidation_info = env_walk#refinement_invalidation_info;
         env_entries = dead_code_marker#write_entries;
         providers;
         predicate_refinement_maps = env_walk#predicate_refinement_maps;

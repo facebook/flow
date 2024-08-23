@@ -86,7 +86,10 @@ let type_at_pos
       |> Base.Option.value_map ~default:[] ~f:ALocSet.elements
       |> List.map loc_of_aloc
   in
-  ((loc, ty, refining_locs), json_data)
+  let refinement_invalidated =
+    Loc_collections.ALocSet.mem (ALoc.of_loc loc) (Context.aggressively_invalidated_locations cx)
+  in
+  ((loc, ty, refining_locs, refinement_invalidated), json_data)
 
 let dump_types ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)

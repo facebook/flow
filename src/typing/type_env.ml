@@ -667,11 +667,18 @@ let find_write cx kind reason =
   | Some t -> t
   | None -> AnyT.error reason
 
-let get_refinement cx key loc =
-  let reason = mk_reason (Key.reason_desc key) loc in
-  match read_entry ~lookup_mode:ForValue cx loc reason with
-  | Ok x -> Some (Flow_js.reposition cx loc x)
-  | Error _ -> None
+let get_refinement cx key ~hover_loc_opt ~refi_loc =
+  let reason = mk_reason (Key.reason_desc key) refi_loc in
+  match read_entry ~lookup_mode:ForValue cx refi_loc reason with
+  | Ok x -> Some (Flow_js.reposition cx refi_loc x)
+  | Error _ ->
+    let { Loc_env.var_info = { Env_api.env_refinement_invalidation_info; _ }; _ } =
+      Context.environment cx
+    in
+    (match ALocMap.find_opt refi_loc env_refinement_invalidation_info with
+    | None -> ()
+    | Some _ -> Base.Option.iter hover_loc_opt ~f:(Context.add_aggressively_invalidated_location cx));
+    None
 
 let get_var ?(lookup_mode = ForValue) cx name loc =
   ignore lookup_mode;
