@@ -530,8 +530,7 @@ and prop_exists_test_generic key reason cx trace result_collector orig_obj sense
           else
             not_pred
         in
-        possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
-        |> List.iter (fun t -> guard cx trace t pred orig_obj result_collector)
+        concretize_and_guard_prop cx trace t pred orig_obj result_collector
       | None ->
         (* prop cannot be read *)
         report_unchanged_filtering_result_to_predicate_result orig_obj result_collector;
@@ -568,8 +567,7 @@ and prop_exists_test_generic key reason cx trace result_collector orig_obj sense
           else
             not_pred
         in
-        possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
-        |> List.iter (fun t -> guard cx trace t pred orig_obj result_collector)
+        concretize_and_guard_prop cx trace t pred orig_obj result_collector
       else (
         report_unchanged_filtering_result_to_predicate_result orig_obj result_collector;
         add_output
@@ -1032,37 +1030,44 @@ and concretize_and_run_sentinel_prop_test
 (**********)
 (* guards *)
 (**********)
-and guard cx trace source pred input result_collector =
+and concretize_and_guard_prop cx trace source pred orig_obj result_collector =
+  let all_changed =
+    possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t source) source
+    |> List.for_all (fun t -> guard_prop cx trace t pred orig_obj result_collector)
+  in
+  if all_changed then
+    report_changes_to_input result_collector
+  else
+    report_unchanged_filtering_result_to_predicate_result orig_obj result_collector
+
+and guard_prop cx trace source pred input result_collector =
   match pred with
   | TruthyP -> begin
     match Type_filter.truthy cx source with
-    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
-      report_changes_to_input result_collector
-    | _ -> report_unchanged_filtering_result_to_predicate_result input result_collector
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
   end
   | NotP TruthyP -> begin
     match Type_filter.not_truthy cx source with
-    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
-      report_changes_to_input result_collector
-    | _ -> report_unchanged_filtering_result_to_predicate_result input result_collector
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
   end
   | MaybeP -> begin
     match Type_filter.maybe cx source with
-    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
-      report_changes_to_input result_collector
-    | _ -> report_unchanged_filtering_result_to_predicate_result input result_collector
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
   end
   | NotP MaybeP -> begin
     match Type_filter.not_maybe cx source with
-    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
-      report_changes_to_input result_collector
-    | _ -> report_unchanged_filtering_result_to_predicate_result input result_collector
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
   end
-  | NotP (NotP p) -> guard cx trace source p input result_collector
+  | NotP (NotP p) -> guard_prop cx trace source p input result_collector
   | _ ->
     let loc = loc_of_reason (reason_of_t input) in
     let pred_str = string_of_predicate pred in
-    add_output cx Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str))
+    add_output cx Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str));
+    false
 
 type predicate_result =
   | TypeChanged of Type.t

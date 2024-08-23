@@ -381,40 +381,12 @@ Refined at [1]
 
    computed_string_literal.js:11:11
    11|     stuff(a.b_c);
-                 ^
-
-References:
-   computed_string_literal.js:10:7
-   10|   if (a.b_c) {
-             ^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- computed_string_literal.js:11:11
-
-Refined at [1]
-
-   computed_string_literal.js:11:11
-   11|     stuff(a.b_c);
                  ^^^^^
 
 References:
    computed_string_literal.js:10:7
    10|   if (a.b_c) {
              ^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- computed_string_literal.js:17:11
-
-Refined at [1]
-
-   computed_string_literal.js:17:11
-   17|     stuff(a["b_c"]);
-                 ^
-
-References:
-   computed_string_literal.js:16:7
-   16|   if (a["b_c"]) {
-             ^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:17:11
@@ -1539,20 +1511,6 @@ Refined at [1]
 
    func_call.js:7:7
    7|       x.y.indexOf(z()); // no error
-            ^
-
-References:
-   func_call.js:3:9
-   3|     if (x.y) {
-              ^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- func_call.js:7:7
-
-Refined at [1]
-
-   func_call.js:7:7
-   7|       x.y.indexOf(z()); // no error
             ^^^
 
 References:
@@ -2074,20 +2032,6 @@ Refined at [1]
 
    invalidation.js:45:47
    45|   if (a.b)                                    a.b.c;   // ok
-                                                     ^
-
-References:
-   invalidation.js:45:7
-   45|   if (a.b)                                    a.b.c;   // ok
-             ^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:45:47
-
-Refined at [1]
-
-   invalidation.js:45:47
-   45|   if (a.b)                                    a.b.c;   // ok
                                                      ^^^
 
 References:
@@ -2096,26 +2040,12 @@ References:
              ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:46:47
-
-Refined at [1]
-
-   invalidation.js:46:47
-   46|   if (a.b) { f();                             a.b.c; } // error, todo: a should not be considered as refined, many similar issues below
-                                                     ^
-
-References:
-   invalidation.js:46:7
-   46|   if (a.b) { f();                             a.b.c; } // error, todo: a should not be considered as refined, many similar issues below
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:46:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
    invalidation.js:46:51
-   46|   if (a.b) { f();                             a.b.c; } // error, todo: a should not be considered as refined, many similar issues below
+   46|   if (a.b) { f();                             a.b.c; } // error
                                                          ^
 
 References:
@@ -2128,22 +2058,8 @@ Error --------------------------------------------------------------------------
 
 Refinement invalidated.
 
-   46|   if (a.b) { f();                             a.b.c; } // error, todo: a should not be considered as refined, many similar issues below
+   46|   if (a.b) { f();                             a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:53:47
-
-Refined at [1]
-
-   invalidation.js:53:47
-   53|   if (a.b) { true && f();                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:53:7
-   53|   if (a.b) { true && f();                     a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:53:51
@@ -2168,20 +2084,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:54:47
-
-Refined at [1]
-
-   invalidation.js:54:47
-   54|   if (a.b) { f() && true;                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:54:7
-   54|   if (a.b) { f() && true;                     a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:54:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2202,20 +2104,6 @@ Refinement invalidated.
 
    54|   if (a.b) { f() && true;                     a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:55:47
-
-Refined at [1]
-
-   invalidation.js:55:47
-   55|   if (a.b) { false || f();                    a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:55:7
-   55|   if (a.b) { false || f();                    a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:55:51
@@ -2240,20 +2128,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:56:47
-
-Refined at [1]
-
-   invalidation.js:56:47
-   56|   if (a.b) { f() || false;                    a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:56:7
-   56|   if (a.b) { f() || false;                    a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:56:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2274,20 +2148,6 @@ Refinement invalidated.
 
    56|   if (a.b) { f() || false;                    a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:57:47
-
-Refined at [1]
-
-   invalidation.js:57:47
-   57|   if (a.b) { null ?? f();                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:57:7
-   57|   if (a.b) { null ?? f();                     a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:57:51
@@ -2312,20 +2172,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:58:47
-
-Refined at [1]
-
-   invalidation.js:58:47
-   58|   if (a.b) { f() ?? true;                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:58:7
-   58|   if (a.b) { f() ?? true;                     a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:58:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2346,20 +2192,6 @@ Refinement invalidated.
 
    58|   if (a.b) { f() ?? true;                     a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:60:47
-
-Refined at [1]
-
-   invalidation.js:60:47
-   60|   if (a.b) { p ? f() : 0;                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:60:7
-   60|   if (a.b) { p ? f() : 0;                     a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:60:51
@@ -2384,20 +2216,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:61:47
-
-Refined at [1]
-
-   invalidation.js:61:47
-   61|   if (a.b) { p ? 1 : f();                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:61:7
-   61|   if (a.b) { p ? 1 : f();                     a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:61:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2418,20 +2236,6 @@ Refinement invalidated.
 
    61|   if (a.b) { p ? 1 : f();                     a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:62:47
-
-Refined at [1]
-
-   invalidation.js:62:47
-   62|   if (a.b) { f() ? 1 : 0;                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:62:7
-   62|   if (a.b) { f() ? 1 : 0;                     a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:62:51
@@ -2456,20 +2260,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:64:47
-
-Refined at [1]
-
-   invalidation.js:64:47
-   64|   if (a.b) { if (p) f();                      a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:64:7
-   64|   if (a.b) { if (p) f();                      a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:64:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2490,20 +2280,6 @@ Refinement invalidated.
 
    64|   if (a.b) { if (p) f();                      a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:65:47
-
-Refined at [1]
-
-   invalidation.js:65:47
-   65|   if (a.b) { if (p); else f();                a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:65:7
-   65|   if (a.b) { if (p); else f();                a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:65:51
@@ -2528,20 +2304,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:66:47
-
-Refined at [1]
-
-   invalidation.js:66:47
-   66|   if (a.b) { if (f());                        a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:66:7
-   66|   if (a.b) { if (f());                        a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:66:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2562,20 +2324,6 @@ Refinement invalidated.
 
    66|   if (a.b) { if (f());                        a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:69:52
-
-Refined at [1]
-
-   invalidation.js:69:52
-   69|   if (a.b) { switch (p) { case true: f(); }        a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:69:7
-   69|   if (a.b) { switch (p) { case true: f(); }        a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:69:56
@@ -2600,20 +2348,6 @@ Refinement invalidated.
                                                             ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:70:52
-
-Refined at [1]
-
-   invalidation.js:70:52
-   70|   if (a.b) { switch (p) { case true: f(); break; } a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:70:7
-   70|   if (a.b) { switch (p) { case true: f(); break; } a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:70:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2634,20 +2368,6 @@ Refinement invalidated.
 
    70|   if (a.b) { switch (p) { case true: f(); break; } a.b.c; } // error
                                                             ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:71:52
-
-Refined at [1]
-
-   invalidation.js:71:52
-   71|   if (a.b) { switch (p) { default: f(); }          a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:71:7
-   71|   if (a.b) { switch (p) { default: f(); }          a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:71:56
@@ -2672,20 +2392,6 @@ Refinement invalidated.
                                                             ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:72:52
-
-Refined at [1]
-
-   invalidation.js:72:52
-   72|   if (a.b) { switch (p) { default: f(); break; }   a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:72:7
-   72|   if (a.b) { switch (p) { default: f(); break; }   a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:72:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2698,20 +2404,6 @@ References:
    invalidation.js:37:15
    37| type A = {b?: {c: boolean}};
                      ^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:73:52
-
-Refined at [1]
-
-   invalidation.js:73:52
-   73|   if (a.b) { switch (f()) {}                       a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:73:7
-   73|   if (a.b) { switch (f()) {}                       a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:73:56
@@ -2736,20 +2428,6 @@ Refinement invalidated.
                                                             ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:74:52
-
-Refined at [1]
-
-   invalidation.js:74:52
-   74|   if (a.b) { switch (f()) { case true: }           a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:74:7
-   74|   if (a.b) { switch (f()) { case true: }           a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:74:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2770,20 +2448,6 @@ Refinement invalidated.
 
    74|   if (a.b) { switch (f()) { case true: }           a.b.c; } // error
                                                             ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:75:52
-
-Refined at [1]
-
-   invalidation.js:75:52
-   75|   if (a.b) { switch (f()) { case true: break; }    a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:75:7
-   75|   if (a.b) { switch (f()) { case true: break; }    a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:75:56
@@ -2808,20 +2472,6 @@ Refinement invalidated.
                                                             ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:76:52
-
-Refined at [1]
-
-   invalidation.js:76:52
-   76|   if (a.b) { switch (f()) { default: }             a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:76:7
-   76|   if (a.b) { switch (f()) { default: }             a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:76:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2844,20 +2494,6 @@ Refinement invalidated.
                                                             ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:77:52
-
-Refined at [1]
-
-   invalidation.js:77:52
-   77|   if (a.b) { switch (f()) { default: break; }      a.b.c; } // error
-                                                          ^
-
-References:
-   invalidation.js:77:7
-   77|   if (a.b) { switch (f()) { default: break; }      a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:77:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2870,20 +2506,6 @@ References:
    invalidation.js:37:15
    37| type A = {b?: {c: boolean}};
                      ^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:81:47
-
-Refined at [1]
-
-   invalidation.js:81:47
-   81|   if (a.b) { while (p) f();                   a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:81:7
-   81|   if (a.b) { while (p) f();                   a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:81:51
@@ -2908,20 +2530,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:82:47
-
-Refined at [1]
-
-   invalidation.js:82:47
-   82|   if (a.b) { while (f());                     a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:82:7
-   82|   if (a.b) { while (f());                     a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:82:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -2942,20 +2550,6 @@ Refinement invalidated.
 
    82|   if (a.b) { while (f());                     a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:83:47
-
-Refined at [1]
-
-   invalidation.js:83:47
-   83|   if (a.b) { do f(); while (p);               a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:83:7
-   83|   if (a.b) { do f(); while (p);               a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:83:51
@@ -2980,20 +2574,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:84:47
-
-Refined at [1]
-
-   invalidation.js:84:47
-   84|   if (a.b) { do; while (f());                 a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:84:7
-   84|   if (a.b) { do; while (f());                 a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:84:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3014,20 +2594,6 @@ Refinement invalidated.
 
    84|   if (a.b) { do; while (f());                 a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:85:47
-
-Refined at [1]
-
-   invalidation.js:85:47
-   85|   if (a.b) { for (; p;) f();                  a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:85:7
-   85|   if (a.b) { for (; p;) f();                  a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:85:51
@@ -3052,20 +2618,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:86:47
-
-Refined at [1]
-
-   invalidation.js:86:47
-   86|   if (a.b) { for (; p; f());                  a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:86:7
-   86|   if (a.b) { for (; p; f());                  a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:86:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3086,20 +2638,6 @@ Refinement invalidated.
 
    86|   if (a.b) { for (; p; f());                  a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:87:47
-
-Refined at [1]
-
-   invalidation.js:87:47
-   87|   if (a.b) { for (; f(););                    a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:87:7
-   87|   if (a.b) { for (; f(););                    a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:87:51
@@ -3124,20 +2662,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:88:47
-
-Refined at [1]
-
-   invalidation.js:88:47
-   88|   if (a.b) { for (f(); p;);                   a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:88:7
-   88|   if (a.b) { for (f(); p;);                   a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:88:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3158,20 +2682,6 @@ Refinement invalidated.
 
    88|   if (a.b) { for (f(); p;);                   a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:89:47
-
-Refined at [1]
-
-   invalidation.js:89:47
-   89|   if (a.b) { for (i1 in y) f();               a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:89:7
-   89|   if (a.b) { for (i1 in y) f();               a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:89:51
@@ -3196,20 +2706,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:90:47
-
-Refined at [1]
-
-   invalidation.js:90:47
-   90|   if (a.b) { for (i2 in ff());                a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:90:7
-   90|   if (a.b) { for (i2 in ff());                a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:90:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3232,20 +2728,6 @@ Refinement invalidated.
                                                        ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:91:47
-
-Refined at [1]
-
-   invalidation.js:91:47
-   91|   if (a.b) { for (i3 of y) f();               a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:91:7
-   91|   if (a.b) { for (i3 of y) f();               a.b.c; } // error
-             ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:91:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3266,20 +2748,6 @@ Refinement invalidated.
 
    91|   if (a.b) { for (i3 of y) f();               a.b.c; } // error
                                                        ^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:92:47
-
-Refined at [1]
-
-   invalidation.js:92:47
-   92|   if (a.b) { for (i4 of ff());                a.b.c; } // error
-                                                     ^
-
-References:
-   invalidation.js:92:7
-   92|   if (a.b) { for (i4 of ff());                a.b.c; } // error
-             ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:92:51
@@ -3430,20 +2898,6 @@ Refined at [1]
 
    invalidation.js:106:7
    106|   if (a.b) { do { continue; } while (f());    a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:105:7
-   105|   if (a.b) { do { f(); return;   } while (p); a.b.c; } // error[unreachable-code]
-              ^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:106:7
-
-Refined at [1]
-
-   invalidation.js:106:7
-   106|   if (a.b) { do { continue; } while (f());    a.b.c; } // error
               ^^^
 
 References:
@@ -3486,20 +2940,6 @@ Unreachable code. [unreachable-code]
 
    108|   if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
                                                       ^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:110:7
-
-Refined at [1]
-
-   invalidation.js:110:7
-   110|   if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:108:7
-   108|   if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
-              ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:110:7
@@ -3852,20 +3292,6 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:145:52
-
-Refined at [1]
-
-   invalidation.js:145:52
-   145|   if (a.b) { l: { f(); }                           a.b.c; } // error
-                                                           ^
-
-References:
-   invalidation.js:145:7
-   145|   if (a.b) { l: { f(); }                           a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:145:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3888,20 +3314,6 @@ Refinement invalidated.
                                                              ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:146:52
-
-Refined at [1]
-
-   invalidation.js:146:52
-   146|   if (a.b) { l: { f(); break l; }                  a.b.c; } // error
-                                                           ^
-
-References:
-   invalidation.js:146:7
-   146|   if (a.b) { l: { f(); break l; }                  a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:146:56
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -3914,20 +3326,6 @@ References:
    invalidation.js:37:15
     37| type A = {b?: {c: boolean}};
                       ^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:147:52
-
-Refined at [1]
-
-   invalidation.js:147:52
-   147|   if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // error
-                                                           ^
-
-References:
-   invalidation.js:147:7
-   147|   if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:147:56
@@ -3950,20 +3348,6 @@ Refinement invalidated.
 
    147|   if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // error
                                                              ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:148:52
-
-Refined at [1]
-
-   invalidation.js:148:52
-   148|   l: if (a.b) { if (p) { f(); break l; }           a.b.c; } // ideally ok, error acceptable
-                                                           ^
-
-References:
-   invalidation.js:148:10
-   148|   l: if (a.b) { if (p) { f(); break l; }           a.b.c; } // ideally ok, error acceptable
-                 ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:148:52
@@ -3996,43 +3380,12 @@ Unreachable code. [unreachable-code]
                                                            ^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:152:7
-
-Refined at [1]
-
-   invalidation.js:152:7
-   152|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- invalidation.js:152:9
 
 Refinement invalidated.
 
    152|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
                 ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:152:57
-
-Refined at [1] [2]
-
-   invalidation.js:152:57
-   152|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
-                                                                ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-   invalidation.js:152:7
-   152|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
-              ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:152:61
@@ -4057,37 +3410,6 @@ Refinement invalidated.
                                                                   ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:153:7
-
-Refined at [1]
-
-   invalidation.js:153:7
-   153|   if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:153:57
-
-Refined at [1] [2]
-
-   invalidation.js:153:57
-   153|   if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // error
-                                                                ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-   invalidation.js:153:7
-   153|   if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // error
-              ^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:153:61
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4100,37 +3422,6 @@ References:
    invalidation.js:37:15
     37| type A = {b?: {c: boolean}};
                       ^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:154:7
-
-Refined at [1]
-
-   invalidation.js:154:7
-   154|   if (a.b) { l: switch (f()) { case true: break l; }    a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:154:57
-
-Refined at [1] [2]
-
-   invalidation.js:154:57
-   154|   if (a.b) { l: switch (f()) { case true: break l; }    a.b.c; } // error
-                                                                ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-   invalidation.js:154:7
-   154|   if (a.b) { l: switch (f()) { case true: break l; }    a.b.c; } // error
-              ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:154:61
@@ -4155,37 +3446,6 @@ Refinement invalidated.
                                                                   ^
 
 
-Error -------------------------------------------------------------------------------------------- invalidation.js:155:7
-
-Refined at [1]
-
-   invalidation.js:155:7
-   155|   if (a.b) { l: switch (f()) { default: break l; }      a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:155:57
-
-Refined at [1] [2]
-
-   invalidation.js:155:57
-   155|   if (a.b) { l: switch (f()) { default: break l; }      a.b.c; } // error
-                                                                ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
-   invalidation.js:155:7
-   155|   if (a.b) { l: switch (f()) { default: break l; }      a.b.c; } // error
-              ^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:155:61
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4198,20 +3458,6 @@ References:
    invalidation.js:37:15
     37| type A = {b?: {c: boolean}};
                       ^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:159:7
-
-Refined at [1]
-
-   invalidation.js:159:7
-   159|   if (a.b) { l: while (p) { f(); continue l; }     a.b.c; } // error
-              ^
-
-References:
-   invalidation.js:149:10
-   149|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
-                 ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:159:56
@@ -4556,39 +3802,11 @@ Refined at [1]
 
    invalidation.js:195:47
    195|   if (a.b)                                    a.b.c;   // ok
-                                                      ^
-
-References:
-   invalidation.js:195:7
-   195|   if (a.b)                                    a.b.c;   // ok
-              ^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:195:47
-
-Refined at [1]
-
-   invalidation.js:195:47
-   195|   if (a.b)                                    a.b.c;   // ok
                                                       ^^^
 
 References:
    invalidation.js:195:7
    195|   if (a.b)                                    a.b.c;   // ok
-              ^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:196:47
-
-Refined at [1]
-
-   invalidation.js:196:47
-   196|   if (a.b) { delete x.b;                      a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:196:7
-   196|   if (a.b) { delete x.b;                      a.b.c; } // error
               ^^^ [1]
 
 
@@ -4614,20 +3832,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:197:47
-
-Refined at [1]
-
-   invalidation.js:197:47
-   197|   if (a.b) { x.b = y;                         a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:197:7
-   197|   if (a.b) { x.b = y;                         a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:197:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4648,20 +3852,6 @@ Refinement invalidated.
 
    197|   if (a.b) { x.b = y;                         a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:204:47
-
-Refined at [1]
-
-   invalidation.js:204:47
-   204|   if (a.b) { true && delete x.b;              a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:204:7
-   204|   if (a.b) { true && delete x.b;              a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:204:51
@@ -4686,20 +3876,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:205:47
-
-Refined at [1]
-
-   invalidation.js:205:47
-   205|   if (a.b) { delete x.b && true;              a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:205:7
-   205|   if (a.b) { delete x.b && true;              a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:205:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4720,20 +3896,6 @@ Refinement invalidated.
 
    205|   if (a.b) { delete x.b && true;              a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:206:47
-
-Refined at [1]
-
-   invalidation.js:206:47
-   206|   if (a.b) { true && (x.b = y);               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:206:7
-   206|   if (a.b) { true && (x.b = y);               a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:206:51
@@ -4758,20 +3920,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:207:47
-
-Refined at [1]
-
-   invalidation.js:207:47
-   207|   if (a.b) { (x.b = y) && true;               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:207:7
-   207|   if (a.b) { (x.b = y) && true;               a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:207:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4792,20 +3940,6 @@ Refinement invalidated.
 
    207|   if (a.b) { (x.b = y) && true;               a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:209:47
-
-Refined at [1]
-
-   invalidation.js:209:47
-   209|   if (a.b) { false || (x.b = y);              a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:209:7
-   209|   if (a.b) { false || (x.b = y);              a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:209:51
@@ -4830,20 +3964,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:210:47
-
-Refined at [1]
-
-   invalidation.js:210:47
-   210|   if (a.b) { (x.b = y) || false;              a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:210:7
-   210|   if (a.b) { (x.b = y) || false;              a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:210:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4864,20 +3984,6 @@ Refinement invalidated.
 
    210|   if (a.b) { (x.b = y) || false;              a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:211:47
-
-Refined at [1]
-
-   invalidation.js:211:47
-   211|   if (a.b) { null ?? (x.b = y);               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:211:7
-   211|   if (a.b) { null ?? (x.b = y);               a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:211:51
@@ -4902,20 +4008,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:212:47
-
-Refined at [1]
-
-   invalidation.js:212:47
-   212|   if (a.b) { (x.b = y) ?? true;               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:212:7
-   212|   if (a.b) { (x.b = y) ?? true;               a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:212:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -4936,20 +4028,6 @@ Refinement invalidated.
 
    212|   if (a.b) { (x.b = y) ?? true;               a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:214:47
-
-Refined at [1]
-
-   invalidation.js:214:47
-   214|   if (a.b) { p ? (x.b = y) : 0;               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:214:7
-   214|   if (a.b) { p ? (x.b = y) : 0;               a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:214:51
@@ -4974,20 +4052,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:215:47
-
-Refined at [1]
-
-   invalidation.js:215:47
-   215|   if (a.b) { p ? 1 : (x.b = y);               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:215:7
-   215|   if (a.b) { p ? 1 : (x.b = y);               a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:215:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5008,20 +4072,6 @@ Refinement invalidated.
 
    215|   if (a.b) { p ? 1 : (x.b = y);               a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:216:47
-
-Refined at [1]
-
-   invalidation.js:216:47
-   216|   if (a.b) { (x.b = y) ? 1 : 0;               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:216:7
-   216|   if (a.b) { (x.b = y) ? 1 : 0;               a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:216:51
@@ -5046,20 +4096,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:218:47
-
-Refined at [1]
-
-   invalidation.js:218:47
-   218|   if (a.b) { if (p) x.b = y;                  a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:218:7
-   218|   if (a.b) { if (p) x.b = y;                  a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:218:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5080,20 +4116,6 @@ Refinement invalidated.
 
    218|   if (a.b) { if (p) x.b = y;                  a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:219:47
-
-Refined at [1]
-
-   invalidation.js:219:47
-   219|   if (a.b) { if (p); else x.b = y;            a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:219:7
-   219|   if (a.b) { if (p); else x.b = y;            a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:219:51
@@ -5118,20 +4140,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:220:47
-
-Refined at [1]
-
-   invalidation.js:220:47
-   220|   if (a.b) { if (x.b = y);                    a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:220:7
-   220|   if (a.b) { if (x.b = y);                    a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:220:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5152,20 +4160,6 @@ Refinement invalidated.
 
    220|   if (a.b) { if (x.b = y);                    a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:223:56
-
-Refined at [1]
-
-   invalidation.js:223:56
-   223|   if (a.b) { switch (p) { case true: x.b = y; }        a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:223:7
-   223|   if (a.b) { switch (p) { case true: x.b = y; }        a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:223:60
@@ -5190,20 +4184,6 @@ Refinement invalidated.
                                                                  ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:224:56
-
-Refined at [1]
-
-   invalidation.js:224:56
-   224|   if (a.b) { switch (p) { case true: x.b = y; break; } a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:224:7
-   224|   if (a.b) { switch (p) { case true: x.b = y; break; } a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:224:60
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5224,20 +4204,6 @@ Refinement invalidated.
 
    224|   if (a.b) { switch (p) { case true: x.b = y; break; } a.b.c; } // error
                                                                  ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:225:56
-
-Refined at [1]
-
-   invalidation.js:225:56
-   225|   if (a.b) { switch (p) { default: x.b = y; }          a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:225:7
-   225|   if (a.b) { switch (p) { default: x.b = y; }          a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:225:60
@@ -5262,20 +4228,6 @@ Refinement invalidated.
                                                                  ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:226:56
-
-Refined at [1]
-
-   invalidation.js:226:56
-   226|   if (a.b) { switch (p) { default: x.b = y; break; }   a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:226:7
-   226|   if (a.b) { switch (p) { default: x.b = y; break; }   a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:226:60
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5288,20 +4240,6 @@ References:
    invalidation.js:37:15
     37| type A = {b?: {c: boolean}};
                       ^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:227:56
-
-Refined at [1]
-
-   invalidation.js:227:56
-   227|   if (a.b) { switch (x.b = y) {}                       a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:227:7
-   227|   if (a.b) { switch (x.b = y) {}                       a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:227:60
@@ -5326,20 +4264,6 @@ Refinement invalidated.
                                                                  ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:228:56
-
-Refined at [1]
-
-   invalidation.js:228:56
-   228|   if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:228:7
-   228|   if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:228:60
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5360,20 +4284,6 @@ Refinement invalidated.
 
    228|   if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
                                                                  ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:229:56
-
-Refined at [1]
-
-   invalidation.js:229:56
-   229|   if (a.b) { switch (x.b = y) { case true: break; }    a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:229:7
-   229|   if (a.b) { switch (x.b = y) { case true: break; }    a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:229:60
@@ -5398,20 +4308,6 @@ Refinement invalidated.
                                                                  ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:230:56
-
-Refined at [1]
-
-   invalidation.js:230:56
-   230|   if (a.b) { switch (x.b = y) { default: }             a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:230:7
-   230|   if (a.b) { switch (x.b = y) { default: }             a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:230:60
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5434,20 +4330,6 @@ Refinement invalidated.
                                                                  ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:231:56
-
-Refined at [1]
-
-   invalidation.js:231:56
-   231|   if (a.b) { switch (x.b = y) { default: break; }      a.b.c; } // error
-                                                               ^
-
-References:
-   invalidation.js:231:7
-   231|   if (a.b) { switch (x.b = y) { default: break; }      a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:231:60
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5460,20 +4342,6 @@ References:
    invalidation.js:37:15
     37| type A = {b?: {c: boolean}};
                       ^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:235:47
-
-Refined at [1]
-
-   invalidation.js:235:47
-   235|   if (a.b) { while (p) x.b = y;               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:235:7
-   235|   if (a.b) { while (p) x.b = y;               a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:235:51
@@ -5498,20 +4366,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:236:47
-
-Refined at [1]
-
-   invalidation.js:236:47
-   236|   if (a.b) { while (x.b = y);                 a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:236:7
-   236|   if (a.b) { while (x.b = y);                 a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:236:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5532,20 +4386,6 @@ Refinement invalidated.
 
    236|   if (a.b) { while (x.b = y);                 a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:237:47
-
-Refined at [1]
-
-   invalidation.js:237:47
-   237|   if (a.b) { do x.b = y; while (p);           a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:237:7
-   237|   if (a.b) { do x.b = y; while (p);           a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:237:51
@@ -5570,20 +4410,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:238:47
-
-Refined at [1]
-
-   invalidation.js:238:47
-   238|   if (a.b) { do; while (x.b = y);             a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:238:7
-   238|   if (a.b) { do; while (x.b = y);             a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:238:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5604,20 +4430,6 @@ Refinement invalidated.
 
    238|   if (a.b) { do; while (x.b = y);             a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:239:47
-
-Refined at [1]
-
-   invalidation.js:239:47
-   239|   if (a.b) { for (; p;) x.b = y;              a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:239:7
-   239|   if (a.b) { for (; p;) x.b = y;              a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:239:51
@@ -5642,20 +4454,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:240:47
-
-Refined at [1]
-
-   invalidation.js:240:47
-   240|   if (a.b) { for (; p; x.b = y);              a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:240:7
-   240|   if (a.b) { for (; p; x.b = y);              a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:240:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5676,20 +4474,6 @@ Refinement invalidated.
 
    240|   if (a.b) { for (; p; x.b = y);              a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:241:47
-
-Refined at [1]
-
-   invalidation.js:241:47
-   241|   if (a.b) { for (; x.b = y;);                a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:241:7
-   241|   if (a.b) { for (; x.b = y;);                a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:241:51
@@ -5714,20 +4498,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:242:47
-
-Refined at [1]
-
-   invalidation.js:242:47
-   242|   if (a.b) { for (x.b = y; p;);               a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:242:7
-   242|   if (a.b) { for (x.b = y; p;);               a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:242:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5748,20 +4518,6 @@ Refinement invalidated.
 
    242|   if (a.b) { for (x.b = y; p;);               a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:243:47
-
-Refined at [1]
-
-   invalidation.js:243:47
-   243|   if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:243:7
-   243|   if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:243:51
@@ -5786,20 +4542,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:244:47
-
-Refined at [1]
-
-   invalidation.js:244:47
-   244|   if (a.b) { for (i2 in x.b = y);             a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:244:7
-   244|   if (a.b) { for (i2 in x.b = y);             a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:244:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5822,20 +4564,6 @@ Refinement invalidated.
                                                         ^
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:245:47
-
-Refined at [1]
-
-   invalidation.js:245:47
-   245|   if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:245:7
-   245|   if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
-              ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- invalidation.js:245:51
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
@@ -5856,20 +4584,6 @@ Refinement invalidated.
 
    245|   if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
                                                         ^
-
-
-Error ------------------------------------------------------------------------------------------- invalidation.js:246:47
-
-Refined at [1]
-
-   invalidation.js:246:47
-   246|   if (a.b) { for (i4 of x.b = y);             a.b.c; } // error
-                                                      ^
-
-References:
-   invalidation.js:246:7
-   246|   if (a.b) { for (i4 of x.b = y);             a.b.c; } // error
-              ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:246:51
@@ -8870,20 +7584,6 @@ References:
    opaque_refinement.js:7:5
    7| if (foo1 != null && bar) {
           ^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------- opaque_refinement.js:15:5
-
-Refined at [1]
-
-   opaque_refinement.js:15:5
-   15|     state.d.index[id];
-           ^^^^^
-
-References:
-   opaque_refinement.js:14:21
-   14|   if (id != null && state.d) {
-                           ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- opaque_refinement.js:15:5
@@ -14830,7 +13530,7 @@ References:
 
 
 
-Found 1040 errors
+Found 948 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
