@@ -6,6 +6,23 @@ Cannot resolve name `Foo`. [cannot-resolve-name]
               ^^^
 
 
+Error ------------------------------------------------------------------------------- children_not_added_to_props.js:8:1
+
+Cannot cast `result` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   children_not_added_to_props.js:8:1
+   8| result as string; // error
+      ^^^^^^
+
+References:
+   children_not_added_to_props.js:6:30
+   6| const result = <Foo bar="3">{3}</Foo>; // ok
+                                   ^ [1]
+   children_not_added_to_props.js:8:11
+   8| result as string; // error
+                ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------- invalid_jsx_unsupported.js:1:9
 
 Invalid `@jsx` declaration. Should have the form `@jsx LeftHandSideExpression` with no spaces. Parse error: Unexpected
@@ -354,4 +371,4 @@ References:
 
 
 
-Found 27 errors
+Found 28 errors

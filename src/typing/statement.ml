@@ -5807,27 +5807,7 @@ module Make
                children_prop
             )
             acc)
-      | _ ->
-        let arr =
-          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-              let reason_op = reason in
-              let element_reason =
-                replace_desc_reason
-                  (Reason.RInferredUnionElemArray { instantiable = false })
-                  reason_op
-              in
-              let elem_t = Tvar.mk cx element_reason in
-              Flow.resolve_spread_list
-                cx
-                ~use_op:unknown_use
-                ~reason_op:reason
-                unresolved_params
-                (ResolveSpreadsToArrayLiteral { id = mk_id (); as_const = false; elem_t; tout })
-          )
-        in
-        ObjectExpressionAcc.add_prop
-          (Properties.add_field (OrdinaryName "children") Polarity.Neutral ~key_loc:None arr)
-          acc
+      | _ -> acc
     in
     let t =
       ObjectExpressionAcc.mk_object_from_spread_acc
