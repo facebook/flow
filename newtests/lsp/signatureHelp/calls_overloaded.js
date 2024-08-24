@@ -81,3 +81,11 @@ function x0(f: ?F, h: ?H) {
   f(/* here */)
   h(/* here */)
 }
+
+// simple overload
+
+function test_overload() {
+  declare function f(x: 1): 1;
+  declare function f(x: 2): 2;
+  f(/* here */);
+}

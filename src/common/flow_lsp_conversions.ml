@@ -55,9 +55,7 @@ let flow_signature_help_to_lsp
   | None -> None
   | Some (signatures, active_parameter) ->
     let open Lsp.SignatureHelp in
-    let signatures =
-      Base.List.fold_left signatures ~f:(fun acc x -> func_details_result_to_lsp x :: acc) ~init:[]
-    in
+    let signatures = Base.List.map signatures ~f:func_details_result_to_lsp in
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
 let flow_completion_item_to_lsp

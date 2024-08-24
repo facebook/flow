@@ -1465,6 +1465,45 @@ module.exports = (suite(
       ),
       lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
         textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 89, character: 4},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1): 1',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 2): 2',
+                  parameters: [
+                    {
+                      label: 'x: 2',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
         },
         position: {line: 5, character: 4},
@@ -2599,18 +2638,18 @@ module.exports = (suite(
             result: {
               signatures: [
                 {
-                  label: 'foo: boolean',
-                  parameters: [
-                    {
-                      label: 'foo: boolean',
-                    },
-                  ],
-                },
-                {
                   label: 'foo: number',
                   parameters: [
                     {
                       label: 'foo: number',
+                    },
+                  ],
+                },
+                {
+                  label: 'foo: boolean',
+                  parameters: [
+                    {
+                      label: 'foo: boolean',
                     },
                   ],
                 },
@@ -2639,18 +2678,18 @@ module.exports = (suite(
             result: {
               signatures: [
                 {
-                  label: 'foo?: string',
-                  parameters: [
-                    {
-                      label: 'foo?: string',
-                    },
-                  ],
-                },
-                {
                   label: 'foo: number',
                   parameters: [
                     {
                       label: 'foo: number',
+                    },
+                  ],
+                },
+                {
+                  label: 'foo?: string',
+                  parameters: [
+                    {
+                      label: 'foo?: string',
                     },
                   ],
                 },
@@ -2743,18 +2782,18 @@ module.exports = (suite(
             result: {
               signatures: [
                 {
-                  label: 'foo?: boolean & string',
-                  parameters: [
-                    {
-                      label: 'foo?: boolean & string',
-                    },
-                  ],
-                },
-                {
                   label: 'foo: number',
                   parameters: [
                     {
                       label: 'foo: number',
+                    },
+                  ],
+                },
+                {
+                  label: 'foo?: boolean & string',
+                  parameters: [
+                    {
+                      label: 'foo?: boolean & string',
                     },
                   ],
                 },
@@ -2937,18 +2976,6 @@ module.exports = (suite(
             result: {
               signatures: [
                 {
-                  label: 'foo: string',
-                  parameters: [
-                    {
-                      label: 'foo: string',
-                      documentation: {
-                        kind: 'markdown',
-                        value: 'This is documentation for Props2.foo property',
-                      },
-                    },
-                  ],
-                },
-                {
                   label: 'foo: number',
                   parameters: [
                     {
@@ -2956,6 +2983,18 @@ module.exports = (suite(
                       documentation: {
                         kind: 'markdown',
                         value: 'This is documentation for Props1.foo property',
+                      },
+                    },
+                  ],
+                },
+                {
+                  label: 'foo: string',
+                  parameters: [
+                    {
+                      label: 'foo: string',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'This is documentation for Props2.foo property',
                       },
                     },
                   ],

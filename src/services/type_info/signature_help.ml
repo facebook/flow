@@ -355,13 +355,13 @@ module Callee_finder = struct
     | _ -> None
 end
 
-let rec collect_functions ~jsdoc ~exact_by_default acc = function
+let rec collect_functions ~jsdoc ~exact_by_default = function
   | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->
     let details = func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return in
-    details :: acc
+    [details]
   | Ty.Inter (t1, t2, ts) ->
-    Base.List.fold_left ~init:acc ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
-  | _ -> acc
+    Base.List.concat_map ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
+  | _ -> []
 
 (* Ty_normalizer_flow will attempt to recover an alias name for this type. Given that
  * in collect_functions we try to match against the structure of the type, we
@@ -412,7 +412,7 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
     (match ty with
     | Ok (Ty.Type ty) ->
       let exact_by_default = Context.exact_by_default cx in
-      (match collect_functions ~jsdoc ~exact_by_default [] ty with
+      (match collect_functions ~jsdoc ~exact_by_default ty with
       | [] -> Ok None
       | funs -> Ok (Some (funs, active_parameter)))
     | Ok _ -> Ok None
