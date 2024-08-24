@@ -113,7 +113,6 @@ let send_end_recheck ~options env =
   let calc_errors_and_warnings () = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.update_clients
     ~clients:env.connections
-    ~flowconfig_vscode_detailed_diagnostics:(Options.vscode_detailed_diagnostics options)
     ~errors_reason:LspProt.End_of_recheck
     ~calc_errors_and_warnings;
 

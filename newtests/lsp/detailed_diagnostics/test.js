@@ -18,24 +18,7 @@ module.exports = (suite(
     modifyFile,
     lspIgnoreStatusAndCancellation,
   }) => [
-    test(
-      'textDocument/publishDiagnostics flowconfig enabled, no client config',
-      [
-        lspStartAndConnect(),
-        addFile('file_with_simple_error.js')
-          .waitUntilLSPMessage(
-            9000,
-            'textDocument/publishDiagnostics',
-            '{Cannot assign}',
-          )
-          .verifyLSPMessageSnapshot(
-            join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
-            ['window/showStatus', '$/cancelRequest'],
-          ),
-      ],
-    ).flowConfig('_flowconfig_enabled'),
-
-    test('textDocument/publishDiagnostics flowconfig enabled, client enabled', [
+    test('textDocument/publishDiagnostics client enabled', [
       lspStartAndConnect(null, {
         ...lspInitializeParams,
         initializationOptions: {detailedErrorRendering: true},
@@ -50,83 +33,37 @@ module.exports = (suite(
           join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
           ['window/showStatus', '$/cancelRequest'],
         ),
-    ]).flowConfig('_flowconfig_enabled'),
+    ]),
 
-    test(
-      'textDocument/publishDiagnostics flowconfig enabled, client disabled',
-      [
-        lspStartAndConnect(null, {
-          ...lspInitializeParams,
-          initializationOptions: {detailedErrorRendering: false},
-        }),
-        addFile('file_with_simple_error.js')
-          .waitUntilLSPMessage(
-            9000,
-            'textDocument/publishDiagnostics',
-            '{Cannot assign}',
-          )
-          .verifyLSPMessageSnapshot(
-            join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
-            ['window/showStatus', '$/cancelRequest'],
-          ),
-      ],
-    ).flowConfig('_flowconfig_enabled'),
+    test('textDocument/publishDiagnostics client disabled', [
+      lspStartAndConnect(null, {
+        ...lspInitializeParams,
+        initializationOptions: {detailedErrorRendering: false},
+      }),
+      addFile('file_with_simple_error.js')
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics',
+          '{Cannot assign}',
+        )
+        .verifyLSPMessageSnapshot(
+          join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
+          ['window/showStatus', '$/cancelRequest'],
+        ),
+    ]),
 
-    test(
-      'textDocument/publishDiagnostics flowconfig disabled, no client config',
-      [
-        lspStartAndConnect(),
-        addFile('file_with_simple_error.js')
-          .waitUntilLSPMessage(
-            9000,
-            'textDocument/publishDiagnostics',
-            '{Cannot assign}',
-          )
-          .verifyLSPMessageSnapshot(
-            join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
-            ['window/showStatus', '$/cancelRequest'],
-          ),
-      ],
-    ).flowConfig('_flowconfig_disabled'),
-
-    test(
-      'textDocument/publishDiagnostics flowconfig disabled, client enabled',
-      [
-        lspStartAndConnect(null, {
-          ...lspInitializeParams,
-          initializationOptions: {detailedErrorRendering: true},
-        }),
-        addFile('file_with_simple_error.js')
-          .waitUntilLSPMessage(
-            9000,
-            'textDocument/publishDiagnostics',
-            '{Cannot assign}',
-          )
-          .verifyLSPMessageSnapshot(
-            join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
-            ['window/showStatus', '$/cancelRequest'],
-          ),
-      ],
-    ).flowConfig('_flowconfig_disabled'),
-
-    test(
-      'textDocument/publishDiagnostics flowconfig disabled, client disabled',
-      [
-        lspStartAndConnect(null, {
-          ...lspInitializeParams,
-          initializationOptions: {detailedErrorRendering: false},
-        }),
-        addFile('file_with_simple_error.js')
-          .waitUntilLSPMessage(
-            9000,
-            'textDocument/publishDiagnostics',
-            '{Cannot assign}',
-          )
-          .verifyLSPMessageSnapshot(
-            join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
-            ['window/showStatus', '$/cancelRequest'],
-          ),
-      ],
-    ).flowConfig('_flowconfig_disabled'),
+    test('textDocument/publishDiagnostics no client config', [
+      lspStartAndConnect(),
+      addFile('file_with_simple_error.js')
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics',
+          '{Cannot assign}',
+        )
+        .verifyLSPMessageSnapshot(
+          join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
+          ['window/showStatus', '$/cancelRequest'],
+        ),
+    ]),
   ],
 ): SuiteType);

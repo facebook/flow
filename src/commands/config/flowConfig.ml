@@ -138,7 +138,6 @@ module Opts = struct
     ts_syntax: bool;
     use_mixed_in_catch_variables: bool option;
     ban_spread_key_props: bool option;
-    vscode_detailed_diagnostics: bool;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
     watchman_sync_timeout: int option;
@@ -273,7 +272,6 @@ module Opts = struct
       ts_syntax = false;
       use_mixed_in_catch_variables = None;
       ban_spread_key_props = None;
-      vscode_detailed_diagnostics = false;
       wait_for_recheck = false;
       watchman_defer_states = [];
       watchman_sync_timeout = None;
@@ -928,9 +926,6 @@ module Opts = struct
         multi_platform_ambient_supports_platform_directory_overrides_parser
       );
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
-      ( "experimental.vscode_detailed_diagnostics",
-        boolean (fun opts v -> Ok { opts with vscode_detailed_diagnostics = v })
-      );
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1747,8 +1742,6 @@ let ts_syntax c = c.options.Opts.ts_syntax
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 
 let ban_spread_key_props c = c.options.Opts.ban_spread_key_props
-
-let vscode_detailed_diagnostics c = c.options.Opts.vscode_detailed_diagnostics
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 
