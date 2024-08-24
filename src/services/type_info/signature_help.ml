@@ -142,9 +142,7 @@ module Callee_finder = struct
 
   let rec get_prop_of_obj cx name reason t =
     Flow_js.possible_concrete_types_for_inspection cx reason t
-    |> Base.List.concat_map ~f:(fun t ->
-           get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t |> Base.Option.to_list
-       )
+    |> Base.List.filter_map ~f:(fun t -> get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t)
     |> function
     | [] -> None
     | [t] -> Some t
@@ -184,9 +182,7 @@ module Callee_finder = struct
 
   let get_prop_of_obj_toplevel cx name reason t =
     Flow_js.possible_concrete_types_for_inspection cx reason t
-    |> Base.List.concat_map ~f:(fun t ->
-           get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t |> Base.Option.to_list
-       )
+    |> Base.List.filter_map ~f:(fun t -> get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t)
 
   let get_attribute_type cx loc t name =
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
@@ -427,7 +423,7 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
       Ty_normalizer_flow.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
     in
     let tys =
-      Base.List.concat_map
+      Base.List.filter_map
         ~f:(fun (t, optional) ->
           match Ty_normalizer_flow.from_type genv t with
           | Ok (Ty.Type ty) ->
@@ -436,10 +432,10 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
             let loc = loc_of_aloc (TypeUtil.loc_of_t t) in
             let jsdoc = Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem loc in
             let documentation = Base.Option.value_map ~default:None ~f:Jsdoc.description jsdoc in
-            [ServerProt.Response.SigHelpJsxAttr { documentation; name; ty; optional }]
+            Some (ServerProt.Response.SigHelpJsxAttr { documentation; name; ty; optional })
           | Ok _
           | Error _ ->
-            [])
+            None)
         ts
     in
     Ok (Some (tys, 0))
