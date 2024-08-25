@@ -402,7 +402,7 @@ jobs:
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
-      run: ./tool test -p 4 --bin bin/linux/flow | cat
+      run: ./tool test -p 4 --bin bin/linux/flow
   tool_test_macos:
     runs-on: macos-14
     needs:
@@ -420,7 +420,7 @@ jobs:
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run tool tests
-      run: ./tool test --bin bin/macos/flow | cat
+      run: ./tool test --bin bin/macos/flow
   tool_test_win:
     runs-on: windows-2022
     needs:
