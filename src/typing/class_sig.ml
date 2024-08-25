@@ -6,12 +6,12 @@
  *)
 
 module Flow = Flow_js
+module ConsGen = Type_annotation_cons_gen
 open Reason
 open Utils_js
 include Class_sig_intf
 
 module Make
-    (ConsGen : Type_annotation_sig.ConsGen)
     (CT : Func_class_sig_types.Config.S)
     (C : Func_params_intf.Config with module Types := CT)
     (P : Func_params_intf.S with module Config_types := CT and module Config := C)

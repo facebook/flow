@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (_ : Type_annotation_sig.ConsGen) (_ : Statement_sig.S) : Type_annotation_sig.S
+module Make (_ : Statement_sig.S) : Type_annotation_sig.S

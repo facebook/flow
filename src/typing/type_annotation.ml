@@ -15,9 +15,9 @@ open Type
 open TypeUtil
 module Flow = Flow_js
 module T = Ast.Type
+module ConsGen = Type_annotation_cons_gen
 
-module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S) :
-  Type_annotation_sig.S = struct
+module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   open Type_env.LookupMode
 
   module Func_type_params_config_types = struct
@@ -139,8 +139,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     Func_class_sig_types.Class.Make (Func_type_params_config_types) (Func_type_params_types)
       (Func_type_sig_types)
   module Class_type_sig =
-    Class_sig.Make (ConsGen) (Func_type_params_config_types) (Func_type_params_config)
-      (Func_type_params)
+    Class_sig.Make (Func_type_params_config_types) (Func_type_params_config) (Func_type_params)
       (Func_type_sig)
       (Class_type_sig_types)
   module Component_type_params_types =

@@ -88,7 +88,7 @@ end = struct
     Ast_loc_utils.loc_to_aloc_mapper#type_annotation t
 
   module Statement = Fix_statement.Statement_
-  module Annot = Type_annotation.Make (Type_annotation_cons_gen.FlowJS) (Statement)
+  module Annot = Type_annotation.Make (Statement)
   module NameResolver = Name_resolver.Make (Context) (Flow_js_utils)
 
   let parse cx content =

@@ -5,6 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module FlowJS : Type_annotation_sig.ConsGen
-
-module Annot : Type_annotation_sig.ConsGen
+include Type_annotation_sig.ConsGen
