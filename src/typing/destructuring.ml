@@ -9,11 +9,6 @@
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
 
-(** TODO currently type annotations internal to patterns get parsed but not
-  * checked. We should either update this to give users a warning that internal
-  * annotations aren't checked, or update this to check internal annotations.
-  *)
-
 module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 open Reason
