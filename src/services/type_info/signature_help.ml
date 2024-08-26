@@ -140,6 +140,50 @@ module Callee_finder = struct
 
   exception Found of t option
 
+  (* Ty_normalizer_flow will attempt to recover an alias name for this type. Given that
+   * in collect_functions we try to match against the structure of the type, we
+   * would rather bypass the alias on the toplevel of the type. It is still
+   * desirable that deeper within the type aliases are maintained. Note that
+   * alternatively we could updated the normalizer to perform a one-off expansion
+   * of the toplevel alias, but that would be more complex that fixing this here. *)
+  let fix_reason_of_t = TypeUtil.mod_reason_of_t Reason.(update_desc_reason invalidate_rtype_alias)
+
+  let simplify_fun_t cx func_t =
+    let open Type in
+    let reason = TypeUtil.reason_of_t func_t in
+    Tvar.mk_no_wrap_where cx reason (fun t ->
+        let u =
+          CallT
+            {
+              use_op = unknown_use;
+              reason;
+              call_action = ConcretizeCallee t;
+              return_hint = hint_unavailable;
+            }
+        in
+        Flow_js.flow cx (func_t, u)
+    )
+
+  let rec get_func cx reason t =
+    (* Lets us coerce things like ClassT to function types if possible. *)
+    let t = simplify_fun_t cx t in
+    match Flow_js.possible_concrete_types_for_inspection cx reason t with
+    | [] -> []
+    | t :: _ ->
+      (* NOTE since we're not merging unions of signatures to a single one,
+       * keep the first member. This shouldn't be common. *)
+      get_func_no_union cx (TypeUtil.reason_of_t t) t
+
+  and get_func_no_union cx reason t =
+    let open Type in
+    match t with
+    | GenericT { bound = t; _ } -> get_func cx reason t
+    | DefT (_, FunT _)
+    | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) ->
+      [fix_reason_of_t t]
+    | IntersectionT (_, rep) -> InterRep.members rep |> List.concat_map (get_func cx reason)
+    | _ -> []
+
   let rec get_prop_of_obj cx name reason t =
     Flow_js.possible_concrete_types_for_inspection cx reason t
     |> Base.List.filter_map ~f:(fun t -> get_prop_of_obj_no_union cx name (TypeUtil.reason_of_t t) t)
@@ -355,42 +399,14 @@ module Callee_finder = struct
     | _ -> None
 end
 
-let rec collect_functions ~jsdoc ~exact_by_default = function
-  | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->
-    let details = func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return in
-    [details]
-  | Ty.Inter (t1, t2, ts) ->
-    Base.List.concat_map ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
-  | _ -> []
-
-(* Ty_normalizer_flow will attempt to recover an alias name for this type. Given that
- * in collect_functions we try to match against the structure of the type, we
- * would rather bypass the alias on the toplevel of the type. It is still
- * desirable that deeper within the type aliases are maintained. Note that
- * alternatively we could updated the normalizer to perform a one-off expansion
- * of the toplevel alias, but that would be more complex that fixing this here. *)
-let rec fix_alias_reason cx t =
-  let open Type in
-  let t = Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t in
-  let t' = TypeUtil.mod_reason_of_t Reason.(update_desc_reason invalidate_rtype_alias) t in
-  match t' with
-  | IntersectionT (r, rep) ->
-    let (t0, (t1, ts)) = InterRep.members_nel rep in
-    let t0 = fix_alias_reason cx t0 in
-    let t1 = fix_alias_reason cx t1 in
-    let ts = Base.List.map ~f:(fix_alias_reason cx) ts in
-    IntersectionT (r, InterRep.make t0 t1 ts)
-  | _ -> t'
-
 let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~loc_of_aloc ~cx ~typed_ast loc with
   | Some (Callee_finder.FunCallData { type_ = t; active_parameter; loc = callee_loc }) ->
-    let t' = fix_alias_reason cx t in
+    let ts = Callee_finder.get_func cx (TypeUtil.reason_of_t t) t in
     let norm_options = Ty_normalizer_env.default_options in
     let genv =
       Ty_normalizer_flow.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
     in
-    let ty = Ty_normalizer_flow.from_type genv t' in
     let jsdoc =
       match
         GetDef_js.get_def
@@ -409,14 +425,17 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
         Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem getdef_loc
       | _ -> None
     in
-    (match ty with
-    | Ok (Ty.Type ty) ->
-      let exact_by_default = Context.exact_by_default cx in
-      (match collect_functions ~jsdoc ~exact_by_default ty with
-      | [] -> Ok None
-      | funs -> Ok (Some (funs, active_parameter)))
-    | Ok _ -> Ok None
-    | Error err -> Error err)
+    let funs =
+      Base.List.filter_map ts ~f:(fun fn ->
+          let ty = Ty_normalizer_flow.from_type genv fn in
+          match ty with
+          | Ok (Ty.Type (Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ })) ->
+            let exact_by_default = Context.exact_by_default cx in
+            Some (func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return)
+          | _ -> None
+      )
+    in
+    Ok (Some (funs, active_parameter))
   | Some (Callee_finder.JsxAttrData { name; sigs = ts }) ->
     let norm_options = Ty_normalizer_env.default_options in
     let genv =

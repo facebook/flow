@@ -1520,7 +1520,35 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(): void',
+                  parameters: [],
+                },
+                {
+                  label: '(x: string): void',
+                  parameters: [
+                    {
+                      label: 'x: string',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: A, y: A): void',
+                  parameters: [
+                    {
+                      label: 'x: A',
+                    },
+                    {
+                      label: 'y: A',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
@@ -1538,7 +1566,35 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(): void',
+                  parameters: [],
+                },
+                {
+                  label: '(x: string): void',
+                  parameters: [
+                    {
+                      label: 'x: string',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: A, y: A): void',
+                  parameters: [
+                    {
+                      label: 'x: A',
+                    },
+                    {
+                      label: 'y: A',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
@@ -1595,7 +1651,28 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1): 1',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 2): 2',
+                  parameters: [
+                    {
+                      label: 'x: 2',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
@@ -1613,7 +1690,28 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1): 1',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 2): 2',
+                  parameters: [
+                    {
+                      label: 'x: 2',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
@@ -1631,7 +1729,28 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1): void',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 2): void',
+                  parameters: [
+                    {
+                      label: 'x: 2',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
@@ -1649,7 +1768,28 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(x: X): void',
+                  parameters: [
+                    {
+                      label: 'x: X',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: X): void',
+                  parameters: [
+                    {
+                      label: 'x: X',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
@@ -1667,7 +1807,28 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/signatureHelp',
-            result: null,
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1): void',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 2): void',
+                  parameters: [
+                    {
+                      label: 'x: 2',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
           },
         ],
         [
