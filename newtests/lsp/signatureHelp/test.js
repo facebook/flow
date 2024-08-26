@@ -785,6 +785,90 @@ module.exports = (suite(
       ),
       lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
         textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+        },
+        position: {line: 41, character: 6},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1, y: 2): 1',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param',
+                      },
+                    },
+                    {
+                      label: 'y: 2',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param',
+                      },
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+        },
+        position: {line: 42, character: 8},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: {
+              signatures: [
+                {
+                  label: '(x: 1, y: 2): 1',
+                  parameters: [
+                    {
+                      label: 'x: 1',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param',
+                      },
+                    },
+                    {
+                      label: 'y: 2',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param',
+                      },
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 1,
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
         },
         position: {line: 8, character: 4},
@@ -1493,6 +1577,231 @@ module.exports = (suite(
               ],
               activeSignature: 0,
               activeParameter: 0,
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 99, character: 7},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: null,
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 103, character: 7},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: null,
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 114, character: 7},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: null,
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 123, character: 7},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: null,
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 132, character: 7},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: null,
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 152, character: 7},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: {
+              signatures: [
+                {
+                  label: '(x: 10, y: 11): 1',
+                  parameters: [
+                    {
+                      label: 'x: 10',
+                    },
+                    {
+                      label: 'y: 11',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 20, y: 21): 2',
+                  parameters: [
+                    {
+                      label: 'x: 20',
+                    },
+                    {
+                      label: 'y: 21',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 0,
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 153, character: 9},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: {
+              signatures: [
+                {
+                  label: '(x: 10, y: 11): 1',
+                  parameters: [
+                    {
+                      label: 'x: 10',
+                    },
+                    {
+                      label: 'y: 11',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 20, y: 21): 2',
+                  parameters: [
+                    {
+                      label: 'x: 20',
+                    },
+                    {
+                      label: 'y: 21',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 1,
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+        },
+        position: {line: 154, character: 9},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/signatureHelp',
+            result: {
+              signatures: [
+                {
+                  label: '(x: 10, y: 11): 1',
+                  parameters: [
+                    {
+                      label: 'x: 10',
+                    },
+                    {
+                      label: 'y: 11',
+                    },
+                  ],
+                },
+                {
+                  label: '(x: 20, y: 21): 2',
+                  parameters: [
+                    {
+                      label: 'x: 20',
+                    },
+                    {
+                      label: 'y: 21',
+                    },
+                  ],
+                },
+              ],
+              activeSignature: 0,
+              activeParameter: 1,
             },
           },
         ],

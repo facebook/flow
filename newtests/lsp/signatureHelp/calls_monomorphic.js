@@ -31,3 +31,14 @@ function x6(g: ?{ f: F }) {
     g.f(/* here */)
   }
 }
+
+function jsdoc() {
+  /**
+   * @param x - 1st param
+   * @param y - 2nd param
+   */
+  declare function foo(x: 1, y: 2): 1;
+
+  foo(/* here */);
+  foo(1, /* here */);
+}

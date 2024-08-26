@@ -89,3 +89,68 @@ function test_overload() {
   declare function f(x: 2): 2;
   f(/* here */);
 }
+
+// overloaded bounds
+
+function test_overloaded_bound() {
+  type T1 = (x: 1) => 1;
+  type T2 = (x: 2) => 2;
+
+  function test1<T: T1 & T2>(fn: T) {
+    fn(/* here */); // TODO
+  }
+
+  function test2<X1: T1, X2: T2>(fn: X1 & X2) {
+    fn(/* here */); // TODO
+  }
+}
+
+// overloaded coercion (ClassT ~> FunT)
+
+function overloaded_coercion() {
+  declare class C1 { (x: 1): void; }
+  declare class C2 { (x: 2): void; }
+
+  function test4(fn: C1 & C2) {
+    fn(/* here */); // TODO
+  }
+}
+
+function overloaded_coercion_poly() {
+  declare class C1 { <X: 1>(x: X): void; }
+  declare class C2 { <X: 2>(x: X): void; }
+
+  function test4(fn: C1 & C2) {
+    fn(/* here */); // TODO
+  }
+}
+
+function overloaded_class_coercion() {
+  declare class C1 { static (x: 1): void; }
+  declare class C2 { static (x: 2): void; }
+
+  function test4(fn: typeof C1 & typeof C2) {
+    fn(/* here */); // TODO
+  }
+}
+
+// overloaded jsdoc
+
+function overloaded_jsdoc() {
+  /**
+   * first overload
+   * @param x - 1st param of first overload
+   * @param y - 2nd param of first overload
+   */
+  declare function foo(x: 10, y: 11): 1;
+  /**
+   * second overload
+   * @param x - 1st param of second overload
+   * @param y - 2nd param of second overload
+   */
+  declare function foo(x: 20, y: 21): 2;
+
+  foo(/* here */); // TODO jsdoc
+  foo(10, /* here */); // TODO jsdoc
+  foo(20, /* here */); // TODO jsdoc, select the right activeSignature
+}
