@@ -548,9 +548,14 @@ let emit_refinement_information_as_errors =
       (Context.refined_locations cx)
   in
   let emit_invalidated_locations_info cx =
-    ALocSet.iter
-      (fun read_loc ->
-        Flow_js_utils.add_output cx Error_message.(EDevOnlyInvalidatedRefinementInfo { read_loc }))
+    ALocMap.iter
+      (fun read_loc invalidation_info ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EDevOnlyInvalidatedRefinementInfo
+              { read_loc; invalidation_info = ALocMap.elements invalidation_info }
+          ))
       (Context.aggressively_invalidated_locations cx)
   in
   fun cx ->

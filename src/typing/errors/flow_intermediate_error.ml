@@ -2433,7 +2433,22 @@ let to_printable_error :
       ]
     | MessageDevOnlyRefinedLocInfo { refining_locs } ->
       text "Refined at" :: Base.List.map refining_locs ~f:no_desc_ref
-    | MessageDevOnlyInvalidatedRefinementInfo -> [text "Refinement invalidated."]
+    | MessageDevOnlyInvalidatedRefinementInfo invalidation_info ->
+      let invalidation_info_msg =
+        Base.List.map invalidation_info ~f:(fun (loc, reason) ->
+            let reason =
+              match reason with
+              | Refinement_invalidation.FunctionCall -> "function call"
+              | Refinement_invalidation.ConstructorCall -> "constructor call"
+              | Refinement_invalidation.PropertyAssignment -> "property assignment"
+              | Refinement_invalidation.Await -> "await expression"
+              | Refinement_invalidation.Yield -> "yield expression"
+            in
+            [text reason; text " at"; no_desc_ref loc]
+        )
+        |> Flow_errors_utils.Friendly.conjunction_concat
+      in
+      text "Refinement invalidated due to " :: invalidation_info_msg
     | MessageDocblockError err ->
       (match err with
       | MultipleFlowAttributes ->

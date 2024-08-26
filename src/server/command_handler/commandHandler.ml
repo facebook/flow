@@ -725,7 +725,7 @@ let infer_type
         ServerProt.Response.InferType.loc = Loc.none;
         tys;
         refining_locs = [];
-        refinement_invalidated = false;
+        refinement_invalidated = [];
         documentation = None;
       }
     in
@@ -767,7 +767,7 @@ let infer_type
                   loc;
                   tys = Friendly (Some { type_str; refs = None });
                   refining_locs = [];
-                  refinement_invalidated = false;
+                  refinement_invalidated = [];
                   documentation = None;
                 },
             None
@@ -2413,13 +2413,38 @@ let handle_persistent_infer_type
         Some location.Lsp.Location.range
     in
     let invalidation_info =
-      if refinement_invalidated then
+      let invalidation_info =
+        Base.List.filter_map refinement_invalidated ~f:(fun (loc, reason) ->
+            Base.Option.map
+              (loc_to_vscode_linked_location_in_markdown ~default_uri loc)
+              ~f:(fun loc ->
+                let reason =
+                  match reason with
+                  | Refinement_invalidation.FunctionCall -> "function call"
+                  | Refinement_invalidation.ConstructorCall -> "constructor call"
+                  | Refinement_invalidation.PropertyAssignment -> "property assignment"
+                  | Refinement_invalidation.Await -> "await expression"
+                  | Refinement_invalidation.Yield -> "yield expression"
+                in
+                (loc, reason)
+            )
+        )
+      in
+      if Base.List.is_empty invalidation_info then
+        []
+      else
+        let reasons_str =
+          invalidation_info
+          |> Base.List.map ~f:(fun (loc, reason) -> Printf.sprintf "%s at %s" reason loc)
+          |> Base.String.concat ~sep:", "
+        in
         [
           MarkedString
-            "Refinement invalidated. Refactor this property to a constant to keep refinements.";
+            (Printf.sprintf
+               "Refinement invalidated due to %s. Refactor this property to a constant to keep refinements."
+               reasons_str
+            );
         ]
-      else
-        []
     in
     let refinement_info =
       let refining_locs =

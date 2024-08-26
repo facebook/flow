@@ -35,21 +35,23 @@ let type_at_pos
   let loc = Loc.cursor (Some file) line col in
   let (refining_locs, refinement_invalidated) =
     match include_refinement_info with
-    | None -> ([], false)
+    | None -> ([], [])
     | Some loc_of_aloc ->
       let open Loc_collections in
-      let contains_cursor aloc = Loc.contains (loc_of_aloc aloc) loc in
+      let contains_cursor aloc _ = Loc.contains (loc_of_aloc aloc) loc in
       let refining_locs =
-        ALocMap.filter (fun aloc _ -> contains_cursor aloc) (Context.refined_locations cx)
+        ALocMap.filter contains_cursor (Context.refined_locations cx)
         |> ALocMap.values
         |> Base.List.fold ~init:ALocSet.empty ~f:ALocSet.union
         |> ALocSet.elements
         |> List.map loc_of_aloc
       in
       let refinement_invalidated =
-        ALocSet.filter contains_cursor (Context.aggressively_invalidated_locations cx)
-        |> ALocSet.is_empty
-        |> not
+        ALocMap.filter contains_cursor (Context.aggressively_invalidated_locations cx)
+        |> ALocMap.values
+        |> Base.List.fold ~init:ALocMap.empty ~f:ALocMap.union
+        |> ALocMap.elements
+        |> List.map (fun (loc, reason) -> (loc_of_aloc loc, reason))
       in
       (refining_locs, refinement_invalidated)
   in

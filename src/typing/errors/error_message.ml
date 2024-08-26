@@ -625,7 +625,10 @@ and 'loc t' =
       refined_loc: 'loc;
       refining_locs: 'loc list;
     }
-  | EDevOnlyInvalidatedRefinementInfo of { read_loc: 'loc }
+  | EDevOnlyInvalidatedRefinementInfo of {
+      read_loc: 'loc;
+      invalidation_info: ('loc * Refinement_invalidation.reason) list;
+    }
   (* As the name suggest, don't use this for production purposes, but feel free to use it to
    * quickly test out some ideas. *)
   | ETemporaryHardcodedErrorForPrototyping of 'loc virtual_reason * string
@@ -1384,8 +1387,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
-  | EDevOnlyInvalidatedRefinementInfo { read_loc } ->
-    EDevOnlyInvalidatedRefinementInfo { read_loc = f read_loc }
+  | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
+    EDevOnlyInvalidatedRefinementInfo
+      {
+        read_loc = f read_loc;
+        invalidation_info = List.map (fun (l, r) -> (f l, r)) invalidation_info;
+      }
   | ETemporaryHardcodedErrorForPrototyping (r, s) ->
     ETemporaryHardcodedErrorForPrototyping (map_reason r, s)
 
@@ -1517,7 +1524,7 @@ let util_use_op_of_msg nope util = function
   | EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc } ->
     util use_op (fun use_op -> EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc })
   | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs = _ }
-  | EDevOnlyInvalidatedRefinementInfo { read_loc = _ }
+  | EDevOnlyInvalidatedRefinementInfo { read_loc = _; invalidation_info = _ }
   | ETemporaryHardcodedErrorForPrototyping (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1887,7 +1894,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
-  | EDevOnlyInvalidatedRefinementInfo { read_loc } -> Some read_loc
+  | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
@@ -2155,8 +2162,8 @@ let friendly_message_of_msg = function
       }
   | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs } ->
     Normal (MessageDevOnlyRefinedLocInfo { refining_locs })
-  | EDevOnlyInvalidatedRefinementInfo { read_loc = _ } ->
-    Normal MessageDevOnlyInvalidatedRefinementInfo
+  | EDevOnlyInvalidatedRefinementInfo { read_loc = _; invalidation_info } ->
+    Normal (MessageDevOnlyInvalidatedRefinementInfo invalidation_info)
   | ETemporaryHardcodedErrorForPrototyping (_, str) ->
     Normal (MessagePlainTextReservedForInternalErrorOnly str)
   | EExportValueAsType (_, export_name) ->

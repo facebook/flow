@@ -268,7 +268,7 @@ module Response = struct
       loc: Loc.t;
       tys: payload;
       refining_locs: Loc.t list;
-      refinement_invalidated: bool;
+      refinement_invalidated: (Loc.t * Refinement_invalidation.reason) list;
       documentation: string option;
     }
   end

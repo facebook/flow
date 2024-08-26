@@ -543,7 +543,7 @@ type 'loc message =
   | MessageDeprecatedObjMap
   | MessageDeprecatedPredicate
   | MessageDevOnlyRefinedLocInfo of { refining_locs: 'loc list }
-  | MessageDevOnlyInvalidatedRefinementInfo
+  | MessageDevOnlyInvalidatedRefinementInfo of ('loc * Refinement_invalidation.reason) list
   | MessageDocblockError of docblock_error
   | MessageDoesNotRender of {
       lower: 'loc virtual_reason;

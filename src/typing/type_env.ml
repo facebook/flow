@@ -668,7 +668,7 @@ let get_refinement cx key loc =
     in
     (match ALocMap.find_opt loc env_refinement_invalidation_info with
     | None -> ()
-    | Some _ -> Context.add_aggressively_invalidated_location cx loc);
+    | Some info -> Context.add_aggressively_invalidated_location cx loc info);
     None
 
 let get_var ?(lookup_mode = ForValue) cx name loc =
