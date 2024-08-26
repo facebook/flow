@@ -33,6 +33,26 @@ let type_at_pos
     line
     col =
   let loc = Loc.cursor (Some file) line col in
+  let (refining_locs, refinement_invalidated) =
+    match include_refinement_info with
+    | None -> ([], false)
+    | Some loc_of_aloc ->
+      let open Loc_collections in
+      let contains_cursor aloc = Loc.contains (loc_of_aloc aloc) loc in
+      let refining_locs =
+        ALocMap.filter (fun aloc _ -> contains_cursor aloc) (Context.refined_locations cx)
+        |> ALocMap.values
+        |> Base.List.fold ~init:ALocSet.empty ~f:ALocSet.union
+        |> ALocSet.elements
+        |> List.map loc_of_aloc
+      in
+      let refinement_invalidated =
+        ALocSet.filter contains_cursor (Context.aggressively_invalidated_locations cx)
+        |> ALocSet.is_empty
+        |> not
+      in
+      (refining_locs, refinement_invalidated)
+  in
   let (json_data, loc, ty) =
     let open Query_types in
     let result =
@@ -76,18 +96,6 @@ let type_at_pos
              )
       in
       (json_data, loc, Some tys)
-  in
-  let refining_locs =
-    match include_refinement_info with
-    | None -> []
-    | Some loc_of_aloc ->
-      let open Loc_collections in
-      ALocMap.find_opt (ALoc.of_loc loc) (Context.refined_locations cx)
-      |> Base.Option.value_map ~default:[] ~f:ALocSet.elements
-      |> List.map loc_of_aloc
-  in
-  let refinement_invalidated =
-    Loc_collections.ALocSet.mem (ALoc.of_loc loc) (Context.aggressively_invalidated_locations cx)
   in
   ((loc, ty, refining_locs, refinement_invalidated), json_data)
 

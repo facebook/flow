@@ -1176,9 +1176,7 @@ module Make
       let ((_, discriminant_t), _) = discriminant_ast in
       let discriminant_after_check =
         if not has_default then
-          let refinement_key =
-            Refinement.key ~allow_optional:true discriminant |> Base.Option.map ~f:snd
-          in
+          let refinement_key = Refinement.key ~allow_optional:true discriminant in
           Type_env.discriminant_after_negated_cases cx switch_loc refinement_key
         else
           None

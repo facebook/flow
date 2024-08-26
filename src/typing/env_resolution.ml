@@ -783,7 +783,7 @@ let rec resolve_binding cx reason loc b =
         (* The key is used to generate a reason for read,
            and only the last prop in the chain matters. *)
         let key = (internal_name "_", [Key.Prop prop]) in
-        Type_env.get_refinement cx key ~hover_loc_opt:None ~refi_loc:prop_loc
+        Type_env.get_refinement cx key prop_loc
       | _ -> None
     in
     (match refined_type with
