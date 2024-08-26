@@ -131,11 +131,13 @@ module Callee_finder = struct
     | FunCallData of {
         type_: Type.t;
         active_parameter: int;
-        loc: Loc.t;
+        loc: ALoc.t;
       }
     | JsxAttrData of {
+        type_: Type.t;
         name: string;
-        sigs: (Type.t * bool) list;
+        loc: ALoc.t;
+        key_loc: ALoc.t;
       }
 
   exception Found of t option
@@ -285,9 +287,8 @@ module Callee_finder = struct
             let _ = recurse () in
 
             let active_parameter = find_argument ~loc_of_aloc cursor arguments 0 in
-            let loc = loc_of_aloc callee_loc in
             let type_ = get_callee_type () in
-            raise (Found (Some (FunCallData { type_; active_parameter; loc })))
+            raise (Found (Some (FunCallData { type_; active_parameter; loc = callee_loc })))
           else
             recurse ()
 
@@ -374,16 +375,10 @@ module Callee_finder = struct
                   ->
                   if this#covers_target attr_loc then (
                     match (elt_name, attr_name) with
-                    | ( Identifier _,
-                        Attribute.Identifier ((key_loc, _), { Identifier.name = "key" as name; _ })
+                    | ( Identifier ((_, t), _),
+                        Attribute.Identifier ((key_loc, _), { Identifier.name; _ })
                       ) ->
-                      (* 'key' is special-cased *)
-                      let reason_key = Reason.mk_reason (Reason.RCustom "React key") key_loc in
-                      let t = TypeUtil.maybe (Flow_js.get_builtin_type cx reason_key "React$Key") in
-                      raise (Found (Some (JsxAttrData { name; sigs = [(t, true)] })))
-                    | (Identifier ((_, t), _), Attribute.Identifier (_, { Identifier.name; _ })) ->
-                      let ts = get_attribute_type cx loc t (Reason.OrdinaryName name) in
-                      raise (Found (Some (JsxAttrData { name; sigs = ts })))
+                      raise (Found (Some (JsxAttrData { type_ = t; name; loc; key_loc })))
                     | _ -> raise (Found None)
                   )
                   )
@@ -416,7 +411,7 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
           ~ast
           ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
           ~purpose:Get_def_types.Purpose.JSDoc
-          callee_loc
+          (loc_of_aloc callee_loc)
       with
       | GetDef_js.Get_def_result.Def (locs, _)
       | GetDef_js.Get_def_result.Partial (locs, _, _)
@@ -436,7 +431,16 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
       )
     in
     Ok (Some (funs, active_parameter))
-  | Some (Callee_finder.JsxAttrData { name; sigs = ts }) ->
+  | Some (Callee_finder.JsxAttrData { type_ = t; name; loc; key_loc }) ->
+    let ts =
+      if name = "key" then
+        (* 'key' is special-cased *)
+        let reason_key = Reason.mk_reason (Reason.RCustom "React key") key_loc in
+        let t = TypeUtil.maybe (Flow_js.get_builtin_type cx reason_key "React$Key") in
+        [(t, true)]
+      else
+        Callee_finder.get_attribute_type cx loc t (Reason.OrdinaryName name)
+    in
     let norm_options = Ty_normalizer_env.default_options in
     let genv =
       Ty_normalizer_flow.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
