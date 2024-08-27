@@ -50,7 +50,7 @@ module type S = sig
     ?lib:bool ->
     ?exclude_syms:SSet.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
-    Env_api.values * (int -> Env_api.refinement)
+    Env_api.values * Refinement_invalidation.t ALocMap.t * (int -> Env_api.refinement)
 end
 
 module PostInferenceCheck = Env_api
@@ -5970,10 +5970,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     )
 
   let program cx ?lib ?exclude_syms program =
-    let (_, { Env_api.env_values; refinement_of_id; _ }) =
+    let (_, { Env_api.env_values; env_refinement_invalidation_info; refinement_of_id; _ }) =
       program_with_scope cx ?lib ?exclude_syms program
     in
-    (env_values, refinement_of_id)
+    (env_values, env_refinement_invalidation_info, refinement_of_id)
 end
 
 module DummyFlow (Context : C) = struct

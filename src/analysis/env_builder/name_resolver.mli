@@ -30,7 +30,9 @@ module type S = sig
     ?lib:bool ->
     ?exclude_syms:SSet.t ->
     (ALoc.t, ALoc.t) Flow_ast.Program.t ->
-    Env_api.values * (int -> Env_api.refinement)
+    Env_api.values
+    * Refinement_invalidation.t Loc_collections.ALocMap.t
+    * (int -> Env_api.refinement)
 end
 
 module Make (Context : C) (_ : F with type cx = Context.t) :

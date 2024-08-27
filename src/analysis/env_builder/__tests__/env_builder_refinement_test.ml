@@ -76,8 +76,23 @@ let print_values refinement_of_id =
     | Number _ -> "number"
     | DeclaredFunction l -> Printf.sprintf "declared function %s" (L.debug_to_string l)
   in
-  fun values ->
-    let kvlist = L.LMap.bindings values in
+  let print_invalidation map =
+    map
+    |> L.LMap.bindings
+    |> Base.List.map ~f:(fun (loc, reason) ->
+           let reason =
+             match reason with
+             | Refinement_invalidation.FunctionCall -> "function call"
+             | Refinement_invalidation.ConstructorCall -> "constructor call"
+             | Refinement_invalidation.PropertyAssignment -> "property assignment"
+             | Refinement_invalidation.Await -> "await expression"
+             | Refinement_invalidation.Yield -> "yield expression"
+           in
+           Printf.sprintf "%s at %s" reason (L.debug_to_string loc)
+       )
+    |> Base.String.concat ~sep:",\n    "
+  in
+  fun values invalidations ->
     let strlist =
       Base.List.map
         ~f:(fun (read_loc, { def_loc = _; val_kind = _; write_locs; name = _; id = _ }) ->
@@ -85,7 +100,14 @@ let print_values refinement_of_id =
             "%s => {\n    %s\n  }"
             (L.debug_to_string read_loc)
             (String.concat ",\n    " @@ Base.List.map ~f:print_value write_locs))
-        kvlist
+        (L.LMap.bindings values)
+      @ Base.List.map
+          ~f:(fun (read_loc, invalidation) ->
+            Printf.sprintf
+              "%s => invalidated refinement by {\n    %s\n  }"
+              (L.debug_to_string read_loc)
+              (print_invalidation invalidation))
+          (L.LMap.bindings invalidations)
     in
     Printf.printf "[\n  %s]" (String.concat ";\n  " strlist)
 
@@ -105,8 +127,8 @@ let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) ?lib ?e
 
   );
   let aloc_ast = parse_with_alocs contents in
-  let refined_reads, refinement_of_id = Name_resolver.program () ?lib ?exclude_syms aloc_ast in
-  print_values refinement_of_id refined_reads;
+  let refined_reads, invalidations, refinement_of_id = Name_resolver.program () ?lib ?exclude_syms aloc_ast in
+  print_values refinement_of_id refined_reads invalidations;
   react_runtime := Options.ReactRuntimeClassic;
   jsx_mode := Options.Jsx_react
 
@@ -1391,6 +1413,9 @@ if (x.p != null) {
         };
         (5, 2) to (5, 3) => {
           {refinement = Not (PropNullishR p); writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (5, 2) to (5, 5) => invalidated refinement by {
+          function call at (4, 2) to (4, 11)
         }] |}]
 
 let%expect_test "conditional_expression" =
@@ -4365,6 +4390,9 @@ y.foo; // still refined
         };
         (7, 0) to (7, 5) => {
           (5, 0) to (5, 5): (some property)
+        };
+        (6, 0) to (6, 5) => invalidated refinement by {
+          property assignment at (5, 0) to (5, 9)
         }] |}]
 
 let%expect_test "heap_refinement_write_havoc_elem" =
@@ -4399,6 +4427,12 @@ y.foo; // should no longer be refined
         };
         (8, 0) to (8, 1) => {
           (4, 4) to (4, 5): (`y`)
+        };
+        (7, 0) to (7, 5) => invalidated refinement by {
+          property assignment at (6, 0) to (6, 8)
+        };
+        (8, 0) to (8, 5) => invalidated refinement by {
+          property assignment at (6, 0) to (6, 8)
         }] |}]
 
 let%expect_test "heap_refinement_havoc_on_write" =
@@ -6488,6 +6522,12 @@ x?.y.z?.w(x.y.z);
         };
         (5, 9) to (5, 10) => {
           (2, 12) to (2, 13): (`x`)
+        };
+        (4, 0) to (4, 4) => invalidated refinement by {
+          function call at (3, 0) to (3, 9)
+        };
+        (5, 1) to (5, 5) => invalidated refinement by {
+          function call at (4, 0) to (4, 16)
         }] |}]
 
 let%expect_test "optional_refi3" =
