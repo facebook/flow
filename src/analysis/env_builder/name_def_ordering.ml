@@ -1093,8 +1093,8 @@ struct
         | UnannotatedParameter _ -> state
       in
       let depends_of_selector state = function
-        | Computed { expression; _ } -> depends_of_expression expression state
-        | Prop { prop_loc; _ } ->
+        | Selector.Computed { expression; _ } -> depends_of_expression expression state
+        | Selector.Prop { prop_loc; _ } ->
           (* In `const {d: {a, b}} = obj`, each prop might be reading from a refined value, \
              which is a write. We need to track these dependencies as well. *)
           let visitor =
@@ -1103,10 +1103,10 @@ struct
           let writes = visitor#find_writes ~for_type:false ~allow_missing:true prop_loc in
           Base.List.iter ~f:(visitor#add ~why:prop_loc) writes;
           visitor#acc
-        | Default
-        | Elem _
-        | ObjRest _
-        | ArrRest _ ->
+        | Selector.Default
+        | Selector.Elem _
+        | Selector.ObjRest _
+        | Selector.ArrRest _ ->
           state
       in
       let depends_of_lhs id_loc lhs_member_expression =
@@ -1239,7 +1239,7 @@ struct
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
           false
-        | Select { selector = Computed _; _ } -> false
+        | Select { selector = Selector.Computed _; _ } -> false
         | Select { parent = (_, binding); _ } -> bind_loop binding
         | Hooklike binding -> bind_loop binding
       in

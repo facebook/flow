@@ -8,54 +8,33 @@
 module Ast = Flow_ast
 open Ast.Pattern
 
-type selector =
-  | Elem of {
-      index: int;
-      has_default: bool;
-    }
-  | Prop of {
-      prop: string;
-      prop_loc: ALoc.t;
-      has_default: bool;
-    }
-  | Computed of {
-      expression: (ALoc.t, ALoc.t) Ast.Expression.t;
-      has_default: bool;
-    }
-  | ObjRest of {
-      used_props: string list;
-      after_computed: bool;
-    }
-  | ArrRest of int
-  | Default
-
 type binding =
   | Root
   | Rest
   | Select of {
-      selector: selector;
+      selector: Selector.t;
       parent: ALoc.t * binding;
     }
 
 let array_element (parent_loc, bind) index direct_default =
-  let selector = Elem { index; has_default = direct_default <> None } in
+  let selector = Selector.Elem { index; has_default = direct_default <> None } in
   Select { selector; parent = (parent_loc, bind) }
 
 let array_rest_element (parent_loc, bind) i =
-  let selector = ArrRest i in
+  let selector = Selector.ArrRest i in
   Select { selector; parent = (parent_loc, bind) }
 
 let object_named_property (parent_loc, bind) prop_loc x direct_default =
   let has_default = direct_default <> None in
-  let selector = Prop { prop = x; prop_loc; has_default } in
+  let selector = Selector.Prop { prop = x; prop_loc; has_default } in
   Select { selector; parent = (parent_loc, bind) }
 
 let object_computed_property (parent_loc, bind) e direct_default =
-  let selector = Computed { expression = e; has_default = direct_default <> None } in
+  let selector = Selector.Computed { expression = e; has_default = direct_default <> None } in
   Select { selector; parent = (parent_loc, bind) }
 
 let object_rest_property (parent_loc, bind) xs has_computed =
-  let selector = ObjRest { used_props = xs; after_computed = has_computed } in
+  let selector = Selector.ObjRest { used_props = xs; after_computed = has_computed } in
   Select { selector; parent = (parent_loc, bind) }
 
 let object_property (parent_loc, bind) xs key direct_default =

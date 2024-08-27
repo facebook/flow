@@ -47,24 +47,24 @@ end = struct
     | _ -> None
 
   let array_element (parent_loc, acc) index direct_default =
-    let selector = Elem { index; has_default = direct_default <> None } in
+    let selector = Selector.Elem { index; has_default = direct_default <> None } in
     Select { selector; parent = (parent_loc, acc) }
 
   let array_rest_element (parent_loc, acc) i =
-    let selector = ArrRest i in
+    let selector = Selector.ArrRest i in
     Select { selector; parent = (parent_loc, acc) }
 
   let object_named_property (parent_loc, acc) prop_loc x direct_default =
     let has_default = direct_default <> None in
-    let selector = Prop { prop = x; prop_loc; has_default } in
+    let selector = Selector.Prop { prop = x; prop_loc; has_default } in
     Select { selector; parent = (parent_loc, acc) }
 
   let object_computed_property (parent_loc, acc) e direct_default =
-    let selector = Computed { expression = e; has_default = direct_default <> None } in
+    let selector = Selector.Computed { expression = e; has_default = direct_default <> None } in
     Select { selector; parent = (parent_loc, acc) }
 
   let object_rest_property (parent_loc, acc) xs has_computed =
-    let selector = ObjRest { used_props = xs; after_computed = has_computed } in
+    let selector = Selector.ObjRest { used_props = xs; after_computed = has_computed } in
     Select { selector; parent = (parent_loc, acc) }
 
   let object_property (parent_loc, acc) xs key direct_default =

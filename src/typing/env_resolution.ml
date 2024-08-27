@@ -148,22 +148,22 @@ let rec synthesizable_expression cx ?cond exp =
   | _ -> expression cx ?cond exp
 
 let mk_selector_reason_has_default cx loc = function
-  | Name_def.Elem { index = n; has_default } ->
+  | Selector.Elem { index = n; has_default } ->
     let key = DefT (mk_reason RNumber loc, NumT (Literal (None, (float n, string_of_int n)))) in
     (Type.Elem key, mk_reason (RArrayNthElement n) loc, has_default)
-  | Name_def.Prop { prop; prop_loc; has_default } ->
+  | Selector.Prop { prop; prop_loc; has_default } ->
     ( Type.Prop (prop, has_default),
       mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc,
       has_default
     )
-  | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc, false)
-  | Name_def.ObjRest { used_props; after_computed = _ } ->
+  | Selector.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc, false)
+  | Selector.ObjRest { used_props; after_computed = _ } ->
     (* TODO: eveyrthing after a computed prop should be optional *)
     (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc, false)
-  | Name_def.Computed { expression = exp; has_default } ->
+  | Selector.Computed { expression = exp; has_default } ->
     let t = expression cx exp in
     (Type.Elem t, mk_reason (RProperty None) loc, has_default)
-  | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
+  | Selector.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 
 let synthesize_expression_for_instantiation cx e =
   let cache = Context.node_cache cx in
@@ -779,7 +779,7 @@ let rec resolve_binding cx reason loc b =
   | Select { selector; parent = (parent_loc, binding) } ->
     let refined_type =
       match selector with
-      | Name_def.Prop { prop; prop_loc; _ } ->
+      | Selector.Prop { prop; prop_loc; _ } ->
         (* The key is used to generate a reason for read,
            and only the last prop in the chain matters. *)
         let key = (internal_name "_", [Key.Prop prop]) in
@@ -809,7 +809,7 @@ let rec resolve_binding cx reason loc b =
         )
       in
       if has_default then
-        let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
+        let (selector, reason, _) = mk_selector_reason_has_default cx loc Selector.Default in
         Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
             Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
                 Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))

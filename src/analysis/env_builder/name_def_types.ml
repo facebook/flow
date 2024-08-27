@@ -129,32 +129,11 @@ type root =
   | UnannotatedParameter of Reason.t
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
-type selector =
-  | Elem of {
-      index: int;
-      has_default: bool;
-    }
-  | Prop of {
-      prop: string;
-      prop_loc: ALoc.t;
-      has_default: bool;
-    }
-  | Computed of {
-      expression: (ALoc.t, ALoc.t) Ast.Expression.t;
-      has_default: bool;
-    }
-  | ObjRest of {
-      used_props: string list;
-      after_computed: bool;
-    }
-  | ArrRest of int
-  | Default
-
 type binding =
   | Root of root
   | Hooklike of binding
   | Select of {
-      selector: selector;
+      selector: Selector.t;
       parent: ALoc.t * binding;
     }
 
@@ -255,13 +234,7 @@ module Print = struct
     | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
     | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 
-  let string_of_selector = function
-    | Elem { index; _ } -> spf "[%d]" index
-    | Prop { prop; _ } -> spf ".%s" prop
-    | Computed _ -> ".[computed]"
-    | ObjRest _ -> "{ ... }"
-    | ArrRest _ -> "[...]"
-    | Default -> "<with default>"
+  let string_of_selector = Selector.to_string
 
   let rec string_of_binding = function
     | Root r -> string_of_root r
