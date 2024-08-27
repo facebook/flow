@@ -5934,7 +5934,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | Options.Jsx_pragma (_, ast) -> Some ast
     in
     let enable_enums = Context.enable_enums cx in
-    let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
+    let (_ssa_completion_state, ((scopes, _, _) as prepass)) =
       Ssa_builder.program_with_scope_and_jsx_pragma
         ~flowmin_compatibility:false
         ~enable_enums
@@ -5957,7 +5957,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     ( completion_state,
       {
         Env_api.scopes;
-        ssa_values;
         env_values = dead_code_marker#values;
         env_refinement_invalidation_info = env_walk#refinement_invalidation_info;
         env_entries = dead_code_marker#write_entries;

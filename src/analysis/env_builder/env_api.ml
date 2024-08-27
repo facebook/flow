@@ -212,7 +212,6 @@ module type S = sig
 
   type env_info = {
     scopes: Scope_api.info;
-    ssa_values: Ssa_api.values;
     env_values: values;
     env_refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     env_entries: env_entry EnvMap.t;
@@ -506,7 +505,6 @@ module Make
 
   type env_info = {
     scopes: Scope_api.info;
-    ssa_values: Ssa_api.values;
     env_values: values;
     env_refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     env_entries: env_entry EnvMap.t;
@@ -527,7 +525,6 @@ module Make
   let empty =
     {
       scopes = Scope_builder.Acc.init;
-      ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
       env_refinement_invalidation_info = L.LMap.empty;
       env_entries = EnvMap.empty;
