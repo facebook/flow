@@ -3084,8 +3084,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             let post_env = this#env_snapshot in
             SMap.merge_env [] pre_env post_env ~combine:(fun acc name pre_env_v post_env_v ->
                 let {
-                  PartialEnvSnapshot.env_val = env_val1;
-                  heap_refinements = heap_refinements1;
+                  PartialEnvSnapshot.env_val = post_env_val;
+                  heap_refinements = post_env_heap_refinements;
                   def_loc = _;
                 } =
                   match post_env_v with
@@ -3093,8 +3093,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   | None -> this#env_read_into_snapshot_from_below name
                 in
                 let {
-                  PartialEnvSnapshot.env_val = env_val2;
-                  heap_refinements = heap_refinements2;
+                  PartialEnvSnapshot.env_val = pre_env_val;
+                  heap_refinements = pre_env_heap_refinements;
                   def_loc = _;
                 } =
                   match pre_env_v with
@@ -3103,23 +3103,26 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 in
                 let acc =
                   HeapRefinementMap.fold
-                    (fun k heap_refinement1 acc ->
-                      match heap_refinement1 with
+                    (fun k post_env_heap_refinement acc ->
+                      match post_env_heap_refinement with
                       | Error _ -> acc
-                      | Ok heap_refinement1 ->
-                        (match HeapRefinementMap.find_opt k heap_refinements2 with
+                      | Ok post_env_heap_refinement ->
+                        (match HeapRefinementMap.find_opt k pre_env_heap_refinements with
                         | None
                         | Some (Error _) ->
                           RefinementKey.{ base = name; projections = k } :: acc
-                        | Some (Ok heap_refinement2) ->
-                          if Val.id_of_val heap_refinement1 = Val.id_of_val heap_refinement2 then
+                        | Some (Ok pre_env_heap_refinement) ->
+                          if
+                            Val.id_of_val post_env_heap_refinement
+                            = Val.id_of_val pre_env_heap_refinement
+                          then
                             acc
                           else
                             RefinementKey.{ base = name; projections = k } :: acc))
-                    heap_refinements1
+                    post_env_heap_refinements
                     acc
                 in
-                if Val.id_of_val env_val1 = Val.id_of_val env_val2 then
+                if Val.id_of_val pre_env_val = Val.id_of_val post_env_val then
                   (acc, None)
                 else
                   (RefinementKey.lookup_of_name name :: acc, None)
