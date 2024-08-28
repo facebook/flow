@@ -347,7 +347,7 @@ end = struct
     let (hd_scope, _) = env in
     iter_function_scope hd_scope ~f:(fun _ { val_ref; heap_refinements; _ } ->
         val_ref := Val.empty ();
-        heap_refinements := HeapRefinementMap.empty
+        heap_refinements := HeapRefinementMap.map (fun _ -> Ok (Val.empty ())) !heap_refinements
     )
 
   let update_env_with_partial_env_snapshot
