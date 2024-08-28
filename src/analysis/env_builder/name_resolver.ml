@@ -1446,7 +1446,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               (match HeapRefinementMap.find_opt projections heap_refinements with
               | None -> None
               | Some (Ok v) ->
-                if Val.is_projection v then
+                if Val.contains_bare_projection v then
                   None
                 else
                   Some (Ok v)
@@ -3023,21 +3023,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       let heap_val1 = heap_map_find key heap_entries1 in
                       let heap_val2 = heap_map_find key heap_entries2 in
                       if Val.id_of_val heap_val1 = Val.id_of_val heap_val2 then
-                        if Val.is_projection heap_val1 then
+                        if Val.contains_bare_projection heap_val1 then
                           None
                         else
                           Some (Ok heap_val1)
                       else
-                        Some (Ok (Val.merge refined_heap_val1 refined_heap_val2))
+                        let v = Val.merge refined_heap_val1 refined_heap_val2 in
+                        if Val.contains_bare_projection v then
+                          None
+                        else
+                          Some (Ok v)
                     | (Some (Ok _), Some (Error invalidation_info)) ->
                       let heap_val1 = heap_map_find key heap_entries1 in
-                      if Val.is_projection heap_val1 then
+                      if Val.contains_bare_projection heap_val1 then
                         None
                       else
                         Some (Error invalidation_info)
                     | (Some (Error invalidation_info), Some (Ok _)) ->
                       let heap_val2 = heap_map_find key heap_entries2 in
-                      if Val.is_projection heap_val2 then
+                      if Val.contains_bare_projection heap_val2 then
                         None
                       else
                         Some (Error invalidation_info)

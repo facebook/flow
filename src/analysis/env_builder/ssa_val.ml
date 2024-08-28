@@ -118,10 +118,13 @@ let is_declared_function t =
   | DeclaredFunction _ -> true
   | _ -> false
 
-let is_projection t =
-  match t.write_state with
-  | Projection _ -> true
-  | _ -> false
+let contains_bare_projection =
+  let rec loop = function
+    | Projection _ -> true
+    | PHI ts -> Base.List.exists ts ~f:loop
+    | _ -> false
+  in
+  (fun t -> loop t.write_state)
 
 let new_id () =
   let id = !curr_id in

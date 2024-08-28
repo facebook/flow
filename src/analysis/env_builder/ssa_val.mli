@@ -105,7 +105,7 @@ val is_undeclared_or_skipped : t -> bool
 
 val is_declared_function : t -> bool
 
-val is_projection : t -> bool
+val contains_bare_projection : t -> bool
 
 val debug_to_string : (int -> Env_api.refinement) -> t -> string
 
