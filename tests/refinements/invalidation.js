@@ -297,3 +297,17 @@ declare var p: boolean;
 
 declare var y: { ... } & Iterator<mixed>;
 declare var ff: mixed => { ... } & Iterator<mixed>;
+
+() => {
+  declare function f(mixed): boolean;
+  declare const foo: ?{bar: string};
+
+  if (
+    foo.bar != null && // error
+    f(foo.bar) &&
+    foo.bar // error
+  ) {
+
+  }
+
+}
