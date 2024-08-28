@@ -343,27 +343,11 @@ end = struct
     let (hd_scope, _) = env in
     iter_function_scope ~f hd_scope
 
-  let reset_to_unreachable_env ~should_havoc_val_to_initialized (env : t) =
+  let reset_to_unreachable_env ~should_havoc_val_to_initialized:_ (env : t) =
     let (hd_scope, _) = env in
-    let partial_env =
-      to_partial_env_snapshot env ~f:(fun _ _ ->
-          {
-            PartialEnvSnapshot.env_val = Val.empty ();
-            heap_refinements = HeapRefinementMap.empty;
-            (* The empty env is always used as a reset value,
-               and the reset_env method (see above) does not mutate def_loc at all.
-               Therefore, the value of def_loc here does not matter. *)
-            def_loc = None;
-          }
-      )
-    in
-    iter_function_scope hd_scope ~f:(fun x env_val ->
-        let env_entry =
-          PartialEnvSnapshot.read_with_fallback x partial_env ~fallback:(fun x ->
-              env_read_entry_from_below ~should_havoc_val_to_initialized x env
-          )
-        in
-        PartialEnvSnapshot.reset_val_with_entry env_entry env_val
+    iter_function_scope hd_scope ~f:(fun _ { val_ref; heap_refinements; _ } ->
+        val_ref := Val.empty ();
+        heap_refinements := HeapRefinementMap.empty
     )
 
   let update_env_with_partial_env_snapshot
