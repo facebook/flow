@@ -91,6 +91,49 @@ type A = {b?: {c: boolean}};
   if (a.b) { for (i3 of y) f();               a.b.c; } // error
   if (a.b) { for (i4 of ff());                a.b.c; } // error
 
+  // Loop constructs with a conditional abrupt completion / abnormal control flow.
+  // while…
+  if (a.b) { while (p) { f(); if (p) continue; }     a.b.c; } // error
+  if (a.b) { while (p) { f(); if (p) break;    }     a.b.c; } // error
+  if (a.b) { while (p) { f(); if (p) return;   }     a.b.c; } // ideally ok, error acceptable
+  if (a.b) { while (f()) { if (p) continue; }        a.b.c; } // error
+  if (a.b) { while (f()) { if (p) break;    }        a.b.c; } // error
+  if (a.b) { while (f()) { if (p) return;   }        a.b.c; } // error
+  // … do-while…
+  if (a.b) { do { f(); if (p) continue; } while (p); a.b.c; } // error
+  if (a.b) { do { f(); if (p) break;    } while (p); a.b.c; } // error
+  if (a.b) { do { f(); if (p) return;   } while (p); a.b.c; } // error[unreachable-code]
+  if (a.b) { do { if (p) continue; } while (f());    a.b.c; } // error
+  if (a.b) { do { if (p) if (p) break;    } while (f());    a.b.c; } // ideally ok, error acceptable
+  if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
+  // … for…
+  if (a.b) { for (; p;) { f(); if (p) continue; }    a.b.c; } // error
+  if (a.b) { for (; p;) { f(); if (p) break;    }    a.b.c; } // error
+  if (a.b) { for (; p;) { f(); if (p) return;   }    a.b.c; } // ideally ok, error acceptable
+  if (a.b) { for (; p; f()) if (p) continue;         a.b.c; } // error
+  if (a.b) { for (; p; f()) if (p) break;            a.b.c; } // ideally ok, error acceptable
+  if (a.b) { for (; p; f()) if (p) return;           a.b.c; } // ideally ok, error acceptable
+  if (a.b) { for (; f();) if (p) continue;           a.b.c; } // error
+  if (a.b) { for (; f();) if (p) break;              a.b.c; } // error
+  if (a.b) { for (; f();) if (p) return;             a.b.c; } // error
+  if (a.b) { for (f(); p;) if (p) continue;          a.b.c; } // error
+  if (a.b) { for (f(); p;) if (p) break;             a.b.c; } // error
+  if (a.b) { for (f(); p;) if (p) return;            a.b.c; } // error
+  // … for-in…
+  if (a.b) { for (i5 in y) { f(); if (p) continue; }  a.b.c; } // error
+  if (a.b) { for (i6 in y) { f(); if (p) break;    }  a.b.c; } // error
+  if (a.b) { for (i7 in y) { f(); if (p) return;   }  a.b.c; } // ideally ok, error acceptable
+  if (a.b) { for (i8 in ff()) if (p) continue;        a.b.c; } // error
+  if (a.b) { for (i9 in ff()) if (p) break;           a.b.c; } // error
+  if (a.b) { for (i10 in ff()) if (p) return;         a.b.c; } // error
+  // … for-of.
+  if (a.b) { for (i11 of y) { f(); if (p) continue; } a.b.c; } // error
+  if (a.b) { for (i12 of y) { f(); if (p) break;    } a.b.c; } // error
+  if (a.b) { for (i13 of y) { f(); if (p) return;   } a.b.c; } // ideally ok, error acceptable
+  if (a.b) { for (i14 of ff()) if (p) continue;       a.b.c; } // error
+  if (a.b) { for (i15 of ff()) if (p) break;          a.b.c; } // error
+  if (a.b) { for (i16 of ff()) if (p) return;         a.b.c; } // error
+
   // Loop constructs with an abrupt completion / abnormal control flow.
   // while…
   if (a.b) { while (p) { f(); continue; }     a.b.c; } // error
