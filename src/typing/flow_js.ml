@@ -1971,8 +1971,6 @@ struct
                 match rrt_resolve_to with
                 (* Spreading iterables in a type context is always OK *)
                 | ResolveSpreadsToMultiflowSubtypeFull _ -> `Iterable
-                (* Function.prototype.apply takes array-likes, not iterables *)
-                | ResolveSpreadsToCallT _ -> `ArrayLike
                 (* Otherwise we're spreading values *)
                 | ResolveSpreadsToArray _
                 | ResolveSpreadsToArrayLiteral _
@@ -2150,8 +2148,7 @@ struct
                   | _ -> ()
               )
             (* no caching *)
-            | ResolveSpreadsToArray _
-            | ResolveSpreadsToCallT _ ->
+            | ResolveSpreadsToArray _ ->
               let rrt_resolved = ResolvedSpreadArg (reason, arrtype, generic) :: rrt_resolved in
               resolve_spread_list_rec
                 cx
@@ -8765,45 +8762,6 @@ struct
         ~rest_param
         (args, params)
     in
-    (* This is used for things like Function.prototype.apply, whose second arg is
-     * basically a spread argument that we'd like to resolve *)
-    let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
-      let (flattened, _, _) = flatten_spread_args cx resolved in
-      let call_args_tlist =
-        Base.List.map
-          ~f:(function
-            | ResolvedArg (TupleElement { t; _ }, _) -> Arg t
-            | ResolvedSpreadArg (r, arrtype, generic) ->
-              let arr = DefT (r, ArrT arrtype) in
-              let arr =
-                Base.Option.value_map
-                  ~f:(fun id ->
-                    GenericT
-                      {
-                        bound = arr;
-                        reason = r;
-                        id;
-                        name = Generic.subst_name_of_id id;
-                        no_infer = false;
-                      })
-                  ~default:arr
-                  generic
-              in
-              SpreadArg arr
-            | ResolvedAnySpreadArg (r, any_src) -> SpreadArg (AnyT.why any_src r))
-          flattened
-      in
-      let call_t =
-        CallT
-          {
-            use_op;
-            reason = reason_op;
-            call_action = Funcalltype { funcalltype with call_args_tlist };
-            return_hint = Type.hint_unavailable;
-          }
-      in
-      flow_opt cx ?trace (tin, call_t)
-    in
     fun cx ?trace ~use_op ~reason_op resolved resolve_to ->
       match resolve_to with
       | ResolveSpreadsToTupleType { id = _; inexact; elem_t; tout } ->
@@ -8834,8 +8792,6 @@ struct
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:true ft resolved
       | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
         finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_strict:false ft resolved
-      | ResolveSpreadsToCallT (funcalltype, tin) ->
-        finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
 
   and apply_method_action cx trace l use_op reason_call this_arg action =
     match action with

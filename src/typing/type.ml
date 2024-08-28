@@ -1706,7 +1706,6 @@ module rec TypeTerm : sig
      * partially apply the arguments to the function and return the resulting
      * function (basically what func.bind(that, ...args) does) *)
     | ResolveSpreadsToMultiflowPartial of int * funtype * reason * t
-    | ResolveSpreadsToCallT of funcalltype * t
 
   and spread_array_resolve_to =
     | ResolveToArrayLiteral of { as_const: bool }
@@ -4125,7 +4124,6 @@ let string_of_use_ctor = function
         | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
         | ResolveSpreadsToMultiflowSubtypeFull _ -> "ResolveSpreadsToMultiflowSubtypeFull"
         | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
-        | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
       end
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"

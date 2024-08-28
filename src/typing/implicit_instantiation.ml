@@ -404,8 +404,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ResolveSpreadsToArrayLiteral _
       | ResolveSpreadsToArray _
       | ResolveSpreadsToMultiflowCallFull _
-      | ResolveSpreadsToMultiflowPartial _
-      | ResolveSpreadsToCallT _ ->
+      | ResolveSpreadsToMultiflowPartial _ ->
         UpperNonT u)
     | ResolveSpreadT _ -> UpperNonT u
     | ResolveUnionT { reason = _; unresolved = _; resolved = _; upper = u; id = _ } ->

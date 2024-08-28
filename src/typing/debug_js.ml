@@ -849,8 +849,6 @@ and dump_use_t_ (depth, tvars) cx t =
         p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid elem_t) (kid tout)) t
       | ResolveSpreadsToMultiflowPartial (_, _, _, tout) ->
         p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tout)) t
-      | ResolveSpreadsToCallT (_, tin) ->
-        p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tin)) t
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _ ->
         p ~extra:(string_of_use_op use_op) t)
