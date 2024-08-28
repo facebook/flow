@@ -205,6 +205,8 @@ module FullEnv : sig
   val to_partial_env_snapshot :
     f:(string -> env_val -> PartialEnvSnapshot.entry) -> t -> PartialEnvSnapshot.t
 
+  val reset_to_unreachable_env : should_havoc_val_to_initialized:(env_val -> bool) -> t -> unit
+
   (* Update the environment entry for every single value in the current function scope.
    * This function should not be used for environment merging purposes. *)
   val update_env : f:(string -> env_val -> unit) -> t -> unit
@@ -340,6 +342,29 @@ end = struct
   let update_env ~f (env : t) =
     let (hd_scope, _) = env in
     iter_function_scope ~f hd_scope
+
+  let reset_to_unreachable_env ~should_havoc_val_to_initialized (env : t) =
+    let (hd_scope, _) = env in
+    let partial_env =
+      to_partial_env_snapshot env ~f:(fun _ _ ->
+          {
+            PartialEnvSnapshot.env_val = Val.empty ();
+            heap_refinements = HeapRefinementMap.empty;
+            (* The empty env is always used as a reset value,
+               and the reset_env method (see above) does not mutate def_loc at all.
+               Therefore, the value of def_loc here does not matter. *)
+            def_loc = None;
+          }
+      )
+    in
+    iter_function_scope hd_scope ~f:(fun x env_val ->
+        let env_entry =
+          PartialEnvSnapshot.read_with_fallback x partial_env ~fallback:(fun x ->
+              env_read_entry_from_below ~should_havoc_val_to_initialized x env
+          )
+        in
+        PartialEnvSnapshot.reset_val_with_entry env_entry env_val
+    )
 
   let update_env_with_partial_env_snapshot
       ~should_havoc_val_to_initialized ~f (partial_env : PartialEnvSnapshot.t) (env : t) =
@@ -1347,17 +1372,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~f:(fun _ -> PartialEnvSnapshot.reset_val_with_entry
         )
 
-      method empty_env_snapshot : PartialEnvSnapshot.t =
-        FullEnv.to_partial_env_snapshot
-          ~f:(fun _ _ ->
-            {
-              PartialEnvSnapshot.env_val = Val.empty ();
-              heap_refinements = HeapRefinementMap.empty;
-              (* The empty env is always used as a reset value,
-                 and the reset_env method (see above) does not mutate def_loc at all.
-                 Therefore, the value of def_loc here does not matter. *)
-              def_loc = None;
-            })
+      method reset_to_unreachable_env =
+        FullEnv.reset_to_unreachable_env
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
           env_state.env
 
       (* This method applies a function over the value stored with a refinement key. It is
@@ -1888,7 +1905,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method raise_abrupt_completion : 'a. AbruptCompletion.t -> 'a =
         fun abrupt_completion ->
           let env = this#env_snapshot in
-          this#reset_env this#empty_env_snapshot;
+          this#reset_to_unreachable_env;
           let abrupt_completion_envs =
             (abrupt_completion, env) :: env_state.abrupt_completion_envs
           in
@@ -3569,7 +3586,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
              * determined by joining all of the breaks with the last fallthrough env. If there
              * was no fallthrough env, then the we can use empty as the base. *)
             | Some env when has_default -> this#reset_env env
-            | None when has_default -> this#reset_env this#empty_env_snapshot
+            | None when has_default -> this#reset_to_unreachable_env
             (* If the switch wasn't exhaustive then merge with the case_starting_env as a base. If
              * the last case fell out then merge that in too. *)
             | Some fallthrough ->
