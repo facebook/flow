@@ -88,7 +88,7 @@ and debug_to_string get_refi { id; write_state } =
   string_of_int id ^ " " ^ debug_write_state get_refi write_state
 
 (* Ensure we only produce one unique val for the same Loc *)
-let val_one_cache : (Reason.t, t) Hashtbl.t = Hashtbl.create 0
+let val_one_cache : (write_state, t) Hashtbl.t = Hashtbl.create 0
 
 let clear () = Hashtbl.reset val_one_cache
 
@@ -129,8 +129,13 @@ let new_id () =
   id
 
 let mk_with_write_state write_state =
-  let id = new_id () in
-  { id; write_state }
+  match Hashtbl.find_opt val_one_cache write_state with
+  | Some v -> v
+  | None ->
+    let id = new_id () in
+    let v = { id; write_state } in
+    Hashtbl.add val_one_cache write_state v;
+    v
 
 let of_write = mk_with_write_state
 
@@ -159,8 +164,11 @@ let rec unrefine_deeply_write_state id write_state =
   | Refinement { refinement_id; val_t } when refinement_id = id ->
     unrefine_deeply_write_state id val_t.write_state
   | Refinement { refinement_id; val_t } ->
-    let val_t' = mk_with_write_state @@ unrefine_deeply_write_state id val_t.write_state in
-    Refinement { refinement_id; val_t = val_t' }
+    let val_t' = unrefine_deeply id val_t in
+    if val_t == val_t' then
+      write_state
+    else
+      Refinement { refinement_id; val_t = val_t' }
   | PHI ts ->
     let ts' = ListUtils.ident_map (unrefine_deeply_write_state id) ts in
     if ts' == ts then
@@ -169,12 +177,17 @@ let rec unrefine_deeply_write_state id write_state =
       PHI ts'
   | _ -> write_state
 
+and unrefine_deeply id t =
+  let state' = unrefine_deeply_write_state id t.write_state in
+  if t.write_state == state' then
+    t
+  else
+    mk_with_write_state state'
+
 let rec base_id_of_val { id; write_state } =
   match write_state with
   | Refinement { refinement_id = _; val_t } -> base_id_of_val val_t
   | _ -> id
-
-let unrefine_deeply id t = mk_with_write_state @@ unrefine_deeply_write_state id t.write_state
 
 let unrefine id t =
   match t.write_state with
@@ -191,13 +204,7 @@ let join_write_states = function
   | [t] -> t
   | ts -> PHI ts
 
-let one reason =
-  match Hashtbl.find_opt val_one_cache reason with
-  | Some v -> v
-  | None ->
-    let v = mk_with_write_state @@ Loc reason in
-    Hashtbl.add val_one_cache reason v;
-    v
+let one reason = mk_with_write_state @@ Loc reason
 
 let illegal_write reason = mk_with_write_state @@ IllegalWrite reason
 
