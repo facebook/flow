@@ -60,13 +60,12 @@ Flags:
 type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C>
   ? C
   : empty
-= React$AbstractComponent<{+foo: string}, mixed, renders React.Node>
+= typeof Poly
 
 'C' defined at component.js:15:73
 'ConcretizedPolyComponent' defined at component.js:15:5
 'Poly' defined at component.js:9:0
 'React$Element' defined at (lib) react.js:150:20
-'React.Node' defined at component.js:9:26
 
 component.js:15:6,15:29
 
@@ -93,13 +92,9 @@ component.js:25:23,25:25
 
 component.js:27:6
 Flags:
-type TypeofFoo = React$AbstractComponent<
-  {+foo: number},
-  mixed,
-  renders React.Node,
->
+type TypeofFoo = typeof Foo
 
-'React.Node' defined at component.js:1:26
+'Foo' defined at component.js:1:0
 'TypeofFoo' defined at component.js:27:5
 
 component.js:27:6,27:14
@@ -141,10 +136,11 @@ render_types.js:10:6,10:6
 
 render_types.js:12:6
 Flags:
-type V = renders Foo | Bar
+type V = renders Foo | React$Element<typeof Bar>
 
 'Bar' defined at render_types.js:6:0
 'Foo' defined at render_types.js:12:9
+'React$Element' defined at (lib) react.js:150:20
 'V' defined at render_types.js:12:5
 
 render_types.js:12:6,12:6
