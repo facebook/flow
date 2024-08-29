@@ -57,6 +57,7 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
+    natural_inference_object_freeze = false;
     react_custom_jsx_typing = false;
     react_disable_function_components_default_props = true;
     react_runtime = Options.ReactRuntimeClassic;

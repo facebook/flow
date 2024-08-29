@@ -101,6 +101,7 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
+  natural_inference_object_freeze: bool;
   react_custom_jsx_typing: bool;
   react_disable_function_components_default_props: bool;
   react_runtime: Options.react_runtime;
@@ -294,6 +295,8 @@ val slow_to_check_logging : t -> Slow_to_check_logging.t
 val max_workers : t -> int
 
 val missing_module_generators : t -> (Str.regexp * string) list
+
+val natural_inference_object_freeze : t -> bool
 
 val jsx : t -> Options.jsx_mode
 

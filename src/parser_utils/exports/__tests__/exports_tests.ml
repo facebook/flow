@@ -65,6 +65,7 @@ let sig_opts =
     relay_integration_module_prefix = None;
     for_builtins = false;
     locs_to_dirtify = [];
+    natural_inference_object_freeze = false;
   }
 
 let print_index exports =

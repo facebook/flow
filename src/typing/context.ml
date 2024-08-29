@@ -57,6 +57,7 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
+  natural_inference_object_freeze: bool;
   react_custom_jsx_typing: bool;
   react_disable_function_components_default_props: bool;
   react_runtime: Options.react_runtime;
@@ -279,6 +280,7 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
+    natural_inference_object_freeze = Options.natural_inference_object_freeze options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_disable_function_components_default_props =
       Options.react_disable_function_components_default_props options;
@@ -626,6 +628,8 @@ let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
+
+let natural_inference_object_freeze cx = cx.metadata.natural_inference_object_freeze
 
 let jsx cx = cx.metadata.jsx
 

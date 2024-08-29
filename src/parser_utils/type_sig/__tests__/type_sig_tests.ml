@@ -240,6 +240,7 @@ let sig_options
     relay_integration_module_prefix;
     for_builtins;
     locs_to_dirtify;
+    natural_inference_object_freeze = false;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =
