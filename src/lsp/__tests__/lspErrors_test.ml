@@ -27,7 +27,7 @@ let mk_diagnostic { uri = _; kind; msg } =
     message = msg;
     tags = [];
     relatedInformation = [];
-    data = NoExtraDetailedDiagnostic;
+    data = NoExtraData;
   }
 
 (* Take the json output and convert it back into a list of errors *)

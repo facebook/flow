@@ -285,7 +285,7 @@ let diagnostics_of_flow_errors =
             |> Base.List.map ~f:(fun (style, text) -> (map_style style, text))
             )
         else
-          Lsp.PublishDiagnostics.NoExtraDetailedDiagnostic
+          Lsp.PublishDiagnostics.NoExtraData
       in
       Some
         ( uri,
@@ -315,3 +315,18 @@ let diagnostics_of_flow_errors =
     Lsp.UriMap.empty
     |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Severity.Err) errors
     |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Severity.Warn) warnings
+
+let synthetic_diagnostics_of_refined_locations locs =
+  Base.List.filter_map locs ~f:(fun loc -> loc |> loc_to_lsp |> Result.to_option)
+  |> Base.List.map ~f:(fun location ->
+         {
+           Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
+           severity = Some Lsp.PublishDiagnostics.Hint;
+           code = Lsp.PublishDiagnostics.NoCode;
+           source = Some "Flow";
+           message = "refined-value";
+           tags = [];
+           relatedInformation = [];
+           data = Lsp.PublishDiagnostics.RefinementInformation;
+         }
+     )

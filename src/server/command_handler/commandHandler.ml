@@ -1283,6 +1283,10 @@ let vscode_detailed_diagnostics client =
     Lsp.Initialize.(lsp_initialize_params.initializationOptions.detailedErrorRendering)
     ~default:false
 
+let semantic_decorations client =
+  let lsp_initialize_params = Persistent_connection.lsp_initialize_params client in
+  Lsp.Initialize.(lsp_initialize_params.initializationOptions.semanticDecorations)
+
 let refinement_info_on_hover client =
   let lsp_initialize_params = Persistent_connection.lsp_initialize_params client in
   Lsp.Initialize.(lsp_initialize_params.initializationOptions.refinementInformationOnHover)
@@ -3389,7 +3393,7 @@ let handle_live_errors_request =
     | Some latest_metadata -> latest_metadata = metadata
     | None -> false
   in
-  fun ~options ~uri ~metadata ->
+  fun ~options ~uri ~metadata ~loc_of_aloc ->
     (* Immediately store the latest metadata *)
     uri_to_latest_metadata_map := SMap.add uri metadata !uri_to_latest_metadata_map;
     fun ~client ~profiling ~env ->
@@ -3434,7 +3438,7 @@ let handle_live_errors_request =
                 metadata
               )
           | File_input.FileContent (_, content) ->
-            let%lwt (live_errors, live_warnings, metadata) =
+            let%lwt (live_errors, live_warnings, refined_locations, metadata) =
               let file_key = file_key_of_file_input ~options ~env file_input in
               match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
               | Ok () ->
@@ -3471,12 +3475,20 @@ let handle_live_errors_request =
                     file_key
                     result
                 in
+                let refined_locations =
+                  match result with
+                  | Ok (_, Typecheck_artifacts { cx; _ }) when semantic_decorations client ->
+                    Context.refined_locations cx
+                    |> Loc_collections.ALocMap.keys
+                    |> Base.List.map ~f:loc_of_aloc
+                  | _ -> []
+                in
                 let metadata =
                   let json_props = add_cache_hit_data_to_json [] did_hit_cache in
                   let json = Hh_json.JSON_Object json_props in
                   with_data ~extra_data:(Some json) metadata
                 in
-                Lwt.return (live_errors, live_warnings, metadata)
+                Lwt.return (live_errors, live_warnings, refined_locations, metadata)
               | Error reason ->
                 Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
 
@@ -3490,6 +3502,7 @@ let handle_live_errors_request =
                 Lwt.return
                   ( Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
                     Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
+                    [],
                     metadata
                   )
             in
@@ -3502,6 +3515,10 @@ let handle_live_errors_request =
                 ~warnings:live_warnings
               |> Lsp.UriMap.find_opt live_errors_uri
               |> Base.Option.value ~default:[]
+            in
+            let live_diagnostics =
+              live_diagnostics
+              @ Flow_lsp_conversions.synthetic_diagnostics_of_refined_locations refined_locations
             in
             Lwt.return
               ( LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
@@ -3771,7 +3788,9 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LiveErrorsRequest uri ->
     let uri = Lsp.DocumentUri.to_string uri in
     (* We can handle live errors even during a recheck *)
-    mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata)
+    mk_parallelizable_persistent
+      ~options
+      (handle_live_errors_request ~options ~uri ~metadata ~loc_of_aloc)
 
 let wrap_immediate_persistent_handler
     (type a b)
