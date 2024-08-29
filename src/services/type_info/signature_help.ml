@@ -402,33 +402,48 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
     let genv =
       Ty_normalizer_flow.mk_genv ~options:norm_options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
     in
-    let jsdoc =
-      match
-        GetDef_js.get_def
-          ~loc_of_aloc
-          ~cx
-          ~file_sig
-          ~ast
-          ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
-          ~purpose:Get_def_types.Purpose.JSDoc
-          (loc_of_aloc callee_loc)
-      with
-      | GetDef_js.Get_def_result.Def (locs, _)
-      | GetDef_js.Get_def_result.Partial (locs, _, _)
-        when LocSet.cardinal locs = 1 ->
-        let getdef_loc = LocSet.choose locs in
-        Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem getdef_loc
+    let func_details_of_type ~jsdoc fn =
+      let ty = Ty_normalizer_flow.from_type genv fn in
+      match ty with
+      | Ok (Ty.Type (Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ })) ->
+        let exact_by_default = Context.exact_by_default cx in
+        Some (func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return)
       | _ -> None
     in
     let funs =
-      Base.List.filter_map ts ~f:(fun fn ->
-          let ty = Ty_normalizer_flow.from_type genv fn in
-          match ty with
-          | Ok (Ty.Type (Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ })) ->
-            let exact_by_default = Context.exact_by_default cx in
-            Some (func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return)
+      match ts with
+      | [] -> []
+      | [t] ->
+        (* non-overloaded case: get-def returns reasonable JSDoc results *)
+        let jsdoc =
+          match
+            GetDef_js.get_def
+              ~loc_of_aloc
+              ~cx
+              ~file_sig
+              ~ast
+              ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
+              ~purpose:Get_def_types.Purpose.JSDoc
+              (loc_of_aloc callee_loc)
+          with
+          | GetDef_js.Get_def_result.Def (locs, _)
+          | GetDef_js.Get_def_result.Partial (locs, _, _)
+            when LocSet.cardinal locs = 1 ->
+            let getdef_loc = LocSet.choose locs in
+            Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem getdef_loc
           | _ -> None
-      )
+        in
+        func_details_of_type ~jsdoc t |> Base.Option.to_list
+      | ts ->
+        (* overloaded case: get-def does not distinguish between overloads, get the
+         * JSDoc from the def_loc of the specific overload instead. *)
+        Base.List.filter_map ts ~f:(fun fn ->
+            let jsdoc =
+              let loc = loc_of_aloc (TypeUtil.def_loc_of_t fn) in
+              Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem loc
+            in
+            func_details_of_type ~jsdoc fn
+        )
     in
     Ok (Some (funs, active_parameter))
   | Some (Callee_finder.JsxAttrData { type_ = t; name; loc; key_loc }) ->

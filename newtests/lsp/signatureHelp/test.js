@@ -1850,23 +1850,47 @@ module.exports = (suite(
               signatures: [
                 {
                   label: '(x: 10, y: 11): 1',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'first overload',
+                  },
                   parameters: [
                     {
                       label: 'x: 10',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param of first overload',
+                      },
                     },
                     {
                       label: 'y: 11',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param of first overload',
+                      },
                     },
                   ],
                 },
                 {
                   label: '(x: 20, y: 21): 2',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'second overload',
+                  },
                   parameters: [
                     {
                       label: 'x: 20',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param of second overload',
+                      },
                     },
                     {
                       label: 'y: 21',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param of second overload',
+                      },
                     },
                   ],
                 },
@@ -1895,23 +1919,47 @@ module.exports = (suite(
               signatures: [
                 {
                   label: '(x: 10, y: 11): 1',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'first overload',
+                  },
                   parameters: [
                     {
                       label: 'x: 10',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param of first overload',
+                      },
                     },
                     {
                       label: 'y: 11',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param of first overload',
+                      },
                     },
                   ],
                 },
                 {
                   label: '(x: 20, y: 21): 2',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'second overload',
+                  },
                   parameters: [
                     {
                       label: 'x: 20',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param of second overload',
+                      },
                     },
                     {
                       label: 'y: 21',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param of second overload',
+                      },
                     },
                   ],
                 },
@@ -1940,23 +1988,47 @@ module.exports = (suite(
               signatures: [
                 {
                   label: '(x: 10, y: 11): 1',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'first overload',
+                  },
                   parameters: [
                     {
                       label: 'x: 10',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param of first overload',
+                      },
                     },
                     {
                       label: 'y: 11',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param of first overload',
+                      },
                     },
                   ],
                 },
                 {
                   label: '(x: 20, y: 21): 2',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'second overload',
+                  },
                   parameters: [
                     {
                       label: 'x: 20',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'x - 1st param of second overload',
+                      },
                     },
                     {
                       label: 'y: 21',
+                      documentation: {
+                        kind: 'markdown',
+                        value: 'y - 2nd param of second overload',
+                      },
                     },
                   ],
                 },

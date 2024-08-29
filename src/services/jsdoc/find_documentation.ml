@@ -231,8 +231,10 @@ class jsdoc_documentation_searcher find =
       let open Ast.Class.Method in
       let { key; comments; _ } = meth in
       let key_loc = loc_of_object_key key in
+      find method_loc comments;
       find key_loc comments;
       find key_loc (comments_of_object_key key);
+      find method_loc (comments_of_object_key key);
       super#class_method method_loc meth
 
     method! class_property prop_loc prop =
@@ -248,12 +250,17 @@ class jsdoc_documentation_searcher find =
       let open Ast.Expression.Object.Property in
       let (locs, comments) =
         match prop with
+        | ( _,
+            Init
+              { key; value = (value_loc, Ast.Expression.Function Ast.Function.{ sig_loc; _ }); _ }
+          ) ->
+          ([sig_loc; loc_of_object_key key; value_loc], [comments_of_object_key key])
         | (_, Init { key; value = (value_loc, _); _ }) ->
           ([loc_of_object_key key; value_loc], [comments_of_object_key key])
-        | (prop_loc, Method { key; value = (_, Ast.Function.{ comments; _ }) }) ->
-          ([prop_loc; loc_of_object_key key], [comments_of_object_key key; comments])
-        | (_, Get { key; value = (_, Ast.Function.{ return; _ }); comments }) ->
-          ([loc_of_object_key key; loc_of_return_annot return], [comments])
+        | (prop_loc, Method { key; value = (_, Ast.Function.{ sig_loc; comments; _ }) }) ->
+          ([sig_loc; prop_loc; loc_of_object_key key], [comments_of_object_key key; comments])
+        | (get_loc, Get { key; value = (_, Ast.Function.{ return; _ }); comments }) ->
+          ([get_loc; loc_of_object_key key; loc_of_return_annot return], [comments])
         | (_, Set _) -> ([], [])
       in
       Base.List.iter locs ~f:(fun loc ->
@@ -321,9 +328,10 @@ class jsdoc_documentation_searcher find =
 
     method! type_alias loc type_alias =
       let open Ast.Statement.TypeAlias in
-      let { id = (id_loc, _); comments; _ } = type_alias in
+      let { id = (id_loc, _); comments; right = (body_loc, _); _ } = type_alias in
       find loc comments;
       find id_loc comments;
+      find body_loc comments;
       super#type_alias loc type_alias
 
     method! opaque_type loc opaque_type =
