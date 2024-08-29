@@ -150,7 +150,7 @@ function overloaded_jsdoc() {
    */
   declare function foo(x: 20, y: 21): 2;
 
-  foo(/* here */); // TODO jsdoc
-  foo(10, /* here */); // TODO jsdoc
-  foo(20, /* here */); // TODO jsdoc, select the right activeSignature
+  foo(/* here */);
+  foo(10, /* here */);
+  foo(20, /* here */); // TODO select the right activeSignature
 }
