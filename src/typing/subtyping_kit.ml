@@ -1082,7 +1082,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* String enum sets can be handled in logarithmic time by just
      * checking for membership in the set.
      *)
-    | (DefT (reason_l, StrT (Literal (_, x))), UnionT (reason_u, rep))
+    | (DefT (reason_l, (StrT (Literal (_, x)) | SingletonStrT x)), UnionT (reason_u, rep))
       when match UnionRep.check_enum rep with
            | Some enums ->
              if not (UnionEnumSet.mem (UnionEnum.Str x) enums) then
