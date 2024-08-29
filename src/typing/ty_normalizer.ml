@@ -751,16 +751,8 @@ module Make (I : INPUT) : S = struct
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-      | TypeAppT { reason; use_op = _; type_; targs; from_value; use_desc = _ } ->
-        (match (desc_of_reason reason, targs) with
-        | ( RTypeApp (RReactElement { name_opt = Some name; from_component_syntax = true }),
-            component :: _
-          ) ->
-          return
-            (Ty.Generic
-               (symbol_from_reason env (TypeUtil.reason_of_t component) name, Ty.TypeAliasKind, None)
-            )
-        | _ -> type_app ~env ~from_value type_ (Some targs))
+      | TypeAppT { reason = _; use_op = _; type_; targs; from_value; use_desc = _ } ->
+        type_app ~env ~from_value type_ (Some targs)
       | ThisInstanceT (r, { super; inst; _ }, _, _)
       | DefT (r, InstanceT { super; inst; _ }) ->
         instance_t ~env r super inst
@@ -768,6 +760,25 @@ module Make (I : INPUT) : S = struct
       | DefT (_, ClassT t) ->
         let%map ty = type__ ~env t in
         Ty.Utility (Ty.Class ty)
+      | DefT
+          ( r,
+            ReactAbstractComponentT
+              {
+                config = _;
+                instance = _;
+                renders = _;
+                component_kind = Nominal (_, name, inferred_targs);
+              }
+          ) ->
+        let%bind inferred_targs =
+          match inferred_targs with
+          | None -> return None
+          | Some inferred_targs ->
+            let%bind inferred_targs = mapM (type__ ~env) inferred_targs in
+            return (Some inferred_targs)
+        in
+        let symbol = Reason_utils.component_symbol env name r in
+        return (Ty.TypeOf (Ty.TSymbol symbol, inferred_targs))
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
@@ -1227,15 +1238,7 @@ module Make (I : INPUT) : S = struct
         | DefT (_, ClassT (ThisInstanceT (r, { inst; _ }, _, _)))
         | DefT (_, ClassT (DefT (r, InstanceT { inst; _ }))) ->
           instance_app ~env r inst tparams targs
-        | DefT (r, TypeT (kind, t)) ->
-          (match (t, targs) with
-          | (OpaqueT (_, opaque_type), Some (component :: _))
-            when Some opaque_type.Type.opaque_id
-                 = Flow_js_utils.builtin_react_element_opaque_id (Env.get_cx env) ->
-            (match Lookahead.peek (Env.get_cx env) component with
-            | Lookahead.LowerBounds [t] -> react_element_shorthand ~env r opaque_type targs t
-            | _ -> type_t_app ~env r kind tparams targs)
-          | _ -> type_t_app ~env r kind tparams targs)
+        | DefT (r, TypeT (kind, _)) -> type_t_app ~env r kind tparams targs
         | DefT
             ( r,
               ReactAbstractComponentT
@@ -1324,17 +1327,6 @@ module Make (I : INPUT) : S = struct
           (match tys with
           | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
           | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
-
-    and react_element_shorthand ~env opaque_reason opaque_type targs t =
-      match t with
-      | T.(DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name, _); _ })) ->
-        let symbol = Reason_utils.component_symbol env name reason in
-        return (Ty.Generic (symbol, Ty.ComponentKind, None))
-      | _ ->
-        let name = opaque_type.Type.opaque_name in
-        let opaque_symbol = symbol_from_reason env opaque_reason (Reason.OrdinaryName name) in
-        let%map targs = optMapM (type__ ~env) targs in
-        generic_talias opaque_symbol targs
 
     and opaque_t ~env reason opaque_type =
       let { Type.opaque_type_args = targs; opaque_name; _ } = opaque_type in

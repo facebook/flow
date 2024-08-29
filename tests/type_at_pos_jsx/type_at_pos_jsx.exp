@@ -87,33 +87,19 @@ jsx_instantiation.js:41:17,41:19
 
 jsx_instantiation.js:55:6
 Flags:
-React$AbstractComponent<{+x: string, +y: number}, mixed, renders React.Node>
-| React$AbstractComponent<
-  {+x: number | string, +y: number | string},
-  mixed,
-  renders React.Node,
->
+typeof Foo2<string, number> | typeof Foo1<number | string>
 
-'React.Node' defined at jsx_instantiation.js:3:37
-'React.Node' defined at jsx_instantiation.js:5:40
+'Foo1' defined at jsx_instantiation.js:3:0
+'Foo2' defined at jsx_instantiation.js:5:0
 
 jsx_instantiation.js:55:6,55:9
 
 jsx_instantiation.js:57:6
 Flags:
-React$AbstractComponent<
-  {+x: number | string, +y: number | string},
-  mixed,
-  renders React.Node,
->
-| React$AbstractComponent<
-  {+x: number | string, +y: number | string},
-  mixed,
-  renders React.Node,
->
+typeof Foo3<number | string> | typeof Foo1<number | string>
 
-'React.Node' defined at jsx_instantiation.js:3:37
-'React.Node' defined at jsx_instantiation.js:6:45
+'Foo1' defined at jsx_instantiation.js:3:0
+'Foo3' defined at jsx_instantiation.js:6:0
 
 jsx_instantiation.js:57:6,57:9
 
@@ -135,11 +121,10 @@ jsx_instantiation.js:69:5,69:9
 
 jsx_instantiation.js:71:5
 Flags:
-React$AbstractComponent<{+x: T, +y: T}, mixed, renders React.Node>
-& React$AbstractComponent<{+x: T, +y: S}, mixed, renders React.Node>
+typeof Foo3 & typeof Foo4
 
-'React.Node' defined at jsx_instantiation.js:6:45
-'React.Node' defined at jsx_instantiation.js:7:48
+'Foo3' defined at jsx_instantiation.js:6:0
+'Foo4' defined at jsx_instantiation.js:7:0
 
 jsx_instantiation.js:71:5,71:9
 
@@ -169,15 +154,10 @@ jsx_instantiation.js:83:6,83:11
 
 jsx_instantiation.js:90:6
 Flags:
-React$AbstractComponent<{+x: string, +y: number}, mixed, renders React.Node>
-| React$AbstractComponent<
-  {+x: number | string, +y: number | string},
-  mixed,
-  renders React.Node,
->
+typeof Foo2<string, number> | typeof Foo1<number | string>
 
-'React.Node' defined at jsx_instantiation.js:3:37
-'React.Node' defined at jsx_instantiation.js:5:40
+'Foo1' defined at jsx_instantiation.js:3:0
+'Foo2' defined at jsx_instantiation.js:5:0
 
 jsx_instantiation.js:90:6,90:8
 
