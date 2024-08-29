@@ -571,6 +571,7 @@ module Initialize = struct
   and initializationOptions = {
     liveSyntaxErrors: bool;
     detailedErrorRendering: bool option;
+    semanticDecorations: bool;
     refinementInformationOnHover: bool;
   }
 
@@ -774,7 +775,7 @@ module PublishDiagnostics = struct
     message: string;  (** the diagnostic's message *)
     tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
-    data: extraDetailedDiagnostic;
+    data: data;
   }
 
   and diagnosticCode =
@@ -787,8 +788,9 @@ module PublishDiagnostics = struct
     relatedMessage: string;  (** wire: just "message" *)
   }
 
-  and extraDetailedDiagnostic =
-    | NoExtraDetailedDiagnostic
+  and data =
+    | NoExtraData
+    | RefinementInformation
     | ExtraDetailedDiagnosticV0 of (ExtraDetailedDiagnosticV0.style * string) list
 end
 

@@ -554,7 +554,9 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
        ]
       @
       match diagnostic.data with
-      | PublishDiagnostics.NoExtraDetailedDiagnostic -> []
+      | PublishDiagnostics.NoExtraData -> []
+      | PublishDiagnostics.RefinementInformation ->
+        [("data", Some (JSON_Object [("semanticDecorationType", JSON_String "refined-value")]))]
       | PublishDiagnostics.ExtraDetailedDiagnosticV0 rendered ->
         let map_color = function
           | ExtraDetailedDiagnosticV0.Default -> "default"
@@ -650,7 +652,7 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
         Jget.array_d j "relatedInformation" ~default:[] |> Base.List.map ~f:parse_info;
       (* The parsing is for recovering diagnostics in the code action. The extra detailed one is
        * not relevant, since it contains the same information as the rest of the diagnostic. *)
-      data = PublishDiagnostics.NoExtraDetailedDiagnostic;
+      data = PublishDiagnostics.NoExtraData;
     }
   )
 
@@ -1413,6 +1415,10 @@ let parse_initialize (params : json option) : Initialize.params =
             | Some "true" -> Some true
             | Some "false" -> Some false
             | _ -> None));
+        semanticDecorations =
+          (match Jget.bool_opt json "semanticDecorations" with
+          | Some b -> b
+          | None -> false);
         refinementInformationOnHover =
           (match Jget.bool_opt json "refinementInformationOnHover" with
           | Some b -> b

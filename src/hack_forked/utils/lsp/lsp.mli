@@ -425,6 +425,7 @@ module Initialize : sig
   and initializationOptions = {
     liveSyntaxErrors: bool;
     detailedErrorRendering: bool option;
+    semanticDecorations: bool;
     refinementInformationOnHover: bool;
   }
 
@@ -617,7 +618,7 @@ module PublishDiagnostics : sig
     message: string;
     tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
-    data: extraDetailedDiagnostic;
+    data: data;
   }
 
   and diagnosticRelatedInformation = {
@@ -625,8 +626,9 @@ module PublishDiagnostics : sig
     relatedMessage: string;
   }
 
-  and extraDetailedDiagnostic =
-    | NoExtraDetailedDiagnostic
+  and data =
+    | NoExtraData
+    | RefinementInformation
     | ExtraDetailedDiagnosticV0 of (ExtraDetailedDiagnosticV0.style * string) list
 end
 

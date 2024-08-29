@@ -114,7 +114,7 @@ let limit_errors errors =
           tags = [];
           message;
           relatedInformation = [];
-          data = PublishDiagnostics.NoExtraDetailedDiagnostic;
+          data = PublishDiagnostics.NoExtraData;
         }
       in
 
