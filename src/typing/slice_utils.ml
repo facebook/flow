@@ -538,6 +538,7 @@ let spread_mk_object
     let frozen = sealed = Object.Spread.Frozen in
     ({ obj_kind; frozen; react_dro = None }, as_const)
   in
+  let positive_polarity = as_const || flags.frozen in
   let props =
     NameUtils.Map.map
       (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
@@ -549,7 +550,7 @@ let spread_mk_object
               preferred_def_locs = None;
               key_loc;
               type_ = mk_dro prop_t;
-              polarity = Polarity.object_literal_polarity as_const;
+              polarity = Polarity.object_literal_polarity positive_polarity;
             })
       props
   in

@@ -10,17 +10,17 @@ export_const.js:5:14,5:17
 
 export_const.js:7:14
 Flags:
-{f: "a"}
+{+f: "a"}
 export_const.js:7:14,7:17
 
 export_const.js:9:14
 Flags:
-{f: "a"}
+{+f: "a"}
 export_const.js:9:14,9:17
 
 export_const.js:11:14
 Flags:
-{a: "a", b: "b", c: {d: string}, e: "e"}
+{+a: "a", +b: "b", +c: {d: string}, +e: "e"}
 export_const.js:11:14,11:17
 
 export_const.js:13:14
@@ -40,17 +40,17 @@ file.js:6:5,6:8
 
 file.js:8:5
 Flags:
-{f: string}
+{+f: string}
 file.js:8:5,8:8
 
 file.js:10:5
 Flags:
-{f: string}
+{+f: string}
 file.js:10:5,10:8
 
 file.js:12:5
 Flags:
-{a: string, b: string, c: {d: string}, e: string}
+{+a: string, +b: string, +c: {d: string}, +e: string}
 file.js:12:5,12:8
 
 file.js:14:5
