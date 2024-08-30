@@ -995,19 +995,6 @@ module SelectionRange : sig
   type result = selection_range list
 end
 
-module SemanticDecorations : sig
-  type params = { textDocument: TextDocumentIdentifier.t }
-
-  and result = { decorations: decoration list }
-
-  and decoration = {
-    range: range;
-    kind: kind;
-  }
-
-  and kind = RefinedValue
-end
-
 module SignatureHelp : sig
   module TriggerKind : sig
     type t =
@@ -1241,7 +1228,6 @@ type lsp_request =
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | ConfigurationRequest of Configuration.params
   | SelectionRangeRequest of SelectionRange.params
-  | SemanticDecorationsRequest of SemanticDecorations.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -1277,7 +1263,6 @@ type lsp_result =
   | CompletionItemResolveResult of CompletionItemResolve.result
   | ConfigurationResult of Configuration.result
   | SelectionRangeResult of SelectionRange.result
-  | SemanticDecorationsResult of SemanticDecorations.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
