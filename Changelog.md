@@ -1,3 +1,25 @@
+### 0.245.0
+
+Likely to cause new Flow errors:
+* `React.Element` type, deprecated in 0.243.0, is now removed.
+* Fixed a bug where refinements are incorrectly not invalidated. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZlduuSMTBJC-Mgz4sHwNSBos6A6u9w1mbGqJUoBaCRHEzrcDEgBrbAk62mPhXFxJ91v7x+fRHEp3gxCKBgNpUU7nAF5KBQA7tEhUJ4VJqmDA+SEgIEwsBwhHHCCMTZQbjHOoYCrooHwmDYY4Ie5HSgkY5kCQM7ZXKH5E7MdJwMgAgC+-EgGiSa1wVGwAAIYEDlHBoDKABRFEpsACUyClaGIoKgAG4ADpQcWSqW2ewy4hagD8wEwlC19lMUAQAqNUGNcBgUqVxqlUoA9IGpQASABiRAA7uHigBZbD+q0QKwOqUAQgAvFKXrgpQAyfPKmDEVNUdUFotJksptPBnMQKUmSgQSjazSt2RN6ithtR40V4DG40C425EANEwkBVQJIZewmEACoA)
+* Under custom jsx pragma, children is no longer incorrectly added to props. Some spurious errors will be gone. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZlduuSMTBJC-Mgz4sHwNSBos6A6u9w1mbGqJUoBaCRHEzrcDEgBrbAk62mPhXFxJ91v7x+fRHEp3gxCKBgNpUU7nAF5KBQA7tEhUJ4VJqmDA+SEgIEwsBwhHHCCMTZQbjHOoYCrooHwmDYY4Ie5HSgkY5kCQM7ZXKH5E7MdJwMgAgC+-EgGiSAHoxQACAACACsSPJJWB8mkRAApBUAHSg2rWuCo2ElyMlADFiMhJajaABuXUHfUsSUwIHKODQJUq9Ia+QAHgAKgA+AAUYAtVt4kp5jBIFuAmEoFoA5ABmRNCpW1OC4NgsKAWv0ASnztp1wK2EklLBI2grAF5JT6zRBJfHa5qQMn2wHgMmBT6xU2A9bJRLJRAbpKoBAAO7a3IgBomEhuqBJDL2EwgAVAA)
+
+New Features:
+* Added LSP signature help support for JSX attributes. The feature is triggered with the opening `{` of a JSX attribute value.
+* Flow now allows to configure the typing of jsx creation under the new option `react.custom_jsx_typing=true`. Under this flag, Flow will type check jsx by through your self-defined global type `React$CustomJSXFactory` type, which should be a function type that accepts arguments according to jsx spec. e.g. You can write a loose one like `type React$CustomJSXFactory = (component: any, props: any, ...children: any) => React.MixedElement`
+
+Notable bug fixes:
+* Fixed jsdoc attachment to signature help results for overloaded functions. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZlduuSMTBJC-Mgz4sHwNSBos6A6u9w1mbGqJUoBaCRHEzrcDEgBrbAk62mPhXFxJ91v7x+fRHEp3gxCKBgNpUU7nAF5KBQA7tEhUJ4VJqmDA+SEgIEwsBwhHHCCMTZQbjHOoYCrooHwmDYY4Ie5HSgkY5kCQM7ZXKH5E7MdJwMgAgC+-EgGiSAB0JGKoAB6ABUsqlsoABPBGRIlRAGiYiOxFUqAAKOGgiJXyJXHJUARnsSqNzg1MBVcDVGq1lB1bD1hqcJto5qVACYoGxbT6HU6XZrtRBdVBZdKpWtcFRsCqgco4NAVcQABTyZBWgAMvCVtALlstAEpywBuKVyhVxpVkWwhqPumOepve42m-3W9V2k0QR0t6Btt0er1D0v+oMhmcj5sHceu6Ox+OJg7Jlhp4GE7MQPMFgPF0snqsnutQevSpUAZUQRIkQl3AAk8IwlQB3OCvJVQBA37NrUQFKhItSpqYCC1OqABS94ACIQGASoVEqrB1OGEGpjAECvEBFQIEq1RkCQyBSnhR5ykqkG7vGlbXlROaWmeNF0amDFMbmp4luxJicdKjFSrkIBuiQmZQEkDSFlYAYACzyVYhYgAKQA))
+* Signature help on overloaded functions will show information in the correct order of signatures
+* Labels of autocomplete on members will indicate if the property is optional with a "?"
+* Fixed a bug where a type-only namespace within a namespace is accidentally dropped. This bug used to make `globalThis.React.Node` being incorrectly unavailable.
+* Fixed poor interaction of "Add missing attributes" quickfix when Linked Editing Range is enabled.
+* Clicking on related symbol location on hover will jump to the right location in VSCode. Previously it incorrectly jumped to the position 1 character left of the right location.
+
+IDE:
+* Elements of component syntax components  (e.g. typeof `<A />` where A is in component syntax) will no longer be shown in hover with shorthand syntax like `A`. Instead, it will be shown as `React$Element<typeof A>`
+
 ### 0.244.0
 
 Likely to cause new Flow errors:
