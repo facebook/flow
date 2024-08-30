@@ -2737,7 +2737,9 @@ module Make
     | Object { Object.properties; comments } ->
       error_on_this_uses_in_object_methods cx properties;
       let reason = Reason.mk_obj_lit_reason ~as_const ~frozen:false loc in
-      let (t, properties) = object_ ~frozen:false ~as_const cx reason properties in
+      let (t, properties) =
+        object_ ~frozen:(frozen = FrozenDirect) ~as_const cx reason properties
+      in
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
       (match elements with

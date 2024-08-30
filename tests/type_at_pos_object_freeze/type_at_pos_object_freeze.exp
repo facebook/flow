@@ -10,17 +10,17 @@ export_const.js:5:14,5:17
 
 export_const.js:7:14
 Flags:
-{f: string}
+{f: "a"}
 export_const.js:7:14,7:17
 
 export_const.js:9:14
 Flags:
-{f: string}
+{f: "a"}
 export_const.js:9:14,9:17
 
 export_const.js:11:14
 Flags:
-{a: string, b: string, c: {d: string}, e: string}
+{a: "a", b: "b", c: {d: string}, e: "e"}
 export_const.js:11:14,11:17
 
 export_const.js:13:14
