@@ -64,6 +64,11 @@ module Make
 
   let empty_seen_names = { static_names = SMap.empty; instance_names = SMap.empty }
 
+  type frozen_kind =
+    | NotFrozen
+    | FrozenProp
+    | FrozenDirect
+
   module ObjectExpressionAcc = struct
     type element =
       | Spread of Type.t
@@ -2056,6 +2061,7 @@ module Make
         (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
       | Ok name ->
         let (acc, key, value) =
+          let frozen = Utils_js.ite frozen FrozenProp NotFrozen in
           if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
             let t = Unsoundness.at InferenceHooks loc in
             let key = translate_identifer_or_literal_key t key in
@@ -2070,7 +2076,7 @@ module Make
               ObjectExpressionAcc.add_prop
                 (Properties.add_field
                    (OrdinaryName name)
-                   (Polarity.object_literal_polarity (as_const || frozen))
+                   (Polarity.object_literal_polarity (as_const || frozen = FrozenProp))
                    ~key_loc:(Some loc)
                    t
                 )
@@ -2268,7 +2274,8 @@ module Make
       List.fold_left
         (fun (acc, rev_prop_asts) -> function
           | SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) ->
-            let (((_, spread), _) as argument) = expression cx ~as_const argument in
+            let frozen = Utils_js.ite frozen FrozenDirect NotFrozen in
+            let (((_, spread), _) as argument) = expression cx ~as_const ~frozen argument in
             ( ObjectExpressionAcc.add_spread spread acc,
               SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) :: rev_prop_asts
             )
@@ -2565,7 +2572,7 @@ module Make
   (* can raise Abnormal.(Exn (_, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond ?(as_const = false) ?(frozen = false) cx (loc, e) =
+  and expression ?cond ?(as_const = false) ?(frozen = NotFrozen) cx (loc, e) =
     let log_slow_to_check ~f =
       match Context.slow_to_check_logging cx with
       | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
@@ -2626,19 +2633,19 @@ module Make
     let open Ast.Expression in
     match e with
     | StringLiteral lit ->
-      let t = string_literal cx ~singleton:(as_const || frozen) loc lit in
+      let t = string_literal cx ~singleton:(as_const || frozen = FrozenProp) loc lit in
       ((loc, t), StringLiteral lit)
     | BooleanLiteral lit ->
-      let t = boolean_literal ~singleton:(as_const || frozen) loc lit in
+      let t = boolean_literal ~singleton:(as_const || frozen = FrozenProp) loc lit in
       ((loc, t), BooleanLiteral lit)
     | NullLiteral lit ->
       let t = null_literal loc in
       ((loc, t), NullLiteral lit)
     | NumberLiteral lit ->
-      let t = number_literal ~singleton:(as_const || frozen) loc lit in
+      let t = number_literal ~singleton:(as_const || frozen = FrozenProp) loc lit in
       ((loc, t), NumberLiteral lit)
     | BigIntLiteral lit ->
-      let t = bigint_literal ~singleton:(as_const || frozen) loc lit in
+      let t = bigint_literal ~singleton:(as_const || frozen = FrozenProp) loc lit in
       ((loc, t), BigIntLiteral lit)
     | RegExpLiteral lit ->
       let t = regexp_literal cx loc in
@@ -5499,7 +5506,7 @@ module Make
           jsx_mk_props
             cx
             fbt_reason
-            ~check_expression:(Statement.expression ?cond:None ?as_const:None ?frozen:None)
+            ~check_expression:(expression ?cond:None ?as_const:None ~frozen:NotFrozen)
             ~collapse_children
             name
             attributes
@@ -5544,7 +5551,7 @@ module Make
             jsx_mk_props
               cx
               reason
-              ~check_expression:(Statement.expression ?cond:None ?as_const:None)
+              ~check_expression:(expression ?cond:None ?as_const:None)
               ~collapse_children
               name
               attributes
@@ -5584,7 +5591,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
+            ~check_expression:(expression ?cond:None ?as_const:None)
             ~collapse_children
             name
             attributes
@@ -5608,7 +5615,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
+            ~check_expression:(expression ?cond:None ?as_const:None)
             ~collapse_children
             el_name
             attributes
@@ -5625,7 +5632,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(Statement.expression ?cond:None ?as_const:None)
+            ~check_expression:(expression ?cond:None ?as_const:None)
             ~collapse_children
             el_name
             attributes
@@ -8508,4 +8515,7 @@ module Make
         (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
     in
     { enum_name; enum_id; members; representation_t; has_unknown_members }
+
+  let expression ?cond ?as_const cx (loc, e) =
+    expression ?cond ?as_const ~frozen:NotFrozen cx (loc, e)
 end
