@@ -514,7 +514,7 @@ let spread_mk_object
     | Some l -> EvalT (t, TypeDestructorT (unknown_use, reason, ReactDRO l), Eval.generate_id ())
     | None -> t
   in
-  let (flags, as_const) =
+  let (obj_kind, as_const, frozen_seal) =
     let (exact, sealed) =
       match target with
       (* Type spread result is exact if annotated to be exact *)
@@ -535,10 +535,17 @@ let spread_mk_object
       | (true, _, _) -> Exact
       | _ -> Inexact
     in
-    let frozen = sealed = Object.Spread.Frozen in
-    ({ obj_kind; frozen; react_dro = None }, as_const)
+    let frozen_seal = sealed = Object.Spread.Frozen in
+    (obj_kind, as_const, frozen_seal)
   in
-  let positive_polarity = as_const || flags.frozen in
+  let flags =
+    {
+      obj_kind;
+      frozen = (not (Context.natural_inference_object_freeze cx)) && frozen_seal;
+      react_dro = None;
+    }
+  in
+  let positive_polarity = as_const || frozen_seal in
   let props =
     NameUtils.Map.map
       (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
@@ -1572,7 +1579,13 @@ let resolve
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, (NullT | VoidT)) ->
-    let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
+    let flags =
+      {
+        frozen = not (Context.natural_inference_object_freeze cx);
+        obj_kind = Exact;
+        react_dro = None;
+      }
+    in
     let x =
       Nel.one
         {
@@ -1594,7 +1607,13 @@ let resolve
     when match tool with
          | Spread _ -> true
          | _ -> false ->
-    let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
+    let flags =
+      {
+        frozen = not (Context.natural_inference_object_freeze cx);
+        obj_kind = Exact;
+        react_dro = None;
+      }
+    in
     let x =
       Nel.one
         {
@@ -1616,7 +1635,13 @@ let resolve
    *)
   | DefT (r, MixedT _) as t ->
     (* TODO(jmbrown): This should be Inexact *)
-    let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
+    let flags =
+      {
+        frozen = not (Context.natural_inference_object_freeze cx);
+        obj_kind = Exact;
+        react_dro = None;
+      }
+    in
     let x =
       match tool with
       | Spread _

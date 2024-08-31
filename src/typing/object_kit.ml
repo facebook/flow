@@ -429,7 +429,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   else
                     Inexact
               in
-              let flags = { frozen = true; obj_kind; react_dro = None } in
+              let flags =
+                {
+                  frozen = not (Context.natural_inference_object_freeze cx);
+                  obj_kind;
+                  react_dro = None;
+                }
+              in
               let generics = Generic.spread_append config_generics defaults_generics in
               (props, flags, generics, config_targs @ defaults_targs)
             (* Otherwise turn our slice props map into an object props. *)
@@ -464,7 +470,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       Inexact
                     )
               in
-              let flags = { frozen = true; obj_kind; react_dro = None } in
+              let flags =
+                {
+                  frozen = not (Context.natural_inference_object_freeze cx);
+                  obj_kind;
+                  react_dro = None;
+                }
+              in
               (props, flags, config_generics, config_targs)
           in
           let call = None in
