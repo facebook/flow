@@ -28,43 +28,63 @@ Flags:
 {prop: {+f: "a"}}
 export_const.js:13:14,13:17
 
+export_const.js:16:14
+Flags:
+{+f: string}
+export_const.js:16:14,16:17
+
+export_const.js:18:14
+Flags:
+{+f: 1, +g: 1, +h: 1}
+export_const.js:18:14,18:17
+
 file.js:4:5
 Flags:
-{f: string}
+{+f: "a"}
 file.js:4:5,4:8
 
 file.js:6:5
 Flags:
-{f: {g: string}}
+{+f: {g: string}}
 file.js:6:5,6:8
 
 file.js:8:5
 Flags:
-{+f: string}
+{+f: "a"}
 file.js:8:5,8:8
 
 file.js:10:5
 Flags:
-{+f: string}
+{+f: "a"}
 file.js:10:5,10:8
 
 file.js:12:5
 Flags:
-{+a: string, +b: string, +c: {d: string}, +e: string}
+{+a: "a", +b: "b", +c: {d: string}, +e: "e"}
 file.js:12:5,12:8
 
 file.js:14:5
 Flags:
-{prop: {f: string}}
+{prop: {+f: "a"}}
 file.js:14:5,14:8
 
 file.js:18:8
 Flags:
-{f: string}
+{+f: "a"}
 file.js:18:8,18:17
 
 file.js:21:8
 Flags:
-{f: string}
+{+f: "a"}
 file.js:21:8,21:20
+
+file.js:24:5
+Flags:
+{+f: string}
+file.js:24:5,24:8
+
+file.js:26:5
+Flags:
+{+f: 1, +g: 1, +h: 1}
+file.js:26:5,26:8
 

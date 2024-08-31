@@ -12,3 +12,8 @@ export const obj5 = Object.freeze({...{a: "a",...{b:"b", c: {d:"d"}}, e: "e"}});
 //           ^
 export const obj6 = { prop: Object.freeze({f:"a"}) }; // {prop: {+f: "a"}}
 //           ^
+const local_obj = {f:"a"};
+export const obj7 = Object.freeze({...local_obj}); // {+f: string}
+//           ^
+export const obj8 = Object.freeze({...{f:"a", ...{g:1}}, h:1, f:1}); // {+f: 1, +g: 1, +h: 1}
+//           ^

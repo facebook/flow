@@ -328,6 +328,11 @@ and 'loc tables = {
   patterns: 'loc pattern Patterns.builder;
 }
 
+type frozen_kind =
+  | NotFrozen
+  | FrozenProp
+  | FrozenDirect
+
 let ignore2 _ _ = ()
 
 let create_tables () =
@@ -1418,8 +1423,8 @@ module ObjectLiteralAcc = struct
 
   let map_props f acc = { acc with props = f acc.props }
 
-  let add_field name id_loc t acc =
-    let f = SMap.add name (ObjValueField (id_loc, t, Polarity.Neutral)) in
+  let add_field name id_loc t polarity acc =
+    let f = SMap.add name (ObjValueField (id_loc, t, polarity)) in
     map_props f acc
 
   let add_method name id_loc fn_loc ~async ~generator def acc =
@@ -2813,8 +2818,10 @@ let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; legacy
   let mref = push_module_ref tbls (Base.String.drop_prefix value prefix_len) in
   ModuleRef { loc; mref; legacy_interop }
 
-let string_literal opts loc s =
-  if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
+let string_literal ~new_frozen opts loc s =
+  if new_frozen = FrozenProp then
+    Annot (SingletonString (loc, s))
+  else if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
     Value (StringLit (loc, s))
   else
     Value (LongStringLit loc)
@@ -2823,7 +2830,7 @@ let template_literal opts loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
   match quasis with
   | [(_, { T.Element.value = { T.Element.raw = _; cooked = s }; tail = _ })] ->
-    string_literal opts loc s
+    string_literal ~new_frozen:NotFrozen opts loc s
   | _ -> Value (StringVal loc)
 
 let graphql_literal opts tbls loc quasi =
@@ -2859,7 +2866,7 @@ let key_mirror =
             acc
           else
             let t = Annot (SingletonString (id_loc, name)) in
-            Acc.add_field name id_loc t acc
+            Acc.add_field name id_loc t Polarity.Neutral acc
         in
         loop tbls loc acc ps
       | O.Property (prop_loc, _)
@@ -2912,17 +2919,27 @@ let binary loc lhs_t rhs_t op =
   | Plus ->
     Eval (loc, lhs_t, Arith (op, rhs_t))
 
-let rec expression opts scope tbls (loc, expr) =
+let rec expression opts scope tbls ?(new_frozen = NotFrozen) (loc, expr) =
   let module E = Ast.Expression in
   let loc = push_loc tbls loc in
   match expr with
   | E.StringLiteral { Ast.StringLiteral.value; raw = _; comments = _ } ->
-    string_literal opts loc value
+    string_literal ~new_frozen opts loc value
   | E.NumberLiteral { Ast.NumberLiteral.value; raw; comments = _ } ->
-    Value (NumberLit (loc, value, raw))
+    if new_frozen = FrozenProp then
+      Annot (SingletonNumber (loc, value, raw))
+    else
+      Value (NumberLit (loc, value, raw))
   | E.BigIntLiteral { Ast.BigIntLiteral.value; raw; comments = _ } ->
-    Value (BigIntLit (loc, value, raw))
-  | E.BooleanLiteral { Ast.BooleanLiteral.value; comments = _ } -> Value (BooleanLit (loc, value))
+    if new_frozen = FrozenProp then
+      Annot (SingletonBigInt (loc, value, raw))
+    else
+      Value (BigIntLit (loc, value, raw))
+  | E.BooleanLiteral { Ast.BooleanLiteral.value; comments = _ } ->
+    if new_frozen = FrozenProp then
+      Annot (SingletonBoolean (loc, value))
+    else
+      Value (BooleanLit (loc, value))
   | E.NullLiteral _comments -> Value (NullLit loc)
   | E.RegExpLiteral _ ->
     (* This can probably be easily supported by referencing the builtin type, as
@@ -3026,7 +3043,8 @@ let rec expression opts scope tbls (loc, expr) =
           (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Satisfies))
       )
   | E.Object { E.Object.properties; comments = _ } ->
-    object_literal opts scope tbls loc ~frozen:false properties
+    let new_frozen = opts.natural_inference_object_freeze && new_frozen = FrozenDirect in
+    object_literal opts scope tbls loc ~frozen:false ~new_frozen properties
   | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements
   | E.Unary { E.Unary.operator; argument; comments = _ } -> begin
     match operator with
@@ -3113,7 +3131,8 @@ let rec expression opts scope tbls (loc, expr) =
      * this call "Object" is not in scope. Again, we should fix the existing
      * signature builder first. *)
     let obj_loc = push_loc tbls obj_loc in
-    object_literal opts scope tbls obj_loc ~frozen:true properties
+    let new_frozen = opts.natural_inference_object_freeze in
+    object_literal opts scope tbls obj_loc ~frozen:true ~new_frozen properties
   | E.Call
       {
         E.Call.callee = (_, E.Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
@@ -4056,7 +4075,7 @@ and object_literal =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
   let module Acc = ObjectLiteralAcc in
-  let prop opts scope tbls acc prop_loc = function
+  let prop ~new_frozen opts scope tbls acc prop_loc = function
     | P.Init
         {
           key =
@@ -4067,11 +4086,14 @@ and object_literal =
         } ->
       let id_loc = push_loc tbls id_loc in
       let loc = push_loc tbls (fst value) in
-      let t = expression opts scope tbls value in
+      let t =
+        expression ~new_frozen:(Utils_js.ite new_frozen FrozenProp NotFrozen) opts scope tbls value
+      in
       if name = "__proto__" then
         Acc.add_proto (loc, t) acc
       else
-        Acc.add_field name id_loc t acc
+        let polarity = Utils_js.ite new_frozen Polarity.Positive Polarity.Neutral in
+        Acc.add_field name id_loc t polarity acc
     | P.Method
         {
           key =
@@ -4123,18 +4145,19 @@ and object_literal =
     | P.Set { key = P.PrivateName _; _ } ->
       failwith "unexpected private field in object literal"
   in
-  let spread opts scope tbls acc p =
+  let spread opts scope tbls ~new_frozen acc p =
     let { O.SpreadProperty.argument = e; comments = _ } = p in
-    let t = expression opts scope tbls e in
+    let new_frozen = Utils_js.ite new_frozen FrozenDirect NotFrozen in
+    let t = expression opts scope tbls ~new_frozen e in
     Acc.add_spread t acc
   in
-  let rec loop opts scope tbls loc ~frozen acc = function
+  let rec loop opts scope tbls loc ~frozen ~new_frozen acc = function
     | [] -> Acc.object_lit loc ~frozen acc
     | p :: ps ->
       (match p with
       | O.SpreadProperty (_, p) ->
-        let acc = spread opts scope tbls acc p in
-        loop opts scope tbls loc ~frozen acc ps
+        let acc = spread opts scope tbls ~new_frozen acc p in
+        loop opts scope tbls loc ~frozen ~new_frozen acc ps
       | O.Property (prop_loc, P.Init { key = P.Computed _; _ })
       | O.Property (prop_loc, P.Method { key = P.Computed _; _ }) ->
         (* TODO: Instead of stopping at the first unexpected key, we should
@@ -4143,11 +4166,11 @@ and object_literal =
         let prop_loc = push_loc tbls prop_loc in
         Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, prop_loc)))
       | O.Property (prop_loc, p) ->
-        let acc = prop opts scope tbls acc prop_loc p in
-        loop opts scope tbls loc ~frozen acc ps)
+        let acc = prop ~new_frozen opts scope tbls acc prop_loc p in
+        loop opts scope tbls loc ~frozen ~new_frozen acc ps)
   in
-  fun opts scope tbls loc ~frozen properties ->
-    loop opts scope tbls loc ~frozen Acc.empty properties
+  fun opts scope tbls loc ~frozen ~new_frozen properties ->
+    loop opts scope tbls loc ~frozen ~new_frozen Acc.empty properties
 
 and array_literal =
   let module E = Ast.Expression in
