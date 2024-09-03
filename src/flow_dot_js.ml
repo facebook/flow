@@ -461,7 +461,8 @@ let get_def filename content line col js_config_object : (Loc.t list, string) re
     | GetDef_js.Get_def_result.Def_error err_msg ->
       Error err_msg)
 
-let infer_type filename content line col js_config_object : Loc.t * (string, string) result =
+let infer_type filename content line col js_config_object :
+    Loc.t * (string, string) result * Loc.t list * (Loc.t * Refinement_invalidation.reason) list =
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
   match parse_content filename content with
@@ -479,10 +480,30 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let loc = mk_loc filename line col in
     let open Query_types in
+    let open Loc_collections in
+    let (refining_locs, refinement_invalidated) =
+      let contains_cursor aloc _ = Loc.contains (loc_of_aloc aloc) loc in
+      let refining_locs =
+        ALocMap.filter contains_cursor (Context.refined_locations cx)
+        |> ALocMap.values
+        |> Base.List.fold ~init:ALocSet.empty ~f:ALocSet.union
+        |> ALocSet.elements
+        |> List.map loc_of_aloc
+      in
+      let refinement_invalidated =
+        ALocMap.filter contains_cursor (Context.aggressively_invalidated_locations cx)
+        |> ALocMap.values
+        |> Base.List.fold ~init:ALocMap.empty ~f:ALocMap.union
+        |> ALocMap.elements
+        |> List.map (fun (loc, reason) -> (loc_of_aloc loc, reason))
+      in
+      (refining_locs, refinement_invalidated)
+    in
     if Js.Unsafe.get js_config_object "dev_only.type_repr" |> Js.to_bool then
       match dump_type_at_pos ~cx ~typed_ast loc with
-      | None -> (Loc.none, Error "No match")
-      | Some (loc, s) -> (loc, Ok (Utils_js.spf "type_repr: %s" s))
+      | None -> (Loc.none, Error "No match", refining_locs, refinement_invalidated)
+      | Some (loc, s) ->
+        (loc, Ok (Utils_js.spf "type_repr: %s" s), refining_locs, refinement_invalidated)
     else
       let result =
         type_at_pos_type
@@ -498,11 +519,12 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
       in
       begin
         match result with
-        | FailureNoMatch -> (Loc.none, Error "No match")
-        | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
+        | FailureNoMatch -> (Loc.none, Error "No match", refining_locs, refinement_invalidated)
+        | FailureUnparseable (loc, _, _) ->
+          (loc, Error "Unparseable", refining_locs, refinement_invalidated)
         | Success (loc, result) ->
           let (result, _) = Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result in
-          (loc, Ok result)
+          (loc, Ok result, refining_locs, refinement_invalidated)
       end
 
 let refined_locations filename content js_config_object =
@@ -767,20 +789,17 @@ let semantic_decorations js_file js_content js_config_object =
   let filename = Js.to_string js_file in
   let content = Js.to_string js_content in
   let json =
-    if Js.Unsafe.get js_config_object "experimental.semantic_decorations" |> Js.to_bool then
-      let refined_locations = refined_locations filename content js_config_object in
-      let decorations =
-        Base.List.map refined_locations ~f:(fun loc ->
-            JSON_Object
-              [
-                ("kind", JSON_String "refined-value");
-                ("range", loc_as_range_end_inclusive_to_json loc);
-              ]
-        )
-      in
-      JSON_Object [("decorations", JSON_Array decorations)]
-    else
-      JSON_Object [("decorations", JSON_Array [])]
+    let refined_locations = refined_locations filename content js_config_object in
+    let decorations =
+      Base.List.map refined_locations ~f:(fun loc ->
+          JSON_Object
+            [
+              ("kind", JSON_String "refined-value");
+              ("range", loc_as_range_end_inclusive_to_json loc);
+            ]
+      )
+    in
+    JSON_Object [("decorations", JSON_Array decorations)]
   in
   js_of_json json
 
@@ -807,9 +826,56 @@ let type_at_pos js_file js_content js_line js_col js_config_object =
   let content = Js.to_string js_content in
   let line = Js.parseInt js_line in
   let col = Js.parseInt js_col in
-  match infer_type filename content line col js_config_object with
-  | (_, Ok resp) -> Js.string resp
-  | (_, _) -> failwith "Error"
+  let open Hh_json in
+  let (_loc, resp, refining_locs, refinement_invalidated) =
+    infer_type filename content line col js_config_object
+  in
+  let markdown_resp s =
+    js_of_json (JSON_Object [("type", JSON_String "markdown"); ("value", JSON_String s)])
+  in
+  let flow_resp s =
+    js_of_json (JSON_Object [("type", JSON_String "flow"); ("value", JSON_String s)])
+  in
+  let loc_to_location_in_markdown loc =
+    let { Loc.source = _; start = { Loc.line; column; _ }; _ } = loc in
+    Utils_js.spf "`%d:%d`" line column
+  in
+  let responses =
+    let refining_locs = Base.List.map refining_locs ~f:loc_to_location_in_markdown in
+    if Base.List.is_empty refining_locs then
+      []
+    else
+      [markdown_resp (Utils_js.spf "Refined at %s" (Base.String.concat ~sep:", " refining_locs))]
+  in
+  let responses =
+    match resp with
+    | Ok s -> flow_resp s :: responses
+    | Error _ -> responses
+  in
+  let responses =
+    let invalidation_info =
+      Base.List.map refinement_invalidated ~f:(fun (loc, reason) ->
+          (loc_to_location_in_markdown loc, Refinement_invalidation.string_of_reason reason)
+      )
+    in
+    if Base.List.is_empty invalidation_info then
+      responses
+    else
+      let reasons_str =
+        invalidation_info
+        |> Base.List.map ~f:(fun (loc, reason) -> Utils_js.spf "%s at %s" reason loc)
+        |> Base.String.concat ~sep:", "
+      in
+      markdown_resp
+        (Utils_js.spf
+           "Refinement invalidated due to %s. Refactor this property to a constant to keep refinements."
+           reasons_str
+        )
+      :: responses
+  in
+  match responses with
+  | [] -> failwith "No responses"
+  | _ -> Js.array (Array.of_list responses)
 
 let exports =
   if Js.Unsafe.js_expr "typeof exports !== 'undefined'" then
@@ -882,13 +948,6 @@ let () =
     "type": "bool",
     "default": false,
     "desc": "Show the underlying type representation for debugging purposes."
-  },
-  {
-    "key": "experimental.semantic_decorations",
-    "kind": "option",
-    "type": "bool",
-    "default": false,
-    "desc": "Apply some decorations in the playground editor based on semantic information."
   },
   {
     "key": "deprecated-type",
