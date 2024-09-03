@@ -18,6 +18,13 @@ type t = reason ALocMap.t
 
 let singleton ~loc ~reason = ALocMap.singleton loc reason
 
+let string_of_reason = function
+  | FunctionCall -> "function call"
+  | ConstructorCall -> "constructor call"
+  | PropertyAssignment -> "property assignment"
+  | Await -> "await expression"
+  | Yield -> "yield expression"
+
 let merge = function
   | (None, None) -> None
   | (Some m, None)
