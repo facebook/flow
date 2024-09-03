@@ -31,7 +31,6 @@ type trigger =
   | Rename of Lsp.lsp_id
   | ServerConnected
   | SelectionRange of Lsp.lsp_id
-  | SemanticDecorations of Lsp.lsp_id
   | SignatureHelp of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id
@@ -102,7 +101,6 @@ let string_of_trigger = function
   | Rename _ -> "Rename"
   | ServerConnected -> "ServerConnected"
   | SelectionRange _ -> "SelectionRange"
-  | SemanticDecorations _ -> "SemanticDecorations"
   | SignatureHelp _ -> "SignatureHelp"
   | TypeCoverage _ -> "TypeCoverage"
   | ExecuteCommand _ -> "ExecuteCommand"
@@ -123,7 +121,6 @@ let lsp_id_of_trigger = function
   | Rage lsp_id
   | Rename lsp_id
   | SelectionRange lsp_id
-  | SemanticDecorations lsp_id
   | SignatureHelp lsp_id
   | TypeCoverage lsp_id
   | ExecuteCommand lsp_id
@@ -198,7 +195,6 @@ let source_of_trigger = function
   | Rage _
   | Rename _
   | SelectionRange _
-  | SemanticDecorations _
   | SignatureHelp _
   | TypeCoverage _
   | ExecuteCommand _
@@ -363,7 +359,6 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, RageRequest) -> Some (Rage lsp_id)
   | RequestMessage (lsp_id, RenameRequest _) -> Some (Rename lsp_id)
   | RequestMessage (lsp_id, TypeCoverageRequest _) -> Some (TypeCoverage lsp_id)
-  | RequestMessage (lsp_id, SemanticDecorationsRequest _) -> Some (SemanticDecorations lsp_id)
   | RequestMessage (lsp_id, SelectionRangeRequest _) -> Some (SelectionRange lsp_id)
   | RequestMessage (lsp_id, SignatureHelpRequest _) -> Some (SignatureHelp lsp_id)
   | RequestMessage (lsp_id, ExecuteCommandRequest _) -> Some (ExecuteCommand lsp_id)
@@ -402,7 +397,6 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, CompletionItemResolveResult _)
   | ResponseMessage (_, ConfigurationResult _)
   | ResponseMessage (_, SelectionRangeResult _)
-  | ResponseMessage (_, SemanticDecorationsResult _)
   | ResponseMessage (_, SignatureHelpResult _)
   | ResponseMessage (_, WorkspaceSymbolResult _)
   | ResponseMessage (_, DocumentSymbolResult _)

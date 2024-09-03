@@ -3046,64 +3046,6 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
       RenameResult { WorkspaceEdit.changes })
     text_doc_position
 
-let handle_persistent_semantic_decorations
-    ~loc_of_aloc ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
-  let textDocument = params.SemanticDecorations.textDocument in
-  let file_input =
-    match file_input with
-    | Some file_input -> file_input
-    | None ->
-      (* We must have failed to get the client when we first tried. We could throw here, but this is
-       * a little more defensive. The only danger here is that the file contents may have changed *)
-      file_input_of_text_document_identifier ~client textDocument
-  in
-  match of_file_input ~options ~env file_input with
-  | Error (Failed reason) -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
-  | Error (Skipped reason) ->
-    let r = SemanticDecorationsResult { SemanticDecorations.decorations = [] } in
-    let response = ResponseMessage (id, r) in
-    let metadata =
-      let extra_data = json_of_skipped reason in
-      with_data ~extra_data metadata
-    in
-    Lwt.return (LspProt.LspFromServer (Some response), metadata)
-  | Ok (file_key, file_contents) ->
-    let type_parse_artifacts_cache =
-      Some (Persistent_connection.type_parse_artifacts_cache client)
-    in
-    let (check_result, did_hit_cache) =
-      match
-        let parse_result =
-          lazy (Type_contents.parse_contents ~options ~profiling file_contents file_key)
-        in
-        type_parse_artifacts_with_cache
-          ~options
-          ~profiling
-          ~type_parse_artifacts_cache
-          env.master_cx
-          file_key
-          parse_result
-      with
-      | (Ok result, did_hit_cache) -> (Ok result, did_hit_cache)
-      | (Error _parse_errors, did_hit_cache) ->
-        (Error "Couldn't parse file in parse_contents", did_hit_cache)
-    in
-    (match check_result with
-    | Error msg ->
-      let json_props = [("error", Hh_json.JSON_String msg)] in
-      let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
-      let extra_data = Some (Hh_json.JSON_Object json_props) in
-      let metadata = with_data ~extra_data metadata in
-      Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:msg metadata)
-    | Ok (Parse_artifacts _, Typecheck_artifacts { cx; _ }) ->
-      let decorations = Semantic_decorations.compute_from_context cx ~loc_of_aloc in
-      let r = SemanticDecorationsResult decorations in
-      let response = ResponseMessage (id, r) in
-      let json_props = [("result", Hh_json.JSON_String "SUCCESS")] in
-      let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
-      let metadata = with_data ~extra_data:(Some (Hh_json.JSON_Object json_props)) metadata in
-      Lwt.return (LspProt.LspFromServer (Some response), metadata))
-
 let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
   let file_input =
@@ -3660,20 +3602,6 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~file_input ~metadata)
-  | LspToServer (RequestMessage (id, SemanticDecorationsRequest params)) ->
-    (* Grab the file contents immediately in case of any future didChanges *)
-    let textDocument = params.SemanticDecorations.textDocument in
-    let file_input = file_input_of_text_document_identifier_opt ~client_id textDocument in
-    mk_parallelizable_persistent
-      ~options
-      (handle_persistent_semantic_decorations
-         ~loc_of_aloc
-         ~options
-         ~id
-         ~params
-         ~file_input
-         ~metadata
-      )
   | LspToServer (RequestMessage (id, SignatureHelpRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc = params.SignatureHelp.loc in

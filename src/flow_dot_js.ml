@@ -505,11 +505,11 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
           (loc, Ok result)
       end
 
-let semantic_decorations filename content js_config_object =
+let refined_locations filename content js_config_object =
   let filename = File_key.SourceFile filename in
   let root = File_path.dummy_path in
   match parse_content filename content with
-  | Error _ -> { Lsp.SemanticDecorations.decorations = [] }
+  | Error _ -> []
   | Ok (ast, file_sig) ->
     let (_, docblock) =
       Docblock_parser.(
@@ -521,7 +521,7 @@ let semantic_decorations filename content js_config_object =
       )
     in
     let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
-    Semantic_decorations.compute_from_context cx ~loc_of_aloc
+    Context.refined_locations cx |> Loc_collections.ALocMap.keys |> Base.List.map ~f:loc_of_aloc
 
 let signature_help filename content line col js_config_object :
     ((ServerProt.Response.func_details_result list * int) option, string) result =
@@ -768,18 +768,13 @@ let semantic_decorations js_file js_content js_config_object =
   let content = Js.to_string js_content in
   let json =
     if Js.Unsafe.get js_config_object "experimental.semantic_decorations" |> Js.to_bool then
-      let { Lsp.SemanticDecorations.decorations } =
-        semantic_decorations filename content js_config_object
-      in
+      let refined_locations = refined_locations filename content js_config_object in
       let decorations =
-        Base.List.map decorations ~f:(fun { Lsp.SemanticDecorations.range; kind } ->
+        Base.List.map refined_locations ~f:(fun loc ->
             JSON_Object
               [
-                ( "kind",
-                  match kind with
-                  | Lsp.SemanticDecorations.RefinedValue -> JSON_String "refined-value"
-                );
-                ("range", range |> Lsp.lsp_range_to_flow_loc |> loc_as_range_end_inclusive_to_json);
+                ("kind", JSON_String "refined-value");
+                ("range", loc_as_range_end_inclusive_to_json loc);
               ]
         )
       in

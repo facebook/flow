@@ -1132,34 +1132,6 @@ let print_typeCoverage (r : TypeCoverage.result) : json =
   )
 
 (************************************************************************)
-(* textDocument/semanticDecorations request                             *)
-(************************************************************************)
-
-let parse_semanticDecorations (params : json option) : SemanticDecorations.params =
-  {
-    SemanticDecorations.textDocument =
-      Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier;
-  }
-
-let print_semanticDecorations (r : SemanticDecorations.result) : json =
-  SemanticDecorations.(
-    let print_decor (d : decoration) : json =
-      Jprint.object_opt
-        [
-          ("range", Some (print_range d.range));
-          ( "kind",
-            Some
-              (JSON_String
-                 (match d.kind with
-                 | RefinedValue -> "refined-value")
-              )
-          );
-        ]
-    in
-    JSON_Object [("decorations", JSON_Array (List.map print_decor r.decorations))]
-  )
-
-(************************************************************************)
 (* workspace/toggleTypeCoverage request                                 *)
 (************************************************************************)
 let parse_toggleTypeCoverage (params : json option) : ToggleTypeCoverage.params =
@@ -1828,7 +1800,6 @@ let request_name_to_string (request : lsp_request) : string =
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
   | ConfigurationRequest _ -> "workspace/configuration"
   | SelectionRangeRequest _ -> "textDocument/selectionRange"
-  | SemanticDecorationsRequest _ -> "textDocument/semanticDecorations"
   | SignatureHelpRequest _ -> "textDocument/signatureHelp"
   | DefinitionRequest _ -> "textDocument/definition"
   | TypeDefinitionRequest _ -> "textDocument/typeDefinition"
@@ -1865,7 +1836,6 @@ let result_name_to_string (result : lsp_result) : string =
   | CompletionItemResolveResult _ -> "completionItem/resolve"
   | ConfigurationResult _ -> "workspace/configuration"
   | SelectionRangeResult _ -> "textDocument/selectionRange"
-  | SemanticDecorationsResult _ -> "textDocument/semanticDecorations"
   | SignatureHelpResult _ -> "textDocument/signatureHelp"
   | DefinitionResult _ -> "textDocument/definition"
   | TypeDefinitionResult _ -> "textDocument/typeDefinition"
@@ -1951,8 +1921,6 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
     DocumentOnTypeFormattingRequest (parse_documentOnTypeFormatting params)
   | "textDocument/codeLens" -> DocumentCodeLensRequest (DocumentCodeLensFmt.params_of_json params)
   | "textDocument/selectionRange" -> SelectionRangeRequest (SelectionRangeFmt.params_of_json params)
-  | "textDocument/semanticDecorations" ->
-    SemanticDecorationsRequest (parse_semanticDecorations params)
   | "textDocument/signatureHelp" -> SignatureHelpRequest (SignatureHelpFmt.of_json params)
   | "telemetry/rage" -> RageRequest
   | "telemetry/ping" -> PingRequest
@@ -2010,7 +1978,6 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | CompletionRequest _
   | CompletionItemResolveRequest _
   | SelectionRangeRequest _
-  | SemanticDecorationsRequest _
   | SignatureHelpRequest _
   | DefinitionRequest _
   | TypeDefinitionRequest _
@@ -2081,7 +2048,6 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | CompletionRequest _
     | CompletionItemResolveRequest _
     | SelectionRangeRequest _
-    | SemanticDecorationsRequest _
     | SignatureHelpRequest _
     | DefinitionRequest _
     | TypeDefinitionRequest _
@@ -2142,7 +2108,6 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | ExecuteCommandResult r -> ExecuteCommandFmt.json_of_result r
     | ApplyWorkspaceEditResult r -> ApplyWorkspaceEditFmt.json_of_result r
     | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
-    | SemanticDecorationsResult r -> print_semanticDecorations r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | WillRenameFilesResult r -> WillRenameFilesFmt.json_of_result r
     | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r

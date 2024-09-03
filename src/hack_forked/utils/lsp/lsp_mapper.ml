@@ -89,8 +89,6 @@ type t = {
   of_selection_range: t -> SelectionRange.selection_range -> SelectionRange.selection_range;
   of_selection_range_params: t -> SelectionRange.params -> SelectionRange.params;
   of_selection_range_result: t -> SelectionRange.result -> SelectionRange.result;
-  of_semantic_decorations_params: t -> SemanticDecorations.params -> SemanticDecorations.params;
-  of_semantic_decorations_result: t -> SemanticDecorations.result -> SemanticDecorations.result;
   of_signature_help_params: t -> SignatureHelp.params -> SignatureHelp.params;
   of_signature_help_result: t -> SignatureHelp.result -> SignatureHelp.result;
   of_show_message_params: t -> ShowMessage.params -> ShowMessage.params;
@@ -480,8 +478,6 @@ let default_mapper =
           ConfigurationResult (mapper.of_configuration_result mapper result)
         | SelectionRangeResult result ->
           SelectionRangeResult (mapper.of_selection_range_result mapper result)
-        | SemanticDecorationsResult result ->
-          SemanticDecorationsResult (mapper.of_semantic_decorations_result mapper result)
         | SignatureHelpResult result ->
           SignatureHelpResult (mapper.of_signature_help_result mapper result)
         | WorkspaceSymbolResult result ->
@@ -546,8 +542,6 @@ let default_mapper =
           ConfigurationRequest (mapper.of_configuration_params mapper params)
         | SelectionRangeRequest params ->
           SelectionRangeRequest (mapper.of_selection_range_params mapper params)
-        | SemanticDecorationsRequest params ->
-          SemanticDecorationsRequest (mapper.of_semantic_decorations_params mapper params)
         | SignatureHelpRequest params ->
           SignatureHelpRequest (mapper.of_signature_help_params mapper params)
         | WorkspaceSymbolRequest params ->
@@ -636,19 +630,6 @@ let default_mapper =
         let parent = Base.Option.map ~f:(mapper.of_selection_range mapper) parent in
         { SelectionRange.range; parent });
     of_selection_range_result = (fun mapper -> Base.List.map ~f:(mapper.of_selection_range mapper));
-    of_semantic_decorations_params =
-      (fun mapper { SemanticDecorations.textDocument } ->
-        let textDocument = mapper.of_text_document_identifier mapper textDocument in
-        { SemanticDecorations.textDocument });
-    of_semantic_decorations_result =
-      (fun mapper { SemanticDecorations.decorations } ->
-        let decorations =
-          Base.List.map decorations ~f:(fun { SemanticDecorations.range; kind } ->
-              let range = mapper.of_range mapper range in
-              { SemanticDecorations.range; kind }
-          )
-        in
-        { SemanticDecorations.decorations });
     of_signature_help_params =
       (fun mapper { SignatureHelp.loc; context } ->
         let loc = mapper.of_text_document_position_params mapper loc in
