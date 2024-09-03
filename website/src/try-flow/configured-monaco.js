@@ -47,8 +47,10 @@ function setGetDefFunction(flowService: ?FlowJsServices): void {
     ) ?? [];
 }
 
-let typeAsPosFunctionForMonaco = (value: string, position: Position): ?string =>
-  null;
+let typeAsPosFunctionForMonaco = (
+  value: string,
+  position: Position,
+): ?string | Array<{type: 'flow' | 'markdown', value: string}> => null;
 
 function setTypeAtPosFunction(flowService: ?FlowJsServices): void {
   typeAsPosFunctionForMonaco = (value, position) =>
@@ -184,22 +186,21 @@ monaco.languages.registerHoverProvider('flow', {
   provideHover(model, position) {
     const result = typeAsPosFunctionForMonaco(model.getValue(), position);
     if (result == null) return null;
-    // flow.js <= 0.125 incorrectly returned an ocaml string
-    // instead of a JS string, where the string value is hidden in a
-    // `c` property.
-    const typeAtPos = typeof result === 'string' ? result : result.c;
-    if (typeAtPos.startsWith('type_repr: ')) {
+    function markdownValue(value: string, type: 'flow' | 'markdown' = 'flow') {
+      return value.startsWith('type_repr: ')
+        ? {
+            value: `\`\`\`ocaml\n${value.substring('type_repr: '.length)}\n\`\`\``,
+          }
+        : type === 'markdown'
+          ? {value}
+          : {value: `\`\`\`${type}\n${value}\n\`\`\``};
+    }
+    if (typeof result === 'string') {
       return {
-        contents: [
-          {
-            value: `\`\`\`ocaml\n${typeAtPos.substring('type_repr: '.length)}\n\`\`\``,
-          },
-        ],
+        contents: [markdownValue(result)],
       };
     }
-    return {
-      contents: [{value: `\`\`\`flow\n${typeAtPos}\n\`\`\``}],
-    };
+    return {contents: result.map(r => markdownValue(r.value, r.type))};
   },
 });
 monaco.languages.registerSignatureHelpProvider('flow', {

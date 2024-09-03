@@ -95,7 +95,12 @@ export default class FlowJsServices {
     return this._flow.getDef(filename, body, line, col, this.config);
   }
 
-  typeAtPos(filename: string, body: string, line: number, col: number): string {
+  typeAtPos(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+  ): string | Array<{type: 'flow' | 'markdown', value: string}> {
     return this._flow.typeAtPos(filename, body, line, col, this.config);
   }
 
