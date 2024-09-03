@@ -96,7 +96,6 @@ const initialState: InitialStateFromHash = initialStateFromURI || {
 };
 
 const REFINED_VALUE_DECORATION_OPTIONS = {
-  hoverMessage: {value: 'Refined value'},
   inlineClassName: styles.refinedValueDecoration,
 };
 
