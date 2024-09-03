@@ -89,7 +89,7 @@ declare type FlowJs = {
     line: number,
     col: number,
     options: {[string]: mixed},
-  ): string,
+  ): string | Array<{type: 'flow' | 'markdown', value: string}>,
   semanticDecorations(
     filename: string,
     body: string,
