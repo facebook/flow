@@ -80,14 +80,7 @@ let print_values refinement_of_id =
     map
     |> L.LMap.bindings
     |> Base.List.map ~f:(fun (loc, reason) ->
-           let reason =
-             match reason with
-             | Refinement_invalidation.FunctionCall -> "function call"
-             | Refinement_invalidation.ConstructorCall -> "constructor call"
-             | Refinement_invalidation.PropertyAssignment -> "property assignment"
-             | Refinement_invalidation.Await -> "await expression"
-             | Refinement_invalidation.Yield -> "yield expression"
-           in
+           let reason = Refinement_invalidation.string_of_reason reason in
            Printf.sprintf "%s at %s" reason (L.debug_to_string loc)
        )
     |> Base.String.concat ~sep:",\n    "

@@ -2436,14 +2436,7 @@ let to_printable_error :
     | MessageDevOnlyInvalidatedRefinementInfo invalidation_info ->
       let invalidation_info_msg =
         Base.List.map invalidation_info ~f:(fun (loc, reason) ->
-            let reason =
-              match reason with
-              | Refinement_invalidation.FunctionCall -> "function call"
-              | Refinement_invalidation.ConstructorCall -> "constructor call"
-              | Refinement_invalidation.PropertyAssignment -> "property assignment"
-              | Refinement_invalidation.Await -> "await expression"
-              | Refinement_invalidation.Yield -> "yield expression"
-            in
+            let reason = Refinement_invalidation.string_of_reason reason in
             [text reason; text " at"; no_desc_ref loc]
         )
         |> Flow_errors_utils.Friendly.conjunction_concat

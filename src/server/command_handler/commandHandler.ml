@@ -2422,14 +2422,7 @@ let handle_persistent_infer_type
             Base.Option.map
               (loc_to_vscode_linked_location_in_markdown ~default_uri loc)
               ~f:(fun loc ->
-                let reason =
-                  match reason with
-                  | Refinement_invalidation.FunctionCall -> "function call"
-                  | Refinement_invalidation.ConstructorCall -> "constructor call"
-                  | Refinement_invalidation.PropertyAssignment -> "property assignment"
-                  | Refinement_invalidation.Await -> "await expression"
-                  | Refinement_invalidation.Yield -> "yield expression"
-                in
+                let reason = Refinement_invalidation.string_of_reason reason in
                 (loc, reason)
             )
         )
