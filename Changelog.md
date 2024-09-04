@@ -1,3 +1,11 @@
+### 0.245.1
+
+Website:
+* Refined expressions are now highlighted in try-flow playground. Hovering on refined expressions will show where it's refined, and hovering on some invalidated property refinements will show the location and reason of the invalidation.
+
+IDE:
+* Flow now responds to `textDocument/prepareName` LSP request. This ensures that Flow's rename support can be surfaced when multiple VSCode extension adds rename support for JS files.
+
 ### 0.245.0
 
 Likely to cause new Flow errors:
