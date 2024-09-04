@@ -15,6 +15,23 @@ the following platforms: `mac`, `windows`. Support for the following platforms: 
                         ^^^^^^^^
 
 
+Error ---------------------------------------------------------------------- desktop-only/use-mobile-from-desktop.js:2:8
+
+Cannot resolve module `../windows-only/windows-specific`. [cannot-resolve-module]
+
+   2| import '../windows-only/windows-specific' // error, cannot import windows-only file with windows extension from desktop (mac, windows) file
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------- desktop-only/use-mobile-from-desktop.js:3:8
+
+The imported module supports the `windows` platform, but the current module requires the support of the following
+platforms: `mac`, `windows`. Support for the `mac` platform is missing. [missing-platform-support]
+
+   3| import '../windows-only/general' // error, cannot import windows-only file from desktop (mac, windows) file
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------- not-desktop-only/not-actually-desktop.js.flow:0:1
 
 Cannot resolve platform-specific implementation module `./not-actually-desktop.android`. All platform-specific
@@ -40,4 +57,4 @@ References:
 
 
 
-Found 4 errors
+Found 6 errors
