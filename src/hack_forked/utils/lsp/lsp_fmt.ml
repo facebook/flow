@@ -450,6 +450,17 @@ module CodeLensResolveFmt = struct
   let json_of_result ~key (r : result) : json = print_codeLens ~key r
 end
 
+(** textDocument/prepareRename Request *)
+module PrepareRenameFmt = struct
+  open PrepareRename
+
+  let params_of_json : json option -> params = parse_textDocumentPositionParams
+
+  let json_of_result : range option -> json = function
+    | None -> JSON_Null
+    | Some range -> print_range range
+end
+
 (** textDocument/rename Request *)
 module RenameFmt = struct
   open Rename
@@ -1597,7 +1608,14 @@ let print_initialize ~key (r : Initialize.result) : json =
                       ]
                 )
               );
-              ("renameProvider", Some (JSON_Bool cap.renameProvider));
+              ( "renameProvider",
+                Base.Option.map cap.renameProvider ~f:(fun rp ->
+                    JSON_Object
+                      (match rp.prepareProvider with
+                      | None -> []
+                      | Some b -> [("prepareProvider", JSON_Bool b)])
+                )
+              );
               ( "documentLinkProvider",
                 Base.Option.map cap.documentLinkProvider ~f:(fun dlp ->
                     JSON_Object [("resolveProvider", JSON_Bool dlp.doclink_resolveProvider)]
@@ -1813,6 +1831,7 @@ let request_name_to_string (request : lsp_request) : string =
   | DocumentOnTypeFormattingRequest _ -> "textDocument/onTypeFormatting"
   | RageRequest -> "telemetry/rage"
   | PingRequest -> "telemetry/ping"
+  | PrepareRenameRequest _ -> "textDocument/prepareRename"
   | RenameRequest _ -> "textDocument/rename"
   | DocumentCodeLensRequest _ -> "textDocument/codeLens"
   | ExecuteCommandRequest _ -> "workspace/executeCommand"
@@ -1850,6 +1869,7 @@ let result_name_to_string (result : lsp_result) : string =
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
   | PingResult _ -> "telemetry/ping"
+  | PrepareRenameResult _ -> "textDocument/prepareRename"
   | RenameResult _ -> "textDocument/rename"
   | DocumentCodeLensResult _ -> "textDocument/codeLens"
   | ExecuteCommandResult _ -> "workspace/executeCommand"
@@ -1911,6 +1931,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "workspace/symbol" -> WorkspaceSymbolRequest (WorkspaceSymbolFmt.params_of_json params)
   | "textDocument/documentSymbol" -> DocumentSymbolRequest (DocumentSymbolFmt.params_of_json params)
   | "textDocument/references" -> FindReferencesRequest (parse_findReferences params)
+  | "textDocument/prepareRename" -> PrepareRenameRequest (PrepareRenameFmt.params_of_json params)
   | "textDocument/rename" -> RenameRequest (RenameFmt.params_of_json params)
   | "textDocument/documentHighlight" -> DocumentHighlightRequest (parse_documentHighlight params)
   | "textDocument/typeCoverage" -> TypeCoverageRequest (parse_typeCoverage params)
@@ -1991,6 +2012,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | DocumentOnTypeFormattingRequest _
   | RageRequest
   | PingRequest
+  | PrepareRenameRequest _
   | RenameRequest _
   | WillRenameFilesRequest _
   | DocumentCodeLensRequest _
@@ -2061,6 +2083,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | DocumentOnTypeFormattingRequest _
     | RageRequest
     | PingRequest
+    | PrepareRenameRequest _
     | RenameRequest _
     | WillRenameFilesRequest _
     | DocumentCodeLensRequest _
@@ -2103,6 +2126,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
     | PingResult r -> print_ping r
+    | PrepareRenameResult r -> PrepareRenameFmt.json_of_result r
     | RenameResult r -> RenameFmt.json_of_result r
     | DocumentCodeLensResult r -> DocumentCodeLensFmt.json_of_result ~key r
     | ExecuteCommandResult r -> ExecuteCommandFmt.json_of_result r

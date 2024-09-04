@@ -493,7 +493,7 @@ module Initialize : sig
     documentFormattingProvider: bool;
     documentRangeFormattingProvider: bool;
     documentOnTypeFormattingProvider: documentOnTypeFormattingOptions option;
-    renameProvider: bool;
+    renameProvider: renameOptions option;
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
@@ -526,6 +526,8 @@ module Initialize : sig
   and documentLinkOptions = { doclink_resolveProvider: bool }
 
   and executeCommandOptions = { commands: Command.name list }
+
+  and renameOptions = { prepareProvider: bool option }
 end
 
 module Shutdown : sig end
@@ -1046,6 +1048,13 @@ module SignatureHelp : sig
     | Offset of int * int
 end
 
+(* Workspace Prepare Rename request, method="textDocument/prepareRename" *)
+module PrepareRename : sig
+  type params = TextDocumentPositionParams.t
+
+  type result = range option
+end
+
 module Rename : sig
   type params = renameParams
 
@@ -1241,6 +1250,7 @@ type lsp_request =
   | ShowStatusRequest of ShowStatus.params
   | RageRequest
   | PingRequest
+  | PrepareRenameRequest of PrepareRename.params
   | RenameRequest of Rename.params
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
@@ -1277,6 +1287,7 @@ type lsp_result =
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
   | PingResult of Ping.result
+  | PrepareRenameResult of PrepareRename.result
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
