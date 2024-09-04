@@ -53,15 +53,15 @@ jobs:
         mkdir -p dist
         cp src/parser/flow_parser.js dist/flow_parser.js
         cp src/parser/flow_parser.js packages/flow-parser/flow_parser.js
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_js_bin
         path: bin/flow.js
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_js_dist
         path: dist/flow_parser.js
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_js_packages
         path: packages/flow-parser/flow_parser.js
@@ -103,11 +103,11 @@ jobs:
       run: |-
         cp dist/flow.zip dist/flow-linux64.zip
         cp src/parser/dist/libflowparser.zip dist/libflowparser-linux64.zip
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_linux_bin
         path: bin/linux/flow
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_linux_dist
         path: |
@@ -153,7 +153,7 @@ jobs:
       run: |-
         cp dist/flow.zip dist/flow-linux64-arm64.zip
         cp src/parser/dist/libflowparser.zip dist/libflowparser-linux64-arm64.zip
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_linux_arm64_dist
         path: |
@@ -195,11 +195,11 @@ jobs:
       run: |-
         cp dist/flow.zip dist/flow-osx.zip
         cp src/parser/dist/libflowparser.zip dist/libflowparser-osx.zip
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_macos_bin
         path: bin/macos/flow
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_macos_dist
         path: |
@@ -242,11 +242,11 @@ jobs:
       run: |-
         cp dist/flow.zip dist/flow-osx-arm64.zip
         cp src/parser/dist/libflowparser.zip dist/libflowparser-osx-arm64.zip
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_macos_arm64_bin
         path: bin/macos-arm64/flow
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_macos_arm64_dist
         path: |
@@ -330,13 +330,13 @@ jobs:
       shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_win_bin
         path: |
           bin/win64/flow.exe
           bin/win64/run_parser_tests.exe
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_win_dist
         path: |
@@ -349,7 +349,7 @@ jobs:
       FLOW_RUNTESTS_PARALLELISM: 8
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_bin
         path: bin/linux
@@ -365,7 +365,7 @@ jobs:
       with:
         xcode-version: '14.3.1'
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_bin
         path: bin/macos
@@ -381,7 +381,7 @@ jobs:
       with:
         xcode-version: '14.3.1'
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_arm64_bin
         path: bin/macos
@@ -394,7 +394,7 @@ jobs:
     - build_linux
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_bin
         path: bin/linux
@@ -412,7 +412,7 @@ jobs:
       with:
         xcode-version: '14.3.1'
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_arm64_bin
         path: bin/macos
@@ -427,7 +427,7 @@ jobs:
     - build_win
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_win_bin
         path: bin/win64
@@ -471,9 +471,6 @@ jobs:
       run: make deps-test | cat
     - name: Run ounit tests
       run: opam exec -- make ounit-tests-ci
-    - uses: actions/upload-artifact@v3.1.3
-      with:
-        path: test-results/ounit/
   ounit_test_macos:
     runs-on: macos-13-xlarge
     steps:
@@ -505,16 +502,13 @@ jobs:
       run: make deps-test | cat
     - name: Run ounit tests
       run: opam exec -- make ounit-tests-ci
-    - uses: actions/upload-artifact@v3.1.3
-      with:
-        path: test-results/ounit/
   parser_test_win:
     runs-on: windows-latest
     needs:
     - build_win
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_win_bin
         path: bin/win64
@@ -536,39 +530,39 @@ jobs:
     - build_macos_x86
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_js_bin
         path: bin
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_js_dist
         path: dist
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_js_packages
         path: packages/flow-parser
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_bin
         path: bin/linux
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_dist
         path: dist
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_bin
         path: bin/macos
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_dist
         path: dist
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_arm64_bin
         path: bin/macos-arm64
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_arm64_dist
         path: dist
@@ -592,7 +586,7 @@ jobs:
         sed -i '0,/flow-remove-types/s//flow-node/' packages/flow-node/package.json
         make dist/npm-flow-remove-types.tgz
         make dist/npm-flow-node.tgz
-    - uses: actions/upload-artifact@v3.1.3
+    - uses: actions/upload-artifact@v4.4.0
       with:
         name: npm_pack
         path: |
@@ -611,11 +605,11 @@ jobs:
     - build_js
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_bin
         path: bin/linux
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_js_bin
         path: dist
@@ -646,7 +640,7 @@ jobs:
     - build_win
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_dist
         path: dist
@@ -654,7 +648,7 @@ jobs:
       run: .circleci/github_upload.sh dist/flow-linux64.zip "flow-linux64-${{ github.ref_name }}.zip"
     - name: Upload Linux libflowparser (x86_64)
       run: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-${{ github.ref_name }}.zip"
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_arm64_dist
         path: dist
@@ -662,7 +656,7 @@ jobs:
       run: .circleci/github_upload.sh dist/flow-linux64-arm64.zip "flow-linux-arm64-${{ github.ref_name }}.zip"
     - name: Upload Linux libflowparser (arm64)
       run: .circleci/github_upload.sh dist/libflowparser-linux64-arm64.zip "libflowparser-linux-arm64-${{ github.ref_name }}.zip"
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_dist
         path: dist
@@ -670,7 +664,7 @@ jobs:
       run: .circleci/github_upload.sh dist/flow-osx.zip "flow-osx-${{ github.ref_name }}.zip"
     - name: Upload Mac libflowparser (x86_64)
       run: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-${{ github.ref_name }}.zip"
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_macos_arm64_dist
         path: dist
@@ -678,7 +672,7 @@ jobs:
       run: .circleci/github_upload.sh dist/flow-osx-arm64.zip "flow-osx-arm64-${{ github.ref_name }}.zip"
     - name: Upload Mac libflowparser (arm64)
       run: .circleci/github_upload.sh dist/libflowparser-osx-arm64.zip "libflowparser-osx-arm64-${{ github.ref_name }}.zip"
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_win_dist
         path: dist
@@ -706,7 +700,7 @@ jobs:
     - build_js
     steps:
     - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v3.0.2
+    - uses: actions/download-artifact@v4.1.7
       with:
         name: build_js_bin
         path: dist
