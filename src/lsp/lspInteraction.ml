@@ -23,6 +23,7 @@ type trigger =
   | DocumentSymbol of Lsp.lsp_id
   | FindReferences of Lsp.lsp_id
   | Hover of Lsp.lsp_id
+  | PrepareRename of Lsp.lsp_id
   | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
@@ -93,6 +94,7 @@ let string_of_trigger = function
   | DocumentSymbol _ -> "documentSymbol"
   | FindReferences _ -> "findReferences"
   | Hover _ -> "hover"
+  | PrepareRename _ -> "PrepareRename"
   | PushedErrorsEndOfRecheck -> "endOfRecheck"
   | PushedErrorsRecheckStreaming -> "recheckStreaming"
   | PushedErrorsEnvChange -> "envChange"
@@ -119,6 +121,7 @@ let lsp_id_of_trigger = function
   | FindReferences lsp_id
   | Hover lsp_id
   | Rage lsp_id
+  | PrepareRename lsp_id
   | Rename lsp_id
   | SelectionRange lsp_id
   | SignatureHelp lsp_id
@@ -193,6 +196,7 @@ let source_of_trigger = function
   | FindReferences _
   | Hover _
   | Rage _
+  | PrepareRename _
   | Rename _
   | SelectionRange _
   | SignatureHelp _
@@ -357,6 +361,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, FindReferencesRequest _) -> Some (FindReferences lsp_id)
   | RequestMessage (lsp_id, HoverRequest _) -> Some (Hover lsp_id)
   | RequestMessage (lsp_id, RageRequest) -> Some (Rage lsp_id)
+  | RequestMessage (lsp_id, PrepareRenameRequest _) -> Some (PrepareRename lsp_id)
   | RequestMessage (lsp_id, RenameRequest _) -> Some (Rename lsp_id)
   | RequestMessage (lsp_id, TypeCoverageRequest _) -> Some (TypeCoverage lsp_id)
   | RequestMessage (lsp_id, SelectionRangeRequest _) -> Some (SelectionRange lsp_id)
@@ -416,6 +421,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, ShowStatusResult _)
   | ResponseMessage (_, RageResult _)
   | ResponseMessage (_, PingResult _)
+  | ResponseMessage (_, PrepareRenameResult _)
   | ResponseMessage (_, RenameResult _)
   | ResponseMessage (_, ErrorResult _)
   | ResponseMessage (_, CodeActionResult _)

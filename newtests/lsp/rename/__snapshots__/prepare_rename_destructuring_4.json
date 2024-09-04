@@ -1,0 +1,13 @@
+{
+  "method": "textDocument/prepareRename",
+  "result": {
+    "start": {
+      "line": 16,
+      "character": 6
+    },
+    "end": {
+      "line": 16,
+      "character": 8
+    }
+  }
+}

@@ -79,6 +79,8 @@ type t = {
   of_location: t -> Location.t -> Location.t;
   of_publish_diagnostics_params: t -> PublishDiagnostics.params -> PublishDiagnostics.params;
   of_rage_result: t -> Rage.result -> Rage.result;
+  of_prepare_rename_params: t -> PrepareRename.params -> PrepareRename.params;
+  of_prepare_rename_result: t -> PrepareRename.result -> PrepareRename.result;
   of_ping_result: t -> Ping.result -> Ping.result;
   of_range: t -> range -> range;
   of_register_capability_params: t -> RegisterCapability.params -> RegisterCapability.params;
@@ -502,6 +504,8 @@ let default_mapper =
           ShowMessageRequestResult (mapper.of_show_message_request_result mapper result)
         | ShowStatusResult result -> ShowStatusResult (mapper.of_show_status_result mapper result)
         | RageResult result -> RageResult (mapper.of_rage_result mapper result)
+        | PrepareRenameResult result ->
+          PrepareRenameResult (mapper.of_prepare_rename_result mapper result)
         | PingResult result -> PingResult (mapper.of_ping_result mapper result)
         | RegisterCapabilityResult -> RegisterCapabilityResult
         | RenameResult result -> RenameResult (mapper.of_rename_result mapper result)
@@ -566,6 +570,8 @@ let default_mapper =
         | ShowStatusRequest params -> ShowStatusRequest (mapper.of_show_status_params mapper params)
         | RageRequest -> RageRequest
         | PingRequest -> PingRequest
+        | PrepareRenameRequest params ->
+          PrepareRenameRequest (mapper.of_prepare_rename_params mapper params)
         | RenameRequest params -> RenameRequest (mapper.of_rename_params mapper params)
         | DocumentCodeLensRequest params ->
           DocumentCodeLensRequest (mapper.of_document_code_lens_params mapper params)
@@ -591,6 +597,9 @@ let default_mapper =
         let diagnostics = Base.List.map ~f:(mapper.of_diagnostic mapper) diagnostics in
         { PublishDiagnostics.uri; diagnostics });
     of_rage_result = (fun _mapper t -> t);
+    of_prepare_rename_params =
+      (fun mapper pos -> mapper.of_text_document_position_params mapper pos);
+    of_prepare_rename_result = (fun mapper result -> Option.map (mapper.of_range mapper) result);
     of_ping_result = (fun _mapper t -> t);
     of_range = (fun _mapper t -> t);
     of_register_capability_params =

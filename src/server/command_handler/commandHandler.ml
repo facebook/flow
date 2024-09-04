@@ -2982,6 +2982,49 @@ let handle_persistent_document_highlight
     Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
+let handle_persistent_prepare_rename
+    ~options ~id ~params:text_doc_position ~metadata ~client ~profiling ~env =
+  let (file_artifacts_opt, extra_parse_data) =
+    get_file_artifacts ~options ~client ~profiling ~env text_doc_position
+  in
+  match file_artifacts_opt with
+  | Error reason ->
+    let metadata =
+      with_data
+        ~extra_data:
+          (Some
+             (Hh_json.JSON_Object
+                [("result", Hh_json.JSON_String "FAILURE"); ("error", Hh_json.JSON_String reason)]
+             )
+          )
+        metadata
+    in
+    let (resp, metadata) = mk_lsp_error_response ~id:(Some id) ~reason metadata in
+    Lwt.return (resp, metadata)
+  | Ok None ->
+    let metadata = with_data ~extra_data:extra_parse_data metadata in
+    let resp = ResponseMessage (id, PrepareRenameResult None) in
+    let metadata =
+      with_data
+        ~extra_data:(Some (Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")]))
+        metadata
+    in
+    Lwt.return (LspProt.LspFromServer (Some resp), metadata)
+  | Ok (Some ((Types_js_types.Parse_artifacts { ast; _ }, _), file_key)) ->
+    let (line, col) = Flow_lsp_conversions.position_of_document_position text_doc_position in
+    let rename_loc =
+      PrepareRenameSearcher.search_rename_loc ast (Loc.cursor (Some file_key) line col)
+    in
+    let resp =
+      ResponseMessage (id, PrepareRenameResult (Option.map Lsp.loc_to_lsp_range rename_loc))
+    in
+    let metadata =
+      with_data
+        ~extra_data:(Some (Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")]))
+        metadata
+    in
+    Lwt.return (LspProt.LspFromServer (Some resp), metadata)
+
 let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let Rename.{ textDocument; position; newName } = params in
   let text_doc_position = TextDocumentPositionParams.{ textDocument; position } in
@@ -3616,6 +3659,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
     Handle_nonparallelizable_persistent
       (handle_persistent_find_references ~loc_of_aloc ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, PrepareRenameRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_prepare_rename ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, RenameRequest params)) ->
     Handle_nonparallelizable_persistent
       (handle_persistent_rename ~reader ~options ~id ~params ~metadata)

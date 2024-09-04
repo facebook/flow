@@ -651,7 +651,7 @@ module Initialize = struct
     documentFormattingProvider: bool;
     documentRangeFormattingProvider: bool;
     documentOnTypeFormattingProvider: documentOnTypeFormattingOptions option;
-    renameProvider: bool;
+    renameProvider: renameOptions option;
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
@@ -689,6 +689,8 @@ module Initialize = struct
   and executeCommandOptions = {
     commands: Command.name list;  (** the commands to be executed on the server *)
   }
+
+  and renameOptions = { prepareProvider: bool option }
 end
 
 (** Shutdown request, method="shutdown" *)
@@ -1272,6 +1274,13 @@ module SignatureHelp = struct
     | Offset of int * int
 end
 
+(* Workspace Prepare Rename request, method="textDocument/prepareRename" *)
+module PrepareRename = struct
+  type params = TextDocumentPositionParams.t
+
+  type result = range option
+end
+
 (* Workspace Rename request, method="textDocument/rename" *)
 module Rename = struct
   type params = renameParams
@@ -1500,6 +1509,7 @@ type lsp_request =
   | ShowStatusRequest of ShowStatus.params
   | RageRequest
   | PingRequest
+  | PrepareRenameRequest of PrepareRename.params
   | RenameRequest of Rename.params
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
@@ -1536,6 +1546,7 @@ type lsp_result =
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
   | PingResult of Ping.result
+  | PrepareRenameResult of PrepareRename.result
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
