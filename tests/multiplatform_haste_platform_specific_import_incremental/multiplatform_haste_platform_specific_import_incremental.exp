@@ -11,7 +11,7 @@ Cannot cast `a` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   A.js.flow:1:34
+   A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
    General.js:3:5
@@ -35,7 +35,7 @@ Cannot cast `a` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   A.js.flow:1:34
+   A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
    General.js:3:5
@@ -52,7 +52,7 @@ Cannot cast `a` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   A.js.flow:1:34
+   A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
    iOSOnly.ios.js:3:5
@@ -65,7 +65,7 @@ Found 2 errors
 
 
 
-Restore A.ios.js and remove A.js.flow
+Restore A.ios.js and remove A.js
 General should error with unbound module.
 Error -------------------------------------------------------------------------------------------------- General.js:1:17
 
@@ -80,7 +80,7 @@ Found 1 error
 
 
 
-Remove both A.ios.js and remove A.js.flow
+Remove both A.ios.js and remove A.js
 Both iOSOnly and General should error with unbound module.
 Error -------------------------------------------------------------------------------------------------- General.js:1:17
 
@@ -103,7 +103,7 @@ Found 2 errors
 
 
 
-Add back both A.ios.js and remove A.js.flow
+Add back both A.ios.js and A.js
 Only General should error.
 Error --------------------------------------------------------------------------------------------------- General.js:3:2
 
@@ -114,7 +114,7 @@ Cannot cast `a` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   A.js.flow:1:34
+   A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
    General.js:3:5

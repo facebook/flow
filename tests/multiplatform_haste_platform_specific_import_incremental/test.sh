@@ -22,17 +22,17 @@ echo ""
 echo ""
 echo ""
 
-echo "Restore A.ios.js and remove A.js.flow"
+echo "Restore A.ios.js and remove A.js"
 mv A.ios.js.ignore A.ios.js
-mv A.js.flow A.js.ignore
-assert_ok "$FLOW" force-recheck A.ios.js A.js.flow
+mv A.js A.js.ignore
+assert_ok "$FLOW" force-recheck A.ios.js A.js
 echo "General should error with unbound module."
 assert_errors "$FLOW" status .
 echo ""
 echo ""
 echo ""
 
-echo "Remove both A.ios.js and remove A.js.flow"
+echo "Remove both A.ios.js and remove A.js"
 mv A.ios.js A.ios.js.ignore
 assert_ok "$FLOW" force-recheck A.ios.js
 echo "Both iOSOnly and General should error with unbound module."
@@ -41,10 +41,10 @@ echo ""
 echo ""
 echo ""
 
-echo "Add back both A.ios.js and remove A.js.flow"
+echo "Add back both A.ios.js and A.js"
 mv A.ios.js.ignore A.ios.js
-mv A.js.ignore A.js.flow
-assert_ok "$FLOW" force-recheck A.ios.js A.js.flow
+mv A.js.ignore A.js
+assert_ok "$FLOW" force-recheck A.ios.js A.js
 echo "Only General should error."
 assert_errors "$FLOW" status .
 echo ""

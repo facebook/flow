@@ -11,6 +11,7 @@ experimental.multi_platform.extensions=.android
 experimental.multi_platform.extensions=.windows
 experimental.multi_platform.extensions=.mac
 
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>/windows-only' -> 'windows'
 experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>/desktop-only' -> 'windows,mac'
 experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>' -> 'ios, android'
 ; order sentitive

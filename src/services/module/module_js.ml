@@ -270,6 +270,14 @@ module Node = struct
           );
       ]
 
+  let only_supported_platform_of_file ~file_options filename =
+    match
+      Platform_set.available_platforms ~file_options ~filename ~explicit_available_platforms:None
+      |> Option.map (Platform_set.to_platform_string_set ~file_options)
+    with
+    | Some platform_set when SSet.cardinal platform_set = 1 -> SSet.choose_opt platform_set
+    | _ -> None
+
   let resolve_relative ~options ~reader ?phantom_acc ~source root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
@@ -277,9 +285,7 @@ module Node = struct
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
     let file_exts = Files.module_file_exts file_options in
-    match
-      Files.platform_specific_extension_opt ~options:file_options (File_key.to_string source)
-    with
+    match only_supported_platform_of_file ~file_options (File_key.to_string source) with
     | None ->
       lazy_seq
         [
@@ -287,7 +293,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
           lazy (resolve_package ~options ~reader ?phantom_acc path);
         ]
-    | Some platform_ext ->
+    | Some platform ->
       lazy_seq
         [
           lazy (path_if_exists ~reader ~file_options phantom_acc path);
@@ -296,7 +302,7 @@ module Node = struct
                ~reader
                ~file_options
                phantom_acc
-               (path ^ platform_ext)
+               (path ^ "." ^ platform)
                file_exts
             );
           lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
@@ -565,7 +571,7 @@ module Haste : MODULE_SYSTEM = struct
               );
           ]
       else
-        match Files.platform_specific_extension_opt ~options:file_options file with
+        match Node.only_supported_platform_of_file ~file_options file with
         | None ->
           lazy_seq
             [
@@ -591,10 +597,18 @@ module Haste : MODULE_SYSTEM = struct
                    r
                 );
             ]
-        | Some ext ->
+        | Some platform ->
           lazy_seq
             [
-              lazy (resolve_haste_module ~options ~reader ?phantom_acc ~source:f ~dir (r ^ ext));
+              lazy
+                (resolve_haste_module
+                   ~options
+                   ~reader
+                   ?phantom_acc
+                   ~source:f
+                   ~dir
+                   (r ^ "." ^ platform)
+                );
               lazy
                 (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
                    ~options
