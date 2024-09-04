@@ -804,7 +804,7 @@ type 'loc message =
   | MessageReadonlyArraysCannotBeWrittenTo
   | MessageRecursionLimitExceeded
   | MessageRedeclareComponentProp of {
-      duplicates: ('loc virtual_reason * 'loc) Nel.t;
+      duplicates: ('loc * name * 'loc) Nel.t;
       spread_loc: 'loc;
     }
   | MessageShouldAnnotateVariableOnlyInitializedInGenericContext of {

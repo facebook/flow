@@ -3404,7 +3404,9 @@ let to_printable_error :
       ]
     | MessageReadonlyArraysCannotBeWrittenTo -> [text "read-only arrays cannot be written to"]
     | MessageRecursionLimitExceeded -> [text "*** Recursion limit exceeded ***"]
-    | MessageRedeclareComponentProp { duplicates = ((first, second_loc), []); spread_loc } ->
+    | MessageRedeclareComponentProp { duplicates = ((first_loc, name, second_loc), []); spread_loc }
+      ->
+      let first = mk_reason (RIdentifier name) first_loc in
       [
         text "Component property ";
         ref first;
@@ -3418,7 +3420,8 @@ let to_printable_error :
       let individual_redeclares_msgs =
         duplicates
         |> Nel.to_list
-        |> Base.List.concat_map ~f:(fun (first, second_loc) ->
+        |> Base.List.concat_map ~f:(fun (first_loc, name, second_loc) ->
+               let first = mk_reason (RIdentifier name) first_loc in
                [
                  text " - ";
                  ref first;

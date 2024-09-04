@@ -576,7 +576,7 @@ and 'loc t' =
     }
   | EDuplicateComponentProp of {
       spread: 'loc;
-      duplicates: ('loc virtual_reason * 'loc) Nel.t;
+      duplicates: ('loc * name * 'loc) Nel.t;
     }
   | ERefComponentProp of {
       spread: 'loc;
@@ -1348,7 +1348,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDuplicateComponentProp
       {
         spread = f spread;
-        duplicates = Nel.map (fun (first, second) -> (map_reason first, f second)) duplicates;
+        duplicates = Nel.map (fun (first, name, second) -> (f first, name, f second)) duplicates;
       }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
   | EKeySpreadProp { spread; loc } -> EKeySpreadProp { spread = f spread; loc = f loc }

@@ -696,13 +696,11 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
           failwith "Ref should have been extracted elsewhere"
         | (_, Some p1, Some { Object.key_loc = key_loc2; prop_t; _ }) ->
           let first =
-            Type.Property.first_loc p1
-            |> Base.Option.value ~default:(loc_of_reason reason)
-            |> mk_reason (RIdentifier x)
+            Type.Property.first_loc p1 |> Base.Option.value ~default:(loc_of_reason reason)
           in
           let second = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc2 in
           let p1 = read_prop reason flags x p1 in
-          (((first, second) :: duplicate_props_in_spread, ref_prop_in_spread), Some p1)
+          (((first, x, second) :: duplicate_props_in_spread, ref_prop_in_spread), Some p1)
         | (Reason.OrdinaryName "ref", None, Some { Object.key_loc; prop_t; _ }) ->
           let loc = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc in
           ((duplicate_props_in_spread, Some loc), None)
