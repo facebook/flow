@@ -12,12 +12,12 @@ type X = $NonMaybeType<{|
   +$refType: 3,
 |}>;
 
-type $RelayProps<Props, RelayPropT = {}> = $ObjMap<
+type $RelayProps<Props, RelayPropT = {}> = MapProps<
   $Diff<Props, {relay: {} | void, ...}>,
-  (<T: {+$refType: empty, ...}>(T) => T) &
-    (<T: {+$refType: empty, ...}>(?T) => ?T) &
-    (<TRef: 3, T: {+$refType: TRef, ...}>(T) => $FragmentRef<T>),
 >;
+type MapProps<O> = {
+  [K in keyof O]: O[K] extends {+$refType: empty, ...} ? O[K] : O[K] extends ?{+$refType: 3, ...} ? $FragmentRef<O[K]> : empty
+};
 
 type Props = {
   selectedValue: X,

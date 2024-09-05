@@ -1,0 +1,42 @@
+Error ------------------------------------------------------------------------------- previously_badly_positioned.js:3:3
+
+Cannot call `c` because string [1] is not an object. [not-an-object]
+
+   3| c('string')(); // error: string is not an object
+        ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- still_badly_positioned.js:9:12
+
+Cannot instantiate `PickKeysFromObject` because property `q` is missing in `MySpec` [1]. [prop-missing]
+
+   still_badly_positioned.js:9:12
+   9|   type A = PickKeysFromObject<MySpec, typeof keys>; // `q` is missing in `MySpec`
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   still_badly_positioned.js:9:31
+   9|   type A = PickKeysFromObject<MySpec, typeof keys>; // `q` is missing in `MySpec`
+                                    ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- still_badly_positioned.js:11:17
+
+Cannot assign `_a` to `_b` because property `q` is missing in object type [1] but exists in `PickKeysFromObject` [2].
+[prop-missing]
+
+   still_badly_positioned.js:11:17
+   11|   const _b: A = _a; // `q` is missing in object type
+                       ^^
+
+References:
+   still_badly_positioned.js:10:19
+   10|   declare var _a: {|x: number|};
+                         ^^^^^^^^^^^^^ [1]
+   still_badly_positioned.js:11:13
+   11|   const _b: A = _a; // `q` is missing in object type
+                   ^ [2]
+
+
+
+Found 3 errors

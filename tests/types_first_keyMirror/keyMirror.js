@@ -1,5 +1,5 @@
-function keyMirror<T: {...}>(obj: T): $ObjMapi<T, <K>(K) => K> {
-  const ret: $ObjMapi<T, <K>(K) => K> = {};
+function keyMirror<T: {...}>(obj: T): $KeyMirror<T> {
+  const ret: $KeyMirror<T> = {};
   for (const key in obj) {
     if (!obj.hasOwnProperty(key)) {
       continue;

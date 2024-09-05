@@ -9,8 +9,8 @@ object type [1]. [prop-missing]
 
 References:
    keyMirror.js:2:14
-   2|   const ret: $ObjMapi<T, <K>(K) => K> = {};
-                   ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   2|   const ret: $KeyMirror<T> = {};
+                   ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:2

@@ -94,22 +94,15 @@ type NonMaybeTypeNumber = $NonMaybeType<?number>;
 type NonMaybeTypeAbstract<X> = $NonMaybeType<X>;
 //   ^
 
-// $ObjMap<T, F>
-type ObjMapProps = $ObjMap<Props, <T>(T) => Array<T>>;
+// mapped types
+type MappedTypeProps = {[K in keyof Props]: Array<Props[K]>}
 //   ^
 
-type ObjMapPoly<X, Y> = $ObjMap<{ a: X, b?: Y }, <T>(T) => Array<T>>;
+type MappedTypePoly<X, Y> = {[K in keyof { a: X, b?: Y }]: Array<{ a: X, b?: Y }[K]>};
 //   ^
 
-// $ObjMapi<T, F>
-type ObjMapiProps = $ObjMapi<Props, <K, V>(K, V) => Array<K | V>>;
-//   ^
-type ObjMapiPoly<X, Y> = $ObjMapi<{ a: X, b?: Y }, <K, V>(K, V) => Array<K | V>>;
-//   ^
-
-type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
 type FnObj = { getName: () => string, getAge: () => number };
-type ObjMapFnReturnTypes = $ObjMapi<FnObj, ExtractReturnObjectType>;
+type MappedTypeFnReturnTypes = {[K in keyof FnObj]: { k: K, v: FnObj[K] extends () => infer V ? V : empty } };
 //   ^
 
 // $TupleMap<T, F>

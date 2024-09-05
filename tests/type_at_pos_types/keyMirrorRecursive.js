@@ -1,9 +1,8 @@
 // @flow
 
-export type KeyMirrorRecursive<O> = $ObjMapi<
-  O,
-  (<X: {}>(mixed, X) => KeyMirrorRecursive<X>) & (<K>(K) => K),
->;
+export type KeyMirrorRecursive<O> = {
+  [K in keyof O]: O[K] extends {...} ? KeyMirrorRecursive<O[K]> : K,
+};
 
 declare function keyMirrorRecursive<O: {}>(
   obj: O,

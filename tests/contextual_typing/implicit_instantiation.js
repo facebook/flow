@@ -111,13 +111,10 @@ function test8() {
 }
 
 function test9() {
-  type M<O> = $ObjMap<
-    O,
-    // This overload selection problem will trigger a PolyT ~> CallT call outside of implicit
-    // instantiation. Correctly selecting the overload requires us to flow targ to bound, which is
-    // disabled during implicit instantiation.
-    (<T: string>(T) => string) & (<T: number>(T) => boolean)
-  >;
+  // This overload selection problem will trigger a nested implicit instantiation.
+  // Correctly selecting the overload requires us to flow targ to bound, which is
+  // disabled during implicit instantiation.
+  type M<O> = {[K in keyof O]: O[K] extends string ? string : boolean};
   declare function id<T>(T): T;
   // A regression test for an earlier bug where the overload is incorrectly selected, and causes
   // an incompatibility.
