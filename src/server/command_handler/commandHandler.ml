@@ -2438,7 +2438,7 @@ let handle_persistent_infer_type
         [
           MarkedString
             (Printf.sprintf
-               "Refinement invalidated due to %s. Refactor this property to a constant to keep refinements."
+               "Refinement invalidated due to %s. Refactor this property to a const variable to keep refinements."
                reasons_str
             );
         ]
