@@ -1518,26 +1518,76 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide quickfix for invalid render arguments', [
-      addFile('invalid-renders.js.ignored', 'invalid-renders.js'),
+    test('provide quickfix for invalid component prop', [
+      addFile('invalid-component-prop.js.ignored', 'invalid-component-prop.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-component-prop.js',
         },
         range: {
-          start: {line: 7, character: 24},
-          end: {line: 7, character: 24},
+          start: {line: 6, character: 15},
+          end: {line: 6, character: 15},
         },
         context: {only: ['quickfix'], diagnostics: []},
       }).verifyLSPMessageSnapshot(
-        path.join(__dirname, '__snapshots__', 'quickfix-invalid-render-1.json'),
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-invalid-component-prop-1.json',
+        ),
         [
           'textDocument/publishDiagnostics',
           'window/showStatus',
           '$/cancelRequest',
         ],
       ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-component-prop.js',
+        },
+        range: {
+          start: {line: 16, character: 15},
+          end: {line: 16, character: 15},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-invalid-component-prop-2.json',
+        ),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-component-prop.js',
+        },
+        range: {
+          start: {line: 23, character: 15},
+          end: {line: 23, character: 15},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-invalid-component-prop-3.json',
+        ),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+    test('provide quickfix for invalid render arguments', [
+      addFile('invalid-renders.js.ignored', 'invalid-renders.js'),
+      lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',

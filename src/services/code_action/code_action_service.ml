@@ -561,6 +561,65 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EDuplicateComponentProp { spread = error_loc; duplicates } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Wrap spread prop with Omit";
+          diagnostic_title = "wrap_spread_prop_with_omit";
+          transform =
+            untyped_ast_transform
+              (Autofix_replace_type.replace_type ~f:(fun t ->
+                   let open Flow_ast.Type in
+                   let string_lit_annot_of_duplicate (_, x, _) =
+                     let n = Reason.display_string_of_name x in
+                     ( Loc.none,
+                       StringLiteral
+                         {
+                           Flow_ast.StringLiteral.value = n;
+                           raw = "\"" ^ n ^ "^\n";
+                           comments = None;
+                         }
+                     )
+                   in
+                   let omitted_keys_annot =
+                     match duplicates with
+                     | (n1, []) -> string_lit_annot_of_duplicate n1
+                     | (n1, n2 :: ns) ->
+                       ( Loc.none,
+                         Union
+                           {
+                             Union.types =
+                               ( string_lit_annot_of_duplicate n1,
+                                 string_lit_annot_of_duplicate n2,
+                                 List.map string_lit_annot_of_duplicate ns
+                               );
+                             comments = None;
+                           }
+                       )
+                   in
+                   Generic
+                     {
+                       Generic.id =
+                         Generic.Identifier.Unqualified
+                           (Loc.none, { Flow_ast.Identifier.name = "Omit"; comments = None });
+                       targs =
+                         Some
+                           ( Loc.none,
+                             {
+                               TypeArgs.arguments = [(Loc.none, t); omitted_keys_annot];
+                               comments = None;
+                             }
+                           );
+                       comments = None;
+                     }
+               )
+              );
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
     let error_loc = Reason.loc_of_reason reason in
     if loc_opt_intersects ~error_loc ~loc then

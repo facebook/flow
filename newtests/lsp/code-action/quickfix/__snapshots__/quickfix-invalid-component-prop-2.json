@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Wrap spread prop with Omit",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/invalid-component-prop.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 13,
+                  "character": 0
+                },
+                "end": {
+                  "line": 19,
+                  "character": 1
+                }
+              },
+              "newText": "component Bar(foo: string, bar: string, ..._: Omit<BarProps, \"foo\" | \"bar\">) {\n  return;\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "wrap_spread_prop_with_omit",
+          "Wrap spread prop with Omit"
+        ]
+      }
+    }
+  ]
+}

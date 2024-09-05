@@ -1,0 +1,27 @@
+// @flow
+
+type FooProps = {foo: string}
+
+component Foo(
+  foo: string,
+  ..._: FooProps
+) {
+  return
+}
+
+type BarProps = {foo: string, bar: string};
+
+component Bar(
+  foo: string,
+  bar: string,
+  ..._: BarProps
+) {
+  return
+}
+
+component Baz(
+  foo: string,
+  ..._: BarProps
+) {
+  return
+}
