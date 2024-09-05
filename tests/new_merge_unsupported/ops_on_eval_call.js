@@ -42,10 +42,6 @@ export const x11 = !t;
 declare var y12: $KeyMirror<T>;
 export const x12 = y12.f;
 
-// Annot_ObjMapConst
-declare var y13: $ObjMapConst<T, any>;
-export const x13 = y13.f;
-
 // Annot_GetKeysT of Reason.t
-declare var y14: $Keys<T>;
-export const x14 = y14.length;
+declare var y13: $Keys<T>;
+export const x13 = y13.length;

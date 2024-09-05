@@ -12,7 +12,6 @@ import {
   x11 as call_x11,
   x12 as call_x12,
   x13 as call_x13,
-  x14 as call_x14,
 } from './ops_on_eval_call';
 
 (call_x1.f: any);
@@ -28,7 +27,6 @@ import {
 (call_x11: any);
 (call_x12: any);
 (call_x13: any);
-(call_x14: any);
 
 import {
   x1 as intersection_x1,
@@ -43,7 +41,6 @@ import {
   x11 as intersection_x11,
   x12 as intersection_x12,
   x13 as intersection_x13,
-  x14 as intersection_x14,
 } from './ops_on_intersection';
 
 (intersection_x1.f: any);
@@ -58,7 +55,6 @@ import {
 (intersection_x11: any);
 (intersection_x12: any);
 (intersection_x13: any);
-(intersection_x14: any);
 
 import {
   x1 as react_config_x1,
@@ -74,7 +70,6 @@ import {
   x11 as react_config_x11,
   x12 as react_config_x12,
   x13 as react_config_x13,
-  x14 as react_config_x14,
 } from './ops_on_react_config';
 
 (react_config_x1.f: any);
@@ -90,7 +85,6 @@ import {
 (react_config_x11: any);
 (react_config_x12: any);
 (react_config_x13: any);
-(react_config_x14: any);
 
 import { x as x_inst_rest } from './ops_on_inst_rest';
 (x_inst_rest: any);
@@ -105,7 +99,6 @@ import {
   x11 as mapped_type_x11,
   x12 as mapped_type_x12,
   x13 as mapped_type_x13,
-  x14 as mapped_type_x14,
 } from './ops_on_eval_mapped_type';
 
 (mapped_type_x2: any);
@@ -116,4 +109,3 @@ import {
 (mapped_type_x11: any);
 (mapped_type_x12: any);
 (mapped_type_x13: any);
-(mapped_type_x14: any);

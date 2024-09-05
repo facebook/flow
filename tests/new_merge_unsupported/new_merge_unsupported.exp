@@ -180,26 +180,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:46:18
 
-Cannot use `$ObjMapConst` on `$Call` [1] in an export position. Please provide an (alternative) annotation for
-`$ObjMapConst` [2]. [invalid-exported-annotation]
-
-   ops_on_eval_call.js:46:18
-   46| declare var y13: $ObjMapConst<T, any>;
-                        ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:50:18
-
 Cannot use key set on `$Call` [1] in an export position. Please provide an (alternative) annotation for key set [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:50:18
-   50| declare var y14: $Keys<T>;
+   ops_on_eval_call.js:46:18
+   46| declare var y13: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
@@ -323,26 +308,11 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:28:18
 
-Cannot use `$ObjMapConst` on object type [1] in an export position. Please provide an (alternative) annotation for
-`$ObjMapConst` [2]. [invalid-exported-annotation]
-
-   ops_on_eval_mapped_type.js:28:18
-   28| declare var y13: $ObjMapConst<T, any>;
-                        ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   ops_on_eval_mapped_type.js:1:11
-    1| type T = {[_K in keyof { f: number }]: string};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:32:18
-
 Cannot use key set on object type [1] in an export position. Please provide an (alternative) annotation for key set [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_mapped_type.js:32:18
-   32| declare var y14: $Keys<T>;
+   ops_on_eval_mapped_type.js:28:18
+   28| declare var y13: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
@@ -532,26 +502,11 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:18
 
-Cannot use `$ObjMapConst` on intersection type [1] in an export position. Please provide an (alternative) annotation for
-`$ObjMapConst` [2]. [invalid-exported-annotation]
-
-   ops_on_intersection.js:48:18
-   48| declare var y13: $ObjMapConst<S, any>;
-                        ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   ops_on_intersection.js:5:10
-    5| type S = { f: any } & { g: any };
-                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:52:18
-
 Cannot use key set on intersection type [1] in an export position. Please provide an (alternative) annotation for key
 set [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:52:18
-   52| declare var y14: $Keys<T>;
+   ops_on_intersection.js:48:18
+   48| declare var y13: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
@@ -820,26 +775,11 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:18
 
-Cannot use `$ObjMapConst` on config of React component [1] in an export position. Please provide an (alternative)
-annotation for `$ObjMapConst` [2]. [invalid-exported-annotation]
-
-   ops_on_react_config.js:51:18
-    51| declare var y13: $ObjMapConst<T, any>;
-                         ^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   <BUILTINS>/react.js:397:53
-   397|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:55:18
-
 Cannot use key set on config of React component [1] in an export position. Please provide an (alternative) annotation
 for key set [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:55:18
-    55| declare var y14: $Keys<T>;
+   ops_on_react_config.js:51:18
+    51| declare var y13: $Keys<T>;
                          ^^^^^^^^ [2]
 
 References:
@@ -849,4 +789,4 @@ References:
 
 
 
-Found 58 errors
+Found 54 errors
