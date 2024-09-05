@@ -11,15 +11,15 @@
             {
               "range": {
                 "start": {
-                  "line": 13,
-                  "character": 0
+                  "line": 16,
+                  "character": 8
                 },
                 "end": {
-                  "line": 19,
-                  "character": 1
+                  "line": 16,
+                  "character": 16
                 }
               },
-              "newText": "component Bar(foo: string, bar: string, ..._: Omit<BarProps, \"foo\" | \"bar\">) {\n  return;\n}"
+              "newText": "Omit<BarProps, \"foo\" | \"bar\">"
             }
           ]
         }

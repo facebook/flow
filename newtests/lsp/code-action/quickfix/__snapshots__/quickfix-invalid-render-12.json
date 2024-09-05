@@ -12,14 +12,14 @@
               "range": {
                 "start": {
                   "line": 18,
-                  "character": 14
+                  "character": 24
                 },
                 "end": {
                   "line": 18,
-                  "character": 35
+                  "character": 34
                 }
               },
-              "newText": "renders* Foo"
+              "newText": "Foo"
             }
           ]
         }

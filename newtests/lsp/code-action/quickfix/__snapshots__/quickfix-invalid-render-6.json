@@ -16,10 +16,23 @@
                 },
                 "end": {
                   "line": 12,
-                  "character": 53
+                  "character": 20
                 }
               },
-              "newText": "renders* Foo"
+              "newText": "renders*"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 12,
+                  "character": 22
+                },
+                "end": {
+                  "line": 12,
+                  "character": 52
+                }
+              },
+              "newText": "Foo"
             }
           ]
         }

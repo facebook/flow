@@ -11,15 +11,15 @@
             {
               "range": {
                 "start": {
-                  "line": 21,
-                  "character": 0
+                  "line": 23,
+                  "character": 8
                 },
                 "end": {
-                  "line": 26,
-                  "character": 1
+                  "line": 23,
+                  "character": 16
                 }
               },
-              "newText": "component Baz(foo: string, ..._: Omit<BarProps, \"foo\">) {\n  return;\n}"
+              "newText": "Omit<BarProps, \"foo\">"
             }
           ]
         }

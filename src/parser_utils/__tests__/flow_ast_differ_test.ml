@@ -1535,6 +1535,71 @@ let tests =
              ~expected:"let bar = (x) => 5;"
              ~mapper:(new useless_mapper)
          );
+         ( "component_id" >:: fun ctxt ->
+           let source = "component rename() { return; }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((10, 16), "gotRenamed")]
+             ~source
+             ~expected:"component gotRenamed() { return; }"
+             ~mapper:(new useless_mapper)
+         );
+         ( "component_rest" >:: fun ctxt ->
+           let source = "component C(...rename) { return; }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((15, 21), "gotRenamed")]
+             ~source
+             ~expected:"component C(...gotRenamed) { return; }"
+             ~mapper:(new useless_mapper)
+         );
+         ( "component_param" >:: fun ctxt ->
+           let source = "component C(rename, ...dontRename) { return; }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((12, 18), "gotRenamed")]
+             ~source
+             ~expected:"component C(gotRenamed, ...dontRename) { return; }"
+             ~mapper:(new useless_mapper)
+         );
+         ( "component_params" >:: fun ctxt ->
+           let source =
+             "component C(rename: string, dontRename: string, rename as rename1: string) { return; }"
+           in
+           assert_edits_equal
+             ctxt
+             ~source
+             ~edits:[((12, 18), "gotRenamed"); ((48, 54), "gotRenamed")]
+             ~expected:
+               "component C(gotRenamed: string, dontRename: string, gotRenamed as rename1: string) { return; }"
+             ~mapper:(new useless_mapper)
+         );
+         ( "component_type_params" >:: fun ctxt ->
+           let source = "component C<RENAME>() { return; }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((12, 18), "GOT_RENAMED")]
+             ~source
+             ~expected:"component C<GOT_RENAMED>() { return; }"
+             ~mapper:(new useless_mapper)
+         );
+         ( "component_combo" >:: fun ctxt ->
+           let source = "component rename<RENAME>(rename) renders Rename { return 4; }" in
+           assert_edits_equal
+             ctxt
+             ~source
+             ~edits:
+               [
+                 ((10, 16), "gotRenamed");
+                 ((17, 23), "GOT_RENAMED");
+                 ((25, 31), "gotRenamed");
+                 ((41, 47), "GotRenamed");
+                 ((57, 58), "5");
+               ]
+             ~expected:
+               "component gotRenamed<GOT_RENAMED>(gotRenamed) renders GotRenamed { return 5; }"
+             ~mapper:(new useless_mapper)
+         );
          ( "call" >:: fun ctxt ->
            let source = "rename()" in
            assert_edits_equal

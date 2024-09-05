@@ -617,6 +617,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         variable_declaration loc var1 var2
       | ((loc, FunctionDeclaration func1), (_, FunctionDeclaration func2)) ->
         function_declaration loc func1 func2
+      | ((loc, ComponentDeclaration comp1), (_, ComponentDeclaration comp2)) ->
+        component_declaration loc comp1 comp2
       | ((loc, ClassDeclaration class1), (_, ClassDeclaration class2)) -> class_ loc class1 class2
       | ((loc, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2)) ->
         interface loc intf1 intf2
@@ -841,6 +843,118 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let spec_diff = diff_if_changed_opt import_specifier spec1 spec2 in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [dflt_diff; spec_diff; comments_diff]
+  and component_declaration
+      (loc : Loc.t)
+      (comp1 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.t)
+      (comp2 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.t) =
+    let open Ast.Statement.ComponentDeclaration in
+    let {
+      id = id1;
+      params = params1;
+      body = (loc_body, body1);
+      renders = renders1;
+      tparams = tparams1;
+      sig_loc = _;
+      comments = comments1;
+    } =
+      comp1
+    in
+    let {
+      id = id2;
+      params = params2;
+      body = (_, body2);
+      renders = renders2;
+      tparams = tparams2;
+      sig_loc = _;
+      comments = comments2;
+    } =
+      comp2
+    in
+    let id = diff_if_changed_nonopt_fn identifier (Some id1) (Some id2) in
+    let tparams = diff_if_changed_opt type_params tparams1 tparams2 in
+    let params = diff_if_changed_ret_opt component_params params1 params2 in
+    let returns =
+      match (renders1, renders2) with
+      | (Ast.Type.AvailableRenders (loc, r1), Ast.Type.AvailableRenders (_, r2)) ->
+        diff_if_changed_ret_opt (render_type loc) r1 r2
+      | (Ast.Type.MissingRenders _, Ast.Type.MissingRenders _) -> Some []
+      | _ -> None
+    in
+    let body = diff_if_changed_ret_opt (block loc_body) body1 body2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [id; tparams; params; returns; body; comments]
+  and component_params
+      (params1 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t)
+      (params2 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t) :
+      node change list option =
+    let open Ast.Statement.ComponentDeclaration.Params in
+    let (loc, { params = param_lst1; rest = rest1; comments = comments1 }) = params1 in
+    let (_, { params = param_lst2; rest = rest2; comments = comments2 }) = params2 in
+    let params_diff = diff_and_recurse_no_trivial component_param param_lst1 param_lst2 in
+    let rest_diff = diff_if_changed_opt component_rest_param rest1 rest2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [params_diff; rest_diff; comments_diff]
+  and component_param
+      (param1 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Param.t)
+      (param2 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Param.t) : node change list option
+      =
+    let ( _,
+          {
+            Ast.Statement.ComponentDeclaration.Param.name = name1;
+            local = local1;
+            default = def1;
+            shorthand = shorthand1;
+          }
+        ) =
+      param1
+    in
+    let ( _,
+          {
+            Ast.Statement.ComponentDeclaration.Param.name = name2;
+            local = local2;
+            default = def2;
+            shorthand = shorthand2;
+          }
+        ) =
+      param2
+    in
+    let name_diff =
+      match (name1, name2) with
+      | ( Ast.Statement.ComponentDeclaration.Param.Identifier id1,
+          Ast.Statement.ComponentDeclaration.Param.Identifier id2
+        ) ->
+        diff_if_changed_nonopt_fn identifier (Some id1) (Some id2)
+      | ( Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc1, lit1),
+          Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc2, lit2)
+        ) ->
+        diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
+      | ( Ast.Statement.ComponentDeclaration.Param.Identifier (loc1, { Ast.Identifier.name; _ }),
+          Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc2, lit2)
+        ) ->
+        Some [replace loc1 (Raw name) (StringLiteral (loc2, lit2))]
+      | ( Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc1, lit1),
+          Ast.Statement.ComponentDeclaration.Param.Identifier (_, { Ast.Identifier.name; _ })
+        ) ->
+        Some [replace loc1 (StringLiteral (loc1, lit1)) (Raw name)]
+    in
+    let local_diff = diff_if_changed binding_pattern local1 local2 |> Base.Option.return in
+    let default_diff =
+      diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) def1 def2
+    in
+    match (shorthand1, shorthand2) with
+    | (false, false) -> join_diff_list [name_diff; local_diff; default_diff]
+    | (true, true) -> join_diff_list [local_diff; default_diff]
+    | (_, _) -> None
+  and component_rest_param
+      (elem1 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.RestParam.t)
+      (elem2 : (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.RestParam.t) :
+      node change list option =
+    let open Ast.Statement.ComponentDeclaration.RestParam in
+    let (loc, { argument = arg1; comments = comments1 }) = elem1 in
+    let (_, { argument = arg2; comments = comments2 }) = elem2 in
+    let arg_diff = Some (binding_pattern arg1 arg2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [arg_diff; comments_diff]
   and function_declaration loc func1 func2 = function_ loc func1 func2
   and function_
       ?(is_arrow = false)
@@ -2499,6 +2613,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt (tuple_type loc1) t1 t2
       | (Array t1, Array t2) -> diff_if_changed_ret_opt (array_type loc1) t1 t2
+      | (Renders t1, Renders t2) -> diff_if_changed_ret_opt (render_type loc1) t1 t2
       | _ -> None
     in
     Base.Option.value type_diff ~default:[replace loc1 (Type (loc1, type1)) (Type (loc1, type2))]
@@ -2879,6 +2994,26 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [argument_diff; comments_diff]
+  and render_type
+      (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Renders.t) (t2 : (Loc.t, Loc.t) Ast.Type.Renders.t)
+      : node change list option =
+    let open Ast.Type.Renders in
+    let { operator_loc; argument = argument1; variant = variant1; comments = comments1 } = t1 in
+    let { operator_loc = _; argument = argument2; variant = variant2; comments = comments2 } = t2 in
+    let variant_diff =
+      if variant1 = variant2 then
+        Some []
+      else
+        let str_of_variant = function
+          | Normal -> "renders"
+          | Maybe -> "renders?"
+          | Star -> "renders*"
+        in
+        Some [replace operator_loc (Raw (str_of_variant variant1)) (Raw (str_of_variant variant2))]
+    in
+    let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [variant_diff; argument_diff; comments_diff]
   and typeof_type
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Typeof.t) (t2 : (Loc.t, Loc.t) Ast.Type.Typeof.t)
       : node change list option =
