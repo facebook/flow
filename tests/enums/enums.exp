@@ -4398,32 +4398,18 @@ Cannot instantiate `$Rest` because enum `E` [1] is not an object. [not-an-object
                         ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:36:12
+Error ------------------------------------------------------------------------------------------- utility-types.js:36:25
 
-Cannot instantiate `$ObjMap` because enum `E` [1] is not a valid argument of `$ObjMap` [2]. [incompatible-use]
+Cannot instantiate mapped type [1] because enum `E` [2] is not an object. [not-an-object]
 
+   utility-types.js:36:25
+   36| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
+                               ^^^^^^^^ [2]
+
+References:
    utility-types.js:36:12
-   36| trigger as $ObjMap<typeof E, <T>(T) => [T]>; // Error: enum `E` is not a valid arg to $ObjMap
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   utility-types.js:36:20
-   36| trigger as $ObjMap<typeof E, <T>(T) => [T]>; // Error: enum `E` is not a valid arg to $ObjMap
-                          ^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- utility-types.js:39:12
-
-Cannot instantiate `$ObjMapi` because enum `E` [1] is not a valid argument of `$ObjMapi` [2]. [incompatible-use]
-
-   utility-types.js:39:12
-   39| trigger as $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>; // Error: enum `E` is not a valid arg to $ObjMapi
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   utility-types.js:39:21
-   39| trigger as $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>; // Error: enum `E` is not a valid arg to $ObjMapi
-                           ^^^^^^^^ [1]
+   36| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- value-of.js:6:3
@@ -4478,7 +4464,7 @@ References:
 
 
 
-Found 265 errors
+Found 264 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

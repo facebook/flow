@@ -19,13 +19,13 @@ type SourceObj = { foo: string, bar: number };
 }
 
 {
-  declare const obj: $ObjMap<SourceObj, ((string)=>number) & ((number)=>string)>;
+  declare const obj: {[K in keyof SourceObj]: string};
   obj.foo;
 //     ^
 }
 
 {
-  declare const obj: $ObjMapConst<SourceObj, string>;
+  declare const obj: {[K in keyof SourceObj]: SourceObj[K] extends string ? number : string};;
   obj.foo;
 //     ^
 }

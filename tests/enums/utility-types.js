@@ -32,8 +32,5 @@ E as $Exact<typeof E>; // Error: TODO: improve error
 // $Rest
 trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
 
-// $ObjMap
-trigger as $ObjMap<typeof E, <T>(T) => [T]>; // Error: enum `E` is not a valid arg to $ObjMap
-
-// $ObjMapi
-trigger as $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>; // Error: enum `E` is not a valid arg to $ObjMapi
+// mapped type
+trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
