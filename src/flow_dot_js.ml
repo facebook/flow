@@ -868,7 +868,7 @@ let type_at_pos js_file js_content js_line js_col js_config_object =
       in
       markdown_resp
         (Utils_js.spf
-           "Refinement invalidated due to %s. Refactor this property to a constant to keep refinements."
+           "Refinement invalidated due to %s. Refactor this property to a const variable to keep refinements."
            reasons_str
         )
       :: responses
