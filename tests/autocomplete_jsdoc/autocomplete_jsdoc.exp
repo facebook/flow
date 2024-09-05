@@ -3962,33 +3962,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$Call",
-  "kind":3,
-  "detail":"$Call",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$Call"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":23,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$Call",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
   "label":"$Diff",
   "kind":3,
   "detail":"$Diff",
@@ -4006,37 +3979,10 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":24,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Diff",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
-  "label":"$ElementType",
-  "kind":3,
-  "detail":"$ElementType",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$ElementType"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":25,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$ElementType",
         "ac_type":"Actype"
       }
     ]
@@ -4060,7 +4006,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact",
@@ -4087,7 +4033,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports",
@@ -4114,7 +4060,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror",
@@ -4141,7 +4087,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":29,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys",
@@ -4168,91 +4114,10 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
-  "label":"$ObjMap",
-  "kind":3,
-  "detail":"$ObjMap",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$ObjMap"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":31,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$ObjMap",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
-  "label":"$ObjMapi",
-  "kind":3,
-  "detail":"$ObjMapi",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$ObjMapi"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":32,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$ObjMapi",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
-  "label":"$PropertyType",
-  "kind":3,
-  "detail":"$PropertyType",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$PropertyType"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":33,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$PropertyType",
         "ac_type":"Actype"
       }
     ]
@@ -4276,7 +4141,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly",
@@ -4303,7 +4168,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Rest",
@@ -4330,7 +4195,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":36,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"$TupleMap",
@@ -4357,7 +4222,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":37,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -4384,7 +4249,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":38,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -4411,7 +4276,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":39,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -4438,7 +4303,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":40,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -4465,7 +4330,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":41,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -4492,7 +4357,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":42,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",

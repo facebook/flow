@@ -250,46 +250,10 @@
         }
       },
       {
-        "label": "$ElementType",
-        "kind": 3,
-        "detail": "$ElementType",
-        "sortText": "00000000000000000006",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "$ElementType"
-        },
-        "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-          "arguments": [
-            "textDocument/completion",
-            "builtin type",
-            {
-              "token": "TAUTO332",
-              "index": 6,
-              "session_requests": 1,
-              "typed_length": 1,
-              "completion": "$ElementType",
-              "ac_type": "Actype"
-            }
-          ]
-        }
-      },
-      {
         "label": "$NonMaybeType",
         "kind": 3,
         "detail": "$NonMaybeType",
-        "sortText": "00000000000000000007",
+        "sortText": "00000000000000000006",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -312,46 +276,10 @@
             "builtin type",
             {
               "token": "TAUTO332",
-              "index": 7,
+              "index": 6,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "$NonMaybeType",
-              "ac_type": "Actype"
-            }
-          ]
-        }
-      },
-      {
-        "label": "$PropertyType",
-        "kind": 3,
-        "detail": "$PropertyType",
-        "sortText": "00000000000000000008",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "$PropertyType"
-        },
-        "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-          "arguments": [
-            "textDocument/completion",
-            "builtin type",
-            {
-              "token": "TAUTO332",
-              "index": 8,
-              "session_requests": 1,
-              "typed_length": 1,
-              "completion": "$PropertyType",
               "ac_type": "Actype"
             }
           ]

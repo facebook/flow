@@ -1225,17 +1225,12 @@ let utility_types =
     "Class";
     "Partial";
     "Required";
-    "$Call";
     "$Diff";
-    "$ElementType";
     "$Exact";
     "$Exports";
     "$KeyMirror";
     "$Keys";
     "$NonMaybeType";
-    "$ObjMap";
-    "$ObjMapi";
-    "$PropertyType";
     "$ReadOnly";
     "$Rest";
     "$TupleMap";
