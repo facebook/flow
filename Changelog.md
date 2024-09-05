@@ -1,3 +1,9 @@
+### 0.245.2
+
+Misc:
+* The language for invalidated refinement is slightly tweaked. Instead of saying refactoring to a constant, we now say refactoring to a const variable.
+
+
 ### 0.245.1
 
 Website:
