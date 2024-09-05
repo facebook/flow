@@ -2156,8 +2156,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- names.js:28:82
 
 Multiple component properties are re-declared within a spread [1].
- - `foo` [2] is re-declared here [3]
- - `bar` [4] is re-declared here [5]
+ - `bar` [2] is re-declared here [3]
+ - `foo` [4] is re-declared here [5]
 Property names may only be have one definition within a component. [invalid-component-prop]
 
    names.js:28:82
@@ -2165,18 +2165,18 @@ Property names may only be have one definition within a component. [invalid-comp
                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   names.js:28:46
-   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
-                                                    ^^^ [2]
-   names.js:28:83
-   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
-                                                                                         ^^^ [3]
    names.js:28:59
    28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
-                                                                 ^^^ [4]
+                                                                 ^^^ [2]
    names.js:28:96
    28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
-                                                                                                      ^^^ [5]
+                                                                                                      ^^^ [3]
+   names.js:28:46
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                    ^^^ [4]
+   names.js:28:83
+   28| component MyPropsAreBadInSoManyDifferentWays(foo: string, bar: string, ...props: {foo: number, bar: number, ref: any}) { return <div /> }; // Error
+                                                                                         ^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------- nested_with_function.js:5:27

@@ -748,7 +748,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
       proto
       generics
   in
-  (t, duplicate_props_in_spread, ref_prop_in_spread)
+  (t, List.rev duplicate_props_in_spread, ref_prop_in_spread)
 
 let check_component_config
     (type a) ~add_output ~(return : _ -> _ -> Type.t -> a) pmap cx use_op reason x =
