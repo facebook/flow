@@ -1030,6 +1030,31 @@ References:
                                                  ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- misc.js:69:28
+
+Cannot call `Object.keys(...).reduce` because: [incompatible-call]
+ - Either object literal [1] is incompatible with type including generic type(s) `TFormData` [2].
+ - Or no more than 1 argument is expected by function type [3].
+
+   misc.js:69:28
+     69|   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
+                                    ^^^^^^
+
+References:
+   misc.js:72:5
+     72|     {},
+             ^^ [1]
+   misc.js:70:32
+     70|     <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1055:5
+             v------
+   1055|     reduce(
+   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
+   1057|     ): T;
+             ---^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- misc.js:134:3
 
 Cannot return `otherData` because object type [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-return]
@@ -1530,7 +1555,7 @@ References:
 
 
 
-Found 90 errors
+Found 91 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

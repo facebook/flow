@@ -23,8 +23,8 @@ declare function IndexedAccess2<T>(T[number]): T;
 IndexedAccess2(1); // Error: T under constrained.
 declare function Call<T>($Call<T, <V>(V) => void>): T;
 Call(undefined); // Error: T under constrained.
-declare function ObjMap<T>($ObjMap<T, <V>(V) => void>): T;
-ObjMap({}); // Error: T under constrained.
+declare function MappedType<T>({[K in keyof T]: void}): T;
+MappedType({}); // Error: T under constrained.
 declare function Values<T>($Values<T>): T;
 Values(3); // Error: T under constrained.
 declare function ElementRef<T>(React.ElementRef<T>): T;

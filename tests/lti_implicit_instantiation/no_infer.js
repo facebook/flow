@@ -41,9 +41,3 @@ declare function f7<T>(
 ): void;
 f7({a: ''}, {a: ''}); // ok
 f7({a: ''}, {a: 3}); // error: number ~> string
-
-declare function f8<T>(
-  v1: T,
-  v2: NoInfer<$ObjMap<<V>(V) => V, {a: string}>> // error: underconstrained
-): void;
-f8(1, {a: ''}); // ok

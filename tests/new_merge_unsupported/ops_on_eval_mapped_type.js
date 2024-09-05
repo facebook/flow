@@ -1,11 +1,11 @@
-type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+type T = {[_K in keyof { f: number }]: string};
 declare var t: T;
 
 // Annot_GetPropT
 export const x2 = t.f;
 
 // Annot_GetElemT
-export const x3 = t[('': string)];
+export const x3 = t[('': string)]; // error: unsafe string key access
 
 // Annot_ObjKitT Spread
 export const x4 = { ...t };

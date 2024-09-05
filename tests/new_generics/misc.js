@@ -61,13 +61,13 @@ function gn<TType>(jsEnum: {[TType]: string, ...}) {
 // KeysT
 function gv<
   TFormData: {},
-  TValidators: $ObjMap<TFormData, (_: mixed) => number>,
+  TValidators: {[K in keyof TFormData]: number},
 >(
   data: TFormData,
   validators: TValidators,
-): $ObjMap<TFormData, (_: mixed) => ?string> {
-  return Object.keys(data).reduce(
-    <K: $Keys<TFormData>>(acc: $ObjMap<TFormData, (_: mixed) => ?string>, k: K): $ObjMap<TFormData, (_: mixed) => ?string> =>
+): {[K in keyof TFormData]: ?string} {
+  return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
+    <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
       Object.assign(acc, {[k]: validators[k](k, data)}),
     {},
   );

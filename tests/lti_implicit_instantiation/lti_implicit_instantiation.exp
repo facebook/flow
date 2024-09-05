@@ -199,20 +199,6 @@ References:
                                       ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ no_infer.js:47:15
-
-Cannot instantiate `$ObjMap` because function type [1] is not a valid argument of `$ObjMap` [2]. [incompatible-use]
-
-   no_infer.js:47:15
-   47|   v2: NoInfer<$ObjMap<<V>(V) => V, {a: string}>> // error: underconstrained
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   no_infer.js:47:23
-   47|   v2: NoInfer<$ObjMap<<V>(V) => V, {a: string}>> // error: underconstrained
-                             ^^^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
@@ -478,20 +464,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:27:1
 
-Cannot call `ObjMap` because `T` [1] is underconstrained by call of `ObjMap` [2]. Either add explicit type arguments or
-cast the expression to your expected type. [underconstrained-implicit-instantiation]
+Cannot call `MappedType` because `T` [1] is underconstrained by call of `MappedType` [2]. Either add explicit type
+arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    upper_non_t.js:27:1
-   27| ObjMap({}); // Error: T under constrained.
-       ^^^^^^
+   27| MappedType({}); // Error: T under constrained.
+       ^^^^^^^^^^
 
 References:
-   upper_non_t.js:26:25
-   26| declare function ObjMap<T>($ObjMap<T, <V>(V) => void>): T;
-                               ^ [1]
+   upper_non_t.js:26:29
+   26| declare function MappedType<T>({[K in keyof T]: void}): T;
+                                   ^ [1]
    upper_non_t.js:27:1
-   27| ObjMap({}); // Error: T under constrained.
-       ^^^^^^^^^^ [2]
+   27| MappedType({}); // Error: T under constrained.
+       ^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:29:1
@@ -1111,4 +1097,4 @@ References:
 
 
 
-Found 71 errors
+Found 70 errors
