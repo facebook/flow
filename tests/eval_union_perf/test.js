@@ -30,11 +30,9 @@ export type NoBar =
   | BarTwo
   | BarThree;
 
-type DeepReadOnlyFn = (<T>(Array<T>) => $ReadOnlyArray<$DeepReadOnly<T>>) &
-  (<T: {}>(T) => $ReadOnly<$ObjMap<T, DeepReadOnlyFn>>) &
-  (<T>(T) => T);
-
-export type $DeepReadOnly<T> = $Call<DeepReadOnlyFn, T>;
+export type $DeepReadOnly<T> =
+  T extends $ReadOnlyArray<infer V> ? $ReadOnlyArray<$DeepReadOnly<V>> :
+  T extends {...} ? {+[K in keyof T]: $DeepReadOnly<T[K]>} : T;
 
 export type Info<
   T: {+bar: {+type: string}},
@@ -83,7 +81,7 @@ type BarUnion =
   | BarFive
   | BarSix
   | BarSeven
-  | $Values<$ObjMap<Elements, <T>(T) => Bar<T>>>;
+  | $Values<{[K in keyof Elements]: Bar<Elements[K]>}>;
 
 type Config = {|
   f: (dispatch: (BarUnion) => void) => void,
