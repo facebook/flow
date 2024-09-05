@@ -100,7 +100,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:15:2
 
-Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+Cannot create `Profile` element because property `foo` is missing in props [1] but exists in `GetPropFragmentRef` [2].
 [prop-missing]
 
    main.js:15:2
@@ -112,13 +112,13 @@ References:
    15| <Profile user={userRef} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    Profile.js:40:3
-   40|   $ObjMap<Props, GetPropFragmentRef>,
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   40|   GetPropFragmentRef<Props>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:16:2
 
-Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
+Cannot create `Profile` element because property `user` is missing in props [1] but exists in `GetPropFragmentRef` [2].
 [prop-missing]
 
    main.js:16:2
@@ -130,8 +130,8 @@ References:
    16| <Profile foo={42} />; // Error: Missing user
        ^^^^^^^^^^^^^^^^^^^^ [1]
    Profile.js:40:3
-   40|   $ObjMap<Props, GetPropFragmentRef>,
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   40|   GetPropFragmentRef<Props>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:17:29
@@ -151,7 +151,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
-Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+Cannot create `Profile` element because property `foo` is missing in props [1] but exists in `GetPropFragmentRef` [2].
 [prop-missing]
 
    main.js:18:2
@@ -163,13 +163,13 @@ References:
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
    Profile.js:40:3
-   40|   $ObjMap<Props, GetPropFragmentRef>,
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   40|   GetPropFragmentRef<Props>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
-Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
+Cannot create `Profile` element because property `user` is missing in props [1] but exists in `GetPropFragmentRef` [2].
 [prop-missing]
 
    main.js:18:2
@@ -181,8 +181,8 @@ References:
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
    Profile.js:40:3
-   40|   $ObjMap<Props, GetPropFragmentRef>,
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   40|   GetPropFragmentRef<Props>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:19:16
@@ -275,14 +275,14 @@ Cannot create `SingularTest` element because null [1] is incompatible with objec
                                                     ^^^^ [1]
 
 References:
-   more.js:26:57
-    26|   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:27:50
+    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+                                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- more.js:104:2
 
-Cannot create `SingularTest` element because property `user` is missing in props [1] but exists in object type [2].
+Cannot create `SingularTest` element because property `user` is missing in props [1] but exists in `MapRelayProps` [2].
 [prop-missing]
 
    more.js:104:2
@@ -311,24 +311,28 @@ References:
    more.js:95:17
     95|   +__fragments: BadFragmentReference<{thing: true}>,
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:26:72
-    26|   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:31:22
+    31|     ? {+__fragments: FragmentReference<V>}
+                             ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:135:17
 
-Cannot create `SingularTest` element because null [1] is incompatible with object type [2] in property `optionalUser`.
-[incompatible-type]
+Cannot create `SingularTest` element because in property `optionalUser`: [incompatible-type]
+ - Either null [1] is incompatible with undefined [2].
+ - Or null [1] is incompatible with object type [3].
 
    more.js:135:17
    135|   optionalUser={null}
                         ^^^^ [1]
 
 References:
-   more.js:26:57
-    26|   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:27:63
+    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+                                                                      ^^^^^^^^ [2]
+   more.js:31:7
+    31|     ? {+__fragments: FragmentReference<V>}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:140:34
@@ -371,14 +375,14 @@ Cannot create `PluralTest` element because null [1] is incompatible with read-on
                            ^^^^ [1]
 
 References:
-   more.js:28:73
-    28|   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:27:50
+    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+                                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- more.js:156:2
 
-Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in object type [2].
+Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in `MapRelayProps` [2].
 [prop-missing]
 
    more.js:156:2
@@ -407,24 +411,28 @@ References:
    more.js:95:17
     95|   +__fragments: BadFragmentReference<{thing: true}>,
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:28:103
-    28|   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                                              ^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:31:22
+    31|     ? {+__fragments: FragmentReference<V>}
+                             ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:183:66
 
-Cannot create `PluralTest` element because null [1] is incompatible with read-only array type [2] in property
-`optionalUsers`. [incompatible-type]
+Cannot create `PluralTest` element because in property `optionalUsers`: [incompatible-type]
+ - Either null [1] is incompatible with undefined [2].
+ - Or null [1] is incompatible with read-only array type [3].
 
    more.js:183:66
    183| <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
                                                                          ^^^^ [1]
 
 References:
-   more.js:28:73
-    28|   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:27:63
+    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+                                                                      ^^^^^^^^ [2]
+   more.js:33:9
+    33|       ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:186:24
@@ -437,9 +445,9 @@ Cannot create `SingularTest` element because string [1] is incompatible with fun
                                ^^^^ [1]
 
 References:
-   more.js:62:12
-    62|   onClick: () => void,
-                   ^^^^^^^^^^ [2]
+   more.js:27:50
+    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+                                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:189:36
@@ -452,10 +460,13 @@ Cannot create `SingularTest` element because number [1] is incompatible with str
                                            ^ [1]
 
 References:
-   more.js:61:11
-    61|   string: string,
-                  ^^^^^^ [2]
+   more.js:27:50
+    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+                                                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
 Found 28 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

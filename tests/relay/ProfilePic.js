@@ -20,5 +20,5 @@ class ProfilePic extends React.Component<Props> {
 }
 
 export default createFragmentContainer(ProfilePic) as React.ComponentType<
-  $ObjMap<Props, GetPropFragmentRef>,
+  GetPropFragmentRef<Props>,
 >;

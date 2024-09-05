@@ -39,11 +39,14 @@ type FragmentData = {+$$typeof: $$TypeofFragment};
 
 export type Fragment<Ref, +Data: FragmentData> = Data;
 
-export type GetPropFragmentRef = (<T>(Fragment<T, FragmentData>) => T) &
-  (<T>(T) => T);
+export type GetPropFragmentRef<O> = {
+  [K in keyof O]: [+t: O[K]] extends [+t: Fragment<infer T, FragmentData>]
+    ? T
+    : O[K],
+};
 
 export function createFragmentContainer<Props: {}>(
   Component: React.ComponentType<Props>,
-): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+): React.ComponentType<GetPropFragmentRef<Props>> {
   return null as any;
 }

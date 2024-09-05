@@ -37,5 +37,5 @@ class Profile extends React.Component<Props> {
 }
 
 export default createFragmentContainer(Profile) as React.ComponentType<
-  $ObjMap<Props, GetPropFragmentRef>,
+  GetPropFragmentRef<Props>,
 >;

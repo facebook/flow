@@ -20,17 +20,17 @@ const React = require('react');
  * RelayModernTyped              *
  *********************************/
 
-// prettier-ignore
-type $RelayProps<Props, RelayPropT> = $ObjMap<
+export type $RelayProps<Props, RelayPropT = RelayProp> = MapRelayProps<
   $Diff<Props, {relay: RelayPropT | void}>,
-  & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-  & (<T: FragmentTypeof, Data: {+__typeof: T}>(?Data) => ?{+__fragments: FragmentReference<T>})
-  & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-  & (<T: FragmentTypeof, Data: {+__typeof: T}>(?$ReadOnlyArray<Data>) => ?$ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-  & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<?Data>) => $ReadOnlyArray<?{+__fragments: FragmentReference<T>}>)
-  & (<T: FragmentTypeof, Data: {+__typeof: T}>(?$ReadOnlyArray<?Data>) => ?$ReadOnlyArray<?{+__fragments: FragmentReference<T>}>)
-  & (<T>(T) => T),
 >;
+
+type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+// prettier-ignore
+type MapRelayProp<T> = T extends null | void ? T
+  : T extends {+__typeof: infer V extends FragmentTypeof}
+    ? {+__fragments: FragmentReference<V>}
+    : T extends $ReadOnlyArray<?{+__typeof: FragmentTypeof}>
+      ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
 
 declare function createFragmentContainer<Props: {}>(
   Component: React.ComponentType<Props>,
