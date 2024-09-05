@@ -88,12 +88,19 @@ let sort_errors =
 
 (* If we have too many errors then limit them to the first N errors *)
 let limit_errors errors =
+  let (special_hidden_errors, errors) =
+    List.partition_tf errors ~f:(fun error ->
+        match error.PublishDiagnostics.data with
+        | PublishDiagnostics.RefinementInformation -> true
+        | _ -> false
+    )
+  in
   let cap = 200 in
   (* List.nth is O(cap) instead of O(n) *)
   let is_below_cap = List.nth errors cap = None in
   if is_below_cap then
     (* avoid O(nlogn) sort in this case *)
-    errors
+    errors @ special_hidden_errors
   else
     (* Sort to make sure we're always sending the same errors *)
     let errors = sort_errors errors in
@@ -118,7 +125,7 @@ let limit_errors errors =
         }
       in
 
-      diagnostic :: retain
+      diagnostic :: (retain @ special_hidden_errors)
 
 let is_parse_error =
   let parse_code = PublishDiagnostics.StringCode "ParseError" in
