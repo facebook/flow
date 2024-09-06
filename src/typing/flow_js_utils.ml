@@ -582,6 +582,12 @@ let exact_obj_error cx obj_kind ~use_op ~exact_reason l =
 
 (** Unions *)
 
+module UnionOptimizationGuardResult = struct
+  type t =
+    | True
+    | Maybe
+end
+
 (** TODO: (1) Define a more general partial equality, that takes into
     account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
 let union_optimization_guard =
@@ -604,10 +610,12 @@ let union_optimization_guard =
   let rec union_optimization_guard_impl seen cx comparator l u =
     match (l, u) with
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
-      UnionRep.same_source rep1 rep2
-      || UnionRep.same_structure rep1 rep2
-      || (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
-      begin
+      if UnionRep.same_source rep1 rep2 then
+        UnionOptimizationGuardResult.True
+      else if UnionRep.same_structure rep1 rep2 then
+        UnionOptimizationGuardResult.True
+      (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
+      else begin
         (* Only optimize for enums, since this is the only fast path examined below.
          * Note that optimizing both reps with [UnionRep.optimize] can potentially
          * cause a `RecursionCheck.LimitExceeded` exception. (`tests/typeapp_termination`
@@ -618,14 +626,18 @@ let union_optimization_guard =
           UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep2;
 
         match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
-        | (Some enums1, Some enums2) -> UnionEnumSet.subset enums1 enums2
+        | (Some enums1, Some enums2) ->
+          if UnionEnumSet.subset enums1 enums2 then
+            UnionOptimizationGuardResult.True
+          else
+            UnionOptimizationGuardResult.Maybe
         | (_, _) ->
           let unwrap rep = UnionRep.members rep |> Base.List.map ~f:(unwrap_type cx) in
           let lts = unwrap rep1 in
           let uts = unwrap rep2 in
           (* Pointwise subtyping check: O(N) *)
           if List.length lts = List.length uts && Base.List.for_all2_exn ~f:( = ) lts uts then
-            true
+            UnionOptimizationGuardResult.True
           else if
             (* Check if u contains l after unwrapping annots, tvars and repos types.
                This is faster than the n^2 case below because it avoids flattening both
@@ -633,14 +645,17 @@ let union_optimization_guard =
             let guard u =
               (not (TypeSet.mem u seen))
               && union_optimization_guard_impl (TypeSet.add u seen) cx comparator l u
+                 = UnionOptimizationGuardResult.True
             in
             Base.List.exists ~f:guard uts
           then
-            true
+            UnionOptimizationGuardResult.True
+          else if union_compare cx comparator lts uts then
+            UnionOptimizationGuardResult.True
           else
-            union_compare cx comparator lts uts
+            UnionOptimizationGuardResult.Maybe
       end
-    | _ -> false
+    | _ -> UnionOptimizationGuardResult.Maybe
   in
   union_optimization_guard_impl TypeSet.empty
 
