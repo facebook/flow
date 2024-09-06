@@ -22,6 +22,14 @@ module type S = sig
     use_op:Type.use_op ->
     (Reason.reason * Type.canonical_renders_form) * (Reason.reason * Type.canonical_renders_form) ->
     unit
+
+  val non_renders_to_renders :
+    Context.t ->
+    Type.DepthTrace.t ->
+    use_op:Type.use_op ->
+    Type.t ->
+    Reason.reason * Type.canonical_renders_form ->
+    unit
 end
 
 module Make (_ : INPUT) : S
