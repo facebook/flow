@@ -667,23 +667,46 @@ module Make (Flow : INPUT) : OUTPUT = struct
                )
            )
 
+  let take_n_from_set n set =
+    let exception Done in
+    let result = ref [] in
+    let i = ref 0 in
+    match
+      UnionEnumSet.iter
+        (fun x ->
+          if !i < n then (
+            incr i;
+            result := x :: !result
+          ) else
+            raise Done)
+        set
+    with
+    | exception Done -> List.rev !result
+    | _ -> List.rev !result
+
   let union_to_union cx trace use_op l rep u =
     match (union_optimization_guard cx TypeUtil.quick_subtype l u, use_op) with
     | (UnionOptimizationGuardResult.True, _) ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (True)"
     | (UnionOptimizationGuardResult.Maybe, _) -> flow_all_in_union cx trace rep (UseT (use_op, u))
-    | (UnionOptimizationGuardResult.False, _) ->
+    | (UnionOptimizationGuardResult.False { diff }, _) ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (False)";
+      let reason_lower = reason_of_t l in
+      let reason_upper = reason_of_t u in
+      let explanation =
+        Some
+          (Flow_intermediate_error_types.ExplanationAdditionalUnionMembers
+             {
+               left = reason_lower;
+               right = reason_upper;
+               members = take_n_from_set 3 diff |> Base.List.map ~f:UnionEnum.to_string;
+               extra_number = max 0 (UnionEnumSet.cardinal diff - 3);
+             }
+          )
+      in
       add_output
         cx
-        (Error_message.EIncompatibleWithUseOp
-           {
-             reason_lower = reason_of_t l;
-             reason_upper = reason_of_t u;
-             use_op;
-             explanation = None;
-           }
-        )
+        (Error_message.EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation })
 
   let check_dro_subtyping cx use_op l u trace =
     match (l, u) with

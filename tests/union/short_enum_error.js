@@ -41,3 +41,11 @@ function test4() {
     _ as T1 as T2; // error -- expanded pair-wise due to mismatching tags
     _ as T2 as T1; // error -- folded into a single error
 }
+
+function test5() {
+    type T1 = 'a' | 'b' | 'c' | 'a1' | 'b1' | 'c1' | 'd1' | 'e1' | 'f1' | 'g1' | 'h1';
+    type T2 = 'a' | 'b' | 'c' | 'a2' | 'b2' | 'c2';
+
+    _ as T1 as T2; // error
+    _ as T2 as T1; // error
+}

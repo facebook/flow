@@ -1791,6 +1791,8 @@ and UnionEnum : sig
     | BoolTag
     | VoidTag
     | NullTag
+
+  val to_string : t -> string
 end = struct
   (* compare numeric literals based on float representation *)
   let equal_number_literal (a, _) (b, _) = a = b
@@ -1822,6 +1824,14 @@ end = struct
     | BoolTag
     | VoidTag
     | NullTag
+
+  let to_string = function
+    | Str s -> display_string_of_name s
+    | Num (_, f) -> f
+    | Bool b -> spf "%b" b
+    | BigInt (_, b) -> b
+    | Void -> "undefined"
+    | Null -> "null"
 end
 
 and UnionEnumSet : (Flow_set.S with type elt = UnionEnum.t) = Flow_set.Make (UnionEnum)

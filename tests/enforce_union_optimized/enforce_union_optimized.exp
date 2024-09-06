@@ -61,7 +61,7 @@ Error --------------------------------------------------------------------------
 
 Union could not be fully optimized internally. The following keys have non-unique values:
  - Key `f` has value `1` in object type [1], object type [2].
- - Key `g` has value ``a`` in object type [1], object type [2].
+ - Key `g` has value `a` in object type [1], object type [2].
  - Key `h` has value `true` in object type [1], object type [2].
  - Key `k` has value `undefined` in object type [1], object type [2].
  - Key `l` has value `null` in object type [1], object type [2].

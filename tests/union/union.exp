@@ -87,8 +87,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- short_enum_error.js:11:8
 
-Cannot call `t2` with `t1` bound to the first parameter because `T1` [1] is incompatible with `T2` [2].
-[incompatible-call]
+Cannot call `t2` with `t1` bound to the first parameter because `T1` [1] is incompatible with `T2` [2]. Type `T1` [1]
+includes members `a1`, `b1`, `c1` that are not included in type `T2` [2]. [incompatible-call]
 
    short_enum_error.js:11:8
    11|     t2(t1); // error (function)
@@ -105,7 +105,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- short_enum_error.js:12:5
 
-Cannot cast `t1` to `T2` because `T1` [1] is incompatible with `T2` [2]. [incompatible-cast]
+Cannot cast `t1` to `T2` because `T1` [1] is incompatible with `T2` [2]. Type `T1` [1] includes members `a1`, `b1`, `c1`
+that are not included in type `T2` [2]. [incompatible-cast]
 
    short_enum_error.js:12:5
    12|     t1 as T2; // error (cast)
@@ -217,6 +218,36 @@ References:
                       ^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- short_enum_error.js:49:10
+
+Cannot cast `_` to `T2` because `T1` [1] is incompatible with `T2` [2]. Type `T1` [1] includes members `a1`, `b1`, `c1`
+and 5 more that are not included in type `T2` [2]. [incompatible-cast]
+
+   short_enum_error.js:49:10
+   49|     _ as T1 as T2; // error
+                ^^ [1]
+
+References:
+   short_enum_error.js:49:16
+   49|     _ as T1 as T2; // error
+                      ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- short_enum_error.js:50:10
+
+Cannot cast `_` to `T1` because `T2` [1] is incompatible with `T1` [2]. Type `T2` [1] includes members `a2`, `b2`, `c2`
+that are not included in type `T1` [2]. [incompatible-cast]
+
+   short_enum_error.js:50:10
+   50|     _ as T2 as T1; // error
+                ^^ [1]
+
+References:
+   short_enum_error.js:50:16
+   50|     _ as T2 as T1; // error
+                      ^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- union.js:2:5
 
 Cannot call `bar` with `0` bound to `x` because: [incompatible-call]
@@ -260,7 +291,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 15 errors
+Found 17 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

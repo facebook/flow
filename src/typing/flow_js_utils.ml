@@ -586,7 +586,7 @@ module UnionOptimizationGuardResult = struct
   type t =
     | True
     | Maybe
-    | False
+    | False of { diff: UnionEnumSet.t }
 end
 
 let union_optimization_guard =
@@ -623,7 +623,7 @@ let union_optimization_guard =
           if UnionEnumSet.subset enums1 enums2 then
             UnionOptimizationGuardResult.True
           else if Base.Option.is_some tag1 && tag1 = tag2 then
-            UnionOptimizationGuardResult.False
+            UnionOptimizationGuardResult.False { diff = UnionEnumSet.diff enums1 enums2 }
           else
             UnionOptimizationGuardResult.Maybe
         | (_, _) ->

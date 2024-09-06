@@ -201,6 +201,12 @@ type 'loc explanation =
       guard_type: 'loc virtual_reason;
       is_return_false_statement: bool;
     }
+  | ExplanationAdditionalUnionMembers of {
+      left: 'loc virtual_reason;
+      right: 'loc virtual_reason;
+      members: string list;
+      extra_number: int;
+    }
 
 type 'loc frame =
   | FrameAnonymous

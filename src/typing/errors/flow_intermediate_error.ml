@@ -1212,6 +1212,15 @@ let to_printable_error :
         hardcoded_string_desc_ref "`React.Immutable`" annot_loc;
         text " are managed by the React runtime and cannot be mutated";
       ]
+    | ExplanationAdditionalUnionMembers { left; right; members; extra_number } ->
+      [text "Type "; ref left; text " includes members "]
+      @ (Base.List.map ~f:(fun m -> code m) members |> Base.List.intersperse ~sep:(text ", "))
+      @ ( if extra_number > 0 then
+          [text (spf " and %d more" extra_number)]
+        else
+          []
+        )
+      @ [text " that are not included in type "; ref right]
   in
   let frame_to_friendly_msgs = function
     | FrameAnonymous -> []
@@ -1748,16 +1757,7 @@ let to_printable_error :
     | MessageCannotNestComponents ->
       [text "Components may not be nested directly within other components."]
     | MessageCannotOptimizeUnionDueToNonUniqueKeys non_unique_keys ->
-      let string_of_union_enum =
-        let open Type.UnionEnum in
-        function
-        | Str s -> code (spf "`%s`" (display_string_of_name s))
-        | Num (_, f) -> code f
-        | Bool b -> code (spf "%b" b)
-        | BigInt (_, b) -> code b
-        | Void -> code "undefined"
-        | Null -> code "null"
-      in
+      let string_of_union_enum x = code (Type.UnionEnum.to_string x) in
       let string_of_non_unique_key (name, map) =
         let ref_texts (r0, rs) = ref r0 :: List.concat_map (fun r -> [text ", "; ref r]) rs in
         map

@@ -802,6 +802,9 @@ let map_loc_of_explanation (f : 'a -> 'b) =
         guard_type = map_reason guard_type;
         is_return_false_statement;
       }
+  | ExplanationAdditionalUnionMembers { left; right; members; extra_number } ->
+    ExplanationAdditionalUnionMembers
+      { left = map_reason left; right = map_reason right; members; extra_number }
 
 let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
