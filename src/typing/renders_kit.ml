@@ -17,7 +17,16 @@ module type INPUT = sig
   include Flow_common.REACT
 end
 
-module Make (Flow : INPUT) = struct
+module type S = sig
+  val rec_renders :
+    Context.t ->
+    Type.DepthTrace.t ->
+    use_op:Type.use_op ->
+    (Reason.reason * Type.canonical_renders_form) * (Reason.reason * Type.canonical_renders_form) ->
+    unit
+end
+
+module Make (Flow : INPUT) : S = struct
   open Flow
 
   let reconstruct_render_type reason form = DefT (reason, RendersT form)
