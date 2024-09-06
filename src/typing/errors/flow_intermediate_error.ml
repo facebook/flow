@@ -294,13 +294,15 @@ let post_process_errors original_errors =
       in
       reason_lower = reason_lower'
       || is_not_duplicate (EExpectedBigIntLit { reason_lower = reason_lower'; reason_upper; use_op })
-    | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
+    | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation } ->
       let ((reason_lower', reason_upper), use_op) =
         dedupe_by_flip (reason_lower, reason_upper) use_op
       in
       reason_lower = reason_lower'
       || is_not_duplicate
-           (EIncompatibleWithUseOp { reason_lower = reason_lower'; reason_upper; use_op })
+           (EIncompatibleWithUseOp
+              { reason_lower = reason_lower'; reason_upper; use_op; explanation }
+           )
     | EEnumIncompatible
         { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
       let ((reason_lower', reason_upper), use_op) =
@@ -1007,8 +1009,8 @@ let rec make_intermediate_error :
         use_op
     | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
       mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
-    | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
-      mk_incompatible_error reason_lower reason_upper use_op
+    | (None, Incompatible { reason_lower; reason_upper; use_op; explanation }) ->
+      mk_incompatible_error ?additional_explanation:explanation reason_lower reason_upper use_op
     | ( None,
         IncompatibleEnum
           { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }

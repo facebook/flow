@@ -443,7 +443,12 @@ module Operators = struct
                 )
             in
             Error_message.EIncompatibleWithUseOp
-              { reason_lower = reason_of_t l; reason_upper = reason_of_t r; use_op }
+              {
+                reason_lower = reason_of_t l;
+                reason_upper = reason_of_t r;
+                use_op;
+                explanation = None;
+              }
           | _ ->
             let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
             Error_message.EComparison reasons)

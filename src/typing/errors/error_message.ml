@@ -311,6 +311,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
+      explanation: 'loc explanation option;
     }
   | EUnsupportedImplements of 'loc virtual_reason
   | ENotAReactComponent of {
@@ -768,6 +769,40 @@ let map_loc_of_invalid_render_type_kind f = function
   | InvalidRendersGenericT -> InvalidRendersGenericT
   | UncategorizedInvalidRenders -> UncategorizedInvalidRenders
 
+let map_loc_of_explanation (f : 'a -> 'b) =
+  let map_reason = Reason.map_reason_locs f in
+  function
+  | ExplanationAbstractEnumCasting -> ExplanationAbstractEnumCasting
+  | ExplanationArrayInvariantTyping -> ExplanationArrayInvariantTyping
+  | ExplanationConstrainedAssign { name; declaration; providers } ->
+    ExplanationConstrainedAssign
+      { name; declaration = f declaration; providers = Base.List.map ~f providers }
+  | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
+    ExplanationConcreteEnumCasting { representation_type; casting_syntax }
+  | ExplanationMultiplatform -> ExplanationMultiplatform
+  | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
+  | ExplanationReactComponentPropsDeepReadOnly loc ->
+    ExplanationReactComponentPropsDeepReadOnly (f loc)
+  | ExplanationReactComponentRefRequirement -> ExplanationReactComponentRefRequirement
+  | ExplanationReactHookArgsDeepReadOnly loc -> ExplanationReactHookArgsDeepReadOnly (f loc)
+  | ExplanationReactHookIncompatibleWithEachOther -> ExplanationReactHookIncompatibleWithEachOther
+  | ExplanationReactHookIncompatibleWithNormalFunctions ->
+    ExplanationReactHookIncompatibleWithNormalFunctions
+  | ExplanationReactHookReturnDeepReadOnly loc -> ExplanationReactHookReturnDeepReadOnly (f loc)
+  | ExplanationReactImmutable loc -> ExplanationReactImmutable (f loc)
+  | ExplanationIncompatibleReactDeepReadOnly -> ExplanationIncompatibleReactDeepReadOnly
+  | ExplanationRenderTypeRequirement -> ExplanationRenderTypeRequirement
+  | ExplanationTypeGuardCompatibility -> ExplanationTypeGuardCompatibility
+  | ExplanationTypeGuardPositiveConsistency { return; param; guard_type; is_return_false_statement }
+    ->
+    ExplanationTypeGuardPositiveConsistency
+      {
+        return = map_reason return;
+        param = map_reason param;
+        guard_type = map_reason guard_type;
+        is_return_false_statement;
+      }
+
 let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
   let map_reason = Reason.map_reason_locs f in
@@ -952,12 +987,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     EInvalidObjectKit
       { reason = map_reason reason; reason_op = map_reason reason_op; use_op = map_use_op use_op }
-  | EIncompatibleWithUseOp { use_op; reason_lower; reason_upper } ->
+  | EIncompatibleWithUseOp { use_op; reason_lower; reason_upper; explanation } ->
     EIncompatibleWithUseOp
       {
         use_op = map_use_op use_op;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
+        explanation = Base.Option.map ~f:(map_loc_of_explanation f) explanation;
       }
   | ENotAReactComponent { reason; use_op } ->
     ENotAReactComponent { reason = map_reason reason; use_op = map_use_op use_op }
@@ -2102,6 +2138,7 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
+      explanation: 'loc explanation option;
     }
   | IncompatibleEnum of {
       reason_lower: 'loc Reason.virtual_reason;
@@ -2148,7 +2185,7 @@ let friendly_message_of_msg = function
     Speculation { loc; use_op = Base.Option.value ~default:unknown_use use_op; branches }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     if branches = [] then
-      Incompatible { reason_lower; reason_upper; use_op }
+      Incompatible { reason_lower; reason_upper; use_op; explanation = None }
     else
       Speculation { loc = loc_of_reason reason_upper; use_op; branches }
   | EIncompatibleProp { prop; reason_prop; reason_obj; special = _; use_op } ->
@@ -2204,13 +2241,13 @@ let friendly_message_of_msg = function
     Normal (MessageAnyValueUsedAsType (desc_of_reason reason_use))
   | EValueUsedAsType { reason_use } -> Normal (MessageValueUsedAsType (desc_of_reason reason_use))
   | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op }
+    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op }
+    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op }
+    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op }
+    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
   | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
     PropMissing
       {
@@ -2528,8 +2565,8 @@ let friendly_message_of_msg = function
   | EObjectComputedPropertyAssign (reason_prop, None, _) ->
     Normal (MessageCannotAssignToObjectWithComputedProp reason_prop)
   | EInvalidLHSInAssignment _ -> Normal MessageCannotAssignToInvalidLHS
-  | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op }
+  | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation } ->
+    Incompatible { reason_lower; reason_upper; use_op; explanation }
   | EUnsupportedImplements reason ->
     Normal (MessageCannotImplementNonInterface (desc_of_reason reason))
   | ENotAReactComponent { reason; use_op } ->

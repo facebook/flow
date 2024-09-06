@@ -5027,7 +5027,7 @@ struct
           add_output
             cx
             (Error_message.EIncompatibleWithUseOp
-               { reason_lower = reason_l; reason_upper = reason_u; use_op }
+               { reason_lower = reason_l; reason_upper = reason_u; use_op; explanation = None }
             )
         (*******************************)
         (* ToString abstract operation *)

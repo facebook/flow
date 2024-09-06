@@ -451,7 +451,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           add_output
             cx
             (Error_message.EIncompatibleWithUseOp
-               { reason_lower = TypeUtil.reason_of_t l; reason_upper = reason_op; use_op }
+               {
+                 reason_lower = TypeUtil.reason_of_t l;
+                 reason_upper = reason_op;
+                 use_op;
+                 explanation = None;
+               }
             );
           true
         | DefT (_, ObjT _) -> shortcut_disjoint_union cx trace reason_op use_op l rep

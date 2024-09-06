@@ -1570,7 +1570,7 @@ let dump_error_message =
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"none" reason2)
         kind
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
-    | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
+    | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation = _ } ->
       spf
         "EIncompatibleWithUseOp { reason_lower = %s; reason_upper = %s; use_op = %s }"
         (dump_reason cx reason_lower)

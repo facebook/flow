@@ -35,6 +35,7 @@ module Make (Flow : INPUT) = struct
                reason_lower = reasonl;
                reason_upper = reasonu;
                use_op = Frame (RendersCompatibility, use_op);
+               explanation = None;
              }
           )
     | (InstrinsicRenders _, StructuralRenders { renders_variant = _; renders_structural_type = t })
@@ -47,6 +48,7 @@ module Make (Flow : INPUT) = struct
                reason_lower = reasonl;
                reason_upper = reasonu;
                use_op = Frame (RendersCompatibility, use_op);
+               explanation = None;
              }
           )
     | (InstrinsicRenders _, NominalRenders _)
@@ -58,6 +60,7 @@ module Make (Flow : INPUT) = struct
              reason_lower = reasonl;
              reason_upper = reasonu;
              use_op = Frame (RendersCompatibility, use_op);
+             explanation = None;
            }
         )
     | ( NominalRenders { renders_id = id1; renders_name = _; renders_super },
@@ -103,6 +106,7 @@ module Make (Flow : INPUT) = struct
              reason_lower = reasonl;
              reason_upper = reasonu;
              use_op = Frame (RendersCompatibility, use_op);
+             explanation = None;
            }
         )
     | (StructuralRenders { renders_variant = RendersNormal; renders_structural_type }, _) ->
@@ -160,6 +164,7 @@ module Make (Flow : INPUT) = struct
              reason_lower = reasonl;
              reason_upper = reasonu;
              use_op = Frame (RendersCompatibility, use_op);
+             explanation = None;
            }
         )
 end

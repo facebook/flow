@@ -6238,7 +6238,8 @@ module Make
       Flow_js_utils.add_output
         cx
         Error_message.(
-          EIncompatibleWithUseOp { reason_lower = reason; reason_upper = reason; use_op }
+          EIncompatibleWithUseOp
+            { reason_lower = reason; reason_upper = reason; use_op; explanation = None }
         );
       let t = AnyT.error reason in
       (t, None, (args_loc, { ArgList.arguments = []; comments }))

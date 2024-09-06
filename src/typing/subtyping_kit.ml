@@ -127,7 +127,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             add_output
               cx
               (Error_message.EIncompatibleWithUseOp
-                 { reason_lower = lreason; reason_upper = ureason; use_op }
+                 { reason_lower = lreason; reason_upper = ureason; use_op; explanation = None }
               )
         ) else if Key_map.(is_empty pmap2 && is_empty nmap2) then
           ()
@@ -135,7 +135,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           add_output
             cx
             (Error_message.EIncompatibleWithUseOp
-               { reason_lower = lreason; reason_upper = ureason; use_op }
+               { reason_lower = lreason; reason_upper = ureason; use_op; explanation = None }
             )
 
   let index_of_param params x =
@@ -658,7 +658,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
              add_output
                cx
                (Error_message.EIncompatibleWithUseOp
-                  { reason_lower = elem_reason; reason_upper = renders_r; use_op }
+                  {
+                    reason_lower = elem_reason;
+                    reason_upper = renders_r;
+                    use_op;
+                    explanation = None;
+                  }
                )
            )
 
@@ -672,7 +677,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EIncompatibleWithUseOp
-           { reason_lower = reason_of_t l; reason_upper = reason_of_t u; use_op }
+           {
+             reason_lower = reason_of_t l;
+             reason_upper = reason_of_t u;
+             use_op;
+             explanation = None;
+           }
         )
 
   let check_dro_subtyping cx use_op l u trace =
@@ -1105,7 +1115,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                add_output
                  cx
                  (Error_message.EIncompatibleWithUseOp
-                    { reason_lower = reason_l; reason_upper = reason_u; use_op }
+                    { reason_lower = reason_l; reason_upper = reason_u; use_op; explanation = None }
                  );
              true
            | _ -> false ->
@@ -1614,6 +1624,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
              reason_lower = reason_of_t l;
              reason_upper = reason_of_t u;
              use_op = Frame (RendersCompatibility, use_op);
+             explanation = None;
            }
         )
     (* Exiting the renders world *)
@@ -2464,6 +2475,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EIncompatibleWithUseOp
-           { reason_lower = reason_of_t l; reason_upper = reason_of_t u; use_op }
+           {
+             reason_lower = reason_of_t l;
+             reason_upper = reason_of_t u;
+             use_op;
+             explanation = None;
+           }
         )
 end
