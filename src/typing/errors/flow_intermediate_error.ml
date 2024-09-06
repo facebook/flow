@@ -1750,7 +1750,7 @@ let to_printable_error :
         let open Type.UnionEnum in
         function
         | Str s -> code (spf "`%s`" (display_string_of_name s))
-        | Num f -> code (spf "%f" f)
+        | Num (_, f) -> code f
         | Bool b -> code (spf "%b" b)
         | BigInt (_, b) -> code b
         | Void -> code "undefined"

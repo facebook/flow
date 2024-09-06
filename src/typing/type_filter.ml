@@ -590,7 +590,8 @@ let sentinel_refinement =
   let open UnionEnum in
   let enum_match sense = function
     | (DefT (_, StrT (Literal (_, value))), Str sentinel) when value = sentinel != sense -> true
-    | (DefT (_, NumT (Literal (_, (value, _)))), Num sentinel) when value = sentinel != sense ->
+    | (DefT (_, NumT (Literal (_, (value, _)))), Num (sentinel, _)) when value = sentinel != sense
+      ->
       true
     | (DefT (_, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
     | (DefT (_, BigIntT (Literal (_, (value, _)))), BigInt (sentinel, _))

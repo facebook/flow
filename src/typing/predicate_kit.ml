@@ -762,7 +762,7 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
   let desc_of_sentinel sentinel =
     match sentinel with
     | UnionEnum.(One (Str s)) -> RStringLit s
-    | UnionEnum.(One (Num n)) -> RNumberLit (string_of_float n)
+    | UnionEnum.(One (Num (_, n))) -> RNumberLit n
     | UnionEnum.(One (Bool b)) -> RBooleanLit b
     | UnionEnum.(One (BigInt (_, n))) -> RBigIntLit n
     | UnionEnum.(One Null) -> RNull
@@ -868,8 +868,8 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
     | DefT (_, StrT (Literal (_, value)))
     | DefT (_, SingletonStrT value) ->
       Some UnionEnum.(One (Str value))
-    | DefT (_, NumT (Literal (_, (value, _))))
-    | DefT (_, SingletonNumT (value, _)) ->
+    | DefT (_, NumT (Literal (_, value)))
+    | DefT (_, SingletonNumT value) ->
       Some UnionEnum.(One (Num value))
     | DefT (_, BoolT (Some value))
     | DefT (_, SingletonBoolT value) ->
@@ -944,7 +944,7 @@ and concretize_and_run_sentinel_prop_test
                let def =
                  match enum with
                  | UnionEnum.Str v -> SingletonStrT v
-                 | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
+                 | UnionEnum.Num v -> SingletonNumT v
                  | UnionEnum.Bool v -> SingletonBoolT v
                  | UnionEnum.BigInt v -> SingletonBigIntT v
                  | UnionEnum.Void -> VoidT
@@ -979,7 +979,7 @@ and concretize_and_run_sentinel_prop_test
                      let def =
                        match enum with
                        | UnionEnum.Str v -> SingletonStrT v
-                       | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
+                       | UnionEnum.Num v -> SingletonNumT v
                        | UnionEnum.Bool v -> SingletonBoolT v
                        | UnionEnum.BigInt v -> SingletonBigIntT v
                        | UnionEnum.Void -> VoidT

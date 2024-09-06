@@ -42,9 +42,9 @@ type sense = bool
 
 type tvar = reason * ident
 
-type number_literal = float * string [@@deriving ord]
+type number_literal = float * string [@@deriving ord, eq]
 
-type bigint_literal = int64 option * string [@@deriving ord]
+type bigint_literal = int64 option * string [@@deriving ord, eq]
 
 module rec TypeTerm : sig
   type t =
@@ -1762,12 +1762,12 @@ and UnionEnum : sig
   type t =
     (* TODO this should not allow internal names *)
     | Str of name
-    | Num of float
+    | Num of number_literal
     | Bool of bool
     | BigInt of bigint_literal
     | Void
     | Null
-  [@@deriving ord]
+  [@@deriving ord, eq]
 
   type star =
     | One of t
@@ -1792,14 +1792,19 @@ and UnionEnum : sig
     | VoidTag
     | NullTag
 end = struct
+  (* compare numeric literals based on float representation *)
+  let equal_number_literal (a, _) (b, _) = a = b
+
+  let compare_number_literal (a, _) (b, _) = compare a b
+
   type t =
     | Str of name
-    | Num of float
+    | Num of number_literal
     | Bool of bool
     | BigInt of bigint_literal
     | Void
     | Null
-  [@@deriving ord]
+  [@@deriving ord, eq]
 
   type star =
     | One of t
@@ -2382,8 +2387,8 @@ end = struct
       | DefT (_, StrT (Literal (_, lit))) ->
         Some (UnionEnum.Str lit)
       | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
-      | DefT (_, SingletonNumT (lit, _))
-      | DefT (_, NumT (Literal (_, (lit, _)))) ->
+      | DefT (_, SingletonNumT lit)
+      | DefT (_, NumT (Literal (_, lit))) ->
         Some (UnionEnum.Num lit)
       | DefT (_, SingletonBigIntT lit)
       | DefT (_, BigIntT (Literal (_, lit))) ->
