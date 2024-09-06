@@ -18,7 +18,7 @@ module type INPUT = sig
 end
 
 module type S = sig
-  val rec_renders :
+  val rec_renders_to_renders :
     Context.t ->
     Type.DepthTrace.t ->
     use_op:Type.use_op ->
@@ -31,7 +31,7 @@ module Make (Flow : INPUT) : S = struct
 
   let reconstruct_render_type reason form = DefT (reason, RendersT form)
 
-  let rec rec_renders cx trace ~use_op ((reasonl, l), (reasonu, u)) =
+  let rec rec_renders_to_renders cx trace ~use_op ((reasonl, l), (reasonu, u)) =
     match (l, u) with
     | (InstrinsicRenders n1, InstrinsicRenders n2) ->
       if n1 = n2 then
@@ -135,7 +135,7 @@ module Make (Flow : INPUT) : S = struct
         rec_flow_t cx trace ~use_op (false_t, u_type)
       | RendersMaybe -> ()
       | RendersStar -> ());
-      rec_renders
+      rec_renders_to_renders
         cx
         trace
         ~use_op
@@ -152,7 +152,7 @@ module Make (Flow : INPUT) : S = struct
         let roa = Flow.get_builtin_typeapp cx reasonl "$ReadOnlyArray" [renders_star] in
         rec_flow_t cx trace ~use_op (roa, reconstruct_render_type reasonu u)
       | RendersStar -> ());
-      rec_renders
+      rec_renders_to_renders
         cx
         trace
         ~use_op

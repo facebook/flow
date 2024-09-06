@@ -16,7 +16,7 @@ module type INPUT = sig
 end
 
 module type S = sig
-  val rec_renders :
+  val rec_renders_to_renders :
     Context.t ->
     Type.DepthTrace.t ->
     use_op:Type.use_op ->

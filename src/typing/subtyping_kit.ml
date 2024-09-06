@@ -1578,7 +1578,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | (DefT (reasonl, RendersT r1), DefT (reasonu, RendersT r2)) ->
-      RendersKit.rec_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))
+      RendersKit.rec_renders_to_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))
     | ( DefT (_, (NullT | VoidT | BoolT (Some false))),
         DefT
           ( _,
