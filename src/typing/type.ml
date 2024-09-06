@@ -1772,6 +1772,25 @@ and UnionEnum : sig
   type star =
     | One of t
     | Many of UnionEnumSet.t
+
+  (**
+   * A tag to describe the kind of values included in an enum union. This information
+   * is useful given that [canon] will match various types to the same UnionEnum.t.
+   * In some cases, we will want to know if the initial DefT types were actually
+   * of the same kind.
+   *)
+  type tag =
+    | SingletonStrTag
+    | StrTag
+    | NumericStrKeyTag
+    | SingletonNumTag
+    | NumTag
+    | SingletonBigIntTag
+    | BingIntTag
+    | SingletonBoolTag
+    | BoolTag
+    | VoidTag
+    | NullTag
 end = struct
   type t =
     | Str of name
@@ -1785,6 +1804,19 @@ end = struct
   type star =
     | One of t
     | Many of UnionEnumSet.t
+
+  type tag =
+    | SingletonStrTag
+    | StrTag
+    | NumericStrKeyTag
+    | SingletonNumTag
+    | NumTag
+    | SingletonBigIntTag
+    | BingIntTag
+    | SingletonBoolTag
+    | BoolTag
+    | VoidTag
+    | NullTag
 end
 
 and UnionEnumSet : (Flow_set.S with type elt = UnionEnum.t) = Flow_set.Make (UnionEnum)
@@ -2274,7 +2306,9 @@ and UnionRep : sig
   module UnionEnumMap : WrappedMap.S with type key = UnionEnum.t
 
   type finally_optimized_rep =
-    | EnumUnion of UnionEnumSet.t
+    (* [None] in the position of tag means that the values used to create this
+     * enum union were not of the same tag. *)
+    | EnumUnion of UnionEnumSet.t * UnionEnum.tag option
     | PartiallyOptimizedUnionEnum of UnionEnumSet.t
     | AlmostDisjointUnionWithPossiblyNonUniqueKeys of
         TypeTerm.t Nel.t UnionEnumMap.t NameUtils.Map.t
@@ -2334,6 +2368,8 @@ and UnionRep : sig
 
   val check_enum : t -> UnionEnumSet.t option
 
+  val check_enum_with_tag : t -> (UnionEnumSet.t * UnionEnum.tag option) option
+
   val string_of_specialization_ : finally_optimized_rep option -> string
 
   val string_of_specialization : t -> string
@@ -2378,7 +2414,7 @@ end = struct
   module UnionEnumMap = WrappedMap.Make (UnionEnum)
 
   type finally_optimized_rep =
-    | EnumUnion of UnionEnumSet.t
+    | EnumUnion of UnionEnumSet.t * UnionEnum.tag option
     | PartiallyOptimizedUnionEnum of UnionEnumSet.t
     | AlmostDisjointUnionWithPossiblyNonUniqueKeys of
         TypeTerm.t Nel.t UnionEnumMap.t NameUtils.Map.t
@@ -2412,20 +2448,42 @@ end = struct
   let same_structure { t0; t1; ts; _ } { t0 = t0'; t1 = t1'; ts = ts'; _ } =
     t0 = t0' && t1 = t1' && ts = ts'
 
+  let tag_of_member =
+    let open TypeTerm in
+    let open UnionEnum in
+    function
+    | DefT (_, SingletonStrT _) -> Some SingletonStrTag
+    | DefT (_, StrT _) -> Some StrTag
+    | DefT (_, NumericStrKeyT _) -> Some NumericStrKeyTag
+    | DefT (_, SingletonNumT _) -> Some SingletonNumTag
+    | DefT (_, NumT _) -> Some NumTag
+    | DefT (_, SingletonBigIntT _) -> Some SingletonBigIntTag
+    | DefT (_, BigIntT _) -> Some BingIntTag
+    | DefT (_, SingletonBoolT _) -> Some SingletonBoolTag
+    | DefT (_, BoolT _) -> Some BoolTag
+    | DefT (_, VoidT) -> Some VoidTag
+    | DefT (_, NullT) -> Some NullTag
+    | _ -> None
+
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
   let make =
-    let rec mk_enum tset = function
-      | [] -> Some tset
+    let rec mk_enum (tset, tag) = function
+      | [] -> Some (tset, tag)
       | t :: ts -> begin
         match canon t with
-        | Some tcanon when is_base t -> mk_enum (UnionEnumSet.add tcanon tset) ts
+        | Some tcanon when is_base t ->
+          let tag = Utils_js.ite (tag = tag_of_member t) tag None in
+          mk_enum (UnionEnumSet.add tcanon tset, tag) ts
         | _ -> None
       end
     in
     fun ?source_aloc t0 t1 ts ->
       let enum =
-        Base.Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> EnumUnion tset)
+        Base.Option.(
+          mk_enum (UnionEnumSet.empty, tag_of_member t0) (t0 :: t1 :: ts) >>| fun (tset, tag) ->
+          EnumUnion (tset, tag)
+        )
       in
       { t0; t1; ts; source_aloc; specialization = ref enum }
 
@@ -2488,26 +2546,29 @@ end = struct
     | Found t -> Some t
 
   let enum_optimize =
-    let split_enum =
+    let split_enum ts =
       List.fold_left
-        (fun (tset, partial) t ->
+        (fun (tset, acc_tag, partial) t ->
           match canon t with
-          | Some tcanon when is_base t -> (UnionEnumSet.add tcanon tset, partial)
-          | _ -> (tset, true))
-        (UnionEnumSet.empty, false)
+          | Some tcanon when is_base t ->
+            let acc_tag = Utils_js.ite (acc_tag = tag_of_member t) acc_tag None in
+            (UnionEnumSet.add tcanon tset, acc_tag, partial)
+          | _ -> (tset, None, true))
+        (UnionEnumSet.empty, tag_of_member (List.hd ts), false)
+        ts
     in
     function
     | [] -> Ok Empty
     | [t] -> Ok (Singleton t)
     | ts ->
-      let (tset, partial) = split_enum ts in
+      let (tset, tag, partial) = split_enum ts in
       if partial then
         if UnionEnumSet.is_empty tset then
           Error NoCandidateMembers
         else
           Ok (PartiallyOptimizedUnionEnum tset)
       else
-        Ok (EnumUnion tset)
+        Ok (EnumUnion (tset, tag))
 
   let canon_prop find_resolved p = Base.Option.(Property.read_t p >>= find_resolved >>= canon)
 
@@ -2681,7 +2742,7 @@ end = struct
           Conditional t
       | Some (AlmostDisjointUnionWithPossiblyNonUniqueKeys _) -> No
       | Some (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys _) -> Unknown
-      | Some (EnumUnion tset) ->
+      | Some (EnumUnion (tset, _)) ->
         if UnionEnumSet.mem tcanon tset then
           Yes
         else
@@ -2746,7 +2807,12 @@ end = struct
 
   let check_enum { specialization; _ } =
     match !specialization with
-    | Some (EnumUnion enums) -> Some enums
+    | Some (EnumUnion (enums, _)) -> Some enums
+    | _ -> None
+
+  let check_enum_with_tag { specialization; _ } =
+    match !specialization with
+    | Some (EnumUnion (enums, tag)) -> Some (enums, tag)
     | _ -> None
 
   let string_of_specialization_ = function
