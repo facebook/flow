@@ -30,6 +30,9 @@ module type OUTPUT = sig
     Type.propref ->
     Type.property_type * Type.property_type ->
     unit
+
+  val union_to_union :
+    Context.t -> Type.DepthTrace.t -> Type.use_op -> Type.t -> Type.UnionRep.t -> Type.t -> unit
 end
 
 module Make (_ : INPUT) : OUTPUT

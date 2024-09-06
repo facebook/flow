@@ -101,7 +101,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:49:3
 
-Cannot cast `x` to union type because bigint literal `0n` [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `x` to union type because union type [1] is incompatible with union type [2]. [incompatible-cast]
 
    bigint.js:49:3
    49|   x as 2n | 3n; // ERROR
@@ -110,24 +110,7 @@ Cannot cast `x` to union type because bigint literal `0n` [1] is incompatible wi
 References:
    bigint.js:44:20
    44|   declare const x: 0n | 1n;
-                          ^^ [1]
-   bigint.js:49:8
-   49|   x as 2n | 3n; // ERROR
-              ^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- bigint.js:49:3
-
-Cannot cast `x` to union type because bigint literal `1n` [1] is incompatible with union type [2]. [incompatible-cast]
-
-   bigint.js:49:3
-   49|   x as 2n | 3n; // ERROR
-         ^
-
-References:
-   bigint.js:44:25
-   44|   declare const x: 0n | 1n;
-                               ^^ [1]
+                          ^^^^^^^ [1]
    bigint.js:49:8
    49|   x as 2n | 3n; // ERROR
               ^^^^^^^ [2]
@@ -445,4 +428,4 @@ References:
 
 
 
-Found 34 errors
+Found 33 errors

@@ -676,10 +676,8 @@ struct
         (***************************)
         | (DefT (reason, EnumValueT enum_info), TypeCastT (use_op, cast_to_t)) ->
           rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, enum_info) })
-        | (UnionT _, TypeCastT (_, (UnionT _ as u)))
-          when union_optimization_guard cx TypeUtil.quick_subtype l u
-               = UnionOptimizationGuardResult.True ->
-          ()
+        | (UnionT (_, rep), TypeCastT (use_op, (UnionT _ as u))) ->
+          union_to_union cx trace use_op l rep u
         | (UnionT _, TypeCastT (use_op, AnnotT (r, t, use_desc))) ->
           rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))
         | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u

@@ -586,10 +586,9 @@ module UnionOptimizationGuardResult = struct
   type t =
     | True
     | Maybe
+    | False
 end
 
-(** TODO: (1) Define a more general partial equality, that takes into
-    account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
 let union_optimization_guard =
   let unwrap_type cx t = Base.Option.value (Context.find_resolved cx t) ~default:t in
   (* Compare l to u. Flatten both unions and then check that each element
@@ -601,12 +600,6 @@ let union_optimization_guard =
     Type_mapper.union_flatten cx lts
     |> Base.List.for_all ~f:(fun t1 -> Base.List.exists ~f:(comparator t1) ts2)
   in
-  (* The equiv bool flag customizes the how the comparator is run on the each pair of element (l, u)
-     of two unions (ls, us).
-     - When equiv=true, all pairs must satisfy `l comparator u` in order for the guard to return true.
-     - When equiv=false, all l must have at least one u such that `l comparator u` in order for the
-       guard to return true.
-  *)
   let rec union_optimization_guard_impl seen cx comparator l u =
     match (l, u) with
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
@@ -625,10 +618,12 @@ let union_optimization_guard =
         if not (UnionRep.is_optimized_finally rep2) then
           UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep2;
 
-        match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
-        | (Some enums1, Some enums2) ->
+        match (UnionRep.check_enum_with_tag rep1, UnionRep.check_enum_with_tag rep2) with
+        | (Some (enums1, tag1), Some (enums2, tag2)) ->
           if UnionEnumSet.subset enums1 enums2 then
             UnionOptimizationGuardResult.True
+          else if Base.Option.is_some tag1 && tag1 = tag2 then
+            UnionOptimizationGuardResult.False
           else
             UnionOptimizationGuardResult.Maybe
         | (_, _) ->

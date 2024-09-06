@@ -38,6 +38,9 @@ module type OUTPUT = sig
     Type.propref ->
     Type.property_type * Type.property_type ->
     unit
+
+  val union_to_union :
+    Context.t -> Type.DepthTrace.t -> use_op -> Type.t -> Type.UnionRep.t -> Type.t -> unit
 end
 
 module Make (Flow : INPUT) : OUTPUT = struct
@@ -659,6 +662,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
                )
            )
 
+  let union_to_union cx trace use_op l rep u =
+    match (union_optimization_guard cx TypeUtil.quick_subtype l u, use_op) with
+    | (UnionOptimizationGuardResult.True, _) ->
+      if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (True)"
+    | (UnionOptimizationGuardResult.Maybe, _) -> flow_all_in_union cx trace rep (UseT (use_op, u))
+    | (UnionOptimizationGuardResult.False, _) ->
+      if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (False)";
+      add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           { reason_lower = reason_of_t l; reason_upper = reason_of_t u; use_op }
+        )
+
   let check_dro_subtyping cx use_op l u trace =
     match (l, u) with
     | ((AnyT _ | AnnotT _), _)
@@ -988,10 +1004,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (UnionT (reason, rep), _) when UnionRep.members rep |> List.exists is_union_resolvable ->
       iter_resolve_union ~f:rec_flow cx trace reason rep (UseT (use_op, u))
     (* cases where there is no loss of precision *)
-    | (UnionT _, UnionT _)
-      when union_optimization_guard cx TypeUtil.quick_subtype l u
-           = UnionOptimizationGuardResult.True ->
-      if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
+    | (UnionT (_, rep), UnionT _) -> union_to_union cx trace use_op l rep u
     | (OpaqueT (_, { super_t = Some (UnionT _ as l); _ }), UnionT _)
       when union_optimization_guard cx TypeUtil.quick_subtype l u
            = UnionOptimizationGuardResult.True ->
