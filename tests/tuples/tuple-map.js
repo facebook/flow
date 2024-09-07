@@ -15,3 +15,9 @@ type F<T> = $ReadOnly<{
 declare function map<A: $ReadOnlyArray<mixed>>(o2: Promise<A>): $TupleMap<A, <V>(F<V>)=>V>;
 const boo = Promise.all([{log: (f: () => string) => {}}]);
 map(boo) as [+v: number]; // error
+
+declare const issue2674: $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
+
+(issue2674[0]: 'FOO'); // ok
+(issue2674[0]: 'BAR'); // error
+issue2674[0] = 'BAR'; // error

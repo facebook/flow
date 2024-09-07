@@ -301,6 +301,216 @@ References:
                   ^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- identity.js:13:6
+
+Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `a`.
+[incompatible-cast]
+
+   identity.js:13:6
+   13|   a: 'asd', // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:14:6
+
+Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `b`.
+[incompatible-cast]
+
+   identity.js:14:6
+   14|   b: 'asd', // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:18:6
+
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`. [incompatible-cast]
+
+   identity.js:18:6
+   18|   a: string, // Error: string ~> number
+            ^^^^^^ [1]
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:19:6
+
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`. [incompatible-cast]
+
+   identity.js:19:6
+   19|   b: string, // Error: string ~> number
+            ^^^^^^ [1]
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:22:7
+
+Cannot cast object literal to `Foo` because property `a` is missing in object type [1] but exists in `IdentityMap` [2].
+[prop-missing]
+
+   identity.js:22:7
+   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+             ^^ [1]
+
+References:
+   identity.js:22:12
+   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+                  ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:22:7
+
+Cannot cast object literal to `Foo` because property `b` is missing in object type [1] but exists in `IdentityMap` [2].
+[prop-missing]
+
+   identity.js:22:7
+   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+             ^^ [1]
+
+References:
+   identity.js:22:12
+   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+                  ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:24:8
+
+Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in `IdentityMap` [2].
+[prop-missing]
+
+   identity.js:24:8
+   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]
+
+References:
+   identity.js:24:13
+   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                   ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:24:8
+
+Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in `IdentityMap` [2].
+[prop-missing]
+
+   identity.js:24:8
+   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]
+
+References:
+   identity.js:24:13
+   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                   ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:31:2
+
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`. [incompatible-cast]
+
+   identity.js:31:2
+   31| (foo: {
+        ^^^
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [1]
+   identity.js:32:6
+   32|   a: string, // Error: number ~> string
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:31:2
+
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`. [incompatible-cast]
+
+   identity.js:31:2
+   31| (foo: {
+        ^^^
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [1]
+   identity.js:33:6
+   33|   b: string, // Error: number ~> string
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:36:2
+
+Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   identity.js:36:2
+   36| (foo.a: empty); // Error: number ~> empty
+        ^^^^^
+
+References:
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [1]
+   identity.js:36:9
+   36| (foo.a: empty); // Error: number ~> empty
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:47:8
+
+Cannot cast object literal to `IdentityMap` because in property `foo`: [incompatible-cast]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   identity.js:47:8
+   47|   foo: true, // Error: boolean ~> number | string
+              ^^^^ [1]
+
+References:
+   identity.js:48:23
+   48| }: IdentityMap<{ foo: number | string }>);
+                             ^^^^^^ [2]
+   identity.js:48:32
+   48| }: IdentityMap<{ foo: number | string }>);
+                                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:50:2
+
+Cannot cast object literal to `IdentityMap` because: [incompatible-cast]
+ - Either boolean [1] is incompatible with number [2] in property `foo`.
+ - Or boolean [1] is incompatible with string [2] in property `foo`.
+
+   identity.js:50:2
+        v
+   50| ({
+   51|   foo: true, // Error: boolean ~> number | string
+   52| }: IdentityMap<{ foo: number } | { foo: string }>);
+       ^
+
+References:
+   identity.js:51:8
+   51|   foo: true, // Error: boolean ~> number | string
+              ^^^^ [1]
+   identity.js:3:40
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                              ^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:30:10
 
 Cannot get `obj1.a.b` because property `b` is missing in null or undefined [1]. [incompatible-use]
@@ -1203,6 +1413,70 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ issue-2674.js:6:2
+
+Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2]. [incompatible-cast]
+
+   issue-2674.js:6:2
+   6| (b.FOO : 'BAR'); // error
+       ^^^^^
+
+References:
+   issue-2674.js:1:32
+   1| type Map<O> = {[K in keyof O]: 'FOO'};
+                                     ^^^^^ [1]
+   issue-2674.js:6:10
+   6| (b.FOO : 'BAR'); // error
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ issue-2674.js:7:9
+
+Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2]. [incompatible-type]
+
+   issue-2674.js:7:9
+   7| b.FOO = 'BAR'; // error
+              ^^^^^ [1]
+
+References:
+   issue-2674.js:1:32
+   1| type Map<O> = {[K in keyof O]: 'FOO'};
+                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ key_mirror.js:9:2
+
+Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2]. [incompatible-cast]
+
+   key_mirror.js:9:2
+   9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+       ^^^^^
+
+References:
+   key_mirror.js:1:55
+   1| declare function keyMirror<O>(o: O): {[K in keyof O]: K};
+                                                            ^ [1]
+   key_mirror.js:9:10
+   9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- lti_implicit_instantiation.js:8:22
+
+Cannot call method `freeze` because property `freeze` is missing in statics of `Object` [1]. [prop-missing]
+
+   lti_implicit_instantiation.js:8:22
+    8|   const foo = Object.freeze({bar: {log: (f: () => string) => {}}})
+                            ^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:12:15
+   12| declare class Object {}
+                     ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
 
 Mapped Types take on the exactness of the argument passed to keyof. They do not support explicit exact or inexact
@@ -1750,6 +2024,42 @@ References:
               ^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- promises.js:6:4
+
+Cannot call `promiseAllByKey(...).then` because property `then` is missing in `Promise` [1]. [prop-missing]
+
+   promises.js:6:4
+   6| }).then(o => {
+         ^^^^
+
+References:
+   promises.js:1:44
+   1| declare function promiseAllByKey<O>(o: O): Promise<{[K in keyof O]: O[K] extends Promise<infer V> ? V : O[K]}>;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- promises.js:4:16
+
+Cannot call `Promise.resolve` because property `resolve` is missing in statics of `Promise` [1]. [prop-missing]
+
+   promises.js:4:16
+    4|   foo: Promise.resolve(0),
+                      ^^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:46:15
+   46| declare class Promise<+R> {}
+                     ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- promises.js:6:9
+
+An annotation on `o` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   6| }).then(o => {
+              ^
+
+
 Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
 Cannot instantiate mapped type [1] because string literal `bar` [2] is incompatible with string literal `foo` [3] in
@@ -2068,8 +2378,49 @@ References:
                     ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- union.js:8:2
 
-Found 135 errors
+Cannot cast object literal to `T` because: [incompatible-cast]
+ - Either boolean [1] is incompatible with string [2] in property `p`.
+ - Or boolean [1] is incompatible with number [3] in property `p`.
+
+   union.js:8:2
+   8| ({p:false}: T); // error
+       ^^^^^^^^^
+
+References:
+   union.js:8:5
+   8| ({p:false}: T); // error
+          ^^^^^ [1]
+   union.js:1:13
+   1| type T = {p:string}|{p:number};
+                  ^^^^^^ [2]
+   union.js:1:24
+   1| type T = {p:string}|{p:number};
+                             ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:9:2
+
+Cannot cast object literal to `U` because: [incompatible-cast]
+ - Either boolean [1] is incompatible with string [2] in property `p`.
+ - Or boolean [1] is incompatible with number [2] in property `p`.
+
+   union.js:9:2
+   9| ({p:false}: U); // error
+       ^^^^^^^^^
+
+References:
+   union.js:9:5
+   9| ({p:false}: U); // error
+          ^^^^^ [1]
+   union.js:2:40
+   2| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                                             ^^^^ [2]
+
+
+
+Found 157 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

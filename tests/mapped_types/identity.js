@@ -1,12 +1,7 @@
 declare var any: any;
 
-type Foo = $ObjMap<
-  {
-    a: number,
-    b: number,
-  },
-  <T>(T) => T,
->;
+type IdentityMap<O> = {[K in keyof O]: O[K]};
+type Foo = IdentityMap<{ a: number, b: number }>;
 declare var foo: Foo;
 
 ({
@@ -42,32 +37,16 @@ declare var foo: Foo;
 
 ({
   foo: 'asd', // OK
-}: $ObjMap<
-  {
-    foo: number | string,
-  },
-  <T>(T) => T,
->);
+}: IdentityMap<{ foo: number | string }>);
 
 ({
   foo: 'asd', // OK
-}: $ObjMap<
-  ({ foo: number } | { foo: string }),
-  <T>(T) => T,
->);
+}: IdentityMap<{ foo: number } | { foo: string }>);
 
 ({
   foo: true, // Error: boolean ~> number | string
-}: $ObjMap<
-  {
-    foo: number | string,
-  },
-  <T>(T) => T,
->);
+}: IdentityMap<{ foo: number | string }>);
 
 ({
   foo: true, // Error: boolean ~> number | string
-}: $ObjMap<
-  ({ foo: number } | { foo: string }),
-  <T>(T) => T,
->);
+}: IdentityMap<{ foo: number } | { foo: string }>);
