@@ -1367,7 +1367,6 @@ let make_options
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
     opt_profile = options_flags.profile;
-    opt_signature_help_for_jsx = FlowConfig.signature_help_for_jsx flowconfig;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;
     opt_munge_underscores =
