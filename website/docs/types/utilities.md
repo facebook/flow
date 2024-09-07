@@ -615,55 +615,6 @@ When not specified, the type of the remainder is just `string`.
 
 `$ElementType<T, K>` is equivalent to the `T[K]` [indexed access type](../indexed-access).
 
-### `$Partial` <UntilVersion version="0.202" />
-A former alias of [Partial](#toc-partial). Support was removed in version 0.203.
-
-### `$Shape<T>` {#toc-shape}
-
-NOTE: **Deprecated!** This utility is unsafe - please use [`Partial`](#toc-partial) documented above to make all of an object's fields optional.
-
-A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
-that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
-the type of a potential binding of `p` in `o` must be compatible with `S`.
-
-For example
-```js flow-check
-type Person = {
-  age: number,
-  name: string,
-};
-// $FlowIgnore[deprecated-utility]
-type PersonDetails = $Shape<Person>;
-
-const person1: Person = {age: 28};  // ERROR: missing `name`
-const person2: Person = {name: 'a'};  // ERROR: missing `age`
-const person3: PersonDetails = {age: 28};  // OK
-const person4: PersonDetails = {name: 'a'};  // OK
-const person5: PersonDetails = {age: 28, name: 'a'};  // OK
-const person6: PersonDetails = {age: '28'};  // ERROR: string is incompatible with number
-```
-
-NOTE: `$Shape<T>` is **not** equivalent to `T` with all its fields marked as optional.
-In particular, Flow unsoundly allows `$Shape<T>` to be used as a `T` in several
-contexts. For example in
-
-```js
-const personShape: PersonDetails = {age: 28};
-personShape as Person;
-```
-Flow will unsoundly allow this last cast to succeed.
-
-It is also not equivalent to itself in some contexts:
-
-```js
-function f<T>(input: $Shape<T>): $Shape<T> {
-  return input; // ERROR: `T` is incompatible with `$Shape` of `T`
-}
-```
-
-This utility type is deprecated and will be deleted in the future -
-use [`Partial`](#toc-partial) instead.
-
 ### `$Call<F, T...>` {#toc-call}
 NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.208 - please use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) to extract types instead.
 
@@ -718,6 +669,7 @@ type GetMapValue<M> =
 true as GetMapValue<Map<string, boolean>>;
 true as GetMapValue<Map<string, number>>;  // Error! value is a `number`
 ```
+## To-be-removed utility types
 
 ### `$ObjMap<T, F>` {#toc-objmap}
 NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
@@ -823,3 +775,56 @@ newObj.b as string; // Error! Property `b` is a number
 
 Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain
 kinds of `[invalid-exported-annotation]` errors.
+
+## Removed utility types
+
+These utility types used to exist, but no longer exist in latest version of Flow.
+
+### `$Partial` <UntilVersion version="0.202" />
+A former alias of [Partial](#toc-partial). Support was removed in version 0.203.
+
+### `$Shape<T>` <UntilVersion version="0.206" /> {#toc-shape}
+
+NOTE: This utility is unsafe - please use [`Partial`](#toc-partial) documented above to make all of an object's fields optional.
+
+A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
+that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
+the type of a potential binding of `p` in `o` must be compatible with `S`.
+
+For example
+```js flow-check
+type Person = {
+  age: number,
+  name: string,
+};
+// $FlowIgnore[deprecated-utility]
+type PersonDetails = $Shape<Person>;
+
+const person1: Person = {age: 28};  // ERROR: missing `name`
+const person2: Person = {name: 'a'};  // ERROR: missing `age`
+const person3: PersonDetails = {age: 28};  // OK
+const person4: PersonDetails = {name: 'a'};  // OK
+const person5: PersonDetails = {age: 28, name: 'a'};  // OK
+const person6: PersonDetails = {age: '28'};  // ERROR: string is incompatible with number
+```
+
+NOTE: `$Shape<T>` is **not** equivalent to `T` with all its fields marked as optional.
+In particular, Flow unsoundly allows `$Shape<T>` to be used as a `T` in several
+contexts. For example in
+
+```js
+const personShape: PersonDetails = {age: 28};
+personShape as Person;
+```
+Flow will unsoundly allow this last cast to succeed.
+
+It is also not equivalent to itself in some contexts:
+
+```js
+function f<T>(input: $Shape<T>): $Shape<T> {
+  return input; // ERROR: `T` is incompatible with `$Shape` of `T`
+}
+```
+
+This utility type is deprecated and will be deleted in the future -
+use [`Partial`](#toc-partial) instead.
