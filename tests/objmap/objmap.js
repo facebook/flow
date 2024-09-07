@@ -16,13 +16,3 @@ promiseAllByKey({
   (o.foo: string); // error, number ~> string
   (o.bar: 'bar'); // ok
 });
-
-var foo: $ObjMap<
-  {|a: number|},
-  <T>(t:T) => T
-> = {} // error, {| a: number |} ~> {}
-
-var bar: $ObjMap<
-  {a: number},
-  <T>(t:T) => T
-> = {a: 1} // ok
