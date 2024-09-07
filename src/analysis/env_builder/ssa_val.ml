@@ -297,44 +297,52 @@ let providers locs =
        locs
     )
 
-let rec simplify_val t =
-  let vals = normalize t.write_state in
-  Base.List.map
-    ~f:(function
-      | Uninitialized l
-        when WriteSet.for_all
-               (function
-                 | IllegalWrite _
-                 | Uninitialized _ ->
-                   true
-                 | _ -> false)
-               vals ->
-        Env_api.Uninitialized (mk_reason RUninitialized l)
-      | Undefined r -> Env_api.Undefined r
-      | Number r -> Env_api.Number r
-      | DeclaredFunction l -> Env_api.DeclaredFunction l
-      | Undeclared (name, loc)
-      | DeclaredButSkipped (name, loc) ->
-        Env_api.Undeclared (name, loc)
-      | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
-      | Projection loc -> Env_api.Projection loc
-      | FunctionThis r -> Env_api.FunctionThis r
-      | GlobalThis r -> Env_api.GlobalThis r
-      | IllegalThis r -> Env_api.IllegalThis r
-      | ClassInstanceThis r -> Env_api.ClassInstanceThis r
-      | ClassStaticThis r -> Env_api.ClassStaticThis r
-      | ClassInstanceSuper r -> Env_api.ClassInstanceSuper r
-      | ClassStaticSuper r -> Env_api.ClassStaticSuper r
-      | Loc r -> Env_api.Write r
-      | EmptyArray { reason; arr_providers } -> Env_api.EmptyArray { reason; arr_providers }
-      | IllegalWrite r -> Env_api.IllegalWrite r
-      | Refinement { refinement_id; val_t } ->
-        Env_api.Refinement { writes = simplify_val val_t; refinement_id; write_id = Some val_t.id }
-      | ModuleScoped name -> Env_api.ModuleScoped name
-      | Global name -> Env_api.Global name
-      | PHI _ ->
-        raise Env_api.(Env_invariant (None, Impossible "A normalized value cannot be a PHI")))
-    (WriteSet.elements vals)
+let rec simplify_val cache t =
+  match IMap.find_opt t.id !cache with
+  | Some v -> v
+  | None ->
+    let vals = normalize t.write_state in
+    let result =
+      Base.List.map
+        ~f:(function
+          | Uninitialized l
+            when WriteSet.for_all
+                   (function
+                     | IllegalWrite _
+                     | Uninitialized _ ->
+                       true
+                     | _ -> false)
+                   vals ->
+            Env_api.Uninitialized (mk_reason RUninitialized l)
+          | Undefined r -> Env_api.Undefined r
+          | Number r -> Env_api.Number r
+          | DeclaredFunction l -> Env_api.DeclaredFunction l
+          | Undeclared (name, loc)
+          | DeclaredButSkipped (name, loc) ->
+            Env_api.Undeclared (name, loc)
+          | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
+          | Projection loc -> Env_api.Projection loc
+          | FunctionThis r -> Env_api.FunctionThis r
+          | GlobalThis r -> Env_api.GlobalThis r
+          | IllegalThis r -> Env_api.IllegalThis r
+          | ClassInstanceThis r -> Env_api.ClassInstanceThis r
+          | ClassStaticThis r -> Env_api.ClassStaticThis r
+          | ClassInstanceSuper r -> Env_api.ClassInstanceSuper r
+          | ClassStaticSuper r -> Env_api.ClassStaticSuper r
+          | Loc r -> Env_api.Write r
+          | EmptyArray { reason; arr_providers } -> Env_api.EmptyArray { reason; arr_providers }
+          | IllegalWrite r -> Env_api.IllegalWrite r
+          | Refinement { refinement_id; val_t } ->
+            Env_api.Refinement
+              { writes = simplify_val cache val_t; refinement_id; write_id = Some val_t.id }
+          | ModuleScoped name -> Env_api.ModuleScoped name
+          | Global name -> Env_api.Global name
+          | PHI _ ->
+            raise Env_api.(Env_invariant (None, Impossible "A normalized value cannot be a PHI")))
+        (WriteSet.elements vals)
+    in
+    cache := IMap.add t.id result !cache;
+    result
 
 type val_binding_kind =
   (* A source level binding is something we can point to a user and say that the definition
@@ -345,8 +353,8 @@ type val_binding_kind =
   | InternalBinding
 
 (* Simplification converts a Val.t to a list of locations. *)
-let simplify def_loc val_binding_kind name value =
-  let write_locs = simplify_val value in
+let simplify ~cache def_loc val_binding_kind name value =
+  let write_locs = simplify_val cache value in
   let val_kind =
     match val_binding_kind with
     | SourceLevelBinding (Bindings.Type { imported; type_only_namespace }) ->

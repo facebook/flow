@@ -1082,6 +1082,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
       | _ -> ()
     in
+    let val_simplify = Val.simplify ~cache:(ref IMap.empty) in
 
     let enable_enums = Context.enable_enums cx in
     object (this)
@@ -1121,7 +1122,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method values : Env_api.values =
         L.LMap.map
           (fun { def_loc; value; val_binding_kind; name } ->
-            Val.simplify def_loc val_binding_kind name value)
+            val_simplify def_loc val_binding_kind name value)
           env_state.values
 
       method refinement_invalidation_info = env_state.refinement_invalidation_info
@@ -3876,7 +3877,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
                         let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
                         let { Env_api.write_locs; _ } =
-                          Val.simplify None Val.InternalBinding None !val_ref
+                          val_simplify None Val.InternalBinding None !val_ref
                         in
                         let (locs, undeclared) =
                           Base.List.fold
@@ -3996,7 +3997,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
                         let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
                         let { Env_api.write_locs; _ } =
-                          Val.simplify None Val.InternalBinding None !val_ref
+                          val_simplify None Val.InternalBinding None !val_ref
                         in
                         let (locs, undeclared) =
                           Base.List.fold
@@ -5666,7 +5667,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           else
             !val_ref
         in
-        let v = Val.simplify def_loc (Val.SourceLevelBinding kind) (Some name) v in
+        let v = val_simplify def_loc (Val.SourceLevelBinding kind) (Some name) v in
         v
 
       method! declare_module _loc ({ Ast.Statement.DeclareModule.id = _; body; _ } as m) =

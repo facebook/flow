@@ -64,7 +64,13 @@ type val_binding_kind =
   | SourceLevelBinding of Bindings.kind
   | InternalBinding
 
-val simplify : ALoc.t option -> val_binding_kind -> string option -> t -> Env_api.read
+val simplify :
+  cache:Env_api.write_locs IMap.t ref ->
+  ALoc.t option ->
+  val_binding_kind ->
+  string option ->
+  t ->
+  Env_api.read
 
 val id_of_val : t -> int
 
