@@ -127,14 +127,14 @@ function render(props: ReadOnlyProps) {
 }
 ```
 
-Additionally, other utility types, such as [`$ObjMap<T>`](#toc-objmap), may strip any read/write annotations, so `$ReadOnly<T>` is a handy way to quickly make the object read-only again after operating on it:
+Additionally, other utility types, such as [spread](../objects/#object-type-spread), may strip any read/write annotations, so `$ReadOnly<T>` is a handy way to quickly make the object read-only again after operating on it:
 
 ```js flow-check
 type Obj = {
   +key: number,
 };
 
-type MappedObj = $ReadOnly<$ObjMap<Obj, <T>(T) => Array<T>>> // Still read-only
+type MappedObj = $ReadOnly<{...Obj, foo: string}> // Still read-only
 ```
 
 The `$ReadOnly` utility works on object and tuple types.
