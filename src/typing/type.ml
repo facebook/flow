@@ -2380,6 +2380,8 @@ and UnionRep : sig
   val string_of_specialization_ : finally_optimized_rep option -> string
 
   val string_of_specialization : t -> string
+
+  val tag_of_member : TypeTerm.t -> UnionEnum.tag option
 end = struct
   (* canonicalize a type w.r.t. enum membership *)
   let canon =

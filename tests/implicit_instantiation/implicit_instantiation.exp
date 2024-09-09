@@ -32,7 +32,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- repos_use.js:21:22
 
-Cannot assign `getKeys1(...)` to `err1_` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+Cannot assign `getKeys1(...)` to `err1_` because `MyEnum` [1] is incompatible with string literal `FOO` [2].
 [incompatible-type]
 
    repos_use.js:21:22
@@ -68,7 +68,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- repos_use.js:25:22
 
-Cannot assign `getKeys2(...)` to `err2_` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+Cannot assign `getKeys2(...)` to `err2_` because `TKey` [1] is incompatible with string literal `FOO` [2].
 [incompatible-type]
 
    repos_use.js:25:22
@@ -76,9 +76,9 @@ Cannot assign `getKeys2(...)` to `err2_` because string literal `BAR` [1] is inc
                             ^^^^^^^^^^^^^^
 
 References:
-   repos_use.js:9:23
-    9| declare const dict: {[MyEnum]: mixed};
-                             ^^^^^^ [1]
+   repos_use.js:7:27
+    7| declare function getKeys2<TKey>({+[T<TKey>]: mixed}): TKey;
+                                 ^^^^ [1]
    repos_use.js:25:14
    25| const err2_: 'FOO' = getKeys2(dict); // ERR
                     ^^^^^ [2]

@@ -1033,8 +1033,31 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | IntersectionT _ -> prerr_endline "UnionT ~> IntersectionT slow case"
         | _ -> ()
       );
-
-      flow_all_in_union cx trace rep (UseT (use_op, u))
+      let check elt =
+        if not (UnionRep.is_optimized_finally rep) then
+          UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+        match UnionRep.check_enum_with_tag rep with
+        | Some (enums, enum_tag) when enum_tag = UnionRep.tag_of_member u ->
+          if not (UnionEnumSet.for_all (( = ) elt) enums) then
+            add_output
+              cx
+              (Error_message.EIncompatibleWithUseOp
+                 {
+                   reason_lower = reason_of_t l;
+                   reason_upper = reason_of_t u;
+                   use_op;
+                   explanation = None;
+                 }
+              )
+        | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
+      in
+      begin
+        match u with
+        | DefT (_, (StrT (Literal (_, x)) | SingletonStrT x)) -> check (UnionEnum.Str x)
+        | DefT (_, (BoolT (Some x) | SingletonBoolT x)) -> check (UnionEnum.Bool x)
+        | DefT (_, (NumT (Literal (_, x)) | SingletonNumT x)) -> check (UnionEnum.Num x)
+        | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
+      end
     | (_, IntersectionT (_, rep)) ->
       ( if Context.is_verbose cx then
         match l with
