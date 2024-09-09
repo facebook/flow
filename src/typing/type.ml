@@ -487,11 +487,6 @@ module rec TypeTerm : sig
       }
     | CallFunCompatibility of { n: int }
     | TupleMapFunCompatibility of { value: 'loc virtual_reason }
-    | ObjMapFunCompatibility of { value: 'loc virtual_reason }
-    | ObjMapiFunCompatibility of {
-        key: 'loc virtual_reason;
-        value: 'loc virtual_reason;
-      }
     | OpaqueTypeSuperCompatibility of {
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
@@ -1635,10 +1630,7 @@ module rec TypeTerm : sig
 
   and type_map =
     | TupleMap of t
-    | ObjectMap of t
-    | ObjectMapi of t
     | ObjectKeyMirror
-    | ObjectMapConst of t
 
   and prototype = t
 
@@ -3396,7 +3388,6 @@ module AConstraint = struct
     | Annot_UnaryArithT of Reason.t * UnaryArithKind.t
     | Annot_NotT of Reason.t
     | Annot_ObjKeyMirror of Reason.t
-    | Annot_ObjMapConst of Reason.t * TypeTerm.t
     | Annot_DeepReadOnlyT of Reason.t * ALoc.t * TypeTerm.dro_type
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of {
@@ -3491,7 +3482,6 @@ module AConstraint = struct
     | Annot_UnaryArithT _ -> "Annot_UnaryArithT"
     | Annot_NotT _ -> "Annot_NotT"
     | Annot_ObjKeyMirror _ -> "Annot_ObjKeyMirror"
-    | Annot_ObjMapConst _ -> "Annot_ObjMapConst"
     | Annot_GetKeysT _ -> "Annot_GetKeysT"
     | Annot_ToStringT _ -> "Annot_ToStringT"
     | Annot_ObjRestT _ -> "Annot_ObjRestT"
@@ -3528,7 +3518,6 @@ module AConstraint = struct
     | Annot_NotT r
     | Annot_MixinT r
     | Annot_ObjKeyMirror r
-    | Annot_ObjMapConst (r, _)
     | Annot_GetKeysT r
     | Annot_ToStringT { reason = r; _ }
     | Annot_ObjRestT (r, _)
@@ -3567,7 +3556,6 @@ module AConstraint = struct
     | Annot_NotT _
     | Annot_MixinT _
     | Annot_ObjKeyMirror _
-    | Annot_ObjMapConst _
     | Annot_GetKeysT _
     | Annot_DeepReadOnlyT _
     | Annot_ToStringT _
@@ -4108,8 +4096,6 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
   | CallFunCompatibility _ -> "CallFunCompatibility"
   | TupleMapFunCompatibility _ -> "TupleMapFunCompatibility"
-  | ObjMapFunCompatibility _ -> "ObjMapFunCompatibility"
-  | ObjMapiFunCompatibility _ -> "ObjMapiFunCompatibility"
   | OpaqueTypeSuperCompatibility _ -> "OpaqueTypeSuperCompatibility"
   | MappedTypeKeyCompatibility _ -> "MappedTypeKeyCompatibility"
   | PropertyCompatibility _ -> "PropertyCompatibility"

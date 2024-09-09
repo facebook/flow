@@ -94,8 +94,6 @@ type error_code =
   | InvalidLhs
   | InvalidMappedType
   | InvalidModule
-  | InvalidObjMap
-  | InvalidObjMapi
   | InvalidPropertyTypeArg
   | InvalidPropType
   | InvalidReactConfig
@@ -311,8 +309,6 @@ let string_of_code : error_code -> string = function
   | InvalidLhs -> "invalid-lhs"
   | InvalidMappedType -> "invalid-mapped-type"
   | InvalidModule -> "invalid-module"
-  | InvalidObjMap -> "invalid-obj-map"
-  | InvalidObjMapi -> "invalid-obj-mapi"
   | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactConfig -> "invalid-react-config"

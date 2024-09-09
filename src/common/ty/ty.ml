@@ -275,10 +275,7 @@ and utility =
   | ElementType of t * t
   | Enum of t
   | NonMaybeType of t
-  | ObjMap of t * t
-  | ObjMapi of t * t
   | ObjKeyMirror of t
-  | ObjMapConst of t * t
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
@@ -677,8 +674,6 @@ class ['A] comparator_ty =
       | Rest _ -> 5
       | ElementType _ -> 7
       | NonMaybeType _ -> 8
-      | ObjMap _ -> 9
-      | ObjMapi _ -> 10
       | TupleMap _ -> 11
       | Call _ -> 12
       | Class _ -> 13
@@ -689,7 +684,6 @@ class ['A] comparator_ty =
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
       | Required _ -> 24
-      | ObjMapConst _ -> 25
       | ReactCheckComponentRef _ -> 26
       | Enum _ -> 27
       | StringPrefix _ -> 28
@@ -850,10 +844,7 @@ let string_of_utility_ctor = function
   | Rest _ -> "$Rest"
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
-  | ObjMap _ -> "$ObjMap"
-  | ObjMapi _ -> "$ObjMapi"
   | ObjKeyMirror _ -> "$KeyMirror"
-  | ObjMapConst _ -> "$ObjectMapConst"
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
   | Class _ -> "Class"
@@ -878,10 +869,7 @@ let types_of_utility = function
   | ElementType (t1, t2) -> Some [t1; t2]
   | Enum t -> Some [t]
   | NonMaybeType t -> Some [t]
-  | ObjMap (t1, t2) -> Some [t1; t2]
-  | ObjMapi (t1, t2) -> Some [t1; t2]
   | ObjKeyMirror t -> Some [t]
-  | ObjMapConst (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]

@@ -28,7 +28,6 @@ type property_assignment_kind =
 type deprecated_type_kind =
   | DeprecatedBool
   | DeprecatedDollarCall
-  | DeprecatedDollarObjMap
   | DeprecatedPredicate
 
 type lint_kind =
@@ -78,7 +77,6 @@ let string_of_sketchy_number_kind = function
 let string_of_deprecated_type_kind = function
   | DeprecatedBool -> "deprecated-type-bool"
   | DeprecatedDollarCall -> "deprecated-type-dollar-call"
-  | DeprecatedDollarObjMap -> "deprecated-type-dollar-objmap"
   | DeprecatedPredicate -> "deprecated-type-predicate"
 
 let string_of_kind = function
@@ -138,12 +136,10 @@ let kinds_of_string = function
       [
         DeprecatedType DeprecatedBool;
         DeprecatedType DeprecatedDollarCall;
-        DeprecatedType DeprecatedDollarObjMap;
         DeprecatedType DeprecatedPredicate;
       ]
   | "deprecated-type-bool" -> Some [DeprecatedType DeprecatedBool]
   | "deprecated-type-dollar-call" -> Some [DeprecatedType DeprecatedDollarCall]
-  | "deprecated-type-dollar-objmap" -> Some [DeprecatedType DeprecatedDollarObjMap]
   | "deprecated-type-predicate" -> Some [DeprecatedType DeprecatedPredicate]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]

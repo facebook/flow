@@ -546,7 +546,6 @@ type 'loc message =
     }
   | MessageDeprecatedBool
   | MessageDeprecatedDollarCall
-  | MessageDeprecatedObjMap
   | MessageDeprecatedPredicate
   | MessageDevOnlyRefinedLocInfo of { refining_locs: 'loc list }
   | MessageDevOnlyInvalidatedRefinementInfo of ('loc * Refinement_invalidation.reason) list
@@ -559,17 +558,6 @@ type 'loc message =
       op: 'loc virtual_reason;
       def: 'loc virtual_reason;
       n: int;
-    }
-  | MessageDollarObjMapArity of {
-      op: 'loc virtual_reason;
-      value: 'loc virtual_reason;
-      def: 'loc virtual_reason;
-    }
-  | MessageDollarObjMapiArity of {
-      op: 'loc virtual_reason;
-      key: 'loc virtual_reason;
-      value: 'loc virtual_reason;
-      def: 'loc virtual_reason;
     }
   | MessageDollarTupleMapArity of {
       op: 'loc virtual_reason;

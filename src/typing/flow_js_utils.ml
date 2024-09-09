@@ -521,8 +521,7 @@ let error_message_kind_of_upper = function
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (loc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
   | GetDictValuesT _ -> Error_message.IncompatibleGetValuesT
-  | MapTypeT (_, _, (ObjectMap _ | ObjectMapi _ | ObjectMapConst _ | ObjectKeyMirror), _) ->
-    Error_message.IncompatibleMapTypeTObject
+  | MapTypeT (_, _, ObjectKeyMirror, _) -> Error_message.IncompatibleMapTypeTObject
   | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
   | BindT _ -> Error_message.IncompatibleBindT
   | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)

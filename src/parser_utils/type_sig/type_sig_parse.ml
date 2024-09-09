@@ -2443,35 +2443,11 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (TupleMap { loc; tup; fn })
     | _ -> Err (loc, CheckError)
   end
-  | "$ObjMap" -> begin
-    match targs with
-    | Some (_, { arguments = [obj; fn]; _ }) ->
-      let obj = annot opts scope tbls xs obj in
-      let fn = annot opts scope tbls xs fn in
-      Annot (ObjMap { loc; obj; fn })
-    | _ -> Err (loc, CheckError)
-  end
-  | "$ObjMapi" -> begin
-    match targs with
-    | Some (_, { arguments = [obj; fn]; _ }) ->
-      let obj = annot opts scope tbls xs obj in
-      let fn = annot opts scope tbls xs fn in
-      Annot (ObjMapi { loc; obj; fn })
-    | _ -> Err (loc, CheckError)
-  end
   | "$KeyMirror" -> begin
     match targs with
     | Some (_, { arguments = [obj]; _ }) ->
       let obj = annot opts scope tbls xs obj in
       Annot (ObjKeyMirror { loc; obj })
-    | _ -> Err (loc, CheckError)
-  end
-  | "$ObjMapConst" -> begin
-    match targs with
-    | Some (_, { arguments = [obj; t]; _ }) ->
-      let obj = annot opts scope tbls xs obj in
-      let t = annot opts scope tbls xs t in
-      Annot (ObjMapConst { loc; obj; t })
     | _ -> Err (loc, CheckError)
   end
   | "React$AbstractComponent" -> begin

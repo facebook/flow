@@ -1613,16 +1613,7 @@ module Make (I : INPUT) : S = struct
         let%bind true_type = type__ ~env true_t in
         let%map false_type = type__ ~env false_t in
         Ty.Conditional { check_type; extends_type; true_type; false_type }
-      | T.TypeMap (T.ObjectMap t') ->
-        let%map ty' = type__ ~env t' in
-        Ty.Utility (Ty.ObjMap (ty, ty'))
-      | T.TypeMap (T.ObjectMapi t') ->
-        let%map ty' = type__ ~env t' in
-        Ty.Utility (Ty.ObjMapi (ty, ty'))
       | T.TypeMap T.ObjectKeyMirror -> return (Ty.Utility (Ty.ObjKeyMirror ty))
-      | T.TypeMap (T.ObjectMapConst t') ->
-        let%map ty' = type__ ~env t' in
-        Ty.Utility (Ty.ObjMapConst (ty, ty'))
       | T.PropertyType { name } ->
         let index = Ty.StrLit name in
         return @@ Ty.IndexedAccess { _object = ty; index; optional = false }

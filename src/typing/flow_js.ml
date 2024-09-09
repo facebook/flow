@@ -2421,7 +2421,7 @@ struct
            differently typed arguments could be incorrectly summarized by common
            type variables they flow to, causing spurious errors. In particular, we
            don't cache calls involved in the execution of mapped type operations
-           ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
+           ($TupleMap) to avoid this problem.
 
            NOTE: This is probably not the final word on non-termination with
            generics. We need to separate the double duty of reasons in the current
@@ -3993,63 +3993,8 @@ struct
           in
           let t = DefT (reason, ArrT (ROArrayAT (elemt, None))) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
-        | (DefT (_, ObjT o), MapTypeT (use_op, reason_op, ObjectMap funt, tout)) ->
-          let map_t _ t =
-            let (t, opt) =
-              match t with
-              | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
-              | _ -> (t, false)
-            in
-            let use_op = Frame (ObjMapFunCompatibility { value = reason_of_t t }, use_op) in
-            let t =
-              EvalT
-                ( funt,
-                  TypeDestructorT (use_op, reason_op, CallType { from_maptype = true; args = [t] }),
-                  Eval.generate_id ()
-                )
-            in
-            if opt then
-              optional t
-            else
-              t
-          in
-          let map_field k t = map_t k t in
-          let mapped_t = Flow_js_utils.map_obj cx o reason_op ~map_t ~map_field in
-          rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
-        | (DefT (_, ObjT o), MapTypeT (use_op, reason_op, ObjectMapi funt, tout)) ->
-          let map_t key t =
-            let (t, opt) =
-              match t with
-              | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
-              | _ -> (t, false)
-            in
-            let use_op =
-              Frame
-                (ObjMapiFunCompatibility { key = reason_of_t key; value = reason_of_t t }, use_op)
-            in
-            let t =
-              EvalT
-                ( funt,
-                  TypeDestructorT
-                    (use_op, reason_op, CallType { from_maptype = true; args = [key; t] }),
-                  Eval.generate_id ()
-                )
-            in
-            if opt then
-              optional t
-            else
-              t
-          in
-          let map_field key t =
-            let reason = replace_desc_reason (RStringLit key) reason_op in
-            map_t (DefT (reason, SingletonStrT key)) t
-          in
-          let mapped_t = Flow_js_utils.map_obj cx o reason_op ~map_t ~map_field in
-          rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
         | (DefT (_, ObjT o), MapTypeT (_, reason_op, ObjectKeyMirror, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx o reason_op, tout)
-        | (DefT (_, ObjT o), MapTypeT (_, reason_op, ObjectMapConst target, tout)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (obj_map_const cx o reason_op target, tout)
         (************************************************************************)
         (* functions may be bound by passing a receiver and (partial) arguments *)
         (************************************************************************)
@@ -6787,10 +6732,7 @@ struct
                don't want to leak the internally delegation to error messages by pushing an
                additional frame. Alternatively, we could have pushed here and filtered out when
                rendering error messages, but that seems a bit wasteful. *)
-            | Frame (TupleMapFunCompatibility _, _)
-            | Frame (ObjMapFunCompatibility _, _)
-            | Frame (ObjMapiFunCompatibility _, _) ->
-              use_op
+            | Frame (TupleMapFunCompatibility _, _) -> use_op
             (* For external CallType operations, we push an additional frame to distinguish their
                error messages from those of "normal" calls. *)
             | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)

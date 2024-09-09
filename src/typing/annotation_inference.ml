@@ -37,7 +37,6 @@ let object_like_op = function
   | Annot_UnaryArithT _
   | Annot_NotT _
   | Annot_ObjKeyMirror _
-  | Annot_ObjMapConst _
   | Annot_GetKeysT _
   | Annot_GetEnumT _
   | Annot_DeepReadOnlyT _
@@ -508,9 +507,6 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (_, reason, TypeMap ObjectKeyMirror), _), _) ->
       let t = elab_t cx t (Annot_ObjKeyMirror reason) in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, TypeMap (ObjectMapConst t')), _), _) ->
-      let t = elab_t cx t (Annot_ObjMapConst (reason, t')) in
-      elab_t cx t op
     | (EvalT (t, TypeDestructorT (_, reason, ValuesType), _), _) ->
       let t = elab_t cx t (Annot_GetValuesT reason) in
       elab_t cx t op
@@ -529,10 +525,6 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (_, reason, EnumType), _), _) ->
       let t = elab_t cx t (Annot_GetEnumT reason) in
       elab_t cx t op
-    | (EvalT (_, TypeDestructorT (_, reason, TypeMap (ObjectMap _)), _), _) ->
-      error_unsupported ~suggestion:"$ObjMapConst" cx reason op
-    | (EvalT (_, TypeDestructorT (_, reason, TypeMap (ObjectMapi _)), _), _) ->
-      error_unsupported ~suggestion:"$KeyMirror" cx reason op
     | (EvalT (_, TypeDestructorT (_, reason, _), _), _) -> error_unsupported cx reason op
     | (OpenT (reason, id), Annot_ConcretizeForInspection (_, _)) ->
       let t = elab_open cx ~seen reason id op in
@@ -1111,8 +1103,6 @@ module rec ConsGen : S = struct
       reposition cx (loc_of_reason reason_op) value
     | (DefT (_, ObjT o), Annot_ObjKeyMirror reason_op) ->
       Flow_js_utils.obj_key_mirror cx o reason_op
-    | (DefT (_, ObjT o), Annot_ObjMapConst (reason_op, target)) ->
-      Flow_js_utils.obj_map_const cx o reason_op target
     | (DefT (_, EnumValueT enum_info), Annot_GetEnumT reason) ->
       DefT (reason, EnumObjectT { enum_value_t = t; enum_info })
     (***********************)

@@ -141,10 +141,7 @@ type 'loc virtual_reason_desc =
   | RDummyThis
   | RImplicitThis of 'loc virtual_reason_desc
   | RTupleMap
-  | RObjectMap
-  | RObjectMapi
   | RObjectKeyMirror
-  | RObjectMapConst
   (* TODO type names should not be able to be internal names *)
   | RType of name
   | RTypeAlias of string * 'loc option (* reliable def loc *) * 'loc virtual_reason_desc
@@ -279,15 +276,14 @@ let rec map_desc_locs f = function
     | RImplicitInstantiation | RConstructorVoidReturn | RUnion | RUnionType | RIntersection
     | RIntersectionType | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype
     | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RReturn
-    | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap
-    | RType _ | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _
-    | RPatternParameter _ | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
-    | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
-    | RUndefinedProperty _ | RSomeProperty | RNamedImportedType _ | RImportStarType _
-    | RImportStarTypeOf _ | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _
-    | RCustom _ | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectMapi | RObjectKeyMirror
-    | RObjectMapConst | RIndexedAccess _ | RConditionalType | RRendersNothing | RAutocompleteToken
-      ) as r ->
+    | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RTupleMap | RType _
+    | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
+    | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _ | RMember _
+    | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _ | RUndefinedProperty _
+    | RSomeProperty | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
+    | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _
+    | ROpaqueType _ | RObjectKeyMirror | RIndexedAccess _ | RConditionalType | RRendersNothing
+    | RAutocompleteToken ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -642,10 +638,7 @@ let rec string_of_desc = function
   | RDummyThis -> "bound `this` in method"
   | RImplicitThis desc -> spf "implicit `this` parameter of %s" (string_of_desc desc)
   | RTupleMap -> "`$TupleMap`"
-  | RObjectMap -> "`$ObjMap`"
-  | RObjectMapi -> "`$ObjMapi`"
   | RObjectKeyMirror -> "`$KeyMirror`"
-  | RObjectMapConst -> "`$ObjMapConst`"
   | RType x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
@@ -1390,10 +1383,7 @@ let classification_of_reason_desc desc =
   | RDummyThis
   | RImplicitThis _
   | RTupleMap
-  | RObjectMap
-  | RObjectMapi
   | RObjectKeyMirror
-  | RObjectMapConst
   | RType _
   | RTypeAlias _
   | ROpaqueType _

@@ -433,11 +433,7 @@ class ['a] t =
 
     method private type_map cx acc =
       function
-      | TupleMap t
-      | ObjectMap t
-      | ObjectMapi t
-      | ObjectMapConst t ->
-        self#type_ cx pole_TODO acc t
+      | TupleMap t -> self#type_ cx pole_TODO acc t
       | ObjectKeyMirror -> acc
 
     method private object_kit_spread_operand_slice

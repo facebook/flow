@@ -350,7 +350,6 @@ and 'loc t' =
   | EUnclearType of 'loc
   | EDeprecatedBool of 'loc
   | EDeprecatedDollarCall of 'loc
-  | EDeprecatedDollarObjMap of 'loc
   | EDeprecatedPredicate of 'loc
   | EInternalType of 'loc * internal_type
   | EIncorrectTypeWithReplacement of {
@@ -1140,7 +1139,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedBool loc -> EDeprecatedBool (f loc)
   | EDeprecatedDollarCall loc -> EDeprecatedDollarCall (f loc)
-  | EDeprecatedDollarObjMap loc -> EDeprecatedDollarObjMap (f loc)
   | EDeprecatedPredicate loc -> EDeprecatedPredicate (f loc)
   | EInternalType (loc, kind) -> EInternalType (f loc, kind)
   | EIncorrectTypeWithReplacement { loc; kind } ->
@@ -1648,7 +1646,6 @@ let util_use_op_of_msg nope util = function
   | EUnclearType _
   | EDeprecatedBool _
   | EDeprecatedDollarCall _
-  | EDeprecatedDollarObjMap _
   | EDeprecatedPredicate _
   | EInternalType _
   | EIncorrectTypeWithReplacement _
@@ -1834,7 +1831,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnclearType loc
   | EDeprecatedBool loc
   | EDeprecatedDollarCall loc
-  | EDeprecatedDollarObjMap loc
   | EDeprecatedPredicate loc
   | EInternalType (loc, _)
   | EIncorrectTypeWithReplacement { loc; _ }
@@ -1992,7 +1988,6 @@ let kind_of_msg =
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
     | EDeprecatedDollarCall _ -> LintError Lints.(DeprecatedType DeprecatedDollarCall)
-    | EDeprecatedDollarObjMap _ -> LintError Lints.(DeprecatedType DeprecatedDollarObjMap)
     | EDeprecatedPredicate _ -> LintError Lints.(DeprecatedType DeprecatedPredicate)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
@@ -2615,7 +2610,6 @@ let friendly_message_of_msg = function
   | EUnclearType _ -> Normal MessageUnclearType
   | EDeprecatedBool _ -> Normal MessageDeprecatedBool
   | EDeprecatedDollarCall _ -> Normal MessageDeprecatedDollarCall
-  | EDeprecatedDollarObjMap _ -> Normal MessageDeprecatedObjMap
   | EDeprecatedPredicate _ -> Normal MessageDeprecatedPredicate
   | EInternalType (_, kind) -> Normal (MessageInternalType kind)
   | EIncorrectTypeWithReplacement { kind; _ } -> Normal (MessageIncorrectType kind)
@@ -2912,7 +2906,6 @@ let defered_in_speculation = function
   | EUnclearType _
   | EDeprecatedBool _
   | EDeprecatedDollarCall _
-  | EDeprecatedDollarObjMap _
   | EDeprecatedPredicate _
   | EInternalType _
   | EUnsafeGettersSetters _
@@ -2966,8 +2959,6 @@ let error_code_of_use_op use_op ~default =
       Some IncompatibleTypeArg
     | (_, CallFunCompatibility _) -> Some InvalidCallUtil
     | (_, TupleMapFunCompatibility _) -> Some InvalidTupleMap
-    | (_, ObjMapFunCompatibility _) -> Some InvalidObjMap
-    | (_, ObjMapiFunCompatibility _) -> Some InvalidObjMapi
     | (None, _) -> None
   in
   Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)
@@ -3226,7 +3217,6 @@ let error_code_of_message err : error_code option =
   | EUnclearType _
   | EDeprecatedBool _
   | EDeprecatedDollarCall _
-  | EDeprecatedDollarObjMap _
   | EDeprecatedPredicate _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _

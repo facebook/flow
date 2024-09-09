@@ -25,49 +25,22 @@ conditional types. [deprecated-type]
                ^^^^^^^^^^^^^^^^^^^
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:4:10
-
-Deprecated type. Use mapped types instead. See https://flow.org/en/docs/types/mapped-types/ for more information on
-mapped types. [deprecated-type]
-
-   4| type B = $ObjMap<{}, () => number>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:5:10
-
-Deprecated type. Use mapped types instead. See https://flow.org/en/docs/types/mapped-types/ for more information on
-mapped types. [deprecated-type]
-
-   5| type C = $ObjMapi<{}, () => number>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:10
-
-Deprecated type. Use mapped types instead. See https://flow.org/en/docs/types/mapped-types/ for more information on
-mapped types. [deprecated-type]
-
-   6| type D = $ObjMapConst<{}, number>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:8:23
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:5:23
 
 Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
 guards. [deprecated-type]
 
-   8| function foo(x: mixed): %checks {
+   5| function foo(x: mixed): %checks {
                             ^^^^^^^^^
 
 
-Warning -------------------------------------------------------------------------------------- deprecated_types.js:11:41
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:8:41
 
 Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
 guards. [deprecated-type]
 
-   11| declare function bar(x: mixed): boolean %checks(x === 1);
-                                               ^^^^^^^^^^^^^^^^
+   8| declare function bar(x: mixed): boolean %checks(x === 1);
+                                              ^^^^^^^^^^^^^^^^
 
 
 Warning ----------------------------------------------------------------------------------------- dynamic-export.js:3:23
@@ -97,4 +70,4 @@ References:
 
 
 
-Found 1 error and 8 warnings
+Found 1 error and 5 warnings

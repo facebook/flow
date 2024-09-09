@@ -932,25 +932,7 @@ class virtual ['a] t =
           t
         else
           TupleMap t''
-      | ObjectMap t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ObjectMap t''
-      | ObjectMapi t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ObjectMapi t''
       | ObjectKeyMirror -> ObjectKeyMirror
-      | ObjectMapConst t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ObjectMapConst t''
 
     method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
 

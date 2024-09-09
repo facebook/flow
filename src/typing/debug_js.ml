@@ -40,10 +40,7 @@ let string_of_destructor = function
   | CallType _ -> "CallType"
   | ConditionalType _ -> "ConditionalType"
   | TypeMap (TupleMap _) -> "TupleMap"
-  | TypeMap (ObjectMap _) -> "ObjectMap"
-  | TypeMap (ObjectMapi _) -> "ObjectMapi"
   | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
-  | TypeMap (ObjectMapConst _) -> "ObjectMapConst"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
@@ -1630,7 +1627,6 @@ let dump_error_message =
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
     | EDeprecatedDollarCall loc -> spf "EDeprecatedDollarCall (%s)" (string_of_aloc loc)
-    | EDeprecatedDollarObjMap loc -> spf "EDeprecatedDollarObjMap (%s)" (string_of_aloc loc)
     | EDeprecatedPredicate loc -> spf "EDeprecatedPredicate (%s)" (string_of_aloc loc)
     | EIncorrectTypeWithReplacement { loc; kind } ->
       let deprecated_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in

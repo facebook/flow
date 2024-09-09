@@ -872,33 +872,12 @@ and merge_annot env file = function
     let fn = merge env file fn in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (tup, TypeDestructorT (use_op, reason, TypeMap (Type.TupleMap fn)), id))
-  | ObjMap { loc; obj; fn } ->
-    let reason = Reason.(mk_reason RObjectMap loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let obj = merge env file obj in
-    let fn = merge env file fn in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMap fn)), id))
-  | ObjMapi { loc; obj; fn } ->
-    let reason = Reason.(mk_reason RObjectMapi loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let obj = merge env file obj in
-    let fn = merge env file fn in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapi fn)), id))
   | ObjKeyMirror { loc; obj } ->
     let reason = Reason.(mk_reason RObjectKeyMirror loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge env file obj in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror), id))
-  | ObjMapConst { loc; obj; t } ->
-    let reason = Reason.(mk_reason RObjectMapConst loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let obj = merge env file obj in
-    let t = merge env file t in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapConst t)), id))
   | ClassT (loc, t) ->
     let t = merge env file t in
     let desc = TypeUtil.desc_of_t t in

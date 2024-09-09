@@ -206,11 +206,10 @@ let flip_frame = function
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | EnumRepresentationTypeCompatibility c ->
     EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
-  | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | TupleAssignment _
-    | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | OpaqueTypeBound _
-    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
-    | MappedTypeKeyCompatibility _ | TypePredicateCompatibility | RendersCompatibility
-    | ReactDeepReadOnly _ ) as use_op ->
+  | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | TupleAssignment _ | TypeParamBound _
+    | OpaqueTypeBound _ | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip
+    | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ | TypePredicateCompatibility
+    | RendersCompatibility | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -700,8 +699,6 @@ let rec make_intermediate_error :
       | Frame (UnifyFlip, use_op)
       | Frame (CallFunCompatibility _, use_op)
       | Frame (TupleMapFunCompatibility _, use_op)
-      | Frame (ObjMapFunCompatibility _, use_op)
-      | Frame (ObjMapiFunCompatibility _, use_op)
       | Frame (MappedTypeKeyCompatibility _, use_op)
       | Frame (TupleAssignment _, use_op)
       | Frame (ReactDeepReadOnly (_, DebugAnnot), use_op)
@@ -861,9 +858,6 @@ let rec make_intermediate_error :
         | Frame (CallFunCompatibility { n }, _) -> MessageDollarCallArity { op; def; n }
         | Frame (TupleMapFunCompatibility { value }, _) ->
           MessageDollarTupleMapArity { op; value; def }
-        | Frame (ObjMapFunCompatibility { value }, _) -> MessageDollarObjMapArity { op; value; def }
-        | Frame (ObjMapiFunCompatibility { key; value }, _) ->
-          MessageDollarObjMapiArity { op; key; value; def }
         | _ -> MessageFunctionRequiresAnotherArgument { def; from = Some op }
       in
       make_error op message
@@ -2422,12 +2416,6 @@ let to_printable_error :
         text
           "See https://flow.org/en/docs/types/conditional/ for more information on conditional types.";
       ]
-    | MessageDeprecatedObjMap ->
-      [
-        text "Deprecated type. Use mapped types instead. ";
-        text
-          "See https://flow.org/en/docs/types/mapped-types/ for more information on mapped types.";
-      ]
     | MessageDeprecatedPredicate ->
       [
         text "Deprecated type. Use type guards instead. ";
@@ -2541,30 +2529,6 @@ let to_printable_error :
         ref def;
         text (spf " expects more than %s. See " exp);
         text Friendly.(docs.call);
-        text " for documentation";
-      ]
-    | MessageDollarObjMapArity { op; value; def } ->
-      [
-        ref op;
-        text " expects the provided function type to take only one argument, the value type ";
-        ref value;
-        text ", but ";
-        ref def;
-        text " takes more than one argument. See ";
-        text Friendly.(docs.objmap);
-        text " for documentation";
-      ]
-    | MessageDollarObjMapiArity { op; key; value; def } ->
-      [
-        ref op;
-        text " expects the provided function type to take only two arguments, the key type ";
-        ref key;
-        text " and the value type ";
-        ref value;
-        text ", but ";
-        ref def;
-        text " takes more than two arguments. See ";
-        text Friendly.(docs.objmapi);
         text " for documentation";
       ]
     | MessageDollarTupleMapArity { op; value; def } ->

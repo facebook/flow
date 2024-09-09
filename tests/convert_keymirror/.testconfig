@@ -1,1 +1,0 @@
-cmd: codemod key-mirror --strip-root --quiet ./

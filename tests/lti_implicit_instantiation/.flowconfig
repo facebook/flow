@@ -6,4 +6,3 @@ component_syntax=true
 
 [lints]
 deprecated-type-dollar-call=off
-deprecated-type-dollar-objmap=off

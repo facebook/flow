@@ -598,24 +598,9 @@ type ('loc, 'a) annot =
       tup: 'a;
       fn: 'a;
     }
-  | ObjMap of {
-      loc: 'loc;
-      obj: 'a;
-      fn: 'a;
-    }
-  | ObjMapi of {
-      loc: 'loc;
-      obj: 'a;
-      fn: 'a;
-    }
   | ObjKeyMirror of {
       loc: 'loc;
       obj: 'a;
-    }
-  | ObjMapConst of {
-      loc: 'loc;
-      obj: 'a;
-      t: 'a;
     }
   | ClassT of 'loc * 'a
   | Function_bind of 'loc
