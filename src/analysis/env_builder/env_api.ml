@@ -582,37 +582,41 @@ module Make
     let { write_locs; def_loc = _; val_kind = _; name = _; id = _ } = L.LMap.find read_loc values in
     write_locs
 
-  let rec writes_of_write_loc ~for_type providers write_loc =
-    match write_loc with
-    | Refinement { refinement_id = _; write_id = _; writes } ->
-      writes |> List.map (writes_of_write_loc ~for_type providers) |> List.flatten
-    | Write r -> [(OrdinaryNameLoc, Reason.loc_of_reason r)]
-    | EmptyArray { reason; arr_providers } ->
-      (OrdinaryNameLoc, Reason.loc_of_reason reason)
-      :: Base.List.map ~f:(fun l -> (ArrayProviderLoc, l)) (L.LSet.elements arr_providers)
-    | IllegalWrite _ -> []
-    | Uninitialized _ -> []
-    | Undeclared (_, loc) when for_type -> [(OrdinaryNameLoc, loc)]
-    | Undeclared _ -> []
-    | FunctionThis r -> [(FunctionThisLoc, Reason.loc_of_reason r)]
-    | GlobalThis _ -> []
-    | IllegalThis _ -> []
-    | ClassInstanceThis r -> [(ClassInstanceThisLoc, Reason.loc_of_reason r)]
-    | ClassStaticThis r -> [(ClassStaticThisLoc, Reason.loc_of_reason r)]
-    | ClassInstanceSuper r -> [(ClassInstanceSuperLoc, Reason.loc_of_reason r)]
-    | ClassStaticSuper r -> [(ClassStaticSuperLoc, Reason.loc_of_reason r)]
-    | ModuleScoped _ -> []
-    | Global _ -> []
-    | Projection l -> [(OrdinaryNameLoc, l)]
-    | Unreachable _ -> []
-    | Undefined _ -> []
-    | Number _ -> []
-    | DeclaredFunction l ->
-      Provider_api.providers_of_def providers l
-      |> Base.Option.value_map ~f:(fun { Provider_api.providers; _ } -> providers) ~default:[]
-      |> Base.List.map ~f:(fun { Provider_api.reason; _ } ->
-             (OrdinaryNameLoc, Reason.loc_of_reason reason)
-         )
+  let writes_of_write_loc ~for_type providers write_loc =
+    let rec f acc write_loc =
+      match write_loc with
+      | Refinement { refinement_id = _; write_id = _; writes } -> Base.List.fold writes ~init:acc ~f
+      | Write r -> (OrdinaryNameLoc, Reason.loc_of_reason r) :: acc
+      | EmptyArray { reason; arr_providers } ->
+        (OrdinaryNameLoc, Reason.loc_of_reason reason)
+        :: Base.List.fold (L.LSet.elements arr_providers) ~init:acc ~f:(fun acc l ->
+               (ArrayProviderLoc, l) :: acc
+           )
+      | IllegalWrite _ -> acc
+      | Uninitialized _ -> acc
+      | Undeclared (_, loc) when for_type -> (OrdinaryNameLoc, loc) :: acc
+      | Undeclared _ -> acc
+      | FunctionThis r -> (FunctionThisLoc, Reason.loc_of_reason r) :: acc
+      | GlobalThis _ -> acc
+      | IllegalThis _ -> acc
+      | ClassInstanceThis r -> (ClassInstanceThisLoc, Reason.loc_of_reason r) :: acc
+      | ClassStaticThis r -> (ClassStaticThisLoc, Reason.loc_of_reason r) :: acc
+      | ClassInstanceSuper r -> (ClassInstanceSuperLoc, Reason.loc_of_reason r) :: acc
+      | ClassStaticSuper r -> (ClassStaticSuperLoc, Reason.loc_of_reason r) :: acc
+      | ModuleScoped _ -> acc
+      | Global _ -> acc
+      | Projection l -> (OrdinaryNameLoc, l) :: acc
+      | Unreachable _ -> acc
+      | Undefined _ -> acc
+      | Number _ -> acc
+      | DeclaredFunction l ->
+        Provider_api.providers_of_def providers l
+        |> Base.Option.value_map ~f:(fun { Provider_api.providers; _ } -> providers) ~default:[]
+        |> Base.List.fold ~init:acc ~f:(fun acc { Provider_api.reason; _ } ->
+               (OrdinaryNameLoc, Reason.loc_of_reason reason) :: acc
+           )
+    in
+    f [] write_loc
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
     match write_loc with
