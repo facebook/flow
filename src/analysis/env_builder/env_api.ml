@@ -618,13 +618,15 @@ module Make
     in
     f [] write_loc
 
-  let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
-    match write_loc with
-    | Refinement { refinement_id; writes; write_id = _ } ->
-      let writes = writes |> List.map (refinements_of_write_loc env) |> List.flatten in
-      let { refining_locs = _; kind } = refinement_of_id refinement_id in
-      kind :: writes
-    | _ -> []
+  let refinements_of_write_loc { refinement_of_id; _ } write_loc =
+    let rec f acc = function
+      | Refinement { refinement_id; writes; write_id = _ } ->
+        let { refining_locs = _; kind } = refinement_of_id refinement_id in
+        let acc = kind :: acc in
+        Base.List.fold writes ~init:acc ~f
+      | _ -> acc
+    in
+    f [] write_loc
 
   let rec show_refinement_kind_without_locs = function
     | AndR (l, r) ->
