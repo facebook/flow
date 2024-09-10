@@ -1332,7 +1332,7 @@ module rec ConsGen : S = struct
       TypeCollector.collect c
     in
     let is_iterable_for_better_error _ _ = false in
-    Flow_js_utils.mk_non_generic_render_type
+    Flow_js_utils.RenderTypes.mk_non_generic_render_type
       cx
       reason
       renders_variant

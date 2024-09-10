@@ -2755,7 +2755,17 @@ let mk_tuple_type cx ~id ~mk_type_destructor ~inexact reason elements =
     else
       AnyT.error reason
 
-let promote_renders_representation_strict =
+module RenderTypes : sig
+  val mk_non_generic_render_type :
+    Context.t ->
+    reason ->
+    Type.renders_variant ->
+    ?force_post_component:bool ->
+    concretize:(Context.t -> Type.t -> Type.t list) ->
+    is_iterable_for_better_error:(Context.t -> Type.t -> bool) ->
+    Type.t ->
+    Type.t
+end = struct
   let allow_child_renders ~parent_variant ~child_variant =
     match (parent_variant, child_variant) with
     | (RendersNormal, RendersNormal) -> true
@@ -2763,27 +2773,44 @@ let promote_renders_representation_strict =
     | (RendersMaybe, (RendersNormal | RendersMaybe)) -> true
     | (RendersMaybe, RendersStar) -> false
     | (RendersStar, _) -> true
-  in
+
   let ast_render_variant_of_render_variant = function
     | RendersNormal -> Flow_ast.Type.Renders.Normal
     | RendersMaybe -> Flow_ast.Type.Renders.Maybe
     | RendersStar -> Flow_ast.Type.Renders.Star
-  in
-  let merge_special_error_acc acc new_error_opt =
-    match (acc, new_error_opt) with
-    | (None, (r, k)) -> Some (Nel.one r, k)
-    | (Some (rs, k1), (r, k2)) ->
-      let k =
-        match (k1, k2) with
-        | (`InvalidRendersNullVoidFalse, `InvalidRendersNullVoidFalse) ->
-          `InvalidRendersNullVoidFalse
-        | (`InvalidRendersIterable, `InvalidRendersIterable)
-        | (`InvalidRendersIterable, `InvalidRendersNullVoidFalse)
-        | (`InvalidRendersNullVoidFalse, `InvalidRendersIterable) ->
-          `InvalidRendersIterable
-      in
-      Some (Nel.cons r rs, k)
-  in
+
+  type potential_fixable_error_kind =
+    | InvalidRendersNullVoidFalse
+    | InvalidRendersIterable
+
+  type 'loc error_acc = {
+    potential_fixable_error_acc: ('loc virtual_reason Nel.t * potential_fixable_error_kind) option;
+    normal_errors: 'loc Error_message.t' list;
+  }
+
+  let merge_error_acc_with_potential_fixable_error acc new_error_opt =
+    let { potential_fixable_error_acc; normal_errors } = acc in
+    let potential_fixable_error_acc =
+      match (potential_fixable_error_acc, new_error_opt) with
+      | (None, (r, k)) -> Some (Nel.one r, k)
+      | (Some (rs, k1), (r, k2)) ->
+        let k =
+          match (k1, k2) with
+          | (InvalidRendersNullVoidFalse, InvalidRendersNullVoidFalse) ->
+            InvalidRendersNullVoidFalse
+          | (InvalidRendersIterable, InvalidRendersIterable)
+          | (InvalidRendersIterable, InvalidRendersNullVoidFalse)
+          | (InvalidRendersNullVoidFalse, InvalidRendersIterable) ->
+            InvalidRendersIterable
+        in
+        Some (Nel.cons r rs, k)
+    in
+    { potential_fixable_error_acc; normal_errors }
+
+  let merge_error_acc_with_normal_error acc e =
+    let { potential_fixable_error_acc; normal_errors } = acc in
+    { potential_fixable_error_acc; normal_errors = e :: normal_errors }
+
   let rec on_concretized_component
       cx
       ~use_op
@@ -2793,7 +2820,7 @@ let promote_renders_representation_strict =
       ~renders_variant
       ~concretize
       ~is_iterable_for_better_error
-      ~special_error_acc
+      ~error_acc
       ~type_collector = function
     | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
       let subst_map =
@@ -2812,7 +2839,7 @@ let promote_renders_representation_strict =
         ~renders_variant
         ~concretize
         ~is_iterable_for_better_error
-        ~special_error_acc
+        ~error_acc
         ~type_collector
         (Type_subst.subst cx subst_map t_out)
     | DefT
@@ -2827,7 +2854,7 @@ let promote_renders_representation_strict =
           )
       in
       TypeCollector.add type_collector t;
-      special_error_acc
+      error_acc
     | DefT (_, ReactAbstractComponentT { component_kind = Structural; renders = render_type; _ }) ->
       normalize_on_renders
         cx
@@ -2838,13 +2865,13 @@ let promote_renders_representation_strict =
         ~renders_variant
         ~concretize
         ~is_iterable_for_better_error
-        ~special_error_acc
+        ~error_acc
         ~type_collector
         render_type
     | t ->
       TypeCollector.add type_collector (AnyT.error reason);
-      add_output
-        cx
+      merge_error_acc_with_normal_error
+        error_acc
         (Error_message.EInvalidRendersTypeArgument
            {
              loc = arg_loc;
@@ -2853,8 +2880,8 @@ let promote_renders_representation_strict =
                Flow_intermediate_error_types.InvalidRendersNonNominalElement (TypeUtil.reason_of_t t);
              invalid_type_reasons = Nel.one resolved_elem_reason;
            }
-        );
-      special_error_acc
+        )
+
   and normalize_on_components
       cx
       ~use_op
@@ -2864,10 +2891,10 @@ let promote_renders_representation_strict =
       ~renders_variant
       ~concretize
       ~is_iterable_for_better_error
-      ~special_error_acc
+      ~error_acc
       ~type_collector
       input =
-    Base.List.fold (concretize cx input) ~init:special_error_acc ~f:(fun special_error_acc t ->
+    Base.List.fold (concretize cx input) ~init:error_acc ~f:(fun error_acc t ->
         on_concretized_component
           cx
           ~arg_loc
@@ -2876,11 +2903,12 @@ let promote_renders_representation_strict =
           ~resolved_elem_reason
           ~renders_variant
           ~concretize
-          ~special_error_acc
+          ~error_acc
           ~is_iterable_for_better_error
           ~type_collector
           t
     )
+
   and on_concretized_renders
       cx
       ~use_op
@@ -2890,11 +2918,11 @@ let promote_renders_representation_strict =
       ~renders_variant
       ~concretize
       ~is_iterable_for_better_error
-      ~special_error_acc
+      ~error_acc
       ~type_collector = function
     | DefT (r, (RendersT (NominalRenders _) as renders)) ->
       TypeCollector.add type_collector (DefT (r, renders));
-      special_error_acc
+      error_acc
     | DefT
         ( r,
           RendersT (StructuralRenders { renders_variant = child_variant; renders_structural_type })
@@ -2909,13 +2937,13 @@ let promote_renders_representation_strict =
           ~renders_variant
           ~concretize
           ~is_iterable_for_better_error
-          ~special_error_acc
+          ~error_acc
           ~type_collector
           renders_structural_type
       else (
         TypeCollector.add type_collector (AnyT.error reason);
-        add_output
-          cx
+        merge_error_acc_with_normal_error
+          error_acc
           (Error_message.EInvalidRendersTypeArgument
              {
                loc = arg_loc;
@@ -2923,13 +2951,12 @@ let promote_renders_representation_strict =
                invalid_render_type_kind = Flow_intermediate_error_types.UncategorizedInvalidRenders;
                invalid_type_reasons = Nel.one r;
              }
-          );
-        special_error_acc
+          )
       )
     | DefT (r, RendersT DefaultRenders) ->
       TypeCollector.add type_collector (AnyT.error reason);
-      add_output
-        cx
+      merge_error_acc_with_normal_error
+        error_acc
         (Error_message.EInvalidRendersTypeArgument
            {
              loc = arg_loc;
@@ -2937,12 +2964,11 @@ let promote_renders_representation_strict =
              invalid_render_type_kind = Flow_intermediate_error_types.UncategorizedInvalidRenders;
              invalid_type_reasons = Nel.one r;
            }
-        );
-      special_error_acc
+        )
     | t ->
       TypeCollector.add type_collector (AnyT.error reason);
-      add_output
-        cx
+      merge_error_acc_with_normal_error
+        error_acc
         (Error_message.EInvalidRendersTypeArgument
            {
              loc = arg_loc;
@@ -2951,8 +2977,8 @@ let promote_renders_representation_strict =
                Flow_intermediate_error_types.InvalidRendersStructural (TypeUtil.reason_of_t t);
              invalid_type_reasons = Nel.one resolved_elem_reason;
            }
-        );
-      special_error_acc
+        )
+
   and normalize_on_renders
       cx
       ~use_op
@@ -2962,10 +2988,10 @@ let promote_renders_representation_strict =
       ~renders_variant
       ~concretize
       ~is_iterable_for_better_error
-      ~special_error_acc
+      ~error_acc
       ~type_collector
       input =
-    Base.List.fold (concretize cx input) ~init:special_error_acc ~f:(fun special_error_acc ->
+    Base.List.fold (concretize cx input) ~init:error_acc ~f:(fun error_acc ->
         on_concretized_renders
           cx
           ~use_op
@@ -2975,9 +3001,10 @@ let promote_renders_representation_strict =
           ~renders_variant
           ~concretize
           ~is_iterable_for_better_error
-          ~special_error_acc
+          ~error_acc
           ~type_collector
     )
+
   and on_concretized_element
       cx
       ~use_op
@@ -2986,12 +3013,12 @@ let promote_renders_representation_strict =
       ~renders_variant
       ~concretize
       ~is_iterable_for_better_error
-      ~special_error_acc
+      ~error_acc
       ~type_collector = function
     | GenericT { reason = generic_reason; _ } ->
       TypeCollector.add type_collector (AnyT.error reason);
-      add_output
-        cx
+      merge_error_acc_with_normal_error
+        error_acc
         (Error_message.EInvalidRendersTypeArgument
            {
              loc = arg_loc;
@@ -2999,11 +3026,10 @@ let promote_renders_representation_strict =
              invalid_render_type_kind = Flow_intermediate_error_types.InvalidRendersGenericT;
              invalid_type_reasons = Nel.one generic_reason;
            }
-        );
-      special_error_acc
+        )
     | DefT (reason, SingletonStrT (OrdinaryName "svg")) ->
       TypeCollector.add type_collector (DefT (reason, RendersT (InstrinsicRenders "svg")));
-      special_error_acc
+      error_acc
     | OpaqueT
         ( element_r,
           {
@@ -3028,7 +3054,7 @@ let promote_renders_representation_strict =
         ~renders_variant
         ~concretize
         ~is_iterable_for_better_error
-        ~special_error_acc
+        ~error_acc
         ~type_collector
         c
     | DefT (invalid_type_reason, BoolT (Some false))
@@ -3036,16 +3062,22 @@ let promote_renders_representation_strict =
     | DefT (invalid_type_reason, NullT)
     | DefT (invalid_type_reason, VoidT) ->
       TypeCollector.add type_collector (AnyT.error reason);
-      merge_special_error_acc special_error_acc (invalid_type_reason, `InvalidRendersNullVoidFalse)
+      merge_error_acc_with_potential_fixable_error
+        error_acc
+        (invalid_type_reason, InvalidRendersNullVoidFalse)
     | DefT (invalid_type_reason, ArrT _) ->
-      merge_special_error_acc special_error_acc (invalid_type_reason, `InvalidRendersIterable)
+      merge_error_acc_with_potential_fixable_error
+        error_acc
+        (invalid_type_reason, InvalidRendersIterable)
     | t ->
       TypeCollector.add type_collector (AnyT.error reason);
       if is_iterable_for_better_error cx t then
-        merge_special_error_acc special_error_acc (reason_of_t t, `InvalidRendersIterable)
-      else (
-        add_output
-          cx
+        merge_error_acc_with_potential_fixable_error
+          error_acc
+          (reason_of_t t, InvalidRendersIterable)
+      else
+        merge_error_acc_with_normal_error
+          error_acc
           (Error_message.EInvalidRendersTypeArgument
              {
                loc = arg_loc;
@@ -3053,9 +3085,8 @@ let promote_renders_representation_strict =
                invalid_render_type_kind = Flow_intermediate_error_types.UncategorizedInvalidRenders;
                invalid_type_reasons = Nel.one (reason_of_t t);
              }
-          );
-        special_error_acc
-      )
+          )
+
   and normalize_on_element
       cx
       ~use_op
@@ -3064,10 +3095,10 @@ let promote_renders_representation_strict =
       ~renders_variant
       ~concretize
       ~is_iterable_for_better_error
-      ~special_error_acc
+      ~error_acc
       ~type_collector
       input =
-    Base.List.fold (concretize cx input) ~init:special_error_acc ~f:(fun special_error_acc t ->
+    Base.List.fold (concretize cx input) ~init:error_acc ~f:(fun error_acc t ->
         on_concretized_element
           cx
           ~arg_loc
@@ -3075,66 +3106,67 @@ let promote_renders_representation_strict =
           ~reason
           ~renders_variant
           ~concretize
-          ~special_error_acc
+          ~error_acc
           ~is_iterable_for_better_error
           ~type_collector
           t
     )
-  in
-  fun cx ~use_op ~arg_loc ~reason ~renders_variant ~concretize ~is_iterable_for_better_error input ->
-    let renders_structural_type =
-      let type_collector = TypeCollector.create () in
-      let special_error_acc =
-        normalize_on_element
-          cx
-          ~use_op
-          ~arg_loc
-          ~reason
-          ~renders_variant
-          ~concretize
-          ~is_iterable_for_better_error
-          ~special_error_acc:None
-          ~type_collector
-          input
-      in
-      Base.Option.iter special_error_acc ~f:(fun (invalid_type_reasons, kind) ->
-          add_output
-            cx
-            (Error_message.EInvalidRendersTypeArgument
-               {
-                 loc = arg_loc;
-                 renders_variant = ast_render_variant_of_render_variant renders_variant;
-                 invalid_render_type_kind =
-                   (match kind with
-                   | `InvalidRendersNullVoidFalse ->
-                     Flow_intermediate_error_types.InvalidRendersNullVoidFalse
-                   | `InvalidRendersIterable -> Flow_intermediate_error_types.InvalidRendersIterable);
-                 invalid_type_reasons;
-               }
-            )
-      );
-      TypeCollector.collect type_collector |> union_of_ts reason
+
+  let promote_renders_representation_strict
+      cx ~use_op ~arg_loc ~reason ~renders_variant ~concretize ~is_iterable_for_better_error input =
+    let type_collector = TypeCollector.create () in
+    let { potential_fixable_error_acc; normal_errors } =
+      normalize_on_element
+        cx
+        ~use_op
+        ~arg_loc
+        ~reason
+        ~renders_variant
+        ~concretize
+        ~is_iterable_for_better_error
+        ~error_acc:{ potential_fixable_error_acc = None; normal_errors = [] }
+        ~type_collector
+        input
     in
+    Base.Option.iter potential_fixable_error_acc ~f:(fun (invalid_type_reasons, kind) ->
+        add_output
+          cx
+          (Error_message.EInvalidRendersTypeArgument
+             {
+               loc = arg_loc;
+               renders_variant = ast_render_variant_of_render_variant renders_variant;
+               invalid_render_type_kind =
+                 (match kind with
+                 | InvalidRendersNullVoidFalse ->
+                   Flow_intermediate_error_types.InvalidRendersNullVoidFalse
+                 | InvalidRendersIterable -> Flow_intermediate_error_types.InvalidRendersIterable);
+               invalid_type_reasons;
+             }
+          )
+    );
+    Base.List.iter normal_errors ~f:(fun e -> add_output cx e);
+    let renders_structural_type = TypeCollector.collect type_collector |> union_of_ts reason in
     DefT (reason, RendersT (StructuralRenders { renders_variant; renders_structural_type }))
 
-let mk_non_generic_render_type
-    cx reason renders_variant ?force_post_component ~concretize ~is_iterable_for_better_error t =
-  Tvar.mk_fully_resolved_lazy
-    cx
-    reason
-    ?force_post_component
-    ( lazy
-      (promote_renders_representation_strict
-         cx
-         ~use_op:unknown_use
-         ~arg_loc:(TypeUtil.loc_of_t t)
-         ~reason
-         ~renders_variant
-         ~concretize
-         ~is_iterable_for_better_error
-         t
-      )
-      )
+  let mk_non_generic_render_type
+      cx reason renders_variant ?force_post_component ~concretize ~is_iterable_for_better_error t =
+    Tvar.mk_fully_resolved_lazy
+      cx
+      reason
+      ?force_post_component
+      ( lazy
+        (promote_renders_representation_strict
+           cx
+           ~use_op:unknown_use
+           ~arg_loc:(TypeUtil.loc_of_t t)
+           ~reason
+           ~renders_variant
+           ~concretize
+           ~is_iterable_for_better_error
+           t
+        )
+        )
+end
 
 module CalleeRecorder : sig
   type kind =

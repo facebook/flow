@@ -1957,7 +1957,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             t
             (Flow_js.get_builtin_typeapp cx r "$Iterable" [AnyT.error r; AnyT.error r; AnyT.error r])
         in
-        Flow_js_utils.mk_non_generic_render_type
+        Flow_js_utils.RenderTypes.mk_non_generic_render_type
           env.cx
           reason
           renders_variant
