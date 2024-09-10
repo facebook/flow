@@ -164,7 +164,7 @@ export default component TryFlow(
 
   function semanticDecorations(flowService: FlowJsServices, model: any) {
     const decorations =
-      flowService.semanticDecorations?.('-', model.getValue()).decorations ||
+      flowService.semanticDecorations?.('-', model.getValue())?.decorations ||
       [];
     const refinedValueDecorations = [];
     for (const decoration of decorations) {
