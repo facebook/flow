@@ -211,6 +211,7 @@ struct
               ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
               ignore @@ this#arg_list arguments
             | SentinelR (_prop, loc) -> this#add ~why:loc (Env_api.ExpressionLoc, loc)
+            | EqR loc -> this#add ~why:loc (Env_api.ExpressionLoc, loc)
             | AndR (l, r)
             | OrR (l, r) ->
               writes_of_refinement l;

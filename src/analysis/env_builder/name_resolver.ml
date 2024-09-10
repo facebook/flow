@@ -5168,6 +5168,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         refis
 
       method eq_test ~strict ~sense ~cond_context loc left right =
+        let eq refis left right =
+          let (right_loc, _) = right in
+          match (RefinementKey.of_expression left, RefinementKey.of_expression right) with
+          | ( Some RefinementKey.({ lookup = { base = lhs_base; _ }; _ } as key),
+              Some RefinementKey.{ lookup = { base = rhs_base; _ }; _ }
+            )
+            when strict && lhs_base <> rhs_base ->
+            let reason = mk_reason (RefinementKey.reason_desc key) loc in
+            let write_entries =
+              EnvMap.add
+                (Env_api.ExpressionLoc, right_loc)
+                (Env_api.AssigningWrite reason)
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries };
+            let refinement = EqR right_loc in
+            this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
+          | _ -> refis
+        in
         Eq_test.visit_eq_test
           ~on_type_of_test:this#typeof_test
           ~on_literal_test:this#literal_test
@@ -5183,18 +5202,26 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                * NOTE: Switch statements do not introduce sentinel refinements *)
           ~on_member_eq_other:(fun expr other ->
             ignore @@ this#expression expr;
-            let refis = this#maybe_sentinel ~sense ~strict loc expr other in
+            (* `sense:true` as we negate with `negate_new_refinements` later *)
+            let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+            let refis = eq refis expr other in
             ignore @@ this#expression other;
-            this#commit_refinement refis)
+            this#commit_refinement refis;
+            if not sense then this#negate_new_refinements ())
           ~on_other_eq_member:(fun other expr ->
+            let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+            let refis = eq refis other expr in
             ignore @@ this#expression other;
             ignore @@ this#expression expr;
-            let refis = this#maybe_sentinel ~sense ~strict loc expr other in
-            this#commit_refinement refis)
+            this#commit_refinement refis;
+            if not sense then this#negate_new_refinements ())
           ~is_switch_cond_context:(cond_context = SwitchTest)
           ~on_other_eq_test:(fun left right ->
+            let refis = eq LookupMap.empty left right in
             ignore @@ this#expression left;
-            ignore @@ this#expression right)
+            ignore @@ this#expression right;
+            this#commit_refinement refis;
+            if not sense then this#negate_new_refinements ())
           ~strict
           ~sense
           loc

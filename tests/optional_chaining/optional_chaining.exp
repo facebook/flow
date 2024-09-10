@@ -2872,36 +2872,19 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements2.js:102:3
 
-Cannot cast `b1?.a` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `b1.a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements2.js:102:3
-   102|   b1?.a as number; // b1.a may not exist and may not be number
-          ^^
-
-References:
-   refinements2.js:99:17
-    99| declare var b1: ?{a?: number};
-                        ^^^^^^^^^^^^^ [1]
-   refinements2.js:102:12
-   102|   b1?.a as number; // b1.a may not exist and may not be number
-                   ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- refinements2.js:102:3
-
-Cannot cast `b1?.a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
-
-   refinements2.js:102:3
-   102|   b1?.a as number; // b1.a may not exist and may not be number
-          ^^^^^
+   102|   b1.a as number; // b1.a may not exist and may not be number
+          ^^^^
 
 References:
    refinements2.js:99:23
     99| declare var b1: ?{a?: number};
                               ^^^^^^ [1]
-   refinements2.js:102:12
-   102|   b1?.a as number; // b1.a may not exist and may not be number
-                   ^^^^^^ [2]
+   refinements2.js:102:11
+   102|   b1.a as number; // b1.a may not exist and may not be number
+                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:1
@@ -3716,7 +3699,7 @@ References:
 
 
 
-Found 232 errors
+Found 231 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -325,6 +325,12 @@ let predicate_of_refinement cx =
         (lazy [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]);
       let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
       Some (BinaryP (SentinelProp prop, other_t))
+    | EqR loc ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "reading from location %s (in eq refinement)" (Reason.string_of_aloc loc)]);
+      let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
+      Some (BinaryP (EqTest, other_t))
     | LatentR { func = (func_loc, _); index; _ } ->
       let (lazy (_, _, t, _, _)) =
         ALocMap.find func_loc (Context.environment cx).Loc_env.pred_func_map

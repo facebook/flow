@@ -99,5 +99,5 @@ if (Array.isArray(c?.d)) {
 declare var b1: ?{a?: number};
 declare var c1: number;
 if (b1?.a === c1) {
-  b1?.a as number; // b1.a may not exist and may not be number
+  b1.a as number; // b1.a may not exist and may not be number
 }

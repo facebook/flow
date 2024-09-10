@@ -507,7 +507,7 @@ struct
             ConcretizeT
               {
                 reason = _;
-                kind = ConcretizeForPredicate ConcretizeRHSForSentinelPropPredicateTest;
+                kind = ConcretizeForPredicate ConcretizeRHSForLiteralPredicateTest;
                 seen = _;
                 collector;
               }

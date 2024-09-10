@@ -1014,7 +1014,7 @@ module rec TypeTerm : sig
     | ConcretizeForGeneralPredicateTest
     | ConcretizeForMaybeOrExistPredicateTest
     | ConcretizeRHSForInstanceOfPredicateTest
-    | ConcretizeRHSForSentinelPropPredicateTest
+    | ConcretizeRHSForLiteralPredicateTest
 
   and substitution = Key.t SMap.t
 
@@ -1023,6 +1023,8 @@ module rec TypeTerm : sig
     | InstanceofTest
     (* e1.key === e2 *)
     | SentinelProp of string
+    (* e1 === e2 *)
+    | EqTest
 
   and 'a literal =
     | Literal of bool option * 'a
@@ -4126,7 +4128,7 @@ let string_of_predicate_concretizer_variant = function
   | ConcretizeForGeneralPredicateTest -> "ConcretizeForGeneralPredicateTest"
   | ConcretizeForMaybeOrExistPredicateTest -> "ConcretizeForMaybeOrExistPredicateTest"
   | ConcretizeRHSForInstanceOfPredicateTest -> "ConcretizeRHSForInstanceOfPredicateTest"
-  | ConcretizeRHSForSentinelPropPredicateTest -> "ConcretizeRHSForSentinelPropPredicateTest"
+  | ConcretizeRHSForLiteralPredicateTest -> "ConcretizeRHSForLiteralPredicateTest"
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
@@ -4229,6 +4231,7 @@ let string_of_use_ctor = function
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
   | SentinelProp key -> "sentinel prop " ^ key
+  | EqTest -> "==="
 
 let rec string_of_predicate = function
   | AndP (p1, p2) -> string_of_predicate p1 ^ " && " ^ string_of_predicate p2

@@ -1,3 +1,20 @@
+Error ------------------------------------------------------------------------------------------ enum-filtering.js:16:17
+
+Cannot cast `y.x` to empty because string literal `NONE` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   enum-filtering.js:16:17
+   16|       default: (y.x: empty); // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
+                       ^^^
+
+References:
+   enum-filtering.js:2:53
+    2| type Selection = { x: 'ONE' } | { x: 'TWO' } | { x: 'NONE' }
+                                                           ^^^^^^ [1]
+   enum-filtering.js:16:22
+   16|       default: (y.x: empty); // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
+                            ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ issue-198.js:9:20
 
 Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1]. [prop-missing]
@@ -291,7 +308,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 17 errors
+Found 18 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

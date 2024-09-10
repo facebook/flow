@@ -167,6 +167,7 @@ module type S = sig
           propname: string;
           loc: L.t;
         }
+      | EqR of L.t
     [@@deriving show { with_path = false }]
 
     type refinement = {
@@ -446,6 +447,7 @@ module Make
           propname: string;
           loc: L.t;
         }
+      | EqR of L.t
     [@@deriving show { with_path = false }]
 
     type refinement = {
@@ -674,6 +676,7 @@ module Make
     | LatentR { func = _; targs = _; arguments = _; index } ->
       Printf.sprintf "LatentR (index = %i)" index
     | PropTruthyR { propname; loc = _ } -> Printf.sprintf "PropTruthyR (%s)" propname
+    | EqR _ -> "EqR"
 end
 
 module With_Loc =

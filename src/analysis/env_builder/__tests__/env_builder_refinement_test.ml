@@ -5890,6 +5890,9 @@ function foo(r: Rule) {
         (14, 12) to (14, 13) => {
           {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}
         };
+        (14, 12) to (14, 15) => {
+          {refinement = EqR; writes = projection at (13, 6) to (13, 9)}
+        };
         (15, 6) to (15, 24) => {
           {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}
         };
@@ -5900,7 +5903,7 @@ function foo(r: Rule) {
           {refinement = Not (SentinelR x); writes = {refinement = Not (SentinelR x); writes = {refinement = SentinelR x; writes = (12, 8) to (12, 9): (`y`)}}}
         };
         (17, 16) to (17, 19) => {
-          {refinement = Not (TWO); writes = {refinement = Not (ONE); writes = projection at (14, 12) to (14, 15)}}
+          {refinement = Not (TWO); writes = {refinement = Not (ONE); writes = {refinement = EqR; writes = projection at (13, 6) to (13, 9)}}}
         }] |}]
 
 let%expect_test "prop_exists" =
@@ -7398,3 +7401,51 @@ component Component() {
         (34, 4) to (34, 8) => {
           {refinement = Not (PropTruthyR (current)); writes = (32, 8) to (32, 12): (`ref6`)}
         }] |}]
+
+let%expect_test "strict_eq_ident" =
+  print_ssa_test {|
+  if (x === y) {
+    x;
+  } else {
+    x;
+  }
+|};
+  [%expect {|
+    [
+      (2, 6) to (2, 7) => {
+        Global x
+      };
+      (2, 12) to (2, 13) => {
+        Global y
+      };
+      (3, 4) to (3, 5) => {
+        {refinement = EqR; writes = Global x}
+      };
+      (5, 4) to (5, 5) => {
+        {refinement = Not (EqR); writes = Global x}
+      }]
+  |}]
+
+let%expect_test "strict_eq_member" =
+  print_ssa_test {|
+  if (x === y.foo) {
+    x;
+  } else {
+    x;
+  }
+|};
+  [%expect {|
+    [
+      (2, 6) to (2, 7) => {
+        Global x
+      };
+      (2, 12) to (2, 13) => {
+        Global y
+      };
+      (3, 4) to (3, 5) => {
+        {refinement = EqR; writes = Global x}
+      };
+      (5, 4) to (5, 5) => {
+        {refinement = Not (EqR); writes = Global x}
+      }]
+  |}]

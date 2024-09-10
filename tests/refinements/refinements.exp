@@ -1790,6 +1790,588 @@ References:
                   ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- ident.js:8:5
+
+Refined at [1]
+
+   ident.js:8:5
+   8|     x as 1; // OK
+          ^
+
+References:
+   ident.js:7:7
+   7|   if (x === one) {
+            ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:9:14
+
+Refined at [1]
+
+   ident.js:9:14
+   9|   } else if (x === two) {
+                   ^
+
+References:
+   ident.js:7:7
+   7|   if (x === one) {
+            ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:10:5
+
+Refined at [1]
+
+   ident.js:10:5
+   10|     x as 2; // OK
+           ^
+
+References:
+   ident.js:7:7
+    7|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:12:5
+
+Refined at [1] [2]
+
+   ident.js:12:5
+   12|     x as empty; // OK
+           ^
+
+References:
+   ident.js:7:7
+    7|   if (x === one) {
+             ^^^^^^^^^ [1]
+   ident.js:9:14
+    9|   } else if (x === two) {
+                    ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:16:5
+
+Refined at [1]
+
+   ident.js:16:5
+   16|     x as 1; // OK
+           ^
+
+References:
+   ident.js:15:7
+   15|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:18:5
+
+Cannot cast `x` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:18:5
+   18|     x as empty; // ERROR: `2` remains
+           ^
+
+References:
+   ident.js:5:24
+    5|   declare const x: 1 | 2;
+                              ^ [1]
+   ident.js:18:10
+   18|     x as empty; // ERROR: `2` remains
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:18:5
+
+Refined at [1]
+
+   ident.js:18:5
+   18|     x as empty; // ERROR: `2` remains
+           ^
+
+References:
+   ident.js:15:7
+   15|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:22:5
+
+Refined at [1]
+
+   ident.js:22:5
+   22|     x as 2; // OK
+           ^
+
+References:
+   ident.js:21:7
+   21|   if (x !== one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:24:5
+
+Refined at [1]
+
+   ident.js:24:5
+   24|     x as 1; // OK
+           ^
+
+References:
+   ident.js:21:7
+   21|   if (x !== one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:25:5
+
+Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:25:5
+   25|     x as empty; // ERROR: it is `1`
+           ^
+
+References:
+   ident.js:5:20
+    5|   declare const x: 1 | 2;
+                          ^ [1]
+   ident.js:25:10
+   25|     x as empty; // ERROR: it is `1`
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:25:5
+
+Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:25:5
+   25|     x as empty; // ERROR: it is `1`
+           ^
+
+References:
+   ident.js:21:13
+   21|   if (x !== one) {
+                   ^^^ [1]
+   ident.js:25:10
+   25|     x as empty; // ERROR: it is `1`
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:25:5
+
+Refined at [1]
+
+   ident.js:25:5
+   25|     x as empty; // ERROR: it is `1`
+           ^
+
+References:
+   ident.js:21:7
+   21|   if (x !== one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:34:5
+
+Refined at [1]
+
+   ident.js:34:5
+   34|     x as 1; // OK
+           ^
+
+References:
+   ident.js:33:7
+   33|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:37:5
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:37:5
+   37|     x as empty; // ERROR: still `number`
+           ^
+
+References:
+   ident.js:31:20
+   31|   declare const x: number;
+                          ^^^^^^ [1]
+   ident.js:37:10
+   37|     x as empty; // ERROR: still `number`
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:43:5
+
+Refined at [1]
+
+   ident.js:43:5
+   43|     x as 1; // OK
+           ^
+
+References:
+   ident.js:40:7
+   40|   if (x !== one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:44:5
+
+Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:44:5
+   44|     x as empty; // ERROR: it is `1`
+           ^
+
+References:
+   ident.js:31:20
+   31|   declare const x: number;
+                          ^^^^^^ [1]
+   ident.js:44:10
+   44|     x as empty; // ERROR: it is `1`
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:44:5
+
+Refined at [1]
+
+   ident.js:44:5
+   44|     x as empty; // ERROR: it is `1`
+           ^
+
+References:
+   ident.js:40:7
+   40|   if (x !== one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:55:5
+
+Refined at [1]
+
+   ident.js:55:5
+   55|     x as 1n; // OK
+           ^
+
+References:
+   ident.js:54:7
+   54|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:56:14
+
+Refined at [1]
+
+   ident.js:56:14
+   56|   } else if (x === two) {
+                    ^
+
+References:
+   ident.js:54:7
+   54|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:57:5
+
+Refined at [1]
+
+   ident.js:57:5
+   57|     x as 2n; // OK
+           ^
+
+References:
+   ident.js:54:7
+   54|   if (x === one) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:59:5
+
+Refined at [1] [2]
+
+   ident.js:59:5
+   59|     x as empty; // OK
+           ^
+
+References:
+   ident.js:54:7
+   54|   if (x === one) {
+             ^^^^^^^^^ [1]
+   ident.js:56:14
+   56|   } else if (x === two) {
+                    ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:70:5
+
+Refined at [1]
+
+   ident.js:70:5
+   70|     x as 'foo'; // OK
+           ^
+
+References:
+   ident.js:69:7
+   69|   if (x === foo) {
+             ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:71:14
+
+Refined at [1]
+
+   ident.js:71:14
+   71|   } else if (x === bar) {
+                    ^
+
+References:
+   ident.js:69:7
+   69|   if (x === foo) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:72:5
+
+Refined at [1]
+
+   ident.js:72:5
+   72|     x as 'bar'; // OK
+           ^
+
+References:
+   ident.js:69:7
+   69|   if (x === foo) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:74:5
+
+Refined at [1] [2]
+
+   ident.js:74:5
+   74|     x as empty; // OK
+           ^
+
+References:
+   ident.js:69:7
+   69|   if (x === foo) {
+             ^^^^^^^^^ [1]
+   ident.js:71:14
+   71|   } else if (x === bar) {
+                    ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:83:5
+
+Refined at [1]
+
+   ident.js:83:5
+   83|     x as 'foo'; // OK
+           ^
+
+References:
+   ident.js:82:7
+   82|   if (x === foo) {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:86:5
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:86:5
+   86|     x as empty; // ERROR: still `string`
+           ^
+
+References:
+   ident.js:80:20
+   80|   declare const x: string;
+                          ^^^^^^ [1]
+   ident.js:86:10
+   86|     x as empty; // ERROR: still `string`
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:97:5
+
+Refined at [1]
+
+   ident.js:97:5
+   97|     x as true; // OK
+           ^
+
+References:
+   ident.js:96:7
+   96|   if (x === t) {
+             ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:98:14
+
+Refined at [1]
+
+   ident.js:98:14
+   98|   } else if (x === f) {
+                    ^
+
+References:
+   ident.js:96:7
+   96|   if (x === t) {
+             ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- ident.js:99:5
+
+Refined at [1]
+
+   ident.js:99:5
+   99|     x as false; // OK
+           ^
+
+References:
+   ident.js:96:7
+   96|   if (x === t) {
+             ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:101:5
+
+Refined at [1] [2]
+
+   ident.js:101:5
+   101|     x as empty; // OK
+            ^
+
+References:
+   ident.js:96:7
+    96|   if (x === t) {
+              ^^^^^^^ [1]
+   ident.js:98:14
+    98|   } else if (x === f) {
+                     ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:111:5
+
+Refined at [1]
+
+   ident.js:111:5
+   111|     x as null; // OK
+            ^
+
+References:
+   ident.js:110:7
+   110|   if (x === n) {
+              ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:113:5
+
+Refined at [1]
+
+   ident.js:113:5
+   113|     x as 1; // OK
+            ^
+
+References:
+   ident.js:110:7
+   110|   if (x === n) {
+              ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:114:5
+
+Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:114:5
+   114|     x as empty; // ERROR: it is `1`
+            ^
+
+References:
+   ident.js:108:27
+   108|   declare const x: null | 1;
+                                  ^ [1]
+   ident.js:114:10
+   114|     x as empty; // ERROR: it is `1`
+                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:114:5
+
+Refined at [1]
+
+   ident.js:114:5
+   114|     x as empty; // ERROR: it is `1`
+            ^
+
+References:
+   ident.js:110:7
+   110|   if (x === n) {
+              ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:124:5
+
+Refined at [1]
+
+   ident.js:124:5
+   124|     x as void; // OK
+            ^
+
+References:
+   ident.js:123:7
+   123|   if (x === u) {
+              ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:126:5
+
+Refined at [1]
+
+   ident.js:126:5
+   126|     x as 1; // OK
+            ^
+
+References:
+   ident.js:123:7
+   123|   if (x === u) {
+              ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:127:5
+
+Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ident.js:127:5
+   127|     x as empty; // ERROR: it is `1`
+            ^
+
+References:
+   ident.js:121:27
+   121|   declare const x: void | 1;
+                                  ^ [1]
+   ident.js:127:10
+   127|     x as empty; // ERROR: it is `1`
+                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- ident.js:127:5
+
+Refined at [1]
+
+   ident.js:127:5
+   127|     x as empty; // ERROR: it is `1`
+            ^
+
+References:
+   ident.js:123:7
+   123|   if (x === u) {
+              ^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:32:16
 
 Refined at [1]
@@ -7039,6 +7621,321 @@ References:
    maybe_react.js:28:2
    28| (C && <C />: ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>); // ok
         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:10:5
+
+Refined at [1]
+
+   member.js:10:5
+   10|     x as 1; // OK
+           ^
+
+References:
+   member.js:9:7
+    9|   if (x === O.A) {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- member.js:11:14
+
+Refined at [1]
+
+   member.js:11:14
+   11|   } else if (x === O.B) {
+                    ^
+
+References:
+   member.js:9:7
+    9|   if (x === O.A) {
+             ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:12:5
+
+Refined at [1]
+
+   member.js:12:5
+   12|     x as 2; // OK
+           ^
+
+References:
+   member.js:9:7
+    9|   if (x === O.A) {
+             ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:14:5
+
+Refined at [1] [2]
+
+   member.js:14:5
+   14|     x as empty; // OK
+           ^
+
+References:
+   member.js:9:7
+    9|   if (x === O.A) {
+             ^^^^^^^^^ [1]
+   member.js:11:14
+   11|   } else if (x === O.B) {
+                    ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:18:5
+
+Refined at [1]
+
+   member.js:18:5
+   18|     x as 1; // OK
+           ^
+
+References:
+   member.js:17:7
+   17|   if (x === O.A) {
+             ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:20:5
+
+Cannot cast `x` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   member.js:20:5
+   20|     x as empty; // ERROR: `2` remains
+           ^
+
+References:
+   member.js:7:24
+    7|   declare const x: 1 | 2;
+                              ^ [1]
+   member.js:20:10
+   20|     x as empty; // ERROR: `2` remains
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:20:5
+
+Refined at [1]
+
+   member.js:20:5
+   20|     x as empty; // ERROR: `2` remains
+           ^
+
+References:
+   member.js:17:7
+   17|   if (x === O.A) {
+             ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:31:5
+
+Refined at [1]
+
+   member.js:31:5
+   31|     O.x as 1; // OK
+           ^^^
+
+References:
+   member.js:30:7
+   30|   if (O.x === one) {
+             ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- member.js:32:14
+
+Refined at [1]
+
+   member.js:32:14
+   32|   } else if (O.x === two) {
+                    ^^^
+
+References:
+   member.js:30:7
+   30|   if (O.x === one) {
+             ^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:33:5
+
+Refined at [1]
+
+   member.js:33:5
+   33|     O.x as 2; // OK
+           ^^^
+
+References:
+   member.js:30:7
+   30|   if (O.x === one) {
+             ^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:35:5
+
+Refined at [1] [2]
+
+   member.js:35:5
+   35|     O.x as empty; // OK
+           ^^^
+
+References:
+   member.js:30:7
+   30|   if (O.x === one) {
+             ^^^^^^^^^^^ [1]
+   member.js:32:14
+   32|   } else if (O.x === two) {
+                    ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:39:5
+
+Refined at [1]
+
+   member.js:39:5
+   39|     O.x as 1; // OK
+           ^^^
+
+References:
+   member.js:38:7
+   38|   if (O.x === one) {
+             ^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:41:5
+
+Cannot cast `O.x` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   member.js:41:5
+   41|     O.x as empty; // ERROR: `2` remains
+           ^^^
+
+References:
+   member.js:28:29
+   28|   declare const O: {|x: 1 | 2|};
+                                   ^ [1]
+   member.js:41:12
+   41|     O.x as empty; // ERROR: `2` remains
+                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:41:5
+
+Refined at [1]
+
+   member.js:41:5
+   41|     O.x as empty; // ERROR: `2` remains
+           ^^^
+
+References:
+   member.js:38:7
+   38|   if (O.x === one) {
+             ^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:58:5
+
+Refined at [1]
+
+   member.js:58:5
+   58|     x.value as number; // OK
+           ^
+
+References:
+   member.js:57:7
+   57|   if (x.type !== O.bar) {
+             ^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:59:5
+
+Refined at [1]
+
+   member.js:59:5
+   59|     x.value as empty; // ERROR
+           ^
+
+References:
+   member.js:57:7
+   57|   if (x.type !== O.bar) {
+             ^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:59:5
+
+Cannot cast `x.value` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   member.js:59:5
+   59|     x.value as empty; // ERROR
+           ^^^^^^^
+
+References:
+   member.js:52:34
+   52|   type T = {|type: 'foo', value: number|}
+                                        ^^^^^^ [1]
+   member.js:59:16
+   59|     x.value as empty; // ERROR
+                      ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:76:7
+
+Refined at [1] [2]
+
+   member.js:76:7
+   76|       x as empty; // OK
+             ^
+
+References:
+   member.js:73:10
+   73|     case O.A: break;
+                ^^^ [1]
+   member.js:74:10
+   74|     case O.B: break;
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- member.js:97:7
+
+Refined at [1]
+
+   member.js:97:7
+   97|       x.value as string; // OK
+             ^
+
+References:
+   member.js:96:10
+   96|     case O.foo:
+                ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- member.js:100:7
+
+Refined at [1]
+
+   member.js:100:7
+   100|       x.value as number; // OK
+              ^
+
+References:
+   member.js:96:10
+    96|     case O.foo:
+                 ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- member.js:103:7
+
+Refined at [1] [2]
+
+   member.js:103:7
+   103|       x as empty; // OK
+              ^
+
+References:
+   member.js:96:10
+    96|     case O.foo:
+                 ^^^^^ [1]
+   member.js:99:10
+    99|     case O.bar:
+                 ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:2:9
@@ -15782,7 +16679,7 @@ References:
 
 
 
-Found 1075 errors
+Found 1135 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

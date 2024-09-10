@@ -80,7 +80,8 @@ and concretize_binary_rhs_and_run_binary_predicate cx trace l r sense b tvar =
   let variant =
     match b with
     | InstanceofTest -> ConcretizeRHSForInstanceOfPredicateTest
-    | SentinelProp _ -> ConcretizeRHSForSentinelPropPredicateTest
+    | SentinelProp _ -> ConcretizeRHSForLiteralPredicateTest
+    | EqTest -> ConcretizeRHSForLiteralPredicateTest
   in
   possible_concrete_types_for_predicate cx reason ~predicate_concretizer_variant:variant r
   |> Base.List.iter ~f:(fun r -> binary_predicate cx trace sense b l r tvar)
@@ -606,6 +607,7 @@ and binary_predicate cx trace sense test left right result_collector =
   match test with
   | InstanceofTest -> instanceof_test cx trace result_collector (sense, left, TypeOperand right)
   | SentinelProp key -> sentinel_prop_test key cx trace result_collector (sense, left, right)
+  | EqTest -> eq_test cx trace result_collector (sense, left, right)
 
 and instanceof_test cx trace result_collector = function
   (* instanceof on an ArrT is a special case since we treat ArrT as its own
@@ -1026,6 +1028,72 @@ and concretize_and_run_sentinel_prop_test
            let t = Type_filter.sentinel_refinement l reason orig_obj sense sentinel in
            report_filtering_result_to_predicate_result t result_collector
          )
+
+and eq_test cx _trace result_collector (sense, left, right) =
+  let expected_loc = loc_of_t right in
+  match right with
+  | DefT (_, StrT (Literal (_, value)))
+  | DefT (_, SingletonStrT value) ->
+    let filtered =
+      if sense then
+        Type_filter.string_literal expected_loc sense value left
+      else
+        Type_filter.not_string_literal value left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | DefT (_, NumT (Literal (_, value)))
+  | DefT (_, SingletonNumT value) ->
+    let filtered =
+      if sense then
+        Type_filter.number_literal expected_loc sense value left
+      else
+        Type_filter.not_number_literal value left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | DefT (_, BoolT (Some true))
+  | DefT (_, SingletonBoolT true) ->
+    let filtered =
+      if sense then
+        Type_filter.true_ left
+      else
+        Type_filter.not_true left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | DefT (_, BoolT (Some false))
+  | DefT (_, SingletonBoolT false) ->
+    let filtered =
+      if sense then
+        Type_filter.false_ left
+      else
+        Type_filter.not_false left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | DefT (_, BigIntT (Literal (_, value)))
+  | DefT (_, SingletonBigIntT value) ->
+    let filtered =
+      if sense then
+        Type_filter.bigint_literal expected_loc sense value left
+      else
+        Type_filter.not_bigint_literal value left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | DefT (_, VoidT) ->
+    let filtered =
+      if sense then
+        Type_filter.undefined left
+      else
+        Type_filter.not_undefined cx left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | DefT (_, NullT) ->
+    let filtered =
+      if sense then
+        Type_filter.null left
+      else
+        Type_filter.not_null cx left
+    in
+    report_filtering_result_to_predicate_result filtered result_collector
+  | _ -> report_unchanged_filtering_result_to_predicate_result left result_collector
 
 (**********)
 (* guards *)
