@@ -984,7 +984,16 @@ let is_munged_prop_name_with_munge name ~should_munge_underscores =
 let is_munged_prop_name cx name =
   is_munged_prop_name_with_munge name ~should_munge_underscores:(Context.should_munge_underscores cx)
 
-let map_obj cx o reason_op ~map_t ~map_field =
+let obj_key_mirror cx o reason_op =
+  let map_t key t =
+    match t with
+    | OptionalT _ -> optional key
+    | _ -> key
+  in
+  let map_field key t =
+    let reason = replace_desc_reason (RStringLit key) reason_op in
+    map_t (DefT (reason, SingletonStrT key)) t
+  in
   let props_tmap =
     Context.find_props cx o.props_tmap
     |> Properties.mapi_fields map_field
@@ -1003,27 +1012,6 @@ let map_obj cx o reason_op ~map_t ~map_field =
   in
   let reason = replace_desc_reason RObjectType reason_op in
   DefT (reason, ObjT { o with props_tmap; flags })
-
-let obj_key_mirror cx o reason_op =
-  let map_t key t =
-    match t with
-    | OptionalT _ -> optional key
-    | _ -> key
-  in
-  let map_field key t =
-    let reason = replace_desc_reason (RStringLit key) reason_op in
-    map_t (DefT (reason, SingletonStrT key)) t
-  in
-  map_obj cx o reason_op ~map_t ~map_field
-
-let obj_map_const cx o reason_op target =
-  let map_t _ t =
-    match t with
-    | OptionalT _ -> optional target
-    | _ -> target
-  in
-  let map_field _ t = map_t target t in
-  map_obj cx o reason_op ~map_t ~map_field
 
 let namespace_type cx reason namespace_symbol values types =
   let add name { preferred_def_locs; name_loc; type_ } acc =

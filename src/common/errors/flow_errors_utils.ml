@@ -131,16 +131,12 @@ module Friendly = struct
   type docs = {
     call: string;
     tuplemap: string;
-    objmap: string;
-    objmapi: string;
   }
 
   let docs =
     {
       call = "https://flow.org/en/docs/types/utilities/#toc-call";
       tuplemap = "https://flow.org/en/docs/types/utilities/#toc-tuplemap";
-      objmap = "https://flow.org/en/docs/types/utilities/#toc-objmap";
-      objmapi = "https://flow.org/en/docs/types/utilities/#toc-objmapi";
     }
 
   (* This function was introduced into the OCaml standard library in 4.04.0. Not

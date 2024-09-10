@@ -49,8 +49,6 @@ module Friendly : sig
   type docs = {
     call: string;
     tuplemap: string;
-    objmap: string;
-    objmapi: string;
   }
 
   val docs : docs
