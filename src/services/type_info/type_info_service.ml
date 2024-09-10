@@ -101,6 +101,54 @@ let type_at_pos
   in
   ((loc, ty, refining_locs, refinement_invalidated), json_data)
 
+let batched_type_at_pos_special_comment_regex = Str.regexp "^ *\\^\\?$"
+
+let batched_type_at_pos_from_special_comments
+    ~cx
+    ~file_sig
+    ~typed_ast
+    ~omit_targ_defaults
+    ~max_depth
+    ~verbose_normalizer
+    ~no_typed_ast_for_imports
+    ~loc_of_aloc
+    file =
+  let (_, { Flow_ast.Program.all_comments; _ }) = typed_ast in
+  let handle_comment (comment_loc, { Flow_ast.Comment.kind; text; on_newline = _ }) =
+    if
+      kind = Flow_ast.Comment.Line
+      && Str.string_match batched_type_at_pos_special_comment_regex text 0
+    then
+      let { Loc.start = { Loc.line; column }; _ } = loc_of_aloc comment_loc in
+      let line = line - 1 in
+      (* To compute the column, +2 for ^?, -2 for starting // *)
+      let column = column + String.length text in
+      let ((ty_loc, tys, refining_locs, invalidation_info), json_data) =
+        type_at_pos
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~omit_targ_defaults
+          ~max_depth
+          ~verbose_normalizer
+          ~no_typed_ast_for_imports
+          ~include_refs:(Some loc_of_aloc)
+          ~include_refinement_info:(Some loc_of_aloc)
+          file
+          line
+          column
+      in
+      let cursor_loc = Loc.cursor (Some file) line column in
+      Some
+        ((cursor_loc, ty_loc, tys, refining_locs, invalidation_info), Hh_json.JSON_Object json_data)
+    else
+      None
+  in
+  let (friendly_results, json_data_list) =
+    Base.List.filter_map all_comments ~f:handle_comment |> Base.List.unzip
+  in
+  (friendly_results, Hh_json.JSON_Array json_data_list)
+
 let dump_types ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
   let exact_by_default = Context.exact_by_default cx in

@@ -56,6 +56,56 @@ let spec =
       );
   }
 
+let handle_friendly_result ~strip_root loc tys refining_locs documentation =
+  let (ty, refs) =
+    match tys with
+    | Some { ServerProt.Response.InferType.type_str; refs } -> (type_str, refs)
+    | _ -> ("(unknown)", None)
+  in
+  let doc =
+    match documentation with
+    | Some doc -> doc ^ "\n"
+    | None -> ""
+  in
+  let range =
+    if loc = Loc.none then
+      ""
+    else
+      spf "\n%s" (Reason.range_string_of_loc ~strip_root loc)
+  in
+  let str_of_loc loc =
+    let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
+    match source with
+    | Some file ->
+      let path = File_key.to_string file in
+      let basename = File_path.basename (File_path.make path) in
+      let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
+      Some (Utils_js.spf "%s%s:%d:%d" lib basename line column)
+    | None -> None
+  in
+  let refs =
+    match refs with
+    | None -> ""
+    | Some refs ->
+      let refs =
+        Base.List.concat_map refs ~f:(fun (name, loc) ->
+            match str_of_loc loc with
+            | Some s -> [Utils_js.spf "'%s' defined at %s" name s]
+            | None -> []
+        )
+      in
+      (match refs with
+      | [] -> ""
+      | _ -> "\n\n" ^ String.concat "\n" refs ^ "\n")
+  in
+  let refinement_info =
+    let refining_locs = Base.List.filter_map refining_locs ~f:str_of_loc in
+    match refining_locs with
+    | [] -> ""
+    | _ -> spf "\n\nRefined at %s\n" (Base.String.concat ~sep:", " refining_locs)
+  in
+  print_endline (doc ^ ty ^ refs ^ refinement_info ^ range)
+
 let handle_response ~file_contents ~pretty ~strip_root response =
   let {
     ServerProt.Response.InferType.loc;
@@ -87,54 +137,7 @@ let handle_response ~file_contents ~pretty ~strip_root response =
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
   | ServerProt.Response.InferType.Friendly tys ->
-    let (ty, refs) =
-      match tys with
-      | Some { ServerProt.Response.InferType.type_str; refs } -> (type_str, refs)
-      | _ -> ("(unknown)", None)
-    in
-    let doc =
-      match documentation with
-      | Some doc -> doc ^ "\n"
-      | None -> ""
-    in
-    let range =
-      if loc = Loc.none then
-        ""
-      else
-        spf "\n%s" (Reason.range_string_of_loc ~strip_root loc)
-    in
-    let str_of_loc loc =
-      let { Loc.source; start = { Loc.line; column; _ }; _ } = loc in
-      match source with
-      | Some file ->
-        let path = File_key.to_string file in
-        let basename = File_path.basename (File_path.make path) in
-        let lib = Utils_js.ite (File_key.is_lib_file file) "(lib) " "" in
-        Some (Utils_js.spf "%s%s:%d:%d" lib basename line column)
-      | None -> None
-    in
-    let refs =
-      match refs with
-      | None -> ""
-      | Some refs ->
-        let refs =
-          Base.List.concat_map refs ~f:(fun (name, loc) ->
-              match str_of_loc loc with
-              | Some s -> [Utils_js.spf "'%s' defined at %s" name s]
-              | None -> []
-          )
-        in
-        (match refs with
-        | [] -> ""
-        | _ -> "\n\n" ^ String.concat "\n" refs ^ "\n")
-    in
-    let refinement_info =
-      let refining_locs = Base.List.filter_map refining_locs ~f:str_of_loc in
-      match refining_locs with
-      | [] -> ""
-      | _ -> spf "\n\nRefined at %s\n" (Base.String.concat ~sep:", " refining_locs)
-    in
-    print_endline (doc ^ ty ^ refs ^ refinement_info ^ range)
+    handle_friendly_result ~strip_root loc tys refining_locs documentation
 
 let handle_error err ~json ~pretty =
   if json then

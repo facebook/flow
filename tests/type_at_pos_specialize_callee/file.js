@@ -18,70 +18,70 @@ type Baz = { baz: () => mixed };
 function test1() {
   declare var foo: F1 & F2 & F3;
   const x1 = foo(1);
-//           ^
+//           ^?
   const x2 = foo([""]);
-//           ^
+//           ^?
   const x3 = foo("");
-//           ^
+//           ^?
   const error = foo(true);
-//              ^
+//              ^?
 }
 
 function test2() {
   declare var foo: F1 & (F2 & F3);
 
   const x1 = foo(1);
-//           ^
+//           ^?
   const x2 = foo([""]);
-//           ^
+//           ^?
   const x3 = foo("");
-//           ^
+//           ^?
   const error = foo(true);
-//              ^
+//              ^?
 }
 
 function test3() {
   declare var foo: (F1 & F2) & F3;
 
   const x1 = foo(1);
-//           ^
+//           ^?
   const x2 = foo([""]);
-//           ^
+//           ^?
   const x3 = foo("");
-//           ^
+//           ^?
   const error = foo(true);
-//              ^
+//              ^?
 }
 
 function test4() {
   declare var foo: F1 | G1;
   const x = foo(1);
-//          ^
+//          ^?
 }
 
 function test5() {
   declare var foo: (F1 | G1) & F2;
 
   const x1 = foo(1);
-//           ^
+//           ^?
   const x2 = foo([""]);
-//           ^
+//           ^?
   const x2 = foo("");
-//           ^
+//           ^?
   const error = foo(true);
-//              ^
+//              ^?
 }
 
 function test6() {
   declare function foo<X>(x: X): X;
   const x = foo(1);
-//          ^
+//          ^?
 }
 
 function test7() {
   declare var foo: ?(<X>(x: X) => X);
   const x = foo?.(1);
-//          ^
+//          ^?
 }
 
 function test8() {
@@ -90,13 +90,13 @@ function test8() {
     | ((G1 & G2) & G3);
 
   const x1 = foo(1);
-//           ^
+//           ^?
   const x2 = foo([""]);
-//           ^
+//           ^?
   const x3 = foo("");
-//           ^
+//           ^?
   const error = foo(true);
-//              ^
+//              ^?
 }
 
 function test9() {
@@ -108,13 +108,13 @@ function test9() {
 
   declare var a: A;
   const x1 = a.foo(1);
-//             ^
+//             ^?
   const x2 = a.foo([""]);
-//             ^
+//             ^?
   const x3 = a.foo("");
-//             ^
+//             ^?
   const error = a.foo(true);
-//                ^
+//                ^?
 }
 
 function test10() {
@@ -125,21 +125,21 @@ function test10() {
   }
 
   const x1 = a.foo(1);
-//             ^
+//             ^?
   const x2 = a.foo([""]);
-//             ^
+//             ^?
   const x3 = a.foo("");
-//             ^
+//             ^?
   const error = a.foo(true);
-//                ^
+//                ^?
 }
 
 function test11() {
   declare var obj: { foo?: ?<X>(x: X) => X } ;
   const x1 = obj.foo?.(1);
-//           ^
+//           ^?
   const x2 = obj.foo?.(1);
-//               ^
+//               ^?
 }
 
 function test12() {
@@ -147,14 +147,14 @@ function test12() {
     foo?: F1 & F2 & F3;
   };
   const x = obj.foo?.(1);
-//          ^
+//          ^?
 }
 
 function test13() {
   declare var obj: any | { f: <V>(x: V) => V };
 
   const x1 = obj.f(1);
-//               ^
+//               ^?
 }
 
 function test14() {
@@ -162,9 +162,9 @@ function test14() {
   declare var o2: { f: <V>(x: V) => V } & any;
 
   const x1 = o1.f(1); // any
-//              ^
+//              ^?
   const x2 = o2.f(1); // number => number
-//              ^
+//              ^?
 }
 
 function test15() {
@@ -172,15 +172,15 @@ function test15() {
   declare var o2: ?{ f: <V>(x: V) => V } & any;
 
   const x1 = o1?.f(1); // any
-//               ^
+//               ^?
   const x2 = o2?.f(1); // number => number
-//               ^
+//               ^?
 }
 
 function test16() {
   declare var x: { f: () => {} } | void;
   x.f(); // (() => void) | any
-//  ^
+//  ^?
 }
 
 function test17() {
@@ -193,19 +193,19 @@ function test17() {
     setLabel(label: any): any;
   };
   const a = new A().setLabel("hello").setLabel(from(1));
-//                  ^
+//                  ^?
 }
 
 function test18() {
   declare var x: (Foo & Bar) & Baz;
   x.baz(); // () => mixed
-//  ^
+//  ^?
 }
 
 function test19() {
   declare var error: mixed;
   error();
-// ^
+// ^?
 }
 
 function test20(
@@ -216,7 +216,7 @@ function test20(
   Bar: (typeof Foo1 | typeof Foo2) & (typeof Foo3 | typeof Foo4),
 ) {
   Bar("", 1); // TODO should include type of both Foo1 and Foo2
-//  ^
+//  ^?
 }
 
 function test_21() {
@@ -225,11 +225,11 @@ function test_21() {
   }
 
   const c1 = new C(1);
-//           ^
+//           ^?
   const c2 = new C(1);
-//              ^
+//              ^?
   const c3 = new C(1);
-//               ^
+//               ^?
 }
 
 function test_22() {
@@ -239,7 +239,7 @@ function test_22() {
   }
 
   const c = new C(1, "");
-//          ^
+//          ^?
 }
 
 function test_23() {
@@ -248,14 +248,14 @@ function test_23() {
   }
 
   const c = new C(1);
-//          ^
+//          ^?
 }
 
 function test_24() {
   declare var C1: any
   const c1 = new C1(1);
-//           ^
+//           ^?
   declare var C2: mixed;
   const c2 = new C2(1); // error
-//           ^
+//           ^?
 }

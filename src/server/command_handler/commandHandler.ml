@@ -685,6 +685,37 @@ let infer_type_to_response
   in
   { ServerProt.Response.InferType.loc; tys; refining_locs; refinement_invalidated; documentation }
 
+let documentation_at_loc ~reader ~profiling ~check_result ~ast file_key line column =
+  let (getdef_loc_result, _) =
+    try_with_json (fun () ->
+        get_def_of_check_result
+          ~reader
+          ~profiling
+          ~check_result
+          ~purpose:Get_def_types.Purpose.JSDoc
+          (file_key, line, column)
+    )
+  in
+  let get_def_documentation =
+    match getdef_loc_result with
+    | Ok [getdef_loc] ->
+      Find_documentation.jsdoc_of_getdef_loc
+        ~ast
+        ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
+        getdef_loc
+      |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+    | _ -> None
+  in
+  let hardcoded_documentation =
+    Find_documentation.hardcoded_documentation_at_loc ast (Loc.cursor (Some file_key) line column)
+  in
+  match (get_def_documentation, hardcoded_documentation) with
+  | (None, None) -> None
+  | (Some d, None)
+  | (None, Some d) ->
+    Some d
+  | (Some d1, Some d2) -> Some (d1 ^ "\n\n" ^ d2)
+
 let infer_type
     ~(options : Options.t)
     ~(reader : Parsing_heaps.Reader.reader)
@@ -793,39 +824,10 @@ let infer_type
             line
             column
         in
-        let (getdef_loc_result, _) =
-          try_with_json (fun () ->
-              get_def_of_check_result
-                ~reader
-                ~profiling
-                ~check_result
-                ~purpose:Get_def_types.Purpose.JSDoc
-                (file_key, line, column)
-          )
-        in
-        let get_def_documentation =
-          match getdef_loc_result with
-          | Ok [getdef_loc] ->
-            Find_documentation.jsdoc_of_getdef_loc
-              ~ast
-              ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-              getdef_loc
-            |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-          | _ -> None
-        in
-        let hardcoded_documentation =
-          Find_documentation.hardcoded_documentation_at_loc
-            ast
-            (Loc.cursor (Some file_key) line column)
-        in
         let documentation =
-          match (get_def_documentation, hardcoded_documentation) with
-          | (None, None) -> None
-          | (Some d, None)
-          | (None, Some d) ->
-            Some d
-          | (Some d1, Some d2) -> Some (d1 ^ "\n\n" ^ d2)
+          documentation_at_loc ~reader ~profiling ~check_result ~ast file_key line column
         in
+
         let json_props =
           ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
           :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
@@ -845,6 +847,92 @@ let infer_type
             tys
         in
         (Ok response, Some (Hh_json.JSON_Object json_props)))
+
+let inlay_hint
+    ~(options : Options.t)
+    ~(reader : Parsing_heaps.Reader.reader)
+    ~(env : ServerEnv.env)
+    ~(profiling : Profiling_js.running)
+    ~type_parse_artifacts_cache
+    input : ServerProt.Response.InlayHint.response * Hh_json.json option =
+  let {
+    ServerProt.Inlay_hint_options.input = file_input;
+    verbose;
+    omit_targ_defaults;
+    wait_for_recheck = _;
+    verbose_normalizer;
+    max_depth;
+    no_typed_ast_for_imports;
+  } =
+    input
+  in
+  match of_file_input ~options ~env file_input with
+  | Error (Failed e) -> (Error e, None)
+  | Error (Skipped reason) ->
+    let extra_data = json_of_skipped reason in
+    (Ok [], extra_data)
+  | Ok (file_key, content) ->
+    let options = { options with Options.opt_verbose = verbose } in
+    let (file_artifacts_result, did_hit_cache) =
+      let parse_result = lazy (Type_contents.parse_contents ~options ~profiling content file_key) in
+      type_parse_artifacts_with_cache
+        ~options
+        ~profiling
+        ~type_parse_artifacts_cache
+        env.master_cx
+        file_key
+        parse_result
+    in
+    (match file_artifacts_result with
+    | Error _parse_errors ->
+      let err_str = "Couldn't parse file in parse_artifacts" in
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      (Error err_str, Some (Hh_json.JSON_Object json_props))
+    | Ok
+        ( (Parse_artifacts { file_sig; ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) as
+        check_result
+        ) ->
+      let (result, json_data) =
+        Type_info_service.batched_type_at_pos_from_special_comments
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~omit_targ_defaults
+          ~max_depth
+          ~verbose_normalizer
+          ~no_typed_ast_for_imports
+          ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+          file_key
+      in
+      let result_with_docs =
+        Base.List.map
+          result
+          ~f:(fun (cursor_loc, type_loc, tys, refining_locs, refinement_invalidated) ->
+            let { Loc.start = { Loc.line; column }; _ } = type_loc in
+            let documentation =
+              documentation_at_loc ~reader ~profiling ~check_result ~ast file_key line column
+            in
+            let tys =
+              Base.Option.map tys ~f:(fun r ->
+                  let (type_str, refs) =
+                    Ty_printer.string_of_type_at_pos_result
+                      ~exact_by_default:(Options.exact_by_default options)
+                      r
+                  in
+                  { ServerProt.Response.InferType.type_str; refs }
+              )
+            in
+            {
+              ServerProt.Response.InlayHint.cursor_loc;
+              type_loc;
+              tys;
+              refining_locs;
+              refinement_invalidated;
+              documentation;
+            }
+        )
+      in
+      (Ok result_with_docs, Some json_data))
 
 let insert_type
     ~options
@@ -1458,6 +1546,14 @@ let handle_infer_type ~options ~reader ~profiling ~env input =
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
+let handle_inlay_hint ~options ~reader ~profiling ~env input =
+  let (result, json_data) =
+    try_with_json (fun () ->
+        inlay_hint ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
+    )
+  in
+  Lwt.return (ServerProt.Response.INLAY_HINT result, json_data)
+
 let handle_insert_type
     ~options
     ~file_input
@@ -1786,6 +1882,11 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck:input.ServerProt.Infer_type_options.wait_for_recheck
       ~options
       (handle_infer_type ~options ~reader input)
+  | ServerProt.Request.INLAY_HINT input ->
+    mk_parallelizable
+      ~wait_for_recheck:input.ServerProt.Inlay_hint_options.wait_for_recheck
+      ~options
+      (handle_inlay_hint ~options ~reader input)
   | ServerProt.Request.RAGE { files } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE

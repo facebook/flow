@@ -34,6 +34,7 @@ end = struct
       GetDefCommand.command;
       GleanCommand.command;
       InitCommand.command;
+      InlayHintCommand.command;
       LspCommand.command;
       LsCommand.command;
       SaveStateCommand.command;

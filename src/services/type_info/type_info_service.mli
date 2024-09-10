@@ -21,6 +21,25 @@ val type_at_pos :
   (Loc.t * Ty.type_at_pos_result option * Loc.t list * (Loc.t * Refinement_invalidation.reason) list)
   * (string * Hh_json.json) list
 
+val batched_type_at_pos_from_special_comments :
+  cx:Context.t ->
+  file_sig:File_sig.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  omit_targ_defaults:bool ->
+  max_depth:int ->
+  verbose_normalizer:bool ->
+  no_typed_ast_for_imports:bool ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  File_key.t ->
+  ( Loc.t
+  * Loc.t
+  * Ty.type_at_pos_result option
+  * Loc.t list
+  * (Loc.t * Refinement_invalidation.reason) list
+  )
+  list
+  * Hh_json.json
+
 val dump_types :
   evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->
   Context.t ->

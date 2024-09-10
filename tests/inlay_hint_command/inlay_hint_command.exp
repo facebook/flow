@@ -1,0 +1,23 @@
+At test.js:1:15
+string
+test.js:1:15,1:18
+
+At test.js:3:16
+string
+test.js:3:15,3:18
+
+At test.js:5:17
+string
+test.js:5:15,5:18
+
+At test.js:7:18
+string
+test.js:7:15,7:18
+
+At test.js:9:19
+string
+test.js:9:15,9:18
+
+At test.js:11:14
+(unknown)
+

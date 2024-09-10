@@ -1,0 +1,1 @@
+cmd: inlay-hint_unstable_exposed_for_testing --strip-root test.js

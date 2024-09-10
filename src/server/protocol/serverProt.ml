@@ -23,6 +23,18 @@ module Infer_type_options = struct
   }
 end
 
+module Inlay_hint_options = struct
+  type t = {
+    input: File_input.t;
+    verbose: Verbose.t option;
+    omit_targ_defaults: bool;
+    wait_for_recheck: bool option;
+    verbose_normalizer: bool;
+    max_depth: int;
+    no_typed_ast_for_imports: bool;
+  }
+end
+
 module Request = struct
   type command =
     | AUTOCOMPLETE of {
@@ -93,6 +105,7 @@ module Request = struct
         types_only: bool;
       }
     | INFER_TYPE of Infer_type_options.t
+    | INLAY_HINT of Inlay_hint_options.t
     | INSERT_TYPE of {
         input: File_input.t;
         target: Loc.t;
@@ -154,6 +167,8 @@ module Request = struct
       Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input input) line char
     | INFER_TYPE { Infer_type_options.input; line; char; _ } ->
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char
+    | INLAY_HINT { Inlay_hint_options.input; _ } ->
+      Printf.sprintf "inlay-hint %s" (File_input.filename_of_file_input input)
     | INSERT_TYPE { input; target; _ } ->
       Loc.(
         Printf.sprintf
@@ -275,6 +290,19 @@ module Response = struct
 
   type infer_type_response = (InferType.t, string) result
 
+  module InlayHint = struct
+    type item = {
+      cursor_loc: Loc.t;
+      type_loc: Loc.t;
+      tys: InferType.friendly_response option;
+      refining_locs: Loc.t list;
+      refinement_invalidated: (Loc.t * Refinement_invalidation.reason) list;
+      documentation: string option;
+    }
+
+    type response = (item list, string) result
+  end
+
   type insert_type_response = (Replacement_printer.patch, string) result
 
   type rage_response = (string * string) list
@@ -310,6 +338,7 @@ module Response = struct
     | FORCE_RECHECK
     | GET_DEF of get_def_response
     | INFER_TYPE of infer_type_response
+    | INLAY_HINT of InlayHint.response
     | INSERT_TYPE of insert_type_response
     | RAGE of rage_response
     | STATUS of {
@@ -332,6 +361,7 @@ module Response = struct
     | FORCE_RECHECK -> "force_recheck response"
     | GET_DEF _ -> "get_def response"
     | INFER_TYPE _ -> "infer_type response"
+    | INLAY_HINT _ -> "inlay_hint response"
     | INSERT_TYPE _ -> "insert_type response"
     | RAGE _ -> "rage response"
     | STATUS _ -> "status response"

@@ -1,29 +1,25 @@
-file.js:20:14
-Flags:
+At file.js:20:14
 F1
 
 'F1' defined at file.js:6:5
 
 file.js:20:14,20:16
 
-file.js:22:14
-Flags:
+At file.js:22:14
 (x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:22:14,22:16
 
-file.js:24:14
-Flags:
+At file.js:24:14
 F3
 
 'F3' defined at file.js:8:5
 
 file.js:24:14,24:16
 
-file.js:26:17
-Flags:
+At file.js:26:17
 F1 & F2 & F3
 
 'F1' defined at file.js:6:5
@@ -32,32 +28,28 @@ F1 & F2 & F3
 
 file.js:26:17,26:19
 
-file.js:33:14
-Flags:
+At file.js:33:14
 F1
 
 'F1' defined at file.js:6:5
 
 file.js:33:14,33:16
 
-file.js:35:14
-Flags:
+At file.js:35:14
 (x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:35:14,35:16
 
-file.js:37:14
-Flags:
+At file.js:37:14
 F3
 
 'F3' defined at file.js:8:5
 
 file.js:37:14,37:16
 
-file.js:39:17
-Flags:
+At file.js:39:17
 F1 & F2 & F3
 
 'F1' defined at file.js:6:5
@@ -66,32 +58,28 @@ F1 & F2 & F3
 
 file.js:39:17,39:19
 
-file.js:46:14
-Flags:
+At file.js:46:14
 F1
 
 'F1' defined at file.js:6:5
 
 file.js:46:14,46:16
 
-file.js:48:14
-Flags:
+At file.js:48:14
 (x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:48:14,48:16
 
-file.js:50:14
-Flags:
+At file.js:50:14
 F3
 
 'F3' defined at file.js:8:5
 
 file.js:50:14,50:16
 
-file.js:52:17
-Flags:
+At file.js:52:17
 F1 & F2 & F3
 
 'F1' defined at file.js:6:5
@@ -100,8 +88,7 @@ F1 & F2 & F3
 
 file.js:52:17,52:19
 
-file.js:58:13
-Flags:
+At file.js:58:13
 G1 | F1
 
 'F1' defined at file.js:6:5
@@ -109,24 +96,21 @@ G1 | F1
 
 file.js:58:13,58:15
 
-file.js:65:14
-Flags:
+At file.js:65:14
 G1
 
 'G1' defined at file.js:10:5
 
 file.js:65:14,65:16
 
-file.js:67:14
-Flags:
+At file.js:67:14
 (x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:67:14,67:16
 
-file.js:69:14
-Flags:
+At file.js:69:14
 (F1 | G1) & F2
 
 'F1' defined at file.js:6:5
@@ -135,8 +119,7 @@ Flags:
 
 file.js:69:14,69:16
 
-file.js:71:17
-Flags:
+At file.js:71:17
 (F1 | G1) & F2
 
 'F1' defined at file.js:6:5
@@ -145,18 +128,15 @@ Flags:
 
 file.js:71:17,71:19
 
-file.js:77:13
-Flags:
+At file.js:77:13
 (x: number) => number
 file.js:77:13,77:15
 
-file.js:83:13
-Flags:
+At file.js:83:13
 ?((x: number) => number)
 file.js:83:13,83:15
 
-file.js:92:14
-Flags:
+At file.js:92:14
 G1 | F1
 
 'F1' defined at file.js:6:5
@@ -164,8 +144,7 @@ G1 | F1
 
 file.js:92:14,92:16
 
-file.js:94:14
-Flags:
+At file.js:94:14
 ((x: Array<string>) => P1) | ((x: Array<string>) => O1)
 
 'O1' defined at file.js:1:20
@@ -173,8 +152,7 @@ Flags:
 
 file.js:94:14,94:16
 
-file.js:96:14
-Flags:
+At file.js:96:14
 G3 | F3
 
 'F3' defined at file.js:8:5
@@ -182,8 +160,7 @@ G3 | F3
 
 file.js:96:14,96:16
 
-file.js:98:17
-Flags:
+At file.js:98:17
 (G1 & G2 & G3) | (F1 & F2 & F3)
 
 'F1' defined at file.js:6:5
@@ -195,32 +172,28 @@ Flags:
 
 file.js:98:17,98:19
 
-file.js:110:16
-Flags:
+At file.js:110:16
 (x: number) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:110:16,110:18
 
-file.js:112:16
-Flags:
+At file.js:112:16
 (x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:112:16,112:18
 
-file.js:114:16
-Flags:
+At file.js:114:16
 (x: string) => O2
 
 'O2' defined at file.js:2:20
 
 file.js:114:16,114:18
 
-file.js:116:19
-Flags:
+At file.js:116:19
 ((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
 
 'O1' defined at file.js:1:20
@@ -228,32 +201,28 @@ Flags:
 
 file.js:116:19,116:21
 
-file.js:127:16
-Flags:
+At file.js:127:16
 (x: number) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:127:16,127:18
 
-file.js:129:16
-Flags:
+At file.js:129:16
 (x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
 
 file.js:129:16,129:18
 
-file.js:131:16
-Flags:
+At file.js:131:16
 (x: string) => O2
 
 'O2' defined at file.js:2:20
 
 file.js:131:16,131:18
 
-file.js:133:19
-Flags:
+At file.js:133:19
 ((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
 
 'O1' defined at file.js:1:20
@@ -261,18 +230,15 @@ Flags:
 
 file.js:133:19,133:21
 
-file.js:139:14
-Flags:
+At file.js:139:14
 {foo?: ?(<X>(x: X) => X)}
 file.js:139:14,139:16
 
-file.js:141:18
-Flags:
+At file.js:141:18
 ?((x: number) => number)
 file.js:141:18,141:20
 
-file.js:149:13
-Flags:
+At file.js:149:13
 {foo?: F1 & F2 & F3}
 
 'F1' defined at file.js:6:5
@@ -281,94 +247,77 @@ Flags:
 
 file.js:149:13,149:15
 
-file.js:156:18
-Flags:
+At file.js:156:18
 ((x: number) => number) | any
 file.js:156:18,156:18
 
-file.js:164:17
-Flags:
+At file.js:164:17
 any (explicit)
 file.js:164:17,164:17
 
-file.js:166:17
-Flags:
+At file.js:166:17
 (x: number) => number
 file.js:166:17,166:17
 
-file.js:174:18
-Flags:
+At file.js:174:18
 any (explicit)
 file.js:174:18,174:18
 
-file.js:176:18
-Flags:
+At file.js:176:18
 (x: number) => number
 file.js:176:18,176:18
 
-file.js:182:5
-Flags:
+At file.js:182:5
 any | (() => {})
 file.js:182:5,182:5
 
-file.js:195:21
-Flags:
+At file.js:195:21
 (label: any) => any
 file.js:195:21,195:28
 
-file.js:201:5
-Flags:
+At file.js:201:5
 () => mixed
 file.js:201:5,201:7
 
-file.js:207:4
-Flags:
+At file.js:207:4
 mixed
 file.js:207:3,207:7
 
-file.js:218:5
-Flags:
+At file.js:218:5
 (x: string, y: mixed) => void
 file.js:218:3,218:5
 
-file.js:227:14
-Flags:
+At file.js:227:14
 (x: number) => void
 file.js:227:18,227:18
 
-file.js:229:17
-Flags:
+At file.js:229:17
 (x: number) => void
 file.js:229:18,229:18
 
-file.js:231:18
-Flags:
+At file.js:231:18
 class C<X>
 
 'C' defined at file.js:223:8
 
 file.js:231:18,231:18
 
-file.js:241:13
-Flags:
+At file.js:241:13
 (x: number | string, y: number | string) => void
 file.js:241:17,241:17
 
-file.js:250:13
-Flags:
+At file.js:250:13
 (x: number) => C<string>
 
 'C' defined at file.js:246:16
 
 file.js:250:17,250:17
 
-file.js:256:14
-Flags:
+At file.js:256:14
 any (explicit)
 file.js:256:18,256:19
 
-file.js:259:14
-Flags:
+At file.js:259:14
 mixed
 file.js:259:18,259:19
 
