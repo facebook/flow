@@ -1,10 +1,12 @@
 // @flow
 
 var o = { m() { return this; } };
+//                      ^?
 o.m();
 
 type AList = ?{data: number, next: AList};
 function alist(n: number): AList {
+//        ^?
   if (n <= 0) return null;
   else return { data: n, next: alist(n - 1) };
 }
@@ -13,6 +15,7 @@ const a = alist(10);
 
 type BList = {data: number, a_next: AList, next: BList} | null | '';
 function blist(n: number): BList {
+//        ^?
   if (n <= 0) return null;
   if (n > 1)  return "";
   return {
@@ -24,6 +27,7 @@ function blist(n: number): BList {
 
 type CList = {data: number, a_next: AList, next: BList, next: CList} | null | '';
 function clist(n: number): CList {
+//          ^?
   if (n <= 0) return null;
   if (n > 1) return "";
   return {
@@ -49,6 +53,10 @@ let x = "";
 while (0 < 1) {
   x = (0 < 1) ? x : "";
 }
-x;
+   x;
+// ^?
 
-type CA<+T> = $ReadOnlyArray<CA<T>>;
+type CA<+T> =
+//   ^?
+  $ReadOnlyArray<CA<T>>;
+//                ^?

@@ -16,4 +16,5 @@ const foo: Array<AB> = [];
 
 foo.forEach(ab => {
   const local = ab;
+//              ^?
 });

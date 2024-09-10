@@ -9,5 +9,6 @@
 import keyMirrorRecursive from './keyMirrorRecursive';
 import typeof KeyMirrorRecursive from './keyMirrorRecursive';
 const keyMirrorRecursiveObj = keyMirrorRecursive({ A: '' });
+//      ^?
 
 module.exports = keyMirrorRecursiveObj;

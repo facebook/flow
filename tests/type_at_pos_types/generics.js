@@ -2,24 +2,29 @@
 
 class C<X> { }
 var cn: C<number> = new C;
-cn;
+    cn;
+//  ^?
 
 function foo() { return C; }
 var D = foo();
 var dn: D<number> = new C;
-dn;
+    dn;
+//  ^?
 
 type E<X> = C<X>;
 var en: E<number> = new C;
-en;
+    en;
+//  ^?
 
 type F<X> = C<void>;
 var fn: F<number> = new C;
-fn;
+    fn;
+//  ^?
 
 type O<X> = { x: X };
 var on: O<number> = { x: 0 };
-on;
+    on;
+//  ^?
 
 type Mono = C<void>;
 
@@ -28,8 +33,10 @@ type Mono = C<void>;
  */
 type Empty = empty;
 declare var a: Empty.T<number>;
+//          ^?
 
 
 function f<X>(x: X) {
     x;
+//  ^?
 }

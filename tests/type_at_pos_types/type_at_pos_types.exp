@@ -1,439 +1,196 @@
-any.js:3:15 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":13,"offset":22},
-    "end":{"line":3,"column":15,"offset":25}
-  },
-  "path":"any.js",
-  "line":3,
-  "endline":3,
-  "start":13,
-  "end":15
-}
-any.js:4:2 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":1,"offset":32},
-    "end":{"line":4,"column":3,"offset":35}
-  },
-  "path":"any.js",
-  "line":4,
-  "endline":4,
-  "start":1,
-  "end":3
-}
-any.js:4:6 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":5,"offset":36},
-    "end":{"line":4,"column":7,"offset":39}
-  },
-  "path":"any.js",
-  "line":4,
-  "endline":4,
-  "start":5,
-  "end":7
-}
-any.js:5:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":5,"offset":48},
-    "end":{"line":5,"column":7,"offset":51}
-  },
-  "path":"any.js",
-  "line":5,
-  "endline":5,
-  "start":5,
-  "end":7
-}
-any.js:7:13 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":13,"offset":70},
-    "end":{"line":7,"column":19,"offset":77}
-  },
-  "path":"any.js",
-  "line":7,
-  "endline":7,
-  "start":13,
-  "end":19
-}
-any.js:8:5 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":1,"offset":87},
-    "end":{"line":8,"column":7,"offset":94}
-  },
-  "path":"any.js",
-  "line":8,
-  "endline":8,
-  "start":1,
-  "end":7
-}
-any.js:8:10 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":9,"offset":95},
-    "end":{"line":8,"column":11,"offset":98}
-  },
-  "path":"any.js",
-  "line":8,
-  "endline":8,
-  "start":9,
-  "end":11
-}
-any.js:9:10 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"any.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":9,"offset":111},
-    "end":{"line":9,"column":11,"offset":114}
-  },
-  "path":"any.js",
-  "line":9,
-  "endline":9,
-  "start":9,
-  "end":11
-}
-array.js:6:15 = {
-  "types":{"unevaluated":{"type":"NumType"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"array.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":14,"offset":133},
-    "end":{"line":6,"column":16,"offset":136}
-  },
-  "path":"array.js",
-  "line":6,
-  "endline":6,
-  "start":14,
-  "end":16
-}
-array.js:10:15 = {
-  "types":{"unevaluated":{"type":"ReadOnlyNumType"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"array.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":14,"offset":175},
-    "end":{"line":10,"column":16,"offset":178}
-  },
-  "path":"array.js",
-  "line":10,
-  "endline":10,
-  "start":14,
-  "end":16
-}
-array.js:15:4 = {
-  "types":{"unevaluated":{"type":"Array<string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"array.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":3,"offset":249},
-    "end":{"line":15,"column":5,"offset":252}
-  },
-  "path":"array.js",
-  "line":15,
-  "endline":15,
-  "start":3,
-  "end":5
-}
-array.js:19:4 = {
-  "types":{"unevaluated":{"type":"Array<?string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"array.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":3,"offset":298},
-    "end":{"line":19,"column":5,"offset":301}
-  },
-  "path":"array.js",
-  "line":19,
-  "endline":19,
-  "start":3,
-  "end":5
-}
-array.js:23:4 = {
-  "types":{"unevaluated":{"type":"Array<string | number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"array.js",
-    "type":"SourceFile",
-    "start":{"line":23,"column":3,"offset":353},
-    "end":{"line":23,"column":5,"offset":356}
-  },
-  "path":"array.js",
-  "line":23,
-  "endline":23,
-  "start":3,
-  "end":5
-}
-destructuring.js:3:6 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"destructuring.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":6,"offset":15},
-    "end":{"line":3,"column":6,"offset":16}
-  },
-  "path":"destructuring.js",
-  "line":3,
-  "endline":3,
-  "start":6,
-  "end":6
-}
-destructuring.js:11:13 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"destructuring.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":13,"offset":157},
-    "end":{"line":11,"column":13,"offset":158}
-  },
-  "path":"destructuring.js",
-  "line":11,
-  "endline":11,
-  "start":13,
-  "end":13
-}
-generics.js:5:1 = {
-  "types":{"unevaluated":{"type":"C<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":1,"offset":52},
-    "end":{"line":5,"column":2,"offset":54}
-  },
-  "path":"generics.js",
-  "line":5,
-  "endline":5,
-  "start":1,
-  "end":2
-}
-generics.js:10:1 = {
-  "types":{"unevaluated":{"type":"C<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":1,"offset":128},
-    "end":{"line":10,"column":2,"offset":130}
-  },
-  "path":"generics.js",
-  "line":10,
-  "endline":10,
-  "start":1,
-  "end":2
-}
-generics.js:14:1 = {
-  "types":{"unevaluated":{"type":"E<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":1,"offset":178},
-    "end":{"line":14,"column":2,"offset":180}
-  },
-  "path":"generics.js",
-  "line":14,
-  "endline":14,
-  "start":1,
-  "end":2
-}
-generics.js:18:1 = {
-  "types":{"unevaluated":{"type":"F<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":1,"offset":231},
-    "end":{"line":18,"column":2,"offset":233}
-  },
-  "path":"generics.js",
-  "line":18,
-  "endline":18,
-  "start":1,
-  "end":2
-}
-generics.js:22:1 = {
-  "types":{"unevaluated":{"type":"O<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":22,"column":1,"offset":288},
-    "end":{"line":22,"column":2,"offset":290}
-  },
-  "path":"generics.js",
-  "line":22,
-  "endline":22,
-  "start":1,
-  "end":2
-}
-generics.js:30:13 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":30,"column":13,"offset":368},
-    "end":{"line":30,"column":13,"offset":369}
-  },
-  "path":"generics.js",
-  "line":30,
-  "endline":30,
-  "start":13,
-  "end":13
-}
-generics.js:34:5 = {
-  "types":{"unevaluated":{"type":"X"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":34,"column":5,"offset":416},
-    "end":{"line":34,"column":5,"offset":417}
-  },
-  "path":"generics.js",
-  "line":34,
-  "endline":34,
-  "start":5,
-  "end":5
-}
-ill-formed.js:30:13 = {
-  "types":{"unevaluated":{"type":"Foo"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"ill-formed.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":7,"offset":46},
-    "end":{"line":5,"column":7,"offset":47}
-  },
-  "path":"ill-formed.js",
-  "line":5,
-  "endline":5,
-  "start":7,
-  "end":7
-}
-implicit-instantiation.js:5:10{
-  "types":{"unevaluated":{"expanded":{"kind":"Num"},"type":"number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"implicit-instantiation.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":10,"offset":62},
-    "end":{"line":5,"column":10,"offset":63}
-  },
-  "path":"implicit-instantiation.js",
-  "line":5,
-  "endline":5,
-  "start":10,
-  "end":10
-}
-implicit-instantiation.js:6:10{
-  "types":{"unevaluated":{"expanded":{"kind":"Str"},"type":"string"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"implicit-instantiation.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":10,"offset":78},
-    "end":{"line":6,"column":10,"offset":79}
-  },
-  "path":"implicit-instantiation.js",
-  "line":6,
-  "endline":6,
-  "start":10,
-  "end":10
-}
-implicit-instantiation.js:10:21{
-  "types":{
-    "unevaluated":{
-      "expanded":{"kind":"Union","types":[{"kind":"Num"},{"kind":"Str"}]},
-      "type":"number | string"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"implicit-instantiation.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":41,"offset":175},
-    "end":{"line":10,"column":41,"offset":176}
-  },
-  "path":"implicit-instantiation.js",
-  "line":10,
-  "endline":10,
-  "start":41,
-  "end":41
-}
-interface.js:6:7 = type I1 = interface {}
+any.js
+At any.js:3:14
+any (explicit)
+any.js:3:13,3:15
+
+At any.js:5:3
+any (explicit)
+any.js:5:1,5:3
+
+At any.js:7:6
+any (explicit)
+any.js:7:5,7:7
+
+At any.js:9:6
+any (implicit)
+any.js:9:5,9:7
+
+At any.js:13:3
+any (explicit)
+any.js:13:1,13:7
+
+At any.js:15:10
+any (explicit)
+any.js:15:9,15:11
+
+At any.js:17:10
+any (implicit)
+any.js:17:9,17:11
+
+array.js
+At array.js:3:19
+Array<{|+nums: number|}>
+array.js:3:16,3:20
+
+At array.js:5:26
+$ReadOnlyArray<{|+nums: number|}>
+array.js:5:24,5:37
+
+At array.js:8:16
+NumType
+
+'NumType' defined at array.js:3:5
+
+array.js:8:14,8:16
+
+At array.js:13:16
+ReadOnlyNumType
+
+'ReadOnlyNumType' defined at array.js:5:5
+
+array.js:13:14,13:16
+
+At array.js:19:5
+Array<string>
+array.js:19:3,19:5
+
+At array.js:24:5
+Array<?string>
+array.js:24:3,24:5
+
+At array.js:29:5
+Array<string | number>
+array.js:29:3,29:5
+
+destructuring.js
+At destructuring.js:3:6
+number
+destructuring.js:3:6,3:6
+
+At destructuring.js:12:13
+number
+destructuring.js:12:13,12:13
+
+generics.js
+At generics.js:5:5
+C<number>
+
+'C' defined at generics.js:3:6
+
+generics.js:5:5,5:6
+
+At generics.js:11:5
+C<number>
+
+'C' defined at generics.js:3:6
+
+generics.js:11:5,11:6
+
+At generics.js:16:5
+E<number>
+
+'E' defined at generics.js:14:5
+
+generics.js:16:5,16:6
+
+At generics.js:21:5
+F<number>
+
+'F' defined at generics.js:19:5
+
+generics.js:21:5,21:6
+
+At generics.js:26:5
+O<number>
+
+'O' defined at generics.js:24:5
+
+generics.js:26:5,26:6
+
+At generics.js:35:13
+any (implicit)
+generics.js:35:13,35:13
+
+At generics.js:40:5
+X
+generics.js:40:5,40:5
+
+ill-formed.js
+At ill-formed.js:5:7
+Foo
+
+'Foo' defined at ill-formed.js:3:5
+
+ill-formed.js:5:7,5:7
+
+implicit-instantiation.js
+At implicit-instantiation.js:5:10
+number
+implicit-instantiation.js:5:10,5:10
+
+At implicit-instantiation.js:7:10
+string
+implicit-instantiation.js:7:10,7:10
+
+At implicit-instantiation.js:12:41
+number | string
+implicit-instantiation.js:12:41,12:41
+
+interface.js
+At interface.js:6:6
+type I1 = interface {}
 
 'I1' defined at interface.js:6:5
 
 interface.js:6:6,6:7
-interface.js:7:7 = type I2 = interface {(): number}
 
-'I2' defined at interface.js:7:5
+At interface.js:8:6
+type I2 = interface {(): number}
 
-interface.js:7:6,7:7
-interface.js:8:7 = type I3 = interface {+[my_key: string]: number}
-
-'I3' defined at interface.js:8:5
+'I2' defined at interface.js:8:5
 
 interface.js:8:6,8:7
-interface.js:9:7 = type I4 = interface {-[my_key: string]: number}
 
-'I4' defined at interface.js:9:5
+At interface.js:10:6
+type I3 = interface {+[my_key: string]: number}
 
-interface.js:9:6,9:7
-interface.js:10:7 = type I5 = interface {[my_key: string]: number}
-
-'I5' defined at interface.js:10:5
+'I3' defined at interface.js:10:5
 
 interface.js:10:6,10:7
-interface.js:11:7 = type I6 = interface extends C, D {}
+
+At interface.js:12:6
+type I4 = interface {-[my_key: string]: number}
+
+'I4' defined at interface.js:12:5
+
+interface.js:12:6,12:7
+
+At interface.js:14:6
+type I5 = interface {[my_key: string]: number}
+
+'I5' defined at interface.js:14:5
+
+interface.js:14:6,14:7
+
+At interface.js:16:6
+type I6 = interface extends C, D {}
 
 'C' defined at interface.js:3:6
 'D' defined at interface.js:4:6
-'I6' defined at interface.js:11:5
+'I6' defined at interface.js:16:5
 
-interface.js:11:6,11:7
-interface.js:12:7 = type I7 = interface extends C {(): number}
+interface.js:16:6,16:7
+
+At interface.js:18:6
+type I7 = interface extends C {(): number}
 
 'C' defined at interface.js:3:6
-'I7' defined at interface.js:12:5
+'I7' defined at interface.js:18:5
 
-interface.js:12:6,12:7
-intersections.js:9:4
-Flags:
+interface.js:18:6,18:7
+
+intersections.js
+At intersections.js:9:4
 K & L
 
 'K' defined at intersections.js:4:20
@@ -441,8 +198,7 @@ K & L
 
 intersections.js:9:3,9:4
 
-intersections.js:11:4
-Flags:
+At intersections.js:11:4
 (?P<TValue>) & L
 
 'L' defined at intersections.js:5:20
@@ -450,8 +206,7 @@ Flags:
 
 intersections.js:11:3,11:4
 
-intersections.js:13:4
-Flags:
+At intersections.js:13:4
 Poly<K & L>
 
 'K' defined at intersections.js:4:20
@@ -460,8 +215,7 @@ Poly<K & L>
 
 intersections.js:13:3,13:4
 
-intersections.js:15:4
-Flags:
+At intersections.js:15:4
 Poly<?(((K, L) => void) & ((L, K) => void))>
 
 'K' defined at intersections.js:4:20
@@ -470,8 +224,7 @@ Poly<?(((K, L) => void) & ((L, K) => void))>
 
 intersections.js:15:3,15:4
 
-intersections.js:17:4
-Flags:
+At intersections.js:17:4
 Poly<?(K & L)>
 
 'K' defined at intersections.js:4:20
@@ -480,8 +233,7 @@ Poly<?(K & L)>
 
 intersections.js:17:3,17:4
 
-intersections.js:26:4
-Flags:
+At intersections.js:26:4
 LongLongLongLongLongLongLongLongName
 & AnotherLongLongLongLongLongLongLongLongName
 
@@ -490,8 +242,7 @@ LongLongLongLongLongLongLongLongName
 
 intersections.js:26:3,26:4
 
-intersections.js:28:4
-Flags:
+At intersections.js:28:4
 (?LongLongLongLongLongLongLongLongNameP<TValue>)
 & AnotherLongLongLongLongLongLongLongLongName
 
@@ -500,8 +251,7 @@ Flags:
 
 intersections.js:28:3,28:4
 
-intersections.js:30:4
-Flags:
+At intersections.js:30:4
 Poly<
   LongLongLongLongLongLongLongLongName
   & AnotherLongLongLongLongLongLongLongLongName,
@@ -513,8 +263,7 @@ Poly<
 
 intersections.js:30:3,30:4
 
-intersections.js:32:4
-Flags:
+At intersections.js:32:4
 Poly<
   ?((
     LongLongLongLongLongLongLongLongName,
@@ -528,8 +277,7 @@ Poly<
 
 intersections.js:32:3,32:4
 
-intersections.js:34:4
-Flags:
+At intersections.js:34:4
 Poly<
   ?(((
     LongLongLongLongLongLongLongLongName,
@@ -547,8 +295,7 @@ Poly<
 
 intersections.js:34:3,34:5
 
-intersections.js:36:4
-Flags:
+At intersections.js:36:4
 Poly<
   ?(LongLongLongLongLongLongLongLongName
   & AnotherLongLongLongLongLongLongLongLongName),
@@ -560,1391 +307,648 @@ Poly<
 
 intersections.js:36:3,36:4
 
-mixed.js:18:17 = {
-  "types":{"unevaluated":{"type":"AB"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"mixed.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":17,"offset":220},
-    "end":{"line":18,"column":18,"offset":222}
-  },
-  "path":"mixed.js",
-  "line":18,
-  "endline":18,
-  "start":17,
-  "end":18
-}
-callable-object.js:8:6 = {
-  "types":{
-    "unevaluated":{
-      "type":"type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"callable-object.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":6,"offset":112},
-    "end":{"line":8,"column":9,"offset":116}
-  },
-  "path":"callable-object.js",
-  "line":8,
-  "endline":8,
-  "start":6,
-  "end":9
-}
-callable-object.js:13:6 = {
-  "types":{
-    "unevaluated":{
-      "type":"type Obj2 = {$call: (...args: $ReadOnlyArray<mixed>) => void, f: <T>(x: T) => T, ...}"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"callable-object.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":6,"offset":192},
-    "end":{"line":13,"column":9,"offset":196}
-  },
-  "path":"callable-object.js",
-  "line":13,
-  "endline":13,
-  "start":6,
-  "end":9
-}
-callable-object.js:18:6 = {
-  "types":{
-    "unevaluated":{
-      "type":"type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"callable-object.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":6,"offset":295},
-    "end":{"line":18,"column":9,"offset":299}
-  },
-  "path":"callable-object.js",
-  "line":18,
-  "endline":18,
-  "start":6,
-  "end":9
-}
-callable-object.js:23:6 = {
-  "types":{
-    "unevaluated":{
-      "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"callable-object.js",
-    "type":"SourceFile",
-    "start":{"line":23,"column":6,"offset":387},
-    "end":{"line":23,"column":9,"offset":391}
-  },
-  "path":"callable-object.js",
-  "line":23,
-  "endline":23,
-  "start":6,
-  "end":9
-}
-callable-object.js:31:6 = {
-  "types":{
-    "unevaluated":{
-      "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"callable-object.js",
-    "type":"SourceFile",
-    "start":{"line":31,"column":6,"offset":620},
-    "end":{"line":31,"column":9,"offset":624}
-  },
-  "path":"callable-object.js",
-  "line":31,
-  "endline":31,
-  "start":6,
-  "end":9
-}
-opaque.js:3:20
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Foo = number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":20,"offset":29},
-    "end":{"line":3,"column":22,"offset":32}
-  },
-  "path":"opaque.js",
-  "line":3,
-  "endline":3,
-  "start":20,
-  "end":22
+mixed.js
+At mixed.js:18:17
+AB
+
+'AB' defined at mixed.js:13:5
+
+mixed.js:18:17,18:18
+
+callable-object.js
+At callable-object.js:8:8
+type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}
+
+'Obj1' defined at callable-object.js:8:5
+
+callable-object.js:8:6,8:9
+
+At callable-object.js:14:8
+type Obj2 = {
+  $call: (...args: $ReadOnlyArray<mixed>) => void,
+  f: <T>(x: T) => T,
+  ...
 }
 
-opaque.js:6:19
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Foo = number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":18,"offset":82},
-    "end":{"line":6,"column":20,"offset":85}
-  },
-  "path":"opaque.js",
-  "line":6,
-  "endline":6,
-  "start":18,
-  "end":20
+'Obj2' defined at callable-object.js:14:5
+
+callable-object.js:14:6,14:9
+
+At callable-object.js:20:8
+type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}
+
+'Obj3' defined at callable-object.js:20:5
+
+callable-object.js:20:6,20:9
+
+At callable-object.js:26:8
+type Obj4 = {
+  (...args: $ReadOnlyArray<mixed>): O1,
+  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  f: <T>(x: T) => T,
+  ...
+}
+& {
+  (...args: $ReadOnlyArray<mixed>): O2,
+  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  f: <T>(x: T) => T,
+  ...
+}
+& {
+  (...args: $ReadOnlyArray<mixed>): O4,
+  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  f: <T>(x: T) => T,
+  ...
 }
 
-opaque.js:8:3
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Foo"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":1,"offset":107},
-    "end":{"line":8,"column":3,"offset":110}
-  },
-  "path":"opaque.js",
-  "line":8,
-  "endline":8,
-  "start":1,
-  "end":3
+'O1' defined at callable-object.js:3:20
+'O2' defined at callable-object.js:4:20
+'O3' defined at callable-object.js:5:20
+'O4' defined at callable-object.js:6:20
+'Obj4' defined at callable-object.js:26:5
+
+callable-object.js:26:6,26:9
+
+At callable-object.js:35:8
+type Obj5 = {
+  (...args: $ReadOnlyArray<mixed>): O4,
+  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  f: <T>(x: T) => T,
+  ...
+}
+& {
+  (...args: $ReadOnlyArray<mixed>): O1,
+  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  f: <T>(x: T) => T,
+  ...
+}
+& {
+  (...args: $ReadOnlyArray<mixed>): O2,
+  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  f: <T>(x: T) => T,
+  ...
 }
 
-opaque.js:11:22
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Bar = number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":21,"offset":137},
-    "end":{"line":11,"column":23,"offset":140}
-  },
-  "path":"opaque.js",
-  "line":11,
-  "endline":11,
-  "start":21,
-  "end":23
-}
+'O1' defined at callable-object.js:3:20
+'O2' defined at callable-object.js:4:20
+'O3' defined at callable-object.js:5:20
+'O4' defined at callable-object.js:6:20
+'Obj5' defined at callable-object.js:35:5
 
-opaque.js:14:18
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Bar = number"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":18,"offset":191},
-    "end":{"line":14,"column":20,"offset":194}
-  },
-  "path":"opaque.js",
-  "line":14,
-  "endline":14,
-  "start":18,
-  "end":20
-}
+callable-object.js:35:6,35:9
 
-opaque.js:16:3
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Bar"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":1,"offset":215},
-    "end":{"line":16,"column":3,"offset":218}
-  },
-  "path":"opaque.js",
-  "line":16,
-  "endline":16,
-  "start":1,
-  "end":3
-}
+opaque.js
+At opaque.js:3:20
+type Foo = number
 
-opaque.js:19:22
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Baz"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":21,"offset":245},
-    "end":{"line":19,"column":23,"offset":248}
-  },
-  "path":"opaque.js",
-  "line":19,
-  "endline":19,
-  "start":21,
-  "end":23
-}
+'Foo' defined at opaque.js:3:19
 
-opaque.js:22:18
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Baz"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":22,"column":18,"offset":291},
-    "end":{"line":22,"column":20,"offset":294}
-  },
-  "path":"opaque.js",
-  "line":22,
-  "endline":22,
-  "start":18,
-  "end":20
-}
+opaque.js:3:20,3:22
 
-opaque.js:24:3
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Baz"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":1,"offset":315},
-    "end":{"line":24,"column":3,"offset":318}
-  },
-  "path":"opaque.js",
-  "line":24,
-  "endline":24,
-  "start":1,
-  "end":3
-}
+At opaque.js:6:19
+type Foo = number
 
-opaque.js:27:14
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Bak<A> = number | A"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":27,"column":13,"offset":337},
-    "end":{"line":27,"column":15,"offset":340}
-  },
-  "path":"opaque.js",
-  "line":27,
-  "endline":27,
-  "start":13,
-  "end":15
-}
+'Foo' defined at opaque.js:3:19
 
-opaque.js:30:19
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Bak<A> = number | A"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":30,"column":18,"offset":391},
-    "end":{"line":30,"column":20,"offset":394}
-  },
-  "path":"opaque.js",
-  "line":30,
-  "endline":30,
-  "start":18,
-  "end":20
-}
+opaque.js:6:18,6:20
 
-opaque.js:32:3
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Bak<string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":32,"column":1,"offset":424},
-    "end":{"line":32,"column":3,"offset":427}
-  },
-  "path":"opaque.js",
-  "line":32,
-  "endline":32,
-  "start":1,
-  "end":3
-}
+At opaque.js:8:3
+Foo
 
-opaque.js:35:22
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":35,"column":21,"offset":454},
-    "end":{"line":35,"column":23,"offset":457}
-  },
-  "path":"opaque.js",
-  "line":35,
-  "endline":35,
-  "start":21,
-  "end":23
-}
+'Foo' defined at opaque.js:3:19
 
-opaque.js:38:19
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":38,"column":18,"offset":502},
-    "end":{"line":38,"column":20,"offset":505}
-  },
-  "path":"opaque.js",
-  "line":38,
-  "endline":38,
-  "start":18,
-  "end":20
-}
+opaque.js:8:1,8:3
 
-opaque.js:40:3
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Bam<string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":40,"column":1,"offset":535},
-    "end":{"line":40,"column":3,"offset":538}
-  },
-  "path":"opaque.js",
-  "line":40,
-  "endline":40,
-  "start":1,
-  "end":3
-}
+At opaque.js:11:22
+type Bar = number
 
-opaque.js:45:22
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type Opaque"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":45,"column":21,"offset":639},
-    "end":{"line":45,"column":26,"offset":645}
-  },
-  "path":"opaque.js",
-  "line":45,
-  "endline":45,
-  "start":21,
-  "end":26
-}
+'Bar' defined at opaque.js:11:20
 
-opaque.js:47:4
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Opaque"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":47,"column":1,"offset":670},
-    "end":{"line":47,"column":6,"offset":676}
-  },
-  "path":"opaque.js",
-  "line":47,
-  "endline":47,
-  "start":1,
-  "end":6
-}
+opaque.js:11:21,11:23
 
-opaque.js:50:34
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type PolyTransparent<A> = Poly$Opaque<A>"},
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":50,"column":30,"offset":713},
-    "end":{"line":50,"column":44,"offset":728}
-  },
-  "path":"opaque.js",
-  "line":50,
-  "endline":50,
-  "start":30,
-  "end":44
-}
+At opaque.js:14:18
+type Bar = number
 
-opaque.js:52:4
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"PolyTransparent<string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":52,"column":1,"offset":773},
-    "end":{"line":52,"column":15,"offset":788}
-  },
-  "path":"opaque.js",
-  "line":52,
-  "endline":52,
-  "start":1,
-  "end":15
-}
+'Bar' defined at opaque.js:11:20
 
-opaque.js:55:27
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type PolyOpaque<A>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":55,"column":25,"offset":820},
-    "end":{"line":55,"column":34,"offset":830}
-  },
-  "path":"opaque.js",
-  "line":55,
-  "endline":55,
-  "start":25,
-  "end":34
-}
+opaque.js:14:18,14:20
 
-opaque.js:57:4
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"PolyOpaque<string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":57,"column":1,"offset":868},
-    "end":{"line":57,"column":10,"offset":878}
-  },
-  "path":"opaque.js",
-  "line":57,
-  "endline":57,
-  "start":1,
-  "end":10
-}
+At opaque.js:16:3
+Bar
 
-opaque.js:61:7
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"Opaque"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":61,"column":7,"offset":932},
-    "end":{"line":61,"column":7,"offset":933}
-  },
-  "path":"opaque.js",
-  "line":61,
-  "endline":61,
-  "start":7,
-  "end":7
-}
+'Bar' defined at opaque.js:11:20
 
-opaque.js:66:7
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"OpaqueKeyWithSupertype1"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":66,"column":7,"offset":1079},
-    "end":{"line":66,"column":7,"offset":1080}
-  },
-  "path":"opaque.js",
-  "line":66,
-  "endline":66,
-  "start":7,
-  "end":7
-}
+opaque.js:16:1,16:3
 
-opaque.js:73:7
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"React$Element<typeof MonoComponent, Props>"},
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":73,"column":7,"offset":1265},
-    "end":{"line":73,"column":17,"offset":1276}
-  },
-  "path":"opaque.js",
-  "line":73,
-  "endline":73,
-  "start":7,
-  "end":17
-}
+At opaque.js:19:22
+type Baz
 
-opaque.js:77:7
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"React$Element<typeof PolyComponent, PolyProps<string>>"},
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":77,"column":7,"offset":1423},
-    "end":{"line":77,"column":17,"offset":1434}
-  },
-  "path":"opaque.js",
-  "line":77,
-  "endline":77,
-  "start":7,
-  "end":17
-}
+'Baz' defined at opaque.js:19:20
 
-optional.js:4:10 = {
-  "types":{"unevaluated":{"type":"void | string"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":10,"offset":46},
-    "end":{"line":4,"column":10,"offset":47}
-  },
-  "path":"optional.js",
-  "line":4,
-  "endline":4,
-  "start":10,
-  "end":10
-}
-optional.js:7:2 = {
-  "types":{"unevaluated":{"type":"(x?: string) => void | string"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":1,"offset":52},
-    "end":{"line":7,"column":3,"offset":55}
-  },
-  "path":"optional.js",
-  "line":7,
-  "endline":7,
-  "start":1,
-  "end":3
-}
-optional.js:10:11 = {
-  "types":{"unevaluated":{"type":"{x?: string, ...}"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":10,"offset":105},
-    "end":{"line":10,"column":12,"offset":108}
-  },
-  "path":"optional.js",
-  "line":10,
-  "endline":10,
-  "start":10,
-  "end":12
-}
-optional.js:10:14 = {
-  "types":{"unevaluated":{"type":"void | string"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":14,"offset":109},
-    "end":{"line":10,"column":14,"offset":110}
-  },
-  "path":"optional.js",
-  "line":10,
-  "endline":10,
-  "start":14,
-  "end":14
-}
-optional.js:14:10 = {
-  "types":{"unevaluated":{"type":"void"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":10,"offset":150},
-    "end":{"line":14,"column":10,"offset":151}
-  },
-  "path":"optional.js",
-  "line":14,
-  "endline":14,
-  "start":10,
-  "end":10
-}
-recursive.js:3:25 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":24,"offset":33},
-    "end":{"line":3,"column":27,"offset":37}
-  },
-  "path":"recursive.js",
-  "line":3,
-  "endline":3,
-  "start":24,
-  "end":27
-}
-recursive.js:6:11 = {
-  "types":{"unevaluated":{"type":"(n: number) => AList"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":10,"offset":104},
-    "end":{"line":7,"column":14,"offset":109}
-  },
-  "path":"recursive.js",
-  "line":7,
-  "endline":7,
-  "start":10,
-  "end":14
-}
-recursive.js:13:12 = {
-  "types":{"unevaluated":{"type":"(n: number) => BList"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":10,"offset":307},
-    "end":{"line":15,"column":14,"offset":312}
-  },
-  "path":"recursive.js",
-  "line":15,
-  "endline":15,
-  "start":10,
-  "end":14
-}
-recursive.js:23:12 = {
-  "types":{"unevaluated":{"type":"(n: number) => CList"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":26,"column":10,"offset":556},
-    "end":{"line":26,"column":14,"offset":561}
-  },
-  "path":"recursive.js",
-  "line":26,
-  "endline":26,
-  "start":10,
-  "end":14
-}
-recursive.js:49:1 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":52,"column":1,"offset":1016},
-    "end":{"line":52,"column":1,"offset":1017}
-  },
-  "path":"recursive.js",
-  "line":52,
-  "endline":52,
-  "start":1,
-  "end":1
-}
-recursive.js:51:6 = {
-  "types":{"unevaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":54,"column":6,"offset":1025},
-    "end":{"line":54,"column":7,"offset":1027}
-  },
-  "path":"recursive.js",
-  "line":54,
-  "endline":54,
-  "start":6,
-  "end":7
-}
-recursive.js:51:31 = {
-  "types":{"unevaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"recursive.js",
-    "type":"SourceFile",
-    "start":{"line":54,"column":30,"offset":1049},
-    "end":{"line":54,"column":31,"offset":1051}
-  },
-  "path":"recursive.js",
-  "line":54,
-  "endline":54,
-  "start":30,
-  "end":31
-}
-subst.js:13:7 = {
-  "types":{"unevaluated":{"type":"{f: number, ...}"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"subst.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":7,"offset":268},
-    "end":{"line":13,"column":8,"offset":270}
-  },
-  "path":"subst.js",
-  "line":13,
-  "endline":13,
-  "start":7,
-  "end":8
-}
-subst.js:14:7 = {
-  "types":{"unevaluated":{"type":"Poly<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"subst.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":7,"offset":292},
-    "end":{"line":14,"column":8,"offset":294}
-  },
-  "path":"subst.js",
-  "line":14,
-  "endline":14,
-  "start":7,
-  "end":8
-}
-subst.js:17:7 = {
-  "types":{"unevaluated":{"type":"Mono"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"subst.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":7,"offset":333},
-    "end":{"line":17,"column":8,"offset":335}
-  },
-  "path":"subst.js",
-  "line":17,
-  "endline":17,
-  "start":7,
-  "end":8
-}
-subst.js:18:7 = {
-  "types":{"unevaluated":{"type":"Mono"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"subst.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":7,"offset":357},
-    "end":{"line":18,"column":8,"offset":359}
-  },
-  "path":"subst.js",
-  "line":18,
-  "endline":18,
-  "start":7,
-  "end":8
-}
-subst.js:21:7 = {
-  "types":{"unevaluated":{"type":"React$Element<any, any>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"subst.js",
-    "type":"SourceFile",
-    "start":{"line":21,"column":7,"offset":397},
-    "end":{"line":21,"column":8,"offset":399}
-  },
-  "path":"subst.js",
-  "line":21,
-  "endline":21,
-  "start":7,
-  "end":8
-}
-subst.js:22:7 = {
-  "types":{"unevaluated":{"type":"React$Element<any, any>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"subst.js",
-    "type":"SourceFile",
-    "start":{"line":22,"column":7,"offset":424},
-    "end":{"line":22,"column":8,"offset":426}
-  },
-  "path":"subst.js",
-  "line":22,
-  "endline":22,
-  "start":7,
-  "end":8
-}
-type-alias.js:3:6 = {
-  "types":{"unevaluated":{"type":"type A = any (implicit)"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":6,"offset":15},
-    "end":{"line":3,"column":6,"offset":16}
-  },
-  "path":"type-alias.js",
-  "line":3,
-  "endline":3,
-  "start":6,
-  "end":6
-}
-type-alias.js:4:6 = {
-  "types":{"unevaluated":{"type":"type B = any | null"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":6,"offset":27},
-    "end":{"line":4,"column":6,"offset":28}
-  },
-  "path":"type-alias.js",
-  "line":4,
-  "endline":4,
-  "start":6,
-  "end":6
-}
-type-alias.js:5:6 = {
-  "types":{"unevaluated":{"type":"type C = A"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":6,"offset":46},
-    "end":{"line":5,"column":6,"offset":47}
-  },
-  "path":"type-alias.js",
-  "line":5,
-  "endline":5,
-  "start":6,
-  "end":6
-}
-type-alias.js:6:6 = {
-  "types":{"unevaluated":{"type":"type D = {x: number, ...}"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":6,"offset":58},
-    "end":{"line":6,"column":6,"offset":59}
-  },
-  "path":"type-alias.js",
-  "line":6,
-  "endline":6,
-  "start":6,
-  "end":6
-}
-type-alias.js:7:6 = {
-  "types":{
-    "unevaluated":{"type":"type E = $Exact<D>"},
-    "evaluated":{"type":"type E = {|x: number|}"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":6,"offset":82},
-    "end":{"line":7,"column":6,"offset":83}
-  },
-  "path":"type-alias.js",
-  "line":7,
-  "endline":7,
-  "start":6,
-  "end":6
-}
-type-alias.js:8:6 = {
-  "types":{"unevaluated":{"type":"type F = ?D"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":6,"offset":102},
-    "end":{"line":8,"column":6,"offset":103}
-  },
-  "path":"type-alias.js",
-  "line":8,
-  "endline":8,
-  "start":6,
-  "end":6
-}
-type-alias.js:12:12 {
-  "types":{"unevaluated":{"type":"P<string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":12,"offset":188},
-    "end":{"line":12,"column":12,"offset":189}
-  },
-  "path":"type-alias.js",
-  "line":12,
-  "endline":12,
-  "start":12,
-  "end":12
-}
-type-alias.js:12:29 {
-  "types":{"unevaluated":{"type":"{t: string, ...}"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":29,"offset":205},
-    "end":{"line":12,"column":29,"offset":206}
-  },
-  "path":"type-alias.js",
-  "line":12,
-  "endline":12,
-  "start":29,
-  "end":29
-}
-type-alias.js:15:8 {
-  "types":{"unevaluated":{"type":"type A = X"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":8,"offset":234},
-    "end":{"line":15,"column":8,"offset":235}
-  },
-  "path":"type-alias.js",
-  "line":15,
-  "endline":15,
-  "start":8,
-  "end":8
-}
-type-alias.js:16:8 {
-  "types":{"unevaluated":{"type":"type B = any | null"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":8,"offset":248},
-    "end":{"line":16,"column":8,"offset":249}
-  },
-  "path":"type-alias.js",
-  "line":16,
-  "endline":16,
-  "start":8,
-  "end":8
-}
-type-alias.js:17:8 {
-  "types":{"unevaluated":{"type":"type C = A"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":8,"offset":269},
-    "end":{"line":17,"column":8,"offset":270}
-  },
-  "path":"type-alias.js",
-  "line":17,
-  "endline":17,
-  "start":8,
-  "end":8
-}
-type-alias.js:18:8 {
-  "types":{"unevaluated":{"type":"type D = {x: X, ...}"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":8,"offset":283},
-    "end":{"line":18,"column":8,"offset":284}
-  },
-  "path":"type-alias.js",
-  "line":18,
-  "endline":18,
-  "start":8,
-  "end":8
-}
-type-alias.js:19:8 {
-  "types":{"unevaluated":{"type":"type E = $Exact<X>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":8,"offset":304},
-    "end":{"line":19,"column":8,"offset":305}
-  },
-  "path":"type-alias.js",
-  "line":19,
-  "endline":19,
-  "start":8,
-  "end":8
-}
-type-alias.js:20:8 {
-  "types":{"unevaluated":{"type":"type F = ?X"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":20,"column":8,"offset":326},
-    "end":{"line":20,"column":8,"offset":327}
-  },
-  "path":"type-alias.js",
-  "line":20,
-  "endline":20,
-  "start":8,
-  "end":8
-}
-type-alias.js:24:6 {
-  "types":{"unevaluated":{"type":"type H = G<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":6,"offset":364},
-    "end":{"line":24,"column":6,"offset":365}
-  },
-  "path":"type-alias.js",
-  "line":24,
-  "endline":24,
-  "start":6,
-  "end":6
-}
-type-alias.js:25:6 {
-  "types":{"unevaluated":{"type":"type I = G<G<number> | string>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":25,"column":6,"offset":384},
-    "end":{"line":25,"column":6,"offset":385}
-  },
-  "path":"type-alias.js",
-  "line":25,
-  "endline":25,
-  "start":6,
-  "end":6
-}
-type-alias.js:27:6 {
-  "types":{"unevaluated":{"type":"type K = J<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":27,"column":6,"offset":459},
-    "end":{"line":27,"column":6,"offset":460}
-  },
-  "path":"type-alias.js",
-  "line":27,
-  "endline":27,
-  "start":6,
-  "end":6
-}
-type-alias.js:29:6 {
-  "types":{"unevaluated":{"type":"type M<Z> = L<number, Z>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":29,"column":6,"offset":536},
-    "end":{"line":29,"column":6,"offset":537}
-  },
-  "path":"type-alias.js",
-  "line":29,
-  "endline":29,
-  "start":6,
-  "end":6
-}
-type-alias.js:31:6 {
-  "types":{"unevaluated":{"type":"type O = N<number>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":31,"column":6,"offset":594},
-    "end":{"line":31,"column":6,"offset":595}
-  },
-  "path":"type-alias.js",
-  "line":31,
-  "endline":31,
-  "start":6,
-  "end":6
-}
-type-alias.js:34:6 {
-  "types":{
-    "unevaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:6-11"},"name":"TKlass"},
-        "typeParams":null,
-        "body":{
-          "kind":"Typeof",
-          "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"}
-        }
-      },
-      "type":"type TKlass = typeof Klass"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":34,"column":6,"offset":630},
-    "end":{"line":34,"column":11,"offset":636}
-  },
-  "path":"type-alias.js",
-  "line":34,
-  "endline":34,
-  "start":6,
-  "end":11
-}
-type-alias.js:37:10 {
-  "types":{
-    "unevaluated":{"type":"type TypeOfWithTArgs = (v: string) => string"},
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":37,"column":6,"offset":697},
-    "end":{"line":37,"column":20,"offset":712}
-  },
-  "path":"type-alias.js",
-  "line":37,
-  "endline":37,
-  "start":6,
-  "end":20
-}
-type-destructor-trigger.js:11:7 = {
-  "types":{"unevaluated":{"type":"KeyMirrorRecursive<{|A: string|}>"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"type-destructor-trigger.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":7,"offset":478},
-    "end":{"line":11,"column":27,"offset":499}
-  },
-  "path":"type-destructor-trigger.js",
-  "line":11,
-  "endline":11,
-  "start":7,
-  "end":27
-}
-tuple.js:3:6
-Flags: --pretty
-{
-  "types":{"unevaluated":{"type":"type T = [1, b: 2, c?: 3]"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":6,"offset":15},
-    "end":{"line":3,"column":6,"offset":16}
-  },
-  "path":"tuple.js",
-  "line":3,
-  "endline":3,
-  "start":6,
-  "end":6
-}
+opaque.js:19:21,19:23
 
-tuple.js:6:6
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type S = [0, ...T, d?: void | 4]"},
-    "evaluated":{"type":"type S = [0, 1, b: 2, c?: 3, d?: 4]"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":6,"offset":50},
-    "end":{"line":6,"column":6,"offset":51}
-  },
-  "path":"tuple.js",
-  "line":6,
-  "endline":6,
-  "start":6,
-  "end":6
-}
+At opaque.js:22:18
+type Baz
 
-tuple.js:10:6
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type R = $ReadOnly<Tup>"},
-    "evaluated":{"type":"type R = $ReadOnly<[a: number, string, boolean]>"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":6,"offset":126},
-    "end":{"line":10,"column":6,"offset":127}
-  },
-  "path":"tuple.js",
-  "line":10,
-  "endline":10,
-  "start":6,
-  "end":6
-}
+'Baz' defined at opaque.js:19:20
 
-tuple.js:13:6
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type P = Partial<Tup>"},
-    "evaluated":{"type":"type P = [a?: number, _1?: string, _2?: boolean]"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":6,"offset":159},
-    "end":{"line":13,"column":6,"offset":160}
-  },
-  "path":"tuple.js",
-  "line":13,
-  "endline":13,
-  "start":6,
-  "end":6
-}
+opaque.js:22:18,22:20
 
-tuple.js:16:6
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type Q = Partial<R>"},
-    "evaluated":{"type":"type Q = $ReadOnly<[a?: number, _1?: string, _2?: boolean]>"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":6,"offset":190},
-    "end":{"line":16,"column":6,"offset":191}
-  },
-  "path":"tuple.js",
-  "line":16,
-  "endline":16,
-  "start":6,
-  "end":6
-}
+At opaque.js:24:3
+Baz
 
-tuple.js:20:6
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type ROM = $ReadOnly<M>"},
-    "evaluated":{"type":"type ROM = $ReadOnly<[1, 2, 3]>"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":20,"column":6,"offset":239},
-    "end":{"line":20,"column":8,"offset":242}
-  },
-  "path":"tuple.js",
-  "line":20,
-  "endline":20,
-  "start":6,
-  "end":8
-}
+'Baz' defined at opaque.js:19:20
 
-tuple.js:23:6
-Flags: --pretty
-{
-  "types":{
-    "unevaluated":{"type":"type Spread = [1, 2, ...[3, 4]]"},
-    "evaluated":{"type":"type Spread = [1, 2, 3, 4]"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"tuple.js",
-    "type":"SourceFile",
-    "start":{"line":23,"column":6,"offset":272},
-    "end":{"line":23,"column":11,"offset":278}
-  },
-  "path":"tuple.js",
-  "line":23,
-  "endline":23,
-  "start":6,
-  "end":11
-}
+opaque.js:24:1,24:3
 
-unions.js:9:3
-Flags:
+At opaque.js:27:14
+type Bak<A> = number | A
+
+'Bak' defined at opaque.js:27:12
+
+opaque.js:27:13,27:15
+
+At opaque.js:30:19
+type Bak<A> = number | A
+
+'Bak' defined at opaque.js:27:12
+
+opaque.js:30:18,30:20
+
+At opaque.js:32:3
+Bak<string>
+
+'Bak' defined at opaque.js:27:12
+
+opaque.js:32:1,32:3
+
+At opaque.js:35:22
+type Bam<A>
+
+'Bam' defined at opaque.js:35:20
+
+opaque.js:35:21,35:23
+
+At opaque.js:38:19
+type Bam<A>
+
+'Bam' defined at opaque.js:35:20
+
+opaque.js:38:18,38:20
+
+At opaque.js:40:3
+Bam<string>
+
+'Bam' defined at opaque.js:35:20
+
+opaque.js:40:1,40:3
+
+At opaque.js:45:22
+type Opaque
+
+'Opaque' defined at opaque-lib.js:6:19
+
+opaque.js:45:21,45:26
+
+At opaque.js:47:4
+Opaque
+
+'Opaque' defined at opaque-lib.js:6:19
+
+opaque.js:47:1,47:6
+
+At opaque.js:50:34
+type PolyTransparent<A> = Poly$Opaque<A>
+
+'Poly$Opaque' defined at opaque-lib.js:3:20
+'PolyTransparent' defined at opaque-lib.js:5:12
+
+opaque.js:50:30,50:44
+
+At opaque.js:52:4
+PolyTransparent<string>
+
+'PolyTransparent' defined at opaque-lib.js:5:12
+
+opaque.js:52:1,52:15
+
+At opaque.js:55:27
+type PolyOpaque<A>
+
+'PolyOpaque' defined at opaque-lib.js:7:19
+
+opaque.js:55:25,55:34
+
+At opaque.js:57:4
+PolyOpaque<string>
+
+'PolyOpaque' defined at opaque-lib.js:7:19
+
+opaque.js:57:1,57:10
+
+At opaque.js:61:7
+Opaque
+
+'Opaque' defined at opaque-lib.js:6:19
+
+opaque.js:61:7,61:7
+
+At opaque.js:66:7
+OpaqueKeyWithSupertype1
+
+'OpaqueKeyWithSupertype1' defined at opaque.js:64:12
+
+opaque.js:66:7,66:7
+
+At opaque.js:73:7
+React$Element<typeof MonoComponent, Props>
+
+'MonoComponent' defined at opaque.js:72:6
+'Props' defined at opaque.js:71:5
+'React$Element' defined at (lib) react.js:150:20
+
+opaque.js:73:7,73:17
+
+At opaque.js:77:7
+React$Element<typeof PolyComponent, PolyProps<string>>
+
+'PolyComponent' defined at opaque.js:76:6
+'PolyProps' defined at opaque.js:75:5
+'React$Element' defined at opaque.js:77:20
+
+opaque.js:77:7,77:17
+
+optional.js
+At optional.js:4:10
+void | string
+optional.js:4:10,4:10
+
+At optional.js:8:3
+(x?: string) => void | string
+optional.js:8:1,8:3
+
+At optional.js:12:11
+{x?: string, ...}
+optional.js:12:10,12:12
+
+At optional.js:14:6
+void | string
+optional.js:14:6,14:6
+
+At optional.js:19:10
+void
+optional.js:19:10,19:10
+
+recursive.js
+At recursive.js:3:25
+any (implicit)
+recursive.js:3:24,3:27
+
+At recursive.js:8:11
+(n: number) => AList
+
+'AList' defined at recursive.js:7:5
+
+recursive.js:8:10,8:14
+
+At recursive.js:17:11
+(n: number) => BList
+
+'BList' defined at recursive.js:16:5
+
+recursive.js:17:10,17:14
+
+At recursive.js:29:13
+(n: number) => CList
+
+'CList' defined at recursive.js:28:5
+
+recursive.js:29:10,29:14
+
+At recursive.js:56:4
+string
+recursive.js:56:4,56:4
+
+At recursive.js:59:6
+type CA<+T> = $ReadOnlyArray<CA<T>>
+
+'CA' defined at recursive.js:59:5
+
+recursive.js:59:6,59:7
+
+At recursive.js:61:19
+type CA<+T> = $ReadOnlyArray<CA<T>>
+
+'CA' defined at recursive.js:59:5
+
+recursive.js:61:18,61:19
+
+subst.js
+At subst.js:13:7
+{f: number, ...}
+subst.js:13:7,13:8
+
+At subst.js:15:7
+Poly<number>
+
+'Poly' defined at subst.js:7:5
+
+subst.js:15:7,15:8
+
+At subst.js:19:7
+Mono
+
+'Mono' defined at subst.js:6:5
+
+subst.js:19:7,19:8
+
+At subst.js:21:7
+Mono
+
+'Mono' defined at subst.js:6:5
+
+subst.js:21:7,21:8
+
+At subst.js:25:7
+React$Element<any, any>
+
+'React$Element' defined at subst.js:25:20
+
+subst.js:25:7,25:8
+
+At subst.js:27:7
+React$Element<any, any>
+
+'React$Element' defined at (lib) react.js:150:20
+
+subst.js:27:7,27:8
+
+type-alias.js
+At type-alias.js:3:6
+type A = any (implicit)
+
+'A' defined at type-alias.js:3:5
+
+type-alias.js:3:6,3:6
+
+At type-alias.js:5:6
+type B = any | null
+
+'B' defined at type-alias.js:5:5
+
+type-alias.js:5:6,5:6
+
+At type-alias.js:7:6
+type C = A
+
+'A' defined at type-alias.js:3:5
+'C' defined at type-alias.js:7:5
+
+type-alias.js:7:6,7:6
+
+At type-alias.js:9:6
+type D = {x: number, ...}
+
+'D' defined at type-alias.js:9:5
+
+type-alias.js:9:6,9:6
+
+At type-alias.js:11:6
+type E = $Exact<D>
+= {|x: number|}
+
+'D' defined at type-alias.js:9:5
+'E' defined at type-alias.js:11:5
+
+type-alias.js:11:6,11:6
+
+At type-alias.js:13:6
+type F = ?D
+
+'D' defined at type-alias.js:9:5
+'F' defined at type-alias.js:13:5
+
+type-alias.js:13:6,13:6
+
+At type-alias.js:18:12
+P<string>
+
+'P' defined at type-alias.js:16:5
+
+type-alias.js:18:12,18:12
+
+At type-alias.js:20:6
+{t: string, ...}
+
+Refined at type-alias.js:18:4
+
+type-alias.js:20:6,20:6
+
+At type-alias.js:25:8
+type A = X
+
+'A' defined at type-alias.js:25:7
+
+type-alias.js:25:8,25:8
+
+At type-alias.js:27:8
+type B = any | null
+
+'B' defined at type-alias.js:27:7
+
+type-alias.js:27:8,27:8
+
+At type-alias.js:29:8
+type C = A
+
+'A' defined at type-alias.js:25:7
+'C' defined at type-alias.js:29:7
+
+type-alias.js:29:8,29:8
+
+At type-alias.js:31:8
+type D = {x: X, ...}
+
+'D' defined at type-alias.js:31:7
+
+type-alias.js:31:8,31:8
+
+At type-alias.js:33:8
+type E = $Exact<X>
+
+'E' defined at type-alias.js:33:7
+
+type-alias.js:33:8,33:8
+
+At type-alias.js:35:8
+type F = ?X
+
+'F' defined at type-alias.js:35:7
+
+type-alias.js:35:8,35:8
+
+At type-alias.js:40:6
+type H = G<number>
+
+'G' defined at type-alias.js:39:5
+'H' defined at type-alias.js:40:5
+
+type-alias.js:40:6,40:6
+
+At type-alias.js:42:6
+type I = G<G<number> | string>
+
+'G' defined at type-alias.js:39:5
+'I' defined at type-alias.js:42:5
+
+type-alias.js:42:6,42:6
+
+At type-alias.js:45:6
+type K = J<number>
+
+'J' defined at type-alias.js:44:5
+'K' defined at type-alias.js:45:5
+
+type-alias.js:45:6,45:6
+
+At type-alias.js:48:6
+type M<Z> = L<number, Z>
+
+'L' defined at type-alias.js:47:5
+'M' defined at type-alias.js:48:5
+
+type-alias.js:48:6,48:6
+
+At type-alias.js:51:6
+type O = N<number>
+
+'N' defined at type-alias.js:50:5
+'O' defined at type-alias.js:51:5
+
+type-alias.js:51:6,51:6
+
+At type-alias.js:55:7
+type TKlass = typeof Klass
+
+'Klass' defined at type-alias.js:54:6
+'TKlass' defined at type-alias.js:55:5
+
+type-alias.js:55:6,55:11
+
+At type-alias.js:59:16
+type TypeOfWithTArgs = (v: string) => string
+
+'TypeOfWithTArgs' defined at type-alias.js:59:5
+
+type-alias.js:59:6,59:20
+
+type-destructor-trigger.js
+At type-destructor-trigger.js:11:9
+KeyMirrorRecursive<{|A: string|}>
+
+'KeyMirrorRecursive' defined at keyMirrorRecursive.js:3:12
+
+type-destructor-trigger.js:11:7,11:27
+
+tuple.js
+At tuple.js:3:6
+type T = [1, b: 2, c?: 3]
+
+'T' defined at tuple.js:3:5
+
+tuple.js:3:6,3:6
+
+At tuple.js:6:6
+type S = [0, ...T, d?: void | 4]
+= [0, 1, b: 2, c?: 3, d?: 4]
+
+'S' defined at tuple.js:6:5
+'T' defined at tuple.js:3:5
+
+tuple.js:6:6,6:6
+
+At tuple.js:10:6
+type R = $ReadOnly<Tup>
+= $ReadOnly<[a: number, string, boolean]>
+
+'R' defined at tuple.js:10:5
+'Tup' defined at tuple.js:9:5
+
+tuple.js:10:6,10:6
+
+At tuple.js:13:6
+type P = Partial<Tup>
+= [a?: number, _1?: string, _2?: boolean]
+
+'P' defined at tuple.js:13:5
+'Tup' defined at tuple.js:9:5
+
+tuple.js:13:6,13:6
+
+At tuple.js:16:6
+type Q = Partial<R>
+= $ReadOnly<[a?: number, _1?: string, _2?: boolean]>
+
+'Q' defined at tuple.js:16:5
+'R' defined at tuple.js:10:5
+
+tuple.js:16:6,16:6
+
+At tuple.js:20:6
+type ROM = $ReadOnly<M>
+= $ReadOnly<[1, 2, 3]>
+
+'M' defined at tuple.js:19:5
+'ROM' defined at tuple.js:20:5
+
+tuple.js:20:6,20:8
+
+At tuple.js:23:6
+type Spread = [1, 2, ...[3, 4]]
+= [1, 2, 3, 4]
+
+'Spread' defined at tuple.js:23:5
+
+tuple.js:23:6,23:11
+
+unions.js
+At unions.js:9:3
 () => number | string
 unions.js:9:1,9:3
 
-unions.js:16:3
-Flags:
+At unions.js:16:3
 (x: string) => void
 unions.js:16:1,16:3
 
-unions.js:28:3
-Flags:
+At unions.js:28:3
 {+f: string, ...} | {+f: number, ...}
 unions.js:28:1,28:3
 
-unions.js:48:4
-Flags:
+At unions.js:48:4
 (() => number) | (() => string)
 unions.js:48:3,48:7
 
-unions.js:50:4
-Flags:
+At unions.js:50:4
 ((x: number) => void) | ((x: string) => void)
 unions.js:50:3,50:7
 
-unions.js:56:3
-Flags:
+At unions.js:56:3
 mixed
 unions.js:56:1,56:3
 
-unions.js:60:4
-Flags:
+At unions.js:60:4
 {g: mixed, ...}
 unions.js:60:1,60:5
 
-unions.js:66:5
-Flags:
+At unions.js:66:5
 {|f: number|}
 unions.js:66:5,66:5
 
-unions.js:69:13
-Flags:
+At unions.js:69:13
 void | null
 unions.js:69:13,69:23
 
-unions.js:78:4
-Flags:
+At unions.js:78:4
 K | L
 
 'K' defined at unions.js:73:20
@@ -1952,8 +956,7 @@ K | L
 
 unions.js:78:3,78:4
 
-unions.js:80:4
-Flags:
+At unions.js:80:4
 ?P<TValue> | L
 
 'L' defined at unions.js:74:20
@@ -1961,8 +964,7 @@ Flags:
 
 unions.js:80:3,80:4
 
-unions.js:82:4
-Flags:
+At unions.js:82:4
 Poly<K | L>
 
 'K' defined at unions.js:73:20
@@ -1971,8 +973,7 @@ Poly<K | L>
 
 unions.js:82:3,82:4
 
-unions.js:84:4
-Flags:
+At unions.js:84:4
 Poly<(K, L) => void>
 
 'K' defined at unions.js:73:20
@@ -1981,8 +982,7 @@ Poly<(K, L) => void>
 
 unions.js:84:3,84:4
 
-unions.js:86:4
-Flags:
+At unions.js:86:4
 Poly<?K | L>
 
 'K' defined at unions.js:73:20
@@ -1991,8 +991,7 @@ Poly<?K | L>
 
 unions.js:86:3,86:4
 
-unions.js:95:4
-Flags:
+At unions.js:95:4
 LongLongLongLongLongLongLongLongName
 | AnotherLongLongLongLongLongLongLongLongName
 
@@ -2001,8 +1000,7 @@ LongLongLongLongLongLongLongLongName
 
 unions.js:95:3,95:4
 
-unions.js:97:4
-Flags:
+At unions.js:97:4
 ?LongLongLongLongLongLongLongLongNameP<TValue>
 | AnotherLongLongLongLongLongLongLongLongName
 
@@ -2011,8 +1009,7 @@ Flags:
 
 unions.js:97:3,97:4
 
-unions.js:99:4
-Flags:
+At unions.js:99:4
 Poly<
   LongLongLongLongLongLongLongLongName
   | AnotherLongLongLongLongLongLongLongLongName,
@@ -2024,8 +1021,7 @@ Poly<
 
 unions.js:99:3,99:4
 
-unions.js:101:4
-Flags:
+At unions.js:101:4
 Poly<
   (LongLongLongLongLongLongLongLongName, LongLongLongLongLongLongLongLongName) => void,
 >
@@ -2035,8 +1031,7 @@ Poly<
 
 unions.js:101:3,101:4
 
-unions.js:103:4
-Flags:
+At unions.js:103:4
 Poly<
   ?LongLongLongLongLongLongLongLongName
   | AnotherLongLongLongLongLongLongLongLongName,
@@ -2048,8 +1043,7 @@ Poly<
 
 unions.js:103:3,103:4
 
-unions.js:112:6
-Flags:
+At unions.js:112:6
 type LongUnion = LongLongLongLongLongLongLongLongName1
 | LongLongLongLongLongLongLongLongName2
 | LongLongLongLongLongLongLongLongName3
@@ -2063,8 +1057,7 @@ type LongUnion = LongLongLongLongLongLongLongLongName1
 
 unions.js:112:6,112:14
 
-unions.js:115:6
-Flags:
+At unions.js:115:6
 type LongUnionPoly = Poly<
   LongLongLongLongLongLongLongLongName1
   | LongLongLongLongLongLongLongLongName2
@@ -2081,85 +1074,99 @@ type LongUnionPoly = Poly<
 
 unions.js:115:6,115:18
 
-tparam_defaults.js:11:8:
+tparam_defaults.js
+At tparam_defaults.js:11:9
 One<string>
 
 'One' defined at tparam_defaults.js:5:5
 
 tparam_defaults.js:11:7,11:10
-tparam_defaults.js:12:8:
+
+At tparam_defaults.js:13:9
 One<>
 
 'One' defined at tparam_defaults.js:5:5
 
-tparam_defaults.js:12:7,12:10
-tparam_defaults.js:14:8:
+tparam_defaults.js:13:7,13:10
+
+At tparam_defaults.js:16:9
 Two<string>
 
 'Two' defined at tparam_defaults.js:7:5
 
-tparam_defaults.js:14:7,14:10
-tparam_defaults.js:15:8:
+tparam_defaults.js:16:7,16:10
+
+At tparam_defaults.js:18:9
 Two<>
 
 'Two' defined at tparam_defaults.js:7:5
 
-tparam_defaults.js:15:7,15:10
-tparam_defaults.js:16:8:
+tparam_defaults.js:18:7,18:10
+
+At tparam_defaults.js:20:9
 Two<Bar, string>
 
 'Bar' defined at tparam_defaults.js:3:6
 'Two' defined at tparam_defaults.js:7:5
 
-tparam_defaults.js:16:7,16:10
-tparam_defaults.js:18:8:
+tparam_defaults.js:20:7,20:10
+
+At tparam_defaults.js:23:9
 Three<>
 
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:18:7,18:12
-tparam_defaults.js:19:8:
+tparam_defaults.js:23:7,23:12
+
+At tparam_defaults.js:25:9
 Three<Bar, string>
 
 'Bar' defined at tparam_defaults.js:3:6
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:19:7,19:12
-tparam_defaults.js:20:8:
+tparam_defaults.js:25:7,25:12
+
+At tparam_defaults.js:27:9
 Three<string>
 
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:20:7,20:12
-tparam_defaults.js:21:8:
+tparam_defaults.js:27:7,27:12
+
+At tparam_defaults.js:29:9
 Three<Bar, number, string>
 
 'Bar' defined at tparam_defaults.js:3:6
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:21:7,21:12
-tparam_defaults.js:22:8:
+tparam_defaults.js:29:7,29:12
+
+At tparam_defaults.js:31:9
 Three<>
 
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:22:7,22:12
-tparam_defaults.js:24:8:
+tparam_defaults.js:31:7,31:12
+
+At tparam_defaults.js:34:9
 Three<Bar, number, Bar, Bar>
 
 'Bar' defined at tparam_defaults.js:3:6
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:24:7,24:12
-tparam_defaults.js:25:8:
+tparam_defaults.js:34:7,34:12
+
+At tparam_defaults.js:36:9
 Three<>
 
 'Three' defined at tparam_defaults.js:9:5
 
-tparam_defaults.js:25:7,25:12
-tparam_defaults.js:29:5:
+tparam_defaults.js:36:7,36:12
+
+At tparam_defaults.js:41:5
 C<C<any>>
 
-'C' defined at tparam_defaults.js:28:6
+'C' defined at tparam_defaults.js:40:6
 
-tparam_defaults.js:29:5,29:5
+tparam_defaults.js:41:5,41:5
+
