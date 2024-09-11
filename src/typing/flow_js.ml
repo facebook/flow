@@ -3923,11 +3923,6 @@ struct
         (*****************)
         | (_, DestructuringT (reason, kind, selector, tout, id)) ->
           destruct cx ~trace reason kind l selector tout id
-        (**************)
-        (* object kit *)
-        (**************)
-        | (_, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         (**************************************************)
         (* function types can be mapped over a structure  *)
         (**************************************************)
@@ -3995,6 +3990,98 @@ struct
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
         | (DefT (_, ObjT o), MapTypeT (_, reason_op, ObjectKeyMirror, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx o reason_op, tout)
+        (**************)
+        (* object kit *)
+        (**************)
+        | ( DefT (_, ArrT arrtype),
+            Object.(
+              ObjKitT
+                ( use_op,
+                  reason_op,
+                  Resolve Next,
+                  Object.ObjectMap
+                    {
+                      prop_type = property_type;
+                      mapped_type_flags =
+                        { variance = mapped_type_variance; optional = mapped_type_optionality };
+                      selected_keys_opt = None;
+                    },
+                  OpenT tout
+                ))
+          ) ->
+          let f value_t ~index ~optional =
+            let key_t =
+              let r = reason_of_t value_t in
+              match index with
+              | None -> NumT.why r
+              | Some i -> DefT (r, SingletonNumT (float_of_int i, string_of_int i))
+            in
+            Slice_utils.mk_mapped_prop_type
+              ~use_op
+              ~mapped_type_optionality
+              ~poly_prop:property_type
+              key_t
+              optional
+          in
+          let () =
+            match mapped_type_variance with
+            | Polarity.Neutral -> ()
+            | _ ->
+              add_output
+                cx
+                Error_message.(
+                  EInvalidMappedType { loc = loc_of_reason reason_op; kind = VarianceOnArrayInput }
+                )
+          in
+          let arrtype =
+            match arrtype with
+            | ArrayAT { elem_t; tuple_view; react_dro } ->
+              ArrayAT
+                {
+                  elem_t = f ~optional:false ~index:None elem_t;
+                  react_dro;
+                  tuple_view =
+                    Base.Option.map
+                      ~f:(fun (TupleView { elements; arity; inexact }) ->
+                        let elements =
+                          Base.List.mapi
+                            ~f:(fun i (TupleElement { name; t; polarity; optional; reason }) ->
+                              TupleElement
+                                {
+                                  name;
+                                  t = f ~optional ~index:(Some i) t;
+                                  polarity;
+                                  optional;
+                                  reason;
+                                })
+                            elements
+                        in
+                        TupleView { elements; arity; inexact })
+                      tuple_view;
+                }
+            | TupleAT { elem_t; elements; arity; inexact; react_dro } ->
+              TupleAT
+                {
+                  elem_t = f ~optional:false ~index:None elem_t;
+                  react_dro;
+                  elements =
+                    Base.List.mapi
+                      ~f:(fun i (TupleElement { name; t; polarity; optional; reason }) ->
+                        TupleElement
+                          { name; t = f ~optional ~index:(Some i) t; polarity; optional; reason })
+                      elements;
+                  arity;
+                  inexact;
+                }
+            | ROArrayAT (elemt, dro) -> ROArrayAT (f ~optional:false ~index:None elemt, dro)
+          in
+          let t =
+            let reason = replace_desc_reason RArrayType reason_op in
+            DefT (reason, ArrT arrtype)
+          in
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
+        | (_, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         (************************************************************************)
         (* functions may be bound by passing a receiver and (partial) arguments *)
         (************************************************************************)

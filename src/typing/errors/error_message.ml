@@ -738,6 +738,7 @@ and invalid_mapped_type_error_kind =
   | ExtraProperties
   | ExplicitExactOrInexact
   | RemoveOptionality
+  | VarianceOnArrayInput
 
 and 'l hook_rule =
   | ConditionalHook
@@ -2874,6 +2875,7 @@ let friendly_message_of_msg = function
       | ExtraProperties -> MessageInvalidMappedTypeWithExtraProps
       | ExplicitExactOrInexact -> MessageInvalidMappedTypeWithExactOrInexact
       | RemoveOptionality -> MessageInvalidMappedTypeWithOptionalityRemoval
+      | VarianceOnArrayInput -> MessageInvalidMappedTypeWithVarianceOnArrayInput
     in
     Normal msg
   | EDuplicateComponentProp { spread; duplicates } ->

@@ -2970,6 +2970,8 @@ let to_printable_error :
       [text "Mapped Types cannot be used when other properties or indexers are present."]
     | MessageInvalidMappedTypeWithOptionalityRemoval ->
       [text "Mapped Types do not yet support optionality removal."]
+    | MessageInvalidMappedTypeWithVarianceOnArrayInput ->
+      [text "Mapped Types do not yet support variance annotations on array inputs."]
     | MessageInvalidInferType ->
       [
         text "Invalid infer type declaration. ";

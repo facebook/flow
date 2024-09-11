@@ -1894,6 +1894,7 @@ let dump_error_message =
           | ExtraProperties -> "ExtraProperties"
           | ExplicitExactOrInexact -> "ExplicitExactOrInexact"
           | RemoveOptionality -> "RemoveOptionality"
+          | VarianceOnArrayInput -> "VarianceOnArrayInput"
         )
     | EDuplicateComponentProp { spread; _ } ->
       spf "EDuplicateComponentProp (%s)" (string_of_aloc spread)

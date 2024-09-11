@@ -684,6 +684,7 @@ type 'loc message =
   | MessageInvalidMappedTypeWithExactOrInexact
   | MessageInvalidMappedTypeWithExtraProps
   | MessageInvalidMappedTypeWithOptionalityRemoval
+  | MessageInvalidMappedTypeWithVarianceOnArrayInput
   | MessageInvalidReactCreateElement of 'loc virtual_reason
   | MessageInvalidRefPropertyType of string
   | MessageInvalidRefPropertyInSpread of {

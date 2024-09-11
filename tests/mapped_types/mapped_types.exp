@@ -2166,215 +2166,363 @@ References:
                                  ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:26:4
+Error ----------------------------------------------------------------------------------------------------- test.js:31:4
+
+Cannot cast `a` to empty because array type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:31:4
+   31|   (a: empty); // ERROR
+          ^
+
+References:
+   test.js:25:20
+   25|   declare const a: Mapped<Arr>;
+                          ^^^^^^^^^^^ [1]
+   test.js:31:7
+   31|   (a: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:4
+
+Cannot cast `b` to empty because array type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:32:4
+   32|   (b: empty); // ERROR
+          ^
+
+References:
+   test.js:26:20
+   26|   declare const b: Mapped<ROArr>;
+                          ^^^^^^^^^^^^^ [1]
+   test.js:32:7
+   32|   (b: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:4
+
+Cannot cast `c` to empty because array type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:33:4
+   33|   (c: empty); // ERROR
+          ^
+
+References:
+   test.js:27:20
+   27|   declare const c: Mapped<Tuple>;
+                          ^^^^^^^^^^^^^ [1]
+   test.js:33:7
+   33|   (c: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:4
 
 Cannot cast `badKey` to `Mapped` because property `bar` is missing in `Mapped` [1] but exists in object type [2].
 [prop-missing]
 
-   test.js:26:4
-   26|   (badKey: Mapped<O>); // ERROR
+   test.js:42:4
+   42|   (badKey: Mapped<O>); // ERROR
           ^^^^^^
 
 References:
-   test.js:26:12
-   26|   (badKey: Mapped<O>); // ERROR
+   test.js:42:12
+   42|   (badKey: Mapped<O>); // ERROR
                   ^^^^^^^^^ [1]
-   test.js:25:25
-   25|   declare const badKey: {bar: {contents: number}};
+   test.js:41:25
+   41|   declare const badKey: {bar: {contents: number}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:26:4
+Error ----------------------------------------------------------------------------------------------------- test.js:42:4
 
 Cannot cast `badKey` to `Mapped` because property `foo` is missing in object type [1] but exists in `Mapped` [2].
 [prop-missing]
 
-   test.js:26:4
-   26|   (badKey: Mapped<O>); // ERROR
+   test.js:42:4
+   42|   (badKey: Mapped<O>); // ERROR
           ^^^^^^
 
 References:
-   test.js:25:25
-   25|   declare const badKey: {bar: {contents: number}};
+   test.js:41:25
+   41|   declare const badKey: {bar: {contents: number}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:26:12
-   26|   (badKey: Mapped<O>); // ERROR
+   test.js:42:12
+   42|   (badKey: Mapped<O>); // ERROR
                   ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:29:4
+Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
 Cannot cast `badVal` to `Mapped` because string [1] is incompatible with number [2] in property `foo.contents`.
 [incompatible-cast]
 
-   test.js:29:4
-   29|   (badVal: Mapped<O>); // ERROR
+   test.js:45:4
+   45|   (badVal: Mapped<O>); // ERROR
           ^^^^^^
 
 References:
-   test.js:28:42
-   28|   declare const badVal: {foo: {contents: string}};
+   test.js:44:42
+   44|   declare const badVal: {foo: {contents: string}};
                                                 ^^^^^^ [1]
    test.js:1:18
     1| type O = {| foo: number |}
                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:5
+Error ----------------------------------------------------------------------------------------------------- test.js:59:4
+
+Cannot cast `badA` to `Mapped` because string [1] is incompatible with number [2] in property `contents` of array
+element. [incompatible-cast]
+
+   test.js:59:4
+   59|   (badA: Mapped<Arr>); // ERROR
+          ^^^^
+
+References:
+   test.js:53:40
+   53|   declare const badA: Array<{contents: string}>;
+                                              ^^^^^^ [1]
+   test.js:2:18
+    2| type Arr = Array<number>;
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:60:4
+
+Cannot cast `badB` to `Mapped` because string [1] is incompatible with number [2] in property `contents` of array
+element. [incompatible-cast]
+
+   test.js:60:4
+   60|   (badB: Mapped<ROArr>); // ERROR
+          ^^^^
+
+References:
+   test.js:54:49
+   54|   declare const badB: $ReadOnlyArray<{contents: string}>;
+                                                       ^^^^^^ [1]
+   test.js:3:29
+    3| type ROArr = $ReadOnlyArray<number>;
+                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:61:4
+
+Cannot cast `badC` to `Mapped` because undefined [1] is incompatible with string [2] in property `contents` of index 1.
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+
+   test.js:61:4
+   61|   (badC: Mapped<Tuple>); // ERROR
+          ^^^^
+
+References:
+   test.js:4:31
+    4| type Tuple = [a: number, +b?: string];
+                                     ^^^^^^ [1]
+   test.js:55:62
+   55|   declare const badC: [a: {contents: number}, +b: {contents: string}];
+                                                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:5
 
 Mapped Types are not supported in interfaces or declared classes. [invalid-mapped-type]
 
-   35|     [x in keyof O]: number; // ERROR
+   67|     [x in keyof O]: number; // ERROR
            ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:38:5
+Error ----------------------------------------------------------------------------------------------------- test.js:70:5
 
 Mapped Types are not supported in interfaces or declared classes. [invalid-mapped-type]
 
-   38|     [x in keyof O]: number; // ERROR
+   70|     [x in keyof O]: number; // ERROR
            ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:47:4
+Error ----------------------------------------------------------------------------------------------------- test.js:79:4
 
 Cannot cast `mappedIndexer.foo` to number because `Box` [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:47:4
-   47|   (mappedIndexer.foo: number); // ERROR
+   test.js:79:4
+   79|   (mappedIndexer.foo: number); // ERROR
           ^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:11:21
-   11|   [key in keyof O]: Box<O[key]>,
+   test.js:14:21
+   14|   [key in keyof O]: Box<O[key]>,
                            ^^^^^^^^^^^ [1]
-   test.js:47:23
-   47|   (mappedIndexer.foo: number); // ERROR
+   test.js:79:23
+   79|   (mappedIndexer.foo: number); // ERROR
                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:48:4
+Error ----------------------------------------------------------------------------------------------------- test.js:80:4
 
 Cannot cast `mappedIndexer.bar` to string because `Box` [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:48:4
-   48|   (mappedIndexer.bar: string); // ERROR
+   test.js:80:4
+   80|   (mappedIndexer.bar: string); // ERROR
           ^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:11:21
-   11|   [key in keyof O]: Box<O[key]>,
+   test.js:14:21
+   14|   [key in keyof O]: Box<O[key]>,
                            ^^^^^^^^^^^ [1]
-   test.js:48:23
-   48|   (mappedIndexer.bar: string); // ERROR
+   test.js:80:23
+   80|   (mappedIndexer.bar: string); // ERROR
                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:60:12
+Error ---------------------------------------------------------------------------------------------------- test.js:92:12
 
 Cannot assign `3` to `readonly.foo` because property `foo` is not writable. [cannot-write]
 
-   60|   readonly.foo = 3; // ERROR
+   92|   readonly.foo = 3; // ERROR
                   ^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:64:14
+Error ---------------------------------------------------------------------------------------------------- test.js:96:14
 
 Cannot get `writeonly.foo` because property `foo` is not readable. [cannot-read]
 
-   64|   (writeonly.foo: number); // ERROR
+   96|   (writeonly.foo: number); // ERROR
                     ^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:70:19
+Error --------------------------------------------------------------------------------------------------- test.js:102:19
 
 Cannot assign `'str'` to `readonlyIndexer.qux` because property `qux` is not writable. [cannot-write]
 
-   70|   readonlyIndexer.qux = 'str'; // ERROR
-                         ^^^
+   102|   readonlyIndexer.qux = 'str'; // ERROR
+                          ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:77:4
+Error --------------------------------------------------------------------------------------------------- test.js:104:23
+
+Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
+
+   104|   type _Unsupported = {+[key in keyof Arr]: Arr[key]}; // error: unsupported variance
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:111:4
 
 Cannot cast `partial.foo` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:77:4
-   77|   (partial.foo: number); // ERROR
-          ^^^^^^^^^^^
+   test.js:111:4
+   111|   (partial.foo: number); // ERROR
+           ^^^^^^^^^^^
 
 References:
-   test.js:75:48
-   75|   type Partial<T: {...}> = {[key in keyof T]?: T[key]};
-                                                      ^^^^^^ [1]
-   test.js:77:17
-   77|   (partial.foo: number); // ERROR
-                       ^^^^^^ [2]
+   test.js:109:72
+   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                               ^^^^^^ [1]
+   test.js:111:17
+   111|   (partial.foo: number); // ERROR
+                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:81:4
+Error ---------------------------------------------------------------------------------------------------- test.js:115:4
 
 Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:81:4
-   81|   (partialIndexer.qux: string); // ERROR
-          ^^^^^^^^^^^^^^^^^^
+   test.js:115:4
+   115|   (partialIndexer.qux: string); // ERROR
+           ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:75:48
-   75|   type Partial<T: {...}> = {[key in keyof T]?: T[key]};
-                                                      ^^^^^^ [1]
-   test.js:81:24
-   81|   (partialIndexer.qux: string); // ERROR
-                              ^^^^^^ [2]
+   test.js:109:72
+   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                               ^^^^^^ [1]
+   test.js:115:24
+   115|   (partialIndexer.qux: string); // ERROR
+                               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:92:28
+Error ---------------------------------------------------------------------------------------------------- test.js:119:4
+
+Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:119:4
+   119|   (partialArr[0]: number); // ERROR;
+           ^^^^^^^^^^^^^
+
+References:
+   test.js:109:72
+   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                               ^^^^^^ [1]
+   test.js:119:19
+   119|   (partialArr[0]: number); // ERROR;
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:121:4
+
+Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:121:4
+   121|   (partialTuple[0]: number); // ERROR;
+           ^^^^^^^^^^^^^^^
+
+References:
+   test.js:109:72
+   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                               ^^^^^^ [1]
+   test.js:121:21
+   121|   (partialTuple[0]: number); // ERROR;
+                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:131:28
 
 Cannot instantiate `MappedConstrained` because number [1] is incompatible with string [2] in type argument `T`.
 [incompatible-type-arg]
 
-   test.js:92:28
-   92|   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
-                                  ^^^^^^^^^^^^^^^^^^^^
+   test.js:131:28
+   131|   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
+                                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:1:18
-    1| type O = {| foo: number |}
-                        ^^^^^^ [1]
-   test.js:87:26
-   87|   type ConstrainedBox<T: string> = Box<T>;
-                                ^^^^^^ [2]
+     1| type O = {| foo: number |}
+                         ^^^^^^ [1]
+   test.js:126:26
+   126|   type ConstrainedBox<T: string> = Box<T>;
+                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:99:35
+Error --------------------------------------------------------------------------------------------------- test.js:138:35
 
 Cannot instantiate `UnconstrainedKey` because boolean [1] is incompatible with `string | number | symbol`, so it cannot
 be used to generate keys for `UnconstrainedKey` [2]. [incompatible-type]
 
-   test.js:99:35
-   99|   type BadKeys = UnconstrainedKey<boolean>; // ERROR HERE, NOT LINE ABOVE
-                                         ^^^^^^^ [1]
+   test.js:138:35
+   138|   type BadKeys = UnconstrainedKey<boolean>; // ERROR HERE, NOT LINE ABOVE
+                                          ^^^^^^^ [1]
 
 References:
-   test.js:98:30
-   98|   type UnconstrainedKey<T> = {[key in T]: number};
-                                    ^^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:137:30
+   137|   type UnconstrainedKey<T> = {[key in T]: number};
+                                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:101:4
+Error ---------------------------------------------------------------------------------------------------- test.js:140:4
 
 Cannot cast `badKeys` to empty because `UnconstrainedKey` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:101:4
-   101|   (badKeys: empty); // ERROR
+   test.js:140:4
+   140|   (badKeys: empty); // ERROR
            ^^^^^^^
 
 References:
-   test.js:100:26
-   100|   declare const badKeys: BadKeys;
+   test.js:139:26
+   139|   declare const badKeys: BadKeys;
                                  ^^^^^^^ [1]
-   test.js:101:13
-   101|   (badKeys: empty); // ERROR
+   test.js:140:13
+   140|   (badKeys: empty); // ERROR
                     ^^^^^ [2]
 
 
@@ -2420,7 +2568,7 @@ References:
 
 
 
-Found 157 errors
+Found 166 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
