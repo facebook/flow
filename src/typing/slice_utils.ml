@@ -1770,6 +1770,29 @@ let super
   | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
   | _ -> next cx use_op tool reason (Nel.one acc)
 
+let mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop key_t prop_optional =
+  (* We persist the original use_op here so that errors involving the typeapp are positioned
+     * at the use site and not the typeapp site *)
+  let t =
+    typeapp_with_use_op
+      ~from_value:false
+      ~use_desc:false
+      (reason_of_t poly_prop)
+      use_op
+      poly_prop
+      [key_t]
+  in
+  match mapped_type_optionality with
+  | MakeOptional -> optional t
+  | RemoveOptional ->
+    (* TODO(jmbrown): This is not supported yet and we error at the declaration site *)
+    t
+  | KeepOptionality ->
+    if prop_optional then
+      optional t
+    else
+      t
+
 let map_object
     poly_prop
     { variance; optional = mapped_type_optionality }
@@ -1778,29 +1801,7 @@ let map_object
     use_op
     selected_keys_and_indexers
     { Object.reason = _; props; flags; generics; interface; reachable_targs } =
-  let mk_prop_type key_t prop_optional =
-    (* We persist the original use_op here so that errors involving the typeapp are positioned
-     * at the use site and not the typeapp site *)
-    let t =
-      typeapp_with_use_op
-        ~from_value:false
-        ~use_desc:false
-        (reason_of_t poly_prop)
-        use_op
-        poly_prop
-        [key_t]
-    in
-    match mapped_type_optionality with
-    | MakeOptional -> optional t
-    | RemoveOptional ->
-      (* TODO(jmbrown): This is not supported yet and we error at the declaration site *)
-      t
-    | KeepOptionality ->
-      if prop_optional then
-        optional t
-      else
-        t
-  in
+  let mk_prop_type = mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop in
   let mk_variance variance prop_polarity =
     match variance with
     | Polarity.Neutral -> prop_polarity
