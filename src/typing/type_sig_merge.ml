@@ -898,13 +898,15 @@ and merge_annot env file = function
         reason
     in
     let instance =
-      Base.Option.value_map
-        ~f:(merge env file)
-        ~default:
-          (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
-           Type.MixedT.make reason
-          )
-        instance
+      Type.ComponentInstanceAvailable
+        (Base.Option.value_map
+           ~f:(merge env file)
+           ~default:
+             (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
+              Type.MixedT.make reason
+             )
+           instance
+        )
     in
     let renders =
       Base.Option.value_map
@@ -1880,15 +1882,16 @@ and merge_component
     in
     let instance =
       match instance with
-      | None -> Type.MixedT.make instance_reason
+      | None -> Type.ComponentInstanceOmitted instance_reason
       | Some instance ->
-        Type.(
-          EvalT
-            ( instance,
-              TypeDestructorT (unknown_use, instance_reason, ReactCheckComponentRef),
-              Eval.generate_id ()
-            )
-        )
+        Type.ComponentInstanceAvailable
+          Type.(
+            EvalT
+              ( instance,
+                TypeDestructorT (unknown_use, instance_reason, ReactCheckComponentRef),
+                Eval.generate_id ()
+              )
+          )
     in
     let param =
       let rest_t =

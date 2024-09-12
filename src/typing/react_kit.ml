@@ -637,8 +637,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (r, ObjT { call_t = Some _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Abstract components. *)
-      | DefT (_, ReactAbstractComponentT { instance; _ }) ->
+      | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailable instance; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
+      | DefT (r, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
+        rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Intrinsic components. *)
       | DefT (_, StrT lit) ->
         get_intrinsic `Instance lit (OrdinaryField { type_ = tout; polarity = Polarity.Positive })

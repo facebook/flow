@@ -1265,12 +1265,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 reason
             in
             let instance =
-              Base.Option.value
-                (List.nth_opt ts 1)
-                ~default:
-                  (let reason = mk_default_type_argument_reason_at_position RMixed 2 in
-                   MixedT.make reason
-                  )
+              ComponentInstanceAvailable
+                (Base.Option.value
+                   (List.nth_opt ts 1)
+                   ~default:
+                     (let reason = mk_default_type_argument_reason_at_position RMixed 2 in
+                      MixedT.make reason
+                     )
+                )
             in
             let renders =
               Base.Option.value

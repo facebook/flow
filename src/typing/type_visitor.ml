@@ -132,7 +132,11 @@ class ['a] t =
         acc
       | ReactAbstractComponentT { config; instance; renders; component_kind = _ } ->
         let acc = self#type_ cx (P.inv pole) acc config in
-        let acc = self#type_ cx pole acc instance in
+        let acc =
+          match instance with
+          | ComponentInstanceOmitted _ -> acc
+          | ComponentInstanceAvailable t -> self#type_ cx pole acc t
+        in
         let acc = self#type_ cx pole acc renders in
         acc
       | RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super }) ->

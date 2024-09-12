@@ -781,7 +781,11 @@ module Make (I : INPUT) : S = struct
         return (Ty.TypeOf (Ty.TSymbol symbol, inferred_targs))
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
-        let%bind instance = type__ ~env instance in
+        let%bind instance =
+          match instance with
+          | ComponentInstanceOmitted _ -> return Ty.Void
+          | ComponentInstanceAvailable t -> type__ ~env t
+        in
         let%bind renders = type__ ~env renders in
         return
           (generic_talias
