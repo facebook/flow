@@ -3,16 +3,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    all.js:11:4
-   11|   (a: number);  // Error: string ~> number
-          ^
+     11|   (a: number);  // Error: string ~> number
+            ^
 
 References:
-   all.js:1:27
-    1| declare var pstr: Promise<string>;
-                                 ^^^^^^ [1]
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
    all.js:11:7
-   11|   (a: number);  // Error: string ~> number
-             ^^^^^^ [2]
+     11|   (a: number);  // Error: string ~> number
+               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:12:4
@@ -20,16 +20,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `b` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
    all.js:12:4
-   12|   (b: boolean); // Error: number ~> boolean
-          ^
+     12|   (b: boolean); // Error: number ~> boolean
+            ^
 
 References:
-   all.js:2:27
-    2| declare var pnum: Promise<number>;
-                                 ^^^^^^ [1]
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
    all.js:12:7
-   12|   (b: boolean); // Error: number ~> boolean
-             ^^^^^^^ [2]
+     12|   (b: boolean); // Error: number ~> boolean
+               ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:13:4
@@ -37,50 +37,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `c` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
    all.js:13:4
-   13|   (c: string);  // Error: boolean ~> string
-          ^
+     13|   (c: string);  // Error: boolean ~> string
+            ^
 
 References:
-   all.js:7:3
-    7|   true, // non-Promise values passed through
-         ^^^^ [1]
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
    all.js:13:7
-   13|   (c: string);  // Error: boolean ~> string
-             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ all.js:17:6
-
-Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
-
-   all.js:17:6
-   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-            ^
-
-References:
-   all.js:1:27
-    1| declare var pstr: Promise<string>;
-                                 ^^^^^^ [1]
-   all.js:17:9
-   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-               ^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ all.js:17:6
-
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
-
-   all.js:17:6
-   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-            ^
-
-References:
-   all.js:2:27
-    2| declare var pnum: Promise<number>;
-                                 ^^^^^^ [1]
-   all.js:17:9
-   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-               ^^^^ [2]
+     13|   (c: string);  // Error: boolean ~> string
+               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:17:6
@@ -88,16 +54,50 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-cast]
 
    all.js:17:6
-   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-            ^
+     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+              ^
 
 References:
-   all.js:7:3
-    7|   true, // non-Promise values passed through
-         ^^^^ [1]
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
    all.js:17:9
-   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-               ^^^^ [2]
+     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+                 ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ all.js:17:6
+
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   all.js:17:6
+     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+              ^
+
+References:
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
+   all.js:17:9
+     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+                 ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ all.js:17:6
+
+Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   all.js:17:6
+     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+              ^
+
+References:
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
+   all.js:17:9
+     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+                 ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:22:9
@@ -110,8 +110,12 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
 
 References:
    <BUILTINS>/core.js:2034:5
-   2034|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => T>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+             v----------------------------------------------------
+   2034|     static all<T: Iterable<mixed>>(promises: T): Promise<
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   2036|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
+   2037|     >;
+             ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- all.js:25:27
@@ -138,9 +142,13 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2041:5
-   2041|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:2044:5
+             v-----------------------------------------------------------
+   2044|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<
+   2045|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   2046|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
+   2047|     >;
+             ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:5:34
@@ -168,8 +176,8 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2063:12
-   2063|   +status: 'rejected',
+   <BUILTINS>/core.js:2069:12
+   2069|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
    allSettled.js:34:22
      34|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -181,13 +189,13 @@ Error --------------------------------------------------------------------------
 Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [prop-missing]
 
    allSettled.js:40:30
-   40|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
-                                    ^^^
+     40|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
+                                      ^^^
 
 References:
-   allSettled.js:24:31
-   24|   const bar = Promise.resolve(new Bar());
-                                     ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:2045:80
+   2045|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+                                                                                        ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:1
@@ -199,8 +207,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2056:15
-   2056|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2062:15
+   2062|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -213,8 +221,8 @@ Cannot call `Promise.any` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2056:5
-   2056|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2062:5
+   2062|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -227,8 +235,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2056:15
-   2056|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2062:15
+   2062|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -243,8 +251,8 @@ an interface. [incompatible-type]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2056:51
-   2056|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2062:51
+   2062|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                                                            ^^^^^^^^^^^^^^ [2]
 
 
