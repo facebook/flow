@@ -8901,7 +8901,7 @@ struct
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, Some ts, t));
     if from_value then
-      reposition_reason cx ?trace reason_tapp ~use_desc t
+      t
     else
       mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) ~use_desc t
 
@@ -8909,7 +8909,7 @@ struct
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, Some ts, t));
     if from_value then
-      reposition_reason cx ?trace reason_tapp ~use_desc:false t
+      t
     else
       mk_instance_source cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
 
@@ -8917,7 +8917,7 @@ struct
       cx trace ~use_op ~reason_op ~reason_tapp ~from_value id tparams_loc xs t ts =
     let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts in
     if from_value then
-      reposition_reason cx ~trace reason_tapp ~use_desc:false t
+      t
     else
       mk_instance cx ~trace reason_tapp t
 

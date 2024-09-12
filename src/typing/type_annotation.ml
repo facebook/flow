@@ -1713,12 +1713,11 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           in
           let env = { env with tparams_map = Subst_name.Map.add name tparam_t tparams_map } in
           let ((prop_loc, prop_type), prop_type_ast) = convert env prop_type in
-          let type_t = DefT (reason_of_t prop_type, TypeT (MappedTypeKind, prop_type)) in
           let poly_prop_type =
             poly_type_of_tparams
               (Context.make_source_poly_id cx ~type_sig:false prop_loc)
               (Some (fst key_tparam, Nel.one tparam))
-              type_t
+              prop_type
           in
           let reason = mk_reason RMappedType obj_loc in
           let eval_t =

@@ -228,24 +228,42 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate `typeof barF` because function type [1] is not a polymorphic type. [incompatible-use]
 
+   with-targs.js:14:17
    14| type Invalid1 = typeof barF<string>; // error
-                       ^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs.js:6:21
+    6| declare function bar<T>(): T;
+                           ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:15:17
 
 Cannot instantiate `typeof FooClass` because class `Foo` [1] is not a polymorphic type. [incompatible-use]
 
+   with-targs.js:15:17
    15| type Invalid2 = typeof FooClass<string>; // error
-                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs.js:3:7
+    3| class Foo<T> {}
+             ^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:16:17
 
 Cannot instantiate `typeof barFExported` because function type [1] is not a polymorphic type. [incompatible-use]
 
+   with-targs.js:16:17
    16| type Invalid3 = typeof barFExported<string>; // error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs-exported.js:4:21
+    4| declare function bar<T>(): T;
+                           ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:17:17
@@ -253,8 +271,14 @@ Error --------------------------------------------------------------------------
 Cannot instantiate `typeof FooClassStringExported` because class `FooClassExported` [1] is not a polymorphic type.
 [incompatible-use]
 
+   with-targs.js:17:17
    17| type Invalid4 = typeof FooClassStringExported<string>; // error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs-exported.js:1:14
+    1| export class FooClassExported<T> {}
+                    ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:26:15
