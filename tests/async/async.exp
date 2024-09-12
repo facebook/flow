@@ -220,9 +220,9 @@ string [2] in type argument `Yield` [3]. [incompatible-return]
                                                      ^^^^^^ [1]
 
 References:
-   generator.js:22:31
-     22|     yield* await Promise.all(["a"]); // error string ~> number
-                                       ^^^ [2]
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1778:27
    1778| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [3]
@@ -237,9 +237,9 @@ string [1] is incompatible with number [2] in type argument `Yield` [3]. [incomp
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   generator.js:22:31
-     22|     yield* await Promise.all(["a"]); // error string ~> number
-                                       ^^^ [1]
+   <BUILTINS>/core.js:2035:58
+   2035|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                  ^^^^^^^^^^^^^ [1]
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
                                                      ^^^^^^ [2]
