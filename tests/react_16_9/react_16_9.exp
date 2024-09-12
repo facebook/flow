@@ -8,8 +8,8 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
                                  ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:287:16
-   287| declare module react {
+   <BUILTINS>/react.js:289:16
+   289| declare module react {
                        ^^^^^ [1]
 
 
@@ -26,13 +26,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:805:53
+   <BUILTINS>/react.js:807:53
                                                             v-
-   805|     declare const Profiler: React$AbstractComponent<{|
-   806|       +children?: React$Node,
-   807|       +id: string,
-   808|       +onRender: ProfilerOnRenderFnType,
-   809|     |}, void, React$Node>;
+   807|     declare const Profiler: React$AbstractComponent<{|
+   808|       +children?: React$Node,
+   809|       +id: string,
+   810|       +onRender: ProfilerOnRenderFnType,
+   811|     |}, void, React$Node>;
             -^ [2]
 
 
@@ -49,13 +49,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:805:53
+   <BUILTINS>/react.js:807:53
                                                             v-
-   805|     declare const Profiler: React$AbstractComponent<{|
-   806|       +children?: React$Node,
-   807|       +id: string,
-   808|       +onRender: ProfilerOnRenderFnType,
-   809|     |}, void, React$Node>;
+   807|     declare const Profiler: React$AbstractComponent<{|
+   808|       +children?: React$Node,
+   809|       +id: string,
+   810|       +onRender: ProfilerOnRenderFnType,
+   811|     |}, void, React$Node>;
             -^ [2]
 
 

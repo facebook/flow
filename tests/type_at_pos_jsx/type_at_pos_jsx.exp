@@ -27,7 +27,7 @@ test.js:22:7
 Flags:
 React$Ref<(props: {x: number}) => Node>
 
-'Node' defined at (lib) react.js:375:22
+'Node' defined at (lib) react.js:377:22
 'React$Ref' defined at (lib) react.js:180:13
 
 test.js:22:7,22:9
@@ -173,7 +173,7 @@ jsx_instantiation.js:105:6
 Flags:
 (props: Props<number | string>) => Node
 
-'Node' defined at (lib) react.js:375:22
+'Node' defined at (lib) react.js:377:22
 'Props' defined at jsx_instantiation.js:102:9
 
 jsx_instantiation.js:105:6,105:8
@@ -182,7 +182,7 @@ jsx_instantiation.js:109:6
 Flags:
 (props: Props<number | string>) => Node
 
-'Node' defined at (lib) react.js:375:22
+'Node' defined at (lib) react.js:377:22
 'Props' defined at jsx_instantiation.js:102:9
 
 jsx_instantiation.js:109:6,109:16

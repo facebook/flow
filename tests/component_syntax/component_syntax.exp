@@ -174,7 +174,7 @@ References:
    190|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed);
+   191|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1146,7 +1146,7 @@ References:
    190|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed);
+   191|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2121,7 +2121,7 @@ References:
    190|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed);
+   191|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2725,7 +2725,7 @@ References:
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed);
+   191|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2746,7 +2746,7 @@ References:
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:191:11
-   191|   | ((T | null) => mixed);
+   191|   | ((T | null) => mixed)
                   ^^^^ [2]
    refs.js:5:21
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
