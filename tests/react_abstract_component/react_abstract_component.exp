@@ -148,8 +148,8 @@ Cannot return `x` because `React.Portal` [1] does not render number [2]. [incomp
                  ^
 
 References:
-   <BUILTINS>/react.js:214:21
-   214| declare opaque type React$Portal;
+   <BUILTINS>/react.js:216:21
+   216| declare opaque type React$Portal;
                             ^^^^^^^^^^^^ [1]
    arity.js:25:43
     25| ): React$AbstractComponent<empty, number, number> {
@@ -464,8 +464,8 @@ Cannot create `C` element because in property `ref`: [incompatible-type]
                                                 ^^^^^^
 
 References:
-   <BUILTINS>/react.js:694:8
-   694|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:696:8
+   696|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:182:6
    182|   | ((React$ElementRef<ElementType> | null) => mixed)
