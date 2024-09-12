@@ -849,9 +849,6 @@ module Make (I : INPUT) : S = struct
       | DefT (reason, EnumValueT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.Generic (symbol, Ty.EnumKind, None)
-      (* MappedTypeKind TypeTs do not appear at the top-level-- they are created as the prop_type
-       * in a MappedType destructor *)
-      | DefT (_, TypeT (MappedTypeKind, t)) -> type__ ~env t
       (* Top-level only *)
       | DefT (_, TypeT _)
       | ModuleT _ ->
@@ -1218,8 +1215,6 @@ module Make (I : INPUT) : S = struct
           | ImportEnumKind ->
             Reason_utils.imported_type_alias_symbol env r
           | OpaqueKind -> Reason_utils.opaque_type_alias_symbol env r
-          | MappedTypeKind ->
-            terr ~kind:BadMappedType ~msg:"Mapped types should not be passed to type_t_app" None
           | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"TypeParamKind" None
         in
         mk_generic ~env symbol Ty.TypeAliasKind tparams targs
@@ -1264,20 +1259,6 @@ module Make (I : INPUT) : S = struct
         let open Type in
         match t with
         | AnyT _ -> type__ ~env t
-        | DefT (reason, PolyT { tparams = _; t_out = DefT (_, TypeT (MappedTypeKind, inner_t)); _ })
-          ->
-          (match targs with
-          | Some targs ->
-            I.typeapp
-              (Env.get_cx env)
-              ~cont:(type__ ~env)
-              ~type_:(type__ ~env)
-              ~app:app_on_generic
-              ~from_value:false
-              reason
-              t
-              targs
-          | None -> type__ ~env inner_t)
         (* e.g. typeof functionDef<targ1, targ2> *)
         | DefT (reason, PolyT _) when from_value && Option.is_some targs ->
           I.typeapp
@@ -1756,11 +1737,6 @@ module Make (I : INPUT) : S = struct
         (* The following cases are not common *)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
         | RenderTypeKind -> terr ~kind:BadTypeAlias ~msg:"render type" (Some t)
-        | MappedTypeKind ->
-          terr
-            ~kind:BadTypeAlias
-            ~msg:"Mapped Types should never be appear as a regular type alias"
-            (Some t)
 
     (* The normalizer input, Type.t, is a rather flat structure. It encompasses types
      * that expressions might have (e.g. number, string, object), but also types that
@@ -1823,11 +1799,6 @@ module Make (I : INPUT) : S = struct
         return (Ty.Decl Ty.(EnumDecl symbol))
       in
       let singleton_poly ~env ~orig_t tparams = function
-        | DefT (_, TypeT (MappedTypeKind, _)) as t ->
-          terr
-            ~kind:BadMappedType
-            ~msg:"Mapped Type properties should never appear in the toplevels"
-            (Some t)
         (* Imported interfaces *)
         | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { super; inst; _ }))) ->
           class_or_interface_decl ~env r (Some tparams) super inst

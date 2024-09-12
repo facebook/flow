@@ -1072,10 +1072,9 @@ and merge_annot env file = function
     let property_type =
       let prop_type = merge env file property_type in
       let prop_reason = TypeUtil.reason_of_t prop_type in
-      let type_t = Type.(DefT (prop_reason, TypeT (MappedTypeKind, prop_type))) in
       let id = Context.make_source_poly_id file.cx ~type_sig:true loc in
       Type.(
-        DefT (prop_reason, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = type_t; id })
+        DefT (prop_reason, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = prop_type; id })
       )
     in
     let optional =

@@ -1775,7 +1775,7 @@ let mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop key_t prop_o
      * at the use site and not the typeapp site *)
   let t =
     typeapp_with_use_op
-      ~from_value:false
+      ~from_value:true
       ~use_desc:false
       (reason_of_t poly_prop)
       use_op
