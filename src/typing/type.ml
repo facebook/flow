@@ -236,7 +236,7 @@ module rec TypeTerm : sig
     (* React$AbstractComponent<Config, Instance, ReturnElement> *)
     | ReactAbstractComponentT of {
         config: t;
-        instance: t;
+        instance: component_instance;
         renders: t;
         component_kind: component_kind;
       }
@@ -247,6 +247,10 @@ module rec TypeTerm : sig
         enum_value_t: t;
         enum_info: enum_info;
       }
+
+  and component_instance =
+    | ComponentInstanceAvailable of t
+    | ComponentInstanceOmitted of reason
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
    * The subtyping rules are much simpler to understand in these forms, so we use the render type

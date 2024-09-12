@@ -5833,7 +5833,11 @@ struct
         (use_op, DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }))
       ->
       contravariant_flow ~use_op config;
-      covariant_flow ~use_op instance;
+      let () =
+        match instance with
+        | ComponentInstanceOmitted _ -> ()
+        | ComponentInstanceAvailable t -> covariant_flow ~use_op t
+      in
       covariant_flow ~use_op renders;
       true
     (* Some types just need to be expanded and filled with any types *)
@@ -5985,7 +5989,11 @@ struct
       true
     | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
       contravariant_flow ~use_op config;
-      covariant_flow ~use_op instance;
+      let () =
+        match instance with
+        | ComponentInstanceOmitted _ -> ()
+        | ComponentInstanceAvailable t -> covariant_flow ~use_op t
+      in
       covariant_flow ~use_op renders;
       true
     | GenericT { bound; _ } ->

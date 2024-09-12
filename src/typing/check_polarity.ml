@@ -202,7 +202,11 @@ end = struct
       )
     | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
       check_polarity cx ?trace seen tparams (Polarity.inv polarity) config;
-      check_polarity cx ?trace seen tparams polarity instance;
+      let () =
+        match instance with
+        | ComponentInstanceOmitted _ -> ()
+        | ComponentInstanceAvailable t -> check_polarity cx ?trace seen tparams polarity t
+      in
       check_polarity cx ?trace seen tparams polarity renders
     | DefT (_, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
       check_polarity cx ?trace seen tparams polarity renders_super

@@ -30,7 +30,7 @@ module type S = sig
     instance_reason:Reason.reason ->
     tparams:Type.typeparams ->
     Types.t ->
-    Type.t * Type.t
+    Type.t * Type.component_instance
 
   val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast
 end
@@ -147,11 +147,11 @@ module Make
     in
     let instance =
       match instance with
-      | None -> Type.MixedT.make instance_reason
+      | None -> Type.ComponentInstanceOmitted instance_reason
       | Some (key_loc, instance) ->
         C.read_react cx key_loc;
+        let open Type in
         let () =
-          let open Type in
           let open Reason in
           let reason_op = mk_reason RReactRef key_loc in
           let u =
@@ -159,15 +159,15 @@ module Make
           in
           Flow_js.flow cx (instance, UseT (Op (DeclareComponentRef { op = reason_op }), u))
         in
-        Type.(
-          Flow_js.mk_possibly_evaluated_destructor
-            cx
-            unknown_use
-            instance_reason
-            instance
-            ReactCheckComponentRef
-            (Eval.generate_id ())
-        )
+        ComponentInstanceAvailable
+          (Flow_js.mk_possibly_evaluated_destructor
+             cx
+             unknown_use
+             instance_reason
+             instance
+             ReactCheckComponentRef
+             (Eval.generate_id ())
+          )
     in
     let config =
       Type.(

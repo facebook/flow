@@ -1426,7 +1426,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Polarity.Negative
         config;
       (* check instancel <: instanceu *)
-      rec_flow_t cx trace ~use_op (this, instance);
+      rec_flow_t
+        cx
+        trace
+        ~use_op
+        ( this,
+          match instance with
+          | ComponentInstanceAvailable t -> t
+          | ComponentInstanceOmitted r -> DefT (r, VoidT)
+        );
 
       (* check rendersl <: rendersu *)
       Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
@@ -1452,8 +1460,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders);
 
-      (* A function component instance type is always void, so flow void to instance *)
-      rec_flow_t cx trace ~use_op (VoidT.make (replace_desc_new_reason RVoid reasonl), instance)
+      begin
+        match instance with
+        (* Lack of instance information in abstract component is equivalent to void instance. *)
+        | ComponentInstanceOmitted _ -> ()
+        | ComponentInstanceAvailable instance ->
+          rec_flow_t cx trace ~use_op (VoidT.make (replace_desc_new_reason RVoid reasonl), instance)
+      end
     (* Object Component ~> AbstractComponent *)
     | ( DefT (reasonl, ObjT { call_t = Some id; _ }),
         DefT
@@ -1478,8 +1491,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let mixed = MixedT.why reasonu in
       rec_flow_t ~use_op cx trace (Context.find_call cx id, DefT (reasonu, FunT (mixed, funtype)));
 
-      (* An object component instance type is always void, so flow void to instance *)
-      rec_flow_t cx trace ~use_op (VoidT.make (replace_desc_new_reason RVoid reasonl), instance)
+      begin
+        match instance with
+        (* Lack of instance information in abstract component is equivalent to void instance. *)
+        | ComponentInstanceOmitted _ -> ()
+        | ComponentInstanceAvailable instance ->
+          (* An object component instance type is always void, so flow void to instance *)
+          rec_flow_t cx trace ~use_op (VoidT.make (replace_desc_new_reason RVoid reasonl), instance)
+      end
     (* AbstractComponent ~> AbstractComponent *)
     | ( DefT
           ( reasonl,
@@ -1498,6 +1517,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       ) ->
       rec_flow_t cx trace ~use_op (configu, configl);
+      let instancel =
+        match instancel with
+        | ComponentInstanceAvailable t -> t
+        | ComponentInstanceOmitted r -> DefT (r, VoidT)
+      in
+      let instanceu =
+        match instanceu with
+        | ComponentInstanceAvailable t -> t
+        | ComponentInstanceOmitted r -> DefT (r, VoidT)
+      in
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       let rendersl =
         match component_kind with
@@ -1511,7 +1540,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | ( DefT
-          ( _,
+          ( _reasonl,
             ReactAbstractComponentT
               {
                 config = configl;
@@ -1521,7 +1550,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               }
           ),
         DefT
-          ( _,
+          ( _reasonu,
             ReactAbstractComponentT
               {
                 config = configu;
@@ -1533,6 +1562,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when ALoc.equal_id idl idu ->
       rec_flow_t cx trace ~use_op (configu, configl);
+      let instancel =
+        match instancel with
+        | ComponentInstanceAvailable t -> t
+        | ComponentInstanceOmitted r -> DefT (r, VoidT)
+      in
+      let instanceu =
+        match instanceu with
+        | ComponentInstanceAvailable t -> t
+        | ComponentInstanceOmitted r -> DefT (r, VoidT)
+      in
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | (DefT (reasonl, RendersT r1), DefT (reasonu, RendersT r2)) ->

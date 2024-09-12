@@ -318,7 +318,16 @@ class virtual ['a] t =
           PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Type.Poly.generate_id () }
       | ReactAbstractComponentT { config; instance; renders; component_kind } ->
         let config' = self#type_ cx map_cx config in
-        let instance' = self#type_ cx map_cx instance in
+        let instance' =
+          match instance with
+          | ComponentInstanceOmitted _ -> instance
+          | ComponentInstanceAvailable t ->
+            let t' = self#type_ cx map_cx t in
+            if t' == t then
+              instance
+            else
+              ComponentInstanceAvailable t'
+        in
         let renders' = self#type_ cx map_cx renders in
         if config' == config && instance' == instance && renders' == renders then
           t
