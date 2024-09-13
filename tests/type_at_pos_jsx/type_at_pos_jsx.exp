@@ -25,10 +25,9 @@ test.js:19:7,19:9
 
 test.js:22:7
 Flags:
-React$Ref<(props: {x: number}) => Node>
+React$RefSetter<void>
 
-'Node' defined at (lib) react.js:381:22
-'React$Ref' defined at (lib) react.js:180:13
+'React$RefSetter' defined at (lib) react.js:189:13
 
 test.js:22:7,22:9
 

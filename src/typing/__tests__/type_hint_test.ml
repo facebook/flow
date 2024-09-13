@@ -612,7 +612,7 @@ let eval_hint_tests =
           [Decomp_ObjSpread; Decomp_JsxProps];
     "jsx_ref_function"
     >:: mk_eval_hint_test
-          ~expected:"React$ElementRef<React$AbstractComponent<{...}, string, React$Node>> | null"
+          ~expected:"string | null"
           "React$AbstractComponent<{...}, string, React$Node>"
           [Decomp_FuncParam ([None], 0, None); Decomp_JsxRef];
     "jsx_fragment_ref"
