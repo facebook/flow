@@ -1,3 +1,30 @@
+### 0.246.0
+
+Likely to cause new Flow errors:
+* Support for $ObjMap has been completely removed. This change means that:
+  * `$ObjMap` will resolve to a user-defined `$ObjMap` global if it's available in your libdef. You can use `type $ObjMap<O, F> = {[K in keyof O]: $Call<F, O[K]>}` to get most of the same behavior, except that in the mapped type version `O[K]` will include void for optional props. Please note that this should be considered as a permanent shim, because we intend to eventually remove `$Call`.
+  * `flow codemod key-mirror` command was removed, since this codemod tries to convert `$ObjMap` to `$KeyMirror`
+  * `deprecated-type-objmap` lint was removed.
+* Component syntax components without ref prop will have `void` as the instance, so `React.ElementRef<component>` of such component will return void.
+
+New Features:
+* Mapped types now support array and tuple types in the form of `{[K in keyof <array or tuple type>: <mapped type>}`.
+  * With this support, we intend to deprecate $TupleMap in the next release and remove the support for $TupleMap eventually
+* You can now refine against variables and member expressions with a literal type, not just literal themselves.
+
+Notable bug fixes:
+* Flow now only reports one error when two disjoint large enum-like unions are compared ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOlANE8qNgAASAnn4ZA84G0ADc7PZMAeyjg0B5C3sAEYABQASh5wHZPO18tWPIAKoqeQBeHkAcgwirNPIAPua0FbbeawFbxVAdbrjAaAEwm80Yb3Wu1mtCBp0hgDMZrdWp1+GFJANRowif13tFPIA9JmeQAhTQQFjy2q0nmUtjyiA8lgSISUd0RnkmSiFxOLHlQCAAdx5cAkPK7cGOPIGtB5OBHX1j2vjKZ9CaTGezeYLRYkJcT5cr1d2dYbTeorZ57c7Pb7A6HuEng3HvOg2HZ9PZuRADRMJFlUCSDQADFZvQALAArFYiogPSQA)).
+
+IDE:
+* Code actions on component syntax components will produce smaller targeted edits, rather than reprint the entire component.
+* Deprecated utility type like $Call are no longer suggested in autocomplete.
+* Flow will now provide a quick fix when the spread prop of a component with component syntax redefines some already defined props.
+
+Library Definitions:
+* `React.Ref` is marked as deprecated. Use `React.RefSetter` instead for ref props, and `React.RefObject` for returns of `useRef`.
+* `React.RefSetter` now includes null and void.
+* `Promise.all` and `Promise.allSettled` have been updated to use mapped type instead of `$TupleMap`. The requirement on the type arguments are slightly changed.
+
 ### 0.245.2
 
 Misc:
