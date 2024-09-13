@@ -1481,9 +1481,9 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [inc
                           ^^^
 
 References:
-   <BUILTINS>/react.js:182:39
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-                                              ^^^^ [1]
+   <BUILTINS>/react.js:191:11
+   191|   | ((T | null) => mixed)
+                  ^^^^ [1]
    ref.js:11:24
     11| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
                                ^^^ [2]

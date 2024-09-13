@@ -490,7 +490,19 @@ and type_of_hint_decomposition cx op reason t =
               reason
               (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
-      | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason "React$Ref" [t]
+      | Decomp_JsxRef ->
+        Flow_js.get_builtin_typeapp
+          cx
+          reason
+          "React$RefSetter"
+          [
+            Tvar.mk_where cx reason (fun ref_t ->
+                SpeculationFlow.resolved_lower_flow_unsafe
+                  cx
+                  reason
+                  (t, ReactKitT (unknown_use, reason, React.GetRef ref_t))
+            );
+          ]
       | Decomp_MethodElem ->
         SpeculationFlow.get_method_type_unsafe
           cx
