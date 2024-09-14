@@ -346,7 +346,7 @@ type NumberRecord = Record<'foo' | 'bar', number>;
 type IndexedObject = {['foo' | 'bar']: number};
 
 // Record uses explicit fields, which means they are all required
-const rec: Record = {}; // error
+const rec: NumberRecord = {}; // error
 // Indexers do not have this same requirement
 const idx: IndexedObject = {}; // no error
 ```
