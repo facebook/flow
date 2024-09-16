@@ -17,8 +17,8 @@ type GetReturnType = <T, S>((T) => S) => S;
 
 type ConsumerProps<T, TSelect: $ReadOnlyArray<(T) => mixed>> = {|
   select?: TSelect,
-  children?: ConsumerRender<$TupleMap<TSelect, GetReturnType>>,
-  render?: ConsumerRender<$TupleMap<TSelect, GetReturnType>>,
+  children?: ConsumerRender<{[K in keyof TSelect]: ReturnType<TSelect[K]>}>,
+  render?: ConsumerRender<{[K in keyof TSelect]: ReturnType<TSelect[K]>}>,
 |};
 
 type Selector<T, R> = T => R;

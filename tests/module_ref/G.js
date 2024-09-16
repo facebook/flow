@@ -20,7 +20,7 @@ class JSResourceReference<+T> {
 
   static loadAll<I: Array<JSResourceReference<mixed>>>(
     loaders: I,
-    callback: (...modules: $TupleMap<I, $unwrap>) => void,
+    callback: (...modules: {[K in keyof I]: I[K] extends JSResourceReference<infer T> ? T : empty}) => void,
   ): void {
     // ...load the modules and then pass them to the callback
   }

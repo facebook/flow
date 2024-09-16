@@ -48,9 +48,9 @@ Cannot cast `E` to number because string [1] is incompatible with number [2]. [i
            ^
 
 References:
-   E.js:5:25
-    5| declare module.exports: string;
-                               ^^^^^^ [1]
+   G.js:23:45
+   23|     callback: (...modules: {[K in keyof I]: I[K] extends JSResourceReference<infer T> ? T : empty}) => void,
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    G.js:34:10
    34|     E as number; // Error - E exports string
                 ^^^^^^ [2]
@@ -65,9 +65,9 @@ Cannot cast `F` to string because number [1] is incompatible with string [2]. [i
            ^
 
 References:
-   F.js:5:25
-    5| declare module.exports: number;
-                               ^^^^^^ [1]
+   G.js:23:45
+   23|     callback: (...modules: {[K in keyof I]: I[K] extends JSResourceReference<infer T> ? T : empty}) => void,
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    G.js:35:10
    35|     F as string; // Error - F exports number
                 ^^^^^^ [2]
