@@ -615,6 +615,8 @@ When not specified, the type of the remainder is just `string`.
 
 `$ElementType<T, K>` is equivalent to the `T[K]` [indexed access type](../indexed-access).
 
+## To-be-removed utility types
+
 ### `$Call<F, T...>` {#toc-call}
 NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.208 - please use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) to extract types instead.
 
@@ -669,10 +671,14 @@ type GetMapValue<M> =
 true as GetMapValue<Map<string, boolean>>;
 true as GetMapValue<Map<string, number>>;  // Error! value is a `number`
 ```
-## To-be-removed utility types
 
-### `$ObjMap<T, F>` {#toc-objmap}
-NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
+## Removed utility types
+
+These utility types used to exist, but no longer exist in latest version of Flow.
+
+### `$ObjMap<T, F>` <UntilVersion version="0.246" /> {#toc-objmap}
+
+NOTE: Please use [Mapped Types](../mapped-types) instead.
 
 `ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
 
@@ -728,8 +734,9 @@ props(promises).then(o => {
 });
 ```
 
-### `$ObjMapi<T, F>` {#toc-objmapi}
-NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
+### `$ObjMapi<T, F>` <UntilVersion version="0.246" /> {#toc-objmapi}
+
+NOTE: Please use [Mapped Types](../mapped-types) instead.
 
 `ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap). The difference is that function
 type `F` will be [called](#toc-call) with both the key and value types of the elements of
@@ -752,8 +759,9 @@ run(o).b as {k: 'b', v: number};  // Error! `b.v` is a string
 run(o).c;                         // Error! `c` was not in the original object
 ```
 
-### `$ObjMapConst<O, T>` {#toc-objmapconst}
-NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
+### `$ObjMapConst<O, T>` <UntilVersion version="0.246" /> {#toc-objmapconst}
+
+NOTE: Please use [Mapped Types](../mapped-types) instead.
 
 `$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
 function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
@@ -775,10 +783,6 @@ newObj.b as string; // Error! Property `b` is a number
 
 Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain
 kinds of `[invalid-exported-annotation]` errors.
-
-## Removed utility types
-
-These utility types used to exist, but no longer exist in latest version of Flow.
 
 ### `$Partial` <UntilVersion version="0.202" />
 A former alias of [Partial](#toc-partial). Support was removed in version 0.203.
