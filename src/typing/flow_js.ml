@@ -2157,6 +2157,11 @@ struct
                 (rrt_resolved, rrt_unresolved)
                 rrt_resolve_to
           end
+        (*****************)
+        (* destructuring *)
+        (*****************)
+        | (_, DestructuringT (reason, kind, selector, tout, id)) ->
+          destruct cx ~trace reason kind l selector tout id
         (**************)
         (* conditional type *)
         (**************)
@@ -3918,11 +3923,6 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (a, tout)
         | (AnyT (_, src), ArrRestT (_, reason, _, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, tout)
-        (*****************)
-        (* destructuring *)
-        (*****************)
-        | (_, DestructuringT (reason, kind, selector, tout, id)) ->
-          destruct cx ~trace reason kind l selector tout id
         (**************************************************)
         (* function types can be mapped over a structure  *)
         (**************************************************)

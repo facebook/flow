@@ -1389,6 +1389,62 @@ Missing an annotation on destructuring. [missing-local-annot]
                      ^^
 
 
+Error ----------------------------------------------------------------------------------------- literal_defaults.js:9:14
+
+Cannot assign string to `s` because string [1] is incompatible with string literal `s` [2]. [incompatible-type]
+
+   literal_defaults.js:9:14
+   9|   const {s = 'xxx'} = o; // ERROR
+                   ^^^^^ [1]
+
+References:
+   literal_defaults.js:2:6
+   2|   s: 's',
+           ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- literal_defaults.js:14:14
+
+Cannot assign number to `n` because number [1] is incompatible with number literal `1` [2]. [incompatible-type]
+
+   literal_defaults.js:14:14
+   14|   const {n = 999999} = o; // ERROR
+                    ^^^^^^ [1]
+
+References:
+   literal_defaults.js:3:6
+    3|   n: 1,
+            ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- literal_defaults.js:19:14
+
+Cannot assign boolean to `b` because boolean [1] is incompatible with boolean literal `true` [2]. [incompatible-type]
+
+   literal_defaults.js:19:14
+   19|   const {b = false} = o; // ERROR
+                    ^^^^^ [1]
+
+References:
+   literal_defaults.js:4:6
+    4|   b: true,
+            ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- literal_defaults.js:24:14
+
+Cannot assign bigint to `i` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-type]
+
+   literal_defaults.js:24:14
+   24|   const {i = 999999n} = o; // ERROR
+                    ^^^^^^^ [1]
+
+References:
+   literal_defaults.js:5:6
+    5|   i: 1n,
+            ^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- object_rest.js:5:9
 
 Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of object pattern [1]. [prop-missing]
@@ -1508,7 +1564,7 @@ References:
 
 
 
-Found 106 errors
+Found 110 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
