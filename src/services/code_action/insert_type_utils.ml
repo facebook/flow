@@ -1280,30 +1280,6 @@ class type_normalization_hardcoded_fixes_mapper
         when metadata.Context.facebook_fbt = Some "FbtElement" ->
         let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Fbt" } in
         Ty.(Generic (symbol, Ty.TypeAliasKind, None))
-      (*
-       * Minimal form of evaluating utility types:
-       *
-       * $Call<<K>(_0: K) => K, T, ...> --> T
-       *)
-      | Ty.(
-          Utility
-            (Call
-              ( Fun
-                  {
-                    fun_type_params =
-                      Some
-                        [{ tp_name = p; tp_bound = None; tp_polarity = Neutral; tp_default = None }];
-                    fun_params = [(_, Bound (_, b), { prm_optional = false })];
-                    fun_rest_param = None;
-                    fun_return = ReturnType (Bound (_, r));
-                    fun_static = _;
-                    fun_effect = _;
-                  },
-                t :: _
-              )
-              ))
-        when p = b && b = r ->
-        this#on_t env t
       | Ty.Obj { Ty.obj_def_loc = Some aloc; _ } ->
         let remote_file = Base.Option.value_exn (ALoc.source aloc) in
         if String.ends_with (File_key.to_string remote_file) ~suffix:"graphql.js" then
