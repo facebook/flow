@@ -1,4 +1,4 @@
-type T = $Call<() => any, void>;
+type T = void extends void ? any : empty;
 declare var t: T;
 
 // Annot_SpecializeT

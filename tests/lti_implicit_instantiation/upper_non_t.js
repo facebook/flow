@@ -21,8 +21,8 @@ declare function IndexedAccess1<T>(T['f']): T;
 IndexedAccess1(1); // Error: T under constrained.
 declare function IndexedAccess2<T>(T[number]): T;
 IndexedAccess2(1); // Error: T under constrained.
-declare function Call<T>($Call<T, <V>(V) => void>): T;
-Call(undefined); // Error: T under constrained.
+declare function ConditionalType<T>(T extends mixed ? void : empty): T;
+ConditionalType(undefined); // Error: T under constrained.
 declare function MappedType<T>({[K in keyof T]: void}): T;
 MappedType({}); // Error: T under constrained.
 declare function Values<T>($Values<T>): T;

@@ -1322,13 +1322,13 @@ Error --------------------------------------------------------------------------
 Invalid type annotation for `V2`. It contains a reference [1] to the binding being declared. [recursive-definition]
 
    rec_decls.js:5:15
-   5|   declare var V2: $Call<<V2>(V2) => V2, V2>; // error recursive-definition
+   5|   declare var V2: V2 extends infer V2 ? V2 : empty; // error recursive-definition
                     ^^
 
 References:
-   rec_decls.js:5:41
-   5|   declare var V2: $Call<<V2>(V2) => V2, V2>; // error recursive-definition
-                                              ^^ [1]
+   rec_decls.js:5:19
+   5|   declare var V2: V2 extends infer V2 ? V2 : empty; // error recursive-definition
+                        ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ rec_decls.js:8:15
@@ -1432,12 +1432,12 @@ Cannot resolve name `x`. [cannot-resolve-name]
                                       ^
 
 
-Error ----------------------------------------------------------------------------------------------- rec_params.js:9:45
+Error ----------------------------------------------------------------------------------------------- rec_params.js:9:26
 
 Cannot resolve name `V`. [cannot-resolve-name]
 
-   9|   function invalid_03(V: $Call<<V>(V) => V, V>): void {} // error on V
-                                                  ^
+   9|   function invalid_03(V: V extends infer V ? V : empty): void {} // error on V
+                               ^
 
 
 Error ---------------------------------------------------------------------------------------------- rec_params.js:10:28

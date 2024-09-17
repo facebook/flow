@@ -58,7 +58,7 @@ function poly_id() {
 }
 
 function poly_eval() {
-  function truthyStr(x: string): $Call<<V>(V) => V, string> %checks {
+  function truthyStr(x: string): string extends infer V ? V : empty %checks {
     return x;
   }
   declare var str: string;

@@ -1,8 +1,8 @@
 function referenced_in_type_annotation_of_declare_var() {
   declare var x1: x1; // error recursive-definition
   declare var x2: typeof x2; // error recursive-definition
-  declare var V1: $Call<<V1>(V1) => V1, number>; // okay
-  declare var V2: $Call<<V2>(V2) => V2, V2>; // error recursive-definition
+  declare var V1: number extends infer V1 ? V1 : empty; // okay
+  declare var V2: V2 extends infer V2 ? V2 : empty; // error recursive-definition
 
   declare var rec_obj_okay: { f: typeof rec_obj_okay }; // okay due to object type constructor
   declare var rec_obj_err:

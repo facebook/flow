@@ -166,5 +166,22 @@ Invalid body for predicate function. Expected a simple return statement as body.
                                                 ^^
 
 
+Error -------------------------------------------------------------------------------------------------- wf-eval.js:3:70
 
-Found 12 errors
+Cannot return `x` because mixed [1] is incompatible with `V` [2]. [incompatible-return]
+
+   wf-eval.js:3:70
+   3| function f3<V>(x: V): V extends infer V ? V : empty %checks { return x; } // error
+                                                                           ^
+
+References:
+   wf-eval.js:3:19
+   3| function f3<V>(x: V): V extends infer V ? V : empty %checks { return x; } // error
+                        ^ [1]
+   wf-eval.js:3:43
+   3| function f3<V>(x: V): V extends infer V ? V : empty %checks { return x; } // error
+                                                ^ [2]
+
+
+
+Found 13 errors

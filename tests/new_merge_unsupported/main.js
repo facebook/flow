@@ -1,32 +1,32 @@
 import {
-  x1 as call_x1,
-  x2 as call_x2,
-  x3 as call_x3,
-  x4 as call_x4,
-  x5 as call_x5,
-  x6 as call_x6,
-  x7 as call_x7,
-  x8 as call_x8,
-  x9 as call_x9,
-  x10 as call_x10,
-  x11 as call_x11,
-  x12 as call_x12,
-  x13 as call_x13,
-} from './ops_on_eval_call';
+  x1 as conditional_x1,
+  x2 as conditional_x2,
+  x3 as conditional_x3,
+  x4 as conditional_x4,
+  x5 as conditional_x5,
+  x6 as conditional_x6,
+  x7 as conditional_x7,
+  x8 as conditional_x8,
+  x9 as conditional_x9,
+  x10 as conditional_x10,
+  x11 as conditional_x11,
+  x12 as conditional_x12,
+  x13 as conditional_x13,
+} from './ops_on_eval_conditional';
 
-(call_x1.f: any);
-(call_x2: any);
-(call_x3: any);
-(call_x4: any);
-(call_x5: any);
-(call_x6: any);
-(call_x7: any);
-(call_x8.__proto__: any);
-((new call_x9).f: any);
-(call_x10: any);
-(call_x11: any);
-(call_x12: any);
-(call_x13: any);
+(conditional_x1.f: any);
+(conditional_x2: any);
+(conditional_x3: any);
+(conditional_x4: any);
+(conditional_x5: any);
+(conditional_x6: any);
+(conditional_x7: any);
+(conditional_x8.__proto__: any);
+((new conditional_x9).f: any);
+(conditional_x10: any);
+(conditional_x11: any);
+(conditional_x12: any);
+(conditional_x13: any);
 
 import {
   x1 as intersection_x1,

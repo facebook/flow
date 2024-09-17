@@ -1,12 +1,12 @@
 function referenced_in_type_annotation_of_func_param() {
-  function okay_01(V: $Call<<V>(V) => V, number>): void {} // okay
+  function okay_01(V: number extends infer V1 ? V1 : empty): void {} // okay
   function okay_02(outer: number, {outer: y}: { outer: typeof outer }) {} // okay
   function okay_03(x: (x: mixed) => void) {} // okay: x as nested param
   function okay_rest(x: number, ...rest: Array<typeof x>) {} // okay
 
   function invalid_01(x: x): void {} // error on x
   function invalid_02(x: typeof x): void {} // error on x
-  function invalid_03(V: $Call<<V>(V) => V, V>): void {} // error on V
+  function invalid_03(V: V extends infer V ? V : empty): void {} // error on V
   function invalid_04({x}: x) {} // error on x
   function invalid_05({x}: typeof x) {} // error on x
   function invalid_06({x:y}: typeof y) {} // error on y

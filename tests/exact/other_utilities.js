@@ -12,13 +12,11 @@ type DeepNestedMaybes = {|
   g: null,
 |};
 
-type ExtractMaybe = <T>(a: ?T) => T;
-type ExtractNonNull<T> = $Call<ExtractMaybe, T>;
+type ExtractNonNull<T> = $NonMaybeType<T>;
 
-type G = ExtractNonNull<$PropertyType<DeepNestedMaybes, 'g'>>;
+type G = ExtractNonNull<DeepNestedMaybes['g']>;
 
-
-type C = ExtractNonNull<$PropertyType<DeepNestedMaybes, 'c'>>;
+type C = ExtractNonNull<DeepNestedMaybes['c']>;
 let c1: C = {
   f: '', // Should cause an error
   d: null,

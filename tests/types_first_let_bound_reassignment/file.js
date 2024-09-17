@@ -28,11 +28,11 @@ const eObj = { e };
 e = 1; // error in types-first, exported via eObj
 
 function f() {}
-export type F = $Call<<V>(() => V) => V, typeof f>;
+export type F = typeof f extends () => infer V ? V : empty;
 f = 1; // error in types-first, exported via type F
 
 function g() {}
-type G = $Call<<V>(() => V) => V, typeof g>;
+type G = typeof g extends () => infer V ? V : empty;
 g = 1; // not exported, but still not allowed
 
 module.exports = { C, foo, x, d, eObj };

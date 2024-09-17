@@ -1,9 +1,4 @@
-export type Bar = $Call<
-  <T>({
-    +blah: T,
-  }) => T,
-  {+blah: number},
->;
+export type Bar = {+blah: number} extends {+blah: infer V} ? V : empty;
 
 class X {
   foo: {|bar: Bar|} = {bar: 'cat'};

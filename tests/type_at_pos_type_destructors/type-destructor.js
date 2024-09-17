@@ -116,10 +116,10 @@ type FnTuple = [() => string, () => number];
 type TupleMapFnReturnTypes = $TupleMap<FnTuple, ExtractReturnType>;
 //   ^
 
-// $Call<F, T...>
+// conditional types
 type ExtractPropType = <T>({ prop: T }) => T;
 type PropObj = { prop: number };
-type CallExtractPropType = $Call<ExtractPropType, PropObj>;
+type ConditionalExtractPropType = PropObj extends { prop: infer T } ? T : empty;
 //   ^
 
 type NestedObj = {|
@@ -131,23 +131,21 @@ type NestedObj = {|
   |}>
 |};
 
-// If you wanted to extract the type for `bar`, you could use $Call:
-type CallNestedObjType = $Call<
+// If you wanted to extract the type for `bar`, you could use conditional type:
+type ConditionalNestedObjType = NestedObj extends {
 //   ^
-  <T>({
-    +data: ?$ReadOnlyArray<{
-      +foo: ?{
-        +bar: ?T
-      }
-    }>
-  }) => T,
-  NestedObj
->;
+  +data: ?$ReadOnlyArray<{
+    +foo: ?{
+      +bar: ?infer T
+    }
+  }>
+} ? T : empty;
 
-type CallPoly<R> = $Call<<N>(N) => N, R>;
+type ConditionalIdPoly<R> = R extends infer N ? N : empty;
+//   ^
 
 type PropObjPoly<P> = { prop: P };
-type CallExtractPropTypePoly<P> = $Call<ExtractPropType, PropObjPoly<P>>;
+type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends { prop: infer T } ? T : empty;
 //   ^
 
 // $Exports<T>

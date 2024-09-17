@@ -36,16 +36,16 @@ export type $DeepReadOnly<T> =
 
 export type Info<
   T: {+bar: {+type: string}},
-> = $Call<
-  <A>({bar: A}) => {
-    bar:
-      | BarOne
-      | BarTwo
-      | BarThree
-      | $DeepReadOnly<$Exact<A>>,
-  },
-  T,
->;
+> =
+  [+t: T] extends [+t: {bar: infer A}]
+  ? {
+      bar:
+        | BarOne
+        | BarTwo
+        | BarThree
+        | $DeepReadOnly<$Exact<A>>,
+    }
+  : empty;
 
 type Bar<T> = $ElementType<T, 'bar'>;
 

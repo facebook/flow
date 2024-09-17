@@ -1,41 +1,3 @@
-Error ---------------------------------------------------------------------------------------------------- call.js:22:13
-
-Cannot assign object literal to `c1` because property `f` is missing in object type [1] but exists in object
-literal [2]. [prop-missing]
-
-   call.js:22:13
-                   v
-   22| let c1: C = {
-   23|   f: '', // Should cause an error
-   24|   d: null,
-   25| };
-       ^ [2]
-
-References:
-   call.js:22:9
-   22| let c1: C = {
-               ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- call.js:26:21
-
-Cannot assign object literal to `c2` because property `f` is missing in object type [1] but exists in object
-literal [2]. [prop-missing]
-
-   call.js:26:21
-                           v
-   26| let c2: $Exact<C> = {
-   27|   f: '',
-   28|   d: null,
-   29| };
-       ^ [2]
-
-References:
-   call.js:26:9
-   26| let c2: $Exact<C> = {
-               ^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------ callable.js:17:26
 
 Cannot assign `f` to `g` because a call signature declaring the expected parameter / return type is missing in object
@@ -547,6 +509,44 @@ References:
    optional.js:3:54
    3| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
                                                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- other_utilities.js:20:13
+
+Cannot assign object literal to `c1` because property `f` is missing in object type [1] but exists in object
+literal [2]. [prop-missing]
+
+   other_utilities.js:20:13
+                   v
+   20| let c1: C = {
+   21|   f: '', // Should cause an error
+   22|   d: null,
+   23| };
+       ^ [2]
+
+References:
+   other_utilities.js:20:9
+   20| let c1: C = {
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- other_utilities.js:24:21
+
+Cannot assign object literal to `c2` because property `f` is missing in object type [1] but exists in object
+literal [2]. [prop-missing]
+
+   other_utilities.js:24:21
+                           v
+   24| let c2: $Exact<C> = {
+   25|   f: '',
+   26|   d: null,
+   27| };
+       ^ [2]
+
+References:
+   other_utilities.js:24:9
+   24| let c2: $Exact<C> = {
+               ^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ prop_test.js:12:9

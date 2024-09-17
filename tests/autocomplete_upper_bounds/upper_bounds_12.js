@@ -1,8 +1,8 @@
 //@flow
 
-type Id = <A>(a: A) => A
+type Id<T> = T extends mixed ? T : empty;
 
-type Union = $Call<Id, "foo" | "bar" | "baz">
+type Union = Id<"foo" | "bar" | "baz">
 
 declare var f : Union => void
 

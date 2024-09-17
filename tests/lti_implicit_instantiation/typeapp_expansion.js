@@ -1,9 +1,9 @@
 declare class MySet<+T> {}
 
-type $ElementOfSet<SetType> = $Call<
-  <ElementType>(MySet<ElementType>) => ElementType,
-  SetType,
->;
+type $ElementOfSet<SetType> =
+  SetType extends MySet<infer ElementType>
+    ? ElementType
+    : empty;
 
 class Entry<+X> {}
 

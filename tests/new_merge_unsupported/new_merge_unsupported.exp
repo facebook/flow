@@ -1,196 +1,196 @@
-Error ----------------------------------------------------------------------------------------- ops_on_eval_call.js:5:25
+Error ---------------------------------------------------------------------------------- ops_on_eval_conditional.js:5:25
 
-Cannot use class extends on `$Call` [1] in an export position. Please provide an (alternative) annotation for class
-extends [2]. [invalid-exported-annotation]
+Cannot use class extends on conditional type [1] in an export position. Please provide an (alternative) annotation for
+class extends [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:5:25
+   ops_on_eval_conditional.js:5:25
    5| export class x1 extends ((0: any): T) {}
                               ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-   1| type T = $Call<() => any, void>;
-               ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+   1| type T = void extends void ? any : empty;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- ops_on_eval_call.js:8:19
+Error ---------------------------------------------------------------------------------- ops_on_eval_conditional.js:8:19
 
-Cannot use property `f` on `$Call` [1] in an export position. Please provide an (alternative) annotation for property
-`f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+property `f` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:8:19
+   ops_on_eval_conditional.js:8:19
    8| export const x2 = t.f;
                         ^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-   1| type T = $Call<() => any, void>;
-               ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+   1| type T = void extends void ? any : empty;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:11:19
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:11:19
 
-Cannot use computed property on `$Call` [1] in an export position. Please provide an (alternative) annotation for
-computed property [2]. [invalid-exported-annotation]
+Cannot use computed property on conditional type [1] in an export position. Please provide an (alternative) annotation
+for computed property [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:11:19
+   ops_on_eval_conditional.js:11:19
    11| export const x3 = t[('': string)];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:14:19
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:14:19
 
-Cannot use spread on `$Call` [1] in an export position. Please provide an (alternative) annotation for spread [2].
-[invalid-exported-annotation]
+Cannot use spread on conditional type [1] in an export position. Please provide an (alternative) annotation for
+spread [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:14:19
+   ops_on_eval_conditional.js:14:19
    14| export const x4 = { ...t };
                          ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:17:17
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:17:17
 
-Cannot use exact on `$Call` [1] in an export position. Please provide an (alternative) annotation for exact [2].
-[invalid-exported-annotation]
+Cannot use exact on conditional type [1] in an export position. Please provide an (alternative) annotation for
+exact [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:17:17
+   ops_on_eval_conditional.js:17:17
    17| declare var y5: $Exact<T>;
                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:21:17
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:21:17
 
-Cannot use statics on `$Call` [1] in an export position. Please provide an (alternative) annotation for statics [2].
-[invalid-exported-annotation]
+Cannot use statics on conditional type [1] in an export position. Please provide an (alternative) annotation for
+statics [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:21:17
+   ops_on_eval_conditional.js:21:17
    21| declare var y6: Class<T>;
                        ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:27:19
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:27:19
 
-Cannot use property `f` on `$Call` [1] in an export position. Please provide an (alternative) annotation for property
-`f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+property `f` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:27:19
+   ops_on_eval_conditional.js:27:19
    27| export const x7 = y7.f;
                          ^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:30:37
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:30:37
 
-Cannot use prototype on `$Call` [1] in an export position. Please provide an (alternative) annotation for prototype [2].
-[invalid-exported-annotation]
+Cannot use prototype on conditional type [1] in an export position. Please provide an (alternative) annotation for
+prototype [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:30:37
+   ops_on_eval_conditional.js:30:37
    30| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:33:32
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:33:32
 
-Cannot use mixins on `$Call` [1] in an export position. Please provide an (alternative) annotation for mixins [2].
-[invalid-exported-annotation]
+Cannot use mixins on conditional type [1] in an export position. Please provide an (alternative) annotation for
+mixins [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:33:32
+   ops_on_eval_conditional.js:33:32
    33| declare export class x9 mixins t {}
                                       ^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:36:20
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:36:20
 
-Cannot use unary minus on `$Call` [1] in an export position. Please provide an (alternative) annotation for unary
-minus [2]. [invalid-exported-annotation]
+Cannot use unary minus on conditional type [1] in an export position. Please provide an (alternative) annotation for
+unary minus [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:36:20
+   ops_on_eval_conditional.js:36:20
    36| export const x10 = -t;
                           ^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:39:20
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:39:20
 
-Cannot use unary not on `$Call` [1] in an export position. Please provide an (alternative) annotation for unary not [2].
-[invalid-exported-annotation]
+Cannot use unary not on conditional type [1] in an export position. Please provide an (alternative) annotation for unary
+not [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:39:20
+   ops_on_eval_conditional.js:39:20
    39| export const x11 = !t;
                           ^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:42:18
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:42:18
 
-Cannot use `$KeyMirror` on `$Call` [1] in an export position. Please provide an (alternative) annotation for
+Cannot use `$KeyMirror` on conditional type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:42:18
+   ops_on_eval_conditional.js:42:18
    42| declare var y12: $KeyMirror<T>;
                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:46:18
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:46:18
 
-Cannot use key set on `$Call` [1] in an export position. Please provide an (alternative) annotation for key set [2].
-[invalid-exported-annotation]
+Cannot use key set on conditional type [1] in an export position. Please provide an (alternative) annotation for key
+set [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:46:18
+   ops_on_eval_conditional.js:46:18
    46| declare var y13: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:1:10
-    1| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_conditional.js:1:10
+    1| type T = void extends void ? any : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:5:19

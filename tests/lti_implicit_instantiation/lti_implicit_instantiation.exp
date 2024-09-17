@@ -446,20 +446,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:25:1
 
-Cannot call `Call` because `T` [1] is underconstrained by call of `Call` [2]. Either add explicit type arguments or cast
-the expression to your expected type. [underconstrained-implicit-instantiation]
+Cannot call `ConditionalType` because `T` [1] is underconstrained by call of `ConditionalType` [2]. Either add explicit
+type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    upper_non_t.js:25:1
-   25| Call(undefined); // Error: T under constrained.
-       ^^^^
+   25| ConditionalType(undefined); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^
 
 References:
-   upper_non_t.js:24:23
-   24| declare function Call<T>($Call<T, <V>(V) => void>): T;
-                             ^ [1]
+   upper_non_t.js:24:34
+   24| declare function ConditionalType<T>(T extends mixed ? void : empty): T;
+                                        ^ [1]
    upper_non_t.js:25:1
-   25| Call(undefined); // Error: T under constrained.
-       ^^^^^^^^^^^^^^^ [2]
+   25| ConditionalType(undefined); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:27:1

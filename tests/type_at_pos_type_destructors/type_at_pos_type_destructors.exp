@@ -814,101 +814,121 @@ type-destructor.js:116:6,116:26
 
 type-destructor.js:122:6
 Flags:
-type CallExtractPropType = $Call<ExtractPropType, PropObj>
+type ConditionalExtractPropType = PropObj extends {prop: infer T, ...}
+  ? T
+  : empty
 = number
 
-'CallExtractPropType' defined at type-destructor.js:122:5
-'ExtractPropType' defined at type-destructor.js:120:5
+'ConditionalExtractPropType' defined at type-destructor.js:122:5
 'PropObj' defined at type-destructor.js:121:5
+'T' defined at type-destructor.js:122:64
 
-type-destructor.js:122:6,122:24
+type-destructor.js:122:6,122:31
 
 type-destructor.js:135:6
 Flags:
-type CallNestedObjType = $Call<
-  <T>({+data: ?$ReadOnlyArray<{+foo: ?{+bar: ?T, ...}, ...}>, ...}) => T,
-  NestedObj,
->
+type ConditionalNestedObjType = NestedObj extends {
+  +data: ?$ReadOnlyArray<{+foo: ?{+bar: ?infer T, ...}, ...}>,
+  ...
+}
+  ? T
+  : empty
 = number
 
-'CallNestedObjType' defined at type-destructor.js:135:5
+'ConditionalNestedObjType' defined at type-destructor.js:135:5
 'NestedObj' defined at type-destructor.js:125:5
+'T' defined at type-destructor.js:139:19
 
-type-destructor.js:135:6,135:22
+type-destructor.js:135:6,135:29
 
-type-destructor.js:150:6
+type-destructor.js:144:6
 Flags:
-type CallExtractPropTypePoly<P> = $Call<ExtractPropType, PropObjPoly<P>>
+type ConditionalIdPoly<R> = R extends infer N ? N : empty
+= R
+
+'ConditionalIdPoly' defined at type-destructor.js:144:5
+'N' defined at type-destructor.js:144:44
+
+type-destructor.js:144:6,144:22
+
+type-destructor.js:148:6
+Flags:
+type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends {
+  prop: infer T,
+  ...
+}
+  ? T
+  : empty
 = P
 
-'CallExtractPropTypePoly' defined at type-destructor.js:150:5
-'ExtractPropType' defined at type-destructor.js:120:5
-'PropObjPoly' defined at type-destructor.js:149:5
+'ConditionalExtractPropTypePoly' defined at type-destructor.js:148:5
+'PropObjPoly' defined at type-destructor.js:147:5
+'T' defined at type-destructor.js:148:78
 
-type-destructor.js:150:6,150:28
+type-destructor.js:148:6,148:35
 
-type-destructor.js:154:6
+type-destructor.js:152:6
 Flags:
 type ExportsM = {|+x: number|}
 
-'ExportsM' defined at type-destructor.js:154:5
+'ExportsM' defined at type-destructor.js:152:5
 
-type-destructor.js:154:6,154:13
+type-destructor.js:152:6,152:13
+
+type-destructor.js:156:18
+Flags:
+<T: {...}, K: T>() => T[K]
+type-destructor.js:156:18,156:28
 
 type-destructor.js:158:18
 Flags:
-<T: {...}, K: T>() => T[K]
+<K: any, T: {...}>() => T[K]
 type-destructor.js:158:18,158:28
 
-type-destructor.js:160:18
-Flags:
-<K: any, T: {...}>() => T[K]
-type-destructor.js:160:18,160:28
-
-type-destructor.js:164:6
+type-destructor.js:162:6
 Flags:
 type RecursiveTypeDestructor = {|f: {|g: RecursiveTypeDestructor["f"]|}|}
 = {|f: {|g: {|g: any|}|}|}
 
-'RecursiveTypeDestructor' defined at type-destructor.js:164:5
+'RecursiveTypeDestructor' defined at type-destructor.js:162:5
 
-type-destructor.js:164:6,164:28
+type-destructor.js:162:6,162:28
 
-type-destructor.js:171:6
+type-destructor.js:169:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
   f: {|h: RecursiveTypeDestructorPoly<X>["f"]|} | X
 |}
 = {|f: {|h: {|h: {|h: any|} | X|} | X|} | X|}
 
-'RecursiveTypeDestructorPoly' defined at type-destructor.js:171:5
+'RecursiveTypeDestructorPoly' defined at type-destructor.js:169:5
 
-type-destructor.js:171:6,171:32
+type-destructor.js:169:6,169:32
 
-type-destructor.js:177:6
+type-destructor.js:175:6
 Flags:
 type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K]
 = empty
 
-'$Pick' defined at type-destructor.js:177:5
+'$Pick' defined at type-destructor.js:175:5
 
-type-destructor.js:177:6,177:10
+type-destructor.js:175:6,175:10
 
-type-destructor.js:182:14
+type-destructor.js:180:14
 Flags:
 ReadOnlyObj
 
 'ReadOnlyObj' defined at type-destructor.js:41:5
 
-type-destructor.js:182:14,182:14
+type-destructor.js:180:14,180:14
 
-type-destructor.js:200:9
+type-destructor.js:198:9
 Flags:
 {prop: R, type: "blah", ...}
 
-'R' defined at type-destructor.js:192:7
+'R' defined at type-destructor.js:190:7
 
-type-destructor.js:200:9,200:14
+type-destructor.js:198:9,198:14
 
 mapped-type.js:7:6
 Flags:
