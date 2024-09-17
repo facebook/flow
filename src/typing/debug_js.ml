@@ -1626,7 +1626,6 @@ let dump_error_message =
     | EInternalType (loc, _) -> spf "EInternalType (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
-    | EDeprecatedDollarCall loc -> spf "EDeprecatedDollarCall (%s)" (string_of_aloc loc)
     | EDeprecatedPredicate loc -> spf "EDeprecatedPredicate (%s)" (string_of_aloc loc)
     | EIncorrectTypeWithReplacement { loc; kind } ->
       let deprecated_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in

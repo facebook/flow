@@ -3,5 +3,4 @@ all=true
 no_flowlib=false
 
 [lints]
-deprecated-type-dollar-call=off
 deprecated-type-predicate=off

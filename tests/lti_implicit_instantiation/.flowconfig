@@ -3,6 +3,3 @@ all=true
 exact_by_default=false
 no_flowlib=false
 component_syntax=true
-
-[lints]
-deprecated-type-dollar-call=off
