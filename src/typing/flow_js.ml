@@ -3990,6 +3990,61 @@ struct
         (**************)
         (* object kit *)
         (**************)
+        | ( GenericT { reason; no_infer; bound; _ },
+            Object.(
+              ObjKitT
+                ( use_op,
+                  reason_op,
+                  Resolve Next,
+                  Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt = None },
+                  tout
+                ))
+          )
+          when speculative_subtyping_succeeds
+                 cx
+                 bound
+                 (DefT (reason, ArrT (ROArrayAT (DefT (reason, MixedT Mixed_everything), None)))) ->
+          let (t_generic_id, t) =
+            let rec loop t ls =
+              match t with
+              | GenericT { id; bound; reason; _ } ->
+                loop
+                  (mod_reason_of_t (fun _ -> reason) bound)
+                  (Generic.spread_append (Generic.make_spread id) ls)
+              | _ -> (ls, t)
+            in
+            loop l Generic.spread_empty
+          in
+          let mapped_bound =
+            Tvar.mk_where cx reason_op (fun tout ->
+                rec_flow
+                  cx
+                  trace
+                  ( t,
+                    ObjKitT
+                      ( use_op,
+                        reason_op,
+                        Object.(Resolve Next),
+                        Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt = None },
+                        tout
+                      )
+                  )
+            )
+          in
+          let mapped_generic_t =
+            Generic.make_op_id Subst_name.Mapped t_generic_id
+            |> Base.Option.value_map ~default:t ~f:(fun id ->
+                   GenericT
+                     {
+                       bound = mapped_bound;
+                       reason;
+                       id;
+                       name = Generic.subst_name_of_id id;
+                       no_infer;
+                     }
+               )
+          in
+          rec_flow_t cx trace ~use_op:unknown_use (mapped_generic_t, tout)
         | ( DefT (_, ArrT arrtype),
             Object.(
               ObjKitT
