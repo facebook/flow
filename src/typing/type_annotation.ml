@@ -1129,22 +1129,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   )
               | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast
           )
-        | "$Call" ->
-          Flow_js_utils.add_output cx (Error_message.EDeprecatedDollarCall loc);
-          (match convert_type_params () with
-          | (fn :: args, targs) ->
-            let reason = mk_reason RFunctionCallType loc in
-            reconstruct_ast
-              (mk_type_destructor
-                 cx
-                 (use_op reason)
-                 reason
-                 fn
-                 (CallType { from_maptype = false; args })
-                 (mk_eval_id cx loc)
-              )
-              targs
-          | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast)
         | "$TupleMap" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =

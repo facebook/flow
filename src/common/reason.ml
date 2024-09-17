@@ -99,7 +99,6 @@ type 'loc virtual_reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall of 'loc virtual_reason_desc
-  | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXChild
   | RJSXFunctionCall of string
@@ -261,11 +260,11 @@ let rec map_desc_locs f = function
     | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit | REmptyArrayLit
     | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType | RTupleType
     | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
-    | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
-    | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _
-    | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
-    | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _ | RComponent _
-    | RComponentType | RInferredUnionElemArray _ ) as r ->
+    | RFunction _ | RFunctionType | RFunctionBody | RFunctionUnusedArgument | RJSXChild
+    | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
+    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
+    | RTypeGuard | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ )
+    as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -586,7 +585,6 @@ let rec string_of_desc = function
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
   | RFunctionCall d -> spf "call of %s" (string_of_desc d)
-  | RFunctionCallType -> "`$Call`"
   | RFunctionUnusedArgument -> "unused function argument"
   | RJSXChild -> "JSX child"
   | RJSXFunctionCall raw_jsx -> spf "`%s(...)`" raw_jsx
@@ -1349,7 +1347,6 @@ let classification_of_reason_desc desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall _
-  | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXChild
   | RJSXFunctionCall _

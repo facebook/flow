@@ -1446,7 +1446,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               call_tout;
               call_strict_arity;
               call_speculation_hint_state;
-              call_kind = (MapTypeKind | CallTypeKind) as call_kind;
+              call_kind = MapTypeKind as call_kind;
               call_specialized_callee;
             }
         )

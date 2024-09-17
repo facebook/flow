@@ -247,7 +247,7 @@ class ['a] t =
         in
         acc
       | RestType (_, t) -> self#type_ cx pole_TODO acc t
-      | CallType { from_maptype = _; args } -> self#list (self#type_ cx pole_TODO) acc args
+      | CallType { args } -> self#list (self#type_ cx pole_TODO) acc args
       | ConditionalType { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t }
         ->
         let acc = self#list (self#type_param cx pole_TODO) acc infer_tparams in

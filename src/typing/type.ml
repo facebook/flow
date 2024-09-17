@@ -1136,7 +1136,6 @@ module rec TypeTerm : sig
 
   and call_kind =
     | MapTypeKind
-    | CallTypeKind
     | RegularCallKind
 
   (* speculation id * case id *)
@@ -1585,10 +1584,7 @@ module rec TypeTerm : sig
       }
     | RestType of Object.Rest.merge_mode * t
     | ValuesType
-    | CallType of {
-        from_maptype: bool;
-        args: t list;
-      }
+    | CallType of { args: t list }
     | ConditionalType of {
         distributive_tparam_name: Subst_name.t option;
         infer_tparams: typeparam list;

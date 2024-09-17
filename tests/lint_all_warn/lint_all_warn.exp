@@ -16,30 +16,21 @@ References:
                      ^^^^^^^ [2]
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:10
-
-Deprecated type. Use conditional types instead. See https://flow.org/en/docs/types/conditional/ for more information on
-conditional types. [deprecated-type]
-
-   3| type A = $Call<() => number>;
-               ^^^^^^^^^^^^^^^^^^^
-
-
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:5:23
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:23
 
 Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
 guards. [deprecated-type]
 
-   5| function foo(x: mixed): %checks {
+   3| function foo(x: mixed): %checks {
                             ^^^^^^^^^
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:8:41
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:41
 
 Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
 guards. [deprecated-type]
 
-   8| declare function bar(x: mixed): boolean %checks(x === 1);
+   6| declare function bar(x: mixed): boolean %checks(x === 1);
                                               ^^^^^^^^^^^^^^^^
 
 
@@ -70,4 +61,4 @@ References:
 
 
 
-Found 1 error and 5 warnings
+Found 1 error and 4 warnings

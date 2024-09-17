@@ -16,13 +16,13 @@ References:
                              ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deprecated.js:1:12
+Error ----------------------------------------------------------------------------------------------- deprecated.js:1:41
 
-Deprecated type. Use conditional types instead. See https://flow.org/en/docs/types/conditional/ for more information on
-conditional types. [deprecated-type]
+Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
+guards. [deprecated-type]
 
-   1| type Foo = $Call<() => string>; // error
-                 ^^^^^^^^^^^^^^^^^^^
+   1| declare function bar(x: mixed): boolean %checks(x === 1);; // error
+                                              ^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------ simple_sketchies.js:5:7

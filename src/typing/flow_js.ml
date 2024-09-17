@@ -3934,7 +3934,7 @@ struct
             let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
             EvalT
               ( funt,
-                TypeDestructorT (use_op, reason_op, CallType { from_maptype = true; args = [x] }),
+                TypeDestructorT (use_op, reason_op, CallType { args = [x] }),
                 Eval.generate_id ()
               )
           in
@@ -3981,10 +3981,7 @@ struct
           let iter = Flow_js_utils.lookup_builtin_value cx "$iterate" reason in
           let elemt =
             EvalT
-              ( iter,
-                TypeDestructorT (use_op, reason, CallType { from_maptype = true; args = [l] }),
-                Eval.generate_id ()
-              )
+              (iter, TypeDestructorT (use_op, reason, CallType { args = [l] }), Eval.generate_id ())
           in
           let t = DefT (reason, ArrT (ROArrayAT (elemt, None))) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
@@ -6811,14 +6808,9 @@ struct
             trace
             (t, Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout)))
         | ValuesType -> rec_flow cx trace (t, GetValuesT (reason, OpenT tout))
-        | CallType { from_maptype; args } ->
+        | CallType { args } ->
           let args = Base.List.map ~f:(fun arg -> Arg arg) args in
-          let call_kind =
-            if from_maptype then
-              MapTypeKind
-            else
-              CallTypeKind
-          in
+          let call_kind = MapTypeKind in
           let call = mk_functioncalltype ~call_kind reason None args tout in
           let call = { call with call_strict_arity = false } in
           let use_op =

@@ -588,11 +588,6 @@ type ('loc, 'a) annot =
       true_type: 'a;
       false_type: 'a;
     }
-  | Call of {
-      loc: 'loc;
-      fn: 'a;
-      args: 'a list;
-    }
   | TupleMap of {
       loc: 'loc;
       tup: 'a;

@@ -635,12 +635,12 @@ class virtual ['a] t =
         else
           RestType (options, x')
       | ValuesType -> t
-      | CallType { from_maptype; args } ->
+      | CallType { args } ->
         let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
         if args' == args then
           t
         else
-          CallType { from_maptype; args = args' }
+          CallType { args = args' }
       | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
         let infer_tparams' = ListUtils.ident_map (self#type_param cx map_cx) infer_tparams in
         let extends_t' = self#type_ cx map_cx extends_t in

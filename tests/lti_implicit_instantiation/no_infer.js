@@ -31,12 +31,6 @@ f5(1, '1'); // error: string ~> number
 
 declare function f6<T>(
   v1: T,
-  v2: NoInfer<$Call<<V>(V) => V, 1>> // error: underconstrained
-): void;
-f6(1, 1); // ok
-
-declare function f7<T>(
-  v1: T,
   v2: NoInfer<{[K in keyof T]: T[K]}>
 ): void;
 f7({a: ''}, {a: ''}); // ok

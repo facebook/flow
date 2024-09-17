@@ -1588,7 +1588,7 @@ module Make (I : INPUT) : S = struct
         in
         Ty.IndexedAccess { _object = ty; index = index'; optional = true }
       | T.OptionalIndexedAccessResultType _ -> return ty
-      | T.CallType { from_maptype = _; args = ts } ->
+      | T.CallType { args = ts } ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))
       | T.ConditionalType

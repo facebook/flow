@@ -1,7 +1,5 @@
 // @flow
 
-type A = $Call<() => number>;
-
 function foo(x: mixed): %checks {
   return x === 1;
 }

@@ -858,13 +858,6 @@ and merge_annot env file = function
     (match distributive_tparam with
     | None -> convert None env
     | Some (TParam { name; _ }) -> convert (Some (Subst_name.Name name)) env)
-  | Call { loc; fn; args } ->
-    let reason = Reason.(mk_reason RFunctionCallType loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let fn = merge env file fn in
-    let args = List.map (merge env file) args in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (fn, TypeDestructorT (use_op, reason, CallType { from_maptype = false; args }), id))
   | TupleMap { loc; tup; fn } ->
     let reason = Reason.(mk_reason RTupleMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
