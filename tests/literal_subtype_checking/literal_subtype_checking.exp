@@ -1,3 +1,129 @@
+Error ------------------------------------------------------------------------------------------- non_refinements.js:5:7
+
+Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:5:7
+   5| x === 'foox'; // ERROR
+            ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+   3| declare const x: ?T;
+                       ^^ [1]
+   non_refinements.js:3:19
+   3| declare const x: ?T;
+                        ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- non_refinements.js:7:7
+
+Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:7:7
+   7| x === 'foox' || x === 'barx'; // ERROR
+            ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+   3| declare const x: ?T;
+                       ^^ [1]
+   non_refinements.js:3:19
+   3| declare const x: ?T;
+                        ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ non_refinements.js:7:23
+
+Invalid check of string literal `barx` against nullable `T` [1] because string literal `barx` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:7:23
+   7| x === 'foox' || x === 'barx'; // ERROR
+                            ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+   3| declare const x: ?T;
+                       ^^ [1]
+   non_refinements.js:3:19
+   3| declare const x: ?T;
+                        ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- non_refinements.js:9:7
+
+Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:9:7
+   9| x === 'foox' || true;
+            ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+   3| declare const x: ?T;
+                       ^^ [1]
+   non_refinements.js:3:19
+   3| declare const x: ?T;
+                        ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- non_refinements.js:11:15
+
+Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:11:15
+   11| true || x === 'foox'; // ERROR
+                     ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+    3| declare const x: ?T;
+                        ^^ [1]
+   non_refinements.js:3:19
+    3| declare const x: ?T;
+                         ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- non_refinements.js:13:21
+
+Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:13:21
+   13| x != null && (x === 'foox' || x === 'barx'); // ERROR
+                           ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+    3| declare const x: ?T;
+                        ^^ [1]
+   non_refinements.js:3:19
+    3| declare const x: ?T;
+                         ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- non_refinements.js:13:37
+
+Invalid check of string literal `barx` against nullable `T` [1] because string literal `barx` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   non_refinements.js:13:37
+   13| x != null && (x === 'foox' || x === 'barx'); // ERROR
+                                           ^^^^^^ [2]
+
+References:
+   non_refinements.js:3:18
+    3| declare const x: ?T;
+                        ^^ [1]
+   non_refinements.js:3:19
+    3| declare const x: ?T;
+                         ^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:7:8
 
 Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
@@ -611,4 +737,4 @@ References:
 
 
 
-Found 36 errors
+Found 43 errors

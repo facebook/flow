@@ -5281,6 +5281,59 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | BitAnd ->
           ignore @@ this#binary loc expr
 
+      method! binary loc expr =
+        let open Flow_ast.Expression.Binary in
+        let { operator; left; right; comments = _ } = expr in
+        let eq_test =
+          Eq_test.visit_eq_test
+            ~on_type_of_test:(fun _ _ _ _ _ -> ())
+            ~on_null_test:(fun ~sense:_ ~strict:_ _ _ _ -> ())
+            ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ _ _ -> ())
+            ~on_member_eq_other:(fun _ _ -> ())
+            ~on_other_eq_member:(fun _ _ -> ())
+            ~on_other_eq_test:(fun _ _ -> ())
+            ~is_switch_cond_context:false
+            ~on_literal_test:(fun ~strict ~sense:_ _loc expr refinement _other ->
+              match RefinementKey.of_expression expr with
+              | Some { RefinementKey.lookup; loc = _ } when strict ->
+                (match lookup with
+                | { RefinementKey.base; projections = [] } ->
+                  let { val_ref = _; def_loc; _ } = this#env_read base in
+                  (match def_loc with
+                  | None -> ()
+                  | Some def_loc -> add_literal_subtype_test def_loc refinement)
+                | _ -> ())
+              | _ -> ())
+        in
+        match operator with
+        | StrictEqual ->
+          eq_test ~strict:true ~sense:true loc left right;
+          super#binary loc expr
+        | StrictNotEqual ->
+          eq_test ~strict:true ~sense:false loc left right;
+          super#binary loc expr
+        | Equal
+        | NotEqual
+        | Instanceof
+        | LessThan
+        | LessThanEqual
+        | GreaterThan
+        | GreaterThanEqual
+        | In
+        | LShift
+        | RShift
+        | RShift3
+        | Plus
+        | Minus
+        | Mult
+        | Exp
+        | Div
+        | Mod
+        | BitOr
+        | Xor
+        | BitAnd ->
+          super#binary loc expr
+
       method call_refinement loc call =
         let open Ast.Expression in
         match call with
