@@ -147,6 +147,40 @@ let negate_bigint_literal (value, raw) =
   | None -> (None, raw)
   | Some value -> (Some (Int64.neg value), negate_raw_lit raw)
 
+let is_number_literal node =
+  match node with
+  | Expression.NumberLiteral _
+  | Expression.Unary
+      {
+        Expression.Unary.operator = Expression.Unary.Minus;
+        argument = (_, Expression.NumberLiteral _);
+        comments = _;
+      } ->
+    true
+  | _ -> false
+
+let extract_number_literal node =
+  match node with
+  | Expression.NumberLiteral { NumberLiteral.value; raw; comments = _ } -> Some (value, raw)
+  | Expression.Unary
+      {
+        Expression.Unary.operator = Expression.Unary.Minus;
+        argument = (_, Expression.NumberLiteral { NumberLiteral.value; raw; _ });
+        comments = _;
+      } ->
+    Some (negate_number_literal (value, raw))
+  | _ -> None
+
+let is_bigint_literal node =
+  match node with
+  | Expression.BigIntLiteral _ -> true
+  | _ -> false
+
+let extract_bigint_literal node =
+  match node with
+  | Expression.BigIntLiteral { BigIntLiteral.value; raw; comments = _ } -> Some (value, raw)
+  | _ -> None
+
 let is_call_to_invariant callee =
   match callee with
   | (_, Expression.Identifier (_, { Identifier.name = "invariant"; _ })) -> true

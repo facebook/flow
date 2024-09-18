@@ -60,6 +60,14 @@ val negate_number_literal : float * string -> float * string
 
 val negate_bigint_literal : int64 option * string -> int64 option * string
 
+val is_number_literal : ('a, 'b) Flow_ast.Expression.t' -> bool
+
+val extract_number_literal : ('a, 'b) Flow_ast.Expression.t' -> (float * string) option
+
+val is_bigint_literal : ('a, 'b) Flow_ast.Expression.t' -> bool
+
+val extract_bigint_literal : ('a, 'b) Flow_ast.Expression.t' -> (int64 option * string) option
+
 val loc_of_expression : ('a, 'a) Flow_ast.Expression.t -> 'a
 
 val loc_of_statement : ('a, 'a) Flow_ast.Statement.t -> 'a

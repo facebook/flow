@@ -7,43 +7,15 @@
 
 module Ast = Flow_ast
 
-let is_number_literal node =
-  let open Ast in
-  match node with
-  | Expression.NumberLiteral _
-  | Expression.Unary
-      {
-        Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.NumberLiteral _);
-        comments = _;
-      } ->
-    true
-  | _ -> false
-
 let extract_number_literal node =
-  let open Ast in
-  match node with
-  | Expression.NumberLiteral { NumberLiteral.value; raw; comments = _ } -> (value, raw)
-  | Expression.Unary
-      {
-        Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.NumberLiteral { NumberLiteral.value; raw; _ });
-        comments = _;
-      } ->
-    (-.value, "-" ^ raw)
-  | _ -> raise Env_api.(Env_invariant (None, Impossible "not a number literal"))
-
-let is_bigint_literal node =
-  let open Ast in
-  match node with
-  | Expression.BigIntLiteral _ -> true
-  | _ -> false
+  match Flow_ast_utils.extract_number_literal node with
+  | Some lit -> lit
+  | None -> raise Env_api.(Env_invariant (None, Impossible "not a number literal"))
 
 let extract_bigint_literal node =
-  let open Ast in
-  match node with
-  | Expression.BigIntLiteral { BigIntLiteral.value; raw; comments = _ } -> (value, raw)
-  | _ -> Utils_js.assert_false "not a bigint literal"
+  match Flow_ast_utils.extract_bigint_literal node with
+  | Some lit -> lit
+  | None -> raise Env_api.(Env_invariant (None, Impossible "not a bigint literal"))
 
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
@@ -302,7 +274,8 @@ module Make
       ) ->
       on_literal_test ~strict ~sense loc expr (SingletonStrR { loc = lit_loc; sense; lit }) other
     (* number equality *)
-    | (((lit_loc, number_literal) as other), expr) when is_number_literal number_literal ->
+    | (((lit_loc, number_literal) as other), expr)
+      when Flow_ast_utils.is_number_literal number_literal ->
       let raw = extract_number_literal number_literal in
       on_literal_test
         ~strict
@@ -311,7 +284,8 @@ module Make
         expr
         (SingletonNumR { loc = lit_loc; sense; lit = raw })
         other
-    | (expr, ((lit_loc, number_literal) as other)) when is_number_literal number_literal ->
+    | (expr, ((lit_loc, number_literal) as other))
+      when Flow_ast_utils.is_number_literal number_literal ->
       let raw = extract_number_literal number_literal in
       on_literal_test
         ~strict
@@ -321,7 +295,8 @@ module Make
         (SingletonNumR { loc = lit_loc; sense; lit = raw })
         other
     (* bigint equality *)
-    | (((lit_loc, bigint_literal) as other), expr) when is_bigint_literal bigint_literal ->
+    | (((lit_loc, bigint_literal) as other), expr)
+      when Flow_ast_utils.is_bigint_literal bigint_literal ->
       let raw = extract_bigint_literal bigint_literal in
       on_literal_test
         ~strict
@@ -330,7 +305,8 @@ module Make
         expr
         (SingletonBigIntR { loc = lit_loc; sense; lit = raw })
         other
-    | (expr, ((lit_loc, bigint_literal) as other)) when is_bigint_literal bigint_literal ->
+    | (expr, ((lit_loc, bigint_literal) as other))
+      when Flow_ast_utils.is_bigint_literal bigint_literal ->
       let raw = extract_bigint_literal bigint_literal in
       on_literal_test
         ~strict
