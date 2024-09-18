@@ -3,6 +3,8 @@ title: Mapped Types
 slug: /types/mapped-types
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Flow's mapped types allow you to transform object types. They are useful for modeling complex runtime operations over objects.
 
 ## Basic Usage {#toc-basic-usage}
@@ -128,6 +130,38 @@ type MappedType = {[key in Union]: number};
 ```
 
 > NOTE: Flow does not yet support removing variance or optionality modifiers.
+
+## Mapped Type on Arrays  <SinceVersion version="0.246" /> {#toc-mapped-type-on-arrays}
+
+Mapped type also works on array or tuple inputs. If the mapped type is in the form of
+
+```
+{[K in keyof <type_1>]: <type_2>}
+```
+
+then `type_1` is allowed to be an array or tuple type.
+
+This feature will be especially useful if you want to map over elements of a tuple:
+
+```js flow-check
+type Tuple = [+a: number, b?: string];
+type MappedTuple = {[K in keyof Tuple]: Tuple[K] extends number ? boolean : string};
+const a: MappedTuple[0] = true;
+const b: MappedTuple[1] = '';
+'' as MappedTuple[0] // error
+false as MappedTuple[1] // error
+declare const mapped: MappedTuple;
+mapped[0] = true; // error: cannot-write
+```
+
+For now, the only supported property modifier on array input is the optionality modifier `?`.
+
+```js flow-check
+type Tuple = [+a: number, b?: string];
+type Supported = {[K in keyof Tuple]?: string};
+type Unsupported1 = {+[K in keyof Tuple]: string};
+type Unsupported2 = {-[K in keyof Tuple]: string};
+```
 
 ## Adoption {#toc-adoption}
 
