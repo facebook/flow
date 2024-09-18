@@ -294,11 +294,11 @@ a        ,) {}
 [1]       ;
 
 // `as` cast with generics
-'m'                                              ;
-['a', 'b', 'c']                                                                                    ;
-['x', 'y', 'z']                                                                      ;
-const ga = {a: 'b'}                                                                                        ;
-const gb = {a: 'x', b: 1}                                                                ;
+'m'                         ;
+['a', 'b', 'c']                                            ;
+['x', 'y', 'z']                                     ;
+const ga = {a: 'b'}                                              ;
+const gb = {a: 'x', b: 1}                                  ;
 
 // `as const`
 's'         ;
