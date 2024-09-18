@@ -229,10 +229,13 @@ const kk = function(a,) {}
 1;
 [1];
 
+// `as` cast with generics
+'m';
+['a', 'b', 'c'];
+['x', 'y', 'z'];
+const ga = {a: 'b'};
+const gb = {a: 'x', b: 1};
+
 // `as const`
 's';
 ['s'];
-
-// `as $NonMaybeType`
-'m';
-['m'];
