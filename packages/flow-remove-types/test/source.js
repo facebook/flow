@@ -296,3 +296,7 @@ a: string,) {}
 // `as const`
 's' as const;
 ['s'] as const;
+
+// `as $NonMaybeType`
+'m' as $NonMaybeType<string>;
+['m'] as $NonMaybeType<string[]>;
