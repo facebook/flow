@@ -12,6 +12,7 @@ Default .flowconfig looks like this:
 untyped-type-import=error
 internal-type=error
 deprecated-type-bool=error
+deprecated-type-dollar-tuple-map=error
 deprecated-type-predicate=error
 
 [options]

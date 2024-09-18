@@ -545,6 +545,7 @@ type 'loc message =
       annot_locs: 'loc Env_api.annot_loc list;
     }
   | MessageDeprecatedBool
+  | MessageDeprecatedDollarTupleMap
   | MessageDeprecatedPredicate
   | MessageDevOnlyRefinedLocInfo of { refining_locs: 'loc list }
   | MessageDevOnlyInvalidatedRefinementInfo of ('loc * Refinement_invalidation.reason) list

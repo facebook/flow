@@ -1130,6 +1130,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast
           )
         | "$TupleMap" ->
+          Flow_js_utils.add_output cx (Error_message.EDeprecatedDollarTupleMap loc);
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
                 match convert_type_params () with

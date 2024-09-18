@@ -2410,6 +2410,12 @@ let to_printable_error :
       @ tl_recur
       @ (text ". Please add an annotation to " :: annot_message)
     | MessageDeprecatedBool -> [text "Deprecated type. Use "; code "boolean"; text " instead."]
+    | MessageDeprecatedDollarTupleMap ->
+      [
+        text "Deprecated type. Use mapped types instead. ";
+        text
+          "See https://flow.org/en/docs/types/mapped-types/ for more information on conditional types.";
+      ]
     | MessageDeprecatedPredicate ->
       [
         text "Deprecated type. Use type guards instead. ";

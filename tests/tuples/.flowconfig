@@ -2,3 +2,6 @@
 no_flowlib=false
 lazy_mode=fs
 all=true
+
+[lints]
+deprecated-type-dollar-tuple-map=off

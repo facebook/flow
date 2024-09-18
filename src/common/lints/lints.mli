@@ -27,6 +27,7 @@ type property_assignment_kind =
 
 type deprecated_type_kind =
   | DeprecatedBool
+  | DeprecatedDollarTupleMap
   | DeprecatedPredicate
 
 type lint_kind =
