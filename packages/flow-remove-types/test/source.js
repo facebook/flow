@@ -293,10 +293,13 @@ a: string,) {}
 1 as number as mixed;
 [1] as [1];
 
+// `as` cast with generics
+'m' as $NonMaybeType<string>;
+['a', 'b', 'c'] as $Keys<{a: string, b: string, c: number}>;
+['x', 'y', 'z'] as $Values<{a: 'x', b: 'y', c: 'z'}>;
+const ga = {a: 'b'} as $Rest<{a: string, c: number}, {c: number}>;
+const gb = {a: 'x', b: 1} as $Shape<{a: string, b: number}>;
+
 // `as const`
 's' as const;
 ['s'] as const;
-
-// `as $NonMaybeType`
-'m' as $NonMaybeType<string>;
-['m'] as $NonMaybeType<string[]>;
