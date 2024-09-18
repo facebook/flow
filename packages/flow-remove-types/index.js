@@ -169,6 +169,10 @@ var removeFlowVisitor = {
     var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
     removeNode(context, node.typeAnnotation);
+    
+    if (node.typeAnnotation.type === 'GenericTypeAnnotation') {
+      removeNode(context, ast.tokens[typeIdx]);
+    }
   },
 
   AsConstExpression: function (context, node, ast) {
