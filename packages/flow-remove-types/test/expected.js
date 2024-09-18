@@ -298,5 +298,5 @@ a        ,) {}
 ['s']         ;
 
 // `as $NonMaybeType`
-'m'    $NonMaybeType                             ;
-['m']    $NonMaybeType                                 ;
+'m'                                              ;
+['m']                                                  ;
