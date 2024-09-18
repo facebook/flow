@@ -233,4 +233,8 @@ const kk = function(a,) {}
 's';
 ['s'];
 
+// `as $NonMaybeType`
+'m'$NonMaybeType;
+['m']$NonMaybeType;
+
 //# sourceMappingURL=source.js.map

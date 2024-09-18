@@ -232,3 +232,7 @@ const kk = function(a,) {}
 // `as const`
 's';
 ['s'];
+
+// `as $NonMaybeType`
+'m'$NonMaybeType;
+['m']$NonMaybeType;
