@@ -173,12 +173,26 @@ let extract_number_literal node =
 
 let is_bigint_literal node =
   match node with
-  | Expression.BigIntLiteral _ -> true
+  | Expression.BigIntLiteral _
+  | Expression.Unary
+      {
+        Expression.Unary.operator = Expression.Unary.Minus;
+        argument = (_, Expression.BigIntLiteral _);
+        comments = _;
+      } ->
+    true
   | _ -> false
 
 let extract_bigint_literal node =
   match node with
   | Expression.BigIntLiteral { BigIntLiteral.value; raw; comments = _ } -> Some (value, raw)
+  | Expression.Unary
+      {
+        Expression.Unary.operator = Expression.Unary.Minus;
+        argument = (_, Expression.BigIntLiteral { BigIntLiteral.value; raw; comments = _ });
+        comments = _;
+      } ->
+    Some (negate_bigint_literal (value, raw))
   | _ -> None
 
 let is_call_to_invariant callee =
