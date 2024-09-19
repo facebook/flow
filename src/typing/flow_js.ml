@@ -1195,6 +1195,8 @@ struct
           rec_flow cx trace (t, u)
         | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
+        | (OptionalT { reason = _; type_ = t; use_desc = _ }, ExtractReactRefT _) ->
+          rec_flow cx trace (t, u)
         | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
           let void = VoidT.why_with_use_desc ~use_desc r in
           rec_flow cx trace (void, u);

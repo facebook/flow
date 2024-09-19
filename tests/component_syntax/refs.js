@@ -87,3 +87,15 @@ import * as React from 'react';
 component Bad<T>(ref: React$RefSetter<T>) { return null };
 
 component Bad2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
+
+{
+  declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+
+  declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+  declare const goodRef: React.RefSetter<{foo: string, bar: number}>;
+  <Foo ref={badRef} />; // error
+  <Foo ref={goodRef} />; // ok
+  <Foo ref={null} />; // ok
+  <Foo ref={undefined} />; // ok
+  <Foo />; // ok
+}
