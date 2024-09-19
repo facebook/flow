@@ -129,6 +129,7 @@ let lsp_completion_of_type =
   | Utility _
   | IndexedAccess _
   | Conditional _
+  | Component _
   | Infer _
   | Renders _ ->
     Lsp.Completion.Variable

@@ -1,4 +1,6 @@
-lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}, null>}
+lazy_ref.js:14:9 = {
+  default: component(ref: React.RefSetter<{moo(x: string): void}>, ...empty) renders null
+}
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
   {+default: (x: Props) => ExactReactElement_DEPRECATED<(x: Props) => Node>},
@@ -153,5 +155,24 @@ React$CreateElement
 
 react.js:4:7,4:19
 
-react_abstract_component.js:3:15 = React$AbstractComponent<any, any, any>
+react_abstract_component.js:3:15 = component(ref: React.RefSetter<any>, ...any) renders any
 react_abstract_component.js:3:15,3:15
+react_abstract_component.js:7:15 = (x: component(ref: React.RefSetter<any>, bar?: number, foo: string) renders Foo) => void
+
+'Foo' defined at react_abstract_component.js:20:18
+
+react_abstract_component.js:7:10,7:14
+react_abstract_component.js:11:15 = (
+  x: component(ref: React.RefSetter<any>, bar?: number, foo: string, ...{...}) renders* Foo
+) => void
+
+'Foo' defined at react_abstract_component.js:11:81
+
+react_abstract_component.js:11:10,11:14
+react_abstract_component.js:15:15 = (
+  x: component(
+    ref: React.RefSetter<any>,
+    ...{bar?: number, foo: string, get getter(): boolean}
+  ) renders any
+) => void
+react_abstract_component.js:15:10,15:14

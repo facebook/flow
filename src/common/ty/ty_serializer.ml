@@ -182,15 +182,98 @@ let type_ options =
     | TypeOf (FunProto, _) -> just (qualified2 "Object" "prototype")
     | TypeOf (ObjProto, _) -> just (qualified2 "Function" "prototype")
     | TypeOf (FunProtoBind, _) -> just (qualified3 "Function" "prototype" "bind")
-    | Renders (t, kind) ->
-      let argument = type_ t in
-      let variant =
-        match kind with
-        | RendersNormal -> T.Renders.Normal
-        | RendersMaybe -> T.Renders.Maybe
-        | RendersStar -> T.Renders.Star
+    | Component { props; instance; renders = renders_ } ->
+      let all_params =
+        match props with
+        | UnflattenedComponentProps t ->
+          let rest_param =
+            {
+              T.Component.RestParam.argument = None;
+              annot = type_ t;
+              optional = false;
+              comments = None;
+            }
+          in
+          { T.Component.Params.params = []; rest = Some (just rest_param); comments = None }
+        | FlattenedComponentProps { props; inexact } ->
+          let params =
+            Base.List.map
+              props
+              ~f:(fun (FlattenedComponentProp { name; optional; def_locs = _; t }) ->
+                let name =
+                  let x = Reason.show_name name in
+                  if Ty_printer.property_key_quotes_needed x then
+                    let quote = Ty_printer.better_quote ~prefer_single_quotes:false x in
+                    let raw = quote ^ Ty_printer.utf8_escape ~quote x ^ quote in
+                    Ast.Statement.ComponentDeclaration.Param.StringLiteral
+                      (Loc.none, { Ast.StringLiteral.value = x; raw; comments = None })
+                  else
+                    Ast.Statement.ComponentDeclaration.Param.Identifier (id_from_string x)
+                in
+                let annot = annotation t in
+                just { T.Component.Param.name; optional; annot }
+            )
+          in
+          let rest =
+            if inexact then
+              Some
+                (just
+                   {
+                     T.Component.RestParam.argument = None;
+                     annot =
+                       just
+                         (T.Object
+                            {
+                              T.Object.exact = false;
+                              inexact = true;
+                              properties = [];
+                              comments = None;
+                            }
+                         );
+                     optional = false;
+                     comments = None;
+                   }
+                )
+            else
+              None
+          in
+          { T.Component.Params.params; rest; comments = None }
       in
-      just (T.Renders { T.Renders.operator_loc = Loc.none; argument; comments = None; variant })
+      let all_params =
+        match instance with
+        | None -> all_params
+        | Some t ->
+          let ref_prop =
+            just
+              {
+                T.Component.Param.name =
+                  Ast.Statement.ComponentDeclaration.Param.Identifier (id_from_string "ref");
+                optional = false;
+                annot =
+                  just
+                    (mk_generic_type (id_from_string "React.RefSetter") (Some (mk_targs [type_ t])));
+              }
+          in
+          let params = ref_prop :: all_params.T.Component.Params.params in
+          { all_params with T.Component.Params.params }
+      in
+      let params = just all_params in
+      let renders =
+        match renders_ with
+        | Renders (t, kind) -> T.AvailableRenders (Loc.none, renders t kind)
+        | _ -> T.AvailableRenders (Loc.none, renders t RendersNormal)
+      in
+      just (T.Component { T.Component.tparams = None; params; renders; comments = None })
+    | Renders (t, kind) -> just (T.Renders (renders t kind))
+  and renders t kind =
+    let argument = type_ t in
+    let variant =
+      match kind with
+      | RendersNormal -> T.Renders.Normal
+      | RendersMaybe -> T.Renders.Maybe
+      | RendersStar -> T.Renders.Star
+    in
+    { T.Renders.operator_loc = Loc.none; argument; comments = None; variant }
   and generic x targs =
     let id = id_from_symbol x in
     let targs = Base.Option.map ~f:type_arguments targs in

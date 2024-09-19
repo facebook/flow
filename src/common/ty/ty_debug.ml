@@ -43,6 +43,7 @@ let string_of_ctor_t = function
   | IndexedAccess _ -> "IndexedAccess"
   | Conditional _ -> "Conditional"
   | Infer _ -> "Infer"
+  | Component _ -> "Component"
   | Renders _ -> "Renders"
 
 let string_of_ctor_decl = function
@@ -387,6 +388,37 @@ struct
           "Infer (%s, %s)"
           (dump_symbol s)
           (Base.Option.value_map ~default:"None" ~f:(dump_t ~depth) b)
+      | Component { props; instance; renders } ->
+        let props =
+          match props with
+          | UnflattenedComponentProps t -> [spf "...%s" (dump_t ~depth t)]
+          | FlattenedComponentProps { props; inexact } ->
+            let props =
+              Base.List.map
+                props
+                ~f:(fun (FlattenedComponentProp { name; optional; def_locs = _; t }) ->
+                  spf
+                    "%s%s: %s"
+                    (Reason.display_string_of_name name)
+                    ( if optional then
+                      "?"
+                    else
+                      ""
+                    )
+                    (dump_t ~depth t)
+              )
+            in
+            if inexact then
+              props @ ["...{...}"]
+            else
+              props
+        in
+        let props =
+          match instance with
+          | None -> props
+          | Some t -> spf "ref: React.RefSetter<%s>" (dump_t ~depth t) :: props
+        in
+        spf "Conditional(%s): %s" (Base.String.concat ~sep:", " props) (dump_t ~depth renders)
       | Renders (t, _) -> spf "Renders (%s)" (dump_t ~depth t)
 
   and dump_class_decl ~depth (name, ps) =
@@ -560,6 +592,40 @@ struct
           [
             ("name", json_of_symbol s);
             ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
+          ]
+        | Component { props; instance; renders } ->
+          let props =
+            match props with
+            | UnflattenedComponentProps t ->
+              JSON_Object [("kind", JSON_String "unflattened"); ("type", json_of_t t)]
+            | FlattenedComponentProps { props; inexact } ->
+              let props =
+                Base.List.map
+                  props
+                  ~f:(fun (FlattenedComponentProp { name; optional; def_locs; t }) ->
+                    JSON_Object
+                      [
+                        ("name", JSON_String (Reason.display_string_of_name name));
+                        ("optional", JSON_Bool optional);
+                        ("type", json_of_t t);
+                        ( "def_locs",
+                          JSON_Array
+                            (Base.List.map def_locs ~f:(fun loc -> JSON_String (string_of_aloc loc)))
+                        );
+                      ]
+                )
+              in
+              JSON_Object
+                [
+                  ("kind", JSON_String "flattened");
+                  ("types", JSON_Array props);
+                  ("inexact", JSON_Bool inexact);
+                ]
+          in
+          [
+            ("props", props);
+            ("instance", Base.Option.value_map instance ~f:json_of_t ~default:JSON_Null);
+            ("renders", json_of_t renders);
           ]
         | Renders (t, variant) ->
           [

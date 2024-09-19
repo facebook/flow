@@ -201,6 +201,66 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               option ~f:(fun t -> fuse [space; Atom "extends"; space; type_ ~depth t]) b;
             ];
         ]
+    | Component { props; instance; renders } ->
+      let to_key x =
+        if property_key_quotes_needed x then
+          let quote = better_quote ~prefer_single_quotes x in
+          fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
+        else
+          identifier (Reason.OrdinaryName x)
+      in
+      let params =
+        match props with
+        | UnflattenedComponentProps t -> [fuse [Atom "..."; type_ ~depth t]]
+        | FlattenedComponentProps { props; inexact } ->
+          let params =
+            Base.List.map
+              props
+              ~f:(fun (FlattenedComponentProp { name; optional; def_locs = _; t }) ->
+                fuse
+                  [
+                    to_key (Reason.display_string_of_name name);
+                    ( if optional then
+                      Atom "?"
+                    else
+                      Empty
+                    );
+                    Atom ":";
+                    pretty_space;
+                    type_ ~depth t;
+                  ]
+            )
+          in
+          if inexact then
+            params @ [Atom "...{...}"]
+          else
+            params
+      in
+      let params =
+        match instance with
+        | None -> params
+        | Some t ->
+          fuse
+            [
+              Atom "ref:";
+              pretty_space;
+              Atom "React.RefSetter";
+              list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") [type_ ~depth t];
+            ]
+          :: params
+      in
+      let renders =
+        match renders with
+        | Renders _ -> type_ ~depth renders
+        | t -> fuse [Atom "renders"; space; type_with_parens ~depth t]
+      in
+      fuse
+        [
+          Atom "component";
+          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
+          space;
+          renders;
+        ]
     | Renders (t, variant) ->
       let renders_str =
         match variant with

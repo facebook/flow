@@ -77,6 +77,11 @@ type t =
       false_type: t;
     }
   | Infer of symbol * t option
+  | Component of {
+      props: component_props;
+      instance: t option;
+      renders: t;
+    }
   | Renders of t * renders_kind
 
 (* Recursive variable *)
@@ -293,6 +298,21 @@ and utility =
   | ReactElementRefType of t
   | ReactCheckComponentRef of t
   | ReactConfigType of t * t
+
+and component_props =
+  | UnflattenedComponentProps of t
+  | FlattenedComponentProps of {
+      props: flattened_component_prop list;
+      inexact: bool;
+    }
+
+and flattened_component_prop =
+  | FlattenedComponentProp of {
+      name: Reason.name;
+      optional: bool;
+      def_locs: aloc list;
+      t: t;
+    }
 
 and renders_kind =
   | RendersNormal
@@ -580,7 +600,8 @@ class ['A] comparator_ty =
       | InlineInterface _ -> 26
       | Conditional _ -> 27
       | Infer _ -> 28
-      | Renders _ -> 29
+      | Component _ -> 29
+      | Renders _ -> 30
 
     method tag_of_decl _ =
       function
@@ -806,6 +827,7 @@ let mk_exact ty =
   | Tup _
   | InlineInterface _
   | Infer _
+  | Component _
   | Renders _ ->
     ty
   (* Do not nest $Exact *)

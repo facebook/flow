@@ -1690,7 +1690,7 @@ Flags: --strip-root --pretty
   "documentation":"`forwardRef` lets your component expose a DOM node to parent component\nwith a ref.\n\n**@see** https://react.dev/reference/react/forwardRef",
   "types":{
     "unevaluated":{
-      "type":"<Config, Instance, Renders: React$Node = React$Node>(render: (props: Config, ref: React$RefSetter<Instance>) => Renders) => React$AbstractComponent<Config, Instance, Renders>"
+      "type":"<Config, Instance, Renders: React$Node = React$Node>(render: (props: Config, ref: React$RefSetter<Instance>) => Renders) => component(ref: React.RefSetter<Instance>, ...Config) renders Renders"
     },
     "evaluated":null
   },

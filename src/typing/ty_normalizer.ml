@@ -783,15 +783,35 @@ module Make (I : INPUT) : S = struct
         let%bind config = type__ ~env config in
         let%bind instance =
           match instance with
-          | ComponentInstanceOmitted _ -> return Ty.Void
-          | ComponentInstanceAvailable t -> type__ ~env t
+          | ComponentInstanceOmitted _ -> return None
+          | ComponentInstanceAvailable t -> type__ ~env t >>| Base.Option.some
         in
         let%bind renders = type__ ~env renders in
-        return
-          (generic_talias
-             (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
-             (Some [config; instance; renders])
-          )
+        let props =
+          let props_flattened =
+            match config with
+            | Ty.Obj
+                {
+                  Ty.obj_def_loc = _;
+                  obj_literal = Some false | None;
+                  obj_props;
+                  obj_kind = (Ty.ExactObj | Ty.InexactObj) as obj_kind;
+                } ->
+              Base.List.fold_result obj_props ~init:[] ~f:(fun acc -> function
+                | Ty.NamedProp { name; prop = Ty.Field { t; polarity = _; optional }; def_locs; _ }
+                  ->
+                  let prop = Ty.FlattenedComponentProp { name; optional; def_locs; t } in
+                  Ok (prop :: acc)
+                | _ -> Error ()
+              )
+              |> Base.Result.map ~f:(fun props -> (props, obj_kind = Ty.InexactObj))
+            | _ -> Error ()
+          in
+          match props_flattened with
+          | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
+          | Error () -> Ty.UnflattenedComponentProps config
+        in
+        return (Ty.Component { props; instance; renders })
       | DefT (_, RendersT (InstrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
       | DefT (r, RendersT (NominalRenders { renders_id = _; renders_name; _ })) ->
         let symbol =
