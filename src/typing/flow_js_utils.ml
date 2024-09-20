@@ -2271,7 +2271,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     let t = tuple_length reason ~inexact arity in
     F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
 
-  let get_obj_prop cx trace o propref reason_op =
+  let get_obj_prop cx trace use_op o propref reason_op =
     let named_prop =
       match propref with
       | Named { name; _ } -> Context.get_prop cx o.props_tmap name
@@ -2285,16 +2285,16 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | (Named { name; _ }, None, Some { key; value; dict_polarity; _ })
       when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
-      F.dict_read_check cx trace ~use_op:unknown_use (type_of_key_name cx name reason_op, key);
+      F.dict_read_check cx trace ~use_op (type_of_key_name cx name reason_op, key);
       Some (OrdinaryField { type_ = value; polarity = dict_polarity }, IndexerProperty)
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
-      F.dict_read_check cx trace ~use_op:unknown_use (k, key);
+      F.dict_read_check cx trace ~use_op (k, key);
       Some (OrdinaryField { type_ = value; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
   let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, ObjT o) in
-    match get_obj_prop cx trace o propref reason_op with
+    match get_obj_prop cx trace use_op o propref reason_op with
     | Some (p, _target_kind) ->
       Base.Option.iter ~f:(fun (id, _) -> Context.test_prop_hit cx id) lookup_info;
       perform_read_prop_action cx trace use_op propref p reason_op o.flags.react_dro

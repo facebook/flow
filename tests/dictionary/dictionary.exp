@@ -63,7 +63,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:56:3
 
-string `prop` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'err'` to `o.prop` because string `prop` [1] is incompatible with number [2]. [incompatible-type]
 
    dictionary.js:56:3
    56|   o.prop = 'err'; // error: string ~> number

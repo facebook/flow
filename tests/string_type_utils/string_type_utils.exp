@@ -161,7 +161,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:31:3
 
-property `123` [1] is incompatible with string prefixed with `data-` [2]. [incompatible-type]
+Cannot get `d[123]` because property `123` [1] is incompatible with string prefixed with `data-` [2].
+[incompatible-type]
 
    prefix.js:31:3
    31|   d[123]; // ERROR

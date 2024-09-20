@@ -3626,7 +3626,7 @@ struct
                 ignore_dicts;
               }
           ) ->
-          (match GetPropTKit.get_obj_prop cx trace o propref reason_op with
+          (match GetPropTKit.get_obj_prop cx trace unknown_use o propref reason_op with
           | Some (p, target_kind) ->
             (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
@@ -7323,7 +7323,7 @@ struct
   and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =
     let obj_t = DefT (reason_obj, ObjT o) in
     let action = WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal; mode } in
-    match GetPropTKit.get_obj_prop cx trace o propref reason_op with
+    match GetPropTKit.get_obj_prop cx trace use_op o propref reason_op with
     | Some (p, target_kind) ->
       perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
     | None ->

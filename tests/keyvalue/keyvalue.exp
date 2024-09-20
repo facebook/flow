@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- keyvalue.js:3:6
 
-empty string [1] is incompatible with number [2]. [incompatible-type]
+Cannot get `x[""]` because empty string [1] is incompatible with number [2]. [incompatible-type]
 
    keyvalue.js:3:6
    3|     (x[""]: number);

@@ -956,7 +956,7 @@ module rec ConsGen : S = struct
         | DefT (_, ObjT o) -> o.flags.react_dro
         | _ -> None
       in
-      (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
+      (match GetPropTKit.get_obj_prop cx dummy_trace unknown_use o propref reason_op with
       | Some (p, _) ->
         GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op react_dro
       | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref objt)

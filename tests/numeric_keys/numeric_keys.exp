@@ -588,7 +588,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:169:3
 
-string `foo` [1] is incompatible with number [2]. [incompatible-type]
+Cannot get `x['foo']` because string `foo` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:169:3
    169|   x['foo']; // ERROR

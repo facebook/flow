@@ -359,7 +359,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:10:3
 
-string `foo` [1] is incompatible with `X` [2]. [incompatible-type]
+Cannot assign `'hi'` to `a['foo']` because string `foo` [1] is incompatible with `X` [2]. [incompatible-type]
 
    computed_keys.js:10:3
    10|   a['foo'] = 'hi'; // nope
