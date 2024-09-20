@@ -46,10 +46,10 @@ declare var Duplicate: component(x: number, ...{x: number}); // error
 <Duplicate x={1} />;
 
 declare var InlineRef: component(ref: number); // error
-<InlineRef ref={1} />;
+<InlineRef ref={1} />; // error: string and number refs are still not allowed
 
 declare var SpreadRef: component(...p: {ref: number}); // error
-<SpreadRef ref={1} />;
+<SpreadRef ref={1} />; // error: string and number refs are still not allowed
 
 declare export var Export: component(x: number) renders number; // invalid-render
 

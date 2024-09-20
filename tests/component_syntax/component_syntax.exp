@@ -192,6 +192,25 @@ References:
                                                ^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- annotation.js:52:17
+
+Cannot create `SpreadRef` element because in property `ref`: [incompatible-type]
+ - Either number [1] is incompatible with object type [2].
+ - Or number [1] is incompatible with function type [3].
+
+   annotation.js:52:17
+    52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
+                        ^ [1]
+
+References:
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------- annotation.js:54:57
 
 Cannot use number [1] as the type argument of renders type. [invalid-render]
@@ -1162,6 +1181,25 @@ References:
    declared.js:53:36
    53| declare component SpreadRef(...p: {ref: number}); // error
                                           ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:54:17
+
+Cannot create `SpreadRef` element because in property `ref`: [incompatible-type]
+ - Either number [1] is incompatible with object type [2].
+ - Or number [1] is incompatible with function type [3].
+
+   declared.js:54:17
+    54| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
+                        ^ [1]
+
+References:
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:56:52
@@ -3402,7 +3440,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 224 errors
+Found 226 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

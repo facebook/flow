@@ -48,10 +48,10 @@ declare component Duplicate(x: number, ...{x: number}); // error
 <Duplicate x={1} />;
 
 declare component InlineRef(ref: number); // error
-<InlineRef ref={1} />;
+<InlineRef ref={1} />; // error: string and number refs are still not allowed
 
 declare component SpreadRef(...p: {ref: number}); // error
-<SpreadRef ref={1} />;
+<SpreadRef ref={1} />; // error: string and number refs are still not allowed
 
 declare export component Export(x: number) renders number;
 

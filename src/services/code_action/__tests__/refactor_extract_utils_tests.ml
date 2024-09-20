@@ -117,6 +117,9 @@ let dummy_context () =
     |> SMap.add "React$Element" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "React$Key" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "React$Ref" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "React$RefSetter"
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   let ccx = Context.make_ccx () in
   let metadata = stub_metadata ~root ~checked:true in

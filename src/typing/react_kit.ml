@@ -222,6 +222,27 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Everything else will not have default props we should diff out. *)
     | _ -> None
 
+  let get_expected_ref cx use_op reason_ref component =
+    match component with
+    | DefT (_, FunT _)
+    | DefT (_, ObjT _)
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
+      get_builtin_typeapp
+        cx
+        reason_ref
+        "React$RefSetter"
+        [
+          EvalT
+            ( component,
+              TypeDestructorT (use_op, reason_ref, ReactElementRefType),
+              Eval.generate_id ()
+            );
+        ]
+    | DefT (_, ClassT _)
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailable _; _ })
+    | _ ->
+      maybe (get_builtin_typeapp cx reason_ref "React$Ref" [component])
+
   let props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
     (* Class components or legacy components. *)
@@ -484,7 +505,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           replace_desc_reason (RCustom "React ref") (reason_of_t normalized_jsx_props)
         in
         (* Create the ref type. *)
-        let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
+        let ref_t = get_expected_ref cx use_op reason_ref l in
         (* Flow the config input ref type to the ref type. *)
         let lookup_kind = NonstrictReturning (None, None) in
         let prop_name = OrdinaryName "ref" in

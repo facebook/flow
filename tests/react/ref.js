@@ -30,7 +30,7 @@ class NumRefs extends React.Component<{}> {
   render(): React.Node {
     var children = [];
     for (var i = 0; i < 10; i++) {
-      children.push(<div ref={i} />);
+      children.push(<FooExact ref={i} />);
     }
     return children;
   }
