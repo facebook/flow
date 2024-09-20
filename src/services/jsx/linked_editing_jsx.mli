@@ -5,8 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val get_linked_locs :
-  use_contains_mapper:bool ->
-  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
-  Loc.t ->
-  Loc.t list option
+val get_linked_locs : (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> Loc.t -> Loc.t list option

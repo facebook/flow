@@ -162,8 +162,6 @@ val jest_integration : config -> bool
 
 val lazy_mode : config -> lazy_mode option
 
-val linked_editing_range_optimizations : config -> bool
-
 (* global defaults for lint suppressions and strict mode *)
 val lint_severities : config -> Severity.severity LintSettings.t
 
