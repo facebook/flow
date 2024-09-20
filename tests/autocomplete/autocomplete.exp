@@ -1460,7 +1460,7 @@ Flags: --pretty
     {"name":"PushSubscriptionJSON","type":"typeof PushSubscriptionJSON"},
     {
       "name":"queueMicrotask",
-      "type":"<TArguments: Array<mixed>>(callback: (...args: TArguments) => mixed) => void"
+      "type":"<TArguments: $ReadOnlyArray<mixed>>(callback: (...args: TArguments) => mixed) => void"
     },
     {"name":"Range","type":"typeof Range"},
     {"name":"RangeError","type":"typeof RangeError"},

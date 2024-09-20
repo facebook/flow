@@ -9,3 +9,5 @@ a.delete('foobar');
 var b = undefined;
 if (undefined) {
 }
+
+queueMicrotask(() => {}); // ok
