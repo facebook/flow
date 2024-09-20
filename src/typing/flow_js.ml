@@ -2615,7 +2615,19 @@ struct
         | (DefT (r, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, ReactJs.component_class cx r props)
         (* Functions with rest params or that are predicates cannot be React components *)
-        | ( DefT (reason, FunT (_, { params; rest_param = None; predicate = None; _ })),
+        | ( DefT
+              ( reason,
+                FunT
+                  ( _,
+                    {
+                      params;
+                      rest_param = None;
+                      predicate = None;
+                      effect = ArbitraryEffect | AnyEffect;
+                      _;
+                    }
+                  )
+              ),
             ReactPropsToOut (_, props)
           ) ->
           (* Contravariance *)
