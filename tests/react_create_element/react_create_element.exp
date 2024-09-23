@@ -504,9 +504,9 @@ References:
    test.js:55:8
    55|   bar: 'Hello, world!', // Error: `bar` is a string.
               ^^^^^^^^^^^^^^^ [1]
-   test.js:44:38
-   44| function D(props: {foo: number, bar: number}) { return null }
-                                            ^^^^^^ [2]
+   test.js:45:39
+   45| function D(props: {foo: number, bar?: number}) { return null }
+                                             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:7

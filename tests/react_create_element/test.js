@@ -41,8 +41,8 @@ React.createElement(B); // Error: Missing `foo` and `bar`.
 class C extends React.Component<{foo: number, bar: number}> {
   static defaultProps: {bar: number} = {bar: 42};
 }
-function D(props: {foo: number, bar: number}) { return null }
-D.defaultProps = {bar: 42};
+
+function D(props: {foo: number, bar?: number}) { return null }
 
 React.createElement(C, {foo: 1, bar: 2}); // OK
 React.createElement(D, {foo: 1, bar: 2}); // OK
@@ -55,9 +55,9 @@ React.createElement(D, {
   bar: 'Hello, world!', // Error: `bar` is a string.
 });
 React.createElement(C, {foo: 42}); // OK: `bar` is in `defaultProps`.
-React.createElement(D, {foo: 42}); // OK: `bar` is in `defaultProps`.
+React.createElement(D, {foo: 42}); // OK: `bar` is optional
 (React.createElement(C, {foo: 42}): ExactReactElement_DEPRECATED<Class<C>, {foo: number, bar: number}>); // OK
-(React.createElement(D, {foo: 42}): ExactReactElement_DEPRECATED<typeof D, {foo: number, bar: number}>); // OK
+(React.createElement(D, {foo: 42}): ExactReactElement_DEPRECATED<typeof D, {foo: number, bar?: number}>); // OK
 
 React.createElement(any, {whateverYouWant: 'yes'}); // OK
 

@@ -1,33 +1,3 @@
-Error ----------------------------------------------------------------------------------------------------- HOC.js:34:26
-
-Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
-[prop-missing]
-
-   HOC.js:34:26
-   34|   C.defaultProps = {...X.defaultProps};
-                                ^^^^^^^^^^^^
-
-References:
-   HOC.js:26:6
-   26|   X: React.AbstractComponent<Props, Instance>,
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- HOC.js:53:26
-
-Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
-[prop-missing]
-
-   HOC.js:53:26
-   53|   C.defaultProps = {...X.defaultProps, baz: 3};
-                                ^^^^^^^^^^^^
-
-References:
-   HOC.js:45:6
-   45|   X: React.AbstractComponent<Props, Instance>,
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:22:10
 
 Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2]. [prop-missing]
@@ -613,62 +583,29 @@ Error --------------------------------------------------------------------------
 Cannot cast `Component` to AbstractComponent because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    function_lower.js:16:1
-   16| Component as React$AbstractComponent<Props, number, React$Node>; // Error void ~> number
+   16| Component as React$AbstractComponent<Props, number, React$Node>; // Erro
        ^^^^^^^^^ [1]
 
 References:
    function_lower.js:16:45
-   16| Component as React$AbstractComponent<Props, number, React$Node>; // Error void ~> number
+   16| Component as React$AbstractComponent<Props, number, React$Node>; // Erro
                                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:26:1
-
-Cannot cast `ComponentWithDefaultProps` to AbstractComponent because property `bar` is missing in props [1] but exists
-in `Props2` [2]. [prop-missing]
-
-   function_lower.js:26:1
-   26| ComponentWithDefaultProps as React$AbstractComponent<{}, void, React$Node>; // Error, missing foo and bar
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   function_lower.js:26:54
-   26| ComponentWithDefaultProps as React$AbstractComponent<{}, void, React$Node>; // Error, missing foo and bar
-                                                            ^^ [1]
-   function_lower.js:20:39
-   20| function ComponentWithDefaultProps(x: Props2) {
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- function_lower.js:32:1
-
-Cannot cast `ComponentWithDefaultProps` to AbstractComponent because undefined [1] is incompatible with number [2].
-[incompatible-cast]
-
-   function_lower.js:32:1
-   32| ComponentWithDefaultProps as React$AbstractComponent<
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   function_lower.js:34:3
-   34|   number,
-         ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ function_lower.js:41:10
+Error ------------------------------------------------------------------------------------------ function_lower.js:21:10
 
 All branches are incompatible: [incompatible-type]
  - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
-   function_lower.js:41:10
-   41|   return NotAComponent; // Error, not a component
+   function_lower.js:21:10
+   21|   return NotAComponent; // Error, not a component
                 ^^^^^^^^^^^^^
 
 References:
-   function_lower.js:38:7
-   38| class NotAComponent {}
+   function_lower.js:18:7
+   18| class NotAComponent {}
              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
    21|   | React$Element<any>
@@ -681,20 +618,20 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:44:1
+Error ------------------------------------------------------------------------------------------- function_lower.js:24:1
 
 Cannot cast `NotAFunctionComponent` to AbstractComponent because: [incompatible-cast]
  - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
-   function_lower.js:44:1
-   44| NotAFunctionComponent as React$AbstractComponent<Props, void, React$Node>;
+   function_lower.js:24:1
+   24| NotAFunctionComponent as React$AbstractComponent<Props, void, React$Node>;
        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   function_lower.js:38:7
-   38| class NotAComponent {}
+   function_lower.js:18:7
+   18| class NotAComponent {}
              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
    21|   | React$Element<any>
@@ -707,21 +644,21 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:51:1
+Error ------------------------------------------------------------------------------------------- function_lower.js:31:1
 
 Cannot cast `SpecificRender` to AbstractComponent because number [1] is incompatible with string [2].
 [incompatible-cast]
 
-   function_lower.js:51:1
-   51| SpecificRender as React$AbstractComponent<{}, void, string>; // ERROR, number ~> string
+   function_lower.js:31:1
+   31| SpecificRender as React$AbstractComponent<{}, void, string>; // ERROR, number ~> string
        ^^^^^^^^^^^^^^
 
 References:
-   function_lower.js:46:28
-   46| function SpecificRender(): number {
+   function_lower.js:26:28
+   26| function SpecificRender(): number {
                                   ^^^^^^ [1]
-   function_lower.js:51:53
-   51| SpecificRender as React$AbstractComponent<{}, void, string>; // ERROR, number ~> string
+   function_lower.js:31:53
+   31| SpecificRender as React$AbstractComponent<{}, void, string>; // ERROR, number ~> string
                                                            ^^^^^^ [2]
 
 
@@ -928,7 +865,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 53 errors
+Found 49 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

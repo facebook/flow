@@ -926,40 +926,6 @@ class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
   foo={1}
 />;
 
-function Function_DefaultProps(props: Props_DefaultProps) {
-  return any;
-}
-Function_DefaultProps.defaultProps = {
-  foo: 42,
-};
-<Function_DefaultProps // OK: It has all the props.
-  foo={1}
-  bar={2}
-/>;
-<Function_DefaultProps // OK: It is missing a default prop.
-  bar={2}
-/>;
-<Function_DefaultProps // Error: It is missing a required non-default prop.
-  foo={1}
-/>;
-
-function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
-  return any;
-}
-FunctionExact_DefaultProps.defaultProps = {
-  foo: 42,
-};
-<FunctionExact_DefaultProps // OK: It has all the props.
-  foo={1}
-  bar={2}
-/>;
-<FunctionExact_DefaultProps // OK: It is missing a default prop.
-  bar={2}
-/>;
-<FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
-  foo={1}
-/>;
-
 const Member_DefaultProps = {prop: Class_DefaultProps};
 <Member_DefaultProps.prop // OK: It has all the props.
   foo={1}
@@ -981,18 +947,6 @@ const EnhancedClass_DefaultProps = hoc(Class_DefaultProps);
   bar={2}
 />;
 <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
-  foo={1}
-/>;
-
-const EnhancedFunction_DefaultProps = hoc(Function_DefaultProps);
-<EnhancedFunction_DefaultProps // OK: It has all the props.
-  foo={1}
-  bar={2}
-/>;
-<EnhancedFunction_DefaultProps // OK: It is missing a default prop.
-  bar={2}
-/>;
-<EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
   foo={1}
 />;
 

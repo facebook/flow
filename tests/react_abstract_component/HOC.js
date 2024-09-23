@@ -24,38 +24,46 @@ TrivialWrap as React.AbstractComponent<
 
 function WrapInDivWithExtraProp<Props, Instance>(
   X: React.AbstractComponent<Props, Instance>,
-): React.AbstractComponent<{|...Props, baz: number|}, void> {
-  const C = (props: {|...Props, baz: number|}) => (
-    <div>
-      {props.baz}
-      <X {...props} />
-    </div>
-  );
-  C.defaultProps = {...X.defaultProps};
+): React.AbstractComponent<{|...Props, baz: number|}> {
+  class C extends React.Component<{|...Props, baz: number|}> {
+    static defaultProps: {} = {};
+    render(): React.Node {
+      const props = this.props;
+      return (
+        <div>
+          {props.baz}
+          <X {...props} />
+        </div>
+      );
+    }
+  }
   return C;
 }
 
 const WrappedInDivWithExtraProp = WrapInDivWithExtraProp(Component); // Note, we lose instance type here
 WrappedInDivWithExtraProp as React.AbstractComponent<
   {|foo?: number, bar: number, baz: number|},
-  void,
 >;
 
 function AddPropWithDefault<Props, Instance>(
   X: React.AbstractComponent<Props, Instance>,
-): React.AbstractComponent<{|...Props, baz?: number|}, void> {
-  const C = (props: {|...Props, baz: number|}) => (
-    <div>
-      {props.baz}
-      <X {...props} />
-    </div>
-  );
-  C.defaultProps = {...X.defaultProps, baz: 3};
+): React.AbstractComponent<{|...Props, baz?: number|}> {
+  class C extends React.Component<{|...Props, baz?: number|}> {
+    static defaultProps: {baz: 3} = {baz: 3};
+    render(): React.Node {
+      const props = this.props;
+      return (
+        <div>
+          {props.baz}
+          <X {...props} />
+        </div>
+      );
+    }
+  }
   return C;
 }
 
 const WrappedAddPropWithDefault = AddPropWithDefault(Component);
 WrappedAddPropWithDefault as React.AbstractComponent<
   {|foo?: number, bar: number, baz?: number|},
-  void,
 >;

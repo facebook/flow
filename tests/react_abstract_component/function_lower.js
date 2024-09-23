@@ -13,27 +13,7 @@ Component as React$AbstractComponent<
   React$Node,
 >; //Ok, extra prop bar
 Component as React$AbstractComponent<Props, number | void, React$Node>; // Ok
-Component as React$AbstractComponent<Props, number, React$Node>; // Error void ~> number
-
-type Props2 = {foo: number, bar: number};
-type Config2 = {+foo?: number, +bar: number};
-function ComponentWithDefaultProps(x: Props2) {
-  return null;
-}
-ComponentWithDefaultProps.defaultProps = {foo: 3};
-
-ComponentWithDefaultProps as React$AbstractComponent<Config2, void, React$Node>;
-ComponentWithDefaultProps as React$AbstractComponent<{}, void, React$Node>; // Error, missing foo and bar
-ComponentWithDefaultProps as React$AbstractComponent<
-  Config2,
-  number | void,
-  React$Node,
->; // Ok, instance is void
-ComponentWithDefaultProps as React$AbstractComponent<
-  Config2,
-  number,
-  React$Node,
->; // Error, void ~> number
+Component as React$AbstractComponent<Props, number, React$Node>; // Erro
 
 class NotAComponent {}
 

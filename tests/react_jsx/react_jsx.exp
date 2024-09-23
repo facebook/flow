@@ -3092,126 +3092,63 @@ References:
                                                                  ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:942:2
-
-Cannot create `Function_DefaultProps` element because property `bar` is missing in props [1] but exists in
-`Props_DefaultProps` [2]. [prop-missing]
-
-   test.js:942:2
-   942| <Function_DefaultProps // Error: It is missing a required non-default prop.
-         ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:942:1
-        v--------------------------------------------------------------------------
-   942| <Function_DefaultProps // Error: It is missing a required non-default prop.
-   943|   foo={1}
-   944| />;
-        -^ [1]
-   test.js:929:39
-   929| function Function_DefaultProps(props: Props_DefaultProps) {
-                                              ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:959:2
-
-Cannot create `FunctionExact_DefaultProps` element because property `bar` is missing in props [1] but exists in
-`Props_DefaultProps` [2]. [prop-missing]
-
-   test.js:959:2
-   959| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:959:1
-        v-------------------------------------------------------------------------------
-   959| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
-   960|   foo={1}
-   961| />;
-        -^ [1]
-   test.js:946:44
-   946| function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:971:2
+Error ---------------------------------------------------------------------------------------------------- test.js:937:2
 
 Cannot create `Member_DefaultProps.prop` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:971:2
-   971| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+   test.js:937:2
+   937| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:971:1
+   test.js:937:1
         v-----------------------------------------------------------------------------
-   971| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
-   972|   foo={1}
-   973| />;
+   937| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+   938|   foo={1}
+   939| />;
         -^ [1]
    test.js:880:50
    880| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
                                                          ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:983:2
+Error ---------------------------------------------------------------------------------------------------- test.js:949:2
 
 Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2]. [prop-missing]
 
-   test.js:983:2
-   983| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
+   test.js:949:2
+   949| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:983:1
+   test.js:949:1
         v-------------------------------------------------------------------------------
-   983| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
-   984|   foo={1}
-   985| />;
+   949| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
+   950|   foo={1}
+   951| />;
         -^ [1]
    test.js:9:24
      9| ): React.ComponentType<React.ElementConfig<Component>> {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:995:2
-
-Cannot create `EnhancedFunction_DefaultProps` element because property `bar` is missing in props [1] but exists in
-`Props_DefaultProps` [2]. [prop-missing]
-
-   test.js:995:2
-   995| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:995:1
-        v----------------------------------------------------------------------------------
-   995| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
-   996|   foo={1}
-   997| />;
-        -^ [1]
-   test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- test.js:1015:20
+Error --------------------------------------------------------------------------------------------------- test.js:969:20
 
 The name of intrinsic element `div` [1] overlaps with a local definition [2] which has a type [1] that can be
 instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition
 [react-intrinsic-overlap]
 
-   test.js:1015:20
-   1015|   declare function div(): React.Node;
-                            ^^^ [2]
+   test.js:969:20
+   969|   declare function div(): React.Node;
+                           ^^^ [2]
 
 References:
-   test.js:1016:4
-   1016|   <div />; // Error
-            ^^^ [1]
+   test.js:970:4
+   970|   <div />; // Error
+           ^^^ [1]
 
 
 
-Found 180 errors
+Found 177 errors
