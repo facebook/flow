@@ -128,7 +128,6 @@ type t = {
   opt_profile: bool;
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;
-  opt_react_disable_function_components_default_props: bool;
   opt_react_runtime: react_runtime;
   opt_recursion_limit: int;
   opt_relay_integration_esmodules: bool;
@@ -303,9 +302,6 @@ let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_r
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
 
 let react_custom_jsx_typing opts = opts.opt_react_custom_jsx_typing
-
-let react_disable_function_components_default_props opts =
-  opts.opt_react_disable_function_components_default_props
 
 let react_runtime opts = opts.opt_react_runtime
 

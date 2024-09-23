@@ -103,7 +103,6 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_object_freeze: bool;
   react_custom_jsx_typing: bool;
-  react_disable_function_components_default_props: bool;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   relay_integration_esmodules: bool;
@@ -248,8 +247,6 @@ val call_props : t -> Type.t IMap.t
 val export_maps : t -> Type.Exports.map
 
 val react_custom_jsx_typing : t -> bool
-
-val react_disable_function_components_default_props : t -> bool
 
 val react_runtime : t -> Options.react_runtime
 

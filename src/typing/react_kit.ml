@@ -212,12 +212,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       Some tvar
     | DefT (_, FunT _)
     | DefT (_, ObjT _) ->
-      if Context.react_disable_function_components_default_props cx then
-        Some (VoidT.make reason_op)
-      else
-        let tvar = Tvar.mk cx reason_op in
-        lookup_defaults cx trace component ~reason_op tvar Polarity.Positive;
-        Some tvar
+      (* Why `Some VoidT` instead of None? A lot of existing code is depending on the current
+       * behavior of automatically changing props to neutral polarity for function components... *)
+      Some (VoidT.make reason_op)
     | DefT (_, ReactAbstractComponentT _) -> None
     (* Everything else will not have default props we should diff out. *)
     | _ -> None

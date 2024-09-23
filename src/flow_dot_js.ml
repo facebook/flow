@@ -127,7 +127,6 @@ let stub_metadata ~root ~checked =
     missing_module_generators = [];
     natural_inference_object_freeze = false;
     react_custom_jsx_typing = false;
-    react_disable_function_components_default_props = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
     relay_integration_esmodules = false;
