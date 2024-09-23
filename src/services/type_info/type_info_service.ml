@@ -19,6 +19,14 @@ let json_data_of_type_opt key str_opt acc =
   )
   :: acc
 
+let json_data_of_locs_opt key locs acc =
+  ( key,
+    match locs with
+    | [] -> Hh_json.JSON_Null
+    | _ -> Hh_json.JSON_Array (List.map (Reason.json_of_loc ~offset_table:None) locs)
+  )
+  :: acc
+
 let type_at_pos
     ~cx
     ~file_sig
@@ -96,6 +104,8 @@ let type_at_pos
              (let exact_by_default = Context.exact_by_default cx in
               Base.Option.map evaluated ~f:(Ty_printer.string_of_elt ~exact_by_default)
              )
+        |> json_data_of_locs_opt "refining_locs" refining_locs
+        |> json_data_of_locs_opt "refinement_invalidated" (List.map fst refinement_invalidated)
       in
       (json_data, loc, Some tys)
   in
