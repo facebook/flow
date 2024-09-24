@@ -2852,11 +2852,20 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.Expression.Conditional in
       let { test; consequent; alternate; comments = _ } = expr in
       this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
-      this#visit_expression ~hints ~cond:NonConditionalContext consequent;
-      this#visit_expression
-        ~hints:(Base.List.append hints [Hint_t (ValueHint consequent, BestEffortHint)])
-        ~cond:NonConditionalContext
-        alternate
+      if expression_is_definitely_synthesizable ~autocomplete_hooks alternate then (
+        (* Special-case for expressions like `cond ? [] : [exp]` *)
+        this#visit_expression
+          ~hints:(Base.List.append hints [Hint_t (ValueHint alternate, BestEffortHint)])
+          ~cond:NonConditionalContext
+          consequent;
+        this#visit_expression ~hints ~cond:NonConditionalContext alternate
+      ) else (
+        this#visit_expression ~hints ~cond:NonConditionalContext consequent;
+        this#visit_expression
+          ~hints:(Base.List.append hints [Hint_t (ValueHint consequent, BestEffortHint)])
+          ~cond:NonConditionalContext
+          alternate
+      )
 
     method! binary loc _ = fail loc "Should be visited by visit_binary_expression"
 
