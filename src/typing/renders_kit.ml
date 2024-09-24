@@ -185,70 +185,80 @@ module Make (Flow : INPUT) : S = struct
            }
         )
 
+  let possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq) =
+    let on_concretized_types ts =
+      Base.List.fold ts ~init:([], false) ~f:(fun (ts, has_failed) -> function
+        | AnyT _ as t -> (t :: ts, has_failed)
+        | DefT (_, RendersT _) as t -> (t :: ts, has_failed)
+        | _ -> (ts, true)
+      )
+    in
+    let concretize_component_renders_and_check component_t =
+      get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
+      |> possible_concrete_types_for_inspection cx elem_reason
+      |> on_concretized_types
+    in
+    match opq with
+    | {
+     super_t = Some (DefT (_, ObjT { props_tmap; _ }));
+     opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
+     _;
+    } ->
+      (match Context.find_monomorphized_component cx props_tmap with
+      | Some mono_component -> concretize_component_renders_and_check mono_component
+      | None ->
+        (* We only want to promote if this is actually a React of a component, otherwise we want
+         * to flow the original object to the tout.
+         *
+         * We perform a speculative subtyping check and then use ComponentRenders to
+         * extract the render type of the component. This type gets concretized, and we continue
+         * with renders subtyping if we get a RendersT from ComponentRenders, otherwise we error,
+         * as we've already checked for structural compatibility in subtyping kit. *)
+        let top_abstract_component =
+          let config = EmptyT.why elem_reason in
+          let instance = ComponentInstanceAvailable (MixedT.why elem_reason) in
+          let renders = get_builtin_type cx elem_reason "React$Node" in
+          DefT
+            ( elem_reason,
+              ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+            )
+        in
+        if speculative_subtyping_succeeds cx component_t top_abstract_component then
+          concretize_component_renders_and_check component_t
+        else if
+          speculative_subtyping_succeeds
+            cx
+            component_t
+            (DefT (elem_reason, SingletonStrT (Reason.OrdinaryName "svg")))
+        then
+          ([DefT (elem_reason, RendersT (InstrinsicRenders "svg"))], false)
+        else
+          ([], true))
+    | _ -> ([], true)
+
   let try_promote_render_type_from_react_element_type
       cx trace ~use_op (elem_reason, opq) (renders_r, upper_renders) =
-    let possibly_promoted =
-      match opq with
-      | {
-       super_t = Some (DefT (_, ObjT { props_tmap; _ }));
-       opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
-       _;
-      } ->
-        (match Context.find_monomorphized_component cx props_tmap with
-        | Some mono_component ->
-          get_builtin_typeapp cx elem_reason "React$ComponentRenders" [mono_component]
-        | None ->
-          (* We only want to promote if this is actually a React of a component, otherwise we want
-           * to flow the original object to the tout.
-           *
-           * We perform a speculative subtyping check and then use ComponentRenders to
-           * extract the render type of the component. This type gets concretized, and we continue
-           * with renders subtyping if we get a RendersT from ComponentRenders, otherwise we error,
-           * as we've already checked for structural compatibility in subtyping kit. *)
-          let top_abstract_component =
-            let config = EmptyT.why renders_r in
-            let instance = ComponentInstanceAvailable (MixedT.why renders_r) in
-            let renders = get_builtin_type cx renders_r "React$Node" in
-            DefT
-              ( renders_r,
-                ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
-              )
-          in
-          if speculative_subtyping_succeeds cx component_t top_abstract_component then
-            get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
-          else if
-            speculative_subtyping_succeeds
-              cx
-              component_t
-              (DefT (elem_reason, SingletonStrT (Reason.OrdinaryName "svg")))
-          then
-            DefT (elem_reason, RendersT (InstrinsicRenders "svg"))
-          else
-            OpaqueT (elem_reason, opq))
-      | _ -> OpaqueT (elem_reason, opq)
+    let (promoted_ts, has_failed) =
+      possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq)
     in
     let use_op = Frame (RendersCompatibility, use_op) in
-    possible_concrete_types_for_inspection cx elem_reason possibly_promoted
-    |> Base.List.iter ~f:(function
-           | AnyT _ as l -> rec_flow_t cx trace ~use_op (l, DefT (renders_r, RendersT upper_renders))
-           | DefT (_, RendersT _) as l ->
-             let l = reposition_reason cx ~trace elem_reason ~use_desc:true l in
-             let renders_t = DefT (renders_r, RendersT upper_renders) in
-             rec_flow_t cx trace ~use_op (l, renders_t)
-           (* We did not successfully promote the React$Element and we have a RendersT on the RHS.
-            * so this is an error *)
-           | _ ->
-             Flow_js_utils.add_output
-               cx
-               (Error_message.EIncompatibleWithUseOp
-                  {
-                    reason_lower = elem_reason;
-                    reason_upper = renders_r;
-                    use_op;
-                    explanation = None;
-                  }
-               )
-           )
+    (* We did not successfully promote the React$Element and we have a RendersT on the RHS.
+     * so this is an error *)
+    if has_failed then
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           { reason_lower = elem_reason; reason_upper = renders_r; use_op; explanation = None }
+        );
+    Base.List.iter promoted_ts ~f:(fun l ->
+        rec_flow_t
+          cx
+          trace
+          ~use_op
+          ( reposition_reason cx ~trace elem_reason ~use_desc:true l,
+            DefT (renders_r, RendersT upper_renders)
+          )
+    )
 
   let non_renders_to_renders cx trace ~use_op l (renders_r, upper_renders) =
     match (l, upper_renders) with
