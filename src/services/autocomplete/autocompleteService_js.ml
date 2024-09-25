@@ -1182,7 +1182,7 @@ let make_builtin_type ~edit_locs name =
     itemDetail = Some name;
     text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
-    sort_text = sort_text_of_rank 100 (* after local results *);
+    sort_text = sort_text_of_rank 200 (* after builtin type operators *);
     preselect = false;
     documentation_and_tags = AcCompletion.empty_documentation_and_tags;
     log_info = "builtin type";
@@ -1204,6 +1204,61 @@ let builtin_types =
     "void";
     "symbol";
   ]
+
+let make_builtin_type_operators =
+  let mk ~edit_locs ?insert_text ?detail ?docs ?(snippet = false) name =
+    {
+      AcCompletion.kind = Some Lsp.Completion.Keyword;
+      name;
+      labelDetail = detail;
+      description = None;
+      itemDetail = Some name;
+      text_edit = Some (text_edit ?insert_text name edit_locs);
+      additional_text_edits = [];
+      sort_text = sort_text_of_rank 100 (* after local results *);
+      preselect = false;
+      documentation_and_tags = lazy (docs, None);
+      log_info = "builtin type operators";
+      insert_text_format =
+        ( if snippet then
+          Lsp.Completion.SnippetFormat
+        else
+          Lsp.Completion.PlainText
+        );
+    }
+  in
+  fun ~edit_locs ->
+    [
+      mk
+        ~edit_locs
+        ~docs:"[component type](https://flow.org/en/docs/react/component-types/)"
+        ~insert_text:"component($1)"
+        ~snippet:true
+        "component";
+      mk
+        ~edit_locs
+        ~docs:"[hook type](https://flow.org/en/docs/react/hook-syntax/#hook-type-annotations)"
+        ~insert_text:"hook "
+        "hook";
+      mk
+        ~edit_locs
+        ~docs:
+          "`renders A` means that it will eventually render exactly one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+        ~insert_text:"renders "
+        "renders";
+      mk
+        ~edit_locs
+        ~docs:
+          "`renders? A` means that it will eventually render zero or one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+        ~insert_text:"renders? "
+        "renders?";
+      mk
+        ~edit_locs
+        ~docs:
+          "`renders* A` means that it will eventually render any amount of `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+        ~insert_text:"renders* "
+        "renders*";
+    ]
 
 let make_utility_type ~edit_locs name =
   {
@@ -1290,6 +1345,7 @@ let autocomplete_unqualified_type
     []
     |> Base.List.rev_map_append builtin_types ~f:(make_builtin_type ~edit_locs)
     |> Base.List.rev_map_append utility_types ~f:(make_utility_type ~edit_locs)
+    |> Base.List.rev_append (make_builtin_type_operators ~edit_locs)
     |> Base.List.rev_map_append tparams_rev ~f:(make_type_param ~edit_locs)
   in
   let type_identifiers = local_type_identifiers typing in

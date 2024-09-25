@@ -3638,10 +3638,165 @@ Flags: --lsp
   }
 }
 {
+  "label":"component",
+  "kind":14,
+  "detail":"component",
+  "documentation":{
+    "kind":"markdown",
+    "value":"[component type](https://flow.org/en/docs/react/component-types/)"
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"component($1)"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"component",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"hook",
+  "kind":14,
+  "detail":"hook",
+  "documentation":{
+    "kind":"markdown",
+    "value":"[hook type](https://flow.org/en/docs/react/hook-syntax/#hook-type-annotations)"
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"hook "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hook",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"renders",
+  "kind":14,
+  "detail":"renders",
+  "documentation":{
+    "kind":"markdown",
+    "value":"`renders A` means that it will eventually render exactly one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"renders "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"renders",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"renders*",
+  "kind":14,
+  "detail":"renders*",
+  "documentation":{
+    "kind":"markdown",
+    "value":"`renders* A` means that it will eventually render any amount of `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"renders* "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"renders*",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"renders?",
+  "kind":14,
+  "detail":"renders?",
+  "documentation":{
+    "kind":"markdown",
+    "value":"`renders? A` means that it will eventually render zero or one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"renders? "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"renders?",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
   "label":"any",
   "kind":6,
   "detail":"any",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3655,7 +3810,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":11,
+        "index":16,
         "session_requests":null,
         "typed_length":null,
         "completion":"any",
@@ -3668,7 +3823,7 @@ Flags: --lsp
   "label":"bigint",
   "kind":6,
   "detail":"bigint",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3682,7 +3837,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":12,
+        "index":17,
         "session_requests":null,
         "typed_length":null,
         "completion":"bigint",
@@ -3695,7 +3850,7 @@ Flags: --lsp
   "label":"boolean",
   "kind":6,
   "detail":"boolean",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3709,7 +3864,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":13,
+        "index":18,
         "session_requests":null,
         "typed_length":null,
         "completion":"boolean",
@@ -3722,7 +3877,7 @@ Flags: --lsp
   "label":"empty",
   "kind":6,
   "detail":"empty",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3736,7 +3891,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":14,
+        "index":19,
         "session_requests":null,
         "typed_length":null,
         "completion":"empty",
@@ -3749,7 +3904,7 @@ Flags: --lsp
   "label":"false",
   "kind":6,
   "detail":"false",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3763,7 +3918,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":15,
+        "index":20,
         "session_requests":null,
         "typed_length":null,
         "completion":"false",
@@ -3776,7 +3931,7 @@ Flags: --lsp
   "label":"mixed",
   "kind":6,
   "detail":"mixed",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3790,7 +3945,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":16,
+        "index":21,
         "session_requests":null,
         "typed_length":null,
         "completion":"mixed",
@@ -3803,7 +3958,7 @@ Flags: --lsp
   "label":"null",
   "kind":6,
   "detail":"null",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3817,7 +3972,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":17,
+        "index":22,
         "session_requests":null,
         "typed_length":null,
         "completion":"null",
@@ -3830,7 +3985,7 @@ Flags: --lsp
   "label":"number",
   "kind":6,
   "detail":"number",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3844,7 +3999,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":18,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"number",
@@ -3857,7 +4012,7 @@ Flags: --lsp
   "label":"string",
   "kind":6,
   "detail":"string",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3871,7 +4026,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":19,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"string",
@@ -3884,7 +4039,7 @@ Flags: --lsp
   "label":"symbol",
   "kind":6,
   "detail":"symbol",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3898,7 +4053,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":20,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"symbol",
@@ -3911,7 +4066,7 @@ Flags: --lsp
   "label":"true",
   "kind":6,
   "detail":"true",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3925,7 +4080,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":21,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"true",
@@ -3938,7 +4093,7 @@ Flags: --lsp
   "label":"void",
   "kind":6,
   "detail":"void",
-  "sortText":"00000000000000000100",
+  "sortText":"00000000000000000200",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
@@ -3952,7 +4107,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":22,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"void",
@@ -3979,7 +4134,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":23,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Diff",
@@ -4006,7 +4161,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":24,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact",
@@ -4033,7 +4188,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":25,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports",
@@ -4060,7 +4215,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror",
@@ -4087,7 +4242,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys",
@@ -4114,7 +4269,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType",
@@ -4141,7 +4296,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":29,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly",
@@ -4168,7 +4323,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Rest",
@@ -4195,7 +4350,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"$TupleMap",
@@ -4222,7 +4377,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -4249,7 +4404,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -4276,7 +4431,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -4303,7 +4458,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -4330,7 +4485,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":36,
+        "index":41,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -4357,7 +4512,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":37,
+        "index":42,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",
