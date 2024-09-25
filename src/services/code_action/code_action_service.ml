@@ -119,6 +119,51 @@ let autofix_missing_local_annot_code_actions
     |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
   | None -> []
 
+let code_action_insert_inferred_render_type
+    ~options
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_name
+    ~get_type_sig
+    ~ast
+    ~file_sig
+    ~typed_ast
+    uri
+    loc =
+  match
+    Insert_inferred_render_type.insert_render_type_at_loc
+      ~cx
+      ~loc_of_aloc
+      ~get_ast_from_shared_mem
+      ~get_haste_name
+      ~get_type_sig
+      ~file_sig
+      ~typed_ast
+      ast
+      loc
+  with
+  | Some new_ast ->
+    let open Lsp in
+    let diff = Insert_type.mk_diff ast new_ast in
+    let opts = layout_options options in
+    let edits =
+      Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+      |> Base.List.map ~f:(fun (loc, text) ->
+             { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
+         )
+    in
+    [
+      CodeAction.Action
+        {
+          CodeAction.title = "Insert inferred render type";
+          kind = CodeActionKind.refactor;
+          diagnostics = [];
+          action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+        };
+    ]
+  | None -> []
+
 let refactor_extract_code_actions
     ~options
     ~support_experimental_snippet_text_edit
@@ -1302,6 +1347,20 @@ let code_actions_at_loc
       uri
       loc
   in
+  let insert_inferred_render_type_code_actions =
+    code_action_insert_inferred_render_type
+      ~options
+      ~cx
+      ~loc_of_aloc
+      ~get_ast_from_shared_mem
+      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_type_sig
+      ~ast
+      ~file_sig
+      ~typed_ast
+      uri
+      loc
+  in
   let refactor_code_actions =
     refactor_extract_code_actions
       ~options
@@ -1377,6 +1436,7 @@ let code_actions_at_loc
     @ autofix_exports_code_actions
     @ autofix_missing_local_annot_code_actions
     @ error_fixes
+    @ insert_inferred_render_type_code_actions
     @ refactor_code_actions
     @ inspection_related_code_actions
   in

@@ -1,0 +1,42 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Insert inferred render type",
+      "kind": "refactor",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/insert-render-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 0
+                },
+                "end": {
+                  "line": 2,
+                  "character": 0
+                }
+              },
+              "newText": "import type { Exported } from \"./exports-for-insert-render-type\";"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 18,
+                  "character": 0
+                },
+                "end": {
+                  "line": 23,
+                  "character": 1
+                }
+              },
+              "newText": "component Foo3() renders* (Bar | Baz | Exported) {\n  if (true) {\n    return null;\n  }\n  return [<Bar />, <Baz />, rendersExported];\n}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

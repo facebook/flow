@@ -409,5 +409,70 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for inserting inferred render types', [
+      addFile('insert-render-type.js.ignored', 'insert-render-type.js'),
+      addFile(
+        'exports-for-insert-render-type.js.ignored',
+        'exports-for-insert-render-type.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-render-type.js',
+        },
+        range: {start: {line: 7, character: 12}, end: {line: 7, character: 12}},
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'refactor-insert-render-type-1.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-render-type.js',
+        },
+        range: {
+          start: {line: 11, character: 12},
+          end: {line: 11, character: 12},
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'refactor-insert-render-type-2.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-render-type.js',
+        },
+        range: {
+          start: {line: 18, character: 12},
+          end: {line: 18, character: 12},
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'refactor-insert-render-type-3.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): SuiteType);

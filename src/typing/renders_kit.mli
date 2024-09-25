@@ -30,6 +30,9 @@ module type S = sig
     Type.t ->
     Reason.reason * Type.canonical_renders_form ->
     unit
+
+  val try_synthesize_render_type :
+    Context.t -> drop_renders_any:bool -> Type.t -> (Type.renders_variant * Type.t list) option
 end
 
 module Make (_ : INPUT) : S

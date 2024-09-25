@@ -17,7 +17,7 @@ module Component_declaration_body
 struct
   module Config = Config
 
-  class component_scope_visitor cx ~renders_t exhaust =
+  class component_scope_visitor cx ~body_loc ~renders_t exhaust =
     object (this)
       inherit
         [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -60,6 +60,7 @@ struct
                }
             )
         in
+        Context.add_inferred_component_return cx body_loc t;
         Flow.flow cx (t, UseT (use_op, renders_t))
     end
 
@@ -82,7 +83,7 @@ struct
     in
 
     let body_ast = reconstruct_body statements_ast in
-    let () = (new component_scope_visitor cx ~renders_t exhaust)#visit statements_ast in
+    let () = (new component_scope_visitor cx ~body_loc ~renders_t exhaust)#visit statements_ast in
 
     Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked_ts, _) ->
         if Type_operation_utils.TypeAssertions.non_exhaustive cx !maybe_exhaustively_checked_ts then

@@ -1,0 +1,29 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Insert inferred render type",
+      "kind": "refactor",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/insert-render-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 7,
+                  "character": 0
+                },
+                "end": {
+                  "line": 9,
+                  "character": 1
+                }
+              },
+              "newText": "component Foo1() renders Bar {\n  return <Bar />;\n}"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
