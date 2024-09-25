@@ -312,6 +312,17 @@ class mapper ~strict ~synth_type ~casting_syntax target =
 
     method! type_annotation_hint = this#update_type_annotation_hint ?type_loc:None ~check_loc:true
 
+    method! component_renders_annotation renders =
+      let open Flow_ast.Type in
+      match renders with
+      | MissingRenders loc when this#target_contained_by loc ->
+        (match synth_type loc with
+        | Ok (l, (_, Renders r)) -> AvailableRenders (l, r)
+        | Ok _
+        | Error _ ->
+          MissingRenders loc)
+      | _ -> super#component_renders_annotation renders
+
     method! function_return_annotation return =
       let open Flow_ast.Function.ReturnAnnot in
       match return with

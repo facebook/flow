@@ -1,0 +1,24 @@
+// @flow
+
+import {rendersExported} from './exports-for-insert-render-type';
+
+declare component Bar();
+declare component Baz();
+
+component Foo1() {
+  return <Bar />;
+}
+
+component Foo2() {
+  if (true) {
+    return null;
+  }
+  return <Bar />;
+}
+
+component Foo3() {
+  if (true) {
+    return null;
+  }
+  return [<Bar />, <Baz />, rendersExported];
+}

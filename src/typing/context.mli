@@ -285,6 +285,8 @@ val post_inference_validation_flows : t -> (Type.t * Type.use_t) list
 
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
+val inferred_component_return : t -> Type.t Nel.t ALocFuzzyMap.t
+
 val verbose : t -> Verbose.t option
 
 val slow_to_check_logging : t -> Slow_to_check_logging.t
@@ -362,6 +364,8 @@ val add_post_inference_validation_flow : t -> Type.t -> Type.use_t -> unit
 val add_post_inference_subtyping_check : t -> Type.t -> Type.use_op -> Type.t -> unit
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
+
+val add_inferred_component_return : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 

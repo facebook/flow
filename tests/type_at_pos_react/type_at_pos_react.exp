@@ -159,14 +159,14 @@ react_abstract_component.js:3:15 = component(ref: React.RefSetter<any>, ...any) 
 react_abstract_component.js:3:15,3:15
 react_abstract_component.js:7:15 = (x: component(ref: React.RefSetter<any>, bar?: number, foo: string) renders Foo) => void
 
-'Foo' defined at react_abstract_component.js:20:18
+'Foo' defined at react_abstract_component.js:19:18
 
 react_abstract_component.js:7:10,7:14
 react_abstract_component.js:11:15 = (
   x: component(ref: React.RefSetter<any>, bar?: number, foo: string, ...{...}) renders* Foo
 ) => void
 
-'Foo' defined at react_abstract_component.js:11:81
+'Foo' defined at react_abstract_component.js:19:18
 
 react_abstract_component.js:11:10,11:14
 react_abstract_component.js:15:15 = (

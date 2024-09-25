@@ -813,12 +813,12 @@ module Make (I : INPUT) : S = struct
         in
         return (Ty.Component { props; instance; renders })
       | DefT (_, RendersT (InstrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
-      | DefT (r, RendersT (NominalRenders { renders_id = _; renders_name; _ })) ->
+      | DefT (_, RendersT (NominalRenders { renders_id; renders_name; _ })) ->
         let symbol =
           Reason_utils.component_symbol
             env
             renders_name
-            (mk_reason (RComponent (OrdinaryName renders_name)) (loc_of_reason r))
+            (mk_reason (RComponent (OrdinaryName renders_name)) (renders_id :> ALoc.t))
         in
         return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | DefT (_, RendersT (StructuralRenders { renders_variant; renders_structural_type })) ->

@@ -191,6 +191,9 @@ type component_t = {
    * eventually not use unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap
    * because we may compare keyed and concrete locations *)
   mutable missing_local_annot_lower_bounds: Type.t Nel.t ALocFuzzyMap.t;
+  (* Used to power a code action to automatically insert appropriate render type.
+   * It is key-ed by the body_loc of components. *)
+  mutable inferred_component_return: Type.t Nel.t ALocFuzzyMap.t;
   mutable exhaustive_checks: (ALoc.t list * bool) ALocMap.t;
   mutable in_implicit_instantiation: bool;
   (* Temporarily allow method unbinding in the following locs *)
@@ -378,6 +381,7 @@ let make_ccx () =
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     missing_local_annot_lower_bounds = ALocFuzzyMap.empty;
+    inferred_component_return = ALocFuzzyMap.empty;
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
     severity_cover = Utils_js.FilenameMap.empty;
@@ -609,6 +613,8 @@ let env_cache_find_opt cx ~for_value id =
 
 let missing_local_annot_lower_bounds cx = cx.ccx.missing_local_annot_lower_bounds
 
+let inferred_component_return cx = cx.ccx.inferred_component_return
+
 let matching_props cx = cx.ccx.matching_props
 
 let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
@@ -749,6 +755,15 @@ let add_missing_local_annot_lower_bound cx loc t =
   in
   cx.ccx.missing_local_annot_lower_bounds <-
     ALocFuzzyMap.add loc bounds missing_local_annot_lower_bounds
+
+let add_inferred_component_return cx loc t =
+  let inferred_component_return = cx.ccx.inferred_component_return in
+  let bounds =
+    match ALocFuzzyMap.find_opt loc inferred_component_return with
+    | None -> Nel.one t
+    | Some bounds -> Nel.cons t bounds
+  in
+  cx.ccx.inferred_component_return <- ALocFuzzyMap.add loc bounds inferred_component_return
 
 let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
 
