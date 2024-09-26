@@ -1,3 +1,33 @@
+### 0.247.0
+
+Breaking changes:
+* Support for the deprecated `$Call` type is removed. `$Call` will now resolve to whatever `$Call` points to in the global libdef. If you need more time to migrate, you can create a shim like `$Call<F, T> = $TupleMap<[T], F>[0]`, but please note that we intend to remove support for `$TupleMap` eventually.
+* `deprecated-type-dollar-call` lint is removed, since the support for `$Call` is removed.
+* `react.disable_function_components_default_props` config option is removed. It is on by default since v0.238.
+
+Likely to cause new Flow errors:
+* `$TupleMap` is deprecated and will be soon removed, now that mapped type works on array inputs. Existing `$TupleMap` will still work in this release, but every use will trigger a `deprecated-type` lint that is on by default.
+* Flow now performs literal subtyping checks for strict equality conditions in non-refinement contexts. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABLZ7JyYMRkJyAOT8iBCgDcAB1YMROQBeBXCzCUCWcgD0as5JkoEEonKgEAA7tLciAGiYSHBoEkMvYTCB6UA)
+* Fixed destructuring with invalid literal defaults. The following now errors properly: [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRgD2UcGgAAIYAAKYBQZzYLkAXi5AHJ5FLxfTkFyBUK5eKYMRxVyAD4SzCUGUASnlAB0oPTciAGiYSJyoEkMvYTCB6UA)
+* Using string ref on components that are definitely not a class component is now an error. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRgD2UcGgAAIAGLEAAUAEoucB6QAdKASgA8fIgXJYMAAvGKQBAhHUVVyAPQAPgA3NqtVzZg1OflBlyIFteFyoBAAO5ckyUCC3fgNEwkTlQJIZewmED0oA)
+* React utility types will no longer incorrectly accept hook types when they expect component types. e.g. `type A = React$ElementConfig<hook (props: {foo: string}) => void>;` will now error.
+
+New Features:
+* Refinements against negated bigint literals should now work.
+
+Notable bug fixes:
+* Mapped type on generic arrays is now supported. Previously it will fail with array is not an object error.
+* `flow-remove-types` now correctly handles `as` cast with generics.
+
+IDE:
+* On hover, values that have `React.AbstractComponent` type will be shown in the [component type](https://flow.org/en/docs/react/component-types/) syntax
+* Flow now offers a code action to insert inferred render type when you hover on the name of the component.
+* Flow now provides keyword completion for component type, hook types and render types.
+
+Library Definitions:
+* Overly restrictive typing of queueMicrotask is now fixed.
+
+
 ### 0.246.0
 
 Likely to cause new Flow errors:
