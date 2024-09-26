@@ -252,6 +252,15 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | DefT (_, ObjT { call_t = Some _; _ }) ->
       rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
     (* Special case for intrinsic components. *)
+    | DefT (_, SingletonStrT name) ->
+      get_intrinsic
+        cx
+        trace
+        component
+        ~reason_op
+        `Props
+        (Literal (None, name))
+        (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
     | DefT (_, StrT lit) ->
       get_intrinsic
         cx
@@ -348,8 +357,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
       (* Abstract components. *)
       | DefT (reason, ReactAbstractComponentT _) ->
-        rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason)
-      (* Intrinsic components. *)
+        rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason) (* Intrinsic components. *)
+      | DefT (_, SingletonStrT name) ->
+        get_intrinsic
+          `Props
+          (Literal (None, name))
+          (OrdinaryField { type_ = tin; polarity = Polarity.Negative })
       | DefT (_, StrT lit) ->
         get_intrinsic `Props lit (OrdinaryField { type_ = tin; polarity = Polarity.Negative })
       | AnyT (reason, source) ->
@@ -660,6 +673,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (r, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Intrinsic components. *)
+      | DefT (_, SingletonStrT name) ->
+        get_intrinsic
+          `Instance
+          (Literal (None, name))
+          (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
       | DefT (_, StrT lit) ->
         get_intrinsic `Instance lit (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
       | AnyT (reason, source) ->
