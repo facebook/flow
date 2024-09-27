@@ -1,3 +1,9 @@
+### 0.247.1
+
+Misc:
+* Performance optimization for unions
+
+
 ### 0.247.0
 
 Breaking changes:
