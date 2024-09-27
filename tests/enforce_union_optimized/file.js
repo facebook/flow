@@ -51,3 +51,5 @@ type Error6e = $Flow$EnforceOptimized<() => void>; // error non-union argument
 
 type Error7a = $Flow$EnforceOptimized<>; // error no arg
 type Error7b = $Flow$EnforceOptimized<1 | 2, 1 | 2>; // error too many args
+
+type Ok15 = $Flow$EnforceOptimized<$Values<{a: 1, b: 2}> | 3 | 4>; // okay
