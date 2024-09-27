@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":49}},
-  "range":[0,150],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":50}},
+  "range":[0,202],
   "body":[
     {
       "type":"ComponentDeclaration",
@@ -231,6 +231,100 @@
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":7,"column":40},"end":{"line":7,"column":45}},
                   "range":[141,146],
+                  "name":"TRest",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          }
+        }
+      ],
+      "rendersType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"ComponentDeclaration",
+      "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":50}},
+      "range":[152,202],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":9,"column":48},"end":{"line":9,"column":50}},
+        "range":[200,202],
+        "body":[]
+      },
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":9,"column":10},"end":{"line":9,"column":15}},
+        "range":[162,167],
+        "name":"Comp5",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[
+        {
+          "type":"ComponentParameter",
+          "loc":{"source":null,"start":{"line":9,"column":16},"end":{"line":9,"column":29}},
+          "range":[168,181],
+          "name":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":16},"end":{"line":9,"column":21}},
+            "range":[168,173],
+            "name":"param",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "local":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":16},"end":{"line":9,"column":29}},
+            "range":[168,181],
+            "name":"param",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":9,"column":21},"end":{"line":9,"column":29}},
+              "range":[173,181],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":9,"column":23},"end":{"line":9,"column":29}},
+                "range":[175,181],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":9,"column":23},"end":{"line":9,"column":29}},
+                  "range":[175,181],
+                  "name":"TParam",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          },
+          "shorthand":true
+        },
+        {
+          "type":"RestElement",
+          "loc":{"source":null,"start":{"line":9,"column":31},"end":{"line":9,"column":45}},
+          "range":[183,197],
+          "argument":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":34},"end":{"line":9,"column":45}},
+            "range":[186,197],
+            "name":"rest",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":9,"column":38},"end":{"line":9,"column":45}},
+              "range":[190,197],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":9,"column":40},"end":{"line":9,"column":45}},
+                "range":[192,197],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":9,"column":40},"end":{"line":9,"column":45}},
+                  "range":[192,197],
                   "name":"TRest",
                   "typeAnnotation":null,
                   "optional":false

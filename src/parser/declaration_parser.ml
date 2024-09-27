@@ -542,6 +542,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
         let rest =
           rest_param env t
           |> Option.map (fun (loc, id, comments) ->
+                 if Peek.token env = T_COMMA then Eat.token env;
                  (loc, { Statement.ComponentDeclaration.RestParam.argument = id; comments })
              )
         in
