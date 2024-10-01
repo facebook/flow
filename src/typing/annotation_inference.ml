@@ -808,17 +808,6 @@ module rec ConsGen : S = struct
     | (_, Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit false) reason in
       DefT (reason, BoolT (Some false))
-    (*****************************)
-    (* Singleton primitive types *)
-    (*****************************)
-    | (DefT (reason, NumericStrKeyT (_, s)), _) ->
-      elab_t cx (DefT (reason, StrT (Literal (None, OrdinaryName s)))) op
-    | (DefT (reason, SingletonStrT key), _) ->
-      elab_t cx (DefT (reason, StrT (Literal (None, key)))) op
-    | (DefT (reason, SingletonNumT lit), _) ->
-      elab_t cx (DefT (reason, NumT (Literal (None, lit)))) op
-    | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT (Some b))) op
-    | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
     (**********)
     (* Mixins *)
     (**********)
@@ -1127,6 +1116,17 @@ module rec ConsGen : S = struct
     (* Unary arith operators *)
     (*************************)
     | (l, Annot_UnaryArithT (reason, kind)) -> Flow_js_utils.flow_unary_arith cx l reason kind
+    (*****************************)
+    (* Singleton primitive types *)
+    (*****************************)
+    | (DefT (reason, NumericStrKeyT (_, s)), _) ->
+      elab_t cx (DefT (reason, StrT (Literal (None, OrdinaryName s)))) op
+    | (DefT (reason, SingletonStrT key), _) ->
+      elab_t cx (DefT (reason, StrT (Literal (None, key)))) op
+    | (DefT (reason, SingletonNumT lit), _) ->
+      elab_t cx (DefT (reason, NumT (Literal (None, lit)))) op
+    | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT (Some b))) op
+    | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
     (********************)
     (* Function Statics *)
     (********************)
