@@ -1,4 +1,4 @@
-import { n, s, b, bi } from "./primitive";
+import { n, s, b, bi, neg, obj_neg } from "./primitive";
 
 function test_numeric() {
   n as 1;
@@ -38,4 +38,16 @@ function test_bigint() {
   1n as typeof bi; // okay
   2n as typeof bi; // error 2n ~> 1n
   2n as bigint as typeof bi; // error bigint ~> 1n
+}
+
+function test_numeric_negative() {
+  neg as -1; // okay
+  neg as 1; // error
+  -1 as typeof neg; // okay
+  1 as typeof neg; // error
+
+  obj_neg.f as -1; // okay
+  obj_neg.f as 1; // error
+  -1 as typeof obj_neg.f; // okay
+  1 as typeof obj_neg.f; // error
 }

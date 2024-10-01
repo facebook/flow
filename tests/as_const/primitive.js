@@ -2,6 +2,8 @@ export const n = 1 as const;
 export const s = "a" as const;
 export const b = true as const;
 export const bi = 1n as const;
+export const neg = -1 as const;
+export const obj_neg = { f: -1 } as const;
 
 function test_numeric() {
   n as 1;
@@ -41,4 +43,16 @@ function test_bigint() {
   1n as typeof bi; // okay
   2n as typeof bi; // error 2n ~> 1n
   2n as bigint as typeof bi; // error bigint ~> 1n
+}
+
+function test_numeric_negative() {
+  neg as -1; // okay
+  neg as 1; // error
+  -1 as typeof neg; // okay
+  1 as typeof neg; // error
+
+  obj_neg.f as -1; // okay
+  obj_neg.f as 1; // error
+  -1 as typeof obj_neg.f; // okay
+  1 as typeof obj_neg.f; // error
 }

@@ -771,7 +771,8 @@ module Make
       | BigIntLiteral _
       | RegExpLiteral _
       | Array _
-      | Object _ ->
+      | Object _
+      | Unary { Unary.operator = Unary.Minus; argument = (_, NumberLiteral _); _ } ->
         false
       | _ -> true
     then
@@ -2669,7 +2670,7 @@ module Make
       ((loc, t), This this)
     | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
     | Unary u ->
-      let (t, u) = unary cx ~cond ~frozen loc u in
+      let (t, u) = unary cx ~cond ~as_const ~frozen loc u in
       ((loc, t), Unary u)
     | Update u ->
       let (t, u) = update cx loc u in
@@ -4689,7 +4690,7 @@ module Make
     ast
 
   (* traverse a unary expression, return result type *)
-  and unary cx ~cond ~frozen loc =
+  and unary cx ~cond ~as_const ~frozen loc =
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
@@ -4709,7 +4710,7 @@ module Make
         { operator = Plus; argument; comments }
       )
     | { operator = Minus; argument; comments } ->
-      let (((_, argt), _) as argument) = expression cx ~frozen argument in
+      let (((_, argt), _) as argument) = expression cx ~as_const ~frozen argument in
       ( begin
           match argt with
           | DefT (reason, NumT (Literal (sense, lit))) ->

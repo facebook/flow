@@ -3002,6 +3002,8 @@ let rec expression opts scope tbls ?(new_frozen = NotFrozen) (loc, expr) =
   | E.AsConstExpression { E.AsConstExpression.expression = e; comments = _ } -> begin
     match expression opts scope tbls e with
     | Value v -> Value (AsConst v)
+    | Eval (loc, Value v, (Unary Flow_ast.Expression.Unary.Minus as op)) ->
+      Eval (loc, Value (AsConst v), op)
     | e -> e
   end
   | E.TSSatisfies _ ->
