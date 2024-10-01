@@ -1257,8 +1257,8 @@ Flags: --strip-root --pretty
 {
   "documentation":"ε is a component",
   "types":{
-    "unevaluated":{"type":"component Epsilon() renders React.Node"},
-    "evaluated":{"type":"component Epsilon() renders React.Node"}
+    "unevaluated":{"type":"component Epsilon()"},
+    "evaluated":{"type":"component Epsilon()"}
   },
   "reasons":[],
   "loc":{
@@ -1847,8 +1847,8 @@ Flags: --strip-root --pretty
 {
   "documentation":"This is the component Foo!",
   "types":{
-    "unevaluated":{"type":"component Foo(baz: string, bar: string) renders React.Node"},
-    "evaluated":{"type":"component Foo(bar: string, baz: string) renders React.Node"}
+    "unevaluated":{"type":"component Foo(baz: string, bar: string)"},
+    "evaluated":{"type":"component Foo(bar: string, baz: string)"}
   },
   "reasons":[],
   "loc":{

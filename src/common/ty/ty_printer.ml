@@ -253,10 +253,11 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     in
     let renders =
       match renders with
-      | Renders _ -> type_ ~depth renders
-      | t -> fuse [Atom "renders"; space; type_with_parens ~depth t]
+      | None -> Empty
+      | Some (Renders _ as renders) -> fuse [space; type_ ~depth renders]
+      | Some t -> fuse [space; Atom "renders"; space; type_with_parens ~depth t]
     in
-    fuse [list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params; space; renders]
+    fuse [list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params; renders]
   and type_generic ~depth (s, _, targs) =
     let name = identifier (local_name_of_symbol s) in
     type_reference ~depth name targs

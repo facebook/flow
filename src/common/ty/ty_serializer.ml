@@ -258,8 +258,9 @@ let type_ options =
       let params = just all_params in
       let renders =
         match renders_ with
-        | Renders (t, kind) -> T.AvailableRenders (Loc.none, renders t kind)
-        | _ -> T.AvailableRenders (Loc.none, renders t RendersNormal)
+        | None -> T.MissingRenders Loc.none
+        | Some (Renders (t, kind)) -> T.AvailableRenders (Loc.none, renders t kind)
+        | Some t -> T.AvailableRenders (Loc.none, renders t RendersNormal)
       in
       just (T.Component { T.Component.tparams = None; params; renders; comments = None })
     | Renders (t, kind) -> just (T.Renders (renders t kind))

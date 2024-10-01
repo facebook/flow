@@ -1,9 +1,8 @@
 component.js:1:11
 Flags:
-component Foo(foo: number) renders React.Node
+component Foo(foo: number)
 
 'Foo' defined at component.js:1:0
-'React.Node' defined at component.js:1:26
 
 component.js:1:11,1:13
 
@@ -33,10 +32,9 @@ component.js:7:11,7:13
 
 component.js:9:11
 Flags:
-component Poly<T>(foo: T) renders React.Node
+component Poly<T>(foo: T)
 
 'Poly' defined at component.js:9:0
-'React.Node' defined at component.js:9:26
 
 component.js:9:11,9:14
 
@@ -51,10 +49,9 @@ component.js:11:6,11:24
 
 component.js:13:29
 Flags:
-element of component Poly<T>(foo: T) renders React.Node
+element of component Poly<T>(foo: T)
 
 'Poly' defined at component.js:9:0
-'React.Node' defined at component.js:9:26
 
 component.js:13:28,13:31
 
@@ -74,10 +71,9 @@ component.js:15:6,15:29
 
 component.js:17:20
 Flags:
-element of component Foo(foo: number) renders React.Node
+element of component Foo(foo: number)
 
 'Foo' defined at component.js:1:0
-'React.Node' defined at component.js:1:26
 
 component.js:17:19,17:21
 
@@ -197,10 +193,9 @@ render_types.js:28:6,28:23
 
 render_types.js:30:36
 Flags:
-element of component Poly<T>() renders React.Node
+element of component Poly<T>()
 
 'Poly' defined at render_types.js:24:0
-'React.Node' defined at render_types.js:24:19
 
 render_types.js:30:36,30:39
 

@@ -618,7 +618,7 @@ module Make (I : INPUT) : S = struct
       Type.t ->
       Type.component_instance ->
       Type.t ->
-      (Ty.component_props * Ty.t option * Ty.t, error) t
+      (Ty.component_props * Ty.t option * Ty.t option, error) t
 
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
@@ -1163,7 +1163,11 @@ module Make (I : INPUT) : S = struct
                )
             )
       in
-      let%bind renders = type__ ~env renders in
+      let%bind renders =
+        match renders with
+        | Type.(DefT (_, RendersT DefaultRenders)) -> return None
+        | _ -> type__ ~env renders >>| Base.Option.some
+      in
       let regular_props =
         let props_flattened =
           match config with

@@ -418,7 +418,10 @@ struct
           | None -> props
           | Some t -> spf "ref: %s" (dump_t ~depth t) :: props
         in
-        spf "Conditional(%s): %s" (Base.String.concat ~sep:", " props) (dump_t ~depth renders)
+        spf
+          "Component(%s): %s"
+          (Base.String.concat ~sep:", " props)
+          (Base.Option.value_map ~default:"<missing>" ~f:(dump_t ~depth) renders)
       | Renders (t, _) -> spf "Renders (%s)" (dump_t ~depth t)
 
   and dump_class_decl ~depth (name, ps) =
@@ -636,7 +639,7 @@ struct
       [
         ("regularProps", props);
         ("refProp", Base.Option.value_map ref_prop ~f:json_of_t ~default:JSON_Null);
-        ("renders", json_of_t renders);
+        ("renders", Base.Option.value_map renders ~f:json_of_t ~default:JSON_Null);
       ]
     and json_of_generic (s, k, targs_opt) =
       json_of_targs targs_opt

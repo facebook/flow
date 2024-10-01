@@ -80,7 +80,7 @@ type t =
   | Component of {
       regular_props: component_props;
       ref_prop: t option;
-      renders: t;
+      renders: t option;
     }
   | Renders of t * renders_kind
 
@@ -348,7 +348,7 @@ and decl =
       targs: t list option;
       props: component_props;
       instance: t option;
-      renders: t;
+      renders: t option;
       is_type: bool;
     }
   | NamespaceDecl of {
