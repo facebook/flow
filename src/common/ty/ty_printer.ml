@@ -202,57 +202,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
             ];
         ]
     | Component { regular_props; ref_prop; renders } ->
-      let to_key x =
-        if property_key_quotes_needed x then
-          let quote = better_quote ~prefer_single_quotes x in
-          fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
-        else
-          identifier (Reason.OrdinaryName x)
-      in
-      let params =
-        match regular_props with
-        | UnflattenedComponentProps t -> [fuse [Atom "..."; type_ ~depth t]]
-        | FlattenedComponentProps { props; inexact } ->
-          let params =
-            Base.List.map
-              props
-              ~f:(fun (FlattenedComponentProp { name; optional; def_locs = _; t }) ->
-                fuse
-                  [
-                    to_key (Reason.display_string_of_name name);
-                    ( if optional then
-                      Atom "?"
-                    else
-                      Empty
-                    );
-                    Atom ":";
-                    pretty_space;
-                    type_ ~depth t;
-                  ]
-            )
-          in
-          if inexact then
-            params @ [Atom "...{...}"]
-          else
-            params
-      in
-      let params =
-        match ref_prop with
-        | None -> params
-        | Some t -> fuse [Atom "ref:"; pretty_space; type_ ~depth t] :: params
-      in
-      let renders =
-        match renders with
-        | Renders _ -> type_ ~depth renders
-        | t -> fuse [Atom "renders"; space; type_with_parens ~depth t]
-      in
-      fuse
-        [
-          Atom "component";
-          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
-          space;
-          renders;
-        ]
+      fuse [Atom "component"; type_component_sig ~depth ~regular_props ~ref_prop ~renders]
     | Renders (t, variant) ->
       let renders_str =
         match variant with
@@ -261,6 +211,52 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         | RendersStar -> "renders*"
       in
       fuse [Atom renders_str; space; type_with_parens ~depth t]
+  and type_component_sig ~depth ~regular_props ~ref_prop ~renders =
+    let to_key x =
+      if property_key_quotes_needed x then
+        let quote = better_quote ~prefer_single_quotes x in
+        fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
+      else
+        identifier (Reason.OrdinaryName x)
+    in
+    let params =
+      match regular_props with
+      | UnflattenedComponentProps t -> [fuse [Atom "..."; type_ ~depth t]]
+      | FlattenedComponentProps { props; inexact } ->
+        let params =
+          Base.List.map
+            props
+            ~f:(fun (FlattenedComponentProp { name; optional; def_locs = _; t }) ->
+              fuse
+                [
+                  to_key (Reason.display_string_of_name name);
+                  ( if optional then
+                    Atom "?"
+                  else
+                    Empty
+                  );
+                  Atom ":";
+                  pretty_space;
+                  type_ ~depth t;
+                ]
+          )
+        in
+        if inexact then
+          params @ [Atom "...{...}"]
+        else
+          params
+    in
+    let params =
+      match ref_prop with
+      | None -> params
+      | Some t -> fuse [Atom "ref:"; pretty_space; type_ ~depth t] :: params
+    in
+    let renders =
+      match renders with
+      | Renders _ -> type_ ~depth renders
+      | t -> fuse [Atom "renders"; space; type_with_parens ~depth t]
+    in
+    fuse [list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params; space; renders]
   and type_generic ~depth (s, _, targs) =
     let name = identifier (local_name_of_symbol s) in
     type_reference ~depth name targs
@@ -592,7 +588,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         option ~f:(type_parameter ~depth) typeParameters;
       ]
   in
-  let nominal_component_decl ~depth s typeParameters typeArgs is_type =
+  let nominal_component_decl ~depth s typeParameters typeArgs regular_props ref_prop renders is_type
+      =
     let base =
       [
         Atom "component";
@@ -602,6 +599,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         (match typeArgs with
         | Some ts -> type_args ~depth ts
         | None -> option ~f:(type_parameter ~depth) typeParameters);
+        type_component_sig ~depth ~regular_props ~ref_prop ~renders;
       ]
     in
     if is_type then
@@ -647,8 +645,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
     | EnumDecl n -> enum_decl n
-    | NominalComponentDecl { name; tparams; targs; is_type } ->
-      nominal_component_decl ~depth name tparams targs is_type
+    | NominalComponentDecl { name; tparams; targs; props; instance; renders; is_type } ->
+      nominal_component_decl ~depth name tparams targs props instance renders is_type
     | NamespaceDecl { name; exports = _ } -> namespace name
     | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in

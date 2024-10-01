@@ -1256,7 +1256,10 @@ imports.js:23:4
 Flags: --strip-root --pretty
 {
   "documentation":"ε is a component",
-  "types":{"unevaluated":{"type":"component Epsilon"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"component Epsilon() renders React.Node"},
+    "evaluated":{"type":"component Epsilon() renders React.Node"}
+  },
   "reasons":[],
   "loc":{
     "source":"imports.js",
@@ -1843,7 +1846,10 @@ components.js:25:4
 Flags: --strip-root --pretty
 {
   "documentation":"This is the component Foo!",
-  "types":{"unevaluated":{"type":"component Foo"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"component Foo(baz: string, bar: string) renders React.Node"},
+    "evaluated":{"type":"component Foo(bar: string, baz: string) renders React.Node"}
+  },
   "reasons":[],
   "loc":{
     "source":"components.js",

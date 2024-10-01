@@ -15,8 +15,14 @@ Flags: --pretty
 {
   "result":[
     {"name":"Complementarity","type":"class Complementarity"},
-    {"name":"ComponentSyntaxBar","type":"component ComponentSyntaxBar"},
-    {"name":"ComponentSyntaxFoo","type":"component ComponentSyntaxFoo"},
+    {
+      "name":"ComponentSyntaxBar",
+      "type":"component ComponentSyntaxBar() renders ComponentSyntaxFoo"
+    },
+    {
+      "name":"ComponentSyntaxFoo",
+      "type":"component ComponentSyntaxFoo() renders React.Node"
+    },
     {"name":"Compressibility","type":"(props: empty) => void"},
     {"name":"Computerization","type":"(props: empty) => void"},
     {"name":"canvas","type":"JSX Intrinsic"},
@@ -371,11 +377,25 @@ Flags: --pretty
 
 components.js:8:29
 Flags: --pretty
-{"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
+{
+  "result":[
+    {
+      "name":"MyComponent",
+      "type":"element of component MyComponent() renders React.Node"
+    }
+  ]
+}
 
 components.js:13:28
 Flags: --pretty
-{"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
+{
+  "result":[
+    {
+      "name":"MyComponent",
+      "type":"element of component MyComponent() renders React.Node"
+    }
+  ]
+}
 
 components.js:19:16
 Flags: --pretty

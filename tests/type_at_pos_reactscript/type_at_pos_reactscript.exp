@@ -1,14 +1,15 @@
 component.js:1:11
 Flags:
-component Foo
+component Foo(foo: number) renders React.Node
 
 'Foo' defined at component.js:1:0
+'React.Node' defined at component.js:1:26
 
 component.js:1:11,1:13
 
 component.js:3:11
 Flags:
-component Bar
+component Bar(bar: string) renders any
 
 'Bar' defined at component.js:3:0
 
@@ -16,7 +17,7 @@ component.js:3:11,3:13
 
 component.js:5:11
 Flags:
-component Baz
+component Baz(foo: number) renders? any
 
 'Baz' defined at component.js:5:0
 
@@ -24,7 +25,7 @@ component.js:5:11,5:13
 
 component.js:7:11
 Flags:
-component Qux
+component Qux(bar: string) renders* any
 
 'Qux' defined at component.js:7:0
 
@@ -32,9 +33,10 @@ component.js:7:11,7:13
 
 component.js:9:11
 Flags:
-component Poly<T>
+component Poly<T>(foo: T) renders React.Node
 
 'Poly' defined at component.js:9:0
+'React.Node' defined at component.js:9:26
 
 component.js:9:11,9:14
 
@@ -49,9 +51,10 @@ component.js:11:6,11:24
 
 component.js:13:29
 Flags:
-element of component Poly<T>
+element of component Poly<T>(foo: T) renders React.Node
 
 'Poly' defined at component.js:9:0
+'React.Node' defined at component.js:9:26
 
 component.js:13:28,13:31
 
@@ -71,16 +74,18 @@ component.js:15:6,15:29
 
 component.js:17:20
 Flags:
-element of component Foo
+element of component Foo(foo: number) renders React.Node
 
 'Foo' defined at component.js:1:0
+'React.Node' defined at component.js:1:26
 
 component.js:17:19,17:21
 
 component.js:22:17
 Flags:
-element of component x
+element of component x(ref: React.RefSetter<mixed>) renders React$Node
 
+'React$Node' defined at (lib) react.js:15:13
 'x' defined at component.js:20:14
 
 component.js:22:17,22:17
@@ -192,9 +197,10 @@ render_types.js:28:6,28:23
 
 render_types.js:30:36
 Flags:
-element of component Poly<T>
+element of component Poly<T>() renders React.Node
 
 'Poly' defined at render_types.js:24:0
+'React.Node' defined at render_types.js:24:19
 
 render_types.js:30:36,30:39
 

@@ -613,6 +613,13 @@ module Make (I : INPUT) : S = struct
       Type.objtype ->
       (Ty.obj_t, error) t
 
+    val convert_component :
+      env:Env.t ->
+      Type.t ->
+      Type.component_instance ->
+      Type.t ->
+      (Ty.component_props * Ty.t option * Ty.t, error) t
+
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
     let rec type_debug ~env ?id ~depth t state =
@@ -780,45 +787,8 @@ module Make (I : INPUT) : S = struct
         let symbol = Reason_utils.component_symbol env name r in
         return (Ty.TypeOf (Ty.TSymbol symbol, inferred_targs))
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
-        let%bind config = type__ ~env config in
-        let%bind ref_prop =
-          match instance with
-          | ComponentInstanceOmitted _ -> return None
-          | ComponentInstanceAvailableAsRefSetterProp t -> type__ ~env t >>| Base.Option.some
-          | ComponentInstanceAvailableAsInstanceType t ->
-            type__ ~env t >>| fun t ->
-            Some
-              (Ty.Generic
-                 ( Ty_symbol.builtin_symbol (Reason.OrdinaryName "React.RefSetter"),
-                   Ty.TypeAliasKind,
-                   Some [t]
-                 )
-              )
-        in
-        let%bind renders = type__ ~env renders in
-        let regular_props =
-          let props_flattened =
-            match config with
-            | Ty.Obj
-                {
-                  Ty.obj_def_loc = _;
-                  obj_literal = Some false | None;
-                  obj_props;
-                  obj_kind = (Ty.ExactObj | Ty.InexactObj) as obj_kind;
-                } ->
-              Base.List.fold_result obj_props ~init:[] ~f:(fun acc -> function
-                | Ty.NamedProp { name; prop = Ty.Field { t; polarity = _; optional }; def_locs; _ }
-                  ->
-                  let prop = Ty.FlattenedComponentProp { name; optional; def_locs; t } in
-                  Ok (prop :: acc)
-                | _ -> Error ()
-              )
-              |> Base.Result.map ~f:(fun props -> (props, obj_kind = Ty.InexactObj))
-            | _ -> Error ()
-          in
-          match props_flattened with
-          | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
-          | Error () -> Ty.UnflattenedComponentProps config
+        let%bind (regular_props, ref_prop, renders) =
+          convert_component ~env config instance renders
         in
         return (Ty.Component { regular_props; ref_prop; renders })
       | DefT (_, RendersT (InstrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
@@ -1176,6 +1146,48 @@ module Make (I : INPUT) : S = struct
           | None -> return None
         in
         Ty.InlineInterface { Ty.if_extends; if_props; if_dict }
+
+    and convert_component ~env config instance renders =
+      let%bind config = type__ ~env config in
+      let%bind ref_prop =
+        match instance with
+        | Type.ComponentInstanceOmitted _ -> return None
+        | Type.ComponentInstanceAvailableAsRefSetterProp t -> type__ ~env t >>| Base.Option.some
+        | Type.ComponentInstanceAvailableAsInstanceType t ->
+          type__ ~env t >>| fun t ->
+          Some
+            (Ty.Generic
+               ( Ty_symbol.builtin_symbol (Reason.OrdinaryName "React.RefSetter"),
+                 Ty.TypeAliasKind,
+                 Some [t]
+               )
+            )
+      in
+      let%bind renders = type__ ~env renders in
+      let regular_props =
+        let props_flattened =
+          match config with
+          | Ty.Obj
+              {
+                Ty.obj_def_loc = _;
+                obj_literal = Some false | None;
+                obj_props;
+                obj_kind = (Ty.ExactObj | Ty.InexactObj) as obj_kind;
+              } ->
+            Base.List.fold_result obj_props ~init:[] ~f:(fun acc -> function
+              | Ty.NamedProp { name; prop = Ty.Field { t; polarity = _; optional }; def_locs; _ } ->
+                let prop = Ty.FlattenedComponentProp { name; optional; def_locs; t } in
+                Ok (prop :: acc)
+              | _ -> Error ()
+            )
+            |> Base.Result.map ~f:(fun props -> (props, obj_kind = Ty.InexactObj))
+          | _ -> Error ()
+        in
+        match props_flattened with
+        | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
+        | Error () -> Ty.UnflattenedComponentProps config
+      in
+      return (regular_props, ref_prop, renders)
 
     and this_class_t ~env r t =
       let open Type in
@@ -1804,7 +1816,7 @@ module Make (I : INPUT) : S = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let component_decl ~env ?targs tparams name reason =
+      let component_decl ~env ?targs tparams config instance renders name reason =
         let%bind tparams =
           match tparams with
           | Some tparams ->
@@ -1812,13 +1824,19 @@ module Make (I : INPUT) : S = struct
             ps
           | None -> return None
         in
-        let%map targs = optMapM (TypeConverter.convert_t ~env) targs in
+        let%bind targs = optMapM (TypeConverter.convert_t ~env) targs in
+        let%map (props, instance, renders) =
+          TypeConverter.convert_component ~env config instance renders
+        in
         Ty.Decl
           (Ty.NominalComponentDecl
              {
                name = Reason_utils.component_symbol env name reason;
                tparams;
                targs;
+               props;
+               instance;
+               renders;
                is_type = Env.toplevel_is_type_identifier_reference env;
              }
           )
@@ -1846,8 +1864,12 @@ module Make (I : INPUT) : S = struct
                 (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ })
             ) ->
           toplevel ~env type_
-        | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name, targs); _ }) ->
-          component_decl ~env ?targs (Some tparams) name reason
+        | DefT
+            ( reason,
+              ReactAbstractComponentT
+                { component_kind = Nominal (_, name, targs); config; instance; renders }
+            ) ->
+          component_decl ~env ?targs (Some tparams) config instance renders name reason
         (* Type Aliases *)
         | DefT (r, TypeT (kind, t)) ->
           let%bind (env, ps) = TypeConverter.convert_type_params_t ~env tparams in
@@ -1893,13 +1915,19 @@ module Make (I : INPUT) : S = struct
         | DefT (reason, EnumObjectT _)
         | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumValueT _))) ->
           enum_decl ~env reason
-        | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name, targs); _ }) ->
-          component_decl ~env ?targs None name reason
-        | DefT (_, ReactAbstractComponentT { component_kind = Structural; _ })
+        | DefT
+            ( reason,
+              ReactAbstractComponentT
+                { component_kind = Nominal (_, name, targs); config; instance; renders }
+            ) ->
+          component_decl ~env ?targs None config instance renders name reason
+        | DefT
+            (_, ReactAbstractComponentT { component_kind = Structural; config; instance; renders })
           when Env.toplevel_is_type_identifier_reference env ->
           let orig_reason = TypeUtil.reason_of_t orig_t in
           (match desc_of_reason orig_reason with
-          | RIdentifier (OrdinaryName name) -> component_decl ~env None name orig_reason
+          | RIdentifier (OrdinaryName name) ->
+            component_decl ~env None config instance renders name orig_reason
           | _ ->
             let%map t = TypeConverter.convert_t ~env orig_t in
             Ty.Type t)

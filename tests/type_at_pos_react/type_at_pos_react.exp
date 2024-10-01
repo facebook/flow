@@ -58,11 +58,58 @@ react_component.js:31:7 = {
             "default":{"kind":"Void"}
           }
         ],
-        "isType":false
+        "isType":false,
+        "regularProps":{
+          "kind":"flattened",
+          "types":[{"name":"children","optional":true,"type":{"kind":"Bound","bound":"Renders"}}],
+          "inexact":false
+        },
+        "refProp":null,
+        "renders":{
+          "kind":"Renders",
+          "argument":{"kind":"Bound","bound":"Renders"},
+          "variant":"normal"
+        }
       },
-      "type":"component Fragment<Renders: React$Node = void>"
+      "type":"component Fragment<Renders: React$Node = void>(children?: Renders) renders Renders"
     },
-    "evaluated":null
+    "evaluated":{
+      "expanded":{
+        "kind":"NominalComponentDecl",
+        "name":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:755:5,757:22"},
+          "name":"Fragment"
+        },
+        "typeParams":[
+          {
+            "name":"Renders",
+            "bound":{
+              "kind":"Generic",
+              "type":{
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
+                "name":"React$Node"
+              },
+              "generic_kind":"type alias"
+            },
+            "polarity":"Neutral",
+            "default":{"kind":"Void"}
+          }
+        ],
+        "isType":false,
+        "regularProps":{
+          "kind":"flattened",
+          "types":[{"name":"children","optional":true,"type":{"kind":"Bound","bound":"Renders"}}],
+          "inexact":false
+        },
+        "refProp":null,
+        "renders":{
+          "kind":"Renders",
+          "argument":{"kind":"Bound","bound":"Renders"},
+          "variant":"normal"
+        }
+      },
+      "type":"component Fragment<Renders: React$Node = void>(children?: Renders) renders Renders"
+    }
   },
   "reasons":[],
   "loc":{

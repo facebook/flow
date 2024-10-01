@@ -346,6 +346,9 @@ and decl =
       tparams: type_param list option;
       (* Used to show instantiation at JSX creation site. *)
       targs: t list option;
+      props: component_props;
+      instance: t option;
+      renders: t;
       is_type: bool;
     }
   | NamespaceDecl of {

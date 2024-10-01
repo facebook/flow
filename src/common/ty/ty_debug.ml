@@ -459,7 +459,8 @@ struct
     | InterfaceDecl (s, ps) ->
       spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
-    | NominalComponentDecl { name; tparams; targs = _; is_type } ->
+    | NominalComponentDecl
+        { name; tparams; targs = _; props = _; instance = _; renders = _; is_type } ->
       spf
         "NominalComponentDecl (%s, %s, %b)"
         (dump_symbol name)
@@ -594,39 +595,7 @@ struct
             ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
           ]
         | Component { regular_props; ref_prop; renders } ->
-          let props =
-            match regular_props with
-            | UnflattenedComponentProps t ->
-              JSON_Object [("kind", JSON_String "unflattened"); ("type", json_of_t t)]
-            | FlattenedComponentProps { props; inexact } ->
-              let props =
-                Base.List.map
-                  props
-                  ~f:(fun (FlattenedComponentProp { name; optional; def_locs; t }) ->
-                    JSON_Object
-                      [
-                        ("name", JSON_String (Reason.display_string_of_name name));
-                        ("optional", JSON_Bool optional);
-                        ("type", json_of_t t);
-                        ( "def_locs",
-                          JSON_Array
-                            (Base.List.map def_locs ~f:(fun loc -> JSON_String (string_of_aloc loc)))
-                        );
-                      ]
-                )
-              in
-              JSON_Object
-                [
-                  ("kind", JSON_String "flattened");
-                  ("types", JSON_Array props);
-                  ("inexact", JSON_Bool inexact);
-                ]
-          in
-          [
-            ("regularProps", props);
-            ("refProp", Base.Option.value_map ref_prop ~f:json_of_t ~default:JSON_Null);
-            ("renders", json_of_t renders);
-          ]
+          json_of_component regular_props ref_prop renders
         | Renders (t, variant) ->
           [
             ("argument", json_of_t t);
@@ -638,6 +607,37 @@ struct
             );
           ]
       )
+    and json_of_component regular_props ref_prop renders =
+      let open Hh_json in
+      let props =
+        match regular_props with
+        | UnflattenedComponentProps t ->
+          JSON_Object [("kind", JSON_String "unflattened"); ("type", json_of_t t)]
+        | FlattenedComponentProps { props; inexact } ->
+          let props =
+            Base.List.map
+              props
+              ~f:(fun (FlattenedComponentProp { name; optional; def_locs = _; t }) ->
+                JSON_Object
+                  [
+                    ("name", JSON_String (Reason.display_string_of_name name));
+                    ("optional", JSON_Bool optional);
+                    ("type", json_of_t t);
+                  ]
+            )
+          in
+          JSON_Object
+            [
+              ("kind", JSON_String "flattened");
+              ("types", JSON_Array props);
+              ("inexact", JSON_Bool inexact);
+            ]
+      in
+      [
+        ("regularProps", props);
+        ("refProp", Base.Option.value_map ref_prop ~f:json_of_t ~default:JSON_Null);
+        ("renders", json_of_t renders);
+      ]
     and json_of_generic (s, k, targs_opt) =
       json_of_targs targs_opt
       @ [
@@ -839,12 +839,13 @@ struct
     let json_of_interface_decl (name, tparams) =
       [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
     in
-    let json_of_nominal_component_decl (name, tparams, is_type) =
+    let json_of_nominal_component_decl (name, tparams, props, instance, renders, is_type) =
       [
         ("name", json_of_symbol name);
         ("typeParams", json_of_type_params tparams);
         ("isType", Hh_json.JSON_Bool is_type);
       ]
+      @ json_of_component props instance renders
     in
     let json_of_namespace name _ =
       Hh_json.[("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
@@ -866,8 +867,8 @@ struct
       | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
       | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
       | EnumDecl name -> [("name", json_of_symbol name)]
-      | NominalComponentDecl { name; tparams; targs = _; is_type } ->
-        json_of_nominal_component_decl (name, tparams, is_type)
+      | NominalComponentDecl { name; tparams; targs = _; props; instance; renders; is_type } ->
+        json_of_nominal_component_decl (name, tparams, props, instance, renders, is_type)
       | NamespaceDecl { name; exports } -> json_of_namespace name exports
       | ModuleDecl { name; exports; default } -> json_of_module name exports default
     in
