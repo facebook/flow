@@ -907,6 +907,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                     | _ -> (None, false)
                   in
                   let annot = _type env in
+                  if Peek.token env = T_COMMA then Eat.token env;
                   {
                     Ast.Type.Component.RestParam.argument;
                     annot;
