@@ -17,3 +17,5 @@ export const obj7 = Object.freeze({...local_obj}); // {+f: string}
 //           ^
 export const obj8 = Object.freeze({...{f:"a", ...{g:1}}, h:1, f:1}); // {+f: 1, +g: 1, +h: 1}
 //           ^
+export const obj9 = Object.freeze({f: -1}); // {+f: -1}
+//           ^

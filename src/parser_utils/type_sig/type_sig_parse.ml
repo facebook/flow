@@ -3021,7 +3021,7 @@ let rec expression opts scope tbls ?(new_frozen = NotFrozen) (loc, expr) =
       let e = Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Unary) in
       Err (loc, SigError e)
     | _ ->
-      let t = expression opts scope tbls argument in
+      let t = expression opts scope tbls ~new_frozen argument in
       Eval (loc, t, Unary operator)
   end
   | E.Binary { E.Binary.operator; left; right; comments = _ } ->

@@ -2589,12 +2589,27 @@ let any_mod_src_keep_placeholder new_src = function
   | Placeholder -> Placeholder
   | _ -> new_src
 
+let unary_negate_lit ~annot_loc reason (value, raw) =
+  let reason = annot_reason ~annot_loc @@ repos_reason annot_loc reason in
+  let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
+  let reason =
+    Reason.update_desc_reason
+      (function
+        | RNumberLit _ -> RNumberLit raw
+        | d -> d)
+      reason
+  in
+  (reason, (value, raw))
+
 let flow_unary_arith cx l reason kind =
   let open UnaryArithKind in
   match (kind, l) with
-  | (Minus, DefT (_, NumT (Literal (_, (value, raw))))) ->
-    let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-    DefT (replace_desc_reason RNumber reason, NumT (Literal (None, (value, raw))))
+  | (Minus, DefT (lreason, NumT (Literal (_, lit)))) ->
+    let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
+    DefT (reason, NumT (Literal (None, lit)))
+  | (Minus, DefT (lreason, SingletonNumT lit)) ->
+    let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
+    DefT (reason, SingletonNumT lit)
   | (Minus, DefT (_, NumT (AnyLiteral | Truthy))) -> l
   | (Minus, DefT (_, BigIntT (Literal (_, (value, raw))))) ->
     let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in

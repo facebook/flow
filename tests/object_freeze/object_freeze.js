@@ -29,6 +29,15 @@ function f(x: Object) {
 var inexact: {...} = {p: 0};
 Object.freeze({...inexact}) as {||}; // Error: inexact -> exact
 
+const NegNumber = Object.freeze({
+  foo: -1,
+});
+NegNumber.foo as 1; // error -1 ~> 1
+NegNumber.foo as -1; // okay
+1 as typeof NegNumber.foo; // error 1 ~> -1
+-1 as typeof NegNumber.foo; // okay
+
 module.exports = {
   inexact: Object.freeze({...inexact}),
+  NegNumber,
 };

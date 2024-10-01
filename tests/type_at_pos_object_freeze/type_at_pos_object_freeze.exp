@@ -38,6 +38,11 @@ Flags:
 {+f: 1, +g: 1, +h: 1}
 export_const.js:18:14,18:17
 
+export_const.js:20:14
+Flags:
+{+f: -1}
+export_const.js:20:14,20:17
+
 file.js:4:5
 Flags:
 {+f: "a"}
@@ -87,4 +92,9 @@ file.js:26:5
 Flags:
 {+f: 1, +g: 1, +h: 1}
 file.js:26:5,26:8
+
+file.js:28:5
+Flags:
+{+f: -1}
+file.js:28:5,28:8
 

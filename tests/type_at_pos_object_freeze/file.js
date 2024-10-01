@@ -25,4 +25,6 @@ import {
 //  ^
     obj8,
 //  ^
-} from './export_const'; // {+f: string}
+    obj9,
+//  ^
+} from './export_const';

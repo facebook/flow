@@ -2669,7 +2669,7 @@ module Make
       ((loc, t), This this)
     | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
     | Unary u ->
-      let (t, u) = unary cx ~cond loc u in
+      let (t, u) = unary cx ~cond ~frozen loc u in
       ((loc, t), Unary u)
     | Update u ->
       let (t, u) = update cx loc u in
@@ -4689,7 +4689,7 @@ module Make
     ast
 
   (* traverse a unary expression, return result type *)
-  and unary cx ~cond loc =
+  and unary cx ~cond ~frozen loc =
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
@@ -4709,18 +4709,19 @@ module Make
         { operator = Plus; argument; comments }
       )
     | { operator = Minus; argument; comments } ->
-      let (((_, argt), _) as argument) = expression cx argument in
+      let (((_, argt), _) as argument) = expression cx ~frozen argument in
       ( begin
           match argt with
-          | DefT (reason, NumT (Literal (sense, (value, raw)))) ->
+          | DefT (reason, NumT (Literal (sense, lit))) ->
             (* special case for negative number literals, to avoid creating an unnecessary tvar. not
                having a tvar allows other special cases that match concrete lower bounds to proceed
                (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
                make a negative number not look like a literal.) *)
-            let annot_loc = loc in
-            let reason = annot_reason ~annot_loc @@ repos_reason annot_loc reason in
-            let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-            DefT (reason, NumT (Literal (sense, (value, raw))))
+            let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
+            DefT (reason, NumT (Literal (sense, lit)))
+          | DefT (reason, SingletonNumT lit) ->
+            let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
+            DefT (reason, SingletonNumT lit)
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
             Operators.unary_arith cx reason UnaryArithKind.Minus arg
