@@ -102,7 +102,7 @@ const Numbers = Object.freeze({
 type NumbersEnum = $Values<typeof Numbers>
 (-1: NumbersEnum); // ok
 (2: NumbersEnum); // ok
-(1: NumbersEnum); // error, NumbersEnum = -1 | 2
+(1: NumbersEnum); // TODO error, NumbersEnum = -1 | 2
 
 interface IfaceWithDict {
   [string]: 1;

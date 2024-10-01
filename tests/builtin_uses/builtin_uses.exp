@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:2:2
 
-Cannot cast `o.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `o.foo` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
 
    test2.js:2:2
    2| (o.foo: string);

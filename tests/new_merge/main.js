@@ -153,7 +153,7 @@ type FrozenSuiteValues =
   | 'Extra Suite';
 
 declare var frozenSuitevalues: FrozenSuiteValues;
-frozenSuitevalues as IndirectFrozenSuiteValues; // okay - due to OpenT indirection
+frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
 
 declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
 indirectFrozenSuitevalues as FrozenSuiteValues; // okay

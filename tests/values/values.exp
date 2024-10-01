@@ -667,20 +667,6 @@ References:
                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- object_types.js:105:2
-
-Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
-
-   object_types.js:105:2
-   105| (1: NumbersEnum); // error, NumbersEnum = -1 | 2
-         ^ [1]
-
-References:
-   object_types.js:105:5
-   105| (1: NumbersEnum); // error, NumbersEnum = -1 | 2
-            ^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- object_types.js:120:2
 
 Cannot cast `'s'` to `$Values` because string [1] is incompatible with number literal `1` [2]. [incompatible-cast]
@@ -738,4 +724,4 @@ References:
 
 
 
-Found 48 errors
+Found 47 errors

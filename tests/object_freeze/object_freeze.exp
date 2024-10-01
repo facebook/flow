@@ -18,10 +18,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ downstream.js:5:9
 
-Cannot assign `0` to `inexact.p` because property `p` is not writable. [cannot-write]
+Cannot assign `0` to `inexact.p` because property `p` is missing in frozen object literal [1]. [prop-missing]
 
-   5| inexact.p = 0; // error: can't set prop on frozen object
-              ^
+   downstream.js:5:9
+    5| inexact.p = 0; // error: can't set prop on frozen object
+               ^
+
+References:
+   object_freeze.js:33:26
+   33|   inexact: Object.freeze({...inexact}),
+                                ^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- object_freeze.js:4:5
@@ -70,20 +76,37 @@ References:
                                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- object_freeze.js:13:8
+Error ------------------------------------------------------------------------------------------- object_freeze.js:13:22
 
-Cannot assign `baz` to `bliffl.constructor` because property `constructor` is not writable. [cannot-write]
+Cannot assign `baz` to `bliffl.constructor` because a call signature declaring the expected parameter / return type is
+missing in object literal [1] but exists in function [2]. [prop-missing]
 
+   object_freeze.js:13:22
    13| bliffl.constructor = baz; // error
-              ^^^^^^^^^^^
+                            ^^^
+
+References:
+   object_freeze.js:8:11
+    8| var baz = {baz: 12345};
+                 ^^^^^^^^^^^^ [1]
+   object_freeze.js:13:8
+   13| bliffl.constructor = baz; // error
+              ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:14:8
 
-Cannot assign function to `bliffl.toString` because property `toString` is not writable. [cannot-write]
+Cannot assign function to `bliffl.toString` because property `toString` is missing in frozen object literal [1].
+[prop-missing]
 
+   object_freeze.js:14:8
    14| bliffl.toString = function () {}; // error
               ^^^^^^^^
+
+References:
+   object_freeze.js:9:28
+    9| var bliffl = Object.freeze({bar: '12345', ...baz});
+                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- object_freeze.js:20:41
