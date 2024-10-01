@@ -214,7 +214,7 @@ component MyComponent(foo: number, bar: string = 'str') {
 }
 
 // Only foo is required
-({foo: 3}) as React.ElementConfig<typeof MyComponent>;
+({foo: 3}) as React.PropsOf<MyComponent>;
 ```
 
 ## `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
