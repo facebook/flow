@@ -8,7 +8,7 @@ Foo as component( // error: Foo ~> string
     bar: string,
     ref: React.RefSetter<string>
 );
-Foo as component(
+Foo as component( // error again due to bad ref
     bar: string,
     ref: ImNotARefSetter // error: bad ref
 );

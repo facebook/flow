@@ -243,7 +243,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                       ReactAbstractComponentT
                         {
                           config;
-                          instance = ComponentInstanceAvailable (MixedT.why r);
+                          instance = ComponentInstanceAvailableAsInstanceType (MixedT.why r);
                           renders = react_node;
                           component_kind = Structural;
                         }

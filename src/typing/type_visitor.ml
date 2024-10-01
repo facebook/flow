@@ -135,7 +135,9 @@ class ['a] t =
         let acc =
           match instance with
           | ComponentInstanceOmitted _ -> acc
-          | ComponentInstanceAvailable t -> self#type_ cx pole acc t
+          | ComponentInstanceAvailableAsInstanceType t
+          | ComponentInstanceAvailableAsRefSetterProp t ->
+            self#type_ cx pole acc t
         in
         let acc = self#type_ cx pole acc renders in
         acc

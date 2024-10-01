@@ -249,8 +249,12 @@ module rec TypeTerm : sig
       }
 
   and component_instance =
-    | ComponentInstanceAvailable of t
+    | ComponentInstanceAvailableAsInstanceType of t
+        (** Instance in React.AbstractComponent<Props, Instance> *)
+    | ComponentInstanceAvailableAsRefSetterProp of t
+        (** React.RefSetter<Instance> in component(ref: React.RefSetter<Instance>) *)
     | ComponentInstanceOmitted of reason
+        (** Modeling the absence of ref prop in components. e.g. component Foo() *)
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
    * The subtyping rules are much simpler to understand in these forms, so we use the render type

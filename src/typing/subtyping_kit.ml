@@ -528,6 +528,91 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     rec_flow cx trace (uproto, ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
 
+  let flow_react_component_instance_to_instance =
+    let react_ref_setter_of cx t =
+      get_builtin_typeapp
+        cx
+        ~use_desc:true
+        (replace_desc_reason
+           (RTypeAppImplicit
+              (RTypeAlias ("React$RefSetter", None, RType (OrdinaryName "React$RefSetter")))
+           )
+           (reason_of_t t)
+        )
+        "React$RefSetter"
+        [t]
+    in
+    (* Before we start to do React.RefSetter, we make our last attempt to generate good
+     * errors in the most common case. On resolved inputs, we can run the extractor to
+     * get us back to instance ~> instance checks. *)
+    let try_extract_instance_of_ref_setter cx trace ref_prop =
+      if TvarVisitors.has_unresolved_tvars cx ref_prop then
+        None
+      else
+        let r = reason_of_t ref_prop in
+        let r = replace_desc_reason (RInstanceOfComponent (desc_of_reason r)) r in
+        let tout = Tvar.mk cx r in
+        match
+          SpeculationKit.try_singleton_throw_on_failure
+            cx
+            trace
+            ref_prop
+            (ExtractReactRefT (r, tout))
+        with
+        | exception Flow_js_utils.SpeculationSingletonError -> None
+        | _ -> Some (Tvar_resolver.resolved_t cx tout)
+    in
+    let subtyping_check cx trace use_op = function
+      (* Easy cases: LHS and RHS have the same kind of instance information,
+       * we can still directly flow the type to each other *)
+      | (ComponentInstanceOmitted _, ComponentInstanceOmitted _) -> ()
+      | (ComponentInstanceAvailableAsInstanceType l, ComponentInstanceAvailableAsInstanceType r) ->
+        rec_flow_t cx trace ~use_op (l, r)
+      | (ComponentInstanceAvailableAsRefSetterProp l, ComponentInstanceAvailableAsRefSetterProp r)
+        ->
+        (* RefSetter is contravariantly typed. We need to flip the flow. *)
+        rec_flow_t cx trace ~use_op (r, l)
+      (* In the following two cases, we can still directly flow the type to each other *)
+      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsInstanceType instance) ->
+        rec_flow_t cx trace ~use_op (VoidT.make r, instance)
+      | (ComponentInstanceAvailableAsInstanceType instance, ComponentInstanceOmitted r) ->
+        rec_flow_t cx trace ~use_op (instance, VoidT.make r)
+      (* The most tricky cases: LHS and RHS have different kinds of instance information,
+       * and one side is ComponentInstanceAvailableAsRefSetterProp. We need to wrap the side
+       * that's not ComponentInstanceAvailableAsRefSetterProp with React.RefSetter *)
+      (* We finally reached the most hopeless case. We wrap the instance type form with
+       * React.RefSetter, and let the subtyping rule take care of the rest. *)
+      | (ComponentInstanceAvailableAsRefSetterProp ref_prop, ComponentInstanceOmitted r) ->
+        (match try_extract_instance_of_ref_setter cx trace ref_prop with
+        | Some t -> rec_flow_t cx trace ~use_op (t, VoidT.make r)
+        | None ->
+          (* RefSetter is contravariantly typed. We need to flip the flow. *)
+          rec_flow_t cx trace ~use_op (react_ref_setter_of cx (DefT (r, VoidT)), ref_prop))
+      | ( ComponentInstanceAvailableAsRefSetterProp ref_prop,
+          ComponentInstanceAvailableAsInstanceType instance
+        ) ->
+        (match try_extract_instance_of_ref_setter cx trace ref_prop with
+        | Some t -> rec_flow_t cx trace ~use_op (t, instance)
+        | None ->
+          (* RefSetter is contravariantly typed. We need to flip the flow. *)
+          rec_flow_t cx trace ~use_op (react_ref_setter_of cx instance, ref_prop))
+      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
+        (match try_extract_instance_of_ref_setter cx trace ref_prop with
+        | Some t -> rec_flow_t cx trace ~use_op (VoidT.make r, t)
+        | None ->
+          (* RefSetter is contravariantly typed. We need to flip the flow. *)
+          rec_flow_t cx trace ~use_op (ref_prop, react_ref_setter_of cx (DefT (r, VoidT))))
+      | ( ComponentInstanceAvailableAsInstanceType instance,
+          ComponentInstanceAvailableAsRefSetterProp ref_prop
+        ) ->
+        (match try_extract_instance_of_ref_setter cx trace ref_prop with
+        | Some t -> rec_flow_t cx trace ~use_op (instance, t)
+        | None ->
+          (* RefSetter is contravariantly typed. We need to flip the flow. *)
+          rec_flow_t cx trace ~use_op (ref_prop, react_ref_setter_of cx instance))
+    in
+    subtyping_check
+
   (* mutable sites on parent values (i.e. object properties,
      array elements) must be typed invariantly when a value
      flows to the parent, unless the incoming value is fresh,
@@ -1425,16 +1510,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (React.GetConfig l)
         Polarity.Negative
         config;
-      (* check instancel <: instanceu *)
-      rec_flow_t
+
+      flow_react_component_instance_to_instance
         cx
         trace
-        ~use_op
-        ( this,
-          match instance with
-          | ComponentInstanceAvailable t -> t
-          | ComponentInstanceOmitted r -> DefT (r, VoidT)
-        );
+        use_op
+        (ComponentInstanceAvailableAsInstanceType this, instance);
 
       (* check rendersl <: rendersu *)
       Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
@@ -1460,13 +1541,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders);
 
-      begin
-        match instance with
-        (* Lack of instance information in abstract component is equivalent to void instance. *)
-        | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailable instance ->
-          rec_flow_t cx trace ~use_op (VoidT.make (replace_desc_new_reason RVoid reasonl), instance)
-      end
+      flow_react_component_instance_to_instance
+        cx
+        trace
+        use_op
+        (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
     (* Object Component ~> AbstractComponent *)
     | ( DefT (reasonl, ObjT { call_t = Some id; _ }),
         DefT
@@ -1491,14 +1570,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let mixed = MixedT.why reasonu in
       rec_flow_t ~use_op cx trace (Context.find_call cx id, DefT (reasonu, FunT (mixed, funtype)));
 
-      begin
-        match instance with
-        (* Lack of instance information in abstract component is equivalent to void instance. *)
-        | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailable instance ->
-          (* An object component instance type is always void, so flow void to instance *)
-          rec_flow_t cx trace ~use_op (VoidT.make (replace_desc_new_reason RVoid reasonl), instance)
-      end
+      flow_react_component_instance_to_instance
+        cx
+        trace
+        use_op
+        (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
     (* AbstractComponent ~> AbstractComponent *)
     | ( DefT
           ( reasonl,
@@ -1517,17 +1593,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       ) ->
       rec_flow_t cx trace ~use_op (configu, configl);
-      let instancel =
-        match instancel with
-        | ComponentInstanceAvailable t -> t
-        | ComponentInstanceOmitted r -> DefT (r, VoidT)
-      in
-      let instanceu =
-        match instanceu with
-        | ComponentInstanceAvailable t -> t
-        | ComponentInstanceOmitted r -> DefT (r, VoidT)
-      in
-      rec_flow_t cx trace ~use_op (instancel, instanceu);
+      flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu);
       let rendersl =
         match component_kind with
         | Nominal (renders_id, renders_name, _) ->
@@ -1562,17 +1628,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when ALoc.equal_id idl idu ->
       rec_flow_t cx trace ~use_op (configu, configl);
-      let instancel =
-        match instancel with
-        | ComponentInstanceAvailable t -> t
-        | ComponentInstanceOmitted r -> DefT (r, VoidT)
-      in
-      let instanceu =
-        match instanceu with
-        | ComponentInstanceAvailable t -> t
-        | ComponentInstanceOmitted r -> DefT (r, VoidT)
-      in
-      rec_flow_t cx trace ~use_op (instancel, instanceu);
+      flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu);
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | (DefT (reasonl, RendersT r1), DefT (reasonu, RendersT r2)) ->
       RendersKit.rec_renders_to_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))

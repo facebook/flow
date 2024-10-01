@@ -891,7 +891,7 @@ and merge_annot env file = function
         reason
     in
     let instance =
-      Type.ComponentInstanceAvailable
+      Type.ComponentInstanceAvailableAsInstanceType
         (Base.Option.value_map
            ~f:(merge env file)
            ~default:
@@ -1849,9 +1849,9 @@ and merge_component
     env file reason (ComponentSig { params_loc; tparams; params; rest_param; renders }) id_opt =
   let t (env, _) =
     let open Type in
-    let (pmap, instance) =
+    let (pmap, ref_prop) =
       Base.List.fold
-        ~f:(fun (acc, instance) param ->
+        ~f:(fun (acc, ref_prop) param ->
           let (Type_sig.ComponentParam { name; name_loc; t }) = param in
           let t = merge env file t in
           match name with
@@ -1863,7 +1863,7 @@ and merge_component
                 ~key_loc:(Some name_loc)
                 t
                 acc,
-              instance
+              ref_prop
             ))
         ~init:(NameUtils.Map.empty, None)
         params
@@ -1873,17 +1873,9 @@ and merge_component
       Reason.(mk_reason (RInstanceOfComponent (desc_of_reason reason)) params_loc)
     in
     let instance =
-      match instance with
+      match ref_prop with
       | None -> Type.ComponentInstanceOmitted instance_reason
-      | Some instance ->
-        Type.ComponentInstanceAvailable
-          Type.(
-            EvalT
-              ( instance,
-                TypeDestructorT (unknown_use, instance_reason, ReactCheckComponentRef),
-                Eval.generate_id ()
-              )
-          )
+      | Some ref_prop -> Type.ComponentInstanceAvailableAsRefSetterProp ref_prop
     in
     let param =
       let rest_t =

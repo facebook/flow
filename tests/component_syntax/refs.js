@@ -9,7 +9,7 @@ component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
 
 component Qux(ref: React$RefSetter<'div'>) { return null };
 
-(Foo: React.AbstractComponent<empty, string>); // err
+(Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
 (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
 
 (Bar: React.AbstractComponent<empty, string>); // err

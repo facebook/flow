@@ -49,6 +49,30 @@ References:
                                 ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------- abstract_component_to_component_type.js:12:1
+
+Cannot cast `Foo` to component because: [incompatible-cast]
+ - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
+   consider rewriting object type [2] as an interface.
+ - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
+   function type [3].
+
+   abstract_component_to_component_type.js:12:1
+    12| Foo as component( // error again due to bad ref
+        ^^^
+
+References:
+   abstract_component_to_component_type.js:14:10
+    14|     ref: ImNotARefSetter // error: bad ref
+                 ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------- abstract_component_to_component_type.js:14:5
 
 Cannot declare ref because: [incompatible-type]
@@ -124,6 +148,30 @@ References:
    class_to_component_type.js:9:26
    9|     ref: React.RefSetter<string>
                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- class_to_component_type.js:11:1
+
+Cannot cast `Foo` to component because: [incompatible-cast]
+ - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
+   consider rewriting object type [2] as an interface.
+ - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
+   function type [3].
+
+   class_to_component_type.js:11:1
+    11| Foo as component( // error again due to bad ref
+        ^^^
+
+References:
+   class_to_component_type.js:13:10
+    13|     ref: ImNotARefSetter // error: bad ref
+                 ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- class_to_component_type.js:13:5
@@ -234,20 +282,20 @@ References:
 
 Error --------------------------------------------------------------------- component_type_to_abstract_component.js:15:1
 
-Cannot cast `C3` to `React.AbstractComponent` because mixed (inferred from type parameter's bound) [1] is incompatible
-with `Instance` [2]. [incompatible-cast]
+Cannot cast `C3` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with `ImNotARefSetter` [2].
+[incompatible-cast]
 
    component_type_to_abstract_component.js:15:1
-    15| C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: mixed ~> Instance
-        ^^
+   15| C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>
+       ^^
 
 References:
-   <BUILTINS>/react.js:189:31
-   189| declare type React$RefSetter<-T> =
-                                      ^ [1]
    component_type_to_abstract_component.js:15:47
-    15| C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: mixed ~> Instance
-                                                      ^^^^^^^^ [2]
+   15| C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>
+                                                     ^^^^^^^^ [1]
+   component_type_to_abstract_component.js:4:47
+    4| declare const C3: component(bar: string, ref: ImNotARefSetter); // error: bad ref
+                                                     ^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:5:1
@@ -298,6 +346,30 @@ References:
                                 ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------- function_to_component_type.js:12:1
+
+Cannot cast `Foo` to component because: [incompatible-cast]
+ - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
+   consider rewriting object type [2] as an interface.
+ - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
+   function type [3].
+
+   function_to_component_type.js:12:1
+    12| Foo as component( // error again due to bad ref
+        ^^^
+
+References:
+   function_to_component_type.js:14:10
+    14|     ref: ImNotARefSetter // error: bad ref
+                 ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------- function_to_component_type.js:14:5
 
 Cannot declare ref because: [incompatible-type]
@@ -324,38 +396,21 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:5:1
-
-Cannot cast `instance` to `Promise` because null [1] is incompatible with `Promise` [2]. [incompatible-cast]
-
-   ref_prop_implicit_instantiation.js:5:1
-     5| instance as Promise<string>; // error, because instance is inferred as mixed above. This is bad.
-        ^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:191:11
-   191|   | ((T | null) => mixed)
-                  ^^^^ [1]
-   ref_prop_implicit_instantiation.js:5:13
-     5| instance as Promise<string>; // error, because instance is inferred as mixed above. This is bad.
-                    ^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:6:1
 
-Cannot cast `instance` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `instance` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
 
    ref_prop_implicit_instantiation.js:6:1
-     6| instance as empty; // error
-        ^^^^^^^^
+   6| instance as empty; // error
+      ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:191:11
-   191|   | ((T | null) => mixed)
-                  ^^^^ [1]
+   ref_prop_implicit_instantiation.js:1:49
+   1| declare const C: component(ref: React.RefSetter<Promise<string>>);
+                                                      ^^^^^^^^^^^^^^^ [1]
    ref_prop_implicit_instantiation.js:6:13
-     6| instance as empty; // error
-                    ^^^^^ [2]
+   6| instance as empty; // error
+                  ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:8:51
@@ -382,44 +437,76 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:9:19
+Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot call `extractRefSetter` because `S` [1] is underconstrained by call of `extractRefSetter` [2]. Either add
-explicit type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+Cannot cast `refSetter` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
 
-   ref_prop_implicit_instantiation.js:9:19
-   9| const refSetter = extractRefSetter(C); // underconstrained, Promise incompatible with empty???
-                        ^^^^^^^^^^^^^^^^
-
-References:
-   ref_prop_implicit_instantiation.js:8:35
-   8| declare function extractRefSetter<S>(c: component(ref: S)): S; // error: bad ref
-                                        ^ [1]
-   ref_prop_implicit_instantiation.js:9:19
-   9| const refSetter = extractRefSetter(C); // underconstrained, Promise incompatible with empty???
-                        ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:9:36
-
-Cannot call `extractRefSetter` with `C` bound to `c` because `Promise` [1] is incompatible with empty [2].
-[incompatible-call]
-
-   ref_prop_implicit_instantiation.js:9:36
-   9| const refSetter = extractRefSetter(C); // underconstrained, Promise incompatible with empty???
-                                         ^
+   ref_prop_implicit_instantiation.js:11:1
+   11| refSetter as empty; // error
+       ^^^^^^^^^
 
 References:
-   ref_prop_implicit_instantiation.js:1:49
-   1| declare const C: component(ref: React.RefSetter<Promise<string>>);
-                                                      ^^^^^^^^^^^^^^^ [1]
-   ref_prop_implicit_instantiation.js:8:41
-   8| declare function extractRefSetter<S>(c: component(ref: S)): S; // error: bad ref
-                                              ^^^^^^^^^^^^^^^^^ [2]
+   ref_prop_implicit_instantiation.js:1:33
+    1| declare const C: component(ref: React.RefSetter<Promise<string>>);
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ref_prop_implicit_instantiation.js:11:14
+   11| refSetter as empty; // error
+                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
+
+Cannot cast `refSetter` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ref_prop_implicit_instantiation.js:11:1
+   11| refSetter as empty; // error
+       ^^^^^^^^^
+
+References:
+   ref_prop_implicit_instantiation.js:1:33
+    1| declare const C: component(ref: React.RefSetter<Promise<string>>);
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ref_prop_implicit_instantiation.js:11:14
+   11| refSetter as empty; // error
+                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
+
+Cannot cast `refSetter` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ref_prop_implicit_instantiation.js:11:1
+   11| refSetter as empty; // error
+       ^^^^^^^^^
+
+References:
+   ref_prop_implicit_instantiation.js:1:33
+    1| declare const C: component(ref: React.RefSetter<Promise<string>>);
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ref_prop_implicit_instantiation.js:11:14
+   11| refSetter as empty; // error
+                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
+
+Cannot cast `refSetter` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ref_prop_implicit_instantiation.js:11:1
+   11| refSetter as empty; // error
+       ^^^^^^^^^
+
+References:
+   ref_prop_implicit_instantiation.js:1:33
+    1| declare const C: component(ref: React.RefSetter<Promise<string>>);
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ref_prop_implicit_instantiation.js:11:14
+   11| refSetter as empty; // error
+                    ^^^^^ [2]
 
 
 
-Found 22 errors
+Found 26 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -178,6 +178,31 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------- annotation.js:49:2
+
+Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type-arg]
+ - Either component [1] is incompatible with string [2].
+ - Or `React.RefSetter` [3] is incompatible with number [4].
+
+   annotation.js:49:2
+    49| <InlineRef ref={1} />; // error: string and number refs are still not allowed
+         ^^^^^^^^^
+
+References:
+   annotation.js:48:24
+    48| declare var InlineRef: component(ref: number); // error
+                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:135:5
+   135|   | string
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:136:36
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
+                                           ^^^^^ [3]
+   annotation.js:48:39
+    48| declare var InlineRef: component(ref: number); // error
+                                              ^^^^^^ [4]
+
+
 Error ---------------------------------------------------------------------------------------------- annotation.js:51:40
 
 Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
@@ -1169,6 +1194,31 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------------- declared.js:51:2
+
+Cannot instantiate `InlineRef` element because in type argument `ElementType`: [incompatible-type-arg]
+ - Either component InlineRef [1] is incompatible with string [2].
+ - Or `React.RefSetter` [3] is incompatible with number [4].
+
+   declared.js:51:2
+    51| <InlineRef ref={1} />; // error: string and number refs are still not allowed
+         ^^^^^^^^^
+
+References:
+   declared.js:50:1
+    50| declare component InlineRef(ref: number); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:135:5
+   135|   | string
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:136:36
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
+                                           ^^^^^ [3]
+   declared.js:50:34
+    50| declare component InlineRef(ref: number); // error
+                                         ^^^^^^ [4]
+
+
 Error ------------------------------------------------------------------------------------------------ declared.js:53:35
 
 Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
@@ -1843,6 +1893,31 @@ References:
                                                          ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- import.js:37:2
+
+Cannot instantiate `NoRef` element because in type argument `ElementType`: [incompatible-type-arg]
+ - Either component NoRef [1] is incompatible with string [2].
+ - Or `React.RefSetter` [3] is incompatible with string [4].
+
+   import.js:37:2
+    37| <NoRef /> // error again because ref in NoRef is bad
+         ^^^^^
+
+References:
+   names.js:22:8
+    22| export component NoRef(ref: string) { return <div /> }; // Error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:135:5
+   135|   | string
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:136:36
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
+                                           ^^^^^ [3]
+   names.js:22:29
+    22| export component NoRef(ref: string) { return <div /> }; // Error
+                                    ^^^^^^ [4]
+
+
 Error --------------------------------------------------------------------------------------------------- import.js:42:2
 
 Cannot create `ExportType` element because property `x` is missing in props [1] but exists in props of component [2].
@@ -2161,6 +2236,31 @@ References:
    <BUILTINS>/react.js:191:6
    191|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:23:2
+
+Cannot instantiate `NoRef` element because in type argument `ElementType`: [incompatible-type-arg]
+ - Either component NoRef [1] is incompatible with string [2].
+ - Or `React.RefSetter` [3] is incompatible with string [4].
+
+   names.js:23:2
+    23| <NoRef /> // error again due to bad ref
+         ^^^^^
+
+References:
+   names.js:22:8
+    22| export component NoRef(ref: string) { return <div /> }; // Error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:135:5
+   135|   | string
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:136:36
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
+                                           ^^^^^ [3]
+   names.js:22:29
+    22| export component NoRef(ref: string) { return <div /> }; // Error
+                                    ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- names.js:25:35
@@ -2796,25 +2896,137 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because component Reffed [1] is incompatible with string [2].
+Cannot cast `Foo` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with object type [2].
 [incompatible-cast]
 
    refs.js:12:2
-   12| (Foo: React.AbstractComponent<empty, string>); // err
+   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
-   refs.js:3:30
-    3| component Foo(ref: {current: typeof Reffed}) { return null };
-                                    ^^^^^^^^^^^^^ [1]
    refs.js:12:38
-   12| (Foo: React.AbstractComponent<empty, string>); // err
-                                            ^^^^^^ [2]
+   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+                                            ^^^^^^ [1]
+   refs.js:3:20
+    3| component Foo(ref: {current: typeof Reffed}) { return null };
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
+
+Cannot cast `Foo` to `React.AbstractComponent` because inexact `React.RefSetter` [1] is incompatible with exact object
+type [2]. [incompatible-exact]
+
+   refs.js:12:2
+   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+        ^^^
+
+References:
+   refs.js:12:38
+   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+                                            ^^^^^^ [1]
+   refs.js:3:20
+    3| component Foo(ref: {current: typeof Reffed}) { return null };
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
+
+Cannot cast `Foo` to `React.AbstractComponent` because property `current` is write-only in `React.RefSetter` [1] but
+readable in object type [2]. [incompatible-variance]
+
+   refs.js:12:2
+   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+        ^^^
+
+References:
+   refs.js:12:38
+   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+                                            ^^^^^^ [1]
+   refs.js:3:20
+    3| component Foo(ref: {current: typeof Reffed}) { return null };
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
+
+Cannot cast `Foo` to `React.AbstractComponent` because in property `current`: [incompatible-cast]
+ - Either component Reffed [1] is incompatible with string [2].
+ - Or component Reffed [1] is incompatible with null [3].
+
+   refs.js:12:2
+    12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+         ^^^
+
+References:
+   refs.js:3:30
+     3| component Foo(ref: {current: typeof Reffed}) { return null };
+                                     ^^^^^^^^^^^^^ [1]
+   refs.js:12:38
+    12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+                                             ^^^^^^ [2]
+   <BUILTINS>/react.js:190:21
+   190|   | { -current: T | null, ... }
+                            ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
+
+Cannot cast `Foo` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with object type [2].
+[incompatible-cast]
+
+   refs.js:13:2
+   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+        ^^^
+
+References:
+   refs.js:13:38
+   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+                                            ^^^^^^^^^^^^^ [1]
+   refs.js:3:20
+    3| component Foo(ref: {current: typeof Reffed}) { return null };
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
+
+Cannot cast `Foo` to `React.AbstractComponent` because inexact `React.RefSetter` [1] is incompatible with exact object
+type [2]. [incompatible-exact]
+
+   refs.js:13:2
+   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+        ^^^
+
+References:
+   refs.js:13:38
+   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+                                            ^^^^^^^^^^^^^ [1]
+   refs.js:3:20
+    3| component Foo(ref: {current: typeof Reffed}) { return null };
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
+
+Cannot cast `Foo` to `React.AbstractComponent` because property `current` is write-only in `React.RefSetter` [1] but
+readable in object type [2]. [incompatible-variance]
+
+   refs.js:13:2
+   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+        ^^^
+
+References:
+   refs.js:13:38
+   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+                                            ^^^^^^^^^^^^^ [1]
+   refs.js:3:20
+    3| component Foo(ref: {current: typeof Reffed}) { return null };
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to `React.AbstractComponent` because component Reffed [1] is incompatible with string [2].
+Cannot cast `Bar` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with function type [2].
 [incompatible-cast]
 
    refs.js:15:2
@@ -2822,12 +3034,52 @@ Cannot cast `Bar` to `React.AbstractComponent` because component Reffed [1] is i
         ^^^
 
 References:
-   refs.js:5:22
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                            ^^^^^^^^^^^^^ [1]
    refs.js:15:38
    15| (Bar: React.AbstractComponent<empty, string>); // err
-                                            ^^^^^^ [2]
+                                            ^^^^^^ [1]
+   refs.js:5:21
+    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
+
+Cannot cast `Bar` to `React.AbstractComponent` because a call signature declaring the expected parameter / return type
+is missing in `React.RefSetter` [1] but exists in function type [2]. [prop-missing]
+
+   refs.js:15:2
+   15| (Bar: React.AbstractComponent<empty, string>); // err
+        ^^^
+
+References:
+   refs.js:15:38
+   15| (Bar: React.AbstractComponent<empty, string>); // err
+                                            ^^^^^^ [1]
+   refs.js:5:21
+    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
+
+Cannot cast `Bar` to `React.AbstractComponent` because in the first parameter: [incompatible-cast]
+ - Either component Reffed [1] is incompatible with string [2].
+ - Or component Reffed [1] is incompatible with null [3].
+
+   refs.js:15:2
+    15| (Bar: React.AbstractComponent<empty, string>); // err
+         ^^^
+
+References:
+   refs.js:5:22
+     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                             ^^^^^^^^^^^^^ [1]
+   refs.js:15:38
+    15| (Bar: React.AbstractComponent<empty, string>); // err
+                                             ^^^^^^ [2]
+   <BUILTINS>/react.js:191:11
+   191|   | ((T | null) => mixed)
+                  ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
@@ -2863,9 +3115,9 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:56:66
     56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
                                                                          ^^^^^^^^^^^ [3]
@@ -2902,9 +3154,9 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:182:6
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:87:18
@@ -2943,9 +3195,9 @@ References:
    refs.js:94:25
     94|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:96:13
@@ -2969,9 +3221,9 @@ References:
    refs.js:94:25
     94|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:182:6
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- refs_without_react.js:1:1
@@ -3440,7 +3692,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 226 errors
+Found 238 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -75,9 +75,9 @@ module Make
 
   let config_and_instance
       cx ~config_reason ~instance_reason ~tparams { params_rev; rest; reconstruct = _ } =
-    let (pmap, instance) =
+    let (pmap, ref_prop) =
       List.fold_left
-        (fun (acc, instance) p ->
+        (fun (acc, ref_prop) p ->
           let key_and_t = C.param_type_with_name p in
           match key_and_t with
           | (key_loc, "ref", t) ->
@@ -108,7 +108,7 @@ module Make
                 ~key_loc:(Some key_loc)
                 t
                 acc,
-              instance
+              ref_prop
             ))
         (NameUtils.Map.empty, None)
         params_rev
@@ -146,9 +146,9 @@ module Make
         t
     in
     let instance =
-      match instance with
+      match ref_prop with
       | None -> Type.ComponentInstanceOmitted instance_reason
-      | Some (key_loc, instance) ->
+      | Some (key_loc, ref_prop) ->
         C.read_react cx key_loc;
         let open Type in
         let () =
@@ -157,17 +157,9 @@ module Make
           let u =
             Flow_js.get_builtin_typeapp cx reason_op "React$RefSetter" [AnyT.error reason_op]
           in
-          Flow_js.flow cx (instance, UseT (Op (DeclareComponentRef { op = reason_op }), u))
+          Flow_js.flow cx (ref_prop, UseT (Op (DeclareComponentRef { op = reason_op }), u))
         in
-        ComponentInstanceAvailable
-          (Flow_js.mk_possibly_evaluated_destructor
-             cx
-             unknown_use
-             instance_reason
-             instance
-             ReactCheckComponentRef
-             (Eval.generate_id ())
-          )
+        ComponentInstanceAvailableAsRefSetterProp ref_prop
     in
     let config =
       Type.(

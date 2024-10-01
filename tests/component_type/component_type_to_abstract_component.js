@@ -12,4 +12,4 @@ C2 as React.AbstractComponent<{+bar: string}, Instance>; // ok
 C1 as React.AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
 C2 as React.AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
 C1 as React.AbstractComponent<{+bar: string}, string>; // error: Instance ~> string
-C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: mixed ~> Instance
+C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>

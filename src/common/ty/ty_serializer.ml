@@ -182,9 +182,9 @@ let type_ options =
     | TypeOf (FunProto, _) -> just (qualified2 "Object" "prototype")
     | TypeOf (ObjProto, _) -> just (qualified2 "Function" "prototype")
     | TypeOf (FunProtoBind, _) -> just (qualified3 "Function" "prototype" "bind")
-    | Component { props; instance; renders = renders_ } ->
+    | Component { regular_props; ref_prop; renders = renders_ } ->
       let all_params =
-        match props with
+        match regular_props with
         | UnflattenedComponentProps t ->
           let rest_param =
             {
@@ -240,7 +240,7 @@ let type_ options =
           { T.Component.Params.params; rest; comments = None }
       in
       let all_params =
-        match instance with
+        match ref_prop with
         | None -> all_params
         | Some t ->
           let ref_prop =
@@ -249,9 +249,7 @@ let type_ options =
                 T.Component.Param.name =
                   Ast.Statement.ComponentDeclaration.Param.Identifier (id_from_string "ref");
                 optional = false;
-                annot =
-                  just
-                    (mk_generic_type (id_from_string "React.RefSetter") (Some (mk_targs [type_ t])));
+                annot = annotation t;
               }
           in
           let params = ref_prop :: all_params.T.Component.Params.params in

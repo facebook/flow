@@ -20,7 +20,7 @@ component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}
 <RunningOutOfMetasyntaxticVariables a={false} /> // Error: first param wins, so a must be number
 
 export component NoRef(ref: string) { return <div /> }; // Error
-<NoRef />
+<NoRef /> // error again due to bad ref
 
 component NoRefInSpread(...props: {ref: string}) { return <div /> }; // Error
 <NoRefInSpread />

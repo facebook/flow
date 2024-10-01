@@ -78,8 +78,8 @@ type t =
     }
   | Infer of symbol * t option
   | Component of {
-      props: component_props;
-      instance: t option;
+      regular_props: component_props;
+      ref_prop: t option;
       renders: t;
     }
   | Renders of t * renders_kind

@@ -205,7 +205,10 @@ end = struct
       let () =
         match instance with
         | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailable t -> check_polarity cx ?trace seen tparams polarity t
+        | ComponentInstanceAvailableAsInstanceType t ->
+          check_polarity cx ?trace seen tparams polarity t
+        | ComponentInstanceAvailableAsRefSetterProp t ->
+          check_polarity cx ?trace seen tparams (Polarity.inv polarity) t
       in
       check_polarity cx ?trace seen tparams polarity renders
     | DefT (_, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->

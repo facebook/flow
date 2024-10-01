@@ -201,7 +201,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               option ~f:(fun t -> fuse [space; Atom "extends"; space; type_ ~depth t]) b;
             ];
         ]
-    | Component { props; instance; renders } ->
+    | Component { regular_props; ref_prop; renders } ->
       let to_key x =
         if property_key_quotes_needed x then
           let quote = better_quote ~prefer_single_quotes x in
@@ -210,7 +210,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
           identifier (Reason.OrdinaryName x)
       in
       let params =
-        match props with
+        match regular_props with
         | UnflattenedComponentProps t -> [fuse [Atom "..."; type_ ~depth t]]
         | FlattenedComponentProps { props; inexact } ->
           let params =
@@ -237,17 +237,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
             params
       in
       let params =
-        match instance with
+        match ref_prop with
         | None -> params
-        | Some t ->
-          fuse
-            [
-              Atom "ref:";
-              pretty_space;
-              Atom "React.RefSetter";
-              list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") [type_ ~depth t];
-            ]
-          :: params
+        | Some t -> fuse [Atom "ref:"; pretty_space; type_ ~depth t] :: params
       in
       let renders =
         match renders with

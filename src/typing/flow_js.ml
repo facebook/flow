@@ -5902,7 +5902,8 @@ struct
       let () =
         match instance with
         | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailable t -> covariant_flow ~use_op t
+        | ComponentInstanceAvailableAsInstanceType t -> covariant_flow ~use_op t
+        | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
       in
       covariant_flow ~use_op renders;
       true
@@ -6058,7 +6059,8 @@ struct
       let () =
         match instance with
         | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailable t -> covariant_flow ~use_op t
+        | ComponentInstanceAvailableAsInstanceType t -> covariant_flow ~use_op t
+        | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
       in
       covariant_flow ~use_op renders;
       true

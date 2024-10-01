@@ -325,12 +325,18 @@ class virtual ['a] t =
         let instance' =
           match instance with
           | ComponentInstanceOmitted _ -> instance
-          | ComponentInstanceAvailable t ->
+          | ComponentInstanceAvailableAsInstanceType t ->
             let t' = self#type_ cx map_cx t in
             if t' == t then
               instance
             else
-              ComponentInstanceAvailable t'
+              ComponentInstanceAvailableAsInstanceType t'
+          | ComponentInstanceAvailableAsRefSetterProp t ->
+            let t' = self#type_ cx map_cx t in
+            if t' == t then
+              instance
+            else
+              ComponentInstanceAvailableAsRefSetterProp t'
         in
         let renders' = self#type_ cx map_cx renders in
         if config' == config && instance' == instance && renders' == renders then

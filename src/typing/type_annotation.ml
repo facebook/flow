@@ -1250,7 +1250,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 reason
             in
             let instance =
-              ComponentInstanceAvailable
+              ComponentInstanceAvailableAsInstanceType
                 (Base.Option.value
                    (List.nth_opt ts 1)
                    ~default:

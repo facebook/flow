@@ -34,7 +34,7 @@ import DefaultExport from "./declared.js";
 <DefaultExport x={"a"} />; // error
 
 import { NoRef }from "./names.js";
-<NoRef /> // no error
+<NoRef /> // error again because ref in NoRef is bad
 
 import { Export as ExportType } from "./annotation.js";
 import DefaultExportType from "./annotation.js";

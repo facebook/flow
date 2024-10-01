@@ -226,7 +226,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
       get_builtin_typeapp
         cx
-        reason_ref
+        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
         "React$RefSetter"
         [
           EvalT
@@ -235,8 +235,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               Eval.generate_id ()
             );
         ]
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsRefSetterProp t; _ })
+      ->
+      t
     | DefT (_, ClassT _)
-    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailable _; _ })
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsInstanceType _; _ })
     | _ ->
       maybe (get_builtin_typeapp cx reason_ref "React$Ref" [component])
 
@@ -668,8 +671,18 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (r, ObjT { call_t = Some _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Abstract components. *)
-      | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailable instance; _ }) ->
+      | DefT
+          ( _,
+            ReactAbstractComponentT
+              { instance = ComponentInstanceAvailableAsInstanceType instance; _ }
+          ) ->
         rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
+      | DefT
+          ( _,
+            ReactAbstractComponentT
+              { instance = ComponentInstanceAvailableAsRefSetterProp ref_prop; _ }
+          ) ->
+        rec_flow cx trace (ref_prop, ExtractReactRefT (reason_of_t tout, tout))
       | DefT (r, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Intrinsic components. *)

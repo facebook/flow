@@ -781,13 +781,22 @@ module Make (I : INPUT) : S = struct
         return (Ty.TypeOf (Ty.TSymbol symbol, inferred_targs))
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
-        let%bind instance =
+        let%bind ref_prop =
           match instance with
           | ComponentInstanceOmitted _ -> return None
-          | ComponentInstanceAvailable t -> type__ ~env t >>| Base.Option.some
+          | ComponentInstanceAvailableAsRefSetterProp t -> type__ ~env t >>| Base.Option.some
+          | ComponentInstanceAvailableAsInstanceType t ->
+            type__ ~env t >>| fun t ->
+            Some
+              (Ty.Generic
+                 ( Ty_symbol.builtin_symbol (Reason.OrdinaryName "React.RefSetter"),
+                   Ty.TypeAliasKind,
+                   Some [t]
+                 )
+              )
         in
         let%bind renders = type__ ~env renders in
-        let props =
+        let regular_props =
           let props_flattened =
             match config with
             | Ty.Obj
@@ -811,7 +820,7 @@ module Make (I : INPUT) : S = struct
           | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
           | Error () -> Ty.UnflattenedComponentProps config
         in
-        return (Ty.Component { props; instance; renders })
+        return (Ty.Component { regular_props; ref_prop; renders })
       | DefT (_, RendersT (InstrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
       | DefT (_, RendersT (NominalRenders { renders_id; renders_name; _ })) ->
         let symbol =

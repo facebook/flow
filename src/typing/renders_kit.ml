@@ -219,7 +219,7 @@ module Make (Flow : INPUT) : S = struct
          * as we've already checked for structural compatibility in subtyping kit. *)
         let top_abstract_component =
           let config = EmptyT.why elem_reason in
-          let instance = ComponentInstanceAvailable (MixedT.why elem_reason) in
+          let instance = ComponentInstanceAvailableAsInstanceType (MixedT.why elem_reason) in
           let renders = get_builtin_type cx elem_reason "React$Node" in
           DefT
             ( elem_reason,

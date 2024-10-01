@@ -388,9 +388,9 @@ struct
           "Infer (%s, %s)"
           (dump_symbol s)
           (Base.Option.value_map ~default:"None" ~f:(dump_t ~depth) b)
-      | Component { props; instance; renders } ->
+      | Component { regular_props; ref_prop; renders } ->
         let props =
-          match props with
+          match regular_props with
           | UnflattenedComponentProps t -> [spf "...%s" (dump_t ~depth t)]
           | FlattenedComponentProps { props; inexact } ->
             let props =
@@ -414,9 +414,9 @@ struct
               props
         in
         let props =
-          match instance with
+          match ref_prop with
           | None -> props
-          | Some t -> spf "ref: React.RefSetter<%s>" (dump_t ~depth t) :: props
+          | Some t -> spf "ref: %s" (dump_t ~depth t) :: props
         in
         spf "Conditional(%s): %s" (Base.String.concat ~sep:", " props) (dump_t ~depth renders)
       | Renders (t, _) -> spf "Renders (%s)" (dump_t ~depth t)
@@ -593,9 +593,9 @@ struct
             ("name", json_of_symbol s);
             ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
           ]
-        | Component { props; instance; renders } ->
+        | Component { regular_props; ref_prop; renders } ->
           let props =
-            match props with
+            match regular_props with
             | UnflattenedComponentProps t ->
               JSON_Object [("kind", JSON_String "unflattened"); ("type", json_of_t t)]
             | FlattenedComponentProps { props; inexact } ->
@@ -623,8 +623,8 @@ struct
                 ]
           in
           [
-            ("props", props);
-            ("instance", Base.Option.value_map instance ~f:json_of_t ~default:JSON_Null);
+            ("regularProps", props);
+            ("refProp", Base.Option.value_map ref_prop ~f:json_of_t ~default:JSON_Null);
             ("renders", json_of_t renders);
           ]
         | Renders (t, variant) ->
