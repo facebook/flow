@@ -158,6 +158,7 @@ var removeFlowVisitor = {
   TypeParameterDeclaration: removeNode,
   TypeParameterInstantiation: removeNode,
   InferredPredicate: removeInferredPredicateNode,
+  IndexedAccessType: removeNode,
   OpaqueType: removeNode,
   DeclareOpaqueType: removeNode,
   DeclareExportDeclaration: removeNode,
@@ -170,13 +171,7 @@ var removeFlowVisitor = {
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
     if (node.typeAnnotation.type === 'GenericTypeAnnotation') {
       removeNode(context, ast.tokens[typeIdx]);
-    } else if (
-      node.typeAnnotation.objectType &&
-      node.typeAnnotation.objectType.type === 'GenericTypeAnnotation'
-    ) {
-      removeNode(context, node.typeAnnotation);
-      removeNode(context, ast.tokens[typeIdx]);
-    } else {
+    } else if (node.typeAnnotation.type !== 'IndexedAccessType') {
       removeNode(context, node.typeAnnotation);
     }
   },
