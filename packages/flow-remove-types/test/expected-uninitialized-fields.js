@@ -295,6 +295,7 @@ a        ,) {}
 
 // `as` cast with generics
 'm'                         ;
+'n'                                                       ;
 ['a', 'b', 'c']                                            ;
 ['x', 'y', 'z']                                     ;
 const ga = {a: 'b'}                                              ;
