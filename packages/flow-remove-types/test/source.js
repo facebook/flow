@@ -295,6 +295,7 @@ a: string,) {}
 
 // `as` cast with generics
 'm' as $NonMaybeType<string>;
+'n' as $NonMaybeType<typeof o>['p'];
 ['a', 'b', 'c'] as $Keys<{a: string, b: string, c: number}>;
 ['x', 'y', 'z'] as $Values<{a: 'x', b: 'y', c: 'z'}>;
 const ga = {a: 'b'} as $Rest<{a: string, c: number}, {c: number}>;
