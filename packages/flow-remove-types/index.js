@@ -170,6 +170,12 @@ var removeFlowVisitor = {
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
     if (node.typeAnnotation.type === 'GenericTypeAnnotation') {
       removeNode(context, ast.tokens[typeIdx]);
+    } else if (
+      node.typeAnnotation.objectType &&
+      node.typeAnnotation.objectType.type === 'GenericTypeAnnotation'
+    ) {
+      removeNode(context, node.typeAnnotation);
+      removeNode(context, ast.tokens[typeIdx]);
     } else {
       removeNode(context, node.typeAnnotation);
     }
