@@ -517,6 +517,13 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
               let name = Statement.ComponentDeclaration.Param.Identifier (identifier_name env) in
               Expect.identifier env "as";
               (name, Parse.pattern env Parse_error.StrictParamName, false)
+            | (T_LCURLY, _) ->
+              error env Parse_error.InvalidComponentParamName;
+              let fake_name_loc = Peek.loc env in
+              let fallback_ident = (fake_name_loc, { Ast.Identifier.name = ""; comments = None }) in
+              let name = Statement.ComponentDeclaration.Param.Identifier fallback_ident in
+              let local = Parse.pattern env Parse_error.StrictParamName in
+              (name, local, false)
             | (_, _) ->
               let id = Parse.identifier_with_type env Parse_error.StrictParamName in
               (match id with

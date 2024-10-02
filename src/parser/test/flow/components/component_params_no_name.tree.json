@@ -1,33 +1,6 @@
 {
   "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
-      "message":"Unexpected token `{`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
-      "message":"Unexpected identifier, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
-      "message":"Unexpected token `,`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":23}},
-      "message":"Unexpected identifier, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-      "message":"Unexpected token `}`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
-      "message":"Strict mode function may not have duplicate parameter names"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-      "message":"Strict mode function may not have duplicate parameter names"
-    }
+    {"loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},"message":"Component params must be an identifier. If you'd like to destructure, you should use `name as {destructure}`"}
   ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":36}},
@@ -54,8 +27,8 @@
       "params":[
         {
           "type":"ComponentParameter",
-          "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
-          "range":[14,15],
+          "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":32}},
+          "range":[14,32],
           "name":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
@@ -65,54 +38,61 @@
             "optional":false
           },
           "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
-            "range":[14,15],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "shorthand":true
-        },
-        {
-          "type":"ComponentParameter",
-          "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
-          "range":[18,19],
-          "name":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
-            "range":[18,19],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
-            "range":[18,19],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "shorthand":true
-        },
-        {
-          "type":"ComponentParameter",
-          "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":32}},
-          "range":[23,32],
-          "name":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-            "range":[23,24],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":32}},
-            "range":[23,32],
-            "name":"",
+            "type":"ObjectPattern",
+            "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":32}},
+            "range":[14,32],
+            "properties":[
+              {
+                "type":"Property",
+                "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
+                "range":[15,18],
+                "key":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
+                  "range":[15,18],
+                  "name":"bar",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "value":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
+                  "range":[15,18],
+                  "name":"bar",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "kind":"init",
+                "method":false,
+                "shorthand":true,
+                "computed":false
+              },
+              {
+                "type":"Property",
+                "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":23}},
+                "range":[20,23],
+                "key":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":23}},
+                  "range":[20,23],
+                  "name":"baz",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "value":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":23}},
+                  "range":[20,23],
+                  "name":"baz",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "kind":"init",
+                "method":false,
+                "shorthand":true,
+                "computed":false
+              }
+            ],
             "typeAnnotation":{
               "type":"TypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":32}},
@@ -122,10 +102,9 @@
                 "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":32}},
                 "range":[26,32]
               }
-            },
-            "optional":false
+            }
           },
-          "shorthand":true
+          "shorthand":false
         }
       ],
       "rendersType":null,
