@@ -1175,6 +1175,14 @@ module Make (I : INPUT) : S = struct
               {
                 Ty.obj_def_loc = _;
                 obj_literal = Some false | None;
+                obj_props = [Ty.SpreadProp config];
+                obj_kind = Ty.ExactObj;
+              } ->
+            Error config
+          | Ty.Obj
+              {
+                Ty.obj_def_loc = _;
+                obj_literal = Some false | None;
                 obj_props;
                 obj_kind = (Ty.ExactObj | Ty.InexactObj) as obj_kind;
               } ->
@@ -1182,14 +1190,14 @@ module Make (I : INPUT) : S = struct
               | Ty.NamedProp { name; prop = Ty.Field { t; polarity = _; optional }; def_locs; _ } ->
                 let prop = Ty.FlattenedComponentProp { name; optional; def_locs; t } in
                 Ok (prop :: acc)
-              | _ -> Error ()
+              | _ -> Error config
             )
             |> Base.Result.map ~f:(fun props -> (props, obj_kind = Ty.InexactObj))
-          | _ -> Error ()
+          | _ -> Error config
         in
         match props_flattened with
         | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
-        | Error () -> Ty.UnflattenedComponentProps config
+        | Error config -> Ty.UnflattenedComponentProps config
       in
       return (regular_props, ref_prop, renders)
 

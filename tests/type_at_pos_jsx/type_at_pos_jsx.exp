@@ -70,7 +70,7 @@ jsx_instantiation.js:20:6,20:9
 
 jsx_instantiation.js:26:13
 Flags:
-component Bar<any | number>(...{...$ReadOnly<{n: number | any}>})
+component Bar<any | number>(...$ReadOnly<{n: number | any}>)
 = component Bar<any | number>(n: number | any)
 
 'Bar' defined at jsx_instantiation.js:25:4
@@ -79,7 +79,7 @@ jsx_instantiation.js:26:13,26:15
 
 jsx_instantiation.js:41:17
 Flags:
-component Foo<any (explicit)>(...{...Props<any>})
+component Foo<any (explicit)>(...Props<any>)
 = component Foo<any (explicit)>(f: (any) => void)
 
 'Foo' defined at jsx_instantiation.js:37:4
