@@ -1,6 +1,8 @@
 // @flow
 
 declare component MyComponent();
+declare const MyComponent2: component();
+declare const MyComponent3: component() renders MyComponent;
 
 type T1 = MyComponen
 //                  ^

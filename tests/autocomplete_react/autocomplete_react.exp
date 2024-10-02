@@ -368,21 +368,53 @@ Flags: --pretty
   ]
 }
 
-components.js:5:21
-Flags: --pretty
-{"result":[]}
+components.js:7:21
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"MyComponent4","type":"Import type from ./exported_components"},
+    {"name":"MyComponent5","type":"Import type from ./exported_components"},
+    {"name":"MyComponent6","type":"Import type from ./exported_components"}
+  ]
+}
 
-components.js:8:29
-Flags: --pretty
-{"result":[{"name":"MyComponent","type":"element of component MyComponent()"}]}
+components.js:10:29
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"MyComponent","type":"element of component MyComponent()"},
+    {"name":"MyComponent3","type":"component() renders MyComponent"},
+    {"name":"MyComponent4","type":"Import type from ./exported_components"},
+    {"name":"MyComponent5","type":"Import type from ./exported_components"},
+    {"name":"MyComponent6","type":"Import type from ./exported_components"}
+  ]
+}
 
-components.js:13:28
-Flags: --pretty
-{"result":[{"name":"MyComponent","type":"element of component MyComponent()"}]}
+components.js:15:28
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"MyComponent","type":"element of component MyComponent()"},
+    {"name":"MyComponent3","type":"component() renders MyComponent"},
+    {"name":"MyComponent4","type":"Import type from ./exported_components"},
+    {"name":"MyComponent5","type":"Import type from ./exported_components"},
+    {"name":"MyComponent6","type":"Import type from ./exported_components"}
+  ]
+}
 
-components.js:19:16
-Flags: --pretty
-{"result":[{"name":"xaaa","type":"number"},{"name":"xbbb","type":"string"}]}
+components.js:21:16
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"xaaa","type":"number"},
+    {"name":"xbbb","type":"string"},
+    {"name":"XDomainRequest","type":"(global)"},
+    {"name":"XMLHttpRequest","type":"(global)"},
+    {"name":"XMLHttpRequestEventTarget","type":"(global)"},
+    {"name":"XMLSerializer","type":"(global)"},
+    {"name":"X_OK","type":"Import from fs"}
+  ]
+}
 
 react_type_namespace.js:3:18
 Flags: --pretty

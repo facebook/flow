@@ -1415,6 +1415,17 @@ let autocomplete_unqualified_type
                  (Ty_utils.reinterpret_elt_as_type_identifier elt)
              in
              (result :: items_rev, errors_to_log)
+           | Ok (Ty.Type (Ty.Component { renders = Some (Ty.Renders _); _ }) as t)
+             when allow_react_element_shorthand_completion ->
+             let result =
+               autocomplete_create_result_elt
+                 ~documentation_and_tags
+                 ~exact_by_default
+                 ~log_info:"unqualified type: react element shorthand"
+                 (name, edit_locs)
+                 t
+             in
+             (result :: items_rev, errors_to_log)
            | Ok elt
              when exports_of_module_ty
                     ~edit_locs
