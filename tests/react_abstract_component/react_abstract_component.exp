@@ -427,7 +427,7 @@ Error --------------------------------------------------------------------------
 Cannot create `C` element because in property `ref`: [incompatible-type]
  - Either a call signature declaring the expected parameter / return type is missing in `React.RefObject` [1] but exists
    in function type [2].
- - Or `React.RefObject` [1] is incompatible with number [3].
+ - Or `React.RefObject` [1] is incompatible with string [3].
 
    create_element.js:24:41
     24| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
@@ -441,7 +441,7 @@ References:
    182|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:183:5
-   183|   | number | string;
+   183|   | string;
             ^^^^^^ [3]
 
 
