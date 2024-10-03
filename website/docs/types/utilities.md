@@ -482,28 +482,6 @@ newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
 Tip: Prefer using `$KeyMirror` instead of `$ObjMapi` (if possible) to fix certain
 kinds of `[invalid-exported-annotation]` errors.
 
-## `$TupleMap<T, F>` {#toc-tuplemap}
-
-`$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`,
-and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`.
-This is analogous to the JavaScript function `map`.
-
-Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate its return type like this:
-
-```js flow-check
-// Function type that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V
-
-function run<A, I: Array<() => A>>(iter: I): $TupleMap<I, ExtractReturnType> {
-  return iter.map(fn => fn());
-}
-
-const arr = [() => 'foo', () => 'bar'];
-run(arr)[0] as string; // Works
-run(arr)[1] as string; // Works
-run(arr)[1] as boolean; // Error!
-```
-
 ## `Class<T>` {#toc-class}
 
 Given a type `T` representing instances of a class `C`, the type `Class<T>` is the type of the class `C`.
@@ -617,8 +595,35 @@ When not specified, the type of the remainder is just `string`.
 
 ## To-be-removed utility types
 
-### `$Call<F, T...>` {#toc-call}
-NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.208 - please use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) to extract types instead.
+### `$TupleMap<T, F>` {#toc-tuplemap}
+
+`$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`,
+and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`.
+This is analogous to the JavaScript function `map`.
+
+Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate its return type like this:
+
+```js flow-check
+// Function type that takes a `() => V` and returns a `V` (its return type)
+type ExtractReturnType = <V>(() => V) => V
+
+function run<A, I: Array<() => A>>(iter: I): $TupleMap<I, ExtractReturnType> {
+  return iter.map(fn => fn());
+}
+
+const arr = [() => 'foo', () => 'bar'];
+run(arr)[0] as string; // Works
+run(arr)[1] as string; // Works
+run(arr)[1] as boolean; // Error!
+```
+
+## Removed utility types
+
+These utility types used to exist, but no longer exist in latest version of Flow.
+
+### `$Call<F, T...>` <UntilVersion version="0.247" /> {#toc-call}
+
+NOTE: Please use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) to extract types instead.
 
 `$Call<F, T...>` is a type that represents the result of calling the given [function type](../functions) `F` with 0 or more arguments `T...`.
 This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
@@ -671,10 +676,6 @@ type GetMapValue<M> =
 true as GetMapValue<Map<string, boolean>>;
 true as GetMapValue<Map<string, number>>;  // Error! value is a `number`
 ```
-
-## Removed utility types
-
-These utility types used to exist, but no longer exist in latest version of Flow.
 
 ### `$ObjMap<T, F>` <UntilVersion version="0.246" /> {#toc-objmap}
 
