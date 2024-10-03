@@ -209,6 +209,10 @@ async function func(): Promise<number> {
 
 ### Predicate Functions
 
+:::warning
+Predicate functions are deprecated and will be removed in a future version. Use [type guards](../type-guards) instead.
+:::
+
 Sometimes you will want to move the condition from an `if` statement into a function:
 
 ```js flow-check
