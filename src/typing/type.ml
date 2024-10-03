@@ -1600,7 +1600,6 @@ module rec TypeTerm : sig
     | ReactElementRefType
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
-    | ReactCheckComponentRef
     | ReactDRO of react_dro
     | MakeHooklike
     | MappedType of {

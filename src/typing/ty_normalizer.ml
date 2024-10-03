@@ -401,7 +401,6 @@ module Make (I : INPUT) : S = struct
         | SpreadTupleType _
         | RestType _
         | ReactCheckComponentConfig _
-        | ReactCheckComponentRef
         | ValuesType
         | TypeMap _
         | EnumType
@@ -1664,7 +1663,6 @@ module Make (I : INPUT) : S = struct
       | T.SpreadTupleType { inexact; resolved_rev; unresolved; _ } ->
         tuple_spread ~env ~inexact ty resolved_rev unresolved
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
-      | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))

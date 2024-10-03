@@ -30,7 +30,6 @@ let string_of_destructor = function
   | ExactType -> "ExactType"
   | ReadOnlyType -> "ReadOnly"
   | ReactCheckComponentConfig _ -> "ReactCheckComponentConfig"
-  | ReactCheckComponentRef -> "ReactCheckComponentRef"
   | PartialType -> "PartialType"
   | RequiredType -> "RequiredType"
   | SpreadType _ -> "Spread"

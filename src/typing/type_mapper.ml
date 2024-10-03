@@ -556,7 +556,6 @@ class virtual ['a] t =
           t
         else
           ReactCheckComponentConfig map'
-      | ReactCheckComponentRef
       | ReactDRO _
       | MakeHooklike
       | NonMaybeType

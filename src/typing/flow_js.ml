@@ -6555,7 +6555,6 @@ struct
       let should_destruct_union () =
         match d with
         | ConditionalType { distributive_tparam_name; _ } -> Option.is_some distributive_tparam_name
-        | ReactCheckComponentRef -> false
         | ReactDRO _ ->
           (match t with
           | UnionT (_, rep) ->
@@ -6778,7 +6777,6 @@ struct
               )
           in
           rec_flow cx trace (t, u)
-        | ReactCheckComponentRef -> rec_flow cx trace (t, ExtractReactRefT (reason, OpenT tout))
         | ReactCheckComponentConfig pmap ->
           let u =
             Object.(

@@ -294,7 +294,6 @@ and utility =
   | ReactElementPropsType of t
   | ReactElementConfigType of t
   | ReactElementRefType of t
-  | ReactCheckComponentRef of t
   | ReactConfigType of t * t
 
 and component_props =
@@ -704,7 +703,6 @@ class ['A] comparator_ty =
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
       | Required _ -> 24
-      | ReactCheckComponentRef _ -> 26
       | Enum _ -> 27
       | StringPrefix _ -> 28
       | StringSuffix _ -> 29
@@ -872,7 +870,6 @@ let string_of_utility_ctor = function
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
   | ReactElementRefType _ -> "React$ElementRef"
-  | ReactCheckComponentRef _ -> "React$Ref"
   | ReactConfigType _ -> "React$Config"
 
 let types_of_utility = function
@@ -899,7 +896,6 @@ let types_of_utility = function
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]
-  | ReactCheckComponentRef t -> Some [t]
   | ReactConfigType (t1, t2) -> Some [t1; t2]
 
 let string_of_prop_source = function

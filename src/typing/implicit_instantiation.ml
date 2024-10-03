@@ -208,8 +208,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | TypeMap _
       | MappedType _ (* TODO: Mapped Type reversals *)
       | ReactElementRefType
-      | ReactCheckComponentConfig _
-      | ReactCheckComponentRef ->
+      | ReactCheckComponentConfig _ ->
         UpperEmpty
       | EnumType ->
         merge_lower_or_upper_bounds r (OpenT tout)
