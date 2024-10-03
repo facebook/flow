@@ -178,7 +178,7 @@ var removeFlowVisitor = {
   ExistsTypeAnnotation: removeNode,
   FunctionTypeAnnotation: removeNode,
   GenericTypeAnnotation: removeNode,
-  HookTypeAnnotation: removeNode,
+  // HookTypeAnnotation: removeNode,
   InferTypeAnnotation: removeNode,
   IntersectionTypeAnnotation: removeNode,
   InterfaceTypeAnnotation: removeNode,
