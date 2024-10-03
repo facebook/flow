@@ -5847,7 +5847,7 @@ b.te
                 {
                   label: 'childContextTypes',
                   kind: 6,
-                  detail: 'any',
+                  detail: 'empty',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -5883,7 +5883,7 @@ b.te
                 {
                   label: 'contextTypes',
                   kind: 6,
-                  detail: 'any',
+                  detail: 'empty',
                   sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
@@ -6314,7 +6314,7 @@ b.te
                 {
                   label: 'childContextTypes',
                   kind: 6,
-                  detail: 'any',
+                  detail: 'empty',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
@@ -6350,7 +6350,7 @@ b.te
                 {
                   label: 'contextTypes',
                   kind: 6,
-                  detail: 'any',
+                  detail: 'empty',
                   sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
