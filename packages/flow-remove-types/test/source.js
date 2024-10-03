@@ -300,7 +300,6 @@ const asEmpty = {} as empty;
 const asExists = 'exists' as *;
 const asFunction = (() => {}) as () => void;
 const asGeneric = 'generic' as $NonMaybeType<string>;
-// const asHook = function myHook(){} as hook (n: number) => void;
 const asKeyof = 'a' as keyof { a: string; b: number };
 const asMixed = 'mixed' as mixed;
 const asNullable = null as ?string;
