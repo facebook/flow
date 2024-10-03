@@ -166,14 +166,40 @@ var removeFlowVisitor = {
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,
 
+  AnyTypeAnnotation: removeNode,
+  ArrayTypeAnnotation: removeNode,
+  BigIntLiteralTypeAnnotation: removeNode,
+  BigIntTypeAnnotation: removeNode,
+  BooleanLiteralTypeAnnotation: removeNode,
+  BooleanTypeAnnotation: removeNode,
+  ComponentTypeAnnotation: removeNode,
+  ConditionalTypeAnnotation: removeNode,
+  EmptyTypeAnnotation: removeNode,
+  ExistsTypeAnnotation: removeNode,
+  FunctionTypeAnnotation: removeNode,
+  GenericTypeAnnotation: removeNode,
+  HookTypeAnnotation: removeNode,
+  InferTypeAnnotation: removeNode,
+  IntersectionTypeAnnotation: removeNode,
+  InterfaceTypeAnnotation: removeNode,
+  KeyofTypeAnnotation: removeNode,
+  MixedTypeAnnotation: removeNode,
+  NullableTypeAnnotation: removeNode,
+  NullLiteralTypeAnnotation: removeNode,
+  NumberLiteralTypeAnnotation: removeNode,
+  NumberTypeAnnotation: removeNode,
+  ObjectTypeAnnotation: removeNode,
+  StringLiteralTypeAnnotation: removeNode,
+  StringTypeAnnotation: removeNode,
+  SymbolTypeAnnotation: removeNode,
+  TupleTypeAnnotation: removeNode,
+  TypeofTypeAnnotation: removeNode,
+  UnionTypeAnnotation: removeNode,
+  VoidTypeAnnotation: removeNode,
+
   AsExpression: function (context, node, ast) {
     var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
-    if (node.typeAnnotation.type === 'GenericTypeAnnotation') {
-      removeNode(context, ast.tokens[typeIdx]);
-    } else if (node.typeAnnotation.type !== 'IndexedAccessType') {
-      removeNode(context, node.typeAnnotation);
-    }
   },
 
   AsConstExpression: function (context, node, ast) {
