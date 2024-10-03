@@ -645,6 +645,92 @@ module Statements = struct
           comments;
         }
     )
+
+  let synthesized_component_declaration
+      ~use_component_syntax ?tparams ~typed_props ~body new_component_name =
+    let component_body = (Loc.none, { Flow_ast.Statement.Block.body; comments = None }) in
+    if use_component_syntax then
+      let params =
+        let params =
+          Base.List.map typed_props ~f:(fun (def, t) ->
+              let open Ast.Statement.ComponentDeclaration.Param in
+              ( Loc.none,
+                {
+                  name = Identifier (Identifiers.identifier def);
+                  local = Patterns.identifier ~annot:(Ast.Type.Available (Loc.none, t)) def;
+                  default = None;
+                  shorthand = true;
+                }
+              )
+          )
+        in
+        component_params params
+      in
+      component_declaration ?tparams ~params new_component_name component_body
+    else
+      let open Flow_ast.Pattern in
+      let function_body = Flow_ast.Function.BodyBlock component_body in
+      let params =
+        if Base.List.is_empty typed_props then
+          None
+        else
+          let properties =
+            Base.List.map typed_props ~f:(fun (def, _) ->
+                Object.Property
+                  ( Loc.none,
+                    {
+                      Object.Property.key = Object.Property.Identifier (Identifiers.identifier def);
+                      pattern = Patterns.identifier def;
+                      default = None;
+                      shorthand = true;
+                    }
+                  )
+            )
+          in
+          let properties_annot =
+            Base.List.map typed_props ~f:(fun (def, t) ->
+                Flow_ast.Type.Object.Property
+                  (Types.Objects.property
+                     (Flow_ast.Expression.Object.Property.Identifier (Identifiers.identifier def))
+                     (Flow_ast.Type.Object.Property.Init t)
+                  )
+            )
+          in
+          let annot =
+            Flow_ast.Type.Available
+              ( Loc.none,
+                ( Loc.none,
+                  Flow_ast.Type.Generic
+                    {
+                      Flow_ast.Type.Generic.id =
+                        Flow_ast.Type.Generic.Identifier.Unqualified
+                          (Identifiers.identifier "$ReadOnly");
+                      targs =
+                        Some
+                          (Types.type_args
+                             (* Do not use explicit bar or ... *)
+                             [Types.object_ ~exact:false ~inexact:false properties_annot]
+                          );
+                      comments = None;
+                    }
+                )
+              )
+          in
+          Some
+            (Functions.params
+               [Functions.param (Loc.none, Object { Object.properties; annot; comments = None })]
+            )
+      in
+      ( Loc.none,
+        Flow_ast.Statement.FunctionDeclaration
+          (Functions.make
+             ~id:(Some (Identifiers.identifier new_component_name))
+             ?params
+             ?tparams
+             ~body:function_body
+             ()
+          )
+      )
 end
 
 module Expressions = struct
