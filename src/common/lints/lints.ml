@@ -27,7 +27,6 @@ type property_assignment_kind =
 
 type deprecated_type_kind =
   | DeprecatedBool
-  | DeprecatedDollarTupleMap
   | DeprecatedPredicate
 
 type lint_kind =
@@ -76,7 +75,6 @@ let string_of_sketchy_number_kind = function
 
 let string_of_deprecated_type_kind = function
   | DeprecatedBool -> "deprecated-type-bool"
-  | DeprecatedDollarTupleMap -> "deprecated-type-dollar-tuple-map"
   | DeprecatedPredicate -> "deprecated-type-predicate"
 
 let string_of_kind = function
@@ -131,15 +129,8 @@ let kinds_of_string = function
   | "untyped-import" -> Some [UntypedImport]
   | "internal-type" -> Some [InternalType]
   | "unclear-type" -> Some [UnclearType]
-  | "deprecated-type" ->
-    Some
-      [
-        DeprecatedType DeprecatedBool;
-        DeprecatedType DeprecatedDollarTupleMap;
-        DeprecatedType DeprecatedPredicate;
-      ]
+  | "deprecated-type" -> Some [DeprecatedType DeprecatedBool; DeprecatedType DeprecatedPredicate]
   | "deprecated-type-bool" -> Some [DeprecatedType DeprecatedBool]
-  | "deprecated-type-dollar-tuple-map" -> Some [DeprecatedType DeprecatedDollarTupleMap]
   | "deprecated-type-predicate" -> Some [DeprecatedType DeprecatedPredicate]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]

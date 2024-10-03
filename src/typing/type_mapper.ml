@@ -645,12 +645,6 @@ class virtual ['a] t =
         else
           RestType (options, x')
       | ValuesType -> t
-      | CallType { args } ->
-        let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
-        if args' == args then
-          t
-        else
-          CallType { args = args' }
       | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
         let infer_tparams' = ListUtils.ident_map (self#type_param cx map_cx) infer_tparams in
         let extends_t' = self#type_ cx map_cx extends_t in
@@ -672,12 +666,7 @@ class virtual ['a] t =
               true_t = true_t';
               false_t = false_t';
             }
-      | TypeMap tmap ->
-        let tmap' = self#type_map cx map_cx tmap in
-        if tmap' == tmap then
-          t
-        else
-          TypeMap tmap'
+      | TypeMap ObjectKeyMirror -> t
       | ReactConfigType default_props ->
         let default_props' = self#type_ cx map_cx default_props in
         if default_props' == default_props then
@@ -942,16 +931,6 @@ class virtual ['a] t =
           p
         else
           LatentP (lazy (use_op, loc, t', targs', argts'), i)
-
-    method type_map cx map_cx t =
-      match t with
-      | TupleMap t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          TupleMap t''
-      | ObjectKeyMirror -> ObjectKeyMirror
 
     method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
 

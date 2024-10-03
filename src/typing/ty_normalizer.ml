@@ -389,7 +389,6 @@ module Make (I : INPUT) : S = struct
         | ElementType _
         | OptionalIndexedAccessNonMaybeType _
         | OptionalIndexedAccessResultType _
-        | CallType _
         | ConditionalType _ ->
           true
         | ExactType
@@ -1641,9 +1640,6 @@ module Make (I : INPUT) : S = struct
         in
         Ty.IndexedAccess { _object = ty; index = index'; optional = true }
       | T.OptionalIndexedAccessResultType _ -> return ty
-      | T.CallType { args = ts } ->
-        let%map tys = mapM (type__ ~env) ts in
-        Ty.Utility (Ty.Call (ty, tys))
       | T.ConditionalType
           { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t } ->
         let check_type = ty in
@@ -1655,9 +1651,6 @@ module Make (I : INPUT) : S = struct
       | T.PropertyType { name } ->
         let index = Ty.StrLit name in
         return @@ Ty.IndexedAccess { _object = ty; index; optional = false }
-      | T.TypeMap (T.TupleMap t') ->
-        let%map ty' = type__ ~env t' in
-        Ty.Utility (Ty.TupleMap (ty, ty'))
       | T.RestType (T.Object.Rest.Sound, t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Rest (ty, ty'))

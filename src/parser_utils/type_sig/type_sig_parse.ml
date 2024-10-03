@@ -2427,14 +2427,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | Some (_, { arguments = [(loc, _)]; _ }) -> Err (push_loc tbls loc, CheckError)
     | _ -> Err (loc, CheckError)
   end
-  | "$TupleMap" -> begin
-    match targs with
-    | Some (_, { arguments = [tup; fn]; _ }) ->
-      let tup = annot opts scope tbls xs tup in
-      let fn = annot opts scope tbls xs fn in
-      Annot (TupleMap { loc; tup; fn })
-    | _ -> Err (loc, CheckError)
-  end
   | "$KeyMirror" -> begin
     match targs with
     | Some (_, { arguments = [obj]; _ }) ->

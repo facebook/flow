@@ -37,9 +37,7 @@ let string_of_destructor = function
   | SpreadTupleType _ -> "SpreadTupleType"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
-  | CallType _ -> "CallType"
   | ConditionalType _ -> "ConditionalType"
-  | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
@@ -1626,7 +1624,6 @@ let dump_error_message =
     | EInternalType (loc, _) -> spf "EInternalType (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
-    | EDeprecatedDollarTupleMap loc -> spf "EDeprecatedDollarTupleMap (%s)" (string_of_aloc loc)
     | EDeprecatedPredicate loc -> spf "EDeprecatedPredicate (%s)" (string_of_aloc loc)
     | EIncorrectTypeWithReplacement { loc; kind } ->
       let deprecated_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in

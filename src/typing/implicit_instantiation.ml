@@ -204,7 +204,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | OptionalIndexedAccessNonMaybeType _
       | OptionalIndexedAccessResultType _
       | ValuesType
-      | CallType _
       | ConditionalType _
       | TypeMap _
       | MappedType _ (* TODO: Mapped Type reversals *)

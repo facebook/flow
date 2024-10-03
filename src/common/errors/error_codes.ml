@@ -102,7 +102,6 @@ type error_code =
   | InvalidSupportsPlatformDecl
   | InvalidTupleArity
   | InvalidTupleIndex
-  | InvalidTupleMap
   | InvalidTypeArg
   | InvalidTypeCastSyntax
   | InvalidTypeOf
@@ -317,7 +316,6 @@ let string_of_code : error_code -> string = function
   | InvalidSupportsPlatformDecl -> "invalid-supports-platform"
   | InvalidTupleArity -> "invalid-tuple-arity"
   | InvalidTupleIndex -> "invalid-tuple-index"
-  | InvalidTupleMap -> "invalid-tuple-map"
   | InvalidTypeArg -> "invalid-type-arg"
   | InvalidTypeCastSyntax -> "invalid-type-cast-syntax"
   | InvalidTypeOf -> "invalid-typeof"

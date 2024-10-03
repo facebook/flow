@@ -4333,33 +4333,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$TupleMap",
-  "kind":3,
-  "detail":"$TupleMap",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
-    "newText":"$TupleMap"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":36,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$TupleMap",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
   "label":"$Values",
   "kind":3,
   "detail":"$Values",
@@ -4377,7 +4350,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":37,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -4404,7 +4377,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":38,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -4431,7 +4404,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":39,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -4458,7 +4431,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":40,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -4485,7 +4458,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":41,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -4512,7 +4485,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":42,
+        "index":41,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",

@@ -139,7 +139,6 @@ type 'loc virtual_reason_desc =
   | RDummyPrototype
   | RDummyThis
   | RImplicitThis of 'loc virtual_reason_desc
-  | RTupleMap
   | RObjectKeyMirror
   (* TODO type names should not be able to be internal names *)
   | RType of name
@@ -275,8 +274,8 @@ let rec map_desc_locs f = function
     | RImplicitInstantiation | RConstructorVoidReturn | RUnion | RUnionType | RIntersection
     | RIntersectionType | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype
     | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RReturn
-    | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RTupleMap | RType _
-    | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
+    | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RType _ | RTypeof _
+    | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
     | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _ | RMember _
     | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _ | RUndefinedProperty _
     | RSomeProperty | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
@@ -635,7 +634,6 @@ let rec string_of_desc = function
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
   | RImplicitThis desc -> spf "implicit `this` parameter of %s" (string_of_desc desc)
-  | RTupleMap -> "`$TupleMap`"
   | RObjectKeyMirror -> "`$KeyMirror`"
   | RType x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
@@ -1379,7 +1377,6 @@ let classification_of_reason_desc desc =
   | RDummyPrototype
   | RDummyThis
   | RImplicitThis _
-  | RTupleMap
   | RObjectKeyMirror
   | RType _
   | RTypeAlias _

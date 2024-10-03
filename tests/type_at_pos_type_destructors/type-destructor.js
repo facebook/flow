@@ -105,17 +105,6 @@ type FnObj = { getName: () => string, getAge: () => number };
 type MappedTypeFnReturnTypes = {[K in keyof FnObj]: { k: K, v: FnObj[K] extends () => infer V ? V : empty } };
 //   ^
 
-// $TupleMap<T, F>
-type TupleMapMixedPair = $TupleMap<[mixed, mixed], <K>(k: K) => K | null>;
-//   ^
-type TupleMapMixedPairPoly<X> = $TupleMap<[X, mixed], <K>(k: K) => K | null>;
-//   ^
-
-type ExtractReturnType = <V>(() => V) => V;
-type FnTuple = [() => string, () => number];
-type TupleMapFnReturnTypes = $TupleMap<FnTuple, ExtractReturnType>;
-//   ^
-
 // conditional types
 type ExtractPropType = <T>({ prop: T }) => T;
 type PropObj = { prop: number };

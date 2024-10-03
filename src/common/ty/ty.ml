@@ -281,8 +281,6 @@ and utility =
   | Enum of t
   | NonMaybeType of t
   | ObjKeyMirror of t
-  | TupleMap of t * t
-  | Call of t * t list
   | Class of t
   | StringPrefix of {
       prefix: string;
@@ -698,8 +696,6 @@ class ['A] comparator_ty =
       | Rest _ -> 5
       | ElementType _ -> 7
       | NonMaybeType _ -> 8
-      | TupleMap _ -> 11
-      | Call _ -> 12
       | Class _ -> 13
       | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
@@ -870,8 +866,6 @@ let string_of_utility_ctor = function
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
   | ObjKeyMirror _ -> "$KeyMirror"
-  | TupleMap _ -> "$TupleMap"
-  | Call _ -> "$Call"
   | Class _ -> "Class"
   | StringPrefix _ -> "StringPrefix"
   | StringSuffix _ -> "StringSuffix"
@@ -895,8 +889,6 @@ let types_of_utility = function
   | Enum t -> Some [t]
   | NonMaybeType t -> Some [t]
   | ObjKeyMirror t -> Some [t]
-  | TupleMap (t1, t2) -> Some [t1; t2]
-  | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
   | StringPrefix { prefix = arg; remainder = None }
   | StringSuffix { suffix = arg; remainder = None } ->

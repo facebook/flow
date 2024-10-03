@@ -48,13 +48,7 @@ function f<X>(x: Array<X>) {
   }
 }
 
-// fast path for TupleMap
-// $FlowExpectedError[deprecated-type]
-function h1<X: [number]>(x: X): $TupleMap<X, (number) => string> {
-  return ['a']; // existing unsoundness
-}
-
-function h2<X: [number]>(x: X): {[_K in keyof X]: string} {
+function h<X: [number]>(x: X): {[_K in keyof X]: string} {
   return ['a']; // error, mapped type doesn't have the unsoundness issue
 }
 

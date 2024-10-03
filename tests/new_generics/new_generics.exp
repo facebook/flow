@@ -1030,37 +1030,37 @@ References:
                                                  ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:58:10
+Error ---------------------------------------------------------------------------------------------------- misc.js:52:10
 
 Cannot return array literal because array literal [1] is incompatible with type including generic type(s) `X` [2].
 [incompatible-return]
 
-   misc.js:58:10
-   58|   return ['a']; // error, mapped type doesn't have the unsoundness issue
+   misc.js:52:10
+   52|   return ['a']; // error, mapped type doesn't have the unsoundness issue
                 ^^^^^ [1]
 
 References:
-   misc.js:57:47
-   57| function h2<X: [number]>(x: X): {[_K in keyof X]: string} {
-                                                     ^ [2]
+   misc.js:51:46
+   51| function h<X: [number]>(x: X): {[_K in keyof X]: string} {
+                                                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:74:28
+Error ---------------------------------------------------------------------------------------------------- misc.js:68:28
 
 Cannot call `Object.keys(...).reduce` because: [incompatible-call]
  - Either object literal [1] is incompatible with type including generic type(s) `TFormData` [2].
  - Or no more than 1 argument is expected by function type [3].
 
-   misc.js:74:28
-     74|   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
+   misc.js:68:28
+     68|   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
                                     ^^^^^^
 
 References:
-   misc.js:77:5
-     77|     {},
+   misc.js:71:5
+     71|     {},
              ^^ [1]
-   misc.js:75:32
-     75|     <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+   misc.js:69:32
+     69|     <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1055:5
              v------
@@ -1070,20 +1070,20 @@ References:
              ---^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:139:3
+Error ---------------------------------------------------------------------------------------------------- misc.js:133:3
 
 Cannot return `otherData` because object type [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-return]
 
-   misc.js:139:3
-   139|   otherData;
+   misc.js:133:3
+   133|   otherData;
           ^^^^^^^^^
 
 References:
-   misc.js:138:54
-   138| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+   misc.js:132:54
+   132| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
                                                              ^^^^^ [1]
-   misc.js:138:72
-   138| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+   misc.js:132:72
+   132| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
                                                                                ^ [2]
 
 

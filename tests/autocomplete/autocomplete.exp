@@ -2748,33 +2748,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$TupleMap",
-  "kind":3,
-  "detail":"$TupleMap",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$TupleMap"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":36,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$TupleMap",
-        "ac_type":"Actype"
-      }
-    ]
-  }
-}
-{
   "label":"$Values",
   "kind":3,
   "detail":"$Values",
@@ -2792,7 +2765,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":37,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -2819,7 +2792,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":38,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -2846,7 +2819,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":39,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -2873,7 +2846,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":40,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -2900,7 +2873,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":41,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -2927,7 +2900,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":42,
+        "index":41,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",
@@ -4728,33 +4701,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$TupleMap",
-  "kind":3,
-  "detail":"$TupleMap",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
-    "newText":"$TupleMap"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":30,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$TupleMap",
-        "ac_type":"Acmem"
-      }
-    ]
-  }
-}
-{
   "label":"$Values",
   "kind":3,
   "detail":"$Values",
@@ -4772,7 +4718,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -4799,7 +4745,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -4826,7 +4772,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -4853,7 +4799,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -4880,7 +4826,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -4907,7 +4853,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":36,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",
@@ -5873,33 +5819,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$TupleMap",
-  "kind":3,
-  "detail":"$TupleMap",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
-    "newText":"$TupleMap"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":30,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$TupleMap",
-        "ac_type":"Acmem"
-      }
-    ]
-  }
-}
-{
   "label":"$Values",
   "kind":3,
   "detail":"$Values",
@@ -5917,7 +5836,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -5944,7 +5863,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -5971,7 +5890,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -5998,7 +5917,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -6025,7 +5944,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -6052,7 +5971,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":36,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",

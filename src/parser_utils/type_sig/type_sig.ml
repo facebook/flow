@@ -588,11 +588,6 @@ type ('loc, 'a) annot =
       true_type: 'a;
       false_type: 'a;
     }
-  | TupleMap of {
-      loc: 'loc;
-      tup: 'a;
-      fn: 'a;
-    }
   | ObjKeyMirror of {
       loc: 'loc;
       obj: 'a;

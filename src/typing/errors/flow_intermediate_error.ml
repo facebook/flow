@@ -206,10 +206,10 @@ let flip_frame = function
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | EnumRepresentationTypeCompatibility c ->
     EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
-  | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | TupleAssignment _ | TypeParamBound _
-    | OpaqueTypeBound _ | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip
-    | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ | TypePredicateCompatibility
-    | RendersCompatibility | ReactDeepReadOnly _ ) as use_op ->
+  | ( CallFunCompatibility _ | TupleAssignment _ | TypeParamBound _ | OpaqueTypeBound _
+    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
+    | MappedTypeKeyCompatibility _ | TypePredicateCompatibility | RendersCompatibility
+    | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -698,7 +698,6 @@ let rec make_intermediate_error :
       | Frame (ReactGetConfig _, use_op)
       | Frame (UnifyFlip, use_op)
       | Frame (CallFunCompatibility _, use_op)
-      | Frame (TupleMapFunCompatibility _, use_op)
       | Frame (MappedTypeKeyCompatibility _, use_op)
       | Frame (TupleAssignment _, use_op)
       | Frame (ReactDeepReadOnly (_, DebugAnnot), use_op)
@@ -856,8 +855,6 @@ let rec make_intermediate_error :
           in
           MessageFunctionRequiresAnotherArgument { def; from = None }
         | Frame (CallFunCompatibility { n }, _) -> MessageDollarCallArity { op; def; n }
-        | Frame (TupleMapFunCompatibility { value }, _) ->
-          MessageDollarTupleMapArity { op; value; def }
         | _ -> MessageFunctionRequiresAnotherArgument { def; from = Some op }
       in
       make_error op message
@@ -2410,12 +2407,6 @@ let to_printable_error :
       @ tl_recur
       @ (text ". Please add an annotation to " :: annot_message)
     | MessageDeprecatedBool -> [text "Deprecated type. Use "; code "boolean"; text " instead."]
-    | MessageDeprecatedDollarTupleMap ->
-      [
-        text "Deprecated type. Use mapped types instead. ";
-        text
-          "See https://flow.org/en/docs/types/mapped-types/ for more information on conditional types.";
-      ]
     | MessageDeprecatedPredicate ->
       [
         text "Deprecated type. Use type guards instead. ";
@@ -2529,17 +2520,6 @@ let to_printable_error :
         ref def;
         text (spf " expects more than %s. See " exp);
         text Friendly.(docs.call);
-        text " for documentation";
-      ]
-    | MessageDollarTupleMapArity { op; value; def } ->
-      [
-        ref op;
-        text " expects the provided function type to take only one argument, the value type ";
-        ref value;
-        text ", but ";
-        ref def;
-        text " takes more than one argument. See ";
-        text Friendly.(docs.tuplemap);
         text " for documentation";
       ]
     | MessageDuplicateClassMember { name; static } ->

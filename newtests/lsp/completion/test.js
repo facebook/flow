@@ -8103,46 +8103,10 @@ b.te
                   },
                 },
                 {
-                  label: '$TupleMap',
-                  kind: 3,
-                  detail: '$TupleMap',
-                  sortText: '00000000000000000036',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 27,
-                        character: 18,
-                      },
-                      end: {
-                        line: 27,
-                        character: 18,
-                      },
-                    },
-                    newText: '$TupleMap',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        index: 36,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: '$TupleMap',
-                        ac_type: 'Actype',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: '$Values',
                   kind: 3,
                   detail: '$Values',
-                  sortText: '00000000000000000037',
+                  sortText: '00000000000000000036',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8165,7 +8129,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 37,
+                        index: 36,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Values',
@@ -8178,7 +8142,7 @@ b.te
                   label: 'Class',
                   kind: 3,
                   detail: 'Class',
-                  sortText: '00000000000000000038',
+                  sortText: '00000000000000000037',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8201,7 +8165,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 38,
+                        index: 37,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Class',
@@ -8214,7 +8178,7 @@ b.te
                   label: 'Partial',
                   kind: 3,
                   detail: 'Partial',
-                  sortText: '00000000000000000039',
+                  sortText: '00000000000000000038',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8237,7 +8201,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 39,
+                        index: 38,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Partial',
@@ -8250,7 +8214,7 @@ b.te
                   label: 'Required',
                   kind: 3,
                   detail: 'Required',
-                  sortText: '00000000000000000040',
+                  sortText: '00000000000000000039',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8273,7 +8237,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 40,
+                        index: 39,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Required',
@@ -8286,7 +8250,7 @@ b.te
                   label: 'StringPrefix',
                   kind: 3,
                   detail: 'StringPrefix',
-                  sortText: '00000000000000000041',
+                  sortText: '00000000000000000040',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8309,7 +8273,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 41,
+                        index: 40,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringPrefix',
@@ -8322,7 +8286,7 @@ b.te
                   label: 'StringSuffix',
                   kind: 3,
                   detail: 'StringSuffix',
-                  sortText: '00000000000000000042',
+                  sortText: '00000000000000000041',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8345,7 +8309,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 42,
+                        index: 41,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringSuffix',
@@ -9715,46 +9679,10 @@ b.te
                   },
                 },
                 {
-                  label: '$TupleMap',
-                  kind: 3,
-                  detail: '$TupleMap',
-                  sortText: '00000000000000000029',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 11,
-                      },
-                      end: {
-                        line: 14,
-                        character: 11,
-                      },
-                    },
-                    newText: '$TupleMap',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'builtin type',
-                      {
-                        token: 'AUTO332',
-                        index: 29,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: '$TupleMap',
-                        ac_type: 'Acmem',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: '$Values',
                   kind: 3,
                   detail: '$Values',
-                  sortText: '00000000000000000030',
+                  sortText: '00000000000000000029',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9777,7 +9705,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 30,
+                        index: 29,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Values',
@@ -9790,7 +9718,7 @@ b.te
                   label: 'Class',
                   kind: 3,
                   detail: 'Class',
-                  sortText: '00000000000000000031',
+                  sortText: '00000000000000000030',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9813,7 +9741,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 31,
+                        index: 30,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Class',
@@ -9826,7 +9754,7 @@ b.te
                   label: 'Partial',
                   kind: 3,
                   detail: 'Partial',
-                  sortText: '00000000000000000032',
+                  sortText: '00000000000000000031',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9849,7 +9777,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 32,
+                        index: 31,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Partial',
@@ -9862,7 +9790,7 @@ b.te
                   label: 'Required',
                   kind: 3,
                   detail: 'Required',
-                  sortText: '00000000000000000033',
+                  sortText: '00000000000000000032',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9885,7 +9813,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 33,
+                        index: 32,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Required',
@@ -9898,7 +9826,7 @@ b.te
                   label: 'StringPrefix',
                   kind: 3,
                   detail: 'StringPrefix',
-                  sortText: '00000000000000000034',
+                  sortText: '00000000000000000033',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9921,7 +9849,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 34,
+                        index: 33,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringPrefix',
@@ -9934,7 +9862,7 @@ b.te
                   label: 'StringSuffix',
                   kind: 3,
                   detail: 'StringSuffix',
-                  sortText: '00000000000000000035',
+                  sortText: '00000000000000000034',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9957,7 +9885,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 35,
+                        index: 34,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringSuffix',

@@ -412,7 +412,6 @@ let rec mod_loc_of_virtual_use_op f =
     | IndexerKeyCompatibility { lower; upper } ->
       IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | CallFunCompatibility { n } -> CallFunCompatibility { n }
-    | TupleMapFunCompatibility { value } -> TupleMapFunCompatibility { value = mod_reason value }
     | OpaqueTypeSuperCompatibility { lower; upper } ->
       OpaqueTypeSuperCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | MappedTypeKeyCompatibility { source_type; mapped_type } ->

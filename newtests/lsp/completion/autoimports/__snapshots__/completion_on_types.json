@@ -214,46 +214,10 @@
         }
       },
       {
-        "label": "$TupleMap",
-        "kind": 3,
-        "detail": "$TupleMap",
-        "sortText": "00000000000000000005",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "$TupleMap"
-        },
-        "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-          "arguments": [
-            "textDocument/completion",
-            "builtin type",
-            {
-              "token": "TAUTO332",
-              "index": 5,
-              "session_requests": 1,
-              "typed_length": 1,
-              "completion": "$TupleMap",
-              "ac_type": "Actype"
-            }
-          ]
-        }
-      },
-      {
         "label": "$NonMaybeType",
         "kind": 3,
         "detail": "$NonMaybeType",
-        "sortText": "00000000000000000006",
+        "sortText": "00000000000000000005",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -276,7 +240,7 @@
             "builtin type",
             {
               "token": "TAUTO332",
-              "index": 6,
+              "index": 5,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "$NonMaybeType",

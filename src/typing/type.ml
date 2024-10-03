@@ -494,7 +494,6 @@ module rec TypeTerm : sig
         upper: 'loc virtual_reason;
       }
     | CallFunCompatibility of { n: int }
-    | TupleMapFunCompatibility of { value: 'loc virtual_reason }
     | OpaqueTypeSuperCompatibility of {
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
@@ -1588,7 +1587,6 @@ module rec TypeTerm : sig
       }
     | RestType of Object.Rest.merge_mode * t
     | ValuesType
-    | CallType of { args: t list }
     | ConditionalType of {
         distributive_tparam_name: Subst_name.t option;
         infer_tparams: typeparam list;
@@ -1634,9 +1632,7 @@ module rec TypeTerm : sig
     | OptionalIndexedAccessStrLitIndex of name
     | OptionalIndexedAccessTypeIndex of t
 
-  and type_map =
-    | TupleMap of t
-    | ObjectKeyMirror
+  and type_map = ObjectKeyMirror
 
   and prototype = t
 
@@ -4102,7 +4098,6 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | ImplicitTypeParam -> "ImplicitTypeParam"
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
   | CallFunCompatibility _ -> "CallFunCompatibility"
-  | TupleMapFunCompatibility _ -> "TupleMapFunCompatibility"
   | OpaqueTypeSuperCompatibility _ -> "OpaqueTypeSuperCompatibility"
   | MappedTypeKeyCompatibility _ -> "MappedTypeKeyCompatibility"
   | PropertyCompatibility _ -> "PropertyCompatibility"

@@ -1289,7 +1289,6 @@ let utility_types =
     "$NonMaybeType";
     "$ReadOnly";
     "$Rest";
-    "$TupleMap";
     "$Values";
     "StringPrefix";
     "StringSuffix";

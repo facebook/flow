@@ -105,7 +105,6 @@ type 'loc virtual_reason_desc =
   | RDummyPrototype
   | RDummyThis
   | RImplicitThis of 'loc virtual_reason_desc
-  | RTupleMap
   | RObjectKeyMirror
   | RType of name
   | RTypeAlias of string * 'loc option * 'loc virtual_reason_desc

@@ -2426,9 +2426,7 @@ struct
            On the other hand, even the reasons of arguments may not offer sufficient
            distinguishing power when the arguments have not been concretized:
            differently typed arguments could be incorrectly summarized by common
-           type variables they flow to, causing spurious errors. In particular, we
-           don't cache calls involved in the execution of mapped type operations
-           ($TupleMap) to avoid this problem.
+           type variables they flow to, causing spurious errors.
 
            NOTE: This is probably not the final word on non-termination with
            generics. We need to separate the double duty of reasons in the current
@@ -3943,62 +3941,6 @@ struct
         | (AnyT (_, src), MapTypeT (_, reason_op, _, tout)) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, tout)
-        | (DefT (_, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout)) ->
-          let f x =
-            let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
-            EvalT
-              ( funt,
-                TypeDestructorT (use_op, reason_op, CallType { args = [x] }),
-                Eval.generate_id ()
-              )
-          in
-          let arrtype =
-            match arrtype with
-            | ArrayAT { elem_t; tuple_view; react_dro } ->
-              ArrayAT
-                {
-                  elem_t = f elem_t;
-                  react_dro;
-                  tuple_view =
-                    Base.Option.map
-                      ~f:(fun (TupleView { elements; arity; inexact }) ->
-                        let elements =
-                          Base.List.map
-                            ~f:(fun (TupleElement { name; t; polarity; optional; reason }) ->
-                              TupleElement { name; t = f t; polarity; optional; reason })
-                            elements
-                        in
-                        TupleView { elements; arity; inexact })
-                      tuple_view;
-                }
-            | TupleAT { elem_t; elements; arity; inexact; react_dro } ->
-              TupleAT
-                {
-                  elem_t = f elem_t;
-                  react_dro;
-                  elements =
-                    Base.List.map
-                      ~f:(fun (TupleElement { name; t; polarity; optional; reason }) ->
-                        TupleElement { name; t = f t; polarity; optional; reason })
-                      elements;
-                  arity;
-                  inexact;
-                }
-            | ROArrayAT (elemt, dro) -> ROArrayAT (f elemt, dro)
-          in
-          let t =
-            let reason = replace_desc_reason RArrayType reason_op in
-            DefT (reason, ArrT arrtype)
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (t, tout)
-        | (_, MapTypeT (use_op, reason, TupleMap funt, tout)) ->
-          let iter = Flow_js_utils.lookup_builtin_value cx "$iterate" reason in
-          let elemt =
-            EvalT
-              (iter, TypeDestructorT (use_op, reason, CallType { args = [l] }), Eval.generate_id ())
-          in
-          let t = DefT (reason, ArrT (ROArrayAT (elemt, None))) in
-          rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
         | (DefT (_, ObjT o), MapTypeT (_, reason_op, ObjectKeyMirror, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx o reason_op, tout)
         (**************)
@@ -5570,8 +5512,6 @@ struct
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
-      | MapTypeT _
-      (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
       | UseT (Op (Coercion _), DefT (_, StrT _)) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
         true
@@ -6879,32 +6819,6 @@ struct
             trace
             (t, Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout)))
         | ValuesType -> rec_flow cx trace (t, GetValuesT (reason, OpenT tout))
-        | CallType { args } ->
-          let args = Base.List.map ~f:(fun arg -> Arg arg) args in
-          let call_kind = MapTypeKind in
-          let call = mk_functioncalltype ~call_kind reason None args tout in
-          let call = { call with call_strict_arity = false } in
-          let use_op =
-            match use_op with
-            (* The following use ops are for operations that internally delegate to CallType. We
-               don't want to leak the internally delegation to error messages by pushing an
-               additional frame. Alternatively, we could have pushed here and filtered out when
-               rendering error messages, but that seems a bit wasteful. *)
-            | Frame (TupleMapFunCompatibility _, _) -> use_op
-            (* For external CallType operations, we push an additional frame to distinguish their
-               error messages from those of "normal" calls. *)
-            | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
-          in
-          let u =
-            CallT
-              {
-                use_op;
-                reason;
-                call_action = Funcalltype call;
-                return_hint = Type.hint_unavailable;
-              }
-          in
-          rec_flow cx trace (t, u)
         | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
           let u =
             ConditionalT

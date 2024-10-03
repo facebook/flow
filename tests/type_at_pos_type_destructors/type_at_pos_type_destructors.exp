@@ -783,49 +783,20 @@ type MappedTypeFnReturnTypes = {
 
 type-destructor.js:105:6,105:28
 
-type-destructor.js:109:6
-Flags:
-type TupleMapMixedPair = $TupleMap<[mixed, mixed], <K>(k: K) => K | null>
-= [mixed, mixed]
-
-'TupleMapMixedPair' defined at type-destructor.js:109:5
-
-type-destructor.js:109:6,109:22
-
 type-destructor.js:111:6
-Flags:
-type TupleMapMixedPairPoly<X> = $TupleMap<[X, mixed], <K>(k: K) => K | null>
-= [X | null, mixed]
-
-'TupleMapMixedPairPoly' defined at type-destructor.js:111:5
-
-type-destructor.js:111:6,111:26
-
-type-destructor.js:116:6
-Flags:
-type TupleMapFnReturnTypes = $TupleMap<FnTuple, ExtractReturnType>
-= [string, number]
-
-'ExtractReturnType' defined at type-destructor.js:114:5
-'FnTuple' defined at type-destructor.js:115:5
-'TupleMapFnReturnTypes' defined at type-destructor.js:116:5
-
-type-destructor.js:116:6,116:26
-
-type-destructor.js:122:6
 Flags:
 type ConditionalExtractPropType = PropObj extends {prop: infer T, ...}
   ? T
   : empty
 = number
 
-'ConditionalExtractPropType' defined at type-destructor.js:122:5
-'PropObj' defined at type-destructor.js:121:5
-'T' defined at type-destructor.js:122:64
+'ConditionalExtractPropType' defined at type-destructor.js:111:5
+'PropObj' defined at type-destructor.js:110:5
+'T' defined at type-destructor.js:111:64
 
-type-destructor.js:122:6,122:31
+type-destructor.js:111:6,111:31
 
-type-destructor.js:135:6
+type-destructor.js:124:6
 Flags:
 type ConditionalNestedObjType = NestedObj extends {
   +data: ?$ReadOnlyArray<{+foo: ?{+bar: ?infer T, ...}, ...}>,
@@ -835,23 +806,23 @@ type ConditionalNestedObjType = NestedObj extends {
   : empty
 = number
 
-'ConditionalNestedObjType' defined at type-destructor.js:135:5
-'NestedObj' defined at type-destructor.js:125:5
-'T' defined at type-destructor.js:139:19
+'ConditionalNestedObjType' defined at type-destructor.js:124:5
+'NestedObj' defined at type-destructor.js:114:5
+'T' defined at type-destructor.js:128:19
 
-type-destructor.js:135:6,135:29
+type-destructor.js:124:6,124:29
 
-type-destructor.js:144:6
+type-destructor.js:133:6
 Flags:
 type ConditionalIdPoly<R> = R extends infer N ? N : empty
 = R
 
-'ConditionalIdPoly' defined at type-destructor.js:144:5
-'N' defined at type-destructor.js:144:44
+'ConditionalIdPoly' defined at type-destructor.js:133:5
+'N' defined at type-destructor.js:133:44
 
-type-destructor.js:144:6,144:22
+type-destructor.js:133:6,133:22
 
-type-destructor.js:148:6
+type-destructor.js:137:6
 Flags:
 type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends {
   prop: infer T,
@@ -861,74 +832,74 @@ type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends {
   : empty
 = P
 
-'ConditionalExtractPropTypePoly' defined at type-destructor.js:148:5
-'PropObjPoly' defined at type-destructor.js:147:5
-'T' defined at type-destructor.js:148:78
+'ConditionalExtractPropTypePoly' defined at type-destructor.js:137:5
+'PropObjPoly' defined at type-destructor.js:136:5
+'T' defined at type-destructor.js:137:78
 
-type-destructor.js:148:6,148:35
+type-destructor.js:137:6,137:35
 
-type-destructor.js:152:6
+type-destructor.js:141:6
 Flags:
 type ExportsM = {|+x: number|}
 
-'ExportsM' defined at type-destructor.js:152:5
+'ExportsM' defined at type-destructor.js:141:5
 
-type-destructor.js:152:6,152:13
+type-destructor.js:141:6,141:13
 
-type-destructor.js:156:18
+type-destructor.js:145:18
 Flags:
 <T: {...}, K: T>() => T[K]
-type-destructor.js:156:18,156:28
+type-destructor.js:145:18,145:28
 
-type-destructor.js:158:18
+type-destructor.js:147:18
 Flags:
 <K: any, T: {...}>() => T[K]
-type-destructor.js:158:18,158:28
+type-destructor.js:147:18,147:28
 
-type-destructor.js:162:6
+type-destructor.js:151:6
 Flags:
 type RecursiveTypeDestructor = {|f: {|g: RecursiveTypeDestructor["f"]|}|}
 = {|f: {|g: {|g: any|}|}|}
 
-'RecursiveTypeDestructor' defined at type-destructor.js:162:5
+'RecursiveTypeDestructor' defined at type-destructor.js:151:5
 
-type-destructor.js:162:6,162:28
+type-destructor.js:151:6,151:28
 
-type-destructor.js:169:6
+type-destructor.js:158:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
   f: {|h: RecursiveTypeDestructorPoly<X>["f"]|} | X
 |}
 = {|f: {|h: {|h: {|h: any|} | X|} | X|} | X|}
 
-'RecursiveTypeDestructorPoly' defined at type-destructor.js:169:5
+'RecursiveTypeDestructorPoly' defined at type-destructor.js:158:5
 
-type-destructor.js:169:6,169:32
+type-destructor.js:158:6,158:32
 
-type-destructor.js:175:6
+type-destructor.js:164:6
 Flags:
 type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K]
 = empty
 
-'$Pick' defined at type-destructor.js:175:5
+'$Pick' defined at type-destructor.js:164:5
 
-type-destructor.js:175:6,175:10
+type-destructor.js:164:6,164:10
 
-type-destructor.js:180:14
+type-destructor.js:169:14
 Flags:
 ReadOnlyObj
 
 'ReadOnlyObj' defined at type-destructor.js:41:5
 
-type-destructor.js:180:14,180:14
+type-destructor.js:169:14,169:14
 
-type-destructor.js:198:9
+type-destructor.js:187:9
 Flags:
 {prop: R, type: "blah", ...}
 
-'R' defined at type-destructor.js:190:7
+'R' defined at type-destructor.js:179:7
 
-type-destructor.js:198:9,198:14
+type-destructor.js:187:9,187:14
 
 mapped-type.js:7:6
 Flags:

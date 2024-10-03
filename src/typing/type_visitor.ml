@@ -249,7 +249,6 @@ class ['a] t =
         in
         acc
       | RestType (_, t) -> self#type_ cx pole_TODO acc t
-      | CallType { args } -> self#list (self#type_ cx pole_TODO) acc args
       | ConditionalType { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t }
         ->
         let acc = self#list (self#type_param cx pole_TODO) acc infer_tparams in
@@ -257,7 +256,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc true_t in
         let acc = self#type_ cx pole_TODO acc false_t in
         acc
-      | TypeMap map -> self#type_map cx acc map
+      | TypeMap ObjectKeyMirror -> acc
       | MappedType
           { property_type; mapped_type_flags = _; homomorphic; distributive_tparam_name = _ } ->
         let acc = self#type_ cx pole_TODO acc property_type in
@@ -436,11 +435,6 @@ class ['a] t =
       let acc = self#exports cx pole acc type_exports_tmap in
       let acc = self#opt (self#type_ cx pole) acc cjs_export in
       acc
-
-    method private type_map cx acc =
-      function
-      | TupleMap t -> self#type_ cx pole_TODO acc t
-      | ObjectKeyMirror -> acc
 
     method private object_kit_spread_operand_slice
         cx acc { Object.Spread.reason = _; prop_map; dict; generics = _; reachable_targs = _ } =

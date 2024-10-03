@@ -863,13 +863,6 @@ and merge_annot env file = function
     (match distributive_tparam with
     | None -> convert None env
     | Some (TParam { name; _ }) -> convert (Some (Subst_name.Name name)) env)
-  | TupleMap { loc; tup; fn } ->
-    let reason = Reason.(mk_reason RTupleMap loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let tup = merge env file tup in
-    let fn = merge env file fn in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (tup, TypeDestructorT (use_op, reason, TypeMap (Type.TupleMap fn)), id))
   | ObjKeyMirror { loc; obj } ->
     let reason = Reason.(mk_reason RObjectKeyMirror loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
