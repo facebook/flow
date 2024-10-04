@@ -1354,6 +1354,25 @@ References:
                          ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ ref.js:7:10
+
+Cannot create `Foo` element because in property `ref`: [incompatible-type]
+ - Either string [1] is incompatible with object type [2].
+ - Or string [1] is incompatible with function type [3].
+
+   ref.js:7:10
+     7| <Foo ref="foo" />; // Error: string ref is banned
+                 ^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
@@ -1371,9 +1390,9 @@ References:
    ref.js:3:7
      3| class Foo extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:11:19
@@ -1415,6 +1434,25 @@ References:
                                     ^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- ref.js:18:15
+
+Cannot create `FooExact` element because in property `ref`: [incompatible-type]
+ - Either string [1] is incompatible with object type [2].
+ - Or string [1] is incompatible with function type [3].
+
+   ref.js:18:15
+    18| <FooExact ref="foo" />; // Error: string ref is banned
+                      ^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- ref.js:21:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
@@ -1432,9 +1470,9 @@ References:
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
               ^^^^^^^^ [2]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:22:16
@@ -1451,12 +1489,12 @@ References:
    ref.js:22:22
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                              ^^^^^^^^ [1]
-   <BUILTINS>/react.js:182:39
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-                                              ^^^^ [2]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:191:11
+   191|   | ((T | null) => mixed)
+                  ^^^^ [2]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
@@ -1470,9 +1508,9 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
               ^^^^^^^^ [3]
@@ -2509,7 +2547,7 @@ References:
 
 
 
-Found 143 errors
+Found 145 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

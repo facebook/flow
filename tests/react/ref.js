@@ -4,7 +4,7 @@ class Foo extends React.Component<{}, void> {}
 class Bar extends React.Component<{}, void> {}
 
 <Foo />; // OK
-<Foo ref="foo" />; // OK
+<Foo ref="foo" />; // Error: string ref is banned
 <Foo ref={null} />; // OK
 <Foo ref={undefined} />; // OK
 <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
@@ -15,7 +15,7 @@ class Bar extends React.Component<{}, void> {}
 class FooExact extends React.Component<{||}, void> {}
 
 <FooExact />; // OK
-<FooExact ref="foo" />; // OK
+<FooExact ref="foo" />; // Error: string ref is banned
 <FooExact ref={null} />; // OK
 <FooExact ref={undefined} />; // OK
 <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.

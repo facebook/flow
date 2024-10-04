@@ -240,7 +240,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsRefSetterProp t; _ })
       ->
       t
-    | DefT (_, ClassT _)
+    | DefT (_, ClassT instance) ->
+      get_builtin_typeapp
+        cx
+        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
+        "React$RefSetter"
+        [instance]
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsInstanceType _; _ })
     | _ ->
       maybe (get_builtin_typeapp cx reason_ref "React$Ref" [component])
