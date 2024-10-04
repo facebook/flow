@@ -83,7 +83,7 @@ type t =
       private_: bool;
     }
   | InvalidComponentParamName
-  | InvalidComponentRenderAnnotation
+  | InvalidComponentRenderAnnotation of { has_nested_render: bool }
   | InvalidComponentStringParameterBinding of {
       optional: bool;
       name: string;
@@ -352,7 +352,7 @@ module PP = struct
       Printf.sprintf "Classes may not have %s%s named `%s`." static_modifier category name
     | InvalidComponentParamName ->
       "Component params must be an identifier. If you'd like to destructure, you should use `name as {destructure}`"
-    | InvalidComponentRenderAnnotation ->
+    | InvalidComponentRenderAnnotation _ ->
       "Components use `renders` instead of `:` to annotate the render type of a component."
     | InvalidComponentStringParameterBinding { optional; name } ->
       let camelized_name = Parse_error_utils.camelize name in

@@ -1944,9 +1944,14 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     | T_COLON ->
       let operator_loc = Peek.loc env in
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-      error env Parse_error.InvalidComponentRenderAnnotation;
       Eat.token env;
       let (loc, argument) = with_loc _type env in
+      let has_nested_render =
+        match argument with
+        | (_, Ast.Type.Renders _) -> true
+        | _ -> false
+      in
+      error_at env (operator_loc, Parse_error.InvalidComponentRenderAnnotation { has_nested_render });
       Type.AvailableRenders
         ( loc,
           {

@@ -1220,7 +1220,7 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
           ~editor_loc:loc
           title
           suggestion
-      | (error_loc, Parse_error.InvalidComponentRenderAnnotation) ->
+      | (error_loc, Parse_error.InvalidComponentRenderAnnotation { has_nested_render = false }) ->
         let title = Printf.sprintf "Replace `:` with `renders`" in
         (* The leading " " is intentional here. Most people will write component Foo(): T and not component Foo() : T,
          * so it would be nice if we could return formatted code in the common case *)
@@ -1232,6 +1232,16 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
           ~editor_loc:loc
           title
           " renders"
+      | (error_loc, Parse_error.InvalidComponentRenderAnnotation { has_nested_render = true }) ->
+        let title = Printf.sprintf "Remove `:`" in
+        code_action_for_parser_error_with_suggestion
+          acc
+          diagnostics
+          uri
+          ~error_loc
+          ~editor_loc:loc
+          title
+          ""
       | (error_loc, Parse_error.InvalidComponentStringParameterBinding { optional; name }) ->
         let title = "Use as-renaming" in
         let replacement =

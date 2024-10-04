@@ -2,3 +2,7 @@
 component Foo(): number {
   return 3;
 }
+
+component Bar(): renders Foo {
+  return <Foo />;
+}

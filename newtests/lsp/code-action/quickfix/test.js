@@ -484,7 +484,52 @@ module.exports = (suite(
         path.join(
           __dirname,
           '__snapshots__',
-          'quickfix-renders-type-parse-error.json',
+          'quickfix-renders-type-parse-error-1.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/component-render-parse-error.js',
+        },
+        range: {
+          start: {
+            line: 5,
+            character: 15,
+          },
+          end: {
+            line: 5,
+            character: 15,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 5,
+                  character: 15,
+                },
+                end: {
+                  line: 5,
+                  character: 16,
+                },
+              },
+              message:
+                'Components use `renders` instead of `:` to annotate the render type of a component.',
+              severity: 1,
+              code: 'ParseError',
+              relatedInformation: [],
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-renders-type-parse-error-2.json',
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
