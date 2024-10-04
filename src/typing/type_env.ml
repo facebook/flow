@@ -248,9 +248,9 @@ let maybe_predicate_function =
   let on_ground t =
     match t with
     | AnyT _ -> false
-    | DefT (_, FunT (_, { predicate; _ }))
-    | DefT (_, PolyT { t_out = DefT (_, FunT (_, { predicate; _ })); _ }) ->
-      Base.Option.is_some predicate
+    | DefT (_, FunT (_, { type_guard; _ }))
+    | DefT (_, PolyT { t_out = DefT (_, FunT (_, { type_guard; _ })); _ }) ->
+      Base.Option.is_some type_guard
     | DefT _ -> false
     | _ -> true (* yes: safe option *)
   in

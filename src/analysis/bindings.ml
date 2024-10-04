@@ -27,7 +27,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
-  | DeclaredFunction of { predicate: bool }
+  | DeclaredFunction
   | Internal
   | GeneratorNext
   | Component
@@ -74,7 +74,7 @@ let to_map t =
   SMap.map (fun (kind, locs) -> (kind, Nel.rev locs)) map
 
 let allow_forward_ref = function
-  | DeclaredFunction _
+  | DeclaredFunction
   | DeclaredClass
   | DeclaredVar
   | DeclaredLet
@@ -87,7 +87,7 @@ let allow_forward_ref = function
   | _ -> false
 
 let allow_redeclaration = function
-  | DeclaredFunction _
+  | DeclaredFunction
   | Var
   | Parameter
   | Function ->

@@ -208,7 +208,7 @@ let flip_frame = function
     EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
   | ( CallFunCompatibility _ | TupleAssignment _ | TypeParamBound _ | OpaqueTypeBound _
     | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
-    | MappedTypeKeyCompatibility _ | TypePredicateCompatibility | RendersCompatibility
+    | MappedTypeKeyCompatibility _ | TypeGuardCompatibility | RendersCompatibility
     | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
@@ -521,12 +521,12 @@ let rec make_intermediate_error :
         in
         root loc frames lower root_msg
       | Op (FunReturnStatement { value }) -> root loc frames value (RootCannotReturn (desc value))
-      | Op (FunImplicitReturn { upper; fn; predicate = true }) ->
+      | Op (FunImplicitReturn { upper; fn; type_guard = true }) ->
         root
           loc
           frames
           upper
-          (RootCannotDeclarePredicate { predicate_loc = loc_of_reason upper; fn })
+          (RootCannotDeclareTypeGuard { type_guard_loc = loc_of_reason upper; fn })
       | Op (FunImplicitReturn { upper; fn; _ }) ->
         root loc frames upper (RootCannotExpectImplicitReturn { upper = desc upper; fn = desc fn })
       | Op (GeneratorYield { value }) -> root loc frames value (RootCannotYield (desc value))
@@ -688,7 +688,7 @@ let rec make_intermediate_error :
           frames
           use_op
           (FrameTypeParameterBound (Subst_name.string_of_subst_name name))
-      | Frame (TypePredicateCompatibility, use_op) ->
+      | Frame (TypeGuardCompatibility, use_op) ->
         unwrap_frame_without_loc loc frames use_op FrameTypePredicate
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
       | Frame (OpaqueTypeBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
@@ -1275,10 +1275,10 @@ let to_printable_error :
       [text "Cannot compare "; ref sentinel; text " with property "; code key; text " of "; ref obj]
     | RootCannotCreateElement component -> [text "Cannot create "; desc component; text " element"]
     | RootCannotDeclareRef -> [text "Cannot declare ref"]
-    | RootCannotDeclarePredicate { predicate_loc; fn } ->
+    | RootCannotDeclareTypeGuard { type_guard_loc; fn } ->
       [
         text "Cannot declare a ";
-        hardcoded_string_desc_ref "type predicate" predicate_loc;
+        hardcoded_string_desc_ref "type guard" type_guard_loc;
         text " for ";
         ref fn;
       ]
@@ -1856,8 +1856,8 @@ let to_printable_error :
     | MessageCannotReassignImport x -> [text "Cannot reassign import "; Friendly.ref x; text "."]
     | MessageCannotRedeclareVar x ->
       [text "Cannot declare "; Friendly.ref x; text " because var redeclaration is not supported."]
-    | MessageCannotReferencePredicateParameter { pred_reason; binding_reason } ->
-      [text "A "; ref pred_reason; text " cannot reference "; ref binding_reason; text "."]
+    | MessageCannotReferenceTypeGuardParameter { type_guard_reason; binding_reason } ->
+      [text "A "; ref type_guard_reason; text " cannot reference "; ref binding_reason; text "."]
     | MessageCannotResolveBuiltinName name -> [text "Cannot resolve name "; code name; text "."]
     | MessageCannotResolveBuiltinModule { name; potential_generator } ->
       let potential_generator_features =
@@ -2745,12 +2745,12 @@ let to_printable_error :
         text "incompatible with ";
         ref upper;
       ]
-    | MessageIncompatibleNonPredicateToPredicate { lower; upper } ->
+    | MessageIncompatibleNonTypeGuardToTypeGuard { lower; upper } ->
       [
         ref lower;
-        text ", a non-predicate function, is incompatible with ";
+        text ", a non-type-guard function, is incompatible with ";
         ref upper;
-        text ", which is a predicate function";
+        text ", which is a type-guard function";
       ]
     | MessageIncompatibleReactDeepReadOnly { lower; upper; dro_loc } ->
       let react_runtime_str = "React runtime" in

@@ -343,8 +343,8 @@ let rec mod_loc_of_virtual_use_op f =
           args = Base.List.map ~f:mod_reason args;
         }
     | FunReturnStatement { value } -> FunReturnStatement { value = mod_reason value }
-    | FunImplicitReturn { fn; upper; predicate } ->
-      FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper; predicate }
+    | FunImplicitReturn { fn; upper; type_guard } ->
+      FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper; type_guard }
     | GeneratorYield { value } -> GeneratorYield { value = mod_reason value }
     | GetProperty reason -> GetProperty (mod_reason reason)
     | IndexedTypeAccess { _object; index } ->
@@ -437,7 +437,7 @@ let rec mod_loc_of_virtual_use_op f =
     | TypeParamBound o -> TypeParamBound o
     | OpaqueTypeBound { opaque_t_reason } ->
       OpaqueTypeBound { opaque_t_reason = mod_reason opaque_t_reason }
-    | TypePredicateCompatibility -> TypePredicateCompatibility
+    | TypeGuardCompatibility -> TypeGuardCompatibility
     | RendersCompatibility -> RendersCompatibility
     | UnifyFlip -> UnifyFlip
     | EnumRepresentationTypeCompatibility { lower; upper } ->
@@ -875,13 +875,9 @@ let reason_of_resolved_param = function
   | ResolvedArg (TupleElement { reason; _ }, _) ->
     reason
 
-let type_guard_of_predicate predicate =
-  match predicate with
-  | TypeGuardBased { type_guard = t; _ } -> Some t
-
 let type_guard_of_funtype f =
-  match f.predicate with
-  | Some p -> type_guard_of_predicate p
+  match f.type_guard with
+  | Some (TypeGuard { type_guard = t; _ }) -> Some t
   | None -> None
 
 let dro_of_type t =

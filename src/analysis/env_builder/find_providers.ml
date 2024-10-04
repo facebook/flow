@@ -12,10 +12,7 @@ exception ImpossibleState of string
 
 (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
 type state =
-  | AnnotatedVar of {
-      contextual: bool;
-      predicate: bool; (* true iff this annotation corresponds to a predicate function (%checks) *)
-    }
+  | AnnotatedVar of { contextual: bool }
   | InitializedVar
   | ArrayInitializedVar
   | EmptyArrayInitializedVar
@@ -85,10 +82,7 @@ end = struct
      initializers were discovered. They will be simplified later on. *)
   type intermediate_state =
     (* Annotations are always on declarations, so they don't need depth *)
-    | Annotated of {
-        predicate: bool;
-        contextual: bool;
-      }
+    | Annotated of { contextual: bool }
     (* number of var scope levels deep that the initializer, and null initializer if applicable, was found from the
        scope in which it was declared--lets us prioritize initializers from nearer
        scopes even if they're lexically later in the program.
@@ -107,10 +101,7 @@ end = struct
   (* This describes a single assingment/initialization of a var (rather than the var's state as a whole). ints are
      number of scopes deeper than the variable's declaration that the assignment occurs *)
   type write_state =
-    | Annotation of {
-        predicate: bool;
-        contextual: bool;
-      }
+    | Annotation of { contextual: bool }
     | Value of int
     | ArrayValue of int
     | Null of int
@@ -181,11 +172,10 @@ end = struct
   (* Compute the joined state of a variable, when modified in separate branches *)
   let combine_states init1 init2 =
     match (init1, init2) with
-    | (Annotated { predicate = p1; contextual = c1 }, Annotated { predicate = p2; contextual = c2 })
-      ->
-      Annotated { predicate = p1 || p2; contextual = c1 && c2 }
-    | (Annotated { predicate; contextual }, _) -> Annotated { predicate; contextual }
-    | (_, Annotated { predicate; contextual }) -> Annotated { predicate; contextual }
+    | (Annotated { contextual = c1 }, Annotated { contextual = c2 }) ->
+      Annotated { contextual = c1 && c2 }
+    | (Annotated { contextual }, _) -> Annotated { contextual }
+    | (_, Annotated { contextual }) -> Annotated { contextual }
     | (Uninitialized, other)
     | (other, Uninitialized) ->
       other
@@ -234,11 +224,11 @@ end = struct
       var x: string; var x: number; provider is string
       *)
       None
-    | (_, Annotation { predicate; contextual }) ->
+    | (_, Annotation { contextual }) ->
       (*
        var x = 42; var x: string, provider is string
       *)
-      Some (Annotated { predicate; contextual })
+      Some (Annotated { contextual })
     | (Uninitialized, Null d) ->
       (*
        var x; x = null provider is null
@@ -463,9 +453,9 @@ end = struct
                 binding_kind1
               else
                 match (binding_kind1, binding_kind2) with
-                | (Bindings.DeclaredFunction { predicate }, _)
-                | (_, Bindings.DeclaredFunction { predicate }) ->
-                  Bindings.DeclaredFunction { predicate }
+                | (Bindings.DeclaredFunction, _)
+                | (_, Bindings.DeclaredFunction) ->
+                  Bindings.DeclaredFunction
                 | _ -> Bindings.Var
               );
           }
@@ -806,17 +796,14 @@ end = struct
         let declare_locs = L.LSet.add loc declare_locs in
         let (state, provider_locs) =
           match (binding_kind, stored_binding_kind) with
-          | ( Bindings.DeclaredFunction { predicate = p1 },
-              Bindings.DeclaredFunction { predicate = p2 }
-            ) ->
+          | (Bindings.DeclaredFunction, Bindings.DeclaredFunction) ->
             (* TODO: It would be better if we modeled providers as Inter | UnionLike. This would
              * make it clear that certain providers are meant to be intersected and others
              * are meant to be unioned. *)
-            let predicate = p1 || p2 in
-            ( Annotated { predicate; contextual = false },
-              L.LMap.add loc (Annotation { predicate; contextual = false }) provider_locs
+            ( Annotated { contextual = false },
+              L.LMap.add loc (Annotation { contextual = false }) provider_locs
             )
-          | (_, Bindings.DeclaredFunction _) -> (cur_state, provider_locs)
+          | (_, Bindings.DeclaredFunction) -> (cur_state, provider_locs)
           | _ ->
             let new_state = extended_state_opt ~state:cur_state ~write_state in
             Base.Option.value_map
@@ -833,8 +820,7 @@ end = struct
         let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
         let (_ : ('a, 'b) Ast.Identifier.t) =
           this#in_context
-            ~mod_cx:(fun _cx ->
-              { init_state = Annotation { predicate = false; contextual = false } })
+            ~mod_cx:(fun _cx -> { init_state = Annotation { contextual = false } })
             (fun () -> this#pattern_identifier ~kind ident)
         in
         decl
@@ -853,7 +839,7 @@ end = struct
         in
         let init_state =
           match (init, annot) with
-          | (_, Some (Ast.Type.Available _)) -> Annotation { predicate = false; contextual = false }
+          | (_, Some (Ast.Type.Available _)) -> Annotation { contextual = false }
           | (None, _) -> Nothing
           | (Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }), _) ->
             EmptyArr
@@ -892,8 +878,7 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Function.ReturnAnnot.Available _ ->
-            Annotation { predicate = Option.is_some predicate; contextual = false }
+          | Ast.Function.ReturnAnnot.Available _ -> Annotation { contextual = false }
           | _ -> Value 0
         in
 
@@ -938,8 +923,7 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Function.ReturnAnnot.Available _ ->
-            Annotation { predicate = Option.is_some predicate; contextual = false }
+          | Ast.Function.ReturnAnnot.Available _ -> Annotation { contextual = false }
           | _ -> Value 0
         in
 
@@ -962,7 +946,7 @@ end = struct
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
         let { id = ident; tparams; params; body; renders; comments; sig_loc = _ } = expr in
-        let init_state = Annotation { predicate = false; contextual = false } in
+        let init_state = Annotation { contextual = false } in
         let _ident' =
           this#in_context
             ~mod_cx:(fun _cx -> { init_state })
@@ -1009,14 +993,9 @@ end = struct
         this#new_entry name Bindings.Component Flow_ast.Variable.Let loc;
         super#identifier ident
 
-      method! declare_function
-          stmt_loc ({ Flow_ast.Statement.DeclareFunction.id; predicate; _ } as stmt) =
+      method! declare_function stmt_loc ({ Flow_ast.Statement.DeclareFunction.id; _ } as stmt) =
         let (loc, { Flow_ast.Identifier.name; _ }) = id in
-        this#new_entry
-          name
-          (Bindings.DeclaredFunction { predicate = Option.is_some predicate })
-          Flow_ast.Variable.Let
-          loc;
+        this#new_entry name Bindings.DeclaredFunction Flow_ast.Variable.Let loc;
         super#declare_function stmt_loc stmt
 
       method! for_in_left_declaration left =
@@ -1033,7 +1012,7 @@ end = struct
               | (_, Array { Array.annot = Ast.Type.Available _; _ })
               | (_, Object { Object.annot = Ast.Type.Available _; _ })
               | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
-                Annotation { predicate = false; contextual = false }
+                Annotation { contextual = false }
               | _ -> Value 0
             in
             ignore
@@ -1062,7 +1041,7 @@ end = struct
               | (_, Array { Array.annot = Ast.Type.Available _; _ })
               | (_, Object { Object.annot = Ast.Type.Available _; _ })
               | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
-                Annotation { predicate = false; contextual = false }
+                Annotation { contextual = false }
               | _ -> Value 0
             in
             ignore
@@ -1090,7 +1069,7 @@ end = struct
             false
           | _ -> true
         in
-        let init_state = Annotation { predicate = false; contextual } in
+        let init_state = Annotation { contextual } in
         ignore
         @@ this#in_context
              ~mod_cx:(fun _cx -> { init_state })
@@ -1099,7 +1078,7 @@ end = struct
         expr
 
       method! component_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
-        let init_state = Annotation { predicate = false; contextual = false } in
+        let init_state = Annotation { contextual = false } in
         ignore
         @@ this#in_context
              ~mod_cx:(fun _cx -> { init_state })
@@ -1350,7 +1329,7 @@ end = struct
     in
     let state =
       match state with
-      | Annotated { predicate; contextual } -> AnnotatedVar { predicate; contextual }
+      | Annotated { contextual } -> AnnotatedVar { contextual }
       | ArrInitialized _ -> ArrayInitializedVar
       | EmptyArrInitialized -> EmptyArrayInitializedVar
       | Initialized _ -> InitializedVar

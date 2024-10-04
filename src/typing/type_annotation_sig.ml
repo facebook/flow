@@ -82,7 +82,7 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Identifier.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.t ->
     (ALoc.t, ALoc.t Flow_ast.Comment.t list) Flow_ast.Syntax.t option ->
-    Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeGuard.t * Type.fun_predicate option
+    Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeGuard.t * Type.type_guard option
 
   val mk_super :
     Context.t ->

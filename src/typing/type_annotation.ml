@@ -1515,7 +1515,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         )
       in
       let fparams = List.rev rev_params in
-      let (return_t, return_ast, predicate) =
+      let (return_t, return_ast, type_guard) =
         convert_return_annotation ~meth_kind:MethodKind env params fparams return
       in
       let statics_t =
@@ -1551,7 +1551,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   params = fparams;
                   rest_param;
                   return_t;
-                  predicate;
+                  type_guard;
                   def_reason = reason;
                   effect = effect_flag;
                 }
@@ -2413,11 +2413,11 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let (_, { RestParam.argument = (_, { Param.name = rest_name; _ }); _ }) = rest in
         match rest_name with
         | Some ((rloc, _), { I.name = rest_name; _ }) when rest_name = param_name ->
-          let pred_reason = mk_reason (RTypeGuardParam param_name) name_loc in
+          let type_guard_reason = mk_reason (RTypeGuardParam param_name) name_loc in
           let binding_reason = mk_reason (RRestParameter (Some rest_name)) rloc in
           Flow_js_utils.add_output
             cx
-            Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
+            Error_message.(ETypeGuardInvalidParameter { type_guard_reason; binding_reason })
         | _ -> ()
     )
 
@@ -2462,19 +2462,19 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); kind; comments }) in
     let one_sided = kind = Ast.Type.TypeGuard.Implies in
     let reason = Reason.mk_reason RTypeGuard gloc in
-    let predicate =
-      Some (TypeGuardBased { reason; one_sided; param_name = (name_loc, name); type_guard })
-    in
     check_guard_type env.cx fparams (name, type_guard);
-    (bool_t, guard', predicate)
+    let type_guard =
+      Some (TypeGuard { reason; one_sided; param_name = (name_loc, name); type_guard })
+    in
+    (bool_t, guard', type_guard)
 
   and convert_return_annotation ~meth_kind env params fparams return =
-    let open T.Function in
+    let open T in
     match return with
-    | TypeAnnotation t_ast ->
+    | Function.TypeAnnotation t_ast ->
       let (((_, t'), _) as t_ast') = convert env t_ast in
-      (t', TypeAnnotation t_ast', None)
-    | TypeGuard
+      (t', Function.TypeAnnotation t_ast', None)
+    | Function.TypeGuard
         ( gloc,
           {
             T.TypeGuard.guard = (((name_loc, { Ast.Identifier.name; _ }) as x), Some t);
@@ -2494,9 +2494,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         check_guard_is_not_rest_param env.cx params (name, name_loc);
         check_guard_appears_in_param_list env.cx params (name, name_loc);
         let (bool_t, guard', predicate) = convert_type_guard env fparams gloc kind x t comments in
-        (bool_t, TypeGuard guard', predicate)
+        (bool_t, Function.TypeGuard guard', predicate)
       )
-    | TypeGuard (loc, guard) ->
+    | Function.TypeGuard (loc, guard) ->
       let { Ast.Type.TypeGuard.kind; _ } = guard in
       Flow_js_utils.add_output
         env.cx
@@ -2504,7 +2504,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
            (loc, Flow_intermediate_error_types.UserDefinedTypeGuards { kind })
         );
       let guard' = Tast_utils.error_mapper#type_guard (loc, guard) in
-      (AnyT.at (AnyError None) loc, TypeGuard guard', None)
+      (AnyT.at (AnyError None) loc, Function.TypeGuard guard', None)
 
   and mk_method_func_sig =
     let add_param env x param =
@@ -2553,7 +2553,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       let (tparams, env, tparams_ast) = mk_type_param_declarations env func_tparams in
       let (fparams, params_ast) = convert_params env params in
-      let (return_t, return_ast, predicate) =
+      let (return_t, return_ast, type_guard) =
         convert_return_annotation
           ~meth_kind
           env
@@ -2562,9 +2562,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           func_return
       in
       let kind =
-        match predicate with
+        match type_guard with
         | None -> Func_class_sig_types.Func.Ordinary
-        | Some pred -> Func_class_sig_types.Func.Predicate pred
+        | Some g -> Func_class_sig_types.Func.TypeGuard g
       in
       let reason = mk_annot_reason RFunctionType loc in
       let effect_flag = ArbitraryEffect (* Methods can't be hooks *) in

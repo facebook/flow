@@ -267,29 +267,6 @@ end
 
 let pattern_has_annot p = p |> Destructure.type_of_pattern |> Base.Option.is_some
 
-let predicate_function_invalid_param_reasons params =
-  let open Flow_ast in
-  let open Reason in
-  let (_, { Function.Params.params; rest; this_ = _; comments = _ }) = params in
-  let reasons =
-    List.filter_map
-      (fun (_, param) ->
-        let open Function.Param in
-        match param.argument with
-        | (ploc, Pattern.Object _)
-        | (ploc, Pattern.Array _)
-        | (ploc, Pattern.Expression _) ->
-          Some (mk_reason RDestructuring ploc)
-        | (_, Pattern.Identifier _) -> None)
-      params
-  in
-  match rest with
-  | Some (rloc, { Function.RestParam.argument; comments = _ }) ->
-    let desc = Reason.code_desc_of_pattern argument in
-    let reason = mk_reason (RRestParameter (Some desc)) rloc in
-    reason :: reasons
-  | None -> reasons
-
 let func_is_synthesizable_from_annotation ({ Ast.Function.return; generator; _ } as f) =
   match return with
   | Ast.Function.ReturnAnnot.Available _
@@ -1530,8 +1507,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         (fun () ->
           let {
             Ast.Function.id = _;
-            params =
-              (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ }) as params;
+            params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ });
             body;
             async;
             generator;
@@ -1612,8 +1588,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
           Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
               match kind with
-              | Ast.Type.Predicate.Declared expr
-                when Base.List.is_empty (predicate_function_invalid_param_reasons params) ->
+              | Ast.Type.Predicate.Declared expr ->
                 this#visit_expression ~hints:[] ~cond:NonConditionalContext expr
               | _ -> ()
           ))

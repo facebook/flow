@@ -222,17 +222,12 @@ and 'loc t' =
       key_error_kind: InvalidObjKey.t;
     }
   | EAmbiguousNumericKeyWithVariance of 'loc
-  | EPredicateFuncArityMismatch of {
-      use_op: 'loc virtual_use_op;
-      reasons: 'loc virtual_reason * 'loc virtual_reason;
-      arities: int * int;
-    }
-  | EPredicateFuncIncompatibility of {
+  | ETypeGuardFuncIncompatibility of {
       use_op: 'loc virtual_use_op;
       reasons: 'loc virtual_reason * 'loc virtual_reason;
     }
-  | EPredicateInvalidParameter of {
-      pred_reason: 'loc virtual_reason;
+  | ETypeGuardInvalidParameter of {
+      type_guard_reason: 'loc virtual_reason;
       binding_reason: 'loc virtual_reason;
     }
   | ETypeGuardIndexMismatch of {
@@ -1049,15 +1044,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
     EUnsupportedKeyInObject { loc = f loc; obj_kind; key_error_kind }
   | EAmbiguousNumericKeyWithVariance loc -> EAmbiguousNumericKeyWithVariance (f loc)
-  | EPredicateFuncArityMismatch { use_op; reasons = (r1, r2); arities } ->
-    EPredicateFuncArityMismatch
-      { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2); arities }
-  | EPredicateFuncIncompatibility { use_op; reasons = (r1, r2) } ->
-    EPredicateFuncIncompatibility
+  | ETypeGuardFuncIncompatibility { use_op; reasons = (r1, r2) } ->
+    ETypeGuardFuncIncompatibility
       { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
-  | EPredicateInvalidParameter { pred_reason; binding_reason } ->
-    EPredicateInvalidParameter
-      { pred_reason = map_reason pred_reason; binding_reason = map_reason binding_reason }
+  | ETypeGuardInvalidParameter { type_guard_reason; binding_reason } ->
+    ETypeGuardInvalidParameter
+      {
+        type_guard_reason = map_reason type_guard_reason;
+        binding_reason = map_reason binding_reason;
+      }
   | ETypeGuardIndexMismatch { use_op; reasons = (r1, r2) } ->
     ETypeGuardIndexMismatch { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
   | ETypeGuardImpliesMismatch { use_op; reasons = (r1, r2) } ->
@@ -1592,9 +1587,8 @@ let util_use_op_of_msg nope util = function
   | EExportsAnnot _
   | EUnsupportedKeyInObject _
   | EAmbiguousNumericKeyWithVariance _
-  | EPredicateFuncArityMismatch _
-  | EPredicateFuncIncompatibility _
-  | EPredicateInvalidParameter _
+  | ETypeGuardFuncIncompatibility _
+  | ETypeGuardInvalidParameter _
   | ETypeGuardIndexMismatch _
   | ETypeGuardImpliesMismatch _
   | EInternal (_, _)
@@ -1785,7 +1779,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETupleRequiredAfterOptional { reason_tuple = reason; _ }
   | ETupleInvalidTypeSpread { reason_spread = reason; _ }
   | ETupleElementAfterInexactSpread reason
-  | EPredicateInvalidParameter { pred_reason = reason; _ }
+  | ETypeGuardInvalidParameter { type_guard_reason = reason; _ }
   | ETypeGuardParamUnbound reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
   | ENegativeTypeGuardConsistency { reason; _ }
@@ -1965,8 +1959,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
   | EPrimitiveAsInterface _
-  | EPredicateFuncArityMismatch _
-  | EPredicateFuncIncompatibility _
+  | ETypeGuardFuncIncompatibility _
   | ETypeGuardIndexMismatch _
   | ETypeGuardImpliesMismatch _ ->
     None
@@ -2422,25 +2415,16 @@ let friendly_message_of_msg = function
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
     Normal (MessageUnsupportedKeyInObject { key_error_kind; obj_kind })
   | EAmbiguousNumericKeyWithVariance _ -> Normal MessageAmbiguousNumericKeyWithVariance
-  | EPredicateFuncArityMismatch
-      { use_op; reasons = (lower, upper); arities = (lower_arity, upper_arity) } ->
+  | ETypeGuardFuncIncompatibility { use_op; reasons = (lower, upper) } ->
     UseOp
       {
         loc = loc_of_reason lower;
-        message = MessageIncompatibleArity { lower; lower_arity; upper; upper_arity };
+        message = MessageIncompatibleNonTypeGuardToTypeGuard { lower; upper };
         use_op;
         explanation = None;
       }
-  | EPredicateFuncIncompatibility { use_op; reasons = (lower, upper) } ->
-    UseOp
-      {
-        loc = loc_of_reason lower;
-        message = MessageIncompatibleNonPredicateToPredicate { lower; upper };
-        use_op;
-        explanation = None;
-      }
-  | EPredicateInvalidParameter { pred_reason; binding_reason } ->
-    Normal (MessageCannotReferencePredicateParameter { pred_reason; binding_reason })
+  | ETypeGuardInvalidParameter { type_guard_reason; binding_reason } ->
+    Normal (MessageCannotReferenceTypeGuardParameter { type_guard_reason; binding_reason })
   | ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) } ->
     UseOp
       {
@@ -3049,9 +3033,8 @@ let error_code_of_message err : error_code option =
   | EForInRHS _ -> Some InvalidInRhs
   | EInstanceofRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
-  | EPredicateFuncArityMismatch _
-  | EPredicateFuncIncompatibility _
-  | EPredicateInvalidParameter _
+  | ETypeGuardFuncIncompatibility _
+  | ETypeGuardInvalidParameter _
   | ETypeGuardIndexMismatch _
   | ETypeGuardImpliesMismatch _
   | ETypeGuardParamUnbound _

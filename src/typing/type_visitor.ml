@@ -318,7 +318,7 @@ class ['a] t =
         params;
         rest_param;
         return_t;
-        predicate;
+        type_guard;
         def_reason = _;
         effect = _;
       } =
@@ -328,12 +328,12 @@ class ['a] t =
       let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
       let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
       let acc = self#type_ cx pole acc return_t in
-      let acc = self#opt (self#fun_predicate cx pole) acc predicate in
+      let acc = self#opt (self#fun_type_guard cx pole) acc type_guard in
       acc
 
-    method private fun_predicate cx pole acc predicate =
-      match predicate with
-      | TypeGuardBased { reason = _; one_sided = _; param_name = _; type_guard = t } ->
+    method private fun_type_guard cx pole acc type_guard =
+      match type_guard with
+      | TypeGuard { reason = _; one_sided = _; param_name = _; type_guard = t } ->
         self#type_ cx pole acc t
 
     method private obj_flags cx pole acc flags =

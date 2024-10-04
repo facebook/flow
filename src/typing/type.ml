@@ -387,7 +387,7 @@ module rec TypeTerm : sig
     | FunImplicitReturn of {
         fn: 'loc virtual_reason;
         upper: 'loc virtual_reason;
-        predicate: bool;
+        type_guard: bool;
       }
     | GeneratorYield of { value: 'loc virtual_reason }
     | GetProperty of 'loc virtual_reason
@@ -526,7 +526,7 @@ module rec TypeTerm : sig
       }
     | TypeParamBound of { name: Subst_name.t }
     | OpaqueTypeBound of { opaque_t_reason: 'loc virtual_reason }
-    | TypePredicateCompatibility
+    | TypeGuardCompatibility
     | RendersCompatibility
     | UnifyFlip
     | EnumRepresentationTypeCompatibility of {
@@ -1086,7 +1086,7 @@ module rec TypeTerm : sig
     params: fun_param list;
     rest_param: fun_rest_param option;
     return_t: t;
-    predicate: fun_predicate option;
+    type_guard: type_guard option;
     def_reason: Reason.t;
     effect: react_effect_type;
   }
@@ -1099,8 +1099,8 @@ module rec TypeTerm : sig
     | ArbitraryEffect
     | AnyEffect
 
-  and fun_predicate =
-    | TypeGuardBased of {
+  and type_guard =
+    | TypeGuard of {
         reason: reason;
         param_name: ALoc.t * string;
         type_guard: t;
@@ -4107,7 +4107,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TypeParamBound _ -> "TypeParamBound"
   | OpaqueTypeBound _ -> "OpaqueTypeBound"
   | UnifyFlip -> "UnifyFlip"
-  | TypePredicateCompatibility -> "TypePredicateCompatibility"
+  | TypeGuardCompatibility -> "TypeGuardCompatibility"
   | RendersCompatibility -> "RendersCompatibility"
   | EnumRepresentationTypeCompatibility _ -> "EnumRepresentationTypeCompatibility"
 
@@ -4333,7 +4333,7 @@ let mk_methodtype
     ~rest_param
     ~def_reason
     ?params_names
-    ~predicate
+    ~type_guard
     tout =
   {
     this_t = (this_t, subtyping);
@@ -4343,7 +4343,7 @@ let mk_methodtype
       | Some xs -> List.map2 (fun x t -> (x, t)) xs tins);
     rest_param;
     return_t = tout;
-    predicate;
+    type_guard;
     def_reason;
     effect;
   }

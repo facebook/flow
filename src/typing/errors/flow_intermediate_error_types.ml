@@ -266,8 +266,8 @@ type 'loc root_message =
     }
   | RootCannotCreateElement of 'loc virtual_reason_desc
   | RootCannotDeclareRef
-  | RootCannotDeclarePredicate of {
-      predicate_loc: 'loc;
+  | RootCannotDeclareTypeGuard of {
+      type_guard_loc: 'loc;
       fn: 'loc virtual_reason;
     }
   | RootCannotDefineClassMethod of {
@@ -435,8 +435,8 @@ type 'loc message =
   | MessageCannotReassignEnum of concrete_reason
   | MessageCannotReassignImport of concrete_reason
   | MessageCannotRedeclareVar of concrete_reason
-  | MessageCannotReferencePredicateParameter of {
-      pred_reason: 'loc virtual_reason;
+  | MessageCannotReferenceTypeGuardParameter of {
+      type_guard_reason: 'loc virtual_reason;
       binding_reason: 'loc virtual_reason;
     }
   | MessageCannotResolveBuiltinName of string
@@ -620,7 +620,7 @@ type 'loc message =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
-  | MessageIncompatibleNonPredicateToPredicate of {
+  | MessageIncompatibleNonTypeGuardToTypeGuard of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }

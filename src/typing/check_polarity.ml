@@ -107,7 +107,7 @@ end = struct
         params;
         rest_param;
         return_t;
-        predicate;
+        type_guard;
         def_reason = _;
         effect = _;
       } =
@@ -117,10 +117,9 @@ end = struct
       List.iter (fun (_, t) -> check_inv t) params;
       Base.Option.iter ~f:(fun (_, _, t) -> check_inv t) rest_param;
       check_polarity cx ?trace seen tparams polarity return_t;
-      (match predicate with
-      | Some (TypeGuardBased { type_guard = t; _ }) ->
-        check_polarity cx ?trace seen tparams polarity t
-      | _ -> ())
+      (match type_guard with
+      | Some (TypeGuard { type_guard = t; _ }) -> check_polarity cx ?trace seen tparams polarity t
+      | None -> ())
     | DefT (_, ArrT (ArrayAT { elem_t = _; tuple_view = Some _; react_dro = _ })) as t ->
       (* This representation signifies a literal, which is not a type. *)
       raise (UnexpectedType (Debug_js.dump_t cx t))

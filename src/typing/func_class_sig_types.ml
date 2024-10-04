@@ -71,7 +71,7 @@ module Func = struct
     | Generator of { return_loc: ALoc.t }
     | AsyncGenerator of { return_loc: ALoc.t }
     | FieldInit of (ALoc.t, ALoc.t) Flow_ast.Expression.t
-    | Predicate of Type.fun_predicate
+    | TypeGuard of Type.type_guard
     | Ctor
 
   let string_of_kind = function
@@ -80,7 +80,7 @@ module Func = struct
     | Generator _ -> "generator"
     | AsyncGenerator _ -> "async generator"
     | FieldInit _ -> "field initializer"
-    | Predicate _ -> "predicate"
+    | TypeGuard _ -> "type guard"
     | Ctor -> "constructor"
 
   module type S = sig

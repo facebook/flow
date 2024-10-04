@@ -120,8 +120,6 @@ val mk_tuple_element :
 
 val reason_of_resolved_param : Type.resolved_param -> reason
 
-val type_guard_of_predicate : Type.fun_predicate -> Type.t option
-
 val type_guard_of_funtype : Type.funtype -> Type.t option
 
 val normalize_jsx_children_prop : ALoc.t -> Type.t list -> Type.t option

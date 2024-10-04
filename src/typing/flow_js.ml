@@ -2620,7 +2620,7 @@ struct
                     {
                       params;
                       rest_param = None;
-                      predicate = None;
+                      type_guard = None;
                       effect = ArbitraryEffect | AnyEffect;
                       _;
                     }
@@ -2640,7 +2640,7 @@ struct
                       params;
                       return_t;
                       rest_param = None;
-                      predicate = None;
+                      type_guard = None;
                       effect = ArbitraryEffect | AnyEffect;
                       _;
                     }
@@ -2668,7 +2668,7 @@ struct
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) -> begin
           match Context.find_call cx id with
-          | ( DefT (_, FunT (_, { rest_param = None; predicate = None; _ }))
+          | ( DefT (_, FunT (_, { rest_param = None; type_guard = None; _ }))
             | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
@@ -5703,15 +5703,15 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t = (this, _); params; rest_param; return_t; predicate; def_reason = _; effect = _ }
+      { this_t = (this, _); params; rest_param; return_t; type_guard; def_reason = _; effect = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
     Base.Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
     contravariant ~use_op this;
     let () =
-      match predicate with
-      | Some (TypeGuardBased { type_guard = t; _ }) -> covariant ~use_op t
+      match type_guard with
+      | Some (TypeGuard { type_guard = t; _ }) -> covariant ~use_op t
       | _ -> ()
     in
     covariant ~use_op return_t
@@ -7265,7 +7265,7 @@ struct
             []
             ~rest_param
             ~def_reason:reason
-            ~predicate:None
+            ~type_guard:None
             (AnyT.untyped reason)
         in
         let fn = DefT (reason, FunT (dummy_static reason, funtype)) in
@@ -7941,8 +7941,8 @@ struct
           lpmap
           upmap
         |> ignore
-      | ( DefT (_, FunT (_, ({ predicate = None; _ } as funtype1))),
-          DefT (_, FunT (_, ({ predicate = None; _ } as funtype2)))
+      | ( DefT (_, FunT (_, ({ type_guard = None; _ } as funtype1))),
+          DefT (_, FunT (_, ({ type_guard = None; _ } as funtype2)))
         )
         when List.length funtype1.params = List.length funtype2.params ->
         rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
@@ -8714,7 +8714,7 @@ struct
         | Some trace -> trace
         | None -> failwith "All multiflows show have a trace"
       in
-      let { params; rest_param; return_t; def_reason; predicate; effect; _ } = ft in
+      let { params; rest_param; return_t; def_reason; type_guard; effect; _ } = ft in
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let (params, rest_param) =
         multiflow_partial
@@ -8744,7 +8744,7 @@ struct
                   (dummy_this (loc_of_reason reason_op))
                   params_tlist
                   return_t
-                  ~predicate
+                  ~type_guard
                   ~rest_param
                   ~def_reason
                   ~params_names

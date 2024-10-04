@@ -103,7 +103,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (Error_message.ETypeGuardImpliesMismatch { use_op; reasons = (reason1, reason2) });
     let idx1 = index_of_param params1 x1 in
     let idx2 = index_of_param params2 x2 in
-    let use_op = Frame (TypePredicateCompatibility, use_op) in
+    let use_op = Frame (TypeGuardCompatibility, use_op) in
     ( if idx1 <> idx2 then
       let lower = Reason.mk_reason (RTypeGuardParam x1) loc1 in
       let upper = Reason.mk_reason (RTypeGuardParam x2) loc2 in
@@ -1513,7 +1513,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~rest_param:
             (Some (None, loc_of_reason reasonu, EmptyT.why (replace_desc_new_reason REmpty reasonu)))
           ~def_reason:reasonl
-          ~predicate:None
+          ~type_guard:None
           renders
       in
       let mixed = MixedT.why reasonu in
@@ -1701,17 +1701,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow cx trace (ft1.return_t, UseT (ret_use_op, ft2.return_t));
 
       begin
-        match (ft1.predicate, ft2.predicate) with
+        match (ft1.type_guard, ft2.type_guard) with
         | (None, Some _) ->
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output
             cx
-            (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
-        | ( Some
-              (TypeGuardBased { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1 }),
-            Some
-              (TypeGuardBased { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2 })
+            (Error_message.ETypeGuardFuncIncompatibility { use_op; reasons = (lreason, ureason) })
+        | ( Some (TypeGuard { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1 }),
+            Some (TypeGuard { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2 })
           ) ->
           func_type_guard_compat
             cx

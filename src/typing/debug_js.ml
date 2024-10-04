@@ -163,7 +163,7 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, FunT (_, { params; rest_param; return_t; this_t; predicate; _ })) ->
+    | DefT (_, FunT (_, { params; rest_param; return_t; this_t; type_guard; _ })) ->
       p
         ~extra:
           (spf
@@ -172,9 +172,8 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
              (Base.Option.value_map rest_param ~default:"" ~f:(fun (_, _, t) -> "..." ^ kid t))
              (kid return_t)
-             (match predicate with
-             | Some (TypeGuardBased { reason = _; one_sided; param_name = (_, name); type_guard })
-               ->
+             (match type_guard with
+             | Some (TypeGuard { reason = _; one_sided; param_name = (_, name); type_guard }) ->
                let implies =
                  if one_sided then
                    "implies "
@@ -1468,12 +1467,10 @@ let dump_error_message =
       spf "EUnsupportedKeyInObject (%s, %s, %s)" (string_of_aloc loc) obj_kind key_error_kind
     | EAmbiguousNumericKeyWithVariance loc ->
       spf "EAmbiguousNumericKeyWithVariance (%s)" (string_of_aloc loc)
-    | EPredicateFuncArityMismatch { use_op; _ } ->
-      spf "EPredicateFuncArityMismatch (%s)" (string_of_use_op use_op)
-    | EPredicateFuncIncompatibility { use_op; _ } ->
-      spf "EPredicateFuncIncompatibility (%s)" (string_of_use_op use_op)
-    | EPredicateInvalidParameter { pred_reason = r; _ } ->
-      spf "EPredicateInvalidParameter (%s)" (dump_reason cx r)
+    | ETypeGuardFuncIncompatibility { use_op; _ } ->
+      spf "ETypeGuardFuncIncompatibility (%s)" (string_of_use_op use_op)
+    | ETypeGuardInvalidParameter { type_guard_reason = r; _ } ->
+      spf "ETypeGuardInvalidParameter (%s)" (dump_reason cx r)
     | ETypeGuardIndexMismatch { use_op; _ } ->
       spf "ETypeGuardIndexMismatch (%s)" (string_of_use_op use_op)
     | ETypeGuardImpliesMismatch { use_op; _ } ->

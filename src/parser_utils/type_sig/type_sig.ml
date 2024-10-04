@@ -43,37 +43,6 @@ type 'a arg =
   | SpreadArg of 'a
 [@@deriving iter, map, show { with_path = false }]
 
-type ('key, 'loc, 'a) predicate =
-  | AndP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
-  | OrP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
-  | NotP of ('key, 'loc, 'a) predicate
-  | TruthyP of 'key
-  | InstanceofP of 'key * 'a
-  | ArrP of 'key
-  | NullP of 'key
-  | MaybeP of 'key
-  | SingletonStrP of 'key * 'loc * bool * string
-  | SingletonBoolP of 'key * 'loc * bool
-  | SingletonNumP of 'key * 'loc * bool * float * string
-  | SingletonBigIntP of 'key * 'loc * bool * int64 option * string
-  | BoolP of 'key * 'loc
-  | FunP of 'key
-  | NumP of 'key * 'loc
-  | BigIntP of 'key * 'loc
-  | ObjP of 'key
-  | StrP of 'key * 'loc
-  | SymbolP of 'key * 'loc
-  | VoidP of 'key
-  | SentinelStrP of 'key * string * 'loc * string
-  | SentinelNumP of 'key * string * 'loc * float * string
-  | SentinelBigIntP of 'key * string * 'loc * int64 option * string
-  | SentinelBoolP of 'key * string * 'loc * bool
-  | SentinelNullP of 'key * string * 'loc
-  | SentinelVoidP of 'key * string * 'loc
-  | SentinelExprP of 'key * string * 'a
-  | LatentP of 'a * ('loc, 'a) targ list option * 'a arg list * ('key * int) Nel.t
-[@@deriving iter, map, show { with_path = false }]
-
 type ('loc, 'a) type_guard =
   | TypeGuard of {
       loc: 'loc;

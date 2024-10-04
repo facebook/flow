@@ -224,7 +224,7 @@ let fun_t ~params ~return_t =
             params;
             rest_param = None;
             return_t;
-            predicate = None;
+            type_guard = None;
             def_reason = dummy_reason;
             effect = AnyEffect;
           }

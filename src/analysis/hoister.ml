@@ -45,8 +45,8 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method private add_component_binding entry =
       this#update_acc Bindings.(add (entry, Bindings.Component))
 
-    method private add_declared_function_binding ~predicate entry =
-      this#update_acc Bindings.(add (entry, Bindings.DeclaredFunction { predicate }))
+    method private add_declared_function_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.DeclaredFunction))
 
     method private add_declared_class_binding entry =
       this#update_acc Bindings.(add (entry, Bindings.DeclaredClass))
@@ -203,7 +203,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       (* The first binding found wins, so we make sure add a declared function binding when
        * we come across it before attempting to transform it into a regular function *)
       let open Ast.Statement.DeclareFunction in
-      this#add_declared_function_binding ~predicate:(Option.is_some decl.predicate) decl.id;
+      this#add_declared_function_binding decl.id;
       super#declare_function loc decl
 
     method! declare_variable _ (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =

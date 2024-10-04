@@ -1617,17 +1617,16 @@ and type_guard_opt opts scope tbls xs guard =
     (* TODO(pvekris) support assert type guards in type_sig_parse *)
     None
 
-and type_guard_or_predicate_of_type_guard opts scope tbls xs guard =
-  match type_guard_opt opts scope tbls xs guard with
-  | Some (loc, param_name, type_guard, one_sided) ->
-    Some (TypeGuard { loc; param_name; type_guard; one_sided })
-  | None -> None
-
 and return_annot opts scope tbls xs = function
   | T.Function.TypeAnnotation r -> (annot opts scope tbls xs r, None)
   | T.Function.TypeGuard ((loc, _) as g) ->
     let loc = push_loc tbls loc in
-    let guard = type_guard_or_predicate_of_type_guard opts scope tbls xs g in
+    let guard =
+      match type_guard_opt opts scope tbls xs g with
+      | Some (loc, param_name, type_guard, one_sided) ->
+        Some (TypeGuard { loc; param_name; type_guard; one_sided })
+      | None -> None
+    in
     (Annot (Boolean loc), guard)
 
 and convert_effect opts effect fun_loc_opt name_opt =
@@ -3583,288 +3582,6 @@ and declare_component_def opts scope tbls f =
   in
   component_type opts scope tbls tps params r
 
-and predicate opts scope tbls pnames =
-  let open Option.Let_syntax in
-  let module E = Ast.Expression in
-  let module I = Ast.Identifier in
-  let refinement_key (_, { I.name = id_name; _ }) =
-    if SSet.mem id_name pnames then
-      Some id_name
-    else
-      None
-  in
-  let refinement_prop = function
-    | E.Member.PropertyIdentifier (_, { I.name; _ }) -> Some name
-    | E.Member.PropertyExpression (_, expr) -> extract_string_literal expr
-    | E.Member.PropertyPrivateName _ -> None
-  in
-  let typeof_typename = function
-    | "boolean" -> Some `Boolean
-    | "function" -> Some `Function
-    | "number" -> Some `Number
-    | "bigint" -> Some `BigInt
-    | "object" -> Some `Object
-    | "string" -> Some `String
-    | "symbol" -> Some `Symbol
-    | "undefined" -> Some `Undefined
-    | _ -> None
-  in
-  let refine_id test id =
-    let%map key = refinement_key id in
-    match test with
-    | `Truthy -> TruthyP key
-    | `Instanceof right ->
-      let t = expression opts scope tbls right in
-      InstanceofP (key, t)
-    | `IsArray -> ArrP key
-    | `Eq (eq_loc, sense, eq_test) ->
-      let pred =
-        match eq_test with
-        | `Typeof `Boolean -> BoolP (key, eq_loc)
-        | `Typeof `Function -> FunP key
-        | `Typeof `Number -> NumP (key, eq_loc)
-        | `Typeof `BigInt -> BigIntP (key, eq_loc)
-        | `Typeof `Object -> ObjP key
-        | `Typeof `String -> StrP (key, eq_loc)
-        | `Typeof `Symbol -> SymbolP (key, eq_loc)
-        | `Typeof `Undefined -> VoidP key
-        | `String (loc, x) -> SingletonStrP (key, loc, sense, x)
-        | `Number (loc, x, raw) -> SingletonNumP (key, loc, sense, x, raw)
-        | `BigInt (loc, x, raw) -> SingletonBigIntP (key, loc, sense, x, raw)
-        | `Bool (loc, x) -> SingletonBoolP (key, loc, x)
-        | `Null _ -> NullP key
-        | `Void _ -> VoidP key
-        | `Maybe -> MaybeP key
-      in
-      if sense then
-        pred
-      else
-        NotP pred
-  in
-  let refine_member test id prop =
-    let%bind key = refinement_key id in
-    let%bind prop = refinement_prop prop in
-    match test with
-    | `Truthy -> None
-    | `Instanceof _ -> None
-    | `IsArray -> None
-    | `Eq (_, sense, eq_test) ->
-      let%map pred =
-        match eq_test with
-        | `Typeof _ -> None
-        | `String (loc, x) -> Some (SentinelStrP (key, prop, loc, x))
-        | `Number (loc, x, raw) -> Some (SentinelNumP (key, prop, loc, x, raw))
-        | `BigInt (loc, x, raw) -> Some (SentinelBigIntP (key, prop, loc, x, raw))
-        | `Bool (loc, x) -> Some (SentinelBoolP (key, prop, loc, x))
-        | `Null loc -> Some (SentinelNullP (key, prop, loc))
-        | `Void loc -> Some (SentinelVoidP (key, prop, loc))
-        | `Maybe -> None
-      in
-      if sense then
-        pred
-      else
-        NotP pred
-  in
-  let refine test (_, expr) =
-    match expr with
-    | E.Identifier id -> refine_id test id
-    | E.Member { E.Member._object = (_, E.Identifier id); property; _ } ->
-      refine_member test id property
-    | _ ->
-      (* TODO: OptionalMember *)
-      None
-  in
-  let eq_test ~strict ~sense eq_loc left right =
-    let module T = E.TemplateLiteral in
-    match (left, right) with
-    | ((_, E.Unary { E.Unary.operator = E.Unary.Typeof; argument = expr; _ }), (_, lit))
-    | ((_, lit), (_, E.Unary { E.Unary.operator = E.Unary.Typeof; argument = expr; _ })) ->
-      let%bind string_literal = extract_string_literal lit in
-      let%bind typename = typeof_typename string_literal in
-      refine (`Eq (eq_loc, sense, `Typeof typename)) expr
-    | ((loc, E.StringLiteral { Ast.StringLiteral.value; _ }), expr)
-    | (expr, (loc, E.StringLiteral { Ast.StringLiteral.value; _ }))
-      when strict ->
-      let loc = push_loc tbls loc in
-      refine (`Eq (eq_loc, sense, `String (loc, value))) expr
-    | ((loc, E.BooleanLiteral { Ast.BooleanLiteral.value; _ }), expr)
-    | (expr, (loc, E.BooleanLiteral { Ast.BooleanLiteral.value; _ }))
-      when strict ->
-      let loc = push_loc tbls loc in
-      refine (`Eq (eq_loc, sense, `Bool (loc, value))) expr
-    | ((loc, E.NumberLiteral { Ast.NumberLiteral.value; raw; _ }), expr)
-    | (expr, (loc, E.NumberLiteral { Ast.NumberLiteral.value; raw; _ }))
-      when strict ->
-      let loc = push_loc tbls loc in
-      refine (`Eq (eq_loc, sense, `Number (loc, value, raw))) expr
-    | ((loc, E.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ }), expr)
-    | (expr, (loc, E.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ }))
-      when strict ->
-      let loc = push_loc tbls loc in
-      refine (`Eq (eq_loc, sense, `BigInt (loc, value, raw))) expr
-    | ((loc, E.NullLiteral _), expr)
-    | (expr, (loc, E.NullLiteral _)) ->
-      let test =
-        if strict then
-          let loc = push_loc tbls loc in
-          `Null loc
-        else
-          `Maybe
-      in
-      refine (`Eq (eq_loc, sense, test)) expr
-    | ((loc, E.TemplateLiteral { T.quasis; expressions = []; _ }), expr)
-    | (expr, (loc, E.TemplateLiteral { T.quasis; expressions = []; _ }))
-      when strict ->
-      (match quasis with
-      | [(_, { T.Element.value = { T.Element.cooked = x; _ }; _ })] ->
-        let loc = push_loc tbls loc in
-        refine (`Eq (eq_loc, sense, `String (loc, x))) expr
-      | _ -> None)
-    | ((loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ }), expr)
-    | (expr, (loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ }))
-      when strict ->
-      let%bind (x, raw) = extract_number_literal lit in
-      let loc = push_loc tbls loc in
-      refine (`Eq (eq_loc, sense, `Number (loc, -.x, "-" ^ raw))) expr
-    | ((loc, E.Unary { E.Unary.operator = E.Unary.Void; _ }), expr)
-    | (expr, (loc, E.Unary { E.Unary.operator = E.Unary.Void; _ }))
-    | ((loc, E.Identifier (_, { I.name = "undefined"; _ })), expr)
-    | (expr, (loc, E.Identifier (_, { I.name = "undefined"; _ }))) ->
-      (* TODO: should not refine if undefined is shadowed *)
-      let eq_test =
-        if strict then
-          let loc = push_loc tbls loc in
-          `Void loc
-        else
-          `Maybe
-      in
-      refine (`Eq (eq_loc, sense, eq_test)) expr
-    | ((_, E.Member { E.Member._object = (_, E.Identifier id); property; _ }), expr)
-    | (expr, (_, E.Member { E.Member._object = (_, E.Identifier id); property; _ })) ->
-      let%bind key = refinement_key id in
-      let%map prop = refinement_prop property in
-      let t = expression opts scope tbls expr in
-      SentinelExprP (key, prop, t)
-    | _ -> None
-  in
-  let logical expr1 expr2 =
-    let open E.Logical in
-    function
-    | And ->
-      let p1 = predicate opts scope tbls pnames expr1 in
-      let p2 = predicate opts scope tbls pnames expr2 in
-      Option.merge p1 p2 ~f:(fun p1 p2 -> AndP (p1, p2))
-    | Or ->
-      let p1 = predicate opts scope tbls pnames expr1 in
-      let p2 = predicate opts scope tbls pnames expr2 in
-      Option.merge p1 p2 ~f:(fun p1 p2 -> OrP (p1, p2))
-    | NullishCoalesce -> None
-  in
-  let unary expr =
-    let module U = E.Unary in
-    function
-    | U.Not ->
-      let%map p = predicate opts scope tbls pnames expr in
-      NotP p
-    | U.Minus
-    | U.Plus
-    | U.BitNot
-    | U.Typeof
-    | U.Void
-    | U.Delete
-    | U.Await ->
-      None
-  in
-  let binary loc left right =
-    let open E.Binary in
-    function
-    | Instanceof -> refine (`Instanceof right) left
-    | Equal -> eq_test ~strict:false ~sense:true loc left right
-    | StrictEqual -> eq_test ~strict:true ~sense:true loc left right
-    | NotEqual -> eq_test ~strict:false ~sense:false loc left right
-    | StrictNotEqual -> eq_test ~strict:true ~sense:false loc left right
-    | LessThan
-    | LessThanEqual
-    | GreaterThan
-    | GreaterThanEqual
-    | LShift
-    | RShift
-    | RShift3
-    | Plus
-    | Minus
-    | Mult
-    | Exp
-    | Div
-    | Mod
-    | BitOr
-    | Xor
-    | BitAnd
-    | In ->
-      None
-  in
-  let targ = function
-    | E.CallTypeArg.Implicit (loc, _) -> ImplicitArg (push_loc tbls loc)
-    | E.CallTypeArg.Explicit t -> ExplicitArg (annot opts scope tbls pnames t)
-  in
-  let targs_ = function
-    | None -> None
-    | Some (_, { E.CallTypeArgs.arguments; _ }) -> Some (Base.List.map arguments ~f:targ)
-  in
-  let arg_list args =
-    Base.List.map args.E.ArgList.arguments ~f:(function
-        | E.Expression e -> Some (Arg (expression opts scope tbls e))
-        | E.Spread _ -> None
-        )
-    |> Base.Option.all
-  in
-  let call callee targs args =
-    let finish = function
-      | [] -> None
-      | x :: xs ->
-        let t = expression opts scope tbls callee in
-        let targs = targs_ targs in
-        let args_opt = arg_list args in
-        Base.Option.map args_opt ~f:(fun args -> LatentP (t, targs, args, (x, xs)))
-    in
-    let f acc i = function
-      | E.Expression (_, E.Identifier id) ->
-        Some
-          (match refinement_key id with
-          | Some key -> (key, i) :: acc
-          | None -> acc)
-      | E.Expression _ -> Some acc
-      | E.Spread _ -> None
-    in
-    let rec loop acc i = function
-      | [] -> finish acc
-      | arg :: args ->
-        let%bind acc = f acc i arg in
-        loop acc (i + 1) args
-    in
-    match (callee, args) with
-    | ( ( _,
-          E.Member
-            {
-              E.Member._object = (_, E.Identifier (_, { I.name = "Array"; comments = _ }));
-              property = E.Member.PropertyIdentifier (_, { I.name = "isArray"; comments = _ });
-              comments = _;
-            }
-        ),
-        { E.ArgList.arguments = [E.Expression arg]; comments = _ }
-      ) ->
-      refine `IsArray arg
-    | (_, { E.ArgList.arguments; comments = _ }) -> loop [] 0 arguments
-  in
-  fun (loc, expr) ->
-    let loc = push_loc tbls loc in
-    match expr with
-    | E.Identifier id -> refine_id `Truthy id
-    | E.Logical { E.Logical.operator; left; right; comments = _ } -> logical left right operator
-    | E.Unary { E.Unary.operator; argument; comments = _ } -> unary argument operator
-    | E.Binary { E.Binary.operator; left; right; comments = _ } -> binary loc left right operator
-    | E.Call { E.Call.callee; targs; arguments = (_, args); comments = _ } -> call callee targs args
-    | _ -> None
-
 and class_def =
   let module C = Ast.Class in
   let module Acc = ClassAcc in
@@ -4415,7 +4132,7 @@ let declare_function_decl opts scope tbls decl =
   let {
     Ast.Statement.DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ });
     annot = (_, (fn_loc, t));
-    predicate = p;
+    predicate = _;
     comments = _;
   } =
     decl
@@ -4440,14 +4157,6 @@ let declare_function_decl opts scope tbls decl =
              let params = function_type_params opts scope tbls xs ps in
              let rest_param = function_type_rest_param opts scope tbls xs rp in
              let (return, type_guard) = return_annot opts scope tbls xs r in
-             let type_guard =
-               match (type_guard, p) with
-               | (Some (TypeGuard _), _) -> type_guard
-               | (_, None) -> None
-               | (_, Some _) ->
-                 (* typing support for %checks is removed *)
-                 None
-             in
              let effect = convert_effect opts effect None (Some name) in
              FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
            | _ -> failwith "unexpected declare function annot"

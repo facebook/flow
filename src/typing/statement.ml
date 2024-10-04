@@ -2840,7 +2840,7 @@ module Make
                       ~rest_param:None
                       ~def_reason:reason
                       ~params_names:[]
-                      ~predicate:None
+                      ~type_guard:None
                       proto
                   )
               )
@@ -7834,11 +7834,11 @@ module Make
         )
     in
     let predicate_checks cx pred params =
-      let err_with_desc desc pred_reason binding_loc =
+      let err_with_desc desc type_guard_reason binding_loc =
         let binding_reason = mk_reason desc binding_loc in
         Flow_js.add_output
           cx
-          Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
+          Error_message.(ETypeGuardInvalidParameter { type_guard_reason; binding_reason })
       in
       let error_on_non_root_binding name expr_reason binding =
         let open Pattern_helper in
@@ -7858,7 +7858,7 @@ module Make
         | Some binding -> error_on_non_root_binding name tg_reason binding
       in
       match pred with
-      | TypeGuardBased { reason; one_sided; param_name; type_guard } ->
+      | TypeGuard { reason; one_sided; param_name; type_guard } ->
         let bindings = Pattern_helper.bindings_of_params params in
         let matching_binding = SMap.find_opt (snd param_name) bindings in
         type_guard_based_checks reason one_sided param_name type_guard matching_binding
@@ -7899,18 +7899,18 @@ module Make
         let fparams = mk_params cx tparams_map params in
         let body = Some body in
         let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
-        let open Func_class_sig_types.Func in
+        let open Func_class_sig_types in
         let has_nonvoid_return =
           Nonvoid_return.might_have_nonvoid_return loc func
-          || (kind <> Ordinary && kind <> Async && kind <> Ctor)
+          || (kind <> Func.Ordinary && kind <> Func.Async && kind <> Func.Ctor)
         in
         let type_guard_incompatible =
           match kind with
-          | Async
-          | Generator _
-          | AsyncGenerator _
-          | FieldInit _
-          | Ctor ->
+          | Func.Async
+          | Func.Generator _
+          | Func.AsyncGenerator _
+          | Func.FieldInit _
+          | Func.Ctor ->
             Some (Func_class_sig_types.Func.string_of_kind kind)
           | _ when getset -> Some "getter/setter"
           | _ -> None
@@ -7930,7 +7930,7 @@ module Make
           | (Ast.Function.ReturnAnnot.Missing loc, _) when not has_nonvoid_return ->
             let void_t = VoidT.why ret_reason in
             let t =
-              if kind = Async then
+              if kind = Func.Async then
                 let reason =
                   mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason ret_reason)
                 in
@@ -7998,7 +7998,7 @@ module Make
         (* Now that we've seen the return annotation we might need to update `kind`. *)
         let kind =
           match type_guard_opt with
-          | Some p -> Predicate p
+          | Some p -> Func.TypeGuard p
           | None -> kind
         in
         let (return_t, predicate) =
@@ -8076,7 +8076,7 @@ module Make
           let () =
             if Context.typing_mode cx = Context.CheckingMode then
               match kind with
-              | Predicate p -> predicate_checks cx p params
+              | Func.TypeGuard p -> predicate_checks cx p params
               | _ -> ()
           in
           {

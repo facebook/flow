@@ -176,14 +176,14 @@ module Make
   S with module Config_types := CT and module Config := C and module Param := F and module Types = T =
 struct
   module Types = T
-  open Func_class_sig_types.Func
+  open Func_class_sig_types
 
   let this_param = F.this
 
   let default_constructor reason =
     {
       T.reason;
-      kind = Ctor;
+      kind = Func.Ctor;
       tparams = None;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
@@ -196,7 +196,7 @@ struct
   let field_initializer reason expr annot_loc return_annot_or_inferred =
     {
       T.reason;
-      kind = FieldInit expr;
+      kind = Func.FieldInit expr;
       tparams = None;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
@@ -237,9 +237,9 @@ struct
       | IdempotentEffect ->
         return_t
     in
-    let predicate =
+    let type_guard =
       match kind with
-      | Predicate p -> Some p
+      | Func.TypeGuard p -> Some p
       | _ -> None
     in
     let funtype =
@@ -249,7 +249,7 @@ struct
         rest_param = F.rest fparams;
         return_t;
         effect;
-        predicate;
+        type_guard;
         def_reason = reason;
       }
     in
@@ -272,9 +272,9 @@ struct
     Base.Option.both this_anno_t method_this_loc
     |> Base.Option.iter ~f:(fun (t, loc) -> Type_env.bind_function_this cx t loc);
     let param_this_t = Base.Option.value ~default:this_default this_anno_t in
-    let predicate =
+    let type_guard =
       match kind with
-      | Predicate p -> Some p
+      | Func.TypeGuard g -> Some g
       | _ -> None
     in
     let t =
@@ -289,7 +289,7 @@ struct
                 ~rest_param
                 ~def_reason
                 ~params_names
-                ~predicate
+                ~type_guard
                 (TypeUtil.type_t_of_annotated_or_inferred return_t)
             )
         )
@@ -321,14 +321,14 @@ struct
     let prev_scope_kind =
       let var_scope_kind =
         match kind with
-        | Ordinary
-        | FieldInit _
-        | Predicate _ ->
+        | Func.Ordinary
+        | Func.FieldInit _
+        | Func.TypeGuard _ ->
           Name_def.Ordinary
-        | Async -> Name_def.Async
-        | Generator _ -> Name_def.Generator
-        | AsyncGenerator _ -> Name_def.AsyncGenerator
-        | Ctor -> Name_def.Ctor
+        | Func.Async -> Name_def.Async
+        | Func.Generator _ -> Name_def.Generator
+        | Func.AsyncGenerator _ -> Name_def.AsyncGenerator
+        | Func.Ctor -> Name_def.Ctor
       in
       Type_env.set_scope_kind cx var_scope_kind
     in
@@ -338,8 +338,8 @@ struct
 
     let (yield_t, next_t) =
       match kind with
-      | Generator _
-      | AsyncGenerator _ ->
+      | Func.Generator _
+      | Func.AsyncGenerator _ ->
         let yield_t = Tvar.mk cx (replace_desc_reason (RCustom "yield") reason) in
         let next_t =
           match return_t with
@@ -349,8 +349,8 @@ struct
         let return_targ = Tvar.mk cx reason in
         let (iterable, generator) =
           match kind with
-          | Generator _ -> ("$Iterable", "Generator")
-          | AsyncGenerator _ -> ("$AsyncIterable", "AsyncGenerator")
+          | Func.Generator _ -> ("$Iterable", "Generator")
+          | Func.AsyncGenerator _ -> ("$AsyncIterable", "AsyncGenerator")
           | _ -> failwith "Bad kind"
         in
         let () =
@@ -418,63 +418,63 @@ struct
          * algorithm to pick use_ops outside the provided loc. *)
         let (use_op, void_t, init_ast) =
           match kind with
-          | Ordinary
-          | Ctor ->
+          | Func.Ordinary
+          | Func.Ctor ->
             let t = VoidT.at loc in
             let use_op =
               Op
                 (FunImplicitReturn
-                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                   { fn = reason_fn; upper = reason_of_t return_t; type_guard = false }
                 )
             in
             (use_op, t, None)
-          | Async ->
+          | Func.Async ->
             let reason = mk_annot_reason (RType (OrdinaryName "Promise")) loc in
             let void_t = VoidT.at loc in
             let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
             let use_op =
               Op
                 (FunImplicitReturn
-                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                   { fn = reason_fn; upper = reason_of_t return_t; type_guard = false }
                 )
             in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
-          | Generator _ ->
+          | Func.Generator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "Generator")) loc in
             let void_t = VoidT.at loc in
             let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
             let use_op =
               Op
                 (FunImplicitReturn
-                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                   { fn = reason_fn; upper = reason_of_t return_t; type_guard = false }
                 )
             in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
-          | AsyncGenerator _ ->
+          | Func.AsyncGenerator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "AsyncGenerator")) loc in
             let void_t = VoidT.at loc in
             let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
             let use_op =
               Op
                 (FunImplicitReturn
-                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                   { fn = reason_fn; upper = reason_of_t return_t; type_guard = false }
                 )
             in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
-          | FieldInit e ->
+          | Func.FieldInit e ->
             let (((_, t), _) as ast) = Statement.expression ?cond:None cx e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
-          | Predicate _ ->
+          | Func.TypeGuard _ ->
             let t = VoidT.at loc in
             let use_op =
               Op
                 (FunImplicitReturn
-                   { fn = reason_fn; upper = reason_of_t return_t; predicate = true }
+                   { fn = reason_fn; upper = reason_of_t return_t; type_guard = true }
                 )
             in
             (use_op, t, None)
@@ -534,7 +534,7 @@ struct
     *)
     (params_ast, body_ast, init_ast)
 
-  let to_ctor_sig f = { f with T.kind = Ctor }
+  let to_ctor_sig f = { f with T.kind = Func.Ctor }
 end
 
 let return_loc = function

@@ -157,7 +157,6 @@ type 'loc virtual_reason_desc =
   | RSuperOf of 'loc virtual_reason_desc
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
-  | RPredicateOf of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of Subst_name.t

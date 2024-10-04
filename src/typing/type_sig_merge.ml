@@ -176,7 +176,7 @@ let add_default_constructor reason extends props =
               ~this:(Type.implicit_mixed_this reason)
               ~rest_param:None
               ~def_reason:reason
-              ~predicate:None
+              ~type_guard:None
           in
           Some Type.(Method { key_loc = None; type_ = DefT (reason, FunT (statics, funtype)) })
         | prop -> prop)
@@ -1710,7 +1710,7 @@ and merge_fun
       | None -> None
       | Some (TypeGuard { loc; param_name; type_guard = t; one_sided }) ->
         let reason = Reason.mk_reason Reason.RTypeGuard loc in
-        Some (Type.TypeGuardBased { reason; one_sided; param_name; type_guard = merge env file t })
+        Some (Type.TypeGuard { reason; one_sided; param_name; type_guard = merge env file t })
     in
     let this_status =
       if is_method then
@@ -1744,7 +1744,7 @@ and merge_fun
         params;
         rest_param;
         return_t;
-        predicate = type_guard;
+        type_guard;
         def_reason = reason;
         effect;
       }

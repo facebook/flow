@@ -170,8 +170,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:40:5
 
-Cannot extend `C` [1] with `D1` because function [2], a non-predicate function, is incompatible with function [3], which
-is a predicate function in property `m`. [function-predicate]
+Cannot extend `C` [1] with `D1` because function [2], a non-type-guard function, is incompatible with function [3],
+which is a type-guard function in property `m`. [function-predicate]
 
    classes.js:40:5
            v----------------------------------------------------
@@ -345,8 +345,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:107:5
 
-Cannot extend `C` [1] with `D1` because function [2], a non-predicate function, is incompatible with function type [3],
-which is a predicate function in property `m`. [function-predicate]
+Cannot extend `C` [1] with `D1` because function [2], a non-type-guard function, is incompatible with function type [3],
+which is a type-guard function in property `m`. [function-predicate]
 
    classes.js:107:5
             v----------------------------------------------------
@@ -464,8 +464,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:7:31
 
-Cannot declare a type predicate [1] for function [2] because boolean [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
+[incompatible-return]
 
    consistency.js:7:31
    7| function no_return(x: mixed): x is number {} // error no return
@@ -1146,8 +1146,8 @@ Cannot declare a type guard on a(n) getter/setter function. [function-predicate]
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:17:31
 
-Cannot declare a type predicate [1] for function [2] because boolean [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
+[incompatible-return]
 
    invalid.js:17:31
    17| function no_return(x: mixed): x is number {}
@@ -1563,7 +1563,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `arr.filter` because: [incompatible-call]
  - Either property `name` is missing in function [1] but exists in statics of `Boolean` [2].
- - Or function [1], a non-predicate function, is incompatible with function type [3], which is a predicate function.
+ - Or function [1], a non-type-guard function, is incompatible with function type [3], which is a type-guard function.
 
    refinement.js:48:35
     48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
@@ -2442,8 +2442,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:10:10
 
-Cannot return `f` because function type [1], a non-predicate function, is incompatible with function type [2], which is
-a predicate function. [function-predicate]
+Cannot return `f` because function type [1], a non-type-guard function, is incompatible with function type [2], which is
+a type-guard function. [function-predicate]
 
    subtyping.js:10:10
    10|   return f; // error non type predicate

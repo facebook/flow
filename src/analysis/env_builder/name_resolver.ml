@@ -752,14 +752,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (EImportReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.DeclaredFunction _, AssignmentWrite) ->
+      | (Bindings.DeclaredFunction, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           (Error_message.EAssignConstLikeBinding
              {
                loc = assignment_loc;
                definition = def_reason;
-               (* The error message is unaffected by the predicate flag *)
                binding_kind = Flow_intermediate_error_types.DeclaredFunctionNameBinding;
              }
           )
@@ -818,7 +817,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | ( Bindings.DeclaredFunction _,
+      | ( Bindings.DeclaredFunction,
           (VarBinding | LetBinding | ClassBinding | ConstBinding | ComponentBinding)
         ) ->
         Some
@@ -1052,34 +1051,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         error (Some null_provider_loc) possible_generic_escape_locs
     in
 
-    let is_def_loc_predicate_function loc =
-      let providers = Env_api.Provider_api.providers_of_def provider_info loc in
-      match providers with
-      | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar { predicate; _ }; _ } ->
-        predicate
-      | _ -> false
-    in
-
-    (* Sanity check for predicate functions: If there are multiple declare function
-     * providers, make sure none of them have a predicate. *)
-    let check_predicate_declare_function ~predicate name loc =
-      match Env_api.Provider_api.providers_of_def provider_info loc with
-      (* This check is only relevant when there are multiple providers *)
-      | Some
-          {
-            Env_api.Provider_api.providers = { Env_api.Provider_api.reason = def_reason; _ } :: _;
-            _;
-          } ->
-        let def_loc = Reason.loc_of_reason def_reason in
-        let def_loc_is_pred = is_def_loc_predicate_function def_loc in
-        (* Raise an error for an overload (other than the first one) if:
-         * - The first overload is a predicate function (`def_loc_is_pred`), or
-         * - The current overload is a predicate function (`predicate`). *)
-        if def_loc <> loc && (predicate || def_loc_is_pred) then
-          add_output
-            (Error_message.EBindingError (Error_message.ENameAlreadyBound, loc, name, def_loc))
-      | _ -> ()
-    in
     let val_simplify = Val.simplify ~cache:(ref IMap.empty) in
 
     let enable_enums = Context.enable_enums cx in
@@ -1454,8 +1425,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | Some (Ok v) -> Some v
 
       (* Function calls may introduce refinements if the function called is a
-       * predicate function. The EnvBuilder has no idea if a function is a
-       * predicate function or not. To handle that, we encode that a variable
+       * type-guard function. The EnvBuilder has no idea if a function is a
+       * type-guard function or not. To handle that, we encode that a variable
        * _might_ be havoced by a function call if that variable is passed
        * as an argument. Variables not passed into the function are havoced if
        * the invalidation api says they can be invalidated.
@@ -1684,7 +1655,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
-            | Bindings.DeclaredFunction _ ->
+            | Bindings.DeclaredFunction ->
               let (_, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
@@ -4181,17 +4152,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                (this#non_this_binding_function loc)
                fn;
           prop
-
-      method! declare_function loc expr =
-        let {
-          Flow_ast.Statement.DeclareFunction.id =
-            (id_loc, { Flow_ast.Identifier.name; comments = _ });
-          _;
-        } =
-          expr
-        in
-        check_predicate_declare_function ~predicate:false (OrdinaryName name) id_loc;
-        super#declare_function loc expr
 
       method! call loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Call.t) =
         let open Ast.Expression.Call in

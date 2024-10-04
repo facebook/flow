@@ -196,7 +196,6 @@ type 'loc virtual_reason_desc =
   | RSuperOf of 'loc virtual_reason_desc
   | RFrozen of 'loc virtual_reason_desc
   | RBound of 'loc virtual_reason_desc
-  | RPredicateOf of 'loc virtual_reason_desc
   | RRefined of 'loc virtual_reason_desc
   | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of Subst_name.t
@@ -306,7 +305,6 @@ let rec map_desc_locs f = function
   | RSuperOf desc -> RSuperOf (map_desc_locs f desc)
   | RFrozen desc -> RFrozen (map_desc_locs f desc)
   | RBound desc -> RBound (map_desc_locs f desc)
-  | RPredicateOf desc -> RPredicateOf (map_desc_locs f desc)
   | RRefined desc -> RRefined (map_desc_locs f desc)
   | RRefinedElement desc -> RRefinedElement (map_desc_locs f desc)
   | RPartialOf desc -> RPartialOf (map_desc_locs f desc)
@@ -699,7 +697,6 @@ let rec string_of_desc = function
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
-  | RPredicateOf d -> spf "predicate encoded in %s" (string_of_desc d)
   | RRefined d -> spf "refined %s" (string_of_desc d)
   | RRefinedElement d -> spf "array element of refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> Subst_name.formatted_string_of_subst_name x
@@ -1425,7 +1422,6 @@ let classification_of_reason_desc desc =
   | RSuperOf _
   | RFrozen _
   | RBound _
-  | RPredicateOf _
   | RRefined _
   | RRefinedElement _
   | RIncompatibleInstantiation _

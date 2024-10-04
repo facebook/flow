@@ -104,8 +104,8 @@ let rec merge_type cx =
         in
         let tout = merge_type cx (ft1.return_t, ft2.return_t) in
         let reason = locationless_reason (RCustom "function") in
-        (* TODO merging predicates would require aligning param names as well *)
-        let predicate = None in
+        (* TODO merging type guards would require aligning param names as well *)
+        let type_guard = None in
         DefT
           ( reason,
             FunT
@@ -117,7 +117,7 @@ let rec merge_type cx =
                   ~rest_param
                   ~def_reason:reason
                   ~params_names
-                  ~predicate
+                  ~type_guard
               )
           )
     end

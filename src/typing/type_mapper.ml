@@ -401,8 +401,15 @@ class virtual ['a] t =
     method fun_type
         cx
         map_cx
-        ( { this_t = (this, subtyping); params; rest_param; return_t; predicate; def_reason; effect }
-        as t
+        ( {
+            this_t = (this, subtyping);
+            params;
+            rest_param;
+            return_t;
+            type_guard;
+            def_reason;
+            effect;
+          } as t
         ) =
       let this' = self#type_ cx map_cx this in
       let params' =
@@ -425,14 +432,14 @@ class virtual ['a] t =
           else
             Some (name, loc, t')
       in
-      let predicate' = OptionUtils.ident_map (self#func_predicate cx map_cx) predicate in
+      let type_guard' = OptionUtils.ident_map (self#func_type_guard cx map_cx) type_guard in
       let return_t' = self#type_ cx map_cx return_t in
       if
         this' == this
         && return_t' == return_t
         && params' == params
         && rest_param' == rest_param
-        && predicate' == predicate
+        && type_guard' == type_guard
       then
         t
       else
@@ -440,8 +447,8 @@ class virtual ['a] t =
         let return_t = return_t' in
         let params = params' in
         let rest_param = rest_param' in
-        let predicate = predicate' in
-        { this_t; params; rest_param; return_t; predicate; def_reason; effect }
+        let type_guard = type_guard' in
+        { this_t; params; rest_param; return_t; type_guard; def_reason; effect }
 
     method inst_type cx map_cx i =
       let {
@@ -743,14 +750,14 @@ class virtual ['a] t =
             Type t'
       )
 
-    method private func_predicate cx map_cx predicate =
-      match predicate with
-      | TypeGuardBased { reason; one_sided; param_name; type_guard = t } ->
+    method private func_type_guard cx map_cx type_guard =
+      match type_guard with
+      | TypeGuard { reason; one_sided; param_name; type_guard = t } ->
         let t' = self#type_ cx map_cx t in
         if t' == t then
-          predicate
+          type_guard
         else
-          TypeGuardBased { reason; one_sided; param_name; type_guard = t' }
+          TypeGuard { reason; one_sided; param_name; type_guard = t' }
 
     method private predicate_maps cx map_cx predicate =
       let (reason, (lazy (pmap, nmap))) = predicate in

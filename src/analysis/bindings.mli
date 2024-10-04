@@ -27,7 +27,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
-  | DeclaredFunction of { predicate: bool }
+  | DeclaredFunction
   | Internal
   | GeneratorNext
   | Component

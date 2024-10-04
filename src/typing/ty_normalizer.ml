@@ -884,7 +884,7 @@ module Make (I : INPUT) : S = struct
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
-      let { T.params; rest_param; return_t; predicate; effect; _ } = f in
+      let { T.params; rest_param; return_t; type_guard; effect; _ } = f in
       let fun_effect =
         match effect with
         | T.HookAnnot
@@ -898,8 +898,8 @@ module Make (I : INPUT) : S = struct
       let%bind fun_params = mapM (fun_param ~env) params in
       let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
       let%bind fun_return =
-        match predicate with
-        | Some (T.TypeGuardBased { reason = _; one_sided; param_name = (_, x); type_guard = t }) ->
+        match type_guard with
+        | Some (T.TypeGuard { reason = _; one_sided; param_name = (_, x); type_guard = t }) ->
           let%map t = type__ ~env t in
           Ty.TypeGuard (one_sided, x, t)
         | None ->

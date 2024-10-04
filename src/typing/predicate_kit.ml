@@ -353,7 +353,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           `params`) raise errors, but also propagate the unrefined types (as if the
           refinement never took place).
       *)
-      | DefT (_, FunT (_, { params; predicate = Some p; _ })) -> begin
+      | DefT (_, FunT (_, { params; type_guard = Some p; _ })) -> begin
         (* TODO: for the moment we only support simple keys (empty projection)
            that exactly correspond to the function's parameters *)
         match (Base.List.nth params idx, p) with
@@ -363,7 +363,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           add_output cx msg;
           report_unchanged_filtering_result_to_predicate_result tin result_collector
         | ( Some (Some name, _),
-            TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
+            TypeGuard { reason = _; one_sided; param_name = (_, param_name); type_guard }
           ) ->
           let filter_result =
             if param_name <> name then
