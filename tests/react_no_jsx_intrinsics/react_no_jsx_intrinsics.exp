@@ -16,7 +16,7 @@ Cannot resolve name `React$Key`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Cannot resolve name `React$Ref`. [cannot-resolve-name]
+Cannot resolve name `React$RefSetter`. [cannot-resolve-name]
 
    3| <div />;
       ^^^^^^^

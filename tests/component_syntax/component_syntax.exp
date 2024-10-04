@@ -2764,9 +2764,9 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                                          ^^^^^^^^^^^^^^ [3]
@@ -2796,9 +2796,9 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:182:6
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9

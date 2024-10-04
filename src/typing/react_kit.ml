@@ -223,7 +223,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     match component with
     | DefT (_, FunT _)
     | DefT (_, ObjT _)
-    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
+    | DefT (_, StrT _)
+    | DefT (_, SingletonStrT _) ->
       get_builtin_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
