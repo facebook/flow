@@ -16,22 +16,20 @@ References:
                      ^^^^^^^ [2]
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:23
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:25
 
-Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
-guards. [deprecated-type]
+Deprecated type. Use `boolean` instead. [deprecated-type]
 
-   3| function foo(x: mixed): %checks {
-                            ^^^^^^^^^
+   3| function foo(x: mixed): bool {
+                              ^^^^
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:41
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:33
 
-Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
-guards. [deprecated-type]
+Deprecated type. Use `boolean` instead. [deprecated-type]
 
-   6| declare function bar(x: mixed): boolean %checks(x === 1);
-                                              ^^^^^^^^^^^^^^^^
+   6| declare function bar(x: mixed): bool;
+                                      ^^^^
 
 
 Warning ----------------------------------------------------------------------------------------- dynamic-export.js:3:23

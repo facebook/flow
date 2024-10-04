@@ -16,13 +16,12 @@ References:
                              ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deprecated.js:1:41
+Error ----------------------------------------------------------------------------------------------- deprecated.js:1:33
 
-Deprecated type. Use type guards instead. See https://flow.org/en/docs/types/type-guards/ for more information on type
-guards. [deprecated-type]
+Deprecated type. Use `boolean` instead. [deprecated-type]
 
-   1| declare function bar(x: mixed): boolean %checks(x === 1);; // error
-                                              ^^^^^^^^^^^^^^^^
+   1| declare function bar(x: mixed): bool; // error
+                                      ^^^^
 
 
 Error ------------------------------------------------------------------------------------------ simple_sketchies.js:5:7

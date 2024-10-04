@@ -756,18 +756,6 @@ try {} catch (e: mixed) { x = e }
       (3, 26) to (3, 27) => val (3, 30) to (3, 31)
     ] |}]
 
-let%expect_test "declarepred" =
-  print_init_test {|
-declare function f(x: T): boolean %checks(x);
-type T = number;
-  |};
-  [%expect {|
-    [
-      (2, 17) to (2, 18) => fun f;
-      (2, 19) to (2, 20) => annot (2, 22) to (2, 23);
-      (3, 5) to (3, 6) => alias (3, 9) to (3, 15)
-    ] |}]
-
 let%expect_test "for1" =
   print_init_test {|
 for (var x = 0;;) { }
@@ -1469,18 +1457,6 @@ declare var f: any;
       (4, 23) to (4, 27) =>
       (7, 12) to (7, 13) =>
       (4, 45) to (4, 49) (Env_api.Make.ExpressionLoc) |}]
-
-let%expect_test "pred" =
-  print_order_test {|
-function isStack(maybeStack: mixed): boolean %checks { return maybeStack instanceof Stack; }
-declare class Stack {
-  static isStack: typeof isStack;
-}
-
-|};
-    [%expect {|
-      (2, 17) to (2, 27) =>
-      illegal scc: (((2, 9) to (2, 16)); ((2, 84) to (2, 89) (Env_api.Make.ExpressionLoc)); ((3, 14) to (3, 19))) |}]
 
 let%expect_test "statics cycle" =
   print_order_test {|

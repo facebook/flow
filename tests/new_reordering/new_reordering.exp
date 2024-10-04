@@ -63,21 +63,6 @@ References:
                                 [6]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:42:1
-
-Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
-this definition [recursive-definition]
-
-   a.js:42:1
-   42| function is_zero(x: number): boolean %checks {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   a.js:43:21
-   43|   return x === 0 || is_zero(x);
-                           ^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------------- a.js:46:18
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -269,4 +254,4 @@ References:
 
 
 
-Found 12 errors
+Found 11 errors

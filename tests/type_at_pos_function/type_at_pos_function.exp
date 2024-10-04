@@ -44,40 +44,34 @@ declare.js:6:18 = {
   "end":20
 }
 declare.js:8:18 = {
-  "types":{
-    "unevaluated":{"type":"((foo: string) => boolean) & ((foo: number) => boolean)"},
-    "evaluated":null
-  },
+  "types":null,
   "reasons":[],
   "loc":{
-    "source":"declare.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":18,"offset":123},
-    "end":{"line":8,"column":20,"offset":126}
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
   },
-  "path":"declare.js",
-  "line":8,
-  "endline":8,
-  "start":18,
-  "end":20
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
 }
 declare.js:9:18 = {
-  "types":{
-    "unevaluated":{"type":"((foo: string) => boolean) & ((foo: number) => boolean)"},
-    "evaluated":null
-  },
+  "types":null,
   "reasons":[],
   "loc":{
-    "source":"declare.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":18,"offset":190},
-    "end":{"line":9,"column":20,"offset":193}
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
   },
-  "path":"declare.js",
-  "line":9,
-  "endline":9,
-  "start":18,
-  "end":20
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
 }
 function.js:4:3 = {
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},

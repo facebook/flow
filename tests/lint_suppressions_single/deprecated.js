@@ -1,3 +1,3 @@
-declare function bar(x: mixed): boolean %checks(x === 1);; // error
+declare function bar(x: mixed): bool; // error
 // $FlowFixMe[deprecated-type]
-declare function baz(x: mixed): boolean %checks(x === 1);; // suppressed
+declare function baz(x: mixed): bool; // suppressed

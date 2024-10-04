@@ -743,14 +743,6 @@ References:
             ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- pred.js:5:21
-
-Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
-
-   5| function f4<X>(x: X): %checks {
-                          
-
-
 Error --------------------------------------------------------------------------------------------------- spreads.js:3:5
 
 Variable `esc` [1] should be annotated, because it is only initialized in a generic context [2] [invalid-declaration]
@@ -766,7 +758,7 @@ References:
 
 
 
-Found 45 errors
+Found 44 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

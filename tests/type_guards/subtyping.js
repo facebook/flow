@@ -10,16 +10,6 @@ function non_type_guard_to_type_guard(f: (x: mixed) => boolean): (x: mixed) => x
   return f; // error non type predicate
 }
 
-function pred_based_to_type_guard(): (x: mixed) => x is number {
-  declare function f(x: mixed): boolean %checks(typeof x === "number");
-  return f; // error pred based to type guard based
-}
-
-function type_guard_to_pred_based(g: (x: mixed) => x is number): void {
-  declare function f(x: mixed): boolean %checks(typeof x === "number");
-  (g: typeof f); // error type guard based to pred based
-}
-
 // Subtyping
 
 function type_guard_subtyping_ok_1(f: (x: mixed) => x is A): (x: mixed) => x is A {

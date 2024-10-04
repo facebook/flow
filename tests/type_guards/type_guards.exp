@@ -2458,184 +2458,148 @@ References:
                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:15:10
-
-Cannot return `f` because function [1], a non-predicate function, is incompatible with function type [2], which is a
-predicate function. [function-predicate]
-
-   subtyping.js:15:10
-   15|   return f; // error pred based to type guard based
-                ^
-
-References:
-   subtyping.js:14:3
-   14|   declare function f(x: mixed): boolean %checks(typeof x === "number");
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:13:38
-   13| function pred_based_to_type_guard(): (x: mixed) => x is number {
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ subtyping.js:20:4
-
-Cannot cast `g` to `typeof f` because function type [1], a non-predicate function, is incompatible with function [2],
-which is a predicate function. [function-predicate]
-
-   subtyping.js:20:4
-   20|   (g: typeof f); // error type guard based to pred based
-          ^
-
-References:
-   subtyping.js:18:38
-   18| function type_guard_to_pred_based(g: (x: mixed) => x is number): void {
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:20:7
-   20|   (g: typeof f); // error type guard based to pred based
-             ^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- subtyping.js:38:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:28:10
 
 Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate. [incompatible-return]
 
-   subtyping.js:38:10
-   38|   return f; // error A ~> B
+   subtyping.js:28:10
+   28|   return f; // error A ~> B
                 ^
 
 References:
-   subtyping.js:37:61
-   37| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
+   subtyping.js:27:61
+   27| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
                                                                    ^ [1]
-   subtyping.js:37:84
-   37| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
+   subtyping.js:27:84
+   27| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
                                                                                           ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:42:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:32:10
 
 Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate. [incompatible-return]
 
-   subtyping.js:42:10
-   42|   return f; // error A ~> C
+   subtyping.js:32:10
+   32|   return f; // error A ~> C
                 ^
 
 References:
-   subtyping.js:41:61
-   41| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
+   subtyping.js:31:61
+   31| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
                                                                    ^ [1]
-   subtyping.js:41:84
-   41| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
+   subtyping.js:31:84
+   31| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
                                                                                           ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:46:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:36:10
 
 Cannot return `f` because read-only array type [1] is incompatible with array type [2] in the type predicate.
 [incompatible-return]
 
-   subtyping.js:46:10
-   46|   return f; // error
+   subtyping.js:36:10
+   36|   return f; // error
                 ^
 
 References:
-   subtyping.js:45:64
-   45| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
+   subtyping.js:35:64
+   35| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
                                                                       ^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:45:106
-   45| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
+   subtyping.js:35:106
+   35| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
                                                                                                                 ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:58:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:48:10
 
 Cannot return `f` because one-sided type guard [1] is incompatible with default type guard [2]. [function-predicate]
 
-   subtyping.js:58:10
-   58|   return f; // error
+   subtyping.js:48:10
+   48|   return f; // error
                 ^
 
 References:
-   subtyping.js:57:64
-   57| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
+   subtyping.js:47:64
+   47| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
                                                                       ^^^^^^^^^^^^^^ [1]
-   subtyping.js:57:95
-   57| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
+   subtyping.js:47:95
+   47| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
                                                                                                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:68:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:58:10
 
 Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element. Arrays are
 invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-return]
 
-   subtyping.js:68:10
-   68|   return f; // error C ~ A
+   subtyping.js:58:10
+   58|   return f; // error C ~ A
                 ^
 
 References:
-   subtyping.js:67:92
-   67| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+   subtyping.js:57:92
+   57| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
                                                                                                   ^ [1]
-   subtyping.js:67:62
-   67| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+   subtyping.js:57:62
+   57| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
                                                                     ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:72:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:62:10
 
 Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate of array element.
 [incompatible-return]
 
-   subtyping.js:72:10
-   72|   return f; // errors A ~> B, B ~> A
+   subtyping.js:62:10
+   62|   return f; // errors A ~> B, B ~> A
                 ^
 
 References:
-   subtyping.js:71:62
-   71| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+   subtyping.js:61:62
+   61| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
                                                                     ^ [1]
-   subtyping.js:71:92
-   71| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+   subtyping.js:61:92
+   61| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
                                                                                                   ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:76:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:66:10
 
 Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element.
 [incompatible-return]
 
-   subtyping.js:76:10
-   76|   return f; // error A ~> C
+   subtyping.js:66:10
+   66|   return f; // error A ~> C
                 ^
 
 References:
-   subtyping.js:75:62
-   75| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+   subtyping.js:65:62
+   65| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
                                                                     ^ [1]
-   subtyping.js:75:92
-   75| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+   subtyping.js:65:92
+   65| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
                                                                                                   ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:84:10
+Error ----------------------------------------------------------------------------------------------- subtyping.js:74:10
 
 Cannot return `f` because one-sided type guard [1] is incompatible with default type guard [2] in array element. Arrays
 are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [function-predicate]
 
-   subtyping.js:84:10
-   84|   return f; // error
+   subtyping.js:74:10
+   74|   return f; // error
                 ^
 
 References:
-   subtyping.js:83:95
-   83| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+   subtyping.js:73:95
+   73| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
                                                                                                      ^^^^^^^^^^^^^^ [1]
-   subtyping.js:83:65
-   83| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+   subtyping.js:73:65
+   73| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
                                                                        ^^^^^^ [2]
 
 
@@ -2869,7 +2833,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 160 errors
+Found 158 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -412,51 +412,25 @@ References:
                             ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:159:3
-
-The following definitions recursively depend on each other, and Flow cannot compute their types:
- - function [1] depends on other definition [2]
- - class `Stack` [3] depends on other definition [4]
-Please add type annotations to these definitions [definition-cycle]
-
-   regression_tests.js:159:3
-   159|   function isStack(maybeStack: mixed): boolean %checks { return maybeStack instanceof Stack; }
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   regression_tests.js:159:87
-   159|   function isStack(maybeStack: mixed): boolean %checks { return maybeStack instanceof Stack; }
-                                                                                              ^^^^^ [2]
-   regression_tests.js:160:3
-          v--------------------
-   160|   declare class Stack {
-   161|     static isStack: typeof isStack;
-   162|   }
-          ^ [3]
-   regression_tests.js:161:28
-   161|     static isStack: typeof isStack;
-                                   ^^^^^^^ [4]
-
-
-Error --------------------------------------------------------------------------------------- regression_tests.js:167:14
+Error --------------------------------------------------------------------------------------- regression_tests.js:160:14
 
 Cannot assign `C` to `foo` because: [incompatible-type]
  - Either class `C` [1] is incompatible with empty [2].
  - Or class `C` [1] is incompatible with number [3].
 
-   regression_tests.js:167:14
-   167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+   regression_tests.js:160:14
+   160|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
                      ^
 
 References:
-   regression_tests.js:166:9
-   166|   class C {
+   regression_tests.js:159:9
+   159|   class C {
                 ^ [1]
-   regression_tests.js:167:8
-   167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+   regression_tests.js:160:8
+   160|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
                ^^^ [2]
-   regression_tests.js:167:44
-   167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+   regression_tests.js:160:44
+   160|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
                                                    ^^^^^^ [3]
 
 
@@ -501,7 +475,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 43 errors
+Found 42 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

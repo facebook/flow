@@ -1,6 +1,6 @@
 // @flow
 
-function foo(x: mixed): %checks {
+function foo(x: mixed): bool {
   return x === 1;
 }
-declare function bar(x: mixed): boolean %checks(x === 1);
+declare function bar(x: mixed): bool;

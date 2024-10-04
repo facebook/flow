@@ -39,7 +39,7 @@ function even(x: number) {
   return odd(x - 1);
 }
 
-function is_zero(x: number): boolean %checks {
+function is_zero(x: number): boolean {
   return x === 0 || is_zero(x);
 }
 

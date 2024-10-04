@@ -19,9 +19,3 @@ export const f = class {};
 export const w = /foo/;
 
 export const x = <foo />;
-
-function testit(arg: any): boolean %checks {
-  return arg as boolean;
-}
-
-export const g = testit;

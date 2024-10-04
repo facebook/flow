@@ -156,13 +156,6 @@ function non_assigning_member_assigns() {
 }
 
 {
-  function isStack(maybeStack: mixed): boolean %checks { return maybeStack instanceof Stack; }
-  declare class Stack {
-    static isStack: typeof isStack;
-  }
-}
-
-{
   class C {
    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
   }
