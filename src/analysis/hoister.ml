@@ -204,11 +204,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
        * we come across it before attempting to transform it into a regular function *)
       let open Ast.Statement.DeclareFunction in
       this#add_declared_function_binding ~predicate:(Option.is_some decl.predicate) decl.id;
-      match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
-      | Some stmt ->
-        let _ = this#statement (loc, stmt) in
-        decl
-      | None -> super#declare_function loc decl
+      super#declare_function loc decl
 
     method! declare_variable _ (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in

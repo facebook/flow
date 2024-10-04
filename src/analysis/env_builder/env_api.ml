@@ -194,9 +194,6 @@ module type S = sig
 
   type predicate_refinement = read * L.t * Pattern_helper.binding
 
-  type predicate_refinement_maps =
-    (Reason.t * predicate_refinement SMap.t * predicate_refinement SMap.t) L.LMap.t
-
   type type_guard_consistency_entry =
     (L.t, L.t) Ast.Expression.t option * L.t Reason.virtual_reason * read * read
 
@@ -216,7 +213,6 @@ module type S = sig
     env_values: values;
     env_refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     env_entries: env_entry EnvMap.t;
-    predicate_refinement_maps: predicate_refinement_maps;
     type_guard_consistency_maps: type_guard_consistency_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
@@ -490,9 +486,6 @@ module Make
 
   type predicate_refinement = read * L.t * Pattern_helper.binding
 
-  type predicate_refinement_maps =
-    (Reason.t * predicate_refinement SMap.t * predicate_refinement SMap.t) L.LMap.t
-
   type type_guard_consistency_entry =
     (L.t, L.t) Ast.Expression.t option * L.t Reason.virtual_reason * read * read
 
@@ -510,7 +503,6 @@ module Make
     env_values: values;
     env_refinement_invalidation_info: Refinement_invalidation.t L.LMap.t;
     env_entries: env_entry EnvMap.t;
-    predicate_refinement_maps: predicate_refinement_maps;
     type_guard_consistency_maps: type_guard_consistency_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
@@ -530,7 +522,6 @@ module Make
       env_values = L.LMap.empty;
       env_refinement_invalidation_info = L.LMap.empty;
       env_entries = EnvMap.empty;
-      predicate_refinement_maps = L.LMap.empty;
       type_guard_consistency_maps = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> raise (Env_invariant (None, Impossible "Empty env info")));

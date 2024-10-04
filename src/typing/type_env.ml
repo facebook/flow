@@ -610,23 +610,6 @@ let read_to_predicate cx var_info ({ Env_api.write_locs; _ }, _, _) =
   |> Nel.of_list
   |> Base.Option.map ~f:(fun (p, rest) -> Base.List.fold rest ~init:p ~f:(fun acc p -> OrP (acc, p)))
 
-let predicate_refinement_maps cx loc =
-  let { Loc_env.var_info; _ } = Context.environment cx in
-  let { Env_api.predicate_refinement_maps; _ } = var_info in
-  let to_predicate_key_map map =
-    map
-    |> SMap.elements
-    |> Base.List.filter_map ~f:(fun (name, read) ->
-           read_to_predicate cx var_info read
-           |> Base.Option.map ~f:(fun p -> ((OrdinaryName name, []), p))
-       )
-    |> Key_map.of_list
-  in
-  match ALocMap.find_opt loc predicate_refinement_maps with
-  | None -> None
-  | Some (expr_reason, p_map, n_map) ->
-    Some (expr_reason, lazy (to_predicate_key_map p_map, to_predicate_key_map n_map))
-
 let type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_refi =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
   let rec is_invalid (acc_result, acc_locs) write_loc =

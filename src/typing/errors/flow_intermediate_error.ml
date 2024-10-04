@@ -2407,11 +2407,6 @@ let to_printable_error :
       @ tl_recur
       @ (text ". Please add an annotation to " :: annot_message)
     | MessageDeprecatedBool -> [text "Deprecated type. Use "; code "boolean"; text " instead."]
-    | MessageDeprecatedPredicate ->
-      [
-        text "Deprecated type. Use type guards instead. ";
-        text "See https://flow.org/en/docs/types/type-guards/ for more information on type guards.";
-      ]
     | MessageDevOnlyRefinedLocInfo { refining_locs } ->
       text "Refined at" :: Base.List.map refining_locs ~f:no_desc_ref
     | MessageDevOnlyInvalidatedRefinementInfo invalidation_info ->
@@ -3872,17 +3867,10 @@ let to_printable_error :
       [text "Get/set properties not yet supported."]
     | MessageUnsupportedSyntax ObjectPropertyComputedGetSet ->
       [text "Computed getters and setters are not yet supported."]
-    | MessageUnsupportedSyntax PredicateDeclarationForImplementation ->
-      [text "Cannot declare predicate when a function body is present."]
-    | MessageUnsupportedSyntax PredicateDeclarationWithoutExpression ->
-      [text "Predicate function declarations need to declare a "; text "predicate expression."]
+    | MessageUnsupportedSyntax PredicateFunction ->
+      [text "Support for predicate functions is removed. `%checks` declaration is now ignored."]
     | MessageUnsupportedSyntax PredicateDeclarationAnonymousParameters ->
       [text "Predicate function declarations cannot use anonymous "; text "function parameters."]
-    | MessageUnsupportedSyntax PredicateInvalidBody ->
-      [
-        text "Invalid body for predicate function. Expected a simple return ";
-        text "statement as body.";
-      ]
     | MessageUnsupportedSyntax RequireDynamicArgument ->
       [text "The parameter passed to "; code "require"; text " must be a string literal."]
     | MessageUnsupportedSyntax SpreadArgument -> [text "A spread argument is unsupported here."]

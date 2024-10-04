@@ -87,57 +87,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       | _ -> ())
 
-  let func_predicate_compat =
-    let rec subst_map (n, map) = function
-      | ((Some k, _) :: ps1, (Some v, _) :: ps2) ->
-        let map' =
-          if k <> v then
-            SMap.add k (OrdinaryName v, []) map
-          else
-            (* Skip trivial entry *)
-            map
-        in
-        subst_map (n + 1, map') (ps1, ps2)
-      | (_, []) -> Ok (map : Type.substitution)
-      | ([], ps2) ->
-        (* Flag an error if predicate counts do not coincide
-           TODO: somehow the original flow needs to be propagated as well *)
-        let n2 = n + List.length ps2 in
-        Error (`ArityMismatch (n, n2))
-      | ((None, _) :: _, _)
-      | (_, (None, _) :: _) ->
-        Error `NoParamNames
-    in
-    fun cx use_op (lreason, params1, pred1) (ureason, params2, pred2) ->
-      match subst_map (0, SMap.empty) (params1, params2) with
-      | Error (`ArityMismatch (n1, n2)) ->
-        add_output
-          cx
-          (Error_message.EPredicateFuncArityMismatch
-             { use_op; reasons = (lreason, ureason); arities = (n1, n2) }
-          )
-      | Error `NoParamNames ->
-        (* Already an unsupported-syntax error on the definition side of the function. *)
-        ()
-      | Ok map ->
-        let (lreason, (lazy (pmap1, _nmap1))) = pred1 in
-        let (ureason, (lazy (pmap2, nmap2))) = pred2 in
-        if SMap.is_empty map then (
-          if not (TypeUtil.pred_map_implies pmap1 pmap2) then
-            add_output
-              cx
-              (Error_message.EIncompatibleWithUseOp
-                 { reason_lower = lreason; reason_upper = ureason; use_op; explanation = None }
-              )
-        ) else if Key_map.(is_empty pmap2 && is_empty nmap2) then
-          ()
-        else
-          add_output
-            cx
-            (Error_message.EIncompatibleWithUseOp
-               { reason_lower = lreason; reason_upper = ureason; use_op; explanation = None }
-            )
-
   let index_of_param params x =
     Base.List.find_mapi params ~f:(fun i p ->
         match p with
@@ -1753,16 +1702,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
       begin
         match (ft1.predicate, ft2.predicate) with
-        | (None, Some _)
-        | (Some (PredBased _), Some (TypeGuardBased _))
-        | (Some (TypeGuardBased _), Some (PredBased _)) ->
+        | (None, Some _) ->
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output
             cx
             (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
-        | (Some (PredBased p1), Some (PredBased p2)) ->
-          func_predicate_compat cx use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
         | ( Some
               (TypeGuardBased { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1 }),
             Some

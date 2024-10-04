@@ -32,9 +32,7 @@ and sentinel_refinement =
   | SingletonBigInt of int64
   | Member of Reason.t
 
-and predicate_kind =
-  | PredKind
-  | TypeGuardKind of ALoc.t * string
+and predicate_kind = TypeGuardKind of ALoc.t * string
 
 and ('t, 'targs, 'args, 'props_and_children) hint_decomposition =
   | Decomp_ObjProp of string

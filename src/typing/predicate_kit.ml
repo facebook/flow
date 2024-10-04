@@ -362,29 +362,6 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
           add_output cx msg;
           report_unchanged_filtering_result_to_predicate_result tin result_collector
-        | (Some (Some name, _), PredBased (_, (lazy (pmap, nmap)))) ->
-          let key = (OrdinaryName name, []) in
-          let preds =
-            if sense then
-              pmap
-            else
-              nmap
-          in
-          begin
-            match Key_map.find_opt key preds with
-            | Some p ->
-              concretize_and_run_predicate
-                cx
-                trace
-                tin
-                (concretization_variant_of_predicate p)
-                result_collector
-                ~predicate_no_concretization:(predicate_no_concretization ~p)
-            | None ->
-              report_filtering_result_to_predicate_result
-                (Type_filter.TypeFilterResult { type_ = tin; changed = false })
-                result_collector
-          end
         | ( Some (Some name, _),
             TypeGuardBased { reason = _; one_sided; param_name = (_, param_name); type_guard }
           ) ->

@@ -902,7 +902,6 @@ module Make (I : INPUT) : S = struct
         | Some (T.TypeGuardBased { reason = _; one_sided; param_name = (_, x); type_guard = t }) ->
           let%map t = type__ ~env t in
           Ty.TypeGuard (one_sided, x, t)
-        | Some (T.PredBased _)
         | None ->
           let%map t = type__ ~env return_t in
           Ty.ReturnType t

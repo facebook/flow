@@ -11,11 +11,6 @@ val pattern_has_annot : (ALoc.t, ALoc.t) Ast.Pattern.t -> bool
 
 val show_scope_kind : scope_kind -> string
 
-val predicate_synthesizable :
-  (ALoc.t, ALoc.t) Ast.Type.Predicate.t option ->
-  (ALoc.t, ALoc.t) Ast.Function.body ->
-  function_synth_kind
-
 val expression_is_definitely_synthesizable :
   autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
   (ALoc.t, ALoc.t) Flow_ast.Expression.t ->

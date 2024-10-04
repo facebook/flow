@@ -1658,9 +1658,9 @@ and function_type opts scope tbls xs f =
   let this_param = function_type_this_param opts scope tbls xs this_ in
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
-  let (return, predicate) = return_annot opts scope tbls xs r in
+  let (return, type_guard) = return_annot opts scope tbls xs r in
   let effect = convert_effect opts effect None None in
-  FunSig { tparams; params; rest_param; this_param; return; predicate; effect }
+  FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
 
 and function_component_type_param opts scope tbls xs t optional =
   let t = annot opts scope tbls xs t in
@@ -3473,41 +3473,6 @@ and function_def_helper =
         let guard = type_guard_opt opts scope tbls xs guard in
         (Annot (Boolean loc), guard)
   in
-  let predicate opts scope tbls ps body =
-    let module P = Ast.Type.Predicate in
-    let module S = Ast.Statement in
-    function
-    | None -> None
-    | Some (_, { P.kind = P.Declared _; _ }) ->
-      (* declared predicate no allowed in function declaration *)
-      None
-    | Some (_, { P.kind = P.Inferred; _ }) ->
-      (match body with
-      | F.BodyBlock
-          ( _,
-            {
-              S.Block.body =
-                [(loc, S.Return { S.Return.argument = Some expr; comments = _; return_out = _ })];
-              comments = _;
-            }
-          )
-      | F.BodyExpression ((loc, _) as expr) ->
-        let loc = push_loc tbls loc in
-        let pnames =
-          List.fold_left
-            (fun acc p ->
-              let (_, { Ast.Function.Param.argument = (_, patt); _ }) = p in
-              match patt with
-              | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
-                let (_, { Ast.Identifier.name; _ }) = name in
-                SSet.add name acc
-              | _ -> acc)
-            SSet.empty
-            ps
-        in
-        Some (loc, predicate opts scope tbls pnames expr)
-      | _ -> None)
-  in
   fun opts scope tbls xs ~constructor fun_loc f ->
     let {
       F.id;
@@ -3515,7 +3480,7 @@ and function_def_helper =
       params = (_, { F.Params.params = ps; rest = rp; this_; comments = _ });
       body;
       return = r;
-      predicate = p;
+      predicate = _;
       async;
       generator;
       effect;
@@ -3537,15 +3502,11 @@ and function_def_helper =
     let (return, type_guard_opt) =
       return opts scope tbls xs ~async ~generator ~constructor body r
     in
-    let predicate =
-      let open Option.Let_syntax in
+    let type_guard =
       match type_guard_opt with
       | Some (loc, param_name, type_guard, one_sided) ->
-        (* Type-guard and %checks cannot coexist (parse error) *)
         Some (TypeGuard { loc; param_name; type_guard; one_sided })
-      | None ->
-        let%map (loc, p) = predicate opts scope tbls ps body p in
-        Predicate (loc, p)
+      | None -> None
     in
     let effect =
       convert_effect
@@ -3554,7 +3515,7 @@ and function_def_helper =
         (Some fun_loc)
         (Base.Option.map ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) id)
     in
-    FunSig { tparams; params; rest_param; this_param; return; predicate; effect }
+    FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
 
 and function_def = function_def_helper ~constructor:false
 
@@ -4479,30 +4440,16 @@ let declare_function_decl opts scope tbls decl =
              let params = function_type_params opts scope tbls xs ps in
              let rest_param = function_type_rest_param opts scope tbls xs rp in
              let (return, type_guard) = return_annot opts scope tbls xs r in
-             let predicate =
-               let module P = T.Predicate in
+             let type_guard =
                match (type_guard, p) with
                | (Some (TypeGuard _), _) -> type_guard
                | (_, None) -> None
-               | (_, Some (loc, { P.kind = P.Declared expr; _ })) ->
-                 let loc = push_loc tbls loc in
-                 let pnames =
-                   List.fold_left
-                     (fun acc p ->
-                       let (_, { Ast.Type.Function.Param.name; _ }) = p in
-                       match name with
-                       | None -> acc
-                       | Some (_, { Ast.Identifier.name; _ }) -> SSet.add name acc)
-                     SSet.empty
-                     ps
-                 in
-                 Some (Predicate (loc, predicate opts scope tbls pnames expr))
-               | (_, Some (_, { P.kind = P.Inferred; _ })) ->
-                 (* inferred predicate not allowed in declared function *)
+               | (_, Some _) ->
+                 (* typing support for %checks is removed *)
                  None
              in
              let effect = convert_effect opts effect None (Some name) in
-             FunSig { tparams; params; rest_param; this_param; return; predicate; effect }
+             FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
            | _ -> failwith "unexpected declare function annot"
        )
       )

@@ -745,12 +745,6 @@ class virtual ['a] t =
 
     method private func_predicate cx map_cx predicate =
       match predicate with
-      | PredBased p ->
-        let p' = self#predicate_maps cx map_cx p in
-        if p == p' then
-          predicate
-        else
-          PredBased p'
       | TypeGuardBased { reason; one_sided; param_name; type_guard = t } ->
         let t' = self#type_ cx map_cx t in
         if t' == t then

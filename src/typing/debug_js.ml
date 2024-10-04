@@ -173,7 +173,6 @@ let rec dump_t_ (depth, tvars) cx t =
              (Base.Option.value_map rest_param ~default:"" ~f:(fun (_, _, t) -> "..." ^ kid t))
              (kid return_t)
              (match predicate with
-             | Some (PredBased _) -> " %checks"
              | Some (TypeGuardBased { reason = _; one_sided; param_name = (_, name); type_guard })
                ->
                let implies =
@@ -1623,7 +1622,6 @@ let dump_error_message =
     | EInternalType (loc, _) -> spf "EInternalType (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
-    | EDeprecatedPredicate loc -> spf "EDeprecatedPredicate (%s)" (string_of_aloc loc)
     | EIncorrectTypeWithReplacement { loc; kind } ->
       let deprecated_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
       spf "EIncorrectTypeWithReplacement (%s) (%s)" (string_of_aloc loc) deprecated_name

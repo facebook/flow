@@ -42,9 +42,7 @@ and sentinel_refinement =
   | SingletonBigInt of int64
   | Member of Reason.t
 
-and predicate_kind =
-  | PredKind
-  | TypeGuardKind of ALoc.t * string
+and predicate_kind = TypeGuardKind of ALoc.t * string
 
 and ('t, 'targs, 'args, 'props_and_children) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
@@ -113,7 +111,6 @@ and ('t, 'targs, 'args, 'props_and_children) hint =
 
 let string_of_predicate_kind = function
   | None -> "no pred"
-  | Some PredKind -> "pred kind"
   | Some (TypeGuardKind _) -> "type guard kind"
 
 let string_of_hint_unknown_kind = function

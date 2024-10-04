@@ -290,48 +290,13 @@ let predicate_function_invalid_param_reasons params =
     reason :: reasons
   | None -> reasons
 
-let predicate_synthesizable predicate body =
-  match (predicate, body) with
-  | ( Some _,
-      Ast.Function.BodyBlock
-        ( _,
-          {
-            Ast.Statement.Block.body =
-              [
-                ( ret_loc,
-                  Ast.Statement.Return
-                    { Ast.Statement.Return.argument = Some expr; comments = _; return_out = _ }
-                );
-              ];
-            comments = _;
-          }
-        )
-    )
-  | (Some _, Ast.Function.BodyExpression ((ret_loc, _) as expr))
-  | (Some (ret_loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared expr; comments = _ }), _)
-    ->
-    FunctionPredicateSynthesizable (ret_loc, expr)
-  | _ -> (* Invalid predicate definition *) FunctionSynthesizable
-
-let func_is_synthesizable_from_annotation
-    ({ Ast.Function.predicate; return; generator; body; params; _ } as f) =
+let func_is_synthesizable_from_annotation ({ Ast.Function.return; generator; _ } as f) =
   match return with
   | Ast.Function.ReturnAnnot.Available _
   | Ast.Function.ReturnAnnot.TypeGuard _ ->
-    if
-      Base.Option.is_some predicate
-      && Base.List.is_empty (predicate_function_invalid_param_reasons params)
-    then
-      predicate_synthesizable predicate body
-    else
-      FunctionSynthesizable
+    FunctionSynthesizable
   | Ast.Function.ReturnAnnot.Missing loc ->
-    if
-      Base.Option.is_some predicate
-      && Base.List.is_empty (predicate_function_invalid_param_reasons params)
-      || Nonvoid_return.might_have_nonvoid_return ALoc.none f
-      || generator
-    then
+    if Nonvoid_return.might_have_nonvoid_return ALoc.none f || generator then
       MissingReturn loc
     else
       FunctionSynthesizable
@@ -365,13 +330,9 @@ let rec obj_properties_synthesizable
   let open Ast.Expression.Object in
   let open Ast.Expression.Object.Property in
   let open Ast.Expression.Object.SpreadProperty in
-  let handle_fun elem_loc this_write_locs acc = function
+  let handle_fun this_write_locs acc = function
     | FunctionSynthesizable -> Ok (acc, this_write_locs)
     | MissingReturn loc -> Ok (FuncMissingAnnot loc :: acc, this_write_locs)
-    | _ ->
-      (match elem_loc with
-      | Some elem_loc -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
-      | None -> Error ())
   in
   let rec synthesizable_expression (acc, this_write_locs) (elem_loc, expr) =
     match expr with
@@ -398,7 +359,7 @@ let rec obj_properties_synthesizable
       Ok (acc, this_write_locs)
     | Ast.Expression.ArrowFunction fn
     | Ast.Expression.Function fn ->
-      handle_fun (Some elem_loc) this_write_locs acc (func_is_synthesizable_from_annotation fn)
+      handle_fun this_write_locs acc (func_is_synthesizable_from_annotation fn)
     | Ast.Expression.Object obj -> begin
       match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
       | ObjectSynthesizable { this_write_locs = new_this_write_locs } ->
@@ -437,7 +398,7 @@ let rec obj_properties_synthesizable
             ->
             Error ()
           | Property (_, Method { key = Identifier _; value = (_, fn); _ }) ->
-            handle_fun None this_write_locs acc (func_is_synthesizable_from_annotation fn)
+            handle_fun this_write_locs acc (func_is_synthesizable_from_annotation fn)
           | Property (_, Init { key = Identifier _; value = expr; _ }) ->
             synthesizable_expression (acc, this_write_locs) expr
           | Property _ -> Error ())
@@ -1548,15 +1509,12 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hints:[] expr);
       expr
 
-    method hint_pred_kind predicate return =
-      match (predicate, return) with
-      | (Some _, _) -> Some PredKind
-      | ( _,
-          Ast.Function.ReturnAnnot.TypeGuard
-            (_, (_, { Ast.Type.TypeGuard.guard = ((name_loc, { Ast.Identifier.name; _ }), _); _ }))
-        ) ->
+    method hint_pred_kind return =
+      match return with
+      | Ast.Function.ReturnAnnot.TypeGuard
+          (_, (_, { Ast.Type.TypeGuard.guard = ((name_loc, { Ast.Identifier.name; _ }), _); _ })) ->
         Some (TypeGuardKind (name_loc, name))
-      | (_, _) -> None
+      | _ -> None
 
     method private name_of_param param =
       let module P = Ast.Pattern in
@@ -1589,7 +1547,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
           ignore (Base.Option.map this_ ~f:this#function_this_param : _ option);
           let param_str_list = this#params_list_to_str_opt params_list in
-          let pred = this#hint_pred_kind predicate return in
+          let pred = this#hint_pred_kind return in
           Base.List.iteri
             ~f:(fun i ->
               this#visit_function_param
@@ -1790,37 +1748,32 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       meth
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
-      match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
-      | Some stmt ->
-        let _ = this#statement (loc, stmt) in
+      let open Ast.Statement.DeclareFunction in
+      let { id = (id_loc, { Ast.Identifier.name; _ }); annot; predicate = _; comments = _ } =
         decl
-      | None ->
-        let open Ast.Statement.DeclareFunction in
-        let { id = (id_loc, { Ast.Identifier.name; _ }); annot; predicate = _; comments = _ } =
-          decl
-        in
-        this#add_ordinary_binding
-          id_loc
-          (func_reason ~async:false ~generator:false loc)
-          (Binding
-             (this#mk_hooklike_if_necessary
-                (Flow_ast_utils.hook_name name)
-                (Root
-                   (Annotation
-                      {
-                        tparams_map = ALocMap.empty;
-                        optional = false;
-                        has_default_expression = false;
-                        react_deep_read_only = None;
-                        param_loc = None;
-                        annot;
-                        concrete = None;
-                      }
-                   )
-                )
-             )
-          );
-        super#declare_function loc decl
+      in
+      this#add_ordinary_binding
+        id_loc
+        (func_reason ~async:false ~generator:false loc)
+        (Binding
+           (this#mk_hooklike_if_necessary
+              (Flow_ast_utils.hook_name name)
+              (Root
+                 (Annotation
+                    {
+                      tparams_map = ALocMap.empty;
+                      optional = false;
+                      has_default_expression = false;
+                      react_deep_read_only = None;
+                      param_loc = None;
+                      annot;
+                      concrete = None;
+                    }
+                 )
+              )
+           )
+        );
+      super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in

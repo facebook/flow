@@ -276,16 +276,14 @@ and type_of_hint_decomposition cx op reason t =
       Obj_type.mk_with_proto cx statics_reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
     in
     let predicate =
-      Base.Option.map pred ~f:(function
-          | PredKind -> PredBased (reason, lazy (Key_map.empty, Key_map.empty))
-          | TypeGuardKind (param_loc, param_name) ->
-            TypeGuardBased
-              {
-                reason;
-                one_sided = false;
-                param_name = (param_loc, param_name);
-                type_guard = Unsoundness.unresolved_any reason;
-              }
+      Base.Option.map pred ~f:(function TypeGuardKind (param_loc, param_name) ->
+          TypeGuardBased
+            {
+              reason;
+              one_sided = false;
+              param_name = (param_loc, param_name);
+              type_guard = Unsoundness.unresolved_any reason;
+            }
           )
     in
     let func =

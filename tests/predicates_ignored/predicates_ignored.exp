@@ -1,0 +1,77 @@
+Error ------------------------------------------------------------------------------------------------- exported.js:1:33
+
+Support for predicate functions is removed. `%checks` declaration is now ignored. [unsupported-syntax]
+
+   1| function local(x: string | null): %checks { return x !== null; } // error: unsupported
+                                      ^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- exported.js:4:3
+
+Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   exported.js:4:3
+   4|   v as string; // erorr: %checks is ignored
+        ^
+
+References:
+   exported.js:2:27
+   2| declare const v: string | null;
+                                ^^^^ [1]
+   exported.js:4:8
+   4|   v as string; // erorr: %checks is ignored
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:7:65
+
+Support for predicate functions is removed. `%checks` declaration is now ignored. [unsupported-syntax]
+
+   7| export function exported_non_declare(x: string | null): boolean %checks { return x !== null; } // error: unsupported
+                                                                      ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:8:69
+
+Support for predicate functions is removed. `%checks` declaration is now ignored. [unsupported-syntax]
+
+   8| declare export function exported_declare(x: string | null): boolean %checks(x !== null) // error: unsupported
+                                                                          ^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- test_exported.js:5:3
+
+Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   test_exported.js:5:3
+   5|   v as string; // erorr: %checks is ignored
+        ^
+
+References:
+   test_exported.js:3:27
+   3| declare const v: string | null;
+                                ^^^^ [1]
+   test_exported.js:5:8
+   5|   v as string; // erorr: %checks is ignored
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- test_exported.js:8:3
+
+Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   test_exported.js:8:3
+   8|   v as string; // erorr: %checks is ignored
+        ^
+
+References:
+   test_exported.js:3:27
+   3| declare const v: string | null;
+                                ^^^^ [1]
+   test_exported.js:8:8
+   8|   v as string; // erorr: %checks is ignored
+             ^^^^^^ [2]
+
+
+
+Found 6 errors

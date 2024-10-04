@@ -548,13 +548,6 @@ end = struct
           else
             this#enter_scope kind meth
 
-      method! declare_function loc expr =
-        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
-        | Some stmt ->
-          let _ = this#statement (loc, stmt) in
-          expr
-        | None -> super#declare_function loc expr
-
       method! block = this#enter_scope Lex super#block
 
       method! catch_clause = this#enter_scope Lex super#catch_clause

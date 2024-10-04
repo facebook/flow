@@ -349,7 +349,6 @@ and 'loc t' =
   | ENonstrictImport of 'loc
   | EUnclearType of 'loc
   | EDeprecatedBool of 'loc
-  | EDeprecatedPredicate of 'loc
   | EInternalType of 'loc * internal_type
   | EIncorrectTypeWithReplacement of {
       loc: 'loc;
@@ -1138,7 +1137,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonstrictImport loc -> ENonstrictImport (f loc)
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedBool loc -> EDeprecatedBool (f loc)
-  | EDeprecatedPredicate loc -> EDeprecatedPredicate (f loc)
   | EInternalType (loc, kind) -> EInternalType (f loc, kind)
   | EIncorrectTypeWithReplacement { loc; kind } ->
     EIncorrectTypeWithReplacement { loc = f loc; kind }
@@ -1644,7 +1642,6 @@ let util_use_op_of_msg nope util = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedBool _
-  | EDeprecatedPredicate _
   | EInternalType _
   | EIncorrectTypeWithReplacement _
   | EUnsafeGettersSetters _
@@ -1828,7 +1825,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonstrictImport loc
   | EUnclearType loc
   | EDeprecatedBool loc
-  | EDeprecatedPredicate loc
   | EInternalType (loc, _)
   | EIncorrectTypeWithReplacement { loc; _ }
   | EUnsafeGettersSetters loc
@@ -1984,7 +1980,6 @@ let kind_of_msg =
     | EInternalType _ -> LintError Lints.InternalType
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
-    | EDeprecatedPredicate _ -> LintError Lints.(DeprecatedType DeprecatedPredicate)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -2605,7 +2600,6 @@ let friendly_message_of_msg = function
   | ENonstrictImport _ -> Normal MessageNonStrictImport
   | EUnclearType _ -> Normal MessageUnclearType
   | EDeprecatedBool _ -> Normal MessageDeprecatedBool
-  | EDeprecatedPredicate _ -> Normal MessageDeprecatedPredicate
   | EInternalType (_, kind) -> Normal (MessageInternalType kind)
   | EIncorrectTypeWithReplacement { kind; _ } -> Normal (MessageIncorrectType kind)
   | EUnsafeGettersSetters _ -> Normal MessageUnsafeGetterSetter
@@ -2901,7 +2895,6 @@ let defered_in_speculation = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedBool _
-  | EDeprecatedPredicate _
   | EInternalType _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
@@ -3210,7 +3203,6 @@ let error_code_of_message err : error_code option =
   | EInternalType _
   | EUnclearType _
   | EDeprecatedBool _
-  | EDeprecatedPredicate _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _

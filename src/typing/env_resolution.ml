@@ -603,7 +603,7 @@ let rec resolve_binding cx reason loc b =
       (FunctionValue
         {
           hints = _;
-          synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
+          synthesizable_from_annotation = FunctionSynthesizable;
           function_loc;
           function_;
           statics;
@@ -1063,7 +1063,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Function
         {
           function_;
-          synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
+          synthesizable_from_annotation = FunctionSynthesizable;
           arrow;
           has_this_def = _;
           function_loc;

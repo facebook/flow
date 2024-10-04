@@ -26,7 +26,6 @@ type error = int * string
 let default_explicit_values =
   LintMap.empty
   |> LintMap.add Lints.(DeprecatedType DeprecatedBool) (Severity.Err, None)
-  |> LintMap.add Lints.(DeprecatedType DeprecatedPredicate) (Severity.Err, None)
   |> LintMap.add Lints.InternalType (Severity.Err, None)
   |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 

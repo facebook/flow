@@ -878,7 +878,6 @@ let reason_of_resolved_param = function
 let type_guard_of_predicate predicate =
   match predicate with
   | TypeGuardBased { type_guard = t; _ } -> Some t
-  | PredBased _ -> None
 
 let type_guard_of_funtype f =
   match f.predicate with

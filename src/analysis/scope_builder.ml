@@ -917,15 +917,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         decl
 
       method! declare_function loc expr =
-        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
-        | Some stmt ->
-          let _ = this#statement (loc, stmt) in
-          expr
-        | None ->
-          let _ = super#declare_function loc expr in
-          let { Ast.Statement.DeclareFunction.annot; _ } = expr in
-          ignore @@ this#hoist_annotations (fun () -> ignore @@ this#type_annotation annot);
-          expr
+        let _ = super#declare_function loc expr in
+        let { Ast.Statement.DeclareFunction.annot; _ } = expr in
+        ignore @@ this#hoist_annotations (fun () -> ignore @@ this#type_annotation annot);
+        expr
 
       method! function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
         let open Ast.Type.Function in

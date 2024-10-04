@@ -1671,101 +1671,12 @@ and merge_fun_statics env file reason statics =
     ~props
     ?call:None
 
-and merge_predicate env file (loc, p) =
-  let singleton key pos =
-    let key = (Reason.OrdinaryName key, []) in
-    (Key_map.singleton key pos, Key_map.singleton key (Type.NotP pos))
-  in
-  let pred_and = Key_map.union ~combine:(fun _ p1 p2 -> Some (Type.AndP (p1, p2))) in
-  let pred_or = Key_map.union ~combine:(fun _ p1 p2 -> Some (Type.OrP (p1, p2))) in
-  let rec pred = function
-    | AndP (p1, p2) ->
-      let (pos1, neg1) = pred p1 in
-      let (pos2, neg2) = pred p2 in
-      (pred_and pos1 pos2, pred_or neg1 neg2)
-    | OrP (p1, p2) ->
-      let (pos1, neg1) = pred p1 in
-      let (pos2, neg2) = pred p2 in
-      (pred_or pos1 pos2, pred_and neg1 neg2)
-    | NotP p ->
-      let (pos, neg) = pred p in
-      (neg, pos)
-    | TruthyP key -> singleton key Type.TruthyP
-    | InstanceofP (key, t) ->
-      let t = merge env file t in
-      singleton key Type.(BinaryP (InstanceofTest, t))
-    | ArrP key -> singleton key Type.ArrP
-    | NullP key -> singleton key Type.NullP
-    | MaybeP key -> singleton key Type.MaybeP
-    | SingletonStrP (key, loc, sense, x) -> singleton key (Type.SingletonStrP (loc, sense, x))
-    | SingletonNumP (key, loc, sense, x, raw) ->
-      singleton key (Type.SingletonNumP (loc, sense, (x, raw)))
-    | SingletonBigIntP (key, loc, sense, x, raw) ->
-      singleton key (Type.SingletonBigIntP (loc, sense, (x, raw)))
-    | SingletonBoolP (key, loc, x) -> singleton key (Type.SingletonBoolP (loc, x))
-    | BoolP (key, loc) -> singleton key (Type.BoolP loc)
-    | FunP key -> singleton key Type.FunP
-    | NumP (key, loc) -> singleton key (Type.NumP loc)
-    | BigIntP (key, loc) -> singleton key (Type.BigIntP loc)
-    | ObjP key -> singleton key Type.ObjP
-    | StrP (key, loc) -> singleton key (Type.StrP loc)
-    | SymbolP (key, loc) -> singleton key (Type.SymbolP loc)
-    | VoidP key -> singleton key Type.VoidP
-    | SentinelStrP (key, prop, loc, x) ->
-      let reason = Reason.(mk_reason RString loc) in
-      let t = Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName x)))) in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | SentinelNumP (key, prop, loc, x, raw) ->
-      let reason = Reason.(mk_reason RNumber loc) in
-      let t = Type.(DefT (reason, NumT (Literal (None, (x, raw))))) in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | SentinelBigIntP (key, prop, loc, x, raw) ->
-      let reason = Reason.(mk_reason RBigInt loc) in
-      let t = Type.(DefT (reason, BigIntT (Literal (None, (x, raw))))) in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | SentinelBoolP (key, prop, loc, x) ->
-      let reason = Reason.(mk_reason RBoolean loc) in
-      let t = Type.(DefT (reason, BoolT (Some x))) in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | SentinelNullP (key, prop, loc) ->
-      let t = Type.NullT.at loc in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | SentinelVoidP (key, prop, loc) ->
-      let t = Type.VoidT.at loc in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | SentinelExprP (key, prop, t) ->
-      let t = merge env file t in
-      singleton key Type.(BinaryP (SentinelProp prop, t))
-    | LatentP (t, targs, args, keys) ->
-      let call_info =
-        lazy
-          (let t = merge env file t in
-           let targs = merge_targs_opt file env targs in
-           let args = merge_args file env args in
-           (Type.unknown_use, TypeUtil.loc_of_t t, t, targs, args)
-          )
-      in
-      Nel.fold_left
-        (fun (pos1, neg1) (key, i) ->
-          let (pos2, neg2) = singleton key (Type.LatentP (call_info, i)) in
-          (pred_and pos1 pos2, pred_or neg1 neg2))
-        (Key_map.empty, Key_map.empty)
-        keys
-  in
-  let reason = Reason.(mk_reason (RPredicateOf RReturn) loc) in
-  let maps =
-    match p with
-    | None -> lazy (Key_map.empty, Key_map.empty)
-    | Some p -> lazy (pred p)
-  in
-  (reason, maps)
-
 and merge_fun
     ?(is_method = false)
     env
     file
     reason
-    (FunSig { tparams; params; rest_param; this_param; return; predicate; effect })
+    (FunSig { tparams; params; rest_param; this_param; return; type_guard; effect })
     statics =
   let t (env, _) =
     let open Type in
@@ -1794,10 +1705,9 @@ and merge_fun
       | Some t -> merge env file t
     in
     let return_t = merge env file return in
-    let predicate =
-      match predicate with
+    let type_guard =
+      match type_guard with
       | None -> None
-      | Some (Predicate (loc, p)) -> Some (Type.PredBased (merge_predicate env file (loc, p)))
       | Some (TypeGuard { loc; param_name; type_guard = t; one_sided }) ->
         let reason = Reason.mk_reason Reason.RTypeGuard loc in
         Some (Type.TypeGuardBased { reason; one_sided; param_name; type_guard = merge env file t })
@@ -1834,7 +1744,7 @@ and merge_fun
         params;
         rest_param;
         return_t;
-        predicate;
+        predicate = type_guard;
         def_reason = reason;
         effect;
       }
@@ -1903,23 +1813,6 @@ and merge_component
     DefT (reason, ReactAbstractComponentT { config = param; instance; renders; component_kind })
   in
   merge_tparams_targs env file reason t tparams
-
-and merge_targ file env = function
-  | ExplicitArg t -> Type.ExplicitArg (merge env file t)
-  | ImplicitArg loc ->
-    let reason = Reason.mk_reason Reason.RImplicitInstantiation loc in
-    let id = Tvar.mk_no_wrap file.cx reason in
-    Type.ImplicitArg (reason, id)
-
-and merge_targs_opt file env = function
-  | None -> None
-  | Some targs -> Some (Base.List.map ~f:(merge_targ file env) targs)
-
-and merge_args file env args =
-  Base.List.map args ~f:(function
-      | Arg t -> Type.Arg (merge env file t)
-      | SpreadArg t -> Type.SpreadArg (merge env file t)
-      )
 
 let merge_type_alias file reason name tparams body =
   let t (env, _) =

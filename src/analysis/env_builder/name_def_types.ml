@@ -66,7 +66,6 @@ type ast_hints =
 
 type function_synth_kind =
   | FunctionSynthesizable
-  | FunctionPredicateSynthesizable of ALoc.t * (ALoc.t, ALoc.t) Ast.Expression.t
   | MissingReturn of ALoc.t
 
 type object_missing_annot =

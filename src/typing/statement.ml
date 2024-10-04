@@ -1053,31 +1053,34 @@ module Make
         let (fn_type, func_ast) = mk_function_declaration cx ~tast_fun_type reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
-    let declare_function cx loc f =
-      match declare_function_to_function_declaration cx loc f with
-      | Some (FunctionDeclaration func, reconstruct_ast) ->
-        let (_, _, node) = function_ ~is_declared_function:true loc func in
-        reconstruct_ast node
-      | _ ->
-        (* error case *)
-        let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } = f in
-        let effect =
-          match annot with
-          | (_, (_, Ast.Type.Function { Ast.Type.Function.effect; _ })) -> effect
-          | _ -> Ast.Function.Arbitrary
-        in
-        hook_check cx effect (id_loc, id_name);
-        let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-        let t =
-          Type_env.get_var_declared_type
-            ~lookup_mode:Type_env.LookupMode.ForValue
-            ~is_declared_function:true
-            cx
-            (OrdinaryName id_name.Ast.Identifier.name)
-            id_loc
-        in
-        let predicate = Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate in
-        { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments }
+    let declare_function cx f =
+      let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } = f in
+      let effect =
+        match annot with
+        | (_, (_, Ast.Type.Function { Ast.Type.Function.effect; _ })) -> effect
+        | _ -> Ast.Function.Arbitrary
+      in
+      hook_check cx effect (id_loc, id_name);
+      let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+      let t =
+        Type_env.get_var_declared_type
+          ~lookup_mode:Type_env.LookupMode.ForValue
+          ~is_declared_function:true
+          cx
+          (OrdinaryName id_name.Ast.Identifier.name)
+          id_loc
+      in
+      let predicate =
+        Base.Option.map predicate ~f:(fun ((loc, _) as p) ->
+            Flow_js.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.PredicateFunction)
+              );
+            Tast_utils.error_mapper#predicate p
+        )
+      in
+      { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments }
     in
     function
     | (_, Empty _) as stmt -> stmt
@@ -1479,7 +1482,7 @@ module Make
       let decl_ast = declare_variable cx decl in
       (loc, DeclareVariable decl_ast)
     | (loc, DeclareFunction decl) ->
-      let decl_ast = declare_function cx loc decl in
+      let decl_ast = declare_function cx decl in
       (loc, DeclareFunction decl_ast)
     | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
     | (_, ClassDeclaration { Ast.Class.id = None; _ }) ->
@@ -1557,7 +1560,7 @@ module Make
             let v_ast = declare_variable cx v in
             D.Variable (loc, v_ast)
           | D.Function (loc, f) ->
-            let f_ast = declare_function cx loc f in
+            let f_ast = declare_function cx f in
             D.Function (loc, f_ast)
           | D.Class (loc, c) ->
             let (_, c_ast) = declare_class cx loc c in
@@ -3032,15 +3035,7 @@ module Make
       let t = List.(expressions |> map snd_fst |> rev |> hd) in
       ((loc, t), Sequence { Sequence.expressions; comments })
     | Function func ->
-      let { Ast.Function.id; predicate; sig_loc; generator; async; _ } = func in
-      (match predicate with
-      | Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Inferred; comments = _ }) ->
-        Flow.add_output
-          cx
-          (Error_message.EUnsupportedSyntax
-             (loc, Flow_intermediate_error_types.PredicateDeclarationWithoutExpression)
-          )
-      | _ -> ());
+      let { Ast.Function.id; predicate = _; sig_loc; generator; async; _ } = func in
       let reason = func_reason ~async ~generator sig_loc in
       let (t, func) =
         match id with
@@ -7633,42 +7628,14 @@ module Make
         )
 
   and mk_func_sig =
-    let predicate_function_kind cx predicate body _loc _params =
-      let pred_synth = Name_def.predicate_synthesizable predicate body in
-      if pred_synth = Name_def.FunctionSynthesizable then begin
-        let body_loc =
-          match body with
-          | Ast.Function.BodyExpression (loc, _) -> loc
-          | Ast.Function.BodyBlock (loc, _) -> loc
-        in
-        Flow_js.add_output
-          cx
-          (Error_message.EUnsupportedSyntax
-             (body_loc, Flow_intermediate_error_types.PredicateInvalidBody)
-          )
-      end;
-      match pred_synth with
-      | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> begin
-        match Type_env.predicate_refinement_maps cx ret_loc with
-        | Some (expr_reason, maps) ->
-          let reason = update_desc_reason (fun d -> RPredicateOf d) expr_reason in
-          Func.Predicate (PredBased (reason, maps))
-        | None -> Func.Ordinary
-      end
-      | Name_def.FunctionSynthesizable
-      | Name_def.MissingReturn _ ->
-        Func.Ordinary
-    in
-    let function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc =
+    let function_kind ~constructor ~async ~generator ~ret_loc =
       let open Func_class_sig_types.Func in
-      match (constructor, async, generator, predicate) with
-      | (true, _, _, _) -> Ctor
-      | (false, true, true, None) -> AsyncGenerator { return_loc = ret_loc }
-      | (false, true, false, None) -> Async
-      | (false, false, true, None) -> Generator { return_loc = ret_loc }
-      | (false, false, false, None) -> Ordinary
-      | (false, false, false, Some (loc, _)) -> predicate_function_kind cx predicate body loc params
-      | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
+      match (constructor, async, generator) with
+      | (true, _, _) -> Ctor
+      | (false, true, true) -> AsyncGenerator { return_loc = ret_loc }
+      | (false, true, false) -> Async
+      | (false, false, true) -> Generator { return_loc = ret_loc }
+      | (false, false, false) -> Ordinary
     in
     let mk_param_annot cx tparams_map reason = function
       | Ast.Type.Missing loc when Context.typing_mode cx <> Context.CheckingMode ->
@@ -7895,20 +7862,6 @@ module Make
         let bindings = Pattern_helper.bindings_of_params params in
         let matching_binding = SMap.find_opt (snd param_name) bindings in
         type_guard_based_checks reason one_sided param_name type_guard matching_binding
-      | PredBased (expr_reason, (lazy (p_map, _))) ->
-        let required_bindings =
-          Base.List.filter_map (Key_map.keys p_map) ~f:(function
-              | (OrdinaryName name, _) -> Some name
-              | _ -> None
-              )
-        in
-        if not (Base.List.is_empty required_bindings) then
-          let bindings = Pattern_helper.bindings_of_params params in
-          Base.List.iter required_bindings ~f:(fun name ->
-              Base.Option.iter (SMap.find_opt name bindings) ~f:(fun binding ->
-                  error_on_non_root_binding name expr_reason binding
-              )
-          )
     in
     fun cx ~require_return_annot ~constructor ~getset ~statics tparams_map reason func ->
       let {
@@ -7938,9 +7891,7 @@ module Make
           | Ast.Function.ReturnAnnot.Missing loc ->
             loc
         in
-        let kind =
-          function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc
-        in
+        let kind = function_kind ~constructor ~async ~generator ~ret_loc in
         Anno.error_on_unsupported_variance_annotation cx ~kind:"function" tparams;
         let (tparams, tparams_map, tparams_ast) =
           Anno.mk_type_param_declarations cx ~tparams_map tparams
@@ -8051,20 +8002,15 @@ module Make
           | None -> kind
         in
         let (return_t, predicate) =
-          let open Ast.Type.Predicate in
-          match (predicate, kind) with
-          | (Some ((loc, { kind = Ast.Type.Predicate.Inferred; _ }) as pred), Func.Predicate _) ->
-            Flow_js.add_output cx (Error_message.EDeprecatedPredicate loc);
-            (return_t, Some pred)
-          | (Some ((loc, { kind = Declared (expr_loc, _); comments = _ }) as pred), _) ->
-            Flow_js.add_output cx (Error_message.EDeprecatedPredicate loc);
+          match predicate with
+          | Some ((loc, _) as pred) ->
             Flow_js.add_output
               cx
               (Error_message.EUnsupportedSyntax
-                 (expr_loc, Flow_intermediate_error_types.PredicateDeclarationForImplementation)
+                 (loc, Flow_intermediate_error_types.PredicateFunction)
               );
-            (Inferred (AnyT.error ret_reason), Some (Tast_utils.error_mapper#predicate pred))
-          | _ -> (return_t, Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate)
+            (return_t, Some (Tast_utils.error_mapper#predicate pred))
+          | None -> (return_t, None)
         in
         let () =
           match (return, kind) with
@@ -8236,22 +8182,6 @@ module Make
       function_decl cx ~fun_loc:None ~arrow:true ~statics reason func default_this
     in
     (fun_type, reconstruct_ast fun_type)
-
-  and declare_function_to_function_declaration cx =
-    let add_output l =
-      Flow.add_output
-        cx
-        (match l with
-        | Declare_function_utils.PredicateDeclarationWithoutExpression loc ->
-          Error_message.EUnsupportedSyntax
-            (loc, Flow_intermediate_error_types.PredicateDeclarationWithoutExpression)
-        | Declare_function_utils.PredicateDeclarationAnonymousParameters loc ->
-          Error_message.EUnsupportedSyntax
-            (loc, Flow_intermediate_error_types.PredicateDeclarationAnonymousParameters))
-    in
-    let copy_t (_, t) l = (l, t) in
-    let loc_of_tloc = fst in
-    Declare_function_utils.declare_function_to_function_declaration ~add_output ~copy_t ~loc_of_tloc
 
   and check_default_pattern cx left right =
     let left_loc = fst left in

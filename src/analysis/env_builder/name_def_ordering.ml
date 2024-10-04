@@ -714,7 +714,7 @@ struct
         cx
         ~autocomplete_hooks
         this_super_dep_loc_map
-        ({ Env_api.providers; env_entries; predicate_refinement_maps; _ } as env)
+        ({ Env_api.providers; env_entries; _ } as env)
         kind
         id_loc =
       let depends_of_node ?(named_only_for_synthesis = false) mk_visit state =
@@ -857,26 +857,6 @@ struct
         let (fully_annotated, state) =
           match synth with
           | FunctionSynthesizable -> (true, state)
-          | FunctionPredicateSynthesizable (loc, _) ->
-            let state =
-              match ALocMap.find_opt loc predicate_refinement_maps with
-              | None -> state
-              | Some (_, p_map, n_map) ->
-                depends_of_node
-                  (fun visitor ->
-                    SMap.iter
-                      (fun _ ({ Env_api.write_locs; _ }, _, _) ->
-                        let writes = visitor#add_write_locs ~for_type:false write_locs in
-                        Base.List.iter ~f:(visitor#add ~why:loc) writes)
-                      p_map;
-                    SMap.iter
-                      (fun _ ({ Env_api.write_locs; _ }, _, _) ->
-                        let writes = visitor#add_write_locs ~for_type:false write_locs in
-                        Base.List.iter ~f:(visitor#add ~why:loc) writes)
-                      n_map)
-                  state
-            in
-            (true, state)
           | _ -> (false, state)
         in
         let state = depends_of_hints state hints in

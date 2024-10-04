@@ -66,10 +66,8 @@ type unsupported_syntax =
   | DestructuringObjectPropertyLiteralNonString
   | DestructuringExpressionPattern
   | JSXTypeArgs
-  | PredicateDeclarationForImplementation
-  | PredicateDeclarationWithoutExpression
+  | PredicateFunction
   | PredicateDeclarationAnonymousParameters
-  | PredicateInvalidBody
   | MultipleIndexers
   | MultipleProtos
   | ExplicitCallAfterProto
@@ -545,7 +543,6 @@ type 'loc message =
       annot_locs: 'loc Env_api.annot_loc list;
     }
   | MessageDeprecatedBool
-  | MessageDeprecatedPredicate
   | MessageDevOnlyRefinedLocInfo of { refining_locs: 'loc list }
   | MessageDevOnlyInvalidatedRefinementInfo of ('loc * Refinement_invalidation.reason) list
   | MessageDocblockError of docblock_error

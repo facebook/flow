@@ -1100,7 +1100,6 @@ module rec TypeTerm : sig
     | AnyEffect
 
   and fun_predicate =
-    | PredBased of (reason * (predicate Key_map.t * predicate Key_map.t) Lazy.t)
     | TypeGuardBased of {
         reason: reason;
         param_name: ALoc.t * string;

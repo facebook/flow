@@ -625,7 +625,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
     write_entries: Env_api.env_entry EnvMap.t;
-    predicate_refinement_maps: Env_api.predicate_refinement_maps;
     type_guard_consistency_maps: Env_api.type_guard_consistency_maps;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
@@ -663,7 +662,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
        statement, the list will be cleared. A loop will consume the list, so we
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
-    predicate_scope_names: (ALoc.t * Pattern_helper.binding) SMap.t option;
     type_guard_name: type_guard_name_info option;
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
@@ -1099,7 +1097,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           values = L.LMap.empty;
           refinement_invalidation_info = L.LMap.empty;
           write_entries = EnvMap.empty;
-          predicate_refinement_maps = L.LMap.empty;
           type_guard_consistency_maps = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
@@ -1108,7 +1105,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           exclude_syms;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
-          predicate_scope_names = None;
           type_guard_name = None;
           visiting_hoisted_type = false;
           in_conditional_type_extends = false;
@@ -1128,8 +1124,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method refinement_invalidation_info = env_state.refinement_invalidation_info
 
       method write_entries : Env_api.env_entry EnvMap.t = env_state.write_entries
-
-      method predicate_refinement_maps = env_state.predicate_refinement_maps
 
       method type_guard_consistency_maps = env_state.type_guard_consistency_maps
 
@@ -2812,50 +2806,23 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#raise_abrupt_completion (AbruptCompletion.continue label)
 
       method! body_expression expr =
-        Base.Option.iter env_state.predicate_scope_names ~f:(fun names ->
-            let reason = mk_reason RFunctionBody (fst expr) in
-            this#record_predicate_refinement_maps (fst expr) names reason expr
-        );
         Base.Option.iter env_state.type_guard_name ~f:(fun name ->
             let return = mk_expression_reason expr in
             this#record_type_guard_maps None name return expr
         );
         super#body_expression expr
 
-      method! return loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
+      method! return _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in
         let { argument; comments = _; return_out = _ } = stmt in
-        (match (env_state.predicate_scope_names, env_state.type_guard_name, argument) with
-        | (None, None, _)
-        | (Some _, _, None)
-        | (_, Some _, None) ->
+        (match (env_state.type_guard_name, argument) with
+        | (None, _)
+        | (Some _, None) ->
           ignore @@ Flow_ast_mapper.map_opt this#expression argument
-        | (Some names, _, Some argument) ->
-          let reason = mk_reason RReturn (fst argument) in
-          this#record_predicate_refinement_maps loc names reason argument
-        | (_, Some name, Some argument) ->
+        | (Some name, Some argument) ->
           let return = mk_expression_reason argument in
           this#record_type_guard_maps (Some argument) name return argument);
         this#raise_abrupt_completion AbruptCompletion.return
-
-      method private record_predicate_refinement_maps loc names expr_reason expr =
-        let record_binding name (loc, binding) = (this#synthesize_read name, loc, binding) in
-        let compute_refi_map () = names |> SMap.mapi record_binding in
-        this#push_refinement_scope empty_refinements;
-        ignore @@ this#expression_refinement expr;
-        let positive_refi_map = compute_refi_map () in
-        this#negate_new_refinements ();
-        let negative_refi_map = compute_refi_map () in
-        this#pop_refinement_scope ();
-        env_state <-
-          {
-            env_state with
-            predicate_refinement_maps =
-              L.LMap.add
-                loc
-                (expr_reason, positive_refi_map, negative_refi_map)
-                env_state.predicate_refinement_maps;
-          }
 
       method private record_type_guard_maps ret_expr tg_info return expr =
         let (TGinfo { loc = guard_param_loc; name; havoced; _ }) = tg_info in
@@ -3914,14 +3881,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let env = this#env_snapshot in
           this#run
             (fun () ->
-              let saved_predicate_scope_names = env_state.predicate_scope_names in
               (* If this is a type guard function type_guard_name will be set in
                  type_guard_annotation. *)
               let saved_type_guard_name = env_state.type_guard_name in
-              let predicate_scope_names =
-                Base.Option.map predicate ~f:(fun _ -> Pattern_helper.bindings_of_params params)
-              in
-              env_state <- { env_state with predicate_scope_names };
               let completion_state =
                 this#run_to_completion (fun () ->
                     let loc =
@@ -4021,12 +3983,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       ()
                 )
               in
-              env_state <-
-                {
-                  env_state with
-                  predicate_scope_names = saved_predicate_scope_names;
-                  type_guard_name = saved_type_guard_name;
-                };
+              env_state <- { env_state with type_guard_name = saved_type_guard_name };
               this#commit_abrupt_completion_matching
                 AbruptCompletion.(mem [return; throw])
                 completion_state)
@@ -4233,14 +4190,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         } =
           expr
         in
-        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
-        | Some stmt ->
-          check_predicate_declare_function ~predicate:true (OrdinaryName name) id_loc;
-          let _ = this#statement (loc, stmt) in
-          expr
-        | None ->
-          check_predicate_declare_function ~predicate:false (OrdinaryName name) id_loc;
-          super#declare_function loc expr
+        check_predicate_declare_function ~predicate:false (OrdinaryName name) id_loc;
+        super#declare_function loc expr
 
       method! call loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Call.t) =
         let open Ast.Expression.Call in
@@ -6047,7 +5998,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         env_refinement_invalidation_info = env_walk#refinement_invalidation_info;
         env_entries = dead_code_marker#write_entries;
         providers;
-        predicate_refinement_maps = env_walk#predicate_refinement_maps;
         type_guard_consistency_maps = env_walk#type_guard_consistency_maps;
         refinement_of_id = env_walk#refinement_of_id;
         pred_func_map = env_walk#pred_func_map;

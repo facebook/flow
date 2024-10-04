@@ -25,9 +25,7 @@ type property_assignment_kind =
   | ThisBeforeEverythingInitialized
   | PropertyFunctionCallBeforeEverythingInitialized
 
-type deprecated_type_kind =
-  | DeprecatedBool
-  | DeprecatedPredicate
+type deprecated_type_kind = DeprecatedBool
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
@@ -75,7 +73,6 @@ let string_of_sketchy_number_kind = function
 
 let string_of_deprecated_type_kind = function
   | DeprecatedBool -> "deprecated-type-bool"
-  | DeprecatedPredicate -> "deprecated-type-predicate"
 
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
@@ -129,9 +126,8 @@ let kinds_of_string = function
   | "untyped-import" -> Some [UntypedImport]
   | "internal-type" -> Some [InternalType]
   | "unclear-type" -> Some [UnclearType]
-  | "deprecated-type" -> Some [DeprecatedType DeprecatedBool; DeprecatedType DeprecatedPredicate]
+  | "deprecated-type" -> Some [DeprecatedType DeprecatedBool]
   | "deprecated-type-bool" -> Some [DeprecatedType DeprecatedBool]
-  | "deprecated-type-predicate" -> Some [DeprecatedType DeprecatedPredicate]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
