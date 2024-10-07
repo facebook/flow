@@ -601,6 +601,11 @@ module TypeSynthesizer = struct
         if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc t);
         ident
 
+      method! expression (((aloc, type_), _) as e) =
+        let loc = loc_of_aloc aloc in
+        if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc type_);
+        super#expression e
+
       method! type_ (((aloc, type_), _) as ast_type) =
         let loc = loc_of_aloc aloc in
         if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc type_);

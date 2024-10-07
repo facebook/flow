@@ -164,7 +164,7 @@ let code_action_insert_inferred_render_type
     ]
   | None -> []
 
-let refactor_extract_code_actions
+let refactor_extract_and_stub_out_code_actions
     ~options
     ~support_experimental_snippet_text_edit
     ~file_contents
@@ -179,41 +179,41 @@ let refactor_extract_code_actions
     ~only
     uri
     loc =
-  if include_extract_refactors only then
-    if Loc.(loc.start = loc._end) then
-      []
-    else
-      match loc.Loc.source with
-      | None -> []
-      | Some file ->
-        let lsp_action_from_refactor { Refactor_extract.title; new_ast; added_imports } =
-          let diff = Insert_type.mk_diff ast new_ast in
-          let opts = layout_options options in
-          let edits =
-            Autofix_imports.add_imports ~options:opts ~added_imports ast
-            @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-            |> flow_loc_patch_to_lsp_edits
-          in
-          let diagnostic_title = "refactor_extract" in
-          let open Lsp in
-          CodeAction.Action
-            {
-              CodeAction.title;
-              kind = CodeActionKind.refactor_extract;
-              diagnostics = [];
-              action =
-                CodeAction.BothEditThenCommand
-                  ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                    {
-                      Command.title = "";
-                      command = Command.Command "log";
-                      arguments =
-                        ["textDocument/codeAction"; diagnostic_title; title]
-                        |> List.map (fun str -> Hh_json.JSON_String str);
-                    }
-                  );
-            }
-        in
+  match loc.Loc.source with
+  | None -> []
+  | Some file ->
+    let lsp_action_from_refactor
+        ~diagnostic_title ~kind { Refactor_extract.title; new_ast; added_imports } =
+      let diff = Insert_type.mk_diff ast new_ast in
+      let opts = layout_options options in
+      let edits =
+        Autofix_imports.add_imports ~options:opts ~added_imports ast
+        @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+        |> flow_loc_patch_to_lsp_edits
+      in
+      let open Lsp in
+      CodeAction.Action
+        {
+          CodeAction.title;
+          kind;
+          diagnostics = [];
+          action =
+            CodeAction.BothEditThenCommand
+              ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                {
+                  Command.title = "";
+                  command = Command.Command "log";
+                  arguments =
+                    ["textDocument/codeAction"; diagnostic_title; title]
+                    |> List.map (fun str -> Hh_json.JSON_String str);
+                }
+              );
+        }
+    in
+    let refactors =
+      if (not (include_extract_refactors only)) || Loc.(loc.start = loc._end) then
+        []
+      else
         let tokens =
           let use_strict = Options.modules_are_use_strict options in
           let module_ref_prefix = Options.haste_module_ref_prefix options in
@@ -243,9 +243,32 @@ let refactor_extract_code_actions
           ~get_type_sig
           ~support_experimental_snippet_text_edit
           ~extract_range:loc
-        |> List.map lsp_action_from_refactor
-  else
-    []
+        |> List.map
+             (lsp_action_from_refactor
+                ~diagnostic_title:"refactor_extract"
+                ~kind:Lsp.CodeActionKind.refactor_extract
+             )
+    in
+    let refactors =
+      match
+        Stub_unbound_name.stub
+          ~ast
+          ~cx
+          ~file
+          ~file_sig
+          ~typed_ast
+          ~loc_of_aloc
+          ~get_ast_from_shared_mem
+          ~get_haste_name
+          ~get_type_sig
+          loc
+      with
+      | None -> refactors
+      | Some r ->
+        lsp_action_from_refactor ~diagnostic_title:"stub_out" ~kind:Lsp.CodeActionKind.quickfix r
+        :: refactors
+    in
+    refactors
 
 let insert_inferred_type_as_cast_code_actions
     ~options
@@ -1372,7 +1395,7 @@ let code_actions_at_loc
       loc
   in
   let refactor_code_actions =
-    refactor_extract_code_actions
+    refactor_extract_and_stub_out_code_actions
       ~options
       ~support_experimental_snippet_text_edit:
         (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)

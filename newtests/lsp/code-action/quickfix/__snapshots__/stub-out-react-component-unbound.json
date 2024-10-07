@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Add missing React component declaration `Foo`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/stub-out-react-component.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 21
+                },
+                "end": {
+                  "line": 2,
+                  "character": 21
+                }
+              },
+              "newText": "component Foo(boz: Set<string>, baz: boolean, bar: string) {\n  return;\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "stub_out",
+          "Add missing React component declaration `Foo`"
+        ]
+      }
+    }
+  ]
+}

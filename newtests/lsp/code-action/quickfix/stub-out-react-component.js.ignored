@@ -1,0 +1,8 @@
+//@flow
+import React from 'react';
+<div className="" />;
+
+<Foo bar="baz" baz boz={new Set<string>()} />;
+
+declare component Defined();
+<Defined />;

@@ -1912,5 +1912,72 @@ module.exports = (suite(
         ),
       ],
     ),
+    test('provide quickfix to stub out react component', [
+      addFile(
+        'stub-out-react-component.js.ignored',
+        'stub-out-react-component.js',
+      ),
+      lspStartAndConnect(6000, {...lspInitializeParams}),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/stub-out-react-component.js',
+        },
+        range: {
+          start: {line: 2, character: 4},
+          end: {line: 2, character: 4},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'stub-out-react-component-intrinsic-no-result.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/stub-out-react-component.js',
+        },
+        range: {
+          start: {line: 4, character: 4},
+          end: {line: 4, character: 4},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'stub-out-react-component-unbound.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/stub-out-react-component.js',
+        },
+        range: {
+          start: {line: 7, character: 4},
+          end: {line: 7, character: 4},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'stub-out-react-component-defined-no-result.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): SuiteType);
