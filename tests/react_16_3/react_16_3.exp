@@ -39,7 +39,7 @@ Error --------------------------------------------------------------------------
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either a call signature declaring the expected parameter / return type is missing in `React.RefObject` [1] but exists
    in function type [2].
- - Or `React.RefObject` [1] is incompatible with string [3].
+ - Or `React.RefObject` [1] is incompatible with null [3].
 
    forwardRef.js:19:38
     19| const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
@@ -49,12 +49,12 @@ References:
    <BUILTINS>/react.js:700:8
    700|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:182:6
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:183:5
-   183|   | string;
-            ^^^^^^ [3]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:192:5
+   192|   | null
+            ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:22:38
@@ -68,9 +68,9 @@ Cannot create `FancyButton` element because in property `ref`: [incompatible-typ
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: React$ElementRef<ElementType> | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:190:5
+   190|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:5:45
      5| const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
                                                     ^^^^^^^^^^^^^^^^^ [3]
@@ -84,7 +84,7 @@ Error --------------------------------------------------------------------------
 Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
  - Either a call signature declaring the expected parameter / return type is missing in `React.RefObject` [1] but exists
    in function type [2].
- - Or `React.RefObject` [1] is incompatible with string [3].
+ - Or `React.RefObject` [1] is incompatible with null [3].
 
    forwardRef.js:42:35
     42| const _j = <UnionRef foo={3} ref={badUnionRef} />; // Error bad ref
@@ -94,12 +94,12 @@ References:
    <BUILTINS>/react.js:700:8
    700|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:182:6
-   182|   | ((React$ElementRef<ElementType> | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:183:5
-   183|   | string;
-            ^^^^^^ [3]
+   <BUILTINS>/react.js:191:6
+   191|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:192:5
+   192|   | null
+            ^^^^ [3]
 
 
 
