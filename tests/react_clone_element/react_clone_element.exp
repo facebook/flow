@@ -26,14 +26,14 @@ References:
              v----------------------------------------------------------------------
    276|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
    277|     element: E,
-   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    279|   ) => E)
           -----^ [3]
    <BUILTINS>/react.js:280:6
              v----------------------------------------------------------------------
    280|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
    281|     element: E,
-   282|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   282|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    283|     children: NoInfer<Props>['children']
    284|   ) => E)
           -----^ [4]
@@ -41,7 +41,7 @@ References:
              v----------------------------------------------------------------------
    285|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
    286|     element: E,
-   287|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   287|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    288|     firstChild: NoInfer<Props>['children'][0],
    289|     secondChild: NoInfer<Props>['children'][1],
    290|     ...restChildren: NoInfer<Props>['children'] extends [+first: mixed, +second: mixed, ...infer Rest] ? Rest : NoInfer<Props>['children']
@@ -151,8 +151,8 @@ References:
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:278:32
-   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    test.js:31:23
     31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
                               ^^^^^^^^^^^^^^^^ [5]
@@ -266,7 +266,7 @@ References:
              v----------------------------------------------------------------------
    276|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
    277|     element: E,
-   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    279|   ) => E)
           -----^ [4]
 
@@ -295,7 +295,7 @@ References:
              v----------------------------------------------------------------------
    276|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
    277|     element: E,
-   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    279|   ) => E)
           -----^ [4]
 
@@ -324,7 +324,7 @@ References:
              v----------------------------------------------------------------------
    276|   & (<Props, C: React$AbstractComponent<empty>, E: React$Element<C, Props>>(
    277|     element: E,
-   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
+   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    279|   ) => E)
           -----^ [4]
 
@@ -490,8 +490,8 @@ References:
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:278:32
-   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: ?React$Ref<NoInfer<C>>|}>>,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   278|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    test.js:76:27
     76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
                                   ^^^^^^^^^^^^^^^^ [5]

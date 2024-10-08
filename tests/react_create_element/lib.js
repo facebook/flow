@@ -9,7 +9,7 @@ type PropsFromPropsArgAndChildrenArg<
 type ExpectedProps<Comp: React$ElementType> = $ReadOnly<{|
   ...$Exact<React$ElementConfig<Comp>>,
   key?: React$Key,
-  ref?: ?React$Ref<Comp>,
+  ref?: ?React$RefSetter<React$ElementRef<Comp>>,
 |}>;
 
 type CheckedReactElement<
