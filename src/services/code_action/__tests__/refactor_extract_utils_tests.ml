@@ -115,7 +115,6 @@ let dummy_context () =
          (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "React$Element" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add "React$Key" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "React$Ref" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "React$RefSetter"
          (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
