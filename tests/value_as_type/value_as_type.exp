@@ -18,8 +18,8 @@ References:
    test1.js:14:3
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

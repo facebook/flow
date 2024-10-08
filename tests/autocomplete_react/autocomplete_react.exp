@@ -464,7 +464,6 @@ Flags: --pretty
       "name":"ReactSetStateFunction",
       "type":"type ReactSetStateFunction<S> = (((S) => S) | S) => void"
     },
-    {"name":"Ref","type":"type Ref<C> = React$Ref<C>"},
     {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
     {
       "name":"RefOf",

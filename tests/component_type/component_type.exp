@@ -65,11 +65,11 @@ References:
    abstract_component_to_component_type.js:14:10
     14|     ref: ImNotARefSetter // error: bad ref
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -91,11 +91,11 @@ References:
    abstract_component_to_component_type.js:14:10
     14|     ref: ImNotARefSetter // error: bad ref
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -166,11 +166,11 @@ References:
    class_to_component_type.js:13:10
     13|     ref: ImNotARefSetter // error: bad ref
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -192,11 +192,11 @@ References:
    class_to_component_type.js:13:10
     13|     ref: ImNotARefSetter // error: bad ref
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -218,11 +218,11 @@ References:
    component_type_to_abstract_component.js:4:47
      4| declare const C3: component(bar: string, ref: ImNotARefSetter); // error: bad ref
                                                       ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -362,11 +362,11 @@ References:
    function_to_component_type.js:14:10
     14|     ref: ImNotARefSetter // error: bad ref
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -388,11 +388,11 @@ References:
    function_to_component_type.js:14:10
     14|     ref: ImNotARefSetter // error: bad ref
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -429,11 +429,11 @@ References:
    ref_prop_implicit_instantiation.js:8:56
      8| declare function extractRefSetter<S>(c: component(ref: S)): S; // error: bad ref
                                                                ^ [1]
-   <BUILTINS>/react.js:190:5
-   190|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:191:6
-   191|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 

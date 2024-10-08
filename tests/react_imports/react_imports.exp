@@ -103,8 +103,8 @@ Cannot get `React.Missing` because property `Missing` is missing in namespace Re
                       ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1059:26
-   1059|   declare export default typeof React;
+   <BUILTINS>/react.js:1039:26
+   1039|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -158,8 +158,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:293:16
-   293| declare module react {
+   <BUILTINS>/react.js:279:16
+   279| declare module react {
                        ^^^^^ [1]
 
 
