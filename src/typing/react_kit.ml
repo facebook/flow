@@ -221,22 +221,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
 
   let get_expected_ref cx use_op reason_ref component =
     match component with
-    | DefT (_, FunT _)
-    | DefT (_, ObjT _)
-    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
-    | DefT (_, StrT _)
-    | DefT (_, SingletonStrT _) ->
-      get_builtin_typeapp
-        cx
-        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        "React$RefSetter"
-        [
-          EvalT
-            ( component,
-              TypeDestructorT (use_op, reason_ref, ReactElementRefType),
-              Eval.generate_id ()
-            );
-        ]
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsRefSetterProp t; _ })
       ->
       t
@@ -251,7 +235,23 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
         "React$RefSetter"
         [instance]
-    | _ -> maybe (get_builtin_typeapp cx reason_ref "React$Ref" [component])
+    | DefT (_, FunT _)
+    | DefT (_, ObjT _)
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
+    | DefT (_, StrT _)
+    | DefT (_, SingletonStrT _)
+    | _ ->
+      get_builtin_typeapp
+        cx
+        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
+        "React$RefSetter"
+        [
+          EvalT
+            ( component,
+              TypeDestructorT (use_op, reason_ref, ReactElementRefType),
+              Eval.generate_id ()
+            );
+        ]
 
   let props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
