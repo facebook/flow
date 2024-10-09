@@ -98,3 +98,10 @@ Run with `yarn run flow-codemod typeCastToAsExpression`.
 Converts usages of the internal React types like `React$Node` to public facing ones like `React.Node`.
 
 Run with `yarn run flow-codemod replaceReactDollarUtilityTypes`.
+
+### Replace `$TEMPORARY$*` types
+Converts:
+ - `$TEMPORARY$object<{props}>` to `$ReadOnly<{props}>`
+ - `$TEMPORARY$array<T>` to `$ReadOnlyArray<T>`
+ - `$TEMPORARY$number<42>` annotations to `number`
+ - `$TEMPORARY$string<"foo">` annotations to `string`
