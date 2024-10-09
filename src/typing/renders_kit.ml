@@ -397,7 +397,7 @@ module Make (Flow : INPUT) : S = struct
                      renders_variant = merge_renders_variant (renders_variant, RendersStar);
                    }
                 )
-          | _ -> failwith "")
+          | _ -> FailedSynthesisState)
       in
       Base.List.fold ~init:state ~f
     in
