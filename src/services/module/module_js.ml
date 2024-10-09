@@ -299,14 +299,19 @@ module Node = struct
     | None ->
       lazy_seq
         [
+          (* Try <path> import directly. Needed for `import './foo.js'`  *)
           lazy (path_if_exists ~reader ~file_options phantom_acc path);
+          (* Try <path>.js import. Needed for `import './foo'`  *)
           lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
           lazy (resolve_package ~options ~reader ?phantom_acc path);
         ]
     | Some platform ->
       lazy_seq
         [
+          (* Try <path> import directly. Needed for `import './foo.js'`  *)
           lazy (path_if_exists ~reader ~file_options phantom_acc path);
+          (* Try <path>.<platform>.js import.
+           * Needed so that `import './foo'` resolves to foo.android.js in android.js files *)
           lazy
             (path_if_exists_with_file_exts
                ~reader
@@ -315,6 +320,7 @@ module Node = struct
                (path ^ "." ^ platform)
                file_exts
             );
+          (* Try <path>.js import. Needed for `import './foo'`  *)
           lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
           lazy (resolve_package ~options ~reader ?phantom_acc path);
         ]
