@@ -5,7 +5,6 @@ lib/
 exact_by_default=false
 autoimports=true
 autoimports_ranked_by_usage=false
-autoimports.experimental.index_star_exports=true
 
 ; disabling the builtins prevents this test from failing every time they change
 no_flowlib=true

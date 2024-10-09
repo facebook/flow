@@ -176,7 +176,7 @@ module Opts = struct
     {
       all = None;
       autoimports = None;
-      autoimports_index_star_exports = false;
+      autoimports_index_star_exports = true;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = true;
       autoimports_ranked_by_usage_boost_exact_match_min_length = 5;
