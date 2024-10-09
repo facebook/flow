@@ -3584,31 +3584,6 @@ let%expect_test "qualified_generic_typeapp_loc" =
            targs =
            [(TyRef (Unqualified BuiltinRef {ref_loc = [1:28-29]; type_ref = true; name = "T"}))]}} |}]
 
-let%expect_test "temporary_object_annot" =
-  print_sig {|
-    declare export var a: $TEMPORARY$object<{foo: string}>;
-  |};
-  [%expect {|
-    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
-      info =
-      ESModuleInfo {type_export_keys = [||];
-        type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
-
-    Local defs:
-    0. Variable {id_loc = [1:19-20];
-         name = "a";
-         def =
-         (Annot
-            (TEMPORARY_Object
-               (Annot
-                  ObjAnnot {loc = [1:40-53];
-                    obj_kind = InexactObj;
-                    props =
-                    { "foo" ->
-                      (ObjAnnotField ([1:41-44], (Annot (String [1:46-52])), Polarity.Neutral)) };
-                    proto = ObjAnnotImplicitProto})))} |}]
-
 let%expect_test "export_ref_renaming" =
   print_sig {|
     declare var a: string;
@@ -4246,28 +4221,6 @@ let%expect_test "getter_setter" =
                       Annot (Number [12:11-17])), [14:6-7], (
                       Annot (String [14:11-17]))))) }})}
   |}]
-
-let%expect_test "long_string_lit" =
-  print_sig ~max_literal_len:3 {|
-    export const a = "aaa";
-    export const b = "bbbb";
-    declare export var c: $TEMPORARY$string<"ccc">;
-    declare export var d: $TEMPORARY$string<"dddd">;
-  |};
-  [%expect {|
-    ESModule {type_exports = [||];
-      exports = [|(ExportBinding 0); (ExportBinding 1); (ExportBinding 2); (ExportBinding 3)|];
-      info =
-      ESModuleInfo {type_export_keys = [||];
-        type_stars = []; export_keys = [|"a"; "b"; "c"; "d"|];
-        stars = []; strict = true; platform_availability_set = None}}
-
-    Local defs:
-    0. Variable {id_loc = [1:13-14]; name = "a"; def = (Value (StringLit ([1:17-22], "aaa")))}
-    1. Variable {id_loc = [2:13-14]; name = "b"; def = (Value (LongStringLit [2:17-23]))}
-    2. Variable {id_loc = [3:19-20];
-         name = "c"; def = (Annot (TEMPORARY_String ([3:40-45], "ccc")))}
-    3. Variable {id_loc = [4:19-20]; name = "d"; def = (Annot (TEMPORARY_LongString [4:40-46]))} |}]
 
 let%expect_test "export_default_function_binding" =
   print_sig {|

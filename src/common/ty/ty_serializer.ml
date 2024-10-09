@@ -66,26 +66,10 @@ let type_ options =
     | Void -> just (T.Void None)
     | Null -> just (T.Null None)
     | Symbol -> just (T.Symbol None)
-    | Num (Some lit) ->
-      builtin_from_string
-        "$TEMPORARY$number"
-        ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))])
-    | Num None -> just (T.Number None)
-    | Str (Some lit) ->
-      builtin_from_string
-        "$TEMPORARY$string"
-        ~targs:(mk_targs [(Loc.none, T.StringLiteral (str_lit (Reason.display_string_of_name lit)))])
-    | Str None -> just (T.String None)
-    | Bool (Some lit) ->
-      builtin_from_string
-        "$TEMPORARY$boolean"
-        ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))])
-    | Bool None -> just (T.Boolean { raw = `Boolean; comments = None })
-    | BigInt (Some lit) ->
-      builtin_from_string
-        "$TEMPORARY$bigint"
-        ~targs:(mk_targs [(Loc.none, T.BigIntLiteral (bigint_lit lit))])
-    | BigInt None -> just (T.BigInt None)
+    | Num _ -> just (T.Number None)
+    | Str _ -> just (T.String None)
+    | Bool _ -> just (T.Boolean { raw = `Boolean; comments = None })
+    | BigInt _ -> just (T.BigInt None)
     | NumLit lit -> just (T.NumberLiteral (num_lit lit))
     | StrLit lit -> just (T.StringLiteral (str_lit (Reason.display_string_of_name lit)))
     | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
@@ -363,12 +347,7 @@ let type_ options =
         (false, false, properties)
       | MappedTypeObj -> (false, false, properties)
     in
-    let t = (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None }) in
-    match o.obj_literal with
-    | Some true -> mk_generic_type (id_from_string "$TEMPORARY$object") (Some (mk_targs [t]))
-    | None
-    | Some false ->
-      t
+    (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None })
   and obj_prop = function
     | NamedProp { name; prop; _ } ->
       let p = obj_named_prop name prop in
@@ -490,16 +469,12 @@ let type_ options =
         comments = None;
       }
     )
-  and arr { arr_readonly; arr_elt_t; arr_literal; _ } =
+  and arr { arr_readonly; arr_elt_t; arr_literal = _; _ } =
     let t = type_ arr_elt_t in
     if arr_readonly then
       builtin_from_string "$ReadOnlyArray" ~targs:(mk_targs [t])
     else
-      match arr_literal with
-      | Some true -> mk_generic_type (id_from_string "$TEMPORARY$array") (Some (mk_targs [t]))
-      | None
-      | Some false ->
-        builtin_from_string "Array" ~targs:(mk_targs [t])
+      builtin_from_string "Array" ~targs:(mk_targs [t])
   and type_params ts =
     let ts = Base.List.map ~f:type_param ts in
     (Loc.none, { T.TypeParams.params = ts; comments = None })

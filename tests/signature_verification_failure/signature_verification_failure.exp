@@ -146,112 +146,96 @@ simple key in object: [signature-verification-failure]
                                  ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:5:15
-
-The type argument of a temporary base type must be a compatible literal type [invalid-temp-type]
-
-   5| export var a: $TEMPORARY$number<'a'> = 42;
-                    ^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- misc.js:7:15
-
-Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
-
-   7| export var b: $TEMPORARY$number<1, 1> = 42;
-                    ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- misc.js:9:18
+Error ----------------------------------------------------------------------------------------------------- misc.js:5:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
 simple key in object: [signature-verification-failure]
 
-   9| export const c = {['a' + 'b']: 42};
+   5| export const c = {['a' + 'b']: 42};
                        ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:11:18
+Error ----------------------------------------------------------------------------------------------------- misc.js:7:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
 spread in array: [signature-verification-failure]
 
-   11| export const d = [...c];
-                        ^^^^^^
+   7| export const d = [...c];
+                       ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:11:22
+Error ----------------------------------------------------------------------------------------------------- misc.js:7:22
 
 Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2]. [prop-missing]
 
-   misc.js:11:22
-     11| export const d = [...c];
+   misc.js:7:22
+      7| export const d = [...c];
                               ^
 
 References:
-   misc.js:9:18
-      9| export const c = {['a' + 'b']: 42};
+   misc.js:5:18
+      5| export const c = {['a' + 'b']: 42};
                           ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:1751:11
    1751| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
+Error ----------------------------------------------------------------------------------------------------- misc.js:9:19
 
 Cannot reassign constant `d` [1]. [reassign-const]
 
-   misc.js:13:19
-   13| export const e = (d += d);
-                         ^
+   misc.js:9:19
+   9| export const e = (d += d);
+                        ^
 
 References:
-   misc.js:11:14
-   11| export const d = [...c];
-                    ^ [1]
+   misc.js:7:14
+   7| export const d = [...c];
+                   ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
+Error ----------------------------------------------------------------------------------------------------- misc.js:9:19
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this assignment expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
 
-   13| export const e = (d += d);
-                         ^^^^^^
+   9| export const e = (d += d);
+                        ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:13:19
+Error ----------------------------------------------------------------------------------------------------- misc.js:9:19
 
 Cannot use operator `+=` with operands array literal [1] and array literal [1] [unsafe-addition]
 
-   misc.js:13:19
-   13| export const e = (d += d);
-                         ^^^^^^
+   misc.js:9:19
+   9| export const e = (d += d);
+                        ^^^^^^
 
 References:
-   misc.js:11:18
-   11| export const d = [...c];
-                        ^^^^^^ [1]
+   misc.js:7:18
+   7| export const d = [...c];
+                       ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
+Error ---------------------------------------------------------------------------------------------------- misc.js:15:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this literal. Please provide an annotation, e.g., by adding a type cast around this expression.
 [signature-verification-failure]
 
-   19| export const w = /foo/;
+   15| export const w = /foo/;
                         ^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:21:18
+Error ---------------------------------------------------------------------------------------------------- misc.js:17:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
 determine the type of this JSX element. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
 
-   21| export const x = <foo />;
+   17| export const x = <foo />;
                         ^^^^^^^
 
 
@@ -346,4 +330,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 35 errors
+Found 33 errors

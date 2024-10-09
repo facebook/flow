@@ -2267,44 +2267,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (NoInfer t)
     | _ -> Err (loc, CheckError)
   end
-  | "$TEMPORARY$number" -> begin
-    match targs with
-    | Some (_, { arguments = [(loc, T.NumberLiteral { Ast.NumberLiteral.value; raw; _ })]; _ }) ->
-      let loc = push_loc tbls loc in
-      Annot (TEMPORARY_Number (loc, value, raw))
-    | _ -> Err (loc, CheckError)
-  end
-  | "$TEMPORARY$string" -> begin
-    match targs with
-    | Some (_, { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ })]; _ }) ->
-      let loc = push_loc tbls loc in
-      if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
-        Annot (TEMPORARY_String (loc, s))
-      else
-        Annot (TEMPORARY_LongString loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "$TEMPORARY$boolean" -> begin
-    match targs with
-    | Some (_, { arguments = [(loc, T.BooleanLiteral { Ast.BooleanLiteral.value; _ })]; _ }) ->
-      let loc = push_loc tbls loc in
-      Annot (TEMPORARY_Boolean (loc, value))
-    | _ -> Err (loc, CheckError)
-  end
-  | "$TEMPORARY$object" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (TEMPORARY_Object t)
-    | _ -> Err (loc, CheckError)
-  end
-  | "$TEMPORARY$array" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (TEMPORARY_Array (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
   | "$ReadOnlyArray" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

@@ -452,16 +452,12 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               type_ ~depth prop;
             ]
     )
-  and type_array ~depth { arr_readonly; arr_literal; arr_elt_t } =
+  and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
     let arr =
       if arr_readonly then
         "$ReadOnlyArray"
       else
-        match arr_literal with
-        | Some true -> "$TEMPORARY$array"
-        | Some false
-        | None ->
-          "Array"
+        "Array"
     in
     fuse [Atom arr; Atom "<"; type_ ~depth arr_elt_t; Atom ">"]
   and type_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
@@ -481,7 +477,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         type_ ~depth dict_value;
       ]
   and type_object ~depth ?(sep = Atom ",") obj =
-    let { obj_kind; obj_props; obj_literal; _ } = obj in
+    let { obj_kind; obj_props; obj_literal = _; _ } = obj in
     let s_exact =
       if obj_kind = ExactObj && not exact_by_default then
         Atom "|"
@@ -496,14 +492,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       | ExactObj -> props
       | MappedTypeObj -> props
     in
-    let o =
-      list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
-    in
-    match obj_literal with
-    | Some true -> fuse [Atom "$TEMPORARY$object"; Atom "<"; o; Atom ">"]
-    | Some false
-    | None ->
-      o
+    list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
   and intersperse_pretty_line ~depth ~sep ts =
     let elts =
       match counted_map (type_with_parens ~depth) ts with

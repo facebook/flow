@@ -442,22 +442,6 @@ module Builtins = struct
   let flowfixme_ast ~exact_by_default ~lint_severities ~suppress_types =
     flowfixme_ty lint_severities suppress_types
     |> Ty_serializer.type_ { Ty_serializer.exact_by_default }
-
-  let temporary_objectlit_symbol =
-    {
-      Ty.sym_provenance = Ty.Builtin;
-      sym_def_loc = ALoc.none;
-      sym_name = Reason.OrdinaryName "$TEMPORARY$object";
-      sym_anonymous = false;
-    }
-
-  let temporary_arraylit_symbol =
-    {
-      Ty.sym_provenance = Ty.Builtin;
-      sym_def_loc = ALoc.none;
-      sym_name = Reason.OrdinaryName "$TEMPORARY$array";
-      sym_anonymous = false;
-    }
 end
 
 (* Validation *)
