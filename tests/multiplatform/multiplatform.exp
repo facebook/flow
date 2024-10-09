@@ -1,3 +1,36 @@
+Error ------------------------------------------------------------------------------- android_and_common.android.js:1:27
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `foo`. Read the
+docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   android_and_common.android.js:1:27
+   1| declare export const foo: number; // expected conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+
+References:
+   android_and_common.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- android_only_use.android.js:2:1
+
+Cannot cast `require(...).foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   android_only_use.android.js:2:1
+   2| require('./android_and_common').foo as string; // error: android_and_common.android is actually imported
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   android_and_common.android.js:1:27
+   1| declare export const foo: number; // expected conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+   android_only_use.android.js:2:40
+   2| require('./android_and_common').foo as string; // error: android_and_common.android is actually imported
+                                             ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------- bad_supports_platform.js:3:4
 
 Invalid `@supportsPlatform` declaration. `random` is not configured in `experimental.multi_platform.extensions` in your
@@ -246,4 +279,4 @@ Cannot resolve module `./allow_no_interface`. [cannot-resolve-module]
 
 
 
-Found 17 errors
+Found 19 errors
