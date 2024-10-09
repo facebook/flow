@@ -318,53 +318,55 @@ let insert_inferred_type_as_cast_code_actions
             ~file
             ~reserved_names:SSet.empty
         in
-        let new_ast =
-          Insert_type.insert_type
-            ~cx
-            ~loc_of_aloc
-            ~remote_converter
-            ~get_ast_from_shared_mem
-            ~get_haste_name
-            ~get_type_sig
-            ~file_sig
-            ~typed_ast
-            ~omit_targ_defaults:false
-            ~strict:false
-            ~ambiguity_strategy:Autofix_options.Generalize
-            ast
-            (fst expression)
-        in
-        let added_imports = remote_converter#to_import_bindings in
-        let diff = Insert_type.mk_diff ast new_ast in
-        let opts = layout_options options in
-        let edits =
-          Autofix_imports.add_imports ~options:opts ~added_imports ast
-          @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-          |> flow_loc_patch_to_lsp_edits
-        in
-        let title = "Insert inferred type as a type cast" in
-        let diagnostic_title = "insert_inferred_type_as_cast" in
-        let code_action =
-          let open Lsp in
-          CodeAction.Action
-            {
-              CodeAction.title;
-              kind = CodeActionKind.refactor;
-              diagnostics = [];
-              action =
-                CodeAction.BothEditThenCommand
-                  ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                    {
-                      Command.title = "";
-                      command = Command.Command "log";
-                      arguments =
-                        ["textDocument/codeAction"; diagnostic_title; title]
-                        |> List.map (fun str -> Hh_json.JSON_String str);
-                    }
-                  );
-            }
-        in
-        [code_action])
+        (match
+           Insert_type.insert_type
+             ~cx
+             ~loc_of_aloc
+             ~remote_converter
+             ~get_ast_from_shared_mem
+             ~get_haste_name
+             ~get_type_sig
+             ~file_sig
+             ~typed_ast
+             ~omit_targ_defaults:false
+             ~strict:false
+             ~ambiguity_strategy:Autofix_options.Generalize
+             ast
+             (fst expression)
+         with
+        | exception Insert_type.FailedToInsertType _ -> []
+        | new_ast ->
+          let added_imports = remote_converter#to_import_bindings in
+          let diff = Insert_type.mk_diff ast new_ast in
+          let opts = layout_options options in
+          let edits =
+            Autofix_imports.add_imports ~options:opts ~added_imports ast
+            @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+            |> flow_loc_patch_to_lsp_edits
+          in
+          let title = "Insert inferred type as a type cast" in
+          let diagnostic_title = "insert_inferred_type_as_cast" in
+          let code_action =
+            let open Lsp in
+            CodeAction.Action
+              {
+                CodeAction.title;
+                kind = CodeActionKind.refactor;
+                diagnostics = [];
+                action =
+                  CodeAction.BothEditThenCommand
+                    ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                      {
+                        Command.title = "";
+                        command = Command.Command "log";
+                        arguments =
+                          ["textDocument/codeAction"; diagnostic_title; title]
+                          |> List.map (fun str -> Hh_json.JSON_String str);
+                      }
+                    );
+              }
+          in
+          [code_action]))
 
 let insert_jsdoc_code_actions ~options ~ast uri loc =
   match Insert_jsdoc.insert_stub_for_target ~use_snippets:false loc ast with
