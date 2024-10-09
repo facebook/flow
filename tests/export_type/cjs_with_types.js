@@ -5,4 +5,4 @@ export interface IFoo {
   prop: number;
 }
 
-module.exports = {} as $TEMPORARY$object<{}>;
+module.exports = {} as {};

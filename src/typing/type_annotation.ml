@@ -730,61 +730,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               let elem_t = List.hd elemts in
               reconstruct_ast elem_t targs
           )
-        (* Temporary base types with literal information *)
-        | "$TEMPORARY$number" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (elemts, targs) = convert_type_params () in
-              match List.hd elemts with
-              | DefT (r, SingletonNumT num_lit) ->
-                reconstruct_ast
-                  (DefT (replace_desc_reason RNumber r, NumT (Literal (None, num_lit))))
-                  targs
-              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
-          )
-        | "$TEMPORARY$string" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (elemts, targs) = convert_type_params () in
-              match List.hd elemts with
-              | DefT (r, SingletonStrT s) ->
-                let max_literal_length = Context.max_literal_length cx in
-                let (lit, r_desc) =
-                  if
-                    max_literal_length = 0
-                    || String.length (display_string_of_name s) <= max_literal_length
-                  then
-                    (Literal (None, s), RString)
-                  else
-                    (AnyLiteral, RLongStringLit max_literal_length)
-                in
-                reconstruct_ast (DefT (replace_desc_reason r_desc r, StrT lit)) targs
-              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
-          )
-        | "$TEMPORARY$boolean" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (elemts, targs) = convert_type_params () in
-              match List.hd elemts with
-              | DefT (r, SingletonBoolT bool) ->
-                reconstruct_ast (DefT (replace_desc_reason RBoolean r, BoolT (Some bool))) targs
-              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
-          )
-        | "$TEMPORARY$object" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = convert_temporary_object (List.hd ts) in
-              reconstruct_ast t targs
-          )
-        | "$TEMPORARY$array" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (elemts, targs) = convert_type_params () in
-              let elem_t = List.hd elemts in
-              reconstruct_ast
-                (DefT
-                   ( mk_annot_reason RArrayLit loc,
-                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
-                   )
-                )
-                targs
-          )
         | "StringPrefix" ->
           let (ts, targs) = convert_type_params () in
           let create_string_prefix_type ~prefix ~remainder =
@@ -1824,24 +1769,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let tast_opt = Base.Option.map ~f:(convert (mk_convert_env cx tparams_map)) ast_opt in
     let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
     (t_opt, tast_opt)
-
-  and convert_temporary_object = function
-    | DefT (r, ObjT o) ->
-      let r = replace_desc_reason RObjectLit r in
-      let obj_kind =
-        match o.flags.obj_kind with
-        | Indexed _ -> o.flags.obj_kind
-        | _ -> Exact
-      in
-      DefT (r, ObjT { o with flags = { obj_kind; frozen = false; react_dro = None } })
-    | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
-      let r = replace_desc_reason RObjectLit r in
-      let target =
-        let open Type.Object.Spread in
-        Value { make_seal = Sealed }
-      in
-      EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
-    | t -> t
 
   and convert_qualification ?(lookup_mode = ForType) cx reason_prefix =
     let open Ast.Type.Generic.Identifier in

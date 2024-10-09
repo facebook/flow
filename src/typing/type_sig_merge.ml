@@ -627,39 +627,6 @@ and merge_annot env file = function
     in
     TypeUtil.mod_reason_of_t (Reason.repos_reason ref_loc) t
   | NoInfer t -> merge { env with in_no_infer = true } file t
-  | TEMPORARY_Number (loc, num, raw) ->
-    let reason = Reason.(mk_annot_reason RNumber loc) in
-    Type.(DefT (reason, NumT (Literal (None, (num, raw)))))
-  | TEMPORARY_String (loc, str) ->
-    let reason = Reason.(mk_annot_reason RString loc) in
-    Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName str))))
-  | TEMPORARY_LongString loc ->
-    let len = Context.max_literal_length file.cx in
-    let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
-    Type.(DefT (reason, StrT AnyLiteral))
-  | TEMPORARY_Boolean (loc, b) ->
-    let reason = Reason.(mk_annot_reason RBoolean loc) in
-    Type.(DefT (reason, BoolT (Some b)))
-  | TEMPORARY_Object t ->
-    let t = merge env file t in
-    let open Type in
-    (match t with
-    | DefT (r, ObjT o) ->
-      let r = Reason.(replace_desc_reason RObjectLit r) in
-      let obj_kind =
-        match o.flags.obj_kind with
-        | Indexed _ -> o.flags.obj_kind
-        | _ -> Type.Exact
-      in
-      DefT (r, ObjT { o with flags = { o.flags with obj_kind } })
-    | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
-      let r = Reason.(replace_desc_reason RObjectLit r) in
-      EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
-    | _ -> t)
-  | TEMPORARY_Array (loc, t) ->
-    let reason = Reason.(mk_annot_reason RArrayLit loc) in
-    let elem_t = merge env file t in
-    Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
   | PropertyType { loc; obj; prop } ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$PropertyType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

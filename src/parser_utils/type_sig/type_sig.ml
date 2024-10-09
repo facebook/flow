@@ -501,12 +501,6 @@ type ('loc, 'a) annot =
       name: string;
     }
   | NoInfer of 'a
-  | TEMPORARY_Number of 'loc * float * string
-  | TEMPORARY_String of 'loc * string
-  | TEMPORARY_LongString of 'loc
-  | TEMPORARY_Boolean of 'loc * bool
-  | TEMPORARY_Object of 'a
-  | TEMPORARY_Array of 'loc * 'a
   | PropertyType of {
       loc: 'loc;
       obj: 'a;

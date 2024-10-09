@@ -2,12 +2,12 @@
 
 export function tag_like_values() {
   return {
-    tag_like: 'tag_like', // should print '$TEMPORARY$string<"tag_like">'
+    tag_like: 'tag_like', // should print 'string'
     non_tag_like: 'non_tag_like!', // should print 'string'
   };
 }
 
-// should print '$TEMPORARY$array<...>'
+// should print 'Array<...>'
 export function array_literal(x: string, y: number) {
   return [x, y];
 }
