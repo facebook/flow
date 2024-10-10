@@ -127,7 +127,7 @@ let extract_docblock =
           if
             filename
             |> File_key.to_string
-            |> Files.platform_specific_extension_opt ~options:file_options
+            |> Files.platform_specific_extensions_and_indices_opt ~options:file_options
             |> Option.is_some
           then
             ((loc, DisallowedSupportsPlatform) :: errors, info)

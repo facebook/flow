@@ -461,7 +461,7 @@ let check_multiplatform_conformance cx ast tast =
          ~file:filename
      with
     | None -> ()
-    | Some impl_mrefs ->
+    | Some (unconditional_extensions, grouped_extensions_with_conditional_extensions) ->
       let module_exists mref =
         match Context.find_require cx mref with
         | Context.TypedModule _
@@ -469,27 +469,42 @@ let check_multiplatform_conformance cx ast tast =
           true
         | Context.MissingModule _ -> false
       in
-      let mrefs_with_existence_status =
-        List.map (fun mref -> (mref, module_exists mref)) impl_mrefs
-      in
       if
         (not (Context.has_explicit_supports_platform cx))
-        && List.for_all (fun (_, exists) -> not exists) mrefs_with_existence_status
+        && Base.List.for_all unconditional_extensions ~f:(fun m -> not (module_exists m))
+        && Base.List.for_all
+             grouped_extensions_with_conditional_extensions
+             ~f:(fun (grouped, conditional) ->
+               (not (module_exists grouped))
+               && Base.List.for_all conditional ~f:(fun m -> not (module_exists m))
+           )
       then
         (* We are fine if no implementation file exist.
          * The .js.flow file might be declaring a builtin module. *)
         ()
-      else
-        (* If one implementation file exist, then all platform specific implementations must exist. *)
-        Base.List.iter mrefs_with_existence_status ~f:(fun (impl_mref, exist) ->
-            if not exist then
+      else (
+        Base.List.iter unconditional_extensions ~f:(fun name ->
+            if not (module_exists name) then
               Flow_js_utils.add_output
                 cx
-                Error_message.(
-                  EPlatformSpecificImplementationModuleLookupFailed
-                    { loc = file_loc; name = impl_mref }
+                (Error_message.EPlatformSpecificImplementationModuleLookupFailed
+                   { loc = file_loc; name }
                 )
-        ))
+        );
+        Base.List.iter
+          grouped_extensions_with_conditional_extensions
+          ~f:(fun (grouped, conditional) ->
+            if not (module_exists grouped) then
+              Base.List.iter conditional ~f:(fun name ->
+                  if not (module_exists name) then
+                    Flow_js_utils.add_output
+                      cx
+                      (Error_message.EPlatformSpecificImplementationModuleLookupFailed
+                         { loc = file_loc; name }
+                      )
+              )
+        )
+      ))
 
 let check_spread_prop_keys cx tast =
   let checker =

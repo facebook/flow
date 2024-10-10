@@ -19,10 +19,10 @@ let available_platforms ~file_options ~filename ~explicit_available_platforms : 
     None
   else
     let multi_platform_extensions = Files.multi_platform_extensions file_options in
-    match Files.platform_specific_extension_and_index_opt ~options:file_options filename with
-    | Some (i, _) ->
+    match Files.platform_specific_extensions_and_indices_opt ~options:file_options filename with
+    | Some result ->
       let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
-      Bitset.set bitset i;
+      Base.List.iter result ~f:(fun (i, _) -> Bitset.set bitset i);
       Some bitset
     | None ->
       (match explicit_available_platforms with
@@ -71,17 +71,62 @@ let platform_specific_implementation_mrefs_of_possibly_interface_file
           let base =
             File_key.chop_suffix file module_file_ext |> File_key.to_string |> Filename.basename
           in
-          let implementation_mrefs =
+          let platform_extensions =
             Base.List.filter_mapi
               (Files.multi_platform_extensions file_options)
               ~f:(fun i platform_ext ->
                 if Bitset.mem i platform_set then
-                  Some ("./" ^ base ^ platform_ext)
+                  Some platform_ext
                 else
                   None
             )
           in
-          Some implementation_mrefs
+          let multi_platform_extension_group_mapping =
+            Files.multi_platform_extension_group_mapping file_options
+          in
+          let (unconditional_extensions, grouped_extensions_with_conditional_extensions) =
+            Base.List.fold
+              platform_extensions
+              ~init:(SSet.empty, SMap.empty)
+              ~f:(fun (unconditional_extensions, grouped_extensions_with_conditional_extensions) ext
+                 ->
+                match
+                  Base.List.find
+                    multi_platform_extension_group_mapping
+                    ~f:(fun (_group_ext, platforms) ->
+                      Base.List.exists platforms ~f:(fun p -> "." ^ p = ext)
+                  )
+                with
+                | None ->
+                  ( SSet.add ext unconditional_extensions,
+                    grouped_extensions_with_conditional_extensions
+                  )
+                | Some (group_ext, _) ->
+                  ( unconditional_extensions,
+                    SMap.adjust
+                      group_ext
+                      (function
+                        | None -> SSet.singleton ext
+                        | Some s -> SSet.add ext s)
+                      grouped_extensions_with_conditional_extensions
+                  )
+            )
+          in
+          let implementation_mref_of_platform_extension platform_ext = "./" ^ base ^ platform_ext in
+          Some
+            ( unconditional_extensions
+              |> SSet.elements
+              |> List.map implementation_mref_of_platform_extension,
+              grouped_extensions_with_conditional_extensions
+              |> SMap.elements
+              |> List.map (fun (group_ext, conditional_exts) ->
+                     ( implementation_mref_of_platform_extension group_ext,
+                       conditional_exts
+                       |> SSet.elements
+                       |> List.map implementation_mref_of_platform_extension
+                     )
+                 )
+            )
         else
           None
     )

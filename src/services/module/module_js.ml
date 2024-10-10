@@ -280,13 +280,36 @@ module Node = struct
           );
       ]
 
-  let only_supported_platform_of_file ~file_options filename =
+  let ordered_allowed_implicit_platform_specific_import ~file_options filename =
     match
       Platform_set.available_platforms ~file_options ~filename ~explicit_available_platforms:None
       |> Option.map (Platform_set.to_platform_string_set ~file_options)
     with
-    | Some platform_set when SSet.cardinal platform_set = 1 -> SSet.choose_opt platform_set
-    | _ -> None
+    | None -> None
+    | Some available_platform_set ->
+      (* For .ios.js files, we will try .ios platform import.
+       * If .native contains .ios, we will try .native imports as well. *)
+      let single_platform =
+        if SSet.cardinal available_platform_set = 1 then
+          [SSet.choose available_platform_set]
+        else
+          []
+      in
+      (* If the file's available platform set matches a platform extension group, then
+       * we also allow import for that extension group.
+       * e.g. .native files can implicitly import other .native files without .native. *)
+      let grouped_platform =
+        Base.List.find_map
+          (Files.multi_platform_extension_group_mapping file_options)
+          ~f:(fun (group_ext, platforms) ->
+            if SSet.subset available_platform_set (SSet.of_list platforms) then
+              Some (Base.String.chop_prefix_exn ~prefix:"." group_ext)
+            else
+              None
+        )
+        |> Option.to_list
+      in
+      Some (single_platform @ grouped_platform)
 
   let resolve_relative ~options ~reader ?phantom_acc ~source root_path rel_path =
     let file_options = Options.file_options options in
@@ -295,7 +318,9 @@ module Node = struct
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
     let file_exts = Files.module_file_exts file_options in
-    match only_supported_platform_of_file ~file_options (File_key.to_string source) with
+    match
+      ordered_allowed_implicit_platform_specific_import ~file_options (File_key.to_string source)
+    with
     | None ->
       lazy_seq
         [
@@ -305,25 +330,30 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
           lazy (resolve_package ~options ~reader ?phantom_acc path);
         ]
-    | Some platform ->
+    | Some ordered_platforms ->
       lazy_seq
-        [
-          (* Try <path> import directly. Needed for `import './foo.js'`  *)
-          lazy (path_if_exists ~reader ~file_options phantom_acc path);
-          (* Try <path>.<platform>.js import.
-           * Needed so that `import './foo'` resolves to foo.android.js in android.js files *)
-          lazy
-            (path_if_exists_with_file_exts
-               ~reader
-               ~file_options
-               phantom_acc
-               (path ^ "." ^ platform)
-               file_exts
-            );
-          (* Try <path>.js import. Needed for `import './foo'`  *)
-          lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
-          lazy (resolve_package ~options ~reader ?phantom_acc path);
-        ]
+        ([
+           (* Try <path> import directly. Needed for `import './foo.js'`  *)
+           lazy (path_if_exists ~reader ~file_options phantom_acc path);
+         ]
+         (* Try <path>.<platform>.js import.
+          * Needed so that `import './foo'` resolves to foo.android.js in android.js files *)
+        @ Base.List.map ordered_platforms ~f:(fun platform ->
+              lazy
+                (path_if_exists_with_file_exts
+                   ~reader
+                   ~file_options
+                   phantom_acc
+                   (path ^ "." ^ platform)
+                   file_exts
+                )
+          )
+        @ [
+            (* Try <path>.js import. Needed for `import './foo'`  *)
+            lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
+            lazy (resolve_package ~options ~reader ?phantom_acc path);
+          ]
+        )
 
   let rec node_module ~options ~reader node_modules_containers file ?phantom_acc ~source dir r =
     let file_options = Options.file_options options in
@@ -587,7 +617,7 @@ module Haste : MODULE_SYSTEM = struct
               );
           ]
       else
-        match Node.only_supported_platform_of_file ~file_options file with
+        match Node.ordered_allowed_implicit_platform_specific_import ~file_options file with
         | None ->
           lazy_seq
             [
@@ -613,40 +643,43 @@ module Haste : MODULE_SYSTEM = struct
                    r
                 );
             ]
-        | Some platform ->
+        | Some ordered_platforms ->
           lazy_seq
-            [
-              lazy
-                (resolve_haste_module
-                   ~options
-                   ~reader
-                   ?phantom_acc
-                   ~source:f
-                   ~dir
-                   (r ^ "." ^ platform)
-                );
-              lazy
-                (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-                   ~options
-                   ~reader
-                   ?phantom_acc
-                   ~source:f
-                   ~dir
-                   r
-                );
-              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
-              lazy
-                (Node.node_module
-                   ~options
-                   ~reader
-                   node_modules_containers
-                   file
-                   ?phantom_acc
-                   ~source:f
-                   dir
-                   r
-                );
-            ]
+            (Base.List.map ordered_platforms ~f:(fun platform ->
+                 lazy
+                   (resolve_haste_module
+                      ~options
+                      ~reader
+                      ?phantom_acc
+                      ~source:f
+                      ~dir
+                      (r ^ "." ^ platform)
+                   )
+             )
+            @ [
+                lazy
+                  (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
+                     ~options
+                     ~reader
+                     ?phantom_acc
+                     ~source:f
+                     ~dir
+                     r
+                  );
+                lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
+                lazy
+                  (Node.node_module
+                     ~options
+                     ~reader
+                     node_modules_containers
+                     file
+                     ?phantom_acc
+                     ~source:f
+                     dir
+                     r
+                  );
+              ]
+            )
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
     (* For historical reasons, the Haste module system always picks the first

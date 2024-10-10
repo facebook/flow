@@ -1,0 +1,10 @@
+[options]
+all=true
+experimental.multi_platform=true
+experimental.multi_platform.extensions=.ios
+experimental.multi_platform.extensions=.android
+experimental.multi_platform.extensions=.web
+experimental.multi_platform.extension_group_mapping='.native' -> 'ios, android'
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>/web' -> 'web'
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>/native' -> 'ios, android'
+experimental.multi_platform.ambient_supports_platform.directory_overrides='<PROJECT_ROOT>' -> 'ios, android, web'

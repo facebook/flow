@@ -1,0 +1,496 @@
+Error ---------------------------------------------------------------------------------- native/use_tests.android.js:1:1
+
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.android.js:1:1
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.android.js:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [1]
+   native/use_tests.android.js:1:48
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+                                                     ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- native/use_tests.android.js:2:1
+
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.android.js:2:1
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.native.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+   native/use_tests.android.js:2:46
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+                                                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- native/use_tests.android.js:3:9
+
+The imported module supports the `web` platform, but the current module requires the support of the `android` platform.
+Support for the `android` platform is missing. [missing-platform-support]
+
+   3| require('../web/explicit_web.web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- native/use_tests.android.js:4:9
+
+Cannot resolve module `../web/explicit_web`. [cannot-resolve-module]
+
+   4| require('../web/explicit_web'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- native/use_tests.android.js:5:9
+
+The imported module supports the `web` platform, but the current module requires the support of the `android` platform.
+Support for the `android` platform is missing. [missing-platform-support]
+
+   5| require('../web/implicit_web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:1:1
+
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.ios.js:1:1
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.ios.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+   native/use_tests.ios.js:1:48
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+                                                     ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:2:1
+
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.ios.js:2:1
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.native.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+   native/use_tests.ios.js:2:46
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+                                                   ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:3:9
+
+The imported module supports the `web` platform, but the current module requires the support of the `ios` platform.
+Support for the `ios` platform is missing. [missing-platform-support]
+
+   3| require('../web/explicit_web.web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:4:9
+
+Cannot resolve module `../web/explicit_web`. [cannot-resolve-module]
+
+   4| require('../web/explicit_web'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:5:9
+
+The imported module supports the `web` platform, but the current module requires the support of the `ios` platform.
+Support for the `ios` platform is missing. [missing-platform-support]
+
+   5| require('../web/implicit_web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ native/use_tests.js:1:1
+
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.js:1:1
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [1]
+   native/use_tests.js:1:48
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+                                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ native/use_tests.js:2:1
+
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.js:2:1
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.native.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+   native/use_tests.js:2:46
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+                                                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ native/use_tests.js:3:9
+
+The imported module supports the `web` platform, but the current module requires the support of the following platforms:
+`android`, `ios`. Support for the following platforms: `android`, `ios` is missing. [missing-platform-support]
+
+   3| require('../web/explicit_web.web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ native/use_tests.js:4:9
+
+Cannot resolve module `../web/explicit_web`. [cannot-resolve-module]
+
+   4| require('../web/explicit_web'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ native/use_tests.js:5:9
+
+The imported module supports the `web` platform, but the current module requires the support of the following platforms:
+`android`, `ios`. Support for the following platforms: `android`, `ios` is missing. [missing-platform-support]
+
+   5| require('../web/implicit_web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- native/use_tests.native.js:1:1
+
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.native.js:1:1
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [1]
+   native/use_tests.native.js:1:48
+   1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+                                                     ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- native/use_tests.native.js:2:1
+
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/use_tests.native.js:2:1
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.native.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+   native/use_tests.native.js:2:46
+   2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
+                                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- native/use_tests.native.js:3:9
+
+The imported module supports the `web` platform, but the current module requires the support of the following platforms:
+`android`, `ios`. Support for the following platforms: `android`, `ios` is missing. [missing-platform-support]
+
+   3| require('../web/explicit_web.web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- native/use_tests.native.js:4:9
+
+Cannot resolve module `../web/explicit_web`. [cannot-resolve-module]
+
+   4| require('../web/explicit_web'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- native/use_tests.native.js:5:9
+
+The imported module supports the `web` platform, but the current module requires the support of the following platforms:
+`android`, `ios`. Support for the following platforms: `android`, `ios` is missing. [missing-platform-support]
+
+   5| require('../web/implicit_web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- web/use_tests.js:1:1
+
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   web/use_tests.js:1:1
+   1| require('../xplat/all_platform_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.web.js:1:27
+   1| declare export const foo: boolean; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^^ [1]
+   web/use_tests.js:1:48
+   1| require('../xplat/all_platform_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+                                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- web/use_tests.js:2:1
+
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   web/use_tests.js:2:1
+   2| require('../xplat/web_native_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.web.js:1:27
+   1| declare export const foo: boolean; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^^ [1]
+   web/use_tests.js:2:46
+   2| require('../xplat/web_native_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+                                                   ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- web/use_tests.js:6:9
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the `web` platform. Support for the `web` platform is missing. [missing-platform-support]
+
+   6| require('../native/explicit_native.native'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- web/use_tests.js:7:9
+
+Cannot resolve module `../native/explicit_native`. [cannot-resolve-module]
+
+   7| require('../native/explicit_native'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- web/use_tests.js:8:9
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the `web` platform. Support for the `web` platform is missing. [missing-platform-support]
+
+   8| require('../native/implicit_native'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:1:1
+
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   web/use_tests.web.js:1:1
+   1| require('../xplat/all_platform_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.web.js:1:27
+   1| declare export const foo: boolean; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^^ [1]
+   web/use_tests.web.js:1:48
+   1| require('../xplat/all_platform_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+                                                     ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:2:1
+
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   web/use_tests.web.js:2:1
+   2| require('../xplat/web_native_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.web.js:1:27
+   1| declare export const foo: boolean; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^^ [1]
+   web/use_tests.web.js:2:46
+   2| require('../xplat/web_native_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
+                                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:6:9
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the `web` platform. Support for the `web` platform is missing. [missing-platform-support]
+
+   6| require('../native/explicit_native.native'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:7:9
+
+Cannot resolve module `../native/explicit_native`. [cannot-resolve-module]
+
+   7| require('../native/explicit_native'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:8:9
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the `web` platform. Support for the `web` platform is missing. [missing-platform-support]
+
+   8| require('../native/implicit_native'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- xplat/all_platform_forked.ios.js:1:27
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`. Read the
+docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   xplat/all_platform_forked.ios.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+
+References:
+   xplat/all_platform_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- xplat/all_platform_forked.web.js:1:27
+
+Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `foo`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   xplat/all_platform_forked.web.js:1:27
+   1| declare export const foo: boolean; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^^ [1]
+
+References:
+   xplat/all_platform_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:1:1
+
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   xplat/use_tests.js:1:1
+   1| require('./all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/all_platform_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [1]
+   xplat/use_tests.js:1:41
+   1| require('./all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+                                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:2:1
+
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   xplat/use_tests.js:2:1
+   2| require('./web_native_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   xplat/web_native_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [1]
+   xplat/use_tests.js:2:39
+   2| require('./web_native_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
+                                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:3:9
+
+The imported module supports the `web` platform, but the current module requires the support of the following platforms:
+`android`, `ios`, `web`. Support for the following platforms: `android`, `ios` is missing. [missing-platform-support]
+
+   3| require('../web/explicit_web.web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:4:9
+
+Cannot resolve module `../web/explicit_web`. [cannot-resolve-module]
+
+   4| require('../web/explicit_web'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:5:9
+
+The imported module supports the `web` platform, but the current module requires the support of the following platforms:
+`android`, `ios`, `web`. Support for the following platforms: `android`, `ios` is missing. [missing-platform-support]
+
+   5| require('../web/implicit_web'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:6:9
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the following platforms: `android`, `ios`, `web`. Support for the `web` platform is missing. [missing-platform-support]
+
+   6| require('../native/explicit_native.native'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:7:9
+
+Cannot resolve module `../native/explicit_native`. [cannot-resolve-module]
+
+   7| require('../native/explicit_native'); // cannot resolve
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:8:9
+
+The imported module supports the following platforms: `android`, `ios`, but the current module requires the support of
+the following platforms: `android`, `ios`, `web`. Support for the `web` platform is missing. [missing-platform-support]
+
+   8| require('../native/implicit_native'); // can resolve, but platform support error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------ xplat/web_native_forked.web.js:1:27
+
+Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `foo`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   xplat/web_native_forked.web.js:1:27
+   1| declare export const foo: boolean; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^^ [1]
+
+References:
+   xplat/web_native_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [2]
+
+
+
+Found 41 errors

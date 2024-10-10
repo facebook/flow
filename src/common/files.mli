@@ -25,6 +25,7 @@ val mk_options :
   module_resource_exts:SSet.t ->
   multi_platform:bool ->
   multi_platform_extensions:string list ->
+  multi_platform_extension_group_mapping:(string * string list) list ->
   multi_platform_ambient_supports_platform_directory_overrides:(string * string list) list ->
   node_resolver_dirnames:string list ->
   options
@@ -53,6 +54,8 @@ val multi_platform : options -> bool
 
 val multi_platform_extensions : options -> string list
 
+val multi_platform_extension_group_mapping : options -> (string * string list) list
+
 val multi_platform_ambient_supports_platform_directory_overrides :
   options -> (string * string list) list
 
@@ -73,9 +76,10 @@ val eponymous_module : File_key.t -> Modulename.t
 val relative_interface_mref_of_possibly_platform_specific_file :
   options:options -> File_key.t -> string option
 
-val platform_specific_extension_and_index_opt : options:options -> string -> (int * string) option
+val grouped_platform_extension_opt : options:options -> string -> (string * string list) option
 
-val platform_specific_extension_opt : options:options -> string -> string option
+val platform_specific_extensions_and_indices_opt :
+  options:options -> string -> (int * string) list option
 
 val chop_platform_suffix : options:options -> File_key.t -> File_key.t
 

@@ -23,6 +23,7 @@ type options = {
   module_resource_exts: SSet.t;
   multi_platform: bool;
   multi_platform_extensions: string list;
+  multi_platform_extension_group_mapping: (string * string list) list;
   multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
   node_resolver_dirnames: string list;
 }
@@ -39,6 +40,7 @@ let mk_options
     ~module_resource_exts
     ~multi_platform
     ~multi_platform_extensions
+    ~multi_platform_extension_group_mapping
     ~multi_platform_ambient_supports_platform_directory_overrides
     ~node_resolver_dirnames =
   {
@@ -53,6 +55,7 @@ let mk_options
     module_resource_exts;
     multi_platform;
     multi_platform_extensions;
+    multi_platform_extension_group_mapping;
     multi_platform_ambient_supports_platform_directory_overrides;
     node_resolver_dirnames;
   }
@@ -70,6 +73,7 @@ let default_options =
     module_resource_exts = SSet.empty;
     multi_platform = false;
     multi_platform_extensions = [];
+    multi_platform_extension_group_mapping = [];
     multi_platform_ambient_supports_platform_directory_overrides = [];
     node_resolver_dirnames = ["node_modules"];
   }
@@ -95,6 +99,8 @@ let module_resource_exts options = options.module_resource_exts
 let multi_platform options = options.multi_platform
 
 let multi_platform_extensions options = options.multi_platform_extensions
+
+let multi_platform_extension_group_mapping options = options.multi_platform_extension_group_mapping
 
 let multi_platform_ambient_supports_platform_directory_overrides options =
   options.multi_platform_ambient_supports_platform_directory_overrides
@@ -157,18 +163,39 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   else
     None
 
-let platform_specific_extension_and_index_opt ~options filename =
-  Base.List.findi options.multi_platform_extensions ~f:(fun _ platform_ext ->
+let grouped_platform_extension_opt ~options filename =
+  Base.List.find options.multi_platform_extension_group_mapping ~f:(fun (group_ext, _platforms) ->
       Base.List.exists options.module_file_exts ~f:(fun module_ext ->
-          Base.String.is_suffix filename ~suffix:(platform_ext ^ module_ext)
+          Base.String.is_suffix filename ~suffix:(group_ext ^ module_ext)
       )
   )
 
-let platform_specific_extension_opt ~options filename =
-  platform_specific_extension_and_index_opt ~options filename |> Base.Option.map ~f:snd
+let platform_specific_extensions_and_indices_opt ~options filename =
+  match
+    Base.List.findi options.multi_platform_extensions ~f:(fun _ platform_ext ->
+        Base.List.exists options.module_file_exts ~f:(fun module_ext ->
+            Base.String.is_suffix filename ~suffix:(platform_ext ^ module_ext)
+        )
+    )
+  with
+  | Some result -> Some [result]
+  | None ->
+    (match grouped_platform_extension_opt ~options filename with
+    | Some (_group_ext, platforms) ->
+      Some
+        (Base.List.map platforms ~f:(fun p ->
+             let ext = "." ^ p in
+             Base.List.findi_exn options.multi_platform_extensions ~f:(fun _ e -> e = ext)
+         )
+        )
+    | None -> None)
 
 let chop_platform_suffix ~options file =
-  Base.List.find_map options.multi_platform_extensions ~f:(fun platform_ext ->
+  let platform_extensions =
+    options.multi_platform_extensions
+    @ Base.List.map options.multi_platform_extension_group_mapping ~f:fst
+  in
+  Base.List.find_map platform_extensions ~f:(fun platform_ext ->
       Base.List.find_map options.module_file_exts ~f:(fun module_ext ->
           let ext = platform_ext ^ module_ext in
           if File_key.check_suffix file ext then
