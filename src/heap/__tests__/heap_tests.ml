@@ -605,6 +605,49 @@ let compare_string_test _ =
   compact ();
   assert_heap_size 0
 
+let entity_heap_test _ctxt =
+  let module Value = struct
+    type t = {
+      a: int;
+      b: string;
+    }
+
+    let equal { a = a1; b = b1 } { a = a2; b = b2 } = a1 = a2 && String.equal b1 b2
+
+    let description = ""
+  end in
+  let module H = EntityHeap.Make (StringKey) (Value) in
+  let assert_latest key expected_value =
+    assert_equal ~cmp:(Option.equal Value.equal) (H.get_latest key) expected_value
+  in
+  let assert_committed key expected_value =
+    assert_equal ~cmp:(Option.equal Value.equal) (H.get_committed key) expected_value
+  in
+  (* Write initial value. *)
+  let initial_value = Value.{ a = 1; b = "foo" } in
+  H.add "key" initial_value;
+  assert_latest "key" (Some initial_value);
+  assert_committed "key" None;
+
+  (* commit initial value *)
+  commit_transaction ();
+  assert_latest "key" (Some initial_value);
+  assert_committed "key" (Some initial_value);
+
+  let next_value = Value.{ a = 2; b = "bar" } in
+  H.add "key" next_value;
+  assert_latest "key" (Some next_value);
+  assert_committed "key" (Some initial_value);
+  (* commit next value *)
+  commit_transaction ();
+  assert_latest "key" (Some next_value);
+  assert_committed "key" (Some next_value);
+
+  (* clean up *)
+  H.remove "key";
+  compact ();
+  assert_heap_size 0
+
 let tests workers =
   "heap_tests"
   >::: [
@@ -618,6 +661,7 @@ let tests workers =
          "entity_barrier" >:: entity_barrier_test;
          "sklist_barrier" >:: sklist_barrier_test;
          "compare_string" >:: compare_string_test;
+         "entity_heap" >:: entity_heap_test;
        ]
 
 let () =

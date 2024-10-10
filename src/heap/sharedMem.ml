@@ -63,6 +63,8 @@ let heap_ref : buf option ref = ref None
 (* constant constructors are integers *)
 let tag_val : tag -> int = Obj.magic
 
+let serialized_tag_val : int = tag_val Serialized_tag
+
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);

@@ -57,6 +57,10 @@ val commit_transaction : unit -> unit
 
 val is_init_transaction : unit -> bool
 
+(* Internal representation of serialized tags in heaps. Exposed to allow
+ * entity heaps to store objects directly. *)
+val serialized_tag_val : int
+
 module type Key = sig
   type t
 
@@ -73,6 +77,20 @@ end
 
 module type AddrValue = sig
   type t
+end
+
+module HashtblSegment (Key : Key) : sig
+  type hash = string
+
+  val hash_of_key : Key.t -> hash
+
+  val add : Key.t -> _ addr -> _ addr
+
+  val mem : Key.t -> bool
+
+  val get : Key.t -> _ addr option
+
+  val remove : Key.t -> unit
 end
 
 module type Heap = sig
