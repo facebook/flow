@@ -973,6 +973,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           (* Ok this is definitely a parameter *)
           ParamList (function_param_list_without_parens env [])
         | _ -> Type (_type env))
+      | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
+        (match Peek.ith_token ~i:1 env with
+        | T_LESS_THAN
+        | T_LPAREN ->
+          Type (_type env)
+        | _ -> function_param_or_generic_type env)
       | T_IDENTIFIER _
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         (* This could be a function parameter or a generic type *)
