@@ -191,8 +191,18 @@ class requires_calculator ~file_key ~ast ~opts =
             )
           ~file:file_key
       with
-      | Some sources ->
-        Base.List.iter sources ~f:(fun source -> this#add_require (ImportSynthetic { source }))
+      | Some (unconditional_extensions, grouped_extensions_with_conditional_extensions) ->
+        let add source = this#add_require (ImportSynthetic { source }) in
+        (* Regardless of whether they are actually required, in file_sig, we will synthesize
+         * imports for all of them. Later in merge_js, we will only error on missing required
+         * ones. *)
+        Base.List.iter unconditional_extensions ~f:add;
+        Base.List.iter
+          grouped_extensions_with_conditional_extensions
+          ~f:(fun (grouped, conditional) ->
+            add grouped;
+            Base.List.iter conditional ~f:add
+        )
       | None ->
         (match
            Files.relative_interface_mref_of_possibly_platform_specific_file

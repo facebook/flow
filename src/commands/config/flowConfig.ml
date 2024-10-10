@@ -109,6 +109,7 @@ module Opts = struct
     modules_are_use_strict: bool;
     multi_platform: bool option;
     multi_platform_extensions: string list;
+    multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
     natural_inference_object_freeze: bool;
@@ -241,6 +242,7 @@ module Opts = struct
       modules_are_use_strict = false;
       multi_platform = None;
       multi_platform_extensions = [];
+      multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
       natural_inference_object_freeze = true;
@@ -693,6 +695,48 @@ module Opts = struct
         else
           Ok { opts with multi_platform_extensions = v :: opts.multi_platform_extensions })
 
+  let multi_platform_extension_group_mapping_parser =
+    mapping
+      ~multiple:true
+      (fun v -> Ok v)
+      (fun opts (group_ext, platforms) ->
+        if String.ends_with ~suffix:Files.flow_ext group_ext then
+          Error
+            ("Cannot use file extension '"
+            ^ group_ext
+            ^ "' since it ends with the reserved extension '"
+            ^ Files.flow_ext
+            ^ "'"
+            )
+        else if Base.List.mem opts.module_file_exts group_ext ~equal:String.equal then
+          Error
+            ("Cannot use file extension '"
+            ^ group_ext
+            ^ "' since it conflicts with the module extension '"
+            ^ group_ext
+            ^ "'"
+            )
+        else if Base.List.mem opts.multi_platform_extensions group_ext ~equal:String.equal then
+          Ok opts
+        else
+          let platforms = Base.String.split ~on:',' platforms |> Base.List.map ~f:String.trim in
+          match
+            Base.List.find_map platforms ~f:(fun p ->
+                if Base.List.mem opts.multi_platform_extensions ("." ^ p) ~equal:String.equal then
+                  None
+                else
+                  Some ("Unknown platform '" ^ p ^ "'.")
+            )
+          with
+          | Some e -> Error e
+          | None ->
+            Ok
+              {
+                opts with
+                multi_platform_extension_group_mapping =
+                  (group_ext, platforms) :: opts.multi_platform_extension_group_mapping;
+              })
+
   let multi_platform_ambient_supports_platform_directory_overrides_parser =
     mapping
       ~multiple:true
@@ -918,6 +962,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
       );
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
+      ( "experimental.multi_platform.extension_group_mapping",
+        multi_platform_extension_group_mapping_parser
+      );
       ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
         multi_platform_ambient_supports_platform_directory_overrides_parser
       );
@@ -1669,6 +1716,8 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let multi_platform c = c.options.Opts.multi_platform
 
 let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
+
+let multi_platform_extension_group_mapping c = c.options.Opts.multi_platform_extension_group_mapping
 
 let multi_platform_ambient_supports_platform_directory_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides

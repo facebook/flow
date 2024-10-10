@@ -719,6 +719,9 @@ let file_options =
     let module_resource_exts = FlowConfig.module_resource_exts flowconfig in
     let multi_platform = FlowConfig.multi_platform flowconfig |> Base.Option.value ~default:false in
     let multi_platform_extensions = FlowConfig.multi_platform_extensions flowconfig in
+    let multi_platform_extension_group_mapping =
+      FlowConfig.multi_platform_extension_group_mapping flowconfig
+    in
     let multi_platform_ambient_supports_platform_directory_overrides =
       FlowConfig.multi_platform_ambient_supports_platform_directory_overrides flowconfig
       |> Base.List.map ~f:(fun (path, platforms) ->
@@ -737,6 +740,7 @@ let file_options =
       ~module_resource_exts
       ~multi_platform
       ~multi_platform_extensions
+      ~multi_platform_extension_group_mapping
       ~multi_platform_ambient_supports_platform_directory_overrides
       ~node_resolver_dirnames
 
