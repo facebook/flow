@@ -126,7 +126,7 @@ npm install --save-dev flow-bin
   "name": "my-flow-project",
   "version": "1.0.0",
   "devDependencies": {
-    "flow-bin": "^0.247.1"
+    "flow-bin": "^0.248.0"
   },
   "scripts": {
     "flow": "flow"

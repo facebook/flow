@@ -1,3 +1,35 @@
+### 0.248.0
+
+Breaking changes:
+* Support for long deprecated predicate function (`%checks`) is removed. It will still parse, but all of them will error with unsupported-syntax, and `%checks` will be completely ignored for type checking purpose as if it doesn't exist.
+* `$TupleMap` support is now removed. `$TupleMap` will now resolve to the global definition is there is one, or it will fail and the type becomes any.
+
+Likely to cause new Flow errors:
+* Support for the unsound `$TEMPORARY$*` types is dropped. If your codebase happens to have any of these types, you can replace them with there sound and well-documented equivalents:
+  - Replace `$TEMPORARY$object<{props}>` with `$ReadOnly<{props}>` or `{props}`
+  - Replace `$TEMPORARY$array<T>` with `$ReadOnlyArray<T>` or `Array<T>`
+  - Replace `$TEMPORARY$number<42>` with `number` or `'42'`
+  - Replace `$TEMPORARY$string<"foo">` with `string` or `"foo"`
+  - We have provided a flow-runner codemod via the `flow-upgrade` package to aid larger codebases with this conversion: `yarn run flow-codemod replaceTemporaryTypes path/to/src`.
+* The inferred type for `Object.freeze({ A: 'a', B: 'b' })` is now `{+A:'a',+B:'b'}` both locally within a file and when the object is being exported. This replaces an earlier unsound behavior where the type of A would opportunistically behaved either as `string` or `'a'` depending on the context where it appeared.
+* [React string refs](https://legacy.reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs) are now banned.
+* `contextTypes` and `childContextTypes` in react class components are now empty typed, so declaring [legacy context](https://legacy.reactjs.org/docs/legacy-context.html) in React will be an error.
+* Component syntax component and component types' ref prop now must have `React.RefSetter<...>` type.
+
+Parser:
+* Component type in parentheses can now be correctly parsed. e.g. `type Foo = (component(x: number) renders Bar);`
+* Trailing comma is now allowed after rest parameter in component syntax components and component types.
+* The v regex flag is now supported.
+
+IDE:
+* We now provide a code action to stub out a react component, at the location of an unbound JSX identifier.
+* Component declaration/type without renders clause will no longer show `renders React.Node` on hover.
+* Hovering on components will now consistently show its props and renders information. Previously, the information is omitted for component declarations.
+* If we see `: renders <annot>` at the position that expects a render declaration, the quickfix will suggest removing `:` instead of replacing `:` with `renders`.
+
+Library Definitions:
+* Added type for `util.stripVTControlCharacters` for NodeJS.
+
 ### 0.247.1
 
 Misc:
