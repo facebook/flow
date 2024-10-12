@@ -240,7 +240,6 @@ let sig_options
     relay_integration_module_prefix;
     for_builtins;
     locs_to_dirtify;
-    natural_inference_object_freeze = false;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =
@@ -2624,10 +2623,10 @@ let%expect_test "frozen_object" =
                  props =
                  { "bar" ->
                    (ObjValueField ([1:42-45], (
-                      Value (StringLit ([1:47-54], "hello"))), Polarity.Neutral));
+                      Annot (SingletonString ([1:47-54], "hello"))), Polarity.Positive));
                    "foo" ->
                    (ObjValueField ([1:33-36], (
-                      Value (NumberLit ([1:38-40], 42., "42"))), Polarity.Neutral)) }}));
+                      Annot (SingletonNumber ([1:38-40], 42., "42"))), Polarity.Positive)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = []; strict = true;

@@ -1434,7 +1434,6 @@ let make_options
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
-    opt_natural_inference_object_freeze = FlowConfig.natural_inference_object_freeze flowconfig;
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
     opt_saved_state_allow_reinit;

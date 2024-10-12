@@ -22,7 +22,6 @@ type t = {
   relay_integration_module_prefix: string option;
   for_builtins: bool;
   locs_to_dirtify: Loc.t list;
-  natural_inference_object_freeze: bool;
 }
 
 let of_options options docblock locs_to_dirtify file =
@@ -63,7 +62,6 @@ let of_options options docblock locs_to_dirtify file =
     enable_ts_syntax = Options.ts_syntax options;
     for_builtins = false;
     casting_syntax = Options.casting_syntax options;
-    natural_inference_object_freeze = Options.natural_inference_object_freeze options;
   }
 
 let builtin_options options =
@@ -88,5 +86,4 @@ let builtin_options options =
     casting_syntax = Options.casting_syntax options;
     for_builtins = true;
     locs_to_dirtify = [];
-    natural_inference_object_freeze = false;
   }

@@ -80,7 +80,6 @@ module SignatureVerification = struct
         hook_compatibility = Options.hook_compatibility_in_file options file;
         for_builtins = false;
         locs_to_dirtify = [];
-        natural_inference_object_freeze = false;
       }
     in
     let (sig_errors, locs, _) =

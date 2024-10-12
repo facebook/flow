@@ -2966,7 +2966,7 @@ let rec expression opts scope tbls ?(new_frozen = NotFrozen) (loc, expr) =
           (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Satisfies))
       )
   | E.Object { E.Object.properties; comments = _ } ->
-    let new_frozen = opts.natural_inference_object_freeze && new_frozen = FrozenDirect in
+    let new_frozen = new_frozen = FrozenDirect in
     object_literal opts scope tbls loc ~frozen:false ~new_frozen properties
   | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements
   | E.Unary { E.Unary.operator; argument; comments = _ } -> begin
@@ -3054,8 +3054,7 @@ let rec expression opts scope tbls ?(new_frozen = NotFrozen) (loc, expr) =
      * this call "Object" is not in scope. Again, we should fix the existing
      * signature builder first. *)
     let obj_loc = push_loc tbls obj_loc in
-    let new_frozen = opts.natural_inference_object_freeze in
-    object_literal opts scope tbls obj_loc ~frozen:true ~new_frozen properties
+    object_literal opts scope tbls obj_loc ~frozen:true ~new_frozen:true properties
   | E.Call
       {
         E.Call.callee = (_, E.Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));

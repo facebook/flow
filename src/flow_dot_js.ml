@@ -81,7 +81,6 @@ let load_lib_files files =
       casting_syntax = Options.CastingSyntax.Both;
       for_builtins = true;
       locs_to_dirtify = [];
-      natural_inference_object_freeze = false;
     }
   in
   Merge_js.merge_lib_files ~sig_opts asts |> snd
@@ -125,7 +124,6 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
-    natural_inference_object_freeze = false;
     react_custom_jsx_typing = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
