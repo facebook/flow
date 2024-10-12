@@ -1,3 +1,8 @@
+### 0.248.1
+
+IDE:
+* `React.Component` annotated exported will now also show up in auto-imports in a type position.
+
 ### 0.248.0
 
 Breaking changes:
