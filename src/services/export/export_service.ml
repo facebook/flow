@@ -7,11 +7,10 @@
 
 open Export_index
 
-let string_of_modulename modulename =
-  let str = Modulename.to_string modulename in
+let inferred_name_of_modulename module_name =
   (* for filenames: /foo/bar/baz.bliffl.js -> baz.bliff.js
      for strings: @example/foo -> foo *)
-  let str = Filename.basename str in
+  let str = Filename.basename module_name in
   (* remove suffixes, e.g. baz.bliffl.js -> baz *)
   let stripped =
     match String.index_opt str '.' with
@@ -83,7 +82,7 @@ let entries_of_exports =
       Base.List.fold exports ~init:(false, acc) ~f:(fun (has_named, acc) export ->
           match export with
           | Exports.DefaultType name_opt ->
-            let name_from_modulename = string_of_modulename module_name in
+            let name_from_modulename = inferred_name_of_modulename module_name in
             let acc = (name_from_modulename, DefaultType) :: acc in
             let acc =
               match name_opt with
@@ -93,7 +92,7 @@ let entries_of_exports =
             (has_named, acc)
           | Exports.Default name_opt ->
             if include_values then
-              let name_from_modulename = string_of_modulename module_name in
+              let name_from_modulename = inferred_name_of_modulename module_name in
               let acc = (name_from_modulename, Default) :: acc in
               let acc =
                 match name_opt with
@@ -110,7 +109,6 @@ let entries_of_exports =
               (has_named, acc)
           | Exports.NamedType name -> (has_named, (name, NamedType) :: acc)
           | Exports.Module (module_name, exports) ->
-            let module_name = Modulename.String module_name in
             ( has_named,
               helper
                 ~module_name
@@ -152,7 +150,7 @@ let entries_of_exports =
       )
     in
     if has_named then
-      (string_of_modulename module_name, Namespace) :: acc
+      (inferred_name_of_modulename module_name, Namespace) :: acc
     else
       acc
   and with_reexports
@@ -211,7 +209,9 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         (match result with
         | Some (Ok dependency) ->
           let module_name = Parsing_heaps.read_dependency dependency in
-          let (source, module_name) = (module_name, string_of_modulename module_name) in
+          let (source, module_name) =
+            (module_name, inferred_name_of_modulename (Modulename.to_string module_name))
+          in
           let (kind, name) =
             match import.Imports.kind with
             | Imports.Default -> (Export_index.Default, module_name)
@@ -259,6 +259,7 @@ let add_exports_of_checked_file ~index_star_exports ~reader ~old file_key parse 
       Modulename.String name
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
+  let module_name = Modulename.to_string module_name in
   let get_dep_and_next_resolver =
     ModuleResolutionLazyStream.get_dep_and_next_resolver ~reader ~old (file_key, parse)
   in
@@ -271,7 +272,6 @@ let add_exports_of_builtins ~index_star_exports lib_exports index =
       match export with
       | Exports.Module (module_name, exports) ->
         let source = Export_index.Builtin module_name in
-        let module_name = Modulename.String module_name in
         add_exports
           ~index_star_exports
           ~source
@@ -464,5 +464,5 @@ let update ~index_star_exports ~workers ~reader ~dirty_files previous : Export_s
   Lwt.return result
 
 module For_test = struct
-  let string_of_modulename = string_of_modulename
+  let inferred_name_of_modulename = inferred_name_of_modulename
 end

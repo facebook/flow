@@ -22,5 +22,5 @@ val update :
   Export_search.t Lwt.t
 
 module For_test : sig
-  val string_of_modulename : Modulename.t -> string
+  val inferred_name_of_modulename : string -> string
 end

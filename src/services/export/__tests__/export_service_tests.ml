@@ -14,43 +14,44 @@ let module_file file_key = Modulename.Filename file_key
 
 let module_name name = Modulename.String name
 
-let string_of_modulename_tests =
+let inferred_name_of_modulename_tests =
   [
     ( "string_dot" >:: fun ctxt ->
-      let actual = string_of_modulename (module_name "FooBar.baz") in
+      let actual = inferred_name_of_modulename "FooBar.baz" in
       let expected = "FooBar" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
     ( "filename_dot" >:: fun ctxt ->
-      let actual = string_of_modulename (module_file (sf "/foo/bar/FooBar.baz.js")) in
+      let actual = inferred_name_of_modulename "/foo/bar/FooBar.baz.js" in
       let expected = "FooBar" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
     ( "string_multiple_dots" >:: fun ctxt ->
-      let actual = string_of_modulename (module_name "FooBar.a.b") in
+      let actual = inferred_name_of_modulename "FooBar.a.b" in
       let expected = "FooBar" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
     ( "filename_multiple_dots" >:: fun ctxt ->
-      let actual = string_of_modulename (module_file (sf "/foo/bar/FooBar.a.b.js")) in
+      let actual = inferred_name_of_modulename "/foo/bar/FooBar.a.b.js" in
       let expected = "FooBar" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
     ( "string_camelcase_dashes" >:: fun ctxt ->
-      let actual = string_of_modulename (module_name "foo-bar-baz") in
+      let actual = inferred_name_of_modulename "foo-bar-baz" in
       let expected = "fooBarBaz" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
     ( "filename_camelcase_dashes" >:: fun ctxt ->
-      let actual = string_of_modulename (module_file (sf "/foo/bar/foo-bar-baz.js")) in
+      let actual = inferred_name_of_modulename "/foo/bar/foo-bar-baz.js" in
       let expected = "fooBarBaz" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
     ( "scoped_package" >:: fun ctxt ->
-      let actual = string_of_modulename (module_name "@example/xyz") in
+      let actual = inferred_name_of_modulename "@example/xyz" in
       let expected = "xyz" in
       assert_equal ~ctxt ~printer:(fun x -> x) expected actual
     );
   ]
 
-let suite = "export_service" >::: ["string_of_modulename" >::: string_of_modulename_tests]
+let suite =
+  "export_service" >::: ["inferred_name_of_modulename" >::: inferred_name_of_modulename_tests]
