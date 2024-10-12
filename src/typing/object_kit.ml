@@ -109,11 +109,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         in
         Indexed { dict_name = None; key = key_t; value = mixed; dict_polarity = Polarity.Neutral }
     in
-    let flags = { frozen = false; obj_kind; react_dro = None } in
+    let flags = { obj_kind; react_dro = None } in
     let interface = None in
     let obj_reason = replace_desc_reason RObjectType reason in
     let slice =
-      { Object.reason = obj_reason; props; flags; generics; interface; reachable_targs = [] }
+      {
+        Object.reason = obj_reason;
+        props;
+        flags;
+        frozen = false;
+        generics;
+        interface;
+        reachable_targs = [];
+      }
     in
     fun ~property_type mapped_type_flags ->
       Slice_utils.map_object property_type mapped_type_flags cx reason use_op None slice
@@ -236,7 +244,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (**************)
     let object_rep =
       let mk_object
-          cx reason { Object.reason = r; props; flags; generics; interface = _; reachable_targs } =
+          cx
+          reason
+          { Object.reason = r; props; flags; frozen = _; generics; interface = _; reachable_targs }
+          =
         (* TODO(jmbrown): Add polarity information to props *)
         let polarity = Polarity.Neutral in
         let props =
@@ -296,6 +307,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             Object.reason = config_reason;
             props = config_props;
             flags = config_flags;
+            frozen = _;
             generics = config_generics;
             interface = _;
             reachable_targs = config_targs;
@@ -322,6 +334,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   Object.reason = defaults_reason;
                   props = defaults_props;
                   flags = defaults_flags;
+                  frozen = _;
                   generics = defaults_generics;
                   interface = _;
                   reachable_targs = defaults_targs;
@@ -429,7 +442,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   else
                     Inexact
               in
-              let flags = { frozen = false; obj_kind; react_dro = None } in
+              let flags = { obj_kind; react_dro = None } in
               let generics = Generic.spread_append config_generics defaults_generics in
               (props, flags, generics, config_targs @ defaults_targs)
             (* Otherwise turn our slice props map into an object props. *)
@@ -464,7 +477,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       Inexact
                     )
               in
-              let flags = { frozen = false; obj_kind; react_dro = None } in
+              let flags = { obj_kind; react_dro = None } in
               (props, flags, config_generics, config_targs)
           in
           let call = None in

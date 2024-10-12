@@ -212,7 +212,6 @@ let rec merge_type cx =
       let id = Context.generate_property_map cx map in
       let flags =
         {
-          frozen = o1.flags.frozen && o2.flags.frozen;
           obj_kind;
           react_dro =
             ( if Base.Option.is_some o1.flags.react_dro && Base.Option.is_some o1.flags.react_dro

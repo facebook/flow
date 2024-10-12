@@ -8,6 +8,7 @@
 open Reason
 open Type
 open TypeUtil
+module U = Utils_js
 
 (* Don't use Flow_js directly from here *)
 module Flow_js = struct end
@@ -130,7 +131,7 @@ let read_dict r { value; dict_polarity; _ } =
     let reason = replace_desc_reason (RUnknownProperty None) r in
     DefT (reason, MixedT Mixed_everything)
 
-let object_slice cx ~interface r id flags reachable_targs generics =
+let object_slice cx ~interface r id flags frozen reachable_targs generics =
   let props = Context.find_props cx id in
   let props = NameUtils.Map.mapi (read_prop r flags) props in
   let obj_kind =
@@ -145,7 +146,7 @@ let object_slice cx ~interface r id flags reachable_targs generics =
       flags.obj_kind
   in
   let flags = { flags with obj_kind } in
-  { Object.reason = r; props; flags; generics; interface; reachable_targs }
+  { Object.reason = r; props; flags; frozen; generics; interface; reachable_targs }
 
 (* Treat dictionaries as optional, own properties. Dictionary reads should
  * be exact. TODO: Forbid writes to indexers through the photo chain.
@@ -267,6 +268,7 @@ let spread2
         Object.reason = r1;
         props = props1;
         flags = flags1;
+        frozen = frozen1;
         generics = generics1;
         interface = _;
         reachable_targs = targs1;
@@ -278,6 +280,7 @@ let spread2
         Object.reason = r2;
         props = props2;
         flags = flags2;
+        frozen = frozen2;
         generics = generics2;
         interface = _;
         reachable_targs = targs2;
@@ -450,13 +453,8 @@ let spread2
         else
           Inexact
     in
-    let flags =
-      {
-        frozen = flags1.frozen && flags2.frozen;
-        obj_kind;
-        react_dro = merge_dro flags1.react_dro flags2.react_dro;
-      }
-    in
+    let flags = { obj_kind; react_dro = merge_dro flags1.react_dro flags2.react_dro } in
+    let frozen = frozen1 && frozen2 in
     let generics = Generic.spread_append generics1 generics2 in
     let reachable_targs = targs1 @ targs2 in
     let inexact_reason =
@@ -480,7 +478,7 @@ let spread2
       Ok
         ( false,
           inexact_reason,
-          { Object.reason; props; flags; generics; interface = None; reachable_targs }
+          { Object.reason; props; flags; frozen; generics; interface = None; reachable_targs }
         )
     | Error e -> Error e)
 
@@ -494,10 +492,21 @@ let spread =
         | Some d -> Indexed d
         | None -> Exact
       in
-      let flags = { obj_kind; frozen = false; react_dro = None } in
+      let flags = { obj_kind; react_dro = None } in
       let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
       Nel.one
-        (true, None, { Object.reason; props; flags; generics; interface = None; reachable_targs })
+        ( true,
+          None,
+          {
+            Object.reason;
+            props;
+            flags;
+            frozen = false;
+            generics;
+            interface = None;
+            reachable_targs;
+          }
+        )
   in
 
   fun ~dict_check cx ~use_op reason nel ->
@@ -507,7 +516,10 @@ let spread =
       merge_result (spread2 ~dict_check cx ~use_op reason) resolved_of_acc_element x0 (x1, xs)
 
 let spread_mk_object
-    cx reason target { Object.reason = _; props; flags; generics; interface = _; reachable_targs } =
+    cx
+    reason
+    target
+    { Object.reason = _; props; flags; frozen = _; generics; interface = _; reachable_targs } =
   let open Object.Spread in
   let mk_dro t =
     match flags.react_dro with
@@ -538,7 +550,7 @@ let spread_mk_object
     let frozen_seal = sealed = Object.Spread.Frozen in
     (obj_kind, as_const, frozen_seal)
   in
-  let flags = { obj_kind; frozen = false; react_dro = None } in
+  let flags = { obj_kind; react_dro = None } in
   let positive_polarity = as_const || frozen_seal in
   let props =
     NameUtils.Map.map
@@ -592,6 +604,7 @@ let object_spread
              Object.reason = r;
              props = _;
              flags = { obj_kind; _ };
+             frozen = _;
              generics = _;
              interface = _;
              reachable_targs = _;
@@ -679,8 +692,8 @@ let object_spread
 
 exception InvalidConfig of Error_message.t
 
-let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _; reachable_targs }
-    =
+let check_config2
+    cx pmap { Object.reason; props; flags; frozen = _; generics; interface = _; reachable_targs } =
   let dict = Obj_type.get_dict_opt flags.obj_kind in
   let ((duplicate_props_in_spread, ref_prop_in_spread), props) =
     NameUtils.Map.merge_env
@@ -715,7 +728,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
       else
         Inexact
   in
-  let flags = { frozen = flags.frozen; obj_kind; react_dro = flags.react_dro } in
+  let flags = { obj_kind; react_dro = flags.react_dro } in
   let props =
     NameUtils.Map.map
       (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
@@ -814,6 +827,7 @@ let object_rest
         Object.reason = r1;
         props = props1;
         flags = flags1;
+        frozen = _;
         generics = generics1;
         interface;
         reachable_targs;
@@ -822,6 +836,7 @@ let object_rest
         Object.reason = r2;
         props = props2;
         flags = flags2;
+        frozen = _;
         generics = generics2;
         interface = _;
         reachable_targs = _;
@@ -1100,7 +1115,7 @@ let object_rest
       | (Inexact, _, Omit) -> Exact
       | _ -> Inexact
     in
-    let flags = { frozen = false; obj_kind; react_dro = flags1.react_dro } in
+    let flags = { obj_kind; react_dro = flags1.react_dro } in
     let generics = Generic.spread_subtract generics1 generics2 in
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT r1 in
@@ -1145,7 +1160,9 @@ let object_rest
 (********************)
 let object_make_exact =
   let mk_exact_object cx reason slice =
-    let { Object.reason = r; props; flags; generics; interface; reachable_targs } = slice in
+    let { Object.reason = r; props; flags; frozen = _; generics; interface; reachable_targs } =
+      slice
+    in
     match interface with
     | Some _ ->
       Flow_js_utils.add_output cx (Error_message.EUnsupportedExact (reason, r));
@@ -1210,7 +1227,9 @@ let object_make_exact =
 let object_read_only =
   let polarity = Polarity.Positive in
   let mk_read_only_object cx reason slice =
-    let { Object.reason = r; props; flags; generics; interface; reachable_targs } = slice in
+    let { Object.reason = r; props; flags; frozen = _; generics; interface; reachable_targs } =
+      slice
+    in
     let props =
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
@@ -1256,10 +1275,11 @@ let object_read_only =
 
 let object_update_optionality kind =
   let mk_object cx reason slice =
-    let { Object.reason = r; props; flags; generics; interface; reachable_targs } = slice in
+    let { Object.reason = r; props; frozen; flags; generics; interface; reachable_targs } = slice in
     let props =
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity; key_loc } ->
+          let polarity = U.ite frozen Polarity.Positive polarity in
           if is_method then
             Method { key_loc; type_ = prop_t }
           else
@@ -1331,6 +1351,7 @@ let intersect2
       Object.reason = r1;
       props = props1;
       flags = flags1;
+      frozen = frozen1;
       generics = generics1;
       interface = _;
       reachable_targs = targs1;
@@ -1339,6 +1360,7 @@ let intersect2
       Object.reason = r2;
       props = props2;
       flags = flags2;
+      frozen = frozen2;
       generics = generics2;
       interface = _;
       reachable_targs = targs2;
@@ -1429,21 +1451,16 @@ let intersect2
           Inexact
         )
   in
-  let flags =
-    {
-      frozen = flags1.frozen || flags2.frozen;
-      obj_kind;
-      react_dro = Base.Option.first_some flags1.react_dro flags2.react_dro;
-    }
-  in
+  let flags = { obj_kind; react_dro = Base.Option.first_some flags1.react_dro flags2.react_dro } in
+  let frozen = frozen1 || frozen2 in
   let generics = Generic.spread_append generics1 generics2 in
   let reachable_targs = targs1 @ targs2 in
-  (props, flags, generics, reachable_targs)
+  (props, flags, frozen, generics, reachable_targs)
 
 let intersect2_with_reason cx reason intersection_loc x1 x2 =
-  let (props, flags, generics, reachable_targs) = intersect2 cx reason x1 x2 in
+  let (props, flags, frozen, generics, reachable_targs) = intersect2 cx reason x1 x2 in
   let reason = mk_reason RObjectType intersection_loc in
-  { Object.reason; props; flags; generics; interface = None; reachable_targs }
+  { Object.reason; props; flags; frozen; generics; interface = None; reachable_targs }
 
 let resolved ~next ~recurse cx use_op reason resolve_tool tool x =
   Object.(
@@ -1473,8 +1490,8 @@ let interface_slice cx r ~static ~inst id generics =
     | Some dict -> Indexed dict
     | None -> Inexact
   in
-  let flags = { frozen = false; obj_kind; react_dro = None } in
-  object_slice cx ~interface:(Some (static, inst)) r id flags [] generics
+  let flags = { obj_kind; react_dro = None } in
+  object_slice cx ~interface:(Some (static, inst)) r id flags false [] generics
 
 let resolve
     (type a)
@@ -1507,7 +1524,7 @@ let resolve
   (* We extract the props from an ObjT. *)
   | DefT (r, ObjT { props_tmap; Type.flags; reachable_targs; _ }) ->
     let x =
-      Nel.one (object_slice cx ~interface:None r props_tmap flags reachable_targs t_generic_id)
+      Nel.one (object_slice cx ~interface:None r props_tmap flags false reachable_targs t_generic_id)
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
   (* We take the fields from an InstanceT excluding methods (because methods
@@ -1571,13 +1588,14 @@ let resolve
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, (NullT | VoidT)) ->
-    let flags = { frozen = false; obj_kind = Exact; react_dro = None } in
+    let flags = { obj_kind = Exact; react_dro = None } in
     let x =
       Nel.one
         {
           Object.reason;
           props = NameUtils.Map.empty;
           flags;
+          frozen = true;
           generics = t_generic_id;
           interface = None;
           reachable_targs = [];
@@ -1593,13 +1611,14 @@ let resolve
     when match tool with
          | Spread _ -> true
          | _ -> false ->
-    let flags = { frozen = false; obj_kind = Exact; react_dro = None } in
+    let flags = { obj_kind = Exact; react_dro = None } in
     let x =
       Nel.one
         {
           Object.reason;
           props = NameUtils.Map.empty;
           flags;
+          frozen = true;
           generics = t_generic_id;
           interface = None;
           reachable_targs = [];
@@ -1615,7 +1634,7 @@ let resolve
    *)
   | DefT (r, MixedT _) as t ->
     (* TODO(jmbrown): This should be Inexact *)
-    let flags = { frozen = false; obj_kind = Exact; react_dro = None } in
+    let flags = { obj_kind = Exact; react_dro = None } in
     let x =
       match tool with
       | Spread _
@@ -1626,6 +1645,7 @@ let resolve
             Object.reason;
             props = NameUtils.Map.empty;
             flags;
+            frozen = true;
             generics = t_generic_id;
             interface = None;
             reachable_targs = [];
@@ -1644,6 +1664,7 @@ let resolve
             Object.reason;
             props = NameUtils.Map.empty;
             flags;
+            frozen = true;
             generics = t_generic_id;
             interface = None;
             reachable_targs = [];
@@ -1738,8 +1759,16 @@ let super
     let slice = interface_slice cx r ~static ~inst own_props Generic.spread_empty in
     let acc = intersect2 cx reason acc slice in
     let acc =
-      let (props, flags, generics, reachable_targs) = acc in
-      { Object.reason; props; flags; generics; interface = Some (static, inst); reachable_targs }
+      let (props, flags, frozen, generics, reachable_targs) = acc in
+      {
+        Object.reason;
+        props;
+        flags;
+        frozen;
+        generics;
+        interface = Some (static, inst);
+        reachable_targs;
+      }
     in
     let resolve_tool = Object.Super (acc, resolve_tool) in
     recurse cx use_op reason resolve_tool tool super
@@ -1776,7 +1805,7 @@ let map_object
     reason
     use_op
     selected_keys_and_indexers
-    { Object.reason = _; props; flags; generics; interface; reachable_targs } =
+    { Object.reason = _; props; flags; frozen; generics; interface; reachable_targs } =
   let mk_prop_type = mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop in
   let mk_variance variance prop_polarity =
     match variance with
@@ -1807,7 +1836,7 @@ let map_object
                    preferred_def_locs = None;
                    key_loc = None;
                    type_ = AnyT.why (AnyError None) reason;
-                   polarity = Polarity.Neutral;
+                   polarity = U.ite frozen Polarity.Positive Polarity.Neutral;
                  }
              in
              NameUtils.Map.add key field map
@@ -1822,14 +1851,19 @@ let map_object
              in
              let key_t = DefT (mk_reason (RStringLit key) key_loc, SingletonStrT key) in
              let prop_optional = is_prop_optional prop_t in
-             let variance = mk_variance variance prop_polarity in
+             let polarity =
+               if frozen then
+                 Polarity.Positive
+               else
+                 mk_variance variance prop_polarity
+             in
              let field =
                Field
                  {
                    preferred_def_locs = None;
                    key_loc = Some key_loc;
                    type_ = mk_prop_type key_t prop_optional;
-                   polarity = variance;
+                   polarity;
                  }
              in
              NameUtils.Map.add key field map)

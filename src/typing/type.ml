@@ -1403,7 +1403,6 @@ module rec TypeTerm : sig
     | Indexed of dicttype
 
   and flags = {
-    frozen: bool;
     react_dro: react_dro option;
     obj_kind: obj_kind;
   }
@@ -2931,6 +2930,7 @@ and Object : sig
     reason: reason;
     props: props;
     flags: TypeTerm.flags;
+    frozen: bool;
     generics: Generic.spread_id;
     interface: (TypeTerm.static * TypeTerm.insttype) option;
     reachable_targs: (TypeTerm.t * Polarity.t) list;
@@ -4392,7 +4392,7 @@ let mk_opt_methodcalltype
     ?opt_meth_generic_this opt_meth_targs opt_meth_args_tlist opt_meth_strict_arity =
   { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity }
 
-let default_flags = { obj_kind = Exact; frozen = false; react_dro = None }
+let default_flags = { obj_kind = Exact; react_dro = None }
 
 let mk_objecttype ?(flags = default_flags) ?(reachable_targs = []) ~call pmap proto =
   { flags; proto_t = proto; props_tmap = pmap; call_t = call; reachable_targs }

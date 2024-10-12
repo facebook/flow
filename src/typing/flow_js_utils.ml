@@ -1028,7 +1028,7 @@ let namespace_type cx reason namespace_symbol values types =
   in
   NamespaceT { namespace_symbol; values_type; types_tmap }
 
-let obj_is_readonlyish { Type.react_dro; frozen; _ } = Base.Option.is_some react_dro || frozen
+let obj_is_readonlyish { Type.react_dro; _ } = Base.Option.is_some react_dro
 
 let is_exception_to_react_dro = function
   | Named { name = OrdinaryName "current"; _ } -> true
@@ -2528,24 +2528,7 @@ let get_values_type_of_obj_t cx o reason =
     NameUtils.Map.fold
       (fun _ prop ts ->
         match Property.read_t prop with
-        | Some t ->
-          let t =
-            if flags.frozen then
-              match t with
-              | DefT (t_reason, StrT (Literal (_, (OrdinaryName _ as name)))) ->
-                let t_reason = replace_desc_reason (RStringLit name) t_reason in
-                DefT (t_reason, SingletonStrT name)
-              | DefT (t_reason, NumT (Literal (_, lit))) ->
-                let t_reason = replace_desc_reason (RNumberLit (snd lit)) t_reason in
-                DefT (t_reason, SingletonNumT lit)
-              | DefT (t_reason, BoolT (Some lit)) ->
-                let t_reason = replace_desc_reason (RBooleanLit lit) t_reason in
-                DefT (t_reason, SingletonBoolT lit)
-              | _ -> t
-            else
-              t
-          in
-          t :: ts
+        | Some t -> t :: ts
         | None -> ts)
       props
       []

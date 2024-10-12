@@ -123,11 +123,7 @@ module Make
         let () =
           let flags =
             Type.
-              {
-                obj_kind = Inexact;
-                frozen = false;
-                react_dro = Some (Reason.loc_of_reason config_reason, Props);
-              }
+              { obj_kind = Inexact; react_dro = Some (Reason.loc_of_reason config_reason, Props) }
           in
           let call = None in
           let pmap = Context.generate_property_map cx NameUtils.Map.empty in

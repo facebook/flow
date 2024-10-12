@@ -955,7 +955,7 @@ and merge_annot env file = function
     let mk_object call proto =
       let id = Type.Properties.id_of_aloc_id ~type_sig:true (Context.make_aloc_id file.cx loc) in
       let obj_type =
-        let flags = { Type.obj_kind; frozen = false; react_dro = None } in
+        let flags = { Type.obj_kind; react_dro = None } in
         let call = Base.Option.map call ~f:(Context.make_call_prop file.cx) in
         Context.add_property_map file.cx id props;
         Type.mk_objecttype ~flags ~call id proto

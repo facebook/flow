@@ -5296,7 +5296,7 @@ struct
             (Error_message.EObjectComputedPropertyAssign
                (reason, reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
             )
-        | ( DefT (_, ObjT { flags = { frozen; obj_kind; _ }; props_tmap; proto_t; call_t; _ }),
+        | ( DefT (_, ObjT { flags = { obj_kind; _ }; props_tmap; proto_t; call_t; _ }),
             CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
           ) ->
           let props_safe =
@@ -5319,7 +5319,7 @@ struct
             | None -> true
             | _ -> false
           in
-          let locally_safe = Base.Option.is_none call_t && (frozen || (props_safe && dict_safe)) in
+          let locally_safe = Base.Option.is_none call_t && props_safe && dict_safe in
           if locally_safe then
             rec_flow cx trace (proto_t, u)
           else
@@ -6085,7 +6085,7 @@ struct
     in
     let o =
       {
-        flags = { obj_kind; frozen = false; react_dro = None };
+        flags = { obj_kind; react_dro = None };
         props_tmap;
         (* Interfaces have no prototype *)
         proto_t = ObjProtoT reason_struct;
@@ -6108,7 +6108,7 @@ struct
         ( lreason,
           ObjT
             {
-              flags = { obj_kind = lkind; frozen = lfrozen; react_dro = _ };
+              flags = { obj_kind = lkind; react_dro = _ };
               props_tmap = lprops;
               proto_t = lproto;
               call_t = lcall;
@@ -6123,7 +6123,7 @@ struct
           ( lreason,
             ObjT
               {
-                flags = { obj_kind = lkind; frozen = lfrozen; react_dro = None };
+                flags = { obj_kind = lkind; react_dro = None };
                 props_tmap = lprops;
                 proto_t = lproto;
                 call_t = lcall;

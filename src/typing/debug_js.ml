@@ -463,6 +463,7 @@ and dump_use_t_ (depth, tvars) cx t =
         Object.reason = _;
         props;
         flags = { obj_kind; _ };
+        frozen = _;
         generics = _;
         interface = _;
         reachable_targs = _;
@@ -517,12 +518,13 @@ and dump_use_t_ (depth, tvars) cx t =
       | None -> Exact
       | Some d -> Indexed d
     in
-    let flags = { obj_kind; frozen = false; react_dro = None } in
+    let flags = { obj_kind; react_dro = None } in
     slice
       {
         Object.reason;
         props;
         flags;
+        frozen = false;
         generics = Generic.spread_empty;
         interface = None;
         reachable_targs = [];

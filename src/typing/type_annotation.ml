@@ -1944,7 +1944,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           else
             Inexact
       in
-      let flags = { obj_kind; frozen = false; react_dro = None } in
+      let flags = { obj_kind; react_dro = None } in
       (mk_annot_reason RObjectType loc, mk_objecttype ~flags ~call pmap proto)
     in
     let mk_object_annot cx loc ~exact call dict pmap proto =

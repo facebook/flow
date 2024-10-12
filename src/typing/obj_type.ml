@@ -17,7 +17,7 @@ let mk_seal ~frozen ~as_const =
 
 let mk_with_proto
     cx reason ~obj_kind ?reachable_targs ?call ?(props = NameUtils.Map.empty) ?id proto =
-  let flags = { obj_kind; frozen = false; react_dro = None } in
+  let flags = { obj_kind; react_dro = None } in
   let call = Base.Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =
     match id with
