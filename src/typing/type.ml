@@ -3029,17 +3029,6 @@ end =
   Object
 
 and React : sig
-  type resolved_object = reason * Properties.t * TypeTerm.flags
-
-  type resolve_object =
-    | ResolveObject
-    | ResolveDict of TypeTerm.dicttype * Properties.t * resolved_object
-    | ResolveProp of name * Properties.t * resolved_object
-
-  type resolve_array =
-    | ResolveArray
-    | ResolveElem of TypeTerm.t list * TypeTerm.t list
-
   type tool =
     | CreateElement of {
         component: TypeTerm.t;
