@@ -461,7 +461,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       Obj_type.mk_with_proto
         cx
         r
-        ~frozen:s.Object.flags.frozen
         ~obj_kind:s.Object.flags.obj_kind
         ~props:
           (NameUtils.Map.map

@@ -1022,7 +1022,7 @@ let namespace_type cx reason namespace_symbol values types =
   in
   let props = NameUtils.Map.fold add values NameUtils.Map.empty in
   let proto = ObjProtoT reason in
-  let values_type = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto in
+  let values_type = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
   let types_tmap =
     Context.generate_property_map cx (NameUtils.Map.fold add types NameUtils.Map.empty)
   in
@@ -1515,7 +1515,7 @@ module CJSRequireTKit = struct
         let value_props = NameUtils.Map.map named_symbol_to_field value_exports_tmap in
         let type_props = NameUtils.Map.map named_symbol_to_field type_exports_tmap in
         let values_type =
-          Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props:value_props proto
+          Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props:value_props proto
         in
         let types_tmap = Context.generate_property_map cx type_props in
         NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
@@ -1581,9 +1581,7 @@ module ImportModuleNsTKit = struct
         Exact
     in
     let proto = ObjProtoT reason in
-    let values_type =
-      Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props:value_props proto
-    in
+    let values_type = Obj_type.mk_with_proto cx reason ~obj_kind ~props:value_props proto in
     let types_tmap = Context.generate_property_map cx type_props in
     (values_type, types_tmap)
 end

@@ -16,15 +16,7 @@ let mk_seal ~frozen ~as_const =
     Object.Spread.Sealed
 
 let mk_with_proto
-    cx
-    reason
-    ~obj_kind
-    ?frozen:(_frozen = false)
-    ?reachable_targs
-    ?call
-    ?(props = NameUtils.Map.empty)
-    ?id
-    proto =
+    cx reason ~obj_kind ?reachable_targs ?call ?(props = NameUtils.Map.empty) ?id proto =
   let flags = { obj_kind; frozen = false; react_dro = None } in
   let call = Base.Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =
@@ -35,9 +27,6 @@ let mk_with_proto
       id
   in
   DefT (reason, ObjT (mk_objecttype ?reachable_targs ~flags ~call pmap proto))
-
-let mk_frozen_exact_empty cx reason =
-  ObjProtoT reason |> mk_with_proto cx reason ~obj_kind:Exact ~frozen:true
 
 let mk ~obj_kind cx reason = mk_with_proto cx ~obj_kind reason (ObjProtoT reason)
 

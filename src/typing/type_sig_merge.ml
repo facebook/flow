@@ -1201,7 +1201,7 @@ and merge_declare_module_implicitly_exported_object env file (loc, module_name, 
     SMap.mapi (merge_obj_value_prop ~for_export:true ~as_const:false env file) props
     |> NameUtils.namemap_of_smap
   in
-  Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen:false
+  Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props
 
 and merge_object_lit ~for_export ~as_const env file (loc, frozen, proto, props) =
   let reason = Reason.mk_obj_lit_reason ~as_const ~frozen loc in
@@ -1217,7 +1217,7 @@ and merge_object_lit ~for_export ~as_const env file (loc, frozen, proto, props) 
     SMap.mapi (merge_obj_value_prop ~for_export ~as_const env file) props
     |> NameUtils.namemap_of_smap
   in
-  Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
+  Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props
 
 and merge_obj_spread_lit ~for_export ~as_const env file (loc, frozen, proto, elems_rev) =
   let reason = Reason.mk_obj_lit_reason ~as_const ~frozen loc in

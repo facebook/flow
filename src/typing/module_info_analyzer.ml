@@ -452,13 +452,7 @@ let mk_module_t =
             named
             NameUtils.Map.empty
         in
-        Obj_type.mk_with_proto
-          cx
-          reason
-          (Type.ObjProtoT reason)
-          ~obj_kind:Type.Exact
-          ~frozen:false
-          ~props
+        Obj_type.mk_with_proto cx reason (Type.ObjProtoT reason) ~obj_kind:Type.Exact ~props
     in
     let module_export_types =
       {

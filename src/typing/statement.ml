@@ -122,9 +122,7 @@ module Make
       match elements_rev acc with
       | (Slice { slice_pmap }, []) ->
         let proto = Base.Option.value ~default:default_proto (proto acc) in
-        let obj_t =
-          Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen ~props:slice_pmap proto
-        in
+        let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props:slice_pmap proto in
         if obj_key_autocomplete acc then
           let get_autocomplete_t () =
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tvar ->
@@ -2239,7 +2237,7 @@ module Make
         in
         Flow.flow cx (elem_t, check);
         (* No properties are added in this case. *)
-        Obj_type.mk_frozen_exact_empty cx reason_obj
+        Obj_type.mk ~obj_kind:Exact cx reason_obj
       | Named { name; reason; _ } ->
         let prop =
           Field
@@ -5451,13 +5449,7 @@ module Make
                  }
               )
           in
-          Obj_type.mk_with_proto
-            cx
-            reason_props
-            ~obj_kind:Exact
-            ~frozen:false
-            ~props
-            (ObjProtoT reason_props)
+          Obj_type.mk_with_proto cx reason_props ~obj_kind:Exact ~props (ObjProtoT reason_props)
     in
     let (t, _) =
       react_jsx_desugar
