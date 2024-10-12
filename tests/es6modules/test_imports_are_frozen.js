@@ -38,7 +38,7 @@ function testRequires() {
 
   // ES6 module
   var ES6_Named1 = require("./ES6_Named1");
-  ES6_Named1.numberValue = 123; // error, es6 exports are frozen
+  ES6_Named1.numberValue = 123; // error, no such export
 
   // CommonJS module that clobbers module.exports
   var CommonJS_Star = require("./CommonJS_Clobbering_Lit");

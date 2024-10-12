@@ -1211,7 +1211,7 @@ Cannot assign `123` to `ES6_Named1.numberValue` because property `numberValue` i
 [prop-missing]
 
    test_imports_are_frozen.js:41:14
-   41|   ES6_Named1.numberValue = 123; // error, es6 exports are frozen
+   41|   ES6_Named1.numberValue = 123; // error, no such export
                     ^^^^^^^^^^^
 
 References:
