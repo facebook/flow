@@ -81,7 +81,9 @@ val grouped_platform_extension_opt : options:options -> string -> (string * stri
 val platform_specific_extensions_and_indices_opt :
   options:options -> string -> (int * string) list option
 
-val chop_platform_suffix : options:options -> File_key.t -> File_key.t
+val chop_platform_suffix_for_file : options:options -> File_key.t -> File_key.t
+
+val chop_platform_suffix_for_haste_module : options:options -> string -> string
 
 val is_json_file : string -> bool
 

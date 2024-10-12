@@ -50,6 +50,7 @@ let fix_signature_verification_errors
     ~file_key
     ~cx
     ~loc_of_aloc
+    ~file_options
     ~get_ast_from_shared_mem
     ~get_haste_name
     ~get_type_sig
@@ -59,6 +60,7 @@ let fix_signature_verification_errors
   let remote_converter =
     new Insert_type_imports.ImportsHelper.remote_converter
       ~loc_of_aloc
+      ~file_options
       ~get_haste_name
       ~get_type_sig
       ~iteration:0

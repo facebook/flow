@@ -190,7 +190,7 @@ let platform_specific_extensions_and_indices_opt ~options filename =
         )
     | None -> None)
 
-let chop_platform_suffix ~options file =
+let chop_platform_suffix_for_file ~options file =
   let platform_extensions =
     options.multi_platform_extensions
     @ Base.List.map options.multi_platform_extension_group_mapping ~f:fst
@@ -206,6 +206,16 @@ let chop_platform_suffix ~options file =
       )
   )
   |> Base.Option.value ~default:file
+
+let chop_platform_suffix_for_haste_module ~options module_name =
+  let platform_extensions =
+    options.multi_platform_extensions
+    @ Base.List.map options.multi_platform_extension_group_mapping ~f:fst
+  in
+  Base.List.find_map platform_extensions ~f:(fun platform_ext ->
+      Base.String.chop_suffix ~suffix:platform_ext module_name
+  )
+  |> Base.Option.value ~default:module_name
 
 let is_json_file filename = Utils_js.extension_of_filename filename = Some ".json"
 

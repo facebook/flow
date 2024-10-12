@@ -605,6 +605,7 @@ let insert_type_
       let rc =
         new ImportsHelper.remote_converter
           ~loc_of_aloc
+          ~file_options:(Context.metadata cx).Context.file_options
           ~get_haste_name
           ~get_type_sig
           ~iteration:0

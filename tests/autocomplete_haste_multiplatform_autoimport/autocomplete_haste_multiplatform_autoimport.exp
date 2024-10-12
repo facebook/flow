@@ -1,0 +1,9 @@
+test.js:3:10
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"fooBarBaz","type":"Import from ToBeImported"},
+    {"name":"fooBarBaz","type":"Import from ToBeImported2"}
+  ]
+}
+

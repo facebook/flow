@@ -1,0 +1,15 @@
+[options]
+all=false
+exact_by_default=false
+no_flowlib=false
+enums=true
+format.single_quotes=true
+autoimports_ranked_by_usage=true
+component_syntax=true
+
+module.system=haste
+experimental.multi_platform=true
+experimental.multi_platform.extensions=.ios
+experimental.multi_platform.extensions=.android
+experimental.multi_platform.extensions=.web
+experimental.multi_platform.extension_group_mapping='.native' -> 'ios, android'

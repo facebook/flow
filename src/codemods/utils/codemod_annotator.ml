@@ -368,6 +368,7 @@ module Make (Extra : BASE_STATS) = struct
           Some
             (new Insert_type_imports.ImportsHelper.remote_converter
                ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
+               ~file_options:(Options.file_options cctx.Codemod_context.Typed.options)
                ~get_haste_name
                ~get_type_sig:(Parsing_heaps.Reader_dispatcher.get_type_sig ~reader)
                ~iteration:cctx.Codemod_context.Typed.iteration

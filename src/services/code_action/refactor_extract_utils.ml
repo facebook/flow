@@ -700,6 +700,7 @@ module TypeSynthesizer = struct
     let remote_converter =
       new Insert_type_imports.ImportsHelper.remote_converter
         ~loc_of_aloc
+        ~file_options:(Context.metadata cx).Context.file_options
         ~get_haste_name
         ~get_type_sig
         ~iteration:0
