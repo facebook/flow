@@ -41,7 +41,7 @@ let choose_provider_and_warn_about_duplicates =
       let (defn_key, _) = defn in
       let def_with_flow_ext_chopped = Files.chop_flow_ext defn_key in
       let impl_with_platform_suffix_chopped =
-        Files.chop_platform_suffix ~options:(Options.file_options options) impl_key
+        Files.chop_platform_suffix_for_file ~options:(Options.file_options options) impl_key
       in
       let errmap =
         (* Allow pair of A.js.flow & A.ios.js *)
@@ -49,7 +49,7 @@ let choose_provider_and_warn_about_duplicates =
           errmap
         else if
           (* Additionally allow pair of A.ios.js.flow & A.ios.js *)
-          Files.chop_platform_suffix
+          Files.chop_platform_suffix_for_file
             ~options:(Options.file_options options)
             def_with_flow_ext_chopped
           = impl_with_platform_suffix_chopped

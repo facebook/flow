@@ -312,6 +312,7 @@ let insert_inferred_type_as_cast_code_actions
         let remote_converter =
           new Insert_type_imports.ImportsHelper.remote_converter
             ~loc_of_aloc
+            ~file_options:(Options.file_options options)
             ~get_haste_name
             ~get_type_sig
             ~iteration:0
@@ -1611,6 +1612,7 @@ let autofix_exports
         ~file_key
         ~cx
         ~loc_of_aloc
+        ~file_options:(Options.file_options options)
         ~get_ast_from_shared_mem
         ~get_haste_name
         ~get_type_sig

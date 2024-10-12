@@ -501,7 +501,7 @@ let nominal_id_have_same_logical_module
     ((b_id, b_name) : ALoc.id * string option) =
   let matching_platform_specific_impl_and_interface_file_key a_src b_src =
     Files.has_flow_ext a_src
-    && Files.chop_flow_ext a_src = Files.chop_platform_suffix ~options:file_options b_src
+    && Files.chop_flow_ext a_src = Files.chop_platform_suffix_for_file ~options:file_options b_src
   in
   match (a_name, b_name, ALoc.source (a_id :> ALoc.t), ALoc.source (b_id :> ALoc.t)) with
   | (Some a_name, Some b_name, Some a_src, Some b_src) ->

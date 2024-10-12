@@ -28,9 +28,9 @@ module Modules = struct
       Hardcoded_module_fixes.files_to_modules
 
   (* Relativize module name if in the same folder, or use haste paths, or fail *)
-  let resolve file module_name =
+  let resolve ~file_options file module_name =
     match module_name with
-    | Modulename.String s -> s
+    | Modulename.String s -> Files.chop_platform_suffix_for_haste_module ~options:file_options s
     | Modulename.Filename f ->
       let f = File_key.to_string f in
       let local_file = Filename.basename f in
@@ -239,6 +239,7 @@ module ImportsHelper : sig
    *)
   class remote_converter :
     loc_of_aloc:(ALoc.t -> Loc.t)
+    -> file_options:Files.options
     -> get_haste_name:(File_key.t -> string option)
     -> get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option)
     -> iteration:int
@@ -467,8 +468,8 @@ end = struct
     let compare = Stdlib.compare
   end)
 
-  class remote_converter ~loc_of_aloc ~get_haste_name ~get_type_sig ~iteration ~file ~reserved_names
-    =
+  class remote_converter
+    ~loc_of_aloc ~file_options ~get_haste_name ~get_type_sig ~iteration ~file ~reserved_names =
     object (self)
       val mutable name_map = ImportedNameMap.empty
 
@@ -500,7 +501,7 @@ end = struct
         let remote_name = Reason.display_string_of_name remote_name in
         ExportsHelper.resolve ~loc_of_aloc ~get_type_sig use_mode sym_def_loc remote_name
         >>| fun { ExportsHelper.import_kind; default } ->
-        let source = Modules.resolve file module_name in
+        let source = Modules.resolve ~file_options file module_name in
         let local_name =
           ImportInfo.to_local_name ~iteration ~reserved_names index use_mode remote_name
         in
