@@ -34,7 +34,7 @@ CommonJS_Clobbering_Frozen.numberValue1 = 123; // Error: exports are frozen
 function testRequires() {
   // CommonJS module
   var DefaultA = require("./A");
-  DefaultA.numberValue1 = 123; // TODO error: prop is not writable
+  DefaultA.numberValue1 = 123; // error: prop is not writable
 
   // ES6 module
   var ES6_Named1 = require("./ES6_Named1");

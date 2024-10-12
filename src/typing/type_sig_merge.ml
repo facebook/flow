@@ -1198,7 +1198,7 @@ and merge_declare_module_implicitly_exported_object env file (loc, module_name, 
   let reason = Reason.(mk_reason (RModule module_name) loc) in
   let proto = Type.ObjProtoT reason in
   let props =
-    SMap.mapi (merge_obj_value_prop ~for_export:true ~as_const:false env file) props
+    SMap.mapi (merge_obj_value_prop ~for_export:true ~as_const:false ~frozen:false env file) props
     |> NameUtils.namemap_of_smap
   in
   Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props
@@ -1214,7 +1214,7 @@ and merge_object_lit ~for_export ~as_const env file (loc, frozen, proto, props) 
       TypeUtil.typeof_annotation reason proto None
   in
   let props =
-    SMap.mapi (merge_obj_value_prop ~for_export ~as_const env file) props
+    SMap.mapi (merge_obj_value_prop ~for_export ~as_const ~frozen env file) props
     |> NameUtils.namemap_of_smap
   in
   Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props
@@ -1225,7 +1225,7 @@ and merge_obj_spread_lit ~for_export ~as_const env file (loc, frozen, proto, ele
   ignore proto;
   let merge_slice props =
     let prop_map =
-      SMap.mapi (merge_obj_value_prop ~for_export ~as_const env file) props
+      SMap.mapi (merge_obj_value_prop ~for_export ~as_const ~frozen env file) props
       |> NameUtils.namemap_of_smap
     in
     {
@@ -1288,9 +1288,9 @@ and merge_accessor env file = function
     let set_type = merge env file st in
     Type.GetSet { get_key_loc = Some gloc; get_type; set_key_loc = Some sloc; set_type }
 
-and merge_obj_value_prop ~for_export ~as_const env file key = function
+and merge_obj_value_prop ~for_export ~as_const ~frozen env file key = function
   | ObjValueField (id_loc, Pack.Ref ref, polarity) when for_export ->
-    let polarity = Polarity.apply_const as_const polarity in
+    let polarity = Utils_js.ite (as_const || frozen) Polarity.Positive polarity in
     merge_ref
       file
       (fun type_ ~ref_loc ~def_loc value_name ->
@@ -1305,7 +1305,7 @@ and merge_obj_value_prop ~for_export ~as_const env file key = function
       ref
   | ObjValueField (id_loc, t, polarity) ->
     let type_ = merge env ~as_const file t in
-    let polarity = Polarity.apply_const as_const polarity in
+    let polarity = Utils_js.ite (as_const || frozen) Polarity.Positive polarity in
     Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor env file x
   | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
