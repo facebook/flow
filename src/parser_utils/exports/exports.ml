@@ -116,7 +116,16 @@ module Eval = struct
   and tyref type_sig seen ?name (r : 'a tyref) : 'a evaled =
     match (r, name) with
     (* This case is a heuristic to identify React.AbstractComponent exports, which can be used as types *)
-    | ( Qualified { name = "AbstractComponent"; qualification = Unqualified (RemoteRef _); _ },
+    | ( Qualified
+          {
+            name = "AbstractComponent";
+            qualification = Unqualified (RemoteRef _ | BuiltinRef _);
+            _;
+          },
+        Some name
+      )
+    | ( Qualified
+          { name = "ComponentType"; qualification = Unqualified (RemoteRef _ | BuiltinRef _); _ },
         Some name
       ) ->
       ComponentDecl name

@@ -374,7 +374,9 @@ Flags: --pretty --imports
   "result":[
     {"name":"MyComponent4","type":"Import type from ./exported_components"},
     {"name":"MyComponent5","type":"Import type from ./exported_components"},
-    {"name":"MyComponent6","type":"Import type from ./exported_components"}
+    {"name":"MyComponent6","type":"Import type from ./exported_components"},
+    {"name":"MyComponent7","type":"Import type from ./exported_components"},
+    {"name":"MyComponent8","type":"Import type from ./exported_components"}
   ]
 }
 
@@ -386,7 +388,9 @@ Flags: --pretty --imports
     {"name":"MyComponent3","type":"component() renders MyComponent"},
     {"name":"MyComponent4","type":"Import type from ./exported_components"},
     {"name":"MyComponent5","type":"Import type from ./exported_components"},
-    {"name":"MyComponent6","type":"Import type from ./exported_components"}
+    {"name":"MyComponent6","type":"Import type from ./exported_components"},
+    {"name":"MyComponent7","type":"Import type from ./exported_components"},
+    {"name":"MyComponent8","type":"Import type from ./exported_components"}
   ]
 }
 
@@ -398,7 +402,9 @@ Flags: --pretty --imports
     {"name":"MyComponent3","type":"component() renders MyComponent"},
     {"name":"MyComponent4","type":"Import type from ./exported_components"},
     {"name":"MyComponent5","type":"Import type from ./exported_components"},
-    {"name":"MyComponent6","type":"Import type from ./exported_components"}
+    {"name":"MyComponent6","type":"Import type from ./exported_components"},
+    {"name":"MyComponent7","type":"Import type from ./exported_components"},
+    {"name":"MyComponent8","type":"Import type from ./exported_components"}
   ]
 }
 
