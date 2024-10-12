@@ -778,10 +778,25 @@ let%expect_test "react_dollar_ac" =
   |};
   [%expect{| [(Default (Some "x")); (DefaultType (Some "x"))] |}]
 
-let%expect_test "react_dot_ac" =
+let%expect_test "react_dot_ac_1" =
   print_module {|
     import * as React from 'react';
-    const x: React.AbstractComponent<{}> = null;
-    export default x;
+    export const x: React.AbstractComponent<{}> = null;
+    export const y: React.AbstractComponent<{}> = null;
   |};
-  [%expect{| [(Default (Some "x")); (DefaultType (Some "x"))] |}]
+  [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]
+
+let%expect_test "react_dot_ac_2" =
+  print_module {|
+    import React from 'react';
+    export const x: React.AbstractComponent<{}> = null;
+    export const y: React.AbstractComponent<{}> = null;
+  |};
+  [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]
+
+let%expect_test "react_builtin_ac_1" =
+  print_module {|
+    export const x: React.AbstractComponent<{}> = null;
+    export const y: React.AbstractComponent<{}> = null;
+  |};
+  [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]
