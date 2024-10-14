@@ -151,8 +151,11 @@ module type S = sig
           sense: bool;
           lit: int64 option * string;
         }
-      (* The location here is the location of expr in x.foo === expr *)
-      | SentinelR of string * L.t
+      (* `other_loc` is the location of expr in `x.foo === expr` *)
+      | SentinelR of {
+          prop: string;
+          other_loc: L.t;
+        }
       | PropNullishR of {
           propname: string;
           loc: L.t;
@@ -428,7 +431,10 @@ module Make
           sense: bool;
           lit: int64 option * string;
         }
-      | SentinelR of string * L.t
+      | SentinelR of {
+          prop: string;
+          other_loc: L.t;
+        }
       | PropNullishR of {
           propname: string;
           loc: L.t;
@@ -662,7 +668,7 @@ module Make
         Printf.sprintf "Not (%s)" lit
       else
         lit
-    | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
+    | SentinelR { prop; _ } -> Printf.sprintf "SentinelR %s" prop
     | PropNullishR { propname = prop; _ } -> Printf.sprintf "PropNullishR %s" prop
     | LatentR { func = _; targs = _; arguments = _; index } ->
       Printf.sprintf "LatentR (index = %i)" index

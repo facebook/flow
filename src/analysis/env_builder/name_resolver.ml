@@ -5053,9 +5053,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             env_state <- { env_state with write_entries };
             let refinement =
               if sense then
-                SentinelR (prop_name, other_loc)
+                SentinelR { prop = prop_name; other_loc }
               else
-                NotR (SentinelR (prop_name, other_loc))
+                NotR (SentinelR { prop = prop_name; other_loc })
             in
             this#start_refinement refinement_key ~refining_locs:(L.LSet.singleton loc) refinement
           | None -> LookupMap.empty

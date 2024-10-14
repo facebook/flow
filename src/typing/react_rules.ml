@@ -507,12 +507,12 @@ let effect_visitor cx is_hook rrid tast =
           | AndR (l, r) -> refines_safe l || refines_safe r
           | OrR (l, r) -> refines_safe l && refines_safe r
           | NotR r -> not (not_refines_safe r)
-          | SentinelR ("current", loc) ->
+          | SentinelR { prop = "current"; other_loc } ->
             is_nullish
               (Type_env.find_write
                  cx
                  Env_api.ExpressionLoc
-                 (mk_reason (RMember { object_ = "ref"; property = "current" }) loc)
+                 (mk_reason (RMember { object_ = "ref"; property = "current" }) other_loc)
               )
           | PropNullishR { propname = "current"; _ } -> true
           | _ -> false

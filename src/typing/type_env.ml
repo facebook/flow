@@ -319,11 +319,15 @@ let predicate_of_refinement cx =
     | SingletonStrR { loc; sense; lit } -> Some (SingletonStrP (loc, sense, lit))
     | SingletonNumR { loc; sense; lit } -> Some (SingletonNumP (loc, sense, lit))
     | SingletonBigIntR { loc; sense; lit } -> Some (SingletonBigIntP (loc, sense, lit))
-    | SentinelR (prop, loc) ->
+    | SentinelR { prop; other_loc } ->
       Debug_js.Verbose.print_if_verbose_lazy
         cx
-        (lazy [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]);
-      let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
+        ( lazy
+          [
+            spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc other_loc);
+          ]
+          );
+      let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc other_loc in
       Some (BinaryP (SentinelProp prop, other_t))
     | EqR loc ->
       Debug_js.Verbose.print_if_verbose_lazy
