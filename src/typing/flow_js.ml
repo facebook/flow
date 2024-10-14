@@ -4374,19 +4374,6 @@ struct
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
           rec_flow cx trace (instance, GetStaticsT statics);
           rec_flow cx trace (OpenT statics, u)
-        (******************************)
-        (* String utils (e.g. prefix) *)
-        (******************************)
-        (* StrUtilT just becomes a StrT so we can access properties and methods. *)
-        | (StrUtilT { reason; op = StrPrefix arg | StrSuffix arg; remainder = _ }, _) ->
-          let reason = replace_desc_reason RString reason in
-          let literal_kind =
-            if arg = "" then
-              AnyLiteral
-            else
-              Truthy
-          in
-          rec_flow cx trace (DefT (reason, StrT literal_kind), u)
         (*********)
         (* enums *)
         (*********)
@@ -5069,6 +5056,19 @@ struct
             (Error_message.EIncompatibleWithUseOp
                { reason_lower = reason_l; reason_upper = reason_u; use_op; explanation = None }
             )
+        (******************************)
+        (* String utils (e.g. prefix) *)
+        (******************************)
+        (* StrUtilT just becomes a StrT so we can access properties and methods. *)
+        | (StrUtilT { reason; op = StrPrefix arg | StrSuffix arg; remainder = _ }, _) ->
+          let reason = replace_desc_reason RString reason in
+          let literal_kind =
+            if arg = "" then
+              AnyLiteral
+            else
+              Truthy
+          in
+          rec_flow cx trace (DefT (reason, StrT literal_kind), u)
         (*******************************)
         (* ToString abstract operation *)
         (*******************************)
