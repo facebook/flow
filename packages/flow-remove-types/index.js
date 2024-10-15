@@ -165,7 +165,6 @@ var removeFlowVisitor = {
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,
 
-
   AsExpression: function (context, node, ast) {
     var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
