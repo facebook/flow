@@ -298,6 +298,64 @@ References:
                                                      ^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:10:1
+
+Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
+
+   everything_implicit_instantiation.js:10:1
+   10| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error
+       ^
+
+References:
+   everything_implicit_instantiation.js:10:69
+   10| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error
+                                                                           ^^^^^^ [1]
+   everything_implicit_instantiation.js:6:74
+    6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
+                                                                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:11:1
+
+Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
+argument `T` [4]. [incompatible-cast]
+
+   everything_implicit_instantiation.js:11:1
+     11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
+         ^
+
+References:
+   everything_implicit_instantiation.js:11:41
+     11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
+                                                 ^^^^^^ [1]
+   everything_implicit_instantiation.js:6:46
+      6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
+                                                      ^^^^^^ [2]
+   <BUILTINS>/core.js:1930:19
+   1930| declare class Set<T> extends $ReadOnlySet<T> {
+                           ^ [3]
+   <BUILTINS>/react.js:229:19
+    229|   type RefSetter<-T> = React$RefSetter<T>;
+                           ^ [4]
+
+
+Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:12:1
+
+Cannot cast `C` to component because a value that renders nothing [1] does not render `A` [2]. [incompatible-cast]
+
+   everything_implicit_instantiation.js:12:1
+   12| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders A; // error
+       ^
+
+References:
+   everything_implicit_instantiation.js:8:23
+    8| const C = idComponent(B);
+                             ^ [1]
+   everything_implicit_instantiation.js:12:77
+   12| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders A; // error
+                                                                                   ^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------- function_to_component_type.js:5:1
 
 Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-cast]
@@ -394,6 +452,47 @@ References:
    <BUILTINS>/react.js:182:6
    182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------ props_implicit_instantiation.js:9:1
+
+Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
+
+   props_implicit_instantiation.js:9:1
+   9| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
+      ^
+
+References:
+   props_implicit_instantiation.js:9:69
+   9| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
+                                                                          ^^^^^^ [1]
+   props_implicit_instantiation.js:5:74
+   5| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
+                                                                               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:10:1
+
+Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
+argument `T` [4]. [incompatible-cast]
+
+   props_implicit_instantiation.js:10:1
+     10| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+         ^
+
+References:
+   props_implicit_instantiation.js:10:41
+     10| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+                                                 ^^^^^^ [1]
+   props_implicit_instantiation.js:5:46
+      5| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
+                                                      ^^^^^^ [2]
+   <BUILTINS>/core.js:1930:19
+   1930| declare class Set<T> extends $ReadOnlySet<T> {
+                           ^ [3]
+   <BUILTINS>/react.js:229:19
+    229|   type RefSetter<-T> = React$RefSetter<T>;
+                           ^ [4]
 
 
 Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:6:1
@@ -505,8 +604,42 @@ References:
                     ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------- renders_implicit_instantiation.js:12:1
 
-Found 26 errors
+Cannot cast `C` to component because a value that renders nothing [1] does not render `A` [2]. [incompatible-cast]
+
+   renders_implicit_instantiation.js:12:1
+   12| C as component() renders A; // error: renders A ~> renders? A
+       ^
+
+References:
+   renders_implicit_instantiation.js:9:23
+    9| const C = idComponent(B);
+                             ^ [1]
+   renders_implicit_instantiation.js:12:18
+   12| C as component() renders A; // error: renders A ~> renders? A
+                        ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------- renders_implicit_instantiation.js:13:1
+
+Cannot cast `C` to component because component B [1] does not render `A2` [2]. [incompatible-cast]
+
+   renders_implicit_instantiation.js:13:1
+   13| C as component() renders? A2; // error: renders? A2 ~> renders? A
+       ^
+
+References:
+   renders_implicit_instantiation.js:9:23
+    9| const C = idComponent(B);
+                             ^ [1]
+   renders_implicit_instantiation.js:13:18
+   13| C as component() renders? A2; // error: renders? A2 ~> renders? A
+                        ^^^^^^^^^^^ [2]
+
+
+
+Found 33 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
