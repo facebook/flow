@@ -289,16 +289,45 @@ const kk = function(this
 a: string,) {}
 
 // `as` cast
-1 as number;
-1 as number as mixed;
-[1] as [1];
+const asAny = 'any' as any;
+const asArray = [1, 2, 3] as number[];
+const asBigIntLiteral = 1n as 1n;
+const asBigInt = 1n as bigint;
+const asBooleanLiteral = true as true;
+const asBoolean = true as boolean;
+const asComponent = (() => {}) as component(p: number, o?: string);
+const asEmpty = {} as empty;
+const asExists = 'exists' as *;
+const asFunction = (() => {}) as () => void;
+const asGeneric = 'generic' as $NonMaybeType<string>;
+const asKeyof = 'a' as keyof { a: string; b: number };
+const asMixed = 'mixed' as mixed;
+const asNullable = null as ?string;
+const asNullLiteral = null as null;
+const asNumberLiteral = 1 as 1;
+const asNumber = 1 as number;
+const asObject = { a: 'a' } as { a: string };
+const asStringLiteral = 'literal' as 'literal';
+const asString = 'string' as string;
+const asSymbol = Symbol('symbol') as symbol;
+const asTuple = ['a', 1] as [string, number];
+const asTypeof = 'typeof' as typeof asString;
+const asUnion = 'union' as string | number;
+const asVoid = undefined as void;
 
-// `as` cast with generics
-'m' as $NonMaybeType<string>;
-['a', 'b', 'c'] as $Keys<{a: string, b: string, c: number}>;
-['x', 'y', 'z'] as $Values<{a: 'x', b: 'y', c: 'z'}>;
-const ga = {a: 'b'} as $Rest<{a: string, c: number}, {c: number}>;
-const gb = {a: 'x', b: 1} as $Shape<{a: string, b: number}>;
+type ConditionalType<T> = T extends string ? string : number;
+const asConditional = 'conditional' as ConditionalType<string>;
+
+interface InterfaceType { a: string; b: number; }
+const asInterface = { a: 'a', b: 1 } as InterfaceType;
+
+type InferType<T> = T extends infer U ? U : never;
+const asInfer = 'infer' as InferType<string>;
+
+type IntersectionType = { a: string } & { b: number };
+const asIntersection = { a: 'a', b: 1 } as IntersectionType;
+
+const asIndexed = 'indexed' as [string, number][0];
 
 // `as const`
 's' as const;

@@ -225,16 +225,41 @@ const k = function(
 const kk = function(a,) {}
 
 // `as` cast
-1;
-1;
-[1];
+const asAny = 'any';
+const asArray = [1, 2, 3];
+const asBigIntLiteral = 1n;
+const asBigInt = 1n;
+const asBooleanLiteral = true;
+const asBoolean = true;
+const asComponent = (() => {});
+const asEmpty = {};
+const asExists = 'exists';
+const asFunction = (() => {});
+const asGeneric = 'generic';
+const asKeyof = 'a';
+const asMixed = 'mixed';
+const asNullable = null;
+const asNullLiteral = null;
+const asNumberLiteral = 1;
+const asNumber = 1;
+const asObject = { a: 'a' };
+const asStringLiteral = 'literal';
+const asString = 'string';
+const asSymbol = Symbol('symbol');
+const asTuple = ['a', 1];
+const asTypeof = 'typeof';
+const asUnion = 'union';
+const asVoid = undefined;
 
-// `as` cast with generics
-'m';
-['a', 'b', 'c'];
-['x', 'y', 'z'];
-const ga = {a: 'b'};
-const gb = {a: 'x', b: 1};
+const asConditional = 'conditional';
+
+const asInterface = { a: 'a', b: 1 };
+
+const asInfer = 'infer';
+
+const asIntersection = { a: 'a', b: 1 };
+
+const asIndexed = 'indexed';
 
 // `as const`
 's';
