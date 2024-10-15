@@ -156,7 +156,6 @@ var removeFlowVisitor = {
   TypeAnnotation: removeNodeIfNotCommentType,
   TypePredicate: removeNodeIfNotCommentType,
   TypeParameterDeclaration: removeNode,
-  TypeParameterInstantiation: removeNode,
   InferredPredicate: removeInferredPredicateNode,
   OpaqueType: removeNode,
   DeclareOpaqueType: removeNode,
@@ -168,14 +167,7 @@ var removeFlowVisitor = {
   AsExpression: function (context, node, ast) {
     var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
-    if (
-      node.typeAnnotation.typeParameters &&
-      node.typeAnnotation.typeParameters.type === 'TypeParameterInstantiation'
-    ) {
-      removeNode(context, ast.tokens[typeIdx]);
-    } else {
-      removeNode(context, node.typeAnnotation);
-    }
+    removeNode(context, node.typeAnnotation);
   },
 
   AsConstExpression: function (context, node, ast) {
@@ -312,6 +304,13 @@ var removeFlowVisitor = {
         // Delete the original arrow token.
         removeNode(context, ast.tokens[arrowIdx]);
       }
+    }
+  },
+
+  TypeParameterInstantiation: function(context, node, ast, parent) {
+    // prevent interference with asExpression removal
+    if (parent.type !== 'GenericTypeAnnotation') {
+      removeNode(context, node);
     }
   },
 };
@@ -564,7 +563,7 @@ function visit(ast, context, visitor) {
       if (node && typeof node === 'object' && (node.type || node.length)) {
         if (node.type) {
           var visitFn = visitor[node.type];
-          if (visitFn && visitFn(context, node, ast) === false) {
+          if (visitFn && visitFn(context, node, ast, parent) === false) {
             continue;
           }
         }
