@@ -105,3 +105,11 @@ Converts:
  - `$TEMPORARY$array<T>` to `$ReadOnlyArray<T>`
  - `$TEMPORARY$number<42>` annotations to `number`
  - `$TEMPORARY$string<"foo">` annotations to `string`
+
+### Replace `React.AbstractComponent<...>` types
+Converts:
+
+- `React.AbstractComponent<Props>` to `React.ComponentType<Props>`
+- `React.ElementConfig<React.AbstractComponent<Props, Instance>>` to `Props`
+- `React.ElementRef<React.AbstractComponent<Props, Instance>>` to `Instance`
+- `React.ElementRef<React.AbstractComponent<Props>` to `mixed`
