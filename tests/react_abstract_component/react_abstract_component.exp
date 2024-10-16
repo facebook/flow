@@ -778,6 +778,15 @@ References:
                          ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- lint.js:3:10
+
+`React$AbstractComponent` is an internal Flow type used to model an exact React element. You should use component type
+instead. See https://flow.org/en/docs/react/component-types/. [internal-type]
+
+   3| type T = React$AbstractComponent<{}>; // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- strict.js:4:12
 
 Cannot create `Component` element because props [1] is incompatible with empty [2]. [incompatible-type]
@@ -865,7 +874,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 49 errors
+Found 50 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
