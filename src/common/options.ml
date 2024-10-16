@@ -67,7 +67,6 @@ type t = {
   opt_all: bool;
   opt_as_const: bool;
   opt_autoimports: bool;
-  opt_autoimports_index_star_exports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
   opt_autoimports_ranked_by_usage_boost_exact_match_min_length: int;
@@ -161,8 +160,6 @@ let all opts = opts.opt_all
 let as_const opts = opts.opt_as_const
 
 let autoimports opts = opts.opt_autoimports
-
-let autoimports_index_star_exports opts = opts.opt_autoimports_index_star_exports
 
 let autoimports_min_characters opts = opts.opt_autoimports_min_characters
 

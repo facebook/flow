@@ -68,8 +68,6 @@ val all : config -> bool option
 
 val autoimports : config -> bool option
 
-val autoimports_index_star_exports : config -> bool
-
 val autoimports_min_characters : config -> int option
 
 val autoimports_ranked_by_usage : config -> bool

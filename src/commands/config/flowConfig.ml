@@ -45,7 +45,6 @@ module Opts = struct
   type t = {
     all: bool option;
     autoimports: bool option;
-    autoimports_index_star_exports: bool;
     autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool;
     autoimports_ranked_by_usage_boost_exact_match_min_length: int;
@@ -176,7 +175,6 @@ module Opts = struct
     {
       all = None;
       autoimports = None;
-      autoimports_index_star_exports = true;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = true;
       autoimports_ranked_by_usage_boost_exact_match_min_length = 5;
@@ -897,9 +895,6 @@ module Opts = struct
     [
       ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
-      ( "autoimports.experimental.index_star_exports",
-        boolean (fun opts v -> Ok { opts with autoimports_index_star_exports = v })
-      );
       ( "autoimports.min_characters",
         uint (fun opts v ->
             if opts.autoimports = Some false then
@@ -1581,8 +1576,6 @@ let libs config = config.libs
 let all c = c.options.Opts.all
 
 let autoimports c = c.options.Opts.autoimports
-
-let autoimports_index_star_exports c = c.options.Opts.autoimports_index_star_exports
 
 let autoimports_min_characters c = c.options.Opts.autoimports_min_characters
 
