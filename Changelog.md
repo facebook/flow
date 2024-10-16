@@ -1,3 +1,17 @@
+### 0.249.0
+
+Likely to cause new Flow errors:
+* Uses of `React$AbstractComponent` outside library definitions will now trigger `internal-type` lint error, which is on by default. `React.AbstractComponent` is also marked as deprecated. We recommend replacing them with [component types](https://flow.org/en/docs/react/component-types/). We have provided a codemod via the `flow-upgrade` package to aid larger codebases with this conversion: `yarn run flow-codemod eliminateAbstractComponent path/to/src`.
+
+Notable bug fixes:
+* Fixed issue with `StringPrefix` and `StringSuffix` when used as a component syntax prop.
+* Fixed an issue that causes type argument inference on component type to be incorrectly under-constrained. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABDAHso4NBOXA2ABhdKMaAWAA8AAVKLCSMhOcArCrGZyAJJ2SyPWScgBKgg0+MVBuiVgAchANAA+AAUAB0oJznZywIrICJxV8fLaWDATaxlFYDTAAMq4kySzX2YGQ628Tkqqyy+UASk5LCgRpI+sNJhIvEdqfdYolPr9AbNIfDxMj0e1cYTSZTjBI6cz2dzWfzAG5HY62bgOa7S96JJyAIK21N97vslgjz1l8cAIV9mkrQerEcokprkvspigCGt8e5xEVh4qCATmEoiuEIhu7bz+IA-JPZ47bPZOcLOQAvIKIqjhYtorjOnIAPRQZyDxGj+Ugol8bCcjgMAQCwCYAO6YVsOZQBA2H9lAuQgA0+b8qRyAgBk9gmCA9JAA))
+* Fixed `as` cast support in `flow-remove-types`.
+
+Library Definitions:
+* React string refs are no longer supported in `React.cloneElement`. e.g. `React.cloneElement(e, {ref: 'foo'})` will be an error.
+* The deprecated `React$Ref` type and various aliases of it are removed.
+
 ### 0.248.1
 
 IDE:
