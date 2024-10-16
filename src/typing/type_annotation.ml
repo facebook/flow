@@ -1149,6 +1149,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               reconstruct_ast (FunProtoBindT reason) None
           )
         | "React$AbstractComponent" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 (loc, Flow_intermediate_error_types.ReactDollarAbstractComponent)
+              );
           let reason = mk_reason (RCustom "AbstractComponent") loc in
           (match targs with
           | None

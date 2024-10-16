@@ -4,4 +4,5 @@ all=true
 exact_by_default=false
 
 [lints]
+internal-type=off
 react-intrinsic-overlap=error
