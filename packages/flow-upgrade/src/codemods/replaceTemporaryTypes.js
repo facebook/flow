@@ -14,6 +14,7 @@ import {t} from 'hermes-transform';
 import {codemod} from '../Types';
 
 export default codemod({
+  title: 'Replace $TEMPORARY$ types',
   describe: [
     'Converts:',
     ' - `$TEMPORARY$object<{props}>` to `$ReadOnly<{props}>`',
