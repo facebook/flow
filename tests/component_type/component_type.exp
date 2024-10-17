@@ -495,40 +495,93 @@ References:
                            ^ [4]
 
 
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:14:1
+
+Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
+within a component. [invalid-component-prop]
+
+   props_implicit_instantiation.js:14:1
+   14| declare component B(foo: string, bar: number); // bad misplaced error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+References:
+   props_implicit_instantiation.js:18:61
+   18| declare function removeSomeProps<Props: {...}>(c: component(foo: string, ...Props)): Props;
+                                                                   ^^^ [1]
+   props_implicit_instantiation.js:14:21
+   14| declare component B(foo: string, bar: number); // bad misplaced error
+                           ^^^ [2]
+
+
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
-Cannot cast `props` to object type because number [1] is incompatible with string [2] in property `bar`.
+Cannot cast `props1` to object type because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-cast]
 
    props_implicit_instantiation.js:16:1
-   16| props as {+foo: number, +bar: string}; // error: string != number
-       ^^^^^
+   16| props1 as {+foo: number, +bar: string}; // error: string != number
+       ^^^^^^
 
 References:
    props_implicit_instantiation.js:14:39
-   14| declare component B(foo: string, bar: number);
+   14| declare component B(foo: string, bar: number); // bad misplaced error
                                              ^^^^^^ [1]
-   props_implicit_instantiation.js:16:31
-   16| props as {+foo: number, +bar: string}; // error: string != number
-                                     ^^^^^^ [2]
+   props_implicit_instantiation.js:16:32
+   16| props1 as {+foo: number, +bar: string}; // error: string != number
+                                      ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
-Cannot cast `props` to object type because string [1] is incompatible with number [2] in property `foo`.
+Cannot cast `props1` to object type because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-cast]
 
    props_implicit_instantiation.js:16:1
-   16| props as {+foo: number, +bar: string}; // error: string != number
-       ^^^^^
+   16| props1 as {+foo: number, +bar: string}; // error: string != number
+       ^^^^^^
 
 References:
    props_implicit_instantiation.js:14:26
-   14| declare component B(foo: string, bar: number);
+   14| declare component B(foo: string, bar: number); // bad misplaced error
                                 ^^^^^^ [1]
-   props_implicit_instantiation.js:16:17
-   16| props as {+foo: number, +bar: string}; // error: string != number
-                       ^^^^^^ [2]
+   props_implicit_instantiation.js:16:18
+   16| props1 as {+foo: number, +bar: string}; // error: string != number
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:20:1
+
+Cannot cast `props2` to object type because property `foo` is missing in object type [1] but exists in props of
+component B [2]. [prop-missing]
+
+   props_implicit_instantiation.js:20:1
+   20| props2 as {+bar: number}; // bad error: foo should be removed
+       ^^^^^^
+
+References:
+   props_implicit_instantiation.js:20:11
+   20| props2 as {+bar: number}; // bad error: foo should be removed
+                 ^^^^^^^^^^^^^^ [1]
+   props_implicit_instantiation.js:14:1
+   14| declare component B(foo: string, bar: number); // bad misplaced error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:21:1
+
+Cannot cast `props2` to empty because props of component B [1] is incompatible with empty [2]. [incompatible-cast]
+
+   props_implicit_instantiation.js:21:1
+   21| props2 as empty; // error
+       ^^^^^^
+
+References:
+   props_implicit_instantiation.js:14:1
+   14| declare component B(foo: string, bar: number); // bad misplaced error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   props_implicit_instantiation.js:21:11
+   21| props2 as empty; // error
+                 ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:6:1
@@ -675,7 +728,7 @@ References:
 
 
 
-Found 35 errors
+Found 38 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
