@@ -486,13 +486,13 @@ end = struct
              * use `import type { ... } from 'react'` and hard-code the module string
              * here. *)
             if is_react_file_key remote_source then
-              Modulename.String "react"
+              `SpecialCased "react"
             else if is_react_redux_file_key remote_source then
-              Modulename.String "react-redux"
+              `SpecialCased "react-redux"
             else (
               match get_haste_name remote_source with
-              | Some name -> Modulename.String name
-              | None -> Modulename.Filename (Files.chop_flow_ext remote_source)
+              | Some name -> `Ordinary (Modulename.String name)
+              | None -> `Ordinary (Modulename.Filename (Files.chop_flow_ext remote_source))
             )
           | None -> failwith "No source"
         in
@@ -501,7 +501,11 @@ end = struct
         let remote_name = Reason.display_string_of_name remote_name in
         ExportsHelper.resolve ~loc_of_aloc ~get_type_sig use_mode sym_def_loc remote_name
         >>| fun { ExportsHelper.import_kind; default } ->
-        let source = Modules.resolve ~file_options file module_name in
+        let source =
+          match module_name with
+          | `SpecialCased m -> m
+          | `Ordinary module_name -> Modules.resolve ~file_options file module_name
+        in
         let local_name =
           ImportInfo.to_local_name ~iteration ~reserved_names index use_mode remote_name
         in
