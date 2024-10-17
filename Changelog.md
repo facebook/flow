@@ -1,3 +1,12 @@
+### 0.250.0
+
+Likely to cause new Flow errors:
+* Fix a bug where scope analysis of exported component type is done incorrectly, which causes generics mentioned within component type to be incorrectly typed as any.
+
+Notable bug fixes:
+* We will now remove previous props in generic component types in type argument inference. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABJARIxoBZOQAhAAUMGIyE59lMUAQvE5mEoEuEIhuAEoANycgD0Ws5swacAg+Xl7E5RSYuCUpU5JkoEEonNqJmwAB0oGzLSxOTAHspDVBOSwRBAGtgAMrpbAABTtjBIAB4Y7CSBLgFZ0-SAHzCsASnl8r4+UXiyVSCqyznpqxJuOq1USmskdVu2z2TlRzkAXkD2GDoYj5kbwsFGu1uv1hvygzlHdqGBInJWxk5wAA1GKIBKpeW5auFUrriZGZyoBAAO4rvdUA8qo9u3IgUP4-1JDL2EwgelAA)
+* When `all` option is specified in the config of `flow-remove-types`, we now respect it and will correctly handle Flow-typed files without `@flow` pragma.
+
 ### 0.249.0
 
 Likely to cause new Flow errors:
