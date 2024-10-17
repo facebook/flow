@@ -57,7 +57,7 @@ module.exports = function flowRemoveTypes(source, options) {
   }
 
   // This parse configuration is intended to be as permissive as possible.
-  var ast = parse(source, {types: true, tokens: true});
+  var ast = parse(source, {flow: all ? 'all' : 'detect', tokens: true});
 
   var removedNodes = [];
 
