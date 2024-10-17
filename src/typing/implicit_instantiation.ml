@@ -263,9 +263,15 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | MakeHooklike
       | PartialType
       | RequiredType
-      | ReactConfigType _
-      | ReactCheckComponentConfig _ ->
+      | ReactConfigType _ ->
         merge_lower_or_upper_bounds r (OpenT tout)
+      | ReactCheckComponentConfig pmap ->
+        merge_lower_or_upper_bounds r (OpenT tout)
+        |> bind_use_t_result ~f:(fun t ->
+               reverse_component_check_config cx r pmap t
+               |> merge_lower_bounds cx
+               |> use_t_result_of_t_option
+           )
       | SpreadType (_, todo_rev, head_slice) ->
         let acc_elements =
           Base.Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice
@@ -414,9 +420,19 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | Object.Partial
       | Object.Required
       | Object.ObjectRep
-      | Object.ReactConfig _
-      | Object.ReactCheckComponentConfig _ ->
+      | Object.ReactConfig _ ->
         identity_reverse_upper_bound cx seen tvar r tout
+      | Object.ReactCheckComponentConfig pmap ->
+        let solution = merge_upper_bounds cx seen r tout in
+        (match solution with
+        | UpperEmpty -> UpperEmpty
+        | UpperNonT u -> UpperNonT u
+        | UpperT t ->
+          (match reverse_component_check_config cx r pmap t |> merge_lower_bounds cx with
+          | None -> UpperEmpty
+          | Some reversed ->
+            Flow.flow_t cx (reversed, tvar);
+            UpperT reversed))
       | Object.ObjectMap _ -> UpperEmpty (* TODO: reverse mapped types *)
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
         let solution = merge_upper_bounds cx seen r tout in
@@ -496,6 +512,22 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       )
     in
     Base.List.fold todo_rev ~init:tout ~f:(fun l o -> rest_type l (operand_to_t o))
+
+  and reverse_component_check_config cx reason pmap tout =
+    if NameUtils.Map.is_empty pmap then
+      tout
+    else
+      Tvar.mk_where cx reason (fun t' ->
+          let rest =
+            Obj_type.mk_with_proto cx reason ~props:pmap ~obj_kind:Type.Exact (ObjProtoT reason)
+          in
+          let u =
+            let open Object in
+            ObjKitT
+              (unknown_use, reason, Resolve Next, Rest (Rest.SpreadReversal, Rest.One rest), t')
+          in
+          Flow.flow cx (tout, u)
+      )
 
   and reverse_obj_kit_rest cx reason t_rest tout =
     Tvar.mk_no_wrap_where cx reason (fun t' ->
