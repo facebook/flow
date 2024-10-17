@@ -1501,7 +1501,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
     | T.Component { T.Component.tparams; params; renders; _ } ->
-      let def = component_type opts scope tbls tparams params renders in
+      let def = component_type opts scope tbls xs tparams params renders in
       Annot (ComponentAnnot (loc, def))
     | T.Object o -> object_type opts scope tbls xs loc o
     | T.Interface
@@ -1754,10 +1754,11 @@ and component_type =
   fun opts
       scope
       tbls
+      xs
       tps
       (loc, { Ast.Type.Component.Params.params = ps; rest = rp; comments = _ })
       r ->
-    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+    let (xs, tparams) = tparams opts scope tbls xs tps in
     let loc = push_loc tbls loc in
     let params = params opts scope tbls xs [] ps in
     let rest_param =
@@ -3540,7 +3541,7 @@ and declare_component_def opts scope tbls f =
   let { Ast.Statement.DeclareComponent.id = _; tparams = tps; params; renders = r; comments = _ } =
     f
   in
-  component_type opts scope tbls tps params r
+  component_type opts scope tbls SSet.empty tps params r
 
 and class_def =
   let module C = Ast.Class in

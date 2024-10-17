@@ -454,38 +454,38 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------ props_implicit_instantiation.js:9:1
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:11:1
 
 Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
 
-   props_implicit_instantiation.js:9:1
-   9| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
-      ^
+   props_implicit_instantiation.js:11:1
+   11| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
+       ^
 
 References:
-   props_implicit_instantiation.js:9:69
-   9| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
-                                                                          ^^^^^^ [1]
-   props_implicit_instantiation.js:5:74
-   5| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
-                                                                               ^^^^^^ [2]
+   props_implicit_instantiation.js:11:69
+   11| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
+                                                                           ^^^^^^ [1]
+   props_implicit_instantiation.js:7:74
+    7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
+                                                                                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:10:1
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:12:1
 
 Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
 argument `T` [4]. [incompatible-cast]
 
-   props_implicit_instantiation.js:10:1
-     10| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+   props_implicit_instantiation.js:12:1
+     12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
          ^
 
 References:
-   props_implicit_instantiation.js:10:41
-     10| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+   props_implicit_instantiation.js:12:41
+     12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
                                                  ^^^^^^ [1]
-   props_implicit_instantiation.js:5:46
-      5| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
+   props_implicit_instantiation.js:7:46
+      7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
                                                       ^^^^^^ [2]
    <BUILTINS>/core.js:1930:19
    1930| declare class Set<T> extends $ReadOnlySet<T> {
@@ -493,6 +493,42 @@ References:
    <BUILTINS>/react.js:230:19
     230|   type RefSetter<-T> = React$RefSetter<T>;
                            ^ [4]
+
+
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
+
+Cannot cast `props` to object type because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-cast]
+
+   props_implicit_instantiation.js:16:1
+   16| props as {+foo: number, +bar: string}; // error: string != number
+       ^^^^^
+
+References:
+   props_implicit_instantiation.js:14:39
+   14| declare component B(foo: string, bar: number);
+                                             ^^^^^^ [1]
+   props_implicit_instantiation.js:16:31
+   16| props as {+foo: number, +bar: string}; // error: string != number
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
+
+Cannot cast `props` to object type because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-cast]
+
+   props_implicit_instantiation.js:16:1
+   16| props as {+foo: number, +bar: string}; // error: string != number
+       ^^^^^
+
+References:
+   props_implicit_instantiation.js:14:26
+   14| declare component B(foo: string, bar: number);
+                                ^^^^^^ [1]
+   props_implicit_instantiation.js:16:17
+   16| props as {+foo: number, +bar: string}; // error: string != number
+                       ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:6:1
@@ -639,7 +675,7 @@ References:
 
 
 
-Found 33 errors
+Found 35 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

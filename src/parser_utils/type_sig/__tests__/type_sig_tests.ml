@@ -6006,17 +6006,20 @@ let%expect_test "component_type" =
     type B = string
     declare export var Baz: component(x: A) renders B;
     declare var Bar: component();
+    type Props = {};
+    export type Mono = component(...Props);
+    export type Poly<Props> = component(...Props);
     declare export default Bar;
   |};
   [%expect{|
-    ESModule {type_exports = [||];
+    ESModule {type_exports = [|(ExportTypeBinding 5); (ExportTypeBinding 6)|];
       exports =
       [|(ExportBinding 2);
-        ExportDefault {default_loc = [5:15-22];
-          def = (TyRef (Unqualified LocalRef {ref_loc = [5:23-26]; index = 3}))}
+        ExportDefault {default_loc = [8:15-22];
+          def = (TyRef (Unqualified LocalRef {ref_loc = [8:23-26]; index = 3}))}
         |];
       info =
-      ESModuleInfo {type_export_keys = [||];
+      ESModuleInfo {type_export_keys = [|"Mono"; "Poly"|];
         type_stars = []; export_keys = [|"Baz"; "default"|];
         stars = []; strict = true; platform_availability_set = None}}
 
@@ -6051,6 +6054,42 @@ let%expect_test "component_type" =
                ComponentSig {params_loc = [4:26-28];
                  tparams = Mono; params = [];
                  rest_param = None; renders = (Annot (ComponentMissingRenders [4:28]))}
+               )))}
+    4. TypeAlias {id_loc = [5:5-10];
+         name = "Props"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [5:13-15];
+              obj_kind = InexactObj;
+              props = {}; proto = ObjAnnotImplicitProto})}
+    5. TypeAlias {id_loc = [6:12-16];
+         name = "Mono"; tparams = Mono;
+         body =
+         (Annot
+            (ComponentAnnot ([6:19-38],
+               ComponentSig {params_loc = [6:28-38];
+                 tparams = Mono; params = [];
+                 rest_param =
+                 (Some ComponentRestParam {
+                         t = (TyRef (Unqualified LocalRef {ref_loc = [6:32-37]; index = 4}))});
+                 renders = (Annot (ComponentMissingRenders [6:38]))}
+               )))}
+    6. TypeAlias {id_loc = [7:12-16];
+         name = "Poly";
+         tparams =
+         (Poly ([7:16-23],
+            TParam {name_loc = [7:17-22];
+              name = "Props"; polarity = Polarity.Neutral;
+              bound = None; default = None},
+            []));
+         body =
+         (Annot
+            (ComponentAnnot ([7:26-45],
+               ComponentSig {params_loc = [7:35-45];
+                 tparams = Mono; params = [];
+                 rest_param =
+                 (Some ComponentRestParam {t = (Annot Bound {ref_loc = [7:39-44]; name = "Props"})});
+                 renders = (Annot (ComponentMissingRenders [7:45]))}
                )))} |}]
 
 let%expect_test "declare_component" =
