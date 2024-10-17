@@ -153,7 +153,11 @@ module Make
           let u =
             Flow_js.get_builtin_typeapp cx reason_op "React$RefSetter" [AnyT.error reason_op]
           in
-          Flow_js.flow cx (ref_prop, UseT (Op (DeclareComponentRef { op = reason_op }), u))
+          Context.add_post_inference_subtyping_check
+            cx
+            ref_prop
+            (Op (DeclareComponentRef { op = reason_op }))
+            u
         in
         ComponentInstanceAvailableAsRefSetterProp ref_prop
     in
