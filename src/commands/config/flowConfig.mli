@@ -202,6 +202,8 @@ val multi_platform_ambient_supports_platform_directory_overrides :
 
 val munge_underscores : config -> bool
 
+val object_freeze_fix : config -> bool
+
 val no_flowlib : config -> bool
 
 val node_main_fields : config -> string list

@@ -121,33 +121,33 @@ Cannot call non-polymorphic function with type arguments. [nonpolymorphic-type-a
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- obj.js:26:44
+Error ----------------------------------------------------------------------------------------------------- obj.js:26:45
 
 Cannot get `Object.freeze<...>(...).b` because property `b` is missing in object type [1]. [prop-missing]
 
-   obj.js:26:44
-   26| Object.freeze<{a: number}>({a: 42, b: 42}).b; // b is hidden
-                                                  ^
+   obj.js:26:45
+   26| Object.freeze<{+a: number}>({a: 42, b: 42}).b; // b is hidden
+                                                   ^
 
 References:
    obj.js:26:15
-   26| Object.freeze<{a: number}>({a: 42, b: 42}).b; // b is hidden
-                     ^^^^^^^^^^^ [1]
+   26| Object.freeze<{+a: number}>({a: 42, b: 42}).b; // b is hidden
+                     ^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- obj.js:27:28
+Error ----------------------------------------------------------------------------------------------------- obj.js:27:29
 
 Cannot call method `freeze` with object literal bound to `o` because property `c` is missing in frozen object
 literal [1] but exists in object type [2]. [prop-missing]
 
-   obj.js:27:28
-   27| Object.freeze<{c: number}>({a: 42, b: 42}); // c does not exist
-                                  ^^^^^^^^^^^^^^ [1]
+   obj.js:27:29
+   27| Object.freeze<{+c: number}>({a: 42, b: 42}); // c does not exist
+                                   ^^^^^^^^^^^^^^ [1]
 
 References:
    obj.js:27:15
-   27| Object.freeze<{c: number}>({a: 42, b: 42}); // c does not exist
-                     ^^^^^^^^^^^ [2]
+   27| Object.freeze<{+c: number}>({a: 42, b: 42}); // c does not exist
+                     ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:28:1

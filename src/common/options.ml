@@ -120,6 +120,7 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
+  opt_object_freeze_fix: bool;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
@@ -288,6 +289,8 @@ let module_name_mappers opts = opts.opt_module_name_mappers
 let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
+
+let object_freeze_fix opts = opts.opt_object_freeze_fix
 
 let node_main_fields opts = opts.opt_node_main_fields
 

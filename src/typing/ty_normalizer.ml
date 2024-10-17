@@ -933,7 +933,11 @@ module Make (I : INPUT) : S = struct
       let { T.obj_kind; _ } = flags in
       let obj_literal =
         if Env.preserve_inferred_literal_types env then
-          Some (Reason.is_literal_object_reason reason)
+          Some
+            (Reason.is_literal_object_reason
+               ~object_freeze_fix:(Context.object_freeze_fix (Env.get_cx env))
+               reason
+            )
         else
           None
       in

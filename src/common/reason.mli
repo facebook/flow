@@ -275,7 +275,7 @@ val is_scalar_reason : 'loc virtual_reason -> bool
 
 val is_array_reason : 'loc virtual_reason -> bool
 
-val is_literal_object_reason : 'loc virtual_reason -> bool
+val is_literal_object_reason : object_freeze_fix:bool -> 'loc virtual_reason -> bool
 
 val is_lib_reason : reason -> bool
 

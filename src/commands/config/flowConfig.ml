@@ -111,6 +111,7 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
+    object_freeze_fix: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -242,6 +243,7 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
+      object_freeze_fix = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -1011,6 +1013,9 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
+      ( "experimental.object_freeze_fix",
+        boolean (fun opts v -> Ok { opts with object_freeze_fix = v })
+      );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "react.custom_jsx_typing",
         boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
@@ -1711,6 +1716,8 @@ let multi_platform_ambient_supports_platform_directory_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
+
+let object_freeze_fix c = c.options.Opts.object_freeze_fix
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

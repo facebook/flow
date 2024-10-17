@@ -817,10 +817,9 @@ let is_instantiable_reason r =
   | RInferredUnionElemArray { instantiable } -> instantiable
   | _ -> false
 
-let is_literal_object_reason r =
+let is_literal_object_reason ~object_freeze_fix r =
   match desc_of_reason r with
   | RObjectLit
-  | RFrozen RObjectLit
   | RObjectPatternRestProp
   | RFunction _
   | RStatics (RFunction _)
@@ -828,6 +827,7 @@ let is_literal_object_reason r =
   | RReactElement _
   | RJSXElementProps _ ->
     true
+  | RFrozen RObjectLit -> not object_freeze_fix
   | _ -> false
 
 let is_lib_reason r =

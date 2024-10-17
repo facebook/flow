@@ -6,6 +6,24 @@ Cannot assign `'23456'` to `frozenObject.bar` because property `bar` is not writ
                     ^^^
 
 
+Error ----------------------------------------------------------------------------------------------- downstream.js:15:1
+
+Cannot cast `frozenObject` to object type because property `bar` is read-only in frozen object literal [1] but writable
+in object type [2]. [incompatible-variance]
+
+   downstream.js:15:1
+   15| frozenObject as {bar: '12345'}; // error bar is readonly
+       ^^^^^^^^^^^^
+
+References:
+   object_freeze.js:11:43
+   11| export const frozenObject = Object.freeze({bar: '12345'});
+                                                 ^^^^^^^^^^^^^^ [1]
+   downstream.js:15:17
+   15| frozenObject as {bar: '12345'}; // error bar is readonly
+                       ^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- downstream.js:16:1
 
 Cannot cast `frozenObject` to object type because string literal `12345` [1] is incompatible with string literal
@@ -102,6 +120,42 @@ References:
    object_freeze.js:12:53
    12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
                                                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- downstream.js:26:1
+
+Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in frozen object literal [1] but
+writable in object type [2]. [incompatible-variance]
+
+   downstream.js:26:1
+   26| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:12:53
+   12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   downstream.js:26:27
+   26| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- downstream.js:26:1
+
+Cannot cast `frozenObjectWithSpread` to object type because property `baz` is read-only in frozen object literal [1] but
+writable in object type [2]. [incompatible-variance]
+
+   downstream.js:26:1
+   26| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:12:53
+   12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   downstream.js:26:27
+   26| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:27:1
@@ -217,6 +271,24 @@ Cannot assign `'23456'` to `frozenObject.bar` because property `bar` is not writ
                     ^^^
 
 
+Error -------------------------------------------------------------------------------------------- object_freeze.js:21:1
+
+Cannot cast `frozenObject` to object type because property `bar` is read-only in frozen object literal [1] but writable
+in object type [2]. [incompatible-variance]
+
+   object_freeze.js:21:1
+   21| frozenObject as {bar: '12345'}; // error bar is readonly
+       ^^^^^^^^^^^^
+
+References:
+   object_freeze.js:11:43
+   11| export const frozenObject = Object.freeze({bar: '12345'});
+                                                 ^^^^^^^^^^^^^^ [1]
+   object_freeze.js:21:17
+   21| frozenObject as {bar: '12345'}; // error bar is readonly
+                       ^^^^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- object_freeze.js:22:1
 
 Cannot cast `frozenObject` to object type because string literal `12345` [1] is incompatible with string literal
@@ -325,6 +397,42 @@ References:
                                                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- object_freeze.js:32:1
+
+Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in frozen object literal [1] but
+writable in object type [2]. [incompatible-variance]
+
+   object_freeze.js:32:1
+   32| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:12:53
+   12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_freeze.js:32:27
+   32| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_freeze.js:32:1
+
+Cannot cast `frozenObjectWithSpread` to object type because property `baz` is read-only in frozen object literal [1] but
+writable in object type [2]. [incompatible-variance]
+
+   object_freeze.js:32:1
+   32| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_freeze.js:12:53
+   12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_freeze.js:32:27
+   32| frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- object_freeze.js:33:1
 
 Cannot cast `frozenObjectWithSpread` to object type because string literal `12345` [1] is incompatible with string
@@ -421,4 +529,4 @@ References:
 
 
 
-Found 31 errors
+Found 37 errors
