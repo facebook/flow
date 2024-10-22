@@ -398,6 +398,11 @@ module Node = struct
           );
       ]
 
+  let flow_typed_module ~options ~reader ?phantom_acc ~source import_str =
+    let root = Options.root options |> File_path.to_string in
+    let root = Filename.concat root "@flowtyped" in
+    resolve_relative ~options ~reader ?phantom_acc ~source root import_str
+
   (* The flowconfig option `module.system.node.allow_root_relative` tells Flow
    * to resolve requires like `require('foo/bar.js')` relative to the project
    * root directory. This is something bundlers like Webpack can be configured
@@ -428,6 +433,7 @@ module Node = struct
       lazy_seq
         [
           lazy (resolve_root_relative ~options ~reader ?phantom_acc ~source:f import_str);
+          lazy (flow_typed_module ~options ~reader ?phantom_acc ~source:f import_str);
           lazy
             (node_module
                ~options
@@ -605,6 +611,7 @@ module Haste : MODULE_SYSTEM = struct
           [
             lazy (resolve_haste_module ~options ~reader ?phantom_acc ~source:f ~dir r);
             lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
+            lazy (Node.flow_typed_module ~options ~reader ?phantom_acc ~source:f r);
             lazy
               (Node.node_module
                  ~options
@@ -632,6 +639,7 @@ module Haste : MODULE_SYSTEM = struct
                    r
                 );
               lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
+              lazy (Node.flow_typed_module ~options ~reader ?phantom_acc ~source:f r);
               lazy
                 (Node.node_module
                    ~options
@@ -668,6 +676,7 @@ module Haste : MODULE_SYSTEM = struct
                      r
                   );
                 lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
+                lazy (Node.flow_typed_module ~options ~reader ?phantom_acc ~source:f r);
                 lazy
                   (Node.node_module
                      ~options

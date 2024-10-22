@@ -1,0 +1,104 @@
+Error ----------------------------------------------------------------------------------------------- nested/test.js:6:1
+
+Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   nested/test.js:6:1
+   6| foo.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/foo.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   nested/test.js:6:12
+   6| foo.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- nested/test.js:8:1
+
+Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   nested/test.js:8:1
+   8| bar.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/bar/baz.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   nested/test.js:8:12
+   8| bar.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- nested/test.js:10:1
+
+Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   nested/test.js:10:1
+   10| scopedFoo.foo as empty; // error
+       ^^^^^^^^^^^^^
+
+References:
+   @flowtyped/@scoped/foo.js:1:27
+    1| declare export const foo: string;
+                                 ^^^^^^ [1]
+   nested/test.js:10:18
+   10| scopedFoo.foo as empty; // error
+                        ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
+
+Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:6:1
+   6| foo.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/foo.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   test.js:6:12
+   6| foo.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
+
+Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:8:1
+   8| bar.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/bar/baz.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   test.js:8:12
+   8| bar.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
+
+Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:10:1
+   10| scopedFoo.foo as empty; // error
+       ^^^^^^^^^^^^^
+
+References:
+   @flowtyped/@scoped/foo.js:1:27
+    1| declare export const foo: string;
+                                 ^^^^^^ [1]
+   test.js:10:18
+   10| scopedFoo.foo as empty; // error
+                        ^^^^^ [2]
+
+
+
+Found 6 errors

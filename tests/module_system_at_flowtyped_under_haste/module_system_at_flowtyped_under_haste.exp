@@ -1,0 +1,138 @@
+Error -------------------------------------------------------------------------------------------------- RootTest.js:7:1
+
+Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   RootTest.js:7:1
+   7| foo.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/foo.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   RootTest.js:7:12
+   7| foo.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- RootTest.js:9:1
+
+Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   RootTest.js:9:1
+   9| bar.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/bar/baz.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   RootTest.js:9:12
+   9| bar.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- RootTest.js:11:1
+
+Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   RootTest.js:11:1
+   11| scopedFoo.foo as empty; // error
+       ^^^^^^^^^^^^^
+
+References:
+   @flowtyped/@scoped/foo.js:1:27
+    1| declare export const foo: string;
+                                 ^^^^^^ [1]
+   RootTest.js:11:18
+   11| scopedFoo.foo as empty; // error
+                        ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- RootTest.js:13:1
+
+Cannot cast `conflict.foo` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   RootTest.js:13:1
+   13| conflict.foo as number; // error
+       ^^^^^^^^^^^^
+
+References:
+   conflict.js:1:27
+    1| declare export const foo: string;
+                                 ^^^^^^ [1]
+   RootTest.js:13:17
+   13| conflict.foo as number; // error
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- nested/NestedTest.js:7:1
+
+Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   nested/NestedTest.js:7:1
+   7| foo.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/foo.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   nested/NestedTest.js:7:12
+   7| foo.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- nested/NestedTest.js:9:1
+
+Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   nested/NestedTest.js:9:1
+   9| bar.foo as empty; // error
+      ^^^^^^^
+
+References:
+   @flowtyped/bar/baz.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   nested/NestedTest.js:9:12
+   9| bar.foo as empty; // error
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- nested/NestedTest.js:11:1
+
+Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   nested/NestedTest.js:11:1
+   11| scopedFoo.foo as empty; // error
+       ^^^^^^^^^^^^^
+
+References:
+   @flowtyped/@scoped/foo.js:1:27
+    1| declare export const foo: string;
+                                 ^^^^^^ [1]
+   nested/NestedTest.js:11:18
+   11| scopedFoo.foo as empty; // error
+                        ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- nested/NestedTest.js:13:1
+
+Cannot cast `conflict.foo` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   nested/NestedTest.js:13:1
+   13| conflict.foo as number; // error
+       ^^^^^^^^^^^^
+
+References:
+   conflict.js:1:27
+    1| declare export const foo: string;
+                                 ^^^^^^ [1]
+   nested/NestedTest.js:13:17
+   13| conflict.foo as number; // error
+                       ^^^^^^ [2]
+
+
+
+Found 8 errors

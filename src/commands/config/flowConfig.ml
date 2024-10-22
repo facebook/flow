@@ -218,7 +218,7 @@ module Opts = struct
       haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
-      haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
+      haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       ignore_non_literal_requires = false;
       include_warnings = false;
@@ -472,7 +472,7 @@ module Opts = struct
 
   let haste_paths_excludes_parser =
     string
-      ~init:(fun opts -> { opts with haste_paths_excludes = [] })
+      ~init:(fun opts -> { opts with haste_paths_excludes = ["<PROJECT_ROOT>/@flowtyped/.*"] })
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_excludes = v :: opts.haste_paths_excludes })
 
