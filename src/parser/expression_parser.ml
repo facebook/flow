@@ -1466,6 +1466,10 @@ module Expression
         Array { e with Array.comments = merge_comments_with_internal comments }
       | ArrowFunction ({ Function.comments; _ } as e) ->
         ArrowFunction { e with Function.comments = merge_comments comments }
+      | AsExpression ({ AsExpression.comments; _ } as e) ->
+        AsExpression { e with AsExpression.comments = merge_comments comments }
+      | AsConstExpression ({ AsConstExpression.comments; _ } as e) ->
+        AsConstExpression { e with AsConstExpression.comments = merge_comments comments }
       | Assignment ({ Assignment.comments; _ } as e) ->
         Assignment { e with Assignment.comments = merge_comments comments }
       | Binary ({ Binary.comments; _ } as e) ->
@@ -1528,6 +1532,8 @@ module Expression
       | TemplateLiteral ({ TemplateLiteral.comments; _ } as e) ->
         TemplateLiteral { e with TemplateLiteral.comments = merge_comments comments }
       | This { This.comments; _ } -> This { This.comments = merge_comments comments }
+      | TSSatisfies ({ TSSatisfies.comments; _ } as e) ->
+        TSSatisfies { e with TSSatisfies.comments = merge_comments comments }
       | TypeCast ({ TypeCast.comments; _ } as e) ->
         TypeCast { e with TypeCast.comments = merge_comments comments }
       | Unary ({ Unary.comments; _ } as e) ->
@@ -1536,8 +1542,6 @@ module Expression
         Update { e with Update.comments = merge_comments comments }
       | Yield ({ Yield.comments; _ } as e) ->
         Yield { e with Yield.comments = merge_comments comments }
-      (* TODO: Delete once all expressions support comment attachment *)
-      | _ -> expression
     )
 
   and array_initializer =
