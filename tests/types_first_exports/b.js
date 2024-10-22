@@ -1,2 +1,2 @@
 const A = require("./a");
-(A: { foo: number });
+(A: $ReadOnly<{ foo: number }>);
