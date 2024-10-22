@@ -892,6 +892,7 @@ let token (env : Lex_env.t) lexbuf : result =
     | "instanceof" -> Token (env, T_INSTANCEOF)
     | "interface" -> Token (env, T_INTERFACE)
     | "let" -> Token (env, T_LET)
+    | "match" -> Token (env, T_MATCH)
     | "new" -> Token (env, T_NEW)
     | "null" -> Token (env, T_NULL)
     | "of" -> Token (env, T_OF)

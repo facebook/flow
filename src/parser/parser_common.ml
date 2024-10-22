@@ -357,6 +357,7 @@ let identifier_name_raw env =
     | T_TYPE -> "type"
     | T_OPAQUE -> "opaque"
     | T_ANY_TYPE -> "any"
+    | T_MATCH -> "match"
     | T_MIXED_TYPE -> "mixed"
     | T_EMPTY_TYPE -> "empty"
     | T_BOOLEAN_TYPE BOOL -> "bool"

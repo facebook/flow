@@ -772,6 +772,7 @@ let token_is_type_identifier env t =
     | T_INSTANCEOF
     | T_INTERFACE
     | T_LET
+    | T_MATCH
     | T_NEW
     | T_NULL
     | T_OF
@@ -979,6 +980,7 @@ module Peek = struct
     | T_ASYNC
     | T_AWAIT
     | T_ENUM
+    | T_MATCH
     | T_POUND
     | T_IDENTIFIER _
     | T_READONLY ->
