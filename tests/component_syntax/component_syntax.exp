@@ -195,9 +195,9 @@ References:
    <BUILTINS>/react.js:135:5
    135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:136:36
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                           ^^^^^ [3]
+   <BUILTINS>/react.js:124:45
+   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    annotation.js:48:39
     48| declare var InlineRef: component(ref: number); // error
                                               ^^^^^^ [4]
@@ -1211,9 +1211,9 @@ References:
    <BUILTINS>/react.js:135:5
    135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:136:36
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                           ^^^^^ [3]
+   <BUILTINS>/react.js:124:45
+   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    declared.js:50:34
     50| declare component InlineRef(ref: number); // error
                                          ^^^^^^ [4]
@@ -1910,9 +1910,9 @@ References:
    <BUILTINS>/react.js:135:5
    135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:136:36
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                           ^^^^^ [3]
+   <BUILTINS>/react.js:124:45
+   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
                                     ^^^^^^ [4]
@@ -2255,9 +2255,9 @@ References:
    <BUILTINS>/react.js:135:5
    135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:136:36
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                           ^^^^^ [3]
+   <BUILTINS>/react.js:124:45
+   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
                                     ^^^^^^ [4]

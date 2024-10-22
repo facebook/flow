@@ -164,7 +164,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incompatible-type-arg]
  - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with AbstractComponent [3].
+ - Or number [1] is incompatible with `React.ComponentType` [3].
 
    classes.js:39:25
     39| var foo: $jsx<number> = <Foo/>;
@@ -178,8 +178,8 @@ References:
    135|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:136:5
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   136|   | React$ComponentType<empty>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26

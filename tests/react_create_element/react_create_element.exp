@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-call]
  - Either undefined [1] is incompatible with string [2].
- - Or undefined [1] is incompatible with AbstractComponent [3].
+ - Or undefined [1] is incompatible with `React.ComponentType` [3].
  - Or function type [4] requires another argument from call of method `createElement` [1].
 
    test.js:5:7
@@ -17,8 +17,8 @@ References:
    135|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:136:5
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   136|   | React$ComponentType<empty>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    lib.js:33:6
              v
     33|   & (<
@@ -33,7 +33,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in the first argument.
- - Or number [1] is incompatible with AbstractComponent [3] in the first argument.
+ - Or number [1] is incompatible with `React.ComponentType` [3] in the first argument.
 
    test.js:7:7
      7| React.createElement(42); // Error: Number is not a valid component type.
@@ -47,8 +47,8 @@ References:
    135|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:136:5
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   136|   | React$ComponentType<empty>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:7
@@ -80,7 +80,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-call]
  - Either object literal [1] is incompatible with union type [2] in the second argument.
- - Or object literal [3] is incompatible with AbstractComponent [4] in the first argument.
+ - Or object literal [3] is incompatible with `React.ComponentType` [4] in the first argument.
 
    test.js:10:7
     10| React.createElement({}, {}); // Error: Object is not a valid component type.
@@ -97,8 +97,8 @@ References:
     10| React.createElement({}, {}); // Error: Object is not a valid component type.
                             ^^ [3]
    <BUILTINS>/react.js:136:5
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   136|   | React$ComponentType<empty>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:7

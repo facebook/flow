@@ -434,8 +434,8 @@ Cannot create `C` element because in property `ref`: [incompatible-type]
                                                 ^^^^^^
 
 References:
-   <BUILTINS>/react.js:687:8
-   687|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:701:8
+   701|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:182:6
    182|   | ((T | null) => mixed)
@@ -799,9 +799,9 @@ References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:136:29
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                    ^^^^^ [2]
+   <BUILTINS>/react.js:136:25
+   136|   | React$ComponentType<empty>;
+                                ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
@@ -824,8 +824,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
-Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with `React.Component` [2].
-[incompatible-call]
+Cannot call `foo` with `ref` bound to `a` because mixed (default type argument for AbstractComponent's 2nd position) [1]
+is incompatible with `React.Component` [2]. [incompatible-call]
 
    strict.js:9:5
    9| foo(ref);

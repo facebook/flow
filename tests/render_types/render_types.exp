@@ -975,61 +975,16 @@ References:
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
 
 Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and `$Iterable` [2] is not a render type. [invalid-render]
+when the third type argument is a render type and undefined [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
-
-Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and `React.Element` [2] is not a render type. [invalid-render]
-
-   renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
-
-Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and `React.Portal` [2] is not a render type. [invalid-render]
-
-   renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
-
-Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and boolean [2] is not a render type. [invalid-render]
-
-   renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:16:5
+   16|   | void
+           ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
@@ -1038,13 +993,28 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and null [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:17:5
+   17|   | null
+           ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
+
+Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
+when the third type argument is a render type and boolean [2] is not a render type. [invalid-render]
+
+   renders_to_renders.js:60:25
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | boolean
+           ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
@@ -1053,13 +1023,13 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and number [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | number
+           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
@@ -1068,28 +1038,58 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and string [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:20:5
+   20|   | string
+           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
 
 Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and undefined [2] is not a render type. [invalid-render]
+when the third type argument is a render type and `React.Element` [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
-                                ^^^^^^^^^^^^^^^^^^ [1]
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:136:43
-   136|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                                  ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
+
+Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
+when the third type argument is a render type and `React.Portal` [2] is not a render type. [invalid-render]
+
+   renders_to_renders.js:60:25
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
+
+Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
+when the third type argument is a render type and `$Iterable` [2] is not a render type. [invalid-render]
+
+   renders_to_renders.js:60:25
+   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+                               ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:62:3

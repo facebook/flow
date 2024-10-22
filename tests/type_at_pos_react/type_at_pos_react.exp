@@ -1,6 +1,9 @@
 lazy_ref.js:14:9 = {
-  default: component(ref: React.RefSetter<{moo(x: string): void}>, ...empty) renders null
+  default: component(ref: RefSetter<{moo(x: string): void}>, ...empty) renders null
 }
+
+'RefSetter' defined at (lib) react.js:1032:9
+
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
   {+default: (x: Props) => ExactReactElement_DEPRECATED<(x: Props) => Node>},
@@ -40,7 +43,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:742:5,744:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:751:5,753:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -77,7 +80,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:742:5,744:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:751:5,753:22"},
           "name":"Fragment"
         },
         "typeParams":[

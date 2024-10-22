@@ -1,7 +1,8 @@
 Error --------------------------------------------------------------------------------------------------- test1.js:13:45
 
 Cannot create `HocChild` element because in property `ref`: [incompatible-type]
- - Either `React.Element` [1] is incompatible with mixed [2] in the first parameter.
+ - Either `React.Element` [1] is incompatible with mixed (default type argument for AbstractComponent's 2nd
+   position) [2] in the first parameter.
  - Or property `current` is missing in property `_handleChild` [3] but exists in object type [4].
 
    test1.js:13:45
@@ -12,9 +13,9 @@ References:
    test1.js:14:27
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
                                   ^^^^^^^^ [1]
-   <BUILTINS>/react.js:124:77
-   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config, mixed, React$Node>;
-                                                                                    ^^^^^ [2]
+   <BUILTINS>/react.js:124:45
+   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test1.js:14:3
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]

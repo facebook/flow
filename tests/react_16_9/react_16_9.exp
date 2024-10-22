@@ -15,8 +15,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
-Cannot create `React.Profiler` element because property `id` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot create `React.Profiler` element because property `id` is missing in props [1] but exists in props of
+component [2]. [prop-missing]
 
    profiler.js:17:13
     17| const _b = <React.Profiler />; // Error, id and onRender are required
@@ -26,20 +26,20 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:798:53
-                                                            v-
-   798|     declare const Profiler: React$AbstractComponent<{|
-   799|       +children?: React$Node,
-   800|       +id: string,
-   801|       +onRender: ProfilerOnRenderFnType,
-   802|     |}, void, React$Node>;
-            -^ [2]
+   <BUILTINS>/react.js:807:38
+                                             v
+   807|     declare const Profiler: component(
+   808|       children?: React$Node,
+   809|       id: string,
+   810|       onRender: ProfilerOnRenderFnType,
+   811|     );
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
-Cannot create `React.Profiler` element because property `onRender` is missing in props [1] but exists in object
-type [2]. [prop-missing]
+Cannot create `React.Profiler` element because property `onRender` is missing in props [1] but exists in props of
+component [2]. [prop-missing]
 
    profiler.js:17:13
     17| const _b = <React.Profiler />; // Error, id and onRender are required
@@ -49,14 +49,14 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:798:53
-                                                            v-
-   798|     declare const Profiler: React$AbstractComponent<{|
-   799|       +children?: React$Node,
-   800|       +id: string,
-   801|       +onRender: ProfilerOnRenderFnType,
-   802|     |}, void, React$Node>;
-            -^ [2]
+   <BUILTINS>/react.js:807:38
+                                             v
+   807|     declare const Profiler: component(
+   808|       children?: React$Node,
+   809|       id: string,
+   810|       onRender: ProfilerOnRenderFnType,
+   811|     );
+            ^ [2]
 
 
 
