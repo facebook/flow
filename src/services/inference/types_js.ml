@@ -128,7 +128,7 @@ let commit_modules ~options ~profiling ~workers ~duplicate_providers dirty_modul
           Modulename.Set.fold
             (fun m acc ->
               match m with
-              | Modulename.String m -> SMap.remove m acc
+              | Modulename.Haste m -> SMap.remove (Haste_module_info.module_name m) acc
               | Modulename.Filename _ -> acc)
             dirty_modules
             duplicate_providers
@@ -1780,7 +1780,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
 
   let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
-    let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
+    let { Saved_state.haste_module_info; normalized_file_data } = parsed_file_data in
     let { Saved_state.hash; exports; requires; resolved_modules; phantom_dependencies; imports } =
       Saved_state.denormalize_file_data ~root normalized_file_data
     in
@@ -1799,7 +1799,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         fn
         file_opt
         hash
-        module_name
+        haste_module_info
         exports
         requires
         resolved_modules
@@ -1818,7 +1818,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   in
 
   let restore_unparsed (fns, dirty_modules, invalid_hashes) (fn, unparsed_file_data) =
-    let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
+    let { Saved_state.unparsed_haste_module_info; unparsed_hash } = unparsed_file_data in
 
     let file_opt =
       if is_init then
@@ -1834,7 +1834,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         fn
         file_opt
         unparsed_hash
-        unparsed_module_name
+        unparsed_haste_module_info
     in
 
     let invalid_hashes =
@@ -1848,7 +1848,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   in
 
   let restore_package (fns, dirty_modules, invalid_hashes) (fn, package_data) =
-    let { Saved_state.package_module_name; package_hash; package_info } = package_data in
+    let { Saved_state.package_haste_module_info; package_hash; package_info } = package_data in
 
     let file_opt =
       if is_init then
@@ -1863,7 +1863,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         fn
         file_opt
         package_hash
-        package_module_name
+        package_haste_module_info
         package_info
     in
 

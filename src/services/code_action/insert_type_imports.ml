@@ -30,7 +30,10 @@ module Modules = struct
   (* Relativize module name if in the same folder, or use haste paths, or fail *)
   let resolve ~file_options file module_name =
     match module_name with
-    | Modulename.String s -> Files.chop_platform_suffix_for_haste_module ~options:file_options s
+    | Modulename.Haste haste_module_info ->
+      Files.chop_platform_suffix_for_haste_module
+        ~options:file_options
+        (Haste_module_info.module_name haste_module_info)
     | Modulename.Filename f ->
       let f = File_key.to_string f in
       let local_file = Filename.basename f in
@@ -240,7 +243,7 @@ module ImportsHelper : sig
   class remote_converter :
     loc_of_aloc:(ALoc.t -> Loc.t)
     -> file_options:Files.options
-    -> get_haste_name:(File_key.t -> string option)
+    -> get_haste_module_info:(File_key.t -> Haste_module_info.t option)
     -> get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option)
     -> iteration:int
     -> file:File_key.t
@@ -469,7 +472,8 @@ end = struct
   end)
 
   class remote_converter
-    ~loc_of_aloc ~file_options ~get_haste_name ~get_type_sig ~iteration ~file ~reserved_names =
+    ~loc_of_aloc ~file_options ~get_haste_module_info ~get_type_sig ~iteration ~file ~reserved_names
+    =
     object (self)
       val mutable name_map = ImportedNameMap.empty
 
@@ -490,8 +494,8 @@ end = struct
             else if is_react_redux_file_key remote_source then
               `SpecialCased "react-redux"
             else (
-              match get_haste_name remote_source with
-              | Some name -> `Ordinary (Modulename.String name)
+              match get_haste_module_info remote_source with
+              | Some haste_module_info -> `Ordinary (Modulename.Haste haste_module_info)
               | None -> `Ordinary (Modulename.Filename (Files.chop_flow_ext remote_source))
             )
           | None -> failwith "No source"

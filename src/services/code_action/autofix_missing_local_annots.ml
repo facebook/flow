@@ -39,7 +39,7 @@ let fix_missing_param_annot_at_loc
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast =
@@ -48,7 +48,7 @@ let fix_missing_param_annot_at_loc
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast
@@ -62,7 +62,7 @@ let fix_all_missing_param_annot_errors_in_file
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast =
@@ -73,7 +73,7 @@ let fix_all_missing_param_annot_errors_in_file
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig
       ~file_sig
       ~typed_ast

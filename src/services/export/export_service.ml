@@ -204,7 +204,7 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
           | Modulename.Filename fn ->
             let file_key = File_key fn in
             Export_index.add name file_key kind acc
-          | Modulename.String _ ->
+          | Modulename.Haste _ ->
             (match provider dependency with
             | Some file ->
               let file_key = File_key (Parsing_heaps.read_file_key file) in
@@ -234,9 +234,7 @@ let add_exports_of_checked_file ~reader ~old file_key parse haste_info index =
   let exports = Parsing_heaps.read_exports parse in
   let module_name =
     match haste_info with
-    | Some info ->
-      let name = Parsing_heaps.read_module_name info in
-      Modulename.String name
+    | Some info -> Modulename.Haste (Parsing_heaps.read_haste_module_info info)
     | None -> Modulename.Filename (Files.chop_flow_ext file_key)
   in
   let module_name = Modulename.to_string module_name in

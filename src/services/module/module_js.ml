@@ -165,7 +165,8 @@ type package_info = Package_json.t option
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module : Options.t -> File_key.t -> package_info:package_info -> string option
+  val exported_module :
+    Options.t -> File_key.t -> package_info:package_info -> Haste_module_info.t option
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -513,20 +514,20 @@ module Haste : MODULE_SYSTEM = struct
       match file with
       | File_key.SourceFile _ ->
         if is_mock file then
-          Some (short_module_name_of file)
+          Some (Haste_module_info.of_module_name (short_module_name_of file))
         else
           (* Standardize \ to / in path for Windows *)
           let normalized_file_name =
             Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
           in
           if is_haste_file normalized_file_name then
-            Some (haste_name options normalized_file_name)
+            Some (Haste_module_info.of_module_name (haste_name options normalized_file_name))
           else
             None
       | File_key.JsonFile path ->
         (match package_info with
         | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->
-          Package_json.name pkg
+          Package_json.name pkg |> Option.map Haste_module_info.of_module_name
         | _ -> None)
       | _ ->
         (* Lib files, resource files, etc don't have any fancy haste name *)
@@ -546,7 +547,7 @@ module Haste : MODULE_SYSTEM = struct
         (scope ^ "/" ^ package, rest)
       | package :: rest -> (package, rest)
     in
-    let mname = Modulename.String name in
+    let mname = Modulename.Haste (Haste_module_info.of_module_name name) in
     let dependency = Parsing_heaps.get_dependency mname in
     match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
     | Some addr ->
@@ -578,15 +579,15 @@ module Haste : MODULE_SYSTEM = struct
     let file_options = Options.file_options options in
     if Files.multi_platform file_options then
       match Option.map Parsing_heaps.read_dependency dependency with
-      | Some (Modulename.String mname as module_name)
+      | Some (Modulename.Haste haste_module_info as mname)
         when Base.List.exists (Files.multi_platform_extensions file_options) ~f:(fun ext ->
-                 String.ends_with ~suffix:ext mname
+                 String.ends_with ~suffix:ext (Haste_module_info.module_name haste_module_info)
              ) ->
         (* If we don't allow an import to resolve a platform specific import, but we did find one,
            we should fail to resolve. This restriction only applies to Haste modules because Metro
            cannot resolve them.
            TODO: could we provide a better error than just failing to resolve? *)
-        record_phantom_dependency module_name dependency phantom_acc;
+        record_phantom_dependency mname dependency phantom_acc;
         None
       | _ -> dependency
     else
@@ -838,8 +839,9 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
 let commit_modules ~workers ~options dirty_modules =
   let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
-  let commit_haste (unchanged, errmap) mname name =
-    let m = Parsing_heaps.get_haste_module_unsafe name in
+  let commit_haste (unchanged, errmap) mname haste_module_info =
+    let name = Haste_module_info.module_name haste_module_info in
+    let m = Parsing_heaps.get_haste_module_unsafe haste_module_info in
     let provider_ent = Heap.get_haste_provider m in
     let all_providers =
       let f acc f =
@@ -948,7 +950,7 @@ let commit_modules ~workers ~options dirty_modules =
   in
   let job ((unchanged, errmap) as acc) mname =
     match mname with
-    | Modulename.String name -> commit_haste acc mname name
+    | Modulename.Haste name -> commit_haste acc mname name
     | Modulename.Filename key -> (commit_file unchanged mname key, errmap)
   in
   let%lwt (unchanged, duplicate_providers) =

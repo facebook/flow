@@ -1060,9 +1060,9 @@ let type_synthesizer_tests =
     let typed_ast = typed_ast_of_ast cx ast in
     let file_sig = file_sig_of_ast ast in
     let locs = LocSet.of_list locs in
-    let get_haste_name f =
+    let get_haste_module_info f =
       let addr = Parsing_heaps.get_file_addr_unsafe f in
-      Parsing_heaps.Reader.get_haste_name ~reader addr
+      Parsing_heaps.Reader.get_haste_module_info ~reader addr
     in
     TypeSynthesizer.create_synthesizer_context
       ~cx
@@ -1071,7 +1071,7 @@ let type_synthesizer_tests =
       ~typed_ast
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
       ~locs
   in

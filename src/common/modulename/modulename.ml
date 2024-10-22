@@ -20,12 +20,12 @@
    is simply known by its path in the file system.
 *)
 type t =
-  | String of string
+  | Haste of Haste_module_info.t
   | Filename of File_key.t
 [@@deriving show, ord]
 
 let to_string = function
-  | String m -> m
+  | Haste m -> Haste_module_info.module_name m
   | Filename f -> File_key.to_string f
 
 module Key = struct

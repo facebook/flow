@@ -576,7 +576,7 @@ module TypeSynthesizer = struct
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     loc_of_aloc: ALoc.t -> Loc.t;
     get_ast_from_shared_mem: File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option;
-    get_haste_name: File_key.t -> string option;
+    get_haste_module_info: File_key.t -> Haste_module_info.t option;
     get_type_sig: File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option;
     type_at_loc_map: (Type.typeparam list * Type.t) LocMap.t;
   }
@@ -658,7 +658,7 @@ module TypeSynthesizer = struct
       ~typed_ast
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig
       ~locs =
     let collector = new type_collector ~loc_of_aloc locs in
@@ -671,7 +671,7 @@ module TypeSynthesizer = struct
       typed_ast;
       loc_of_aloc;
       get_ast_from_shared_mem;
-      get_haste_name;
+      get_haste_module_info;
       get_type_sig;
       type_at_loc_map;
     }
@@ -693,7 +693,7 @@ module TypeSynthesizer = struct
         typed_ast;
         loc_of_aloc;
         get_ast_from_shared_mem;
-        get_haste_name;
+        get_haste_module_info;
         get_type_sig;
         type_at_loc_map;
       } =
@@ -701,7 +701,7 @@ module TypeSynthesizer = struct
       new Insert_type_imports.ImportsHelper.remote_converter
         ~loc_of_aloc
         ~file_options:(Context.metadata cx).Context.file_options
-        ~get_haste_name
+        ~get_haste_module_info
         ~get_type_sig
         ~iteration:0
         ~file

@@ -36,7 +36,7 @@ let insert_render_type_at_loc
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast
@@ -75,7 +75,7 @@ let insert_render_type_at_loc
             ~cx
             ~loc_of_aloc
             ~get_ast_from_shared_mem
-            ~get_haste_name
+            ~get_haste_module_info
             ~get_type_sig
             ~file_sig
             ~typed_ast

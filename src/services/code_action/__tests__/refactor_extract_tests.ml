@@ -31,9 +31,9 @@ let assert_refactored
       ~typed_ast
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-      ~get_haste_name:(fun f ->
+      ~get_haste_module_info:(fun f ->
         let addr = Parsing_heaps.get_file_addr_unsafe f in
-        Parsing_heaps.Reader.get_haste_name ~reader addr)
+        Parsing_heaps.Reader.get_haste_module_info ~reader addr)
       ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
       ~support_experimental_snippet_text_edit
       ~extract_range

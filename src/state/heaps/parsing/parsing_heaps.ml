@@ -18,7 +18,7 @@ module FileHeap =
 
 module HasteModuleHeap =
   SharedMem.AddrHeap
-    (StringKey)
+    (Haste_module_info)
     (struct
       type t = [ `haste_module ]
     end)
@@ -146,17 +146,19 @@ let get_parsed_file reader file =
 
 let get_haste_module = HasteModuleHeap.get
 
-let get_haste_module_unsafe name =
-  match get_haste_module name with
+let get_haste_module_unsafe haste_module_info =
+  match get_haste_module haste_module_info with
   | Some addr -> addr
-  | None -> raise (Haste_module_not_found name)
+  | None -> raise (Haste_module_not_found (Haste_module_info.module_name haste_module_info))
 
 let get_dependency = function
-  | Modulename.String name -> (get_haste_module name :> dependency_addr option)
+  | Modulename.Haste haste_module_info ->
+    (get_haste_module haste_module_info :> dependency_addr option)
   | Modulename.Filename key -> (get_file_addr key :> dependency_addr option)
 
 let get_dependency_unsafe = function
-  | Modulename.String name -> (get_haste_module_unsafe name :> dependency_addr)
+  | Modulename.Haste haste_module_info ->
+    (get_haste_module_unsafe haste_module_info :> dependency_addr)
   | Modulename.Filename key -> (get_file_addr_unsafe key :> dependency_addr)
 
 let read_provider reader m =
@@ -175,8 +177,8 @@ let read_provider reader m =
 let iter_dependents f mname =
   let dependents =
     match mname with
-    | Modulename.String name ->
-      let* haste_module = get_haste_module name in
+    | Modulename.Haste haste_module_info ->
+      let* haste_module = get_haste_module haste_module_info in
       Some (Heap.get_haste_dependents haste_module)
     | Modulename.Filename file_key ->
       let* file_addr = get_file_addr file_key in
@@ -203,9 +205,12 @@ let read_file_hash parse =
   let open Heap in
   get_file_hash parse |> read_int64
 
-let read_module_name info =
+let read_haste_module_info info =
   let open Heap in
-  get_haste_module info |> get_haste_name |> read_string
+  let haste_module = get_haste_module info in
+  Haste_module_info.mk
+    ~module_name:(haste_module |> get_haste_name |> read_string)
+    ~namespace_bitset:(get_haste_namespace_bitset haste_module)
 
 let read_dependency_name =
   let haste_name m = Heap.read_string (Heap.get_haste_name m) in
@@ -286,7 +291,12 @@ let read_package_info parse : (Package_json.t, unit) result =
 let read_dependency =
   let open Heap in
   read_dependency
-    (fun addr -> Modulename.String (get_haste_name addr |> read_string))
+    (fun addr ->
+      Modulename.Haste
+        (Haste_module_info.mk
+           ~module_name:(get_haste_name addr |> read_string)
+           ~namespace_bitset:(get_haste_namespace_bitset addr)
+        ))
     (fun addr -> Modulename.Filename (read_file_key addr))
 
 let read_resolved_module f addr =
@@ -320,7 +330,12 @@ let read_resolved_modules_map f parse resolved_requires =
   in
   SMap.of_increasing_iterator_unchecked f n
 
-let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_name m))
+let haste_modulename m =
+  Modulename.Haste
+    (Haste_module_info.mk
+       ~module_name:(Heap.read_string (Heap.get_haste_name m))
+       ~namespace_bitset:(Heap.get_haste_namespace_bitset m)
+    )
 
 let prepare_find_or_add find add key =
   match find key with
@@ -342,47 +357,54 @@ let prepare_add_phantom_file file_key =
 
 let prepare_find_or_add_phantom_file = prepare_find_or_add get_file_addr prepare_add_phantom_file
 
-let prepare_add_haste_module name =
+let prepare_add_haste_module haste_module_info =
   let open Heap in
+  let name = Haste_module_info.module_name haste_module_info in
   let+ name' = prepare_write_string name
   and+ provider = prepare_write_entity
   and+ dependents = prepare_write_sklist
   and+ haste_module = prepare_write_haste_module in
-  let m = haste_module name' (provider None) dependents in
-  HasteModuleHeap.add name m
+  let m =
+    haste_module
+      name'
+      (Haste_module_info.namespace_bitset haste_module_info)
+      (provider None)
+      dependents
+  in
+  HasteModuleHeap.add haste_module_info m
 
 let prepare_find_or_add_haste_module = prepare_find_or_add get_haste_module prepare_add_haste_module
 
-let prepare_write_haste_info_for_name name =
+let prepare_write_haste_info_for_haste_module_info haste_module_info =
   let open Heap in
-  let+ haste_module = prepare_find_or_add_haste_module name
+  let+ haste_module = prepare_find_or_add_haste_module haste_module_info
   and+ haste_info = prepare_write_haste_info in
   haste_info haste_module
 
-let prepare_update_haste_info haste_ent name =
-  let+ haste_info = prepare_write_haste_info_for_name name in
+let prepare_update_haste_info haste_ent haste_module_info =
+  let+ haste_info = prepare_write_haste_info_for_haste_module_info haste_module_info in
   Heap.entity_advance haste_ent (Some haste_info)
 
-let prepare_update_haste_info_if_changed haste_ent name_opt =
+let prepare_update_haste_info_if_changed haste_ent haste_module_info_opt =
   let open Heap in
   let old_haste_info = entity_read_latest haste_ent in
-  match (old_haste_info, name_opt) with
+  match (old_haste_info, haste_module_info_opt) with
   | (None, None) -> prepare_const ()
   | (Some _, None) ->
     let+ () = prepare_const () in
     entity_advance haste_ent None
-  | (None, Some name) -> prepare_update_haste_info haste_ent name
-  | (Some old_info, Some name) ->
-    let old_name =
-      try read_module_name old_info with
+  | (None, Some haste_module_info) -> prepare_update_haste_info haste_ent haste_module_info
+  | (Some old_info, Some haste_module_info) ->
+    let old_haste_module_info =
+      try read_haste_module_info old_info with
       | exn ->
         let exn = Exception.wrap exn in
-        raise (Failed_to_read_haste_info (name, exn))
+        raise (Failed_to_read_haste_info (Haste_module_info.module_name haste_module_info, exn))
     in
-    if String.equal name old_name then
+    if Haste_module_info.equal old_haste_module_info haste_module_info then
       prepare_const ()
     else
-      prepare_update_haste_info haste_ent name
+      prepare_update_haste_info haste_ent haste_module_info
 
 let prepare_write_aloc_table locs =
   let open Type_sig_collections in
@@ -404,7 +426,8 @@ let prepare_write_imports (imports : Imports.t) =
   Marshal.to_string imports [] |> Heap.prepare_write_serialized_imports
 
 let prepare_find_or_add_dependency = function
-  | Modulename.String name -> (prepare_find_or_add_haste_module name :> dependency_addr Heap.prep)
+  | Modulename.Haste haste_module_info ->
+    (prepare_find_or_add_haste_module haste_module_info :> dependency_addr Heap.prep)
   | Modulename.Filename key -> (prepare_find_or_add_phantom_file key :> dependency_addr Heap.prep)
 
 let prepare_write_resolved_modules resolved_modules =
@@ -621,13 +644,13 @@ let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt 
         let ent = Heap.get_resolved_requires parse in
         Heap.entity_advance ent resolved_requires_opt)
 
-let prepare_create_file file_key module_name resolved_requires_opt =
+let prepare_create_file file_key haste_module_info_opt resolved_requires_opt =
   let open Heap in
   let (file_kind, file_name) = file_kind_and_name file_key in
   let+ file_name = prepare_write_string file_name
   and+ parse_ent = prepare_write_entity
   and+ haste_ent = prepare_write_entity
-  and+ haste_info = prepare_opt prepare_write_haste_info_for_name module_name
+  and+ haste_info = prepare_opt prepare_write_haste_info_for_haste_module_info haste_module_info_opt
   and+ update_resolved_requires =
     prepare_update_resolved_requires_if_changed None resolved_requires_opt
   and+ (dependents, set_alternate) =
@@ -670,10 +693,10 @@ let prepare_create_file file_key module_name resolved_requires_opt =
     to remove the resolved requires (e.g. for a deleted file), pass [Some None]; to
     leave them as is (e.g. when updating other parts of the file), pass [None].
  *)
-let prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt =
+let prepare_update_file file_key file parse_ent haste_module_info_opt resolved_requires_opt_opt =
   let open Heap in
   let haste_ent = get_haste_info file in
-  let+ () = prepare_update_haste_info_if_changed haste_ent module_name
+  let+ () = prepare_update_haste_info_if_changed haste_ent haste_module_info_opt
   and+ update_resolved_requires =
     match resolved_requires_opt_opt with
     | None -> prepare_const (fun _ _ -> ())
@@ -711,7 +734,7 @@ let prepare_add_checked_file
     file_key
     file_opt
     hash
-    module_name
+    haste_module_info_opt
     docblock_opt
     ast_opt
     locs_opt
@@ -758,7 +781,7 @@ let prepare_add_checked_file
   | None ->
     let resolved_requires_opt = Option.join resolved_requires_opt_opt in
     let+ parse = prepare_create_parse ()
-    and+ create_file = prepare_create_file file_key module_name resolved_requires_opt in
+    and+ create_file = prepare_create_file file_key haste_module_info_opt resolved_requires_opt in
     create_file (parse :> [ `typed | `untyped | `package ] parse_addr)
   | Some file ->
     let parse_ent = get_parse file in
@@ -770,7 +793,7 @@ let prepare_add_checked_file
     | None ->
       let+ parse = prepare_create_parse ()
       and+ update_file =
-        prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt
+        prepare_update_file file_key file parse_ent haste_module_info_opt resolved_requires_opt_opt
       in
       update_file (parse :> [ `typed | `untyped | `package ] parse_addr)
     | Some parse ->
@@ -816,27 +839,32 @@ let prepare_add_checked_file
         let resolved_requires_ent = get_resolved_requires parse in
         let+ create_parse = prepare_create_parse_with_ents ()
         and+ update_file =
-          prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt
+          prepare_update_file
+            file_key
+            file
+            parse_ent
+            haste_module_info_opt
+            resolved_requires_opt_opt
         in
         let parse = create_parse resolved_requires_ent leader_ent sig_hash_ent in
         let () = clear_leader () in
         update_file (parse :> [ `typed | `untyped | `package ] parse_addr))
 
-let prepare_add_unparsed_file file_key file_opt hash module_name =
+let prepare_add_unparsed_file file_key file_opt hash haste_module_info_opt =
   let open Heap in
   let+ hash = prepare_write_int64 hash
   and+ parse = prepare_write_untyped_parse
   and+ create_or_update_file =
     match file_opt with
-    | None -> prepare_create_file file_key module_name None
+    | None -> prepare_create_file file_key haste_module_info_opt None
     | Some file ->
       let parse_ent = get_parse file in
-      prepare_update_file file_key file parse_ent module_name (Some None)
+      prepare_update_file file_key file parse_ent haste_module_info_opt (Some None)
   in
   let parse = parse hash in
   create_or_update_file (parse :> [ `typed | `untyped | `package ] parse_addr)
 
-let prepare_add_package_file file_key file_opt hash module_name package_info =
+let prepare_add_package_file file_key file_opt hash haste_module_info_opt package_info =
   let package_info = Marshal.to_string (package_info : (Package_json.t, unit) result) [] in
   let open Heap in
   let+ hash = prepare_write_int64 hash
@@ -844,10 +872,10 @@ let prepare_add_package_file file_key file_opt hash module_name package_info =
   and+ parse = prepare_write_package_parse
   and+ create_or_update_file =
     match file_opt with
-    | None -> prepare_create_file file_key module_name None
+    | None -> prepare_create_file file_key haste_module_info_opt None
     | Some file ->
       let parse_ent = get_parse file in
-      prepare_update_file file_key file parse_ent module_name (Some None)
+      prepare_update_file file_key file parse_ent haste_module_info_opt (Some None)
   in
   let parse = parse hash package_info in
   create_or_update_file (parse :> [ `typed | `untyped | `package ] parse_addr)
@@ -855,7 +883,7 @@ let prepare_add_package_file file_key file_opt hash module_name package_info =
 (* If this file used to exist, but no longer does, then it was deleted. Record
  * the deletion by clearing parse information. Deletion might also require
  * re-picking module providers, so we return dirty modules. *)
-let clear_file file_key module_name =
+let clear_file file_key haste_module_info_opt =
   let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let parsed_file =
@@ -871,12 +899,12 @@ let clear_file file_key module_name =
        before we started, then the heap won't know which module to dirty. if
        a haste name reducer applies, we can figure it out from just the filename;
        otherwise, lazy mode will miss that this module is dirty. *)
-    (match module_name with
+    (match haste_module_info_opt with
     | None -> MSet.empty
-    | Some name ->
-      let m = alloc (prepare_find_or_add_haste_module name) in
+    | Some haste_module_info ->
+      let m = alloc (prepare_find_or_add_haste_module haste_module_info) in
       ignore (m : haste_module_addr);
-      MSet.singleton (Modulename.String name))
+      MSet.singleton (Modulename.Haste haste_module_info))
   | Some (file, parse_ent, parse) ->
     let () =
       let old_resolved_requires =
@@ -1126,7 +1154,7 @@ let add_parsed
     ~exports
     ~imports
     hash
-    module_name
+    haste_module_info_opt
     docblock
     ast
     requires
@@ -1139,7 +1167,7 @@ let add_parsed
        file_key
        file_opt
        hash
-       module_name
+       haste_module_info_opt
        (Some docblock)
        (Some ast)
        (Some locs)
@@ -1151,13 +1179,13 @@ let add_parsed
        None
     )
 
-let add_unparsed file_key file_opt hash module_name : MSet.t =
+let add_unparsed file_key file_opt hash haste_module_info_opt : MSet.t =
   WorkerCancel.with_no_cancellations @@ fun () ->
-  Heap.alloc (prepare_add_unparsed_file file_key file_opt hash module_name)
+  Heap.alloc (prepare_add_unparsed_file file_key file_opt hash haste_module_info_opt)
 
-let add_package file_key file_opt hash module_name package_info : MSet.t =
+let add_package file_key file_opt hash haste_module_info_opt package_info : MSet.t =
   WorkerCancel.with_no_cancellations @@ fun () ->
-  Heap.alloc (prepare_add_package_file file_key file_opt hash module_name package_info)
+  Heap.alloc (prepare_add_package_file file_key file_opt hash haste_module_info_opt package_info)
 
 let clear_not_found file_key module_name =
   WorkerCancel.with_no_cancellations @@ fun () -> clear_file file_key module_name
@@ -1179,7 +1207,7 @@ module type READER = sig
 
   val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
-  val get_haste_name : reader:reader -> file_addr -> string option
+  val get_haste_module_info : reader:reader -> file_addr -> Haste_module_info.t option
 
   val get_leader : reader:reader -> [ `typed ] parse_addr -> file_addr option
 
@@ -1292,9 +1320,9 @@ module Mutator_reader = struct
 
   let get_haste_info ~reader file = read ~reader (Heap.get_haste_info file)
 
-  let get_haste_name ~reader file =
+  let get_haste_module_info ~reader file =
     let* info = get_haste_info ~reader file in
-    Some (read_module_name info)
+    Some (read_haste_module_info info)
 
   let get_leader ~reader parse = read ~reader (Heap.get_leader parse)
 
@@ -1510,7 +1538,7 @@ type worker_mutator = {
     exports:Exports.t ->
     imports:Imports.t ->
     Xx.hash ->
-    string option ->
+    Haste_module_info.t option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     string array ->
@@ -1518,15 +1546,15 @@ type worker_mutator = {
     locs_tbl ->
     type_sig ->
     MSet.t;
-  add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
+  add_unparsed: File_key.t -> file_addr option -> Xx.hash -> Haste_module_info.t option -> MSet.t;
   add_package:
     File_key.t ->
     file_addr option ->
     Xx.hash ->
-    string option ->
+    Haste_module_info.t option ->
     (Package_json.t, unit) result ->
     MSet.t;
-  clear_not_found: File_key.t -> string option -> MSet.t;
+  clear_not_found: File_key.t -> Haste_module_info.t option -> MSet.t;
 }
 
 (* Parsing is pretty easy - there is no before state and no chance of rollbacks, so we don't
@@ -1738,9 +1766,9 @@ module Reader = struct
 
   let get_haste_info ~reader file = read ~reader (Heap.get_haste_info file)
 
-  let get_haste_name ~reader file =
+  let get_haste_module_info ~reader file =
     let* info = get_haste_info ~reader file in
-    Some (read_module_name info)
+    Some (read_haste_module_info info)
 
   let get_leader ~reader parse = read ~reader (Heap.get_leader parse)
 
@@ -1939,10 +1967,10 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_haste_info ~reader
     | State_reader reader -> Reader.get_haste_info ~reader
 
-  let get_haste_name ~reader =
+  let get_haste_module_info ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_haste_name ~reader
-    | State_reader reader -> Reader.get_haste_name ~reader
+    | Mutator_state_reader reader -> Mutator_reader.get_haste_module_info ~reader
+    | State_reader reader -> Reader.get_haste_module_info ~reader
 
   let get_leader ~reader =
     match reader with

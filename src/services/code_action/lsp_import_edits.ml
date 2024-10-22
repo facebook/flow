@@ -193,12 +193,12 @@ let from_of_source ~module_system_info ~src_dir source =
   | Export_index.Builtin from -> Some from
   | Export_index.File_key from ->
     let module_name =
-      match module_system_info.get_haste_name from with
-      | Some module_name ->
+      match module_system_info.get_haste_module_info from with
+      | Some haste_module_info ->
         Some
           (Files.chop_platform_suffix_for_haste_module
              ~options:module_system_info.file_options
-             module_name
+             (Haste_module_info.module_name haste_module_info)
           )
       | None when module_system_info.haste_module_system ->
         Base.Option.bind src_dir ~f:(fun src_dir ->

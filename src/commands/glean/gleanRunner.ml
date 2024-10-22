@@ -704,7 +704,7 @@ let file_of_string_modules ~root ~write_root ~options ~file:file_key =
   in
   let%bind string =
     match Module_js.exported_module ~options file_key ~package_info:None with
-    | Some string -> return string
+    | Some string -> return (Haste_module_info.module_name string)
     | None -> []
   in
   return FileOfStringModule.(to_json { file; string })

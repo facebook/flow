@@ -436,12 +436,19 @@ module NewAPI : sig
   (* haste module *)
 
   val prepare_write_haste_module :
-    ([ `string ] addr -> [ `file ] entity addr -> [ `file ] sklist addr -> [ `haste_module ] addr)
+    ([ `string ] addr ->
+    int ->
+    [ `file ] entity addr ->
+    [ `file ] sklist addr ->
+    [ `haste_module ] addr
+    )
     prep
 
   val haste_modules_equal : [ `haste_module ] addr -> [ `haste_module ] addr -> bool
 
   val get_haste_name : [ `haste_module ] addr -> [ `string ] addr
+
+  val get_haste_namespace_bitset : [ `haste_module ] addr -> int
 
   val get_haste_provider : [ `haste_module ] addr -> [ `file ] entity addr
 

@@ -302,8 +302,8 @@ let reducer
         if skip_changed then
           Modulename.Set.empty
         else
-          let module_name = exported_module file_key ~package_info:None in
-          worker_mutator.Parsing_heaps.clear_not_found file_key module_name
+          let haste_module_info_opt = exported_module file_key ~package_info:None in
+          worker_mutator.Parsing_heaps.clear_not_found file_key haste_module_info_opt
       in
       let not_found = FilenameSet.add file_key acc.not_found in
       let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
@@ -337,7 +337,7 @@ let reducer
             | Parse_ok
                 { ast; requires; file_sig; exports; imports; locs; type_sig; tolerable_errors } ->
               let file_sig = (file_sig, tolerable_errors) in
-              let module_name = exported_module file_key ~package_info:None in
+              let haste_module_info_opt = exported_module file_key ~package_info:None in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_parsed
                   file_key
@@ -345,7 +345,7 @@ let reducer
                   ~exports
                   ~imports
                   hash
-                  module_name
+                  haste_module_info_opt
                   docblock
                   ast
                   requires
@@ -357,19 +357,19 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
             | Parse_recovered { parse_errors = (error, _); _ } ->
-              let module_name = exported_module file_key ~package_info:None in
+              let haste_module_info_opt = exported_module file_key ~package_info:None in
               let failure = Parse_error error in
-              fold_failed acc worker_mutator file_key file_opt hash module_name failure
+              fold_failed acc worker_mutator file_key file_opt hash haste_module_info_opt failure
             | Parse_exn exn ->
-              let module_name = exported_module file_key ~package_info:None in
+              let haste_module_info_opt = exported_module file_key ~package_info:None in
               let failure = Uncaught_exception exn in
-              fold_failed acc worker_mutator file_key file_opt hash module_name failure
+              fold_failed acc worker_mutator file_key file_opt hash haste_module_info_opt failure
             | Parse_skip (Skip_package_json result) ->
-              let (error, module_name, package_info) =
+              let (error, haste_module_info_opt, package_info) =
                 match result with
                 | Ok pkg ->
-                  let module_name = exported_module file_key ~package_info:(Some pkg) in
-                  (None, module_name, Ok pkg)
+                  let haste_module_info_opt = exported_module file_key ~package_info:(Some pkg) in
+                  (None, haste_module_info_opt, Ok pkg)
                 | Error err -> (Some err, None, Error ())
               in
               let dirty_modules =
@@ -377,7 +377,7 @@ let reducer
                   file_key
                   file_opt
                   hash
-                  module_name
+                  haste_module_info_opt
                   package_info
               in
               let package_json =
@@ -387,18 +387,22 @@ let reducer
               { acc with package_json; dirty_modules }
             | Parse_skip Skip_non_flow_file
             | Parse_skip Skip_resource_file ->
-              let module_name = exported_module file_key ~package_info:None in
+              let haste_module_info_opt = exported_module file_key ~package_info:None in
               let dirty_modules =
-                worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+                worker_mutator.Parsing_heaps.add_unparsed
+                  file_key
+                  file_opt
+                  hash
+                  haste_module_info_opt
               in
               let unparsed = FilenameSet.add file_key acc.unparsed in
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with unparsed; dirty_modules }
           end
         | (docblock_errors, _docblock) ->
-          let module_name = exported_module file_key ~package_info:None in
+          let haste_module_info_opt = exported_module file_key ~package_info:None in
           let dirty_modules =
-            worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
+            worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash haste_module_info_opt
           in
           let error = Docblock_errors docblock_errors in
           let failed = (file_key :: fst acc.failed, error :: snd acc.failed) in

@@ -73,7 +73,7 @@ module Module = struct
     | Some file_key -> of_file_key ~root ~write_root file_key
 
   let of_modulename ~root ~write_root = function
-    | Modulename.String str -> String str
+    | Modulename.Haste haste_module_info -> String (Haste_module_info.module_name haste_module_info)
     | Modulename.Filename file_key -> of_file_key ~root ~write_root file_key
 
   let to_json module_ =

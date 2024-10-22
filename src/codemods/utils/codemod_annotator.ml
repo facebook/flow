@@ -360,16 +360,16 @@ module Make (Extra : BASE_STATS) = struct
         let reserved_names = Queries.used_names prog in
         let file = cctx.Codemod_context.Typed.file in
         let reader = cctx.Codemod_context.Typed.reader in
-        let get_haste_name f =
+        let get_haste_module_info f =
           let addr = Parsing_heaps.get_file_addr_unsafe f in
-          Parsing_heaps.Reader_dispatcher.get_haste_name ~reader addr
+          Parsing_heaps.Reader_dispatcher.get_haste_module_info ~reader addr
         in
         remote_converter <-
           Some
             (new Insert_type_imports.ImportsHelper.remote_converter
                ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
                ~file_options:(Options.file_options cctx.Codemod_context.Typed.options)
-               ~get_haste_name
+               ~get_haste_module_info
                ~get_type_sig:(Parsing_heaps.Reader_dispatcher.get_type_sig ~reader)
                ~iteration:cctx.Codemod_context.Typed.iteration
                ~file

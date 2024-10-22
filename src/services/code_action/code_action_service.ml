@@ -58,7 +58,7 @@ let autofix_exports_code_actions
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~ast
     ~file_sig
@@ -74,7 +74,7 @@ let autofix_exports_code_actions
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig
       ~file_sig
       ~typed_ast
@@ -89,7 +89,7 @@ let autofix_missing_local_annot_code_actions
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~ast
     ~file_sig
@@ -109,7 +109,7 @@ let autofix_missing_local_annot_code_actions
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig
       ~file_sig
       ~typed_ast
@@ -124,7 +124,7 @@ let code_action_insert_inferred_render_type
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~ast
     ~file_sig
@@ -136,7 +136,7 @@ let code_action_insert_inferred_render_type
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig
       ~file_sig
       ~typed_ast
@@ -174,7 +174,7 @@ let refactor_extract_and_stub_out_code_actions
     ~typed_ast
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~only
     uri
@@ -239,7 +239,7 @@ let refactor_extract_and_stub_out_code_actions
           ~typed_ast
           ~loc_of_aloc
           ~get_ast_from_shared_mem
-          ~get_haste_name
+          ~get_haste_module_info
           ~get_type_sig
           ~support_experimental_snippet_text_edit
           ~extract_range:loc
@@ -259,7 +259,7 @@ let refactor_extract_and_stub_out_code_actions
           ~typed_ast
           ~loc_of_aloc
           ~get_ast_from_shared_mem
-          ~get_haste_name
+          ~get_haste_module_info
           ~get_type_sig
           loc
       with
@@ -279,7 +279,7 @@ let insert_inferred_type_as_cast_code_actions
     ~typed_ast
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     uri
     loc =
@@ -313,7 +313,7 @@ let insert_inferred_type_as_cast_code_actions
           new Insert_type_imports.ImportsHelper.remote_converter
             ~loc_of_aloc
             ~file_options:(Options.file_options options)
-            ~get_haste_name
+            ~get_haste_module_info
             ~get_type_sig
             ~iteration:0
             ~file
@@ -325,7 +325,7 @@ let insert_inferred_type_as_cast_code_actions
              ~loc_of_aloc
              ~remote_converter
              ~get_ast_from_shared_mem
-             ~get_haste_name
+             ~get_haste_module_info
              ~get_type_sig
              ~file_sig
              ~typed_ast
@@ -1357,7 +1357,7 @@ let code_actions_at_loc
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
       ~get_type_sig
       ~ast
       ~file_sig
@@ -1373,7 +1373,7 @@ let code_actions_at_loc
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
       ~get_type_sig
       ~ast
       ~file_sig
@@ -1389,7 +1389,7 @@ let code_actions_at_loc
       ~cx
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
       ~get_type_sig
       ~ast
       ~file_sig
@@ -1409,7 +1409,7 @@ let code_actions_at_loc
       ~typed_ast
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+      ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
       ~get_type_sig
       ~only
       uri
@@ -1461,7 +1461,7 @@ let code_actions_at_loc
         ~typed_ast
         ~loc_of_aloc
         ~get_ast_from_shared_mem
-        ~get_haste_name:module_system_info.Lsp_module_system_info.get_haste_name
+        ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
         ~get_type_sig
         uri
         loc
@@ -1587,7 +1587,7 @@ let autofix_exports
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_key
     ~file_content =
@@ -1614,7 +1614,7 @@ let autofix_exports
         ~loc_of_aloc
         ~file_options:(Options.file_options options)
         ~get_ast_from_shared_mem
-        ~get_haste_name
+        ~get_haste_module_info
         ~get_type_sig
         ~file_sig
         ~typed_ast
@@ -1631,7 +1631,7 @@ let autofix_missing_local_annot
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_key
     ~file_content =
@@ -1655,7 +1655,7 @@ let autofix_missing_local_annot
         ~cx
         ~loc_of_aloc
         ~get_ast_from_shared_mem
-        ~get_haste_name
+        ~get_haste_module_info
         ~get_type_sig
         ~file_sig
         ~typed_ast
@@ -1671,7 +1671,7 @@ let insert_type
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_key
     ~file_content
@@ -1708,7 +1708,7 @@ let insert_type
            ~cx
            ~loc_of_aloc
            ~get_ast_from_shared_mem
-           ~get_haste_name
+           ~get_haste_module_info
            ~get_type_sig
            ~file_sig
            ~typed_ast

@@ -392,7 +392,7 @@ let autocomplete filename content line col js_config_object :
               {
                 file_options = Files.default_options;
                 haste_module_system = false;
-                get_haste_name = (fun _ -> None);
+                get_haste_module_info = (fun _ -> None);
                 get_package_info = (fun _ -> None);
                 is_package_file = (fun _ -> false);
                 resolves_to_real_path = (fun ~from:_ ~to_real_path:_ -> false);

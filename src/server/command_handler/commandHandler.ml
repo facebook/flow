@@ -249,12 +249,15 @@ let of_file_input ~options ~env file_input =
     | Error reason -> Error (Skipped reason)
     | Ok () -> Ok (file_key, file_contents))
 
-let get_haste_name ~reader f =
-  Parsing_heaps.get_file_addr f |> Base.Option.bind ~f:(Parsing_heaps.Reader.get_haste_name ~reader)
+let get_haste_module_info ~reader f =
+  Parsing_heaps.get_file_addr f
+  |> Base.Option.bind ~f:(Parsing_heaps.Reader.get_haste_module_info ~reader)
 
 let mk_module_system_info =
   let is_package_file ~reader module_name =
-    let dependency = Parsing_heaps.get_dependency (Modulename.String module_name) in
+    let dependency =
+      Parsing_heaps.get_dependency (Modulename.Haste (Haste_module_info.of_module_name module_name))
+    in
     match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
     | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr
     | None -> false
@@ -263,7 +266,7 @@ let mk_module_system_info =
     {
       Lsp_module_system_info.file_options = Options.file_options options;
       haste_module_system = Options.(module_system options = Haste);
-      get_haste_name = get_haste_name ~reader;
+      get_haste_module_info = get_haste_module_info ~reader;
       get_package_info = Parsing_heaps.Reader.get_package_info ~reader;
       is_package_file = is_package_file ~reader;
       resolves_to_real_path =
@@ -940,7 +943,7 @@ let insert_type
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_input
     ~target
@@ -957,7 +960,7 @@ let insert_type
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_key
     ~file_content
@@ -972,7 +975,7 @@ let autofix_exports
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~input =
   let file_key = file_key_of_file_input ~options ~env input in
@@ -983,7 +986,7 @@ let autofix_exports
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_key
     ~file_content
@@ -994,7 +997,7 @@ let autofix_missing_local_annot
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~input =
   let file_key = file_key_of_file_input ~options ~env input in
@@ -1005,7 +1008,7 @@ let autofix_missing_local_annot
     ~profiling
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_key
     ~file_content
@@ -1420,7 +1423,7 @@ let handle_autocomplete
 let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let get_ast_from_shared_mem = Parsing_heaps.Reader.get_ast ~reader in
-  let get_haste_name = get_haste_name ~reader in
+  let get_haste_module_info = get_haste_module_info ~reader in
   let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
     try_with (fun () ->
@@ -1431,7 +1434,7 @@ let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
           ~input
           ~loc_of_aloc
           ~get_ast_from_shared_mem
-          ~get_haste_name
+          ~get_haste_module_info
           ~get_type_sig
     )
   in
@@ -1440,7 +1443,7 @@ let handle_autofix_exports ~options ~input ~profiling ~env ~reader =
 let handle_autofix_missing_local_annot ~options ~input ~profiling ~env ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let get_ast_from_shared_mem = Parsing_heaps.Reader.get_ast ~reader in
-  let get_haste_name = get_haste_name ~reader in
+  let get_haste_module_info = get_haste_module_info ~reader in
   let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
     try_with (fun () ->
@@ -1451,7 +1454,7 @@ let handle_autofix_missing_local_annot ~options ~input ~profiling ~env ~reader =
           ~input
           ~loc_of_aloc
           ~get_ast_from_shared_mem
-          ~get_haste_name
+          ~get_haste_module_info
           ~get_type_sig
     )
   in
@@ -1559,7 +1562,7 @@ let handle_insert_type
     ~reader =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let get_ast_from_shared_mem = Parsing_heaps.Reader.get_ast ~reader in
-  let get_haste_name = get_haste_name ~reader in
+  let get_haste_module_info = get_haste_module_info ~reader in
   let get_type_sig = Parsing_heaps.Reader.get_type_sig ~reader in
   let result =
     try_with (fun _ ->
@@ -1569,7 +1572,7 @@ let handle_insert_type
           ~profiling
           ~loc_of_aloc
           ~get_ast_from_shared_mem
-          ~get_haste_name
+          ~get_haste_module_info
           ~get_type_sig
           ~file_input
           ~target
@@ -3392,9 +3395,14 @@ let handle_persistent_rename_file_imports
     let new_file_key = File_key.map (fun _ -> new_flowpath) file_key in
     let new_haste_name = Module_js.exported_module ~options new_file_key ~package_info:None in
     match (old_haste_name, new_haste_name) with
-    | (Some old_haste_name, Some new_haste_name) ->
+    | (Some old_haste_info, Some new_haste_info) ->
       let edits =
-        RenameModule.get_rename_edits ~reader ~options ~old_haste_name ~new_haste_name file_key
+        RenameModule.get_rename_edits
+          ~reader
+          ~options
+          ~old_haste_name:(Haste_module_info.module_name old_haste_info)
+          ~new_haste_name:(Haste_module_info.module_name new_haste_info)
+          file_key
       in
       (edits, None)
     | (_, _) -> (Error "Error converting file names to Haste paths", None)

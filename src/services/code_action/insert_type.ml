@@ -582,7 +582,7 @@ let insert_type_
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast
@@ -606,7 +606,7 @@ let insert_type_
         new ImportsHelper.remote_converter
           ~loc_of_aloc
           ~file_options:(Context.metadata cx).Context.file_options
-          ~get_haste_name
+          ~get_haste_module_info
           ~get_type_sig
           ~iteration:0
           ~file
@@ -637,7 +637,7 @@ let insert_type
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast
@@ -651,7 +651,7 @@ let insert_type
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast
@@ -667,7 +667,7 @@ let insert_type_t
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast
@@ -682,7 +682,7 @@ let insert_type_t
     ~cx
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     ~file_sig
     ~typed_ast

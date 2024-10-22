@@ -109,7 +109,7 @@ let stub
     ~typed_ast
     ~loc_of_aloc
     ~get_ast_from_shared_mem
-    ~get_haste_name
+    ~get_haste_module_info
     ~get_type_sig
     cursor_loc =
   let open Base.Option.Let_syntax in
@@ -138,7 +138,7 @@ let stub
       ~typed_ast
       ~loc_of_aloc
       ~get_ast_from_shared_mem
-      ~get_haste_name
+      ~get_haste_module_info
       ~get_type_sig
       ~locs:
         (SMap.fold

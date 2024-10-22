@@ -35,9 +35,9 @@ val get_file_addr : File_key.t -> file_addr option
 
 val get_file_addr_unsafe : File_key.t -> file_addr
 
-val get_haste_module : string -> haste_module_addr option
+val get_haste_module : Haste_module_info.t -> haste_module_addr option
 
-val get_haste_module_unsafe : string -> haste_module_addr
+val get_haste_module_unsafe : Haste_module_info.t -> haste_module_addr
 
 val get_dependency : Modulename.t -> dependency_addr option
 
@@ -51,7 +51,7 @@ val read_file_key : file_addr -> File_key.t
 
 val read_file_hash : [> ] parse_addr -> Xx.hash
 
-val read_module_name : haste_info_addr -> string
+val read_haste_module_info : haste_info_addr -> Haste_module_info.t
 
 val read_dependency_name : dependency_addr -> string
 
@@ -100,7 +100,7 @@ module type READER = sig
 
   val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
-  val get_haste_name : reader:reader -> file_addr -> string option
+  val get_haste_module_info : reader:reader -> file_addr -> Haste_module_info.t option
 
   val get_leader : reader:reader -> [ `typed ] parse_addr -> file_addr option
 
@@ -209,7 +209,7 @@ type worker_mutator = {
     exports:Exports.t ->
     imports:Imports.t ->
     Xx.hash ->
-    string option ->
+    Haste_module_info.t option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     string array ->
@@ -217,15 +217,16 @@ type worker_mutator = {
     locs_tbl ->
     type_sig ->
     Modulename.Set.t;
-  add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t;
+  add_unparsed:
+    File_key.t -> file_addr option -> Xx.hash -> Haste_module_info.t option -> Modulename.Set.t;
   add_package:
     File_key.t ->
     file_addr option ->
     Xx.hash ->
-    string option ->
+    Haste_module_info.t option ->
     (Package_json.t, unit) result ->
     Modulename.Set.t;
-  clear_not_found: File_key.t -> string option -> Modulename.Set.t;
+  clear_not_found: File_key.t -> Haste_module_info.t option -> Modulename.Set.t;
 }
 
 module Parse_mutator : sig
@@ -276,7 +277,7 @@ module Saved_state_mutator : sig
     File_key.t ->
     file_addr option ->
     Xx.hash ->
-    string option ->
+    Haste_module_info.t option ->
     Exports.t ->
     string array ->
     resolved_module array ->
@@ -285,14 +286,19 @@ module Saved_state_mutator : sig
     Modulename.Set.t
 
   val add_unparsed :
-    worker_mutator -> File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t
+    worker_mutator ->
+    File_key.t ->
+    file_addr option ->
+    Xx.hash ->
+    Haste_module_info.t option ->
+    Modulename.Set.t
 
   val add_package :
     worker_mutator ->
     File_key.t ->
     file_addr option ->
     Xx.hash ->
-    string option ->
+    Haste_module_info.t option ->
     (Package_json.t, unit) result ->
     Modulename.Set.t
 

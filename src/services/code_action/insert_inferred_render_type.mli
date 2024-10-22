@@ -10,7 +10,7 @@ val insert_render_type_at_loc :
   cx:Context.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
-  get_haste_name:(File_key.t -> string option) ->
+  get_haste_module_info:(File_key.t -> Haste_module_info.t option) ->
   get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
   file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t_out) Flow_ast.Program.t ->

@@ -8,7 +8,8 @@
 type package_info = Package_json.t option
 
 (* export and import functions for the module system *)
-val exported_module : options:Options.t -> File_key.t -> package_info:package_info -> string option
+val exported_module :
+  options:Options.t -> File_key.t -> package_info:package_info -> Haste_module_info.t option
 
 type phantom_acc
 

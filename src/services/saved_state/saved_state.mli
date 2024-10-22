@@ -18,18 +18,20 @@ type denormalized_file_data = {
 type normalized_file_data [@@deriving show]
 
 type parsed_file_data = {
-  module_name: string option;
+  haste_module_info: Haste_module_info.t option;
   normalized_file_data: normalized_file_data;
 }
 [@@deriving show]
 
+(* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_module_name: string option;
+  unparsed_haste_module_info: Haste_module_info.t option;
   unparsed_hash: Xx.hash;
 }
 
+(** info for package.json files *)
 type package_file_data = {
-  package_module_name: string option;
+  package_haste_module_info: Haste_module_info.t option;
   package_hash: Xx.hash;
   package_info: (Package_json.t, unit) result;
 }

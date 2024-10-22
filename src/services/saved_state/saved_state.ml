@@ -21,20 +21,20 @@ type normalized_file_data = denormalized_file_data [@@deriving show]
 
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
-  module_name: string option;
+  haste_module_info: Haste_module_info.t option;
   normalized_file_data: normalized_file_data;
 }
 [@@deriving show]
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_module_name: string option;
+  unparsed_haste_module_info: Haste_module_info.t option;
   unparsed_hash: Xx.hash;
 }
 
 (** info for package.json files *)
 type package_file_data = {
-  package_module_name: string option;
+  package_haste_module_info: Haste_module_info.t option;
   package_hash: Xx.hash;
   package_info: (Package_json.t, unit) result;
 }
@@ -67,10 +67,15 @@ type saved_state_data = {
 
 let modulename_map_fn ~on_file ?on_string = function
   | Modulename.Filename fn -> Modulename.Filename (on_file fn)
-  | Modulename.String str as module_name ->
+  | Modulename.Haste haste_module_info as module_name ->
     (match on_string with
     | None -> module_name
-    | Some f -> Modulename.String (f str))
+    | Some f ->
+      Modulename.Haste
+        (Haste_module_info.mk
+           ~module_name:(f (Haste_module_info.module_name haste_module_info))
+           ~namespace_bitset:(Haste_module_info.namespace_bitset haste_module_info)
+        ))
 
 let resolved_module_map_fn ~on_file ?on_string = function
   | Ok mname -> Ok (modulename_map_fn ~on_file ?on_string mname)
@@ -137,6 +142,10 @@ end = struct
     | None ->
       Hashtbl.add t.intern_tbl x x;
       x
+
+  let intern_haste_module_info t haste_module_info =
+    let _module_name : string = intern t (Haste_module_info.module_name haste_module_info) in
+    haste_module_info
 
   (* We could also add a cache for this call, to improve sharing of the underlying strings
    * between file keys and the places that deal with raw paths. Unfortunately, an April 2020 test
@@ -214,10 +223,10 @@ end = struct
     let imports = normalize_imports t imports in
     { requires; resolved_modules; phantom_dependencies; exports; hash; imports }
 
-  let normalize_parsed_data t { module_name; normalized_file_data } =
-    let module_name = Option.map (intern t) module_name in
+  let normalize_parsed_data t { haste_module_info; normalized_file_data } =
+    let haste_module_info = Option.map (intern_haste_module_info t) haste_module_info in
     let normalized_file_data = normalize_file_data t normalized_file_data in
-    { module_name; normalized_file_data }
+    { haste_module_info; normalized_file_data }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file t ~reader fn parsed_heaps =
@@ -239,7 +248,7 @@ end = struct
       in
       let file_data =
         {
-          module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
+          haste_module_info = Parsing_heaps.Reader.get_haste_module_info ~reader addr;
           normalized_file_data =
             {
               requires;
@@ -258,12 +267,13 @@ end = struct
   let collect_normalized_data_for_package_json_file t ~reader fn package_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_package_parse_unsafe ~reader fn addr in
-    let package_module_name =
-      Parsing_heaps.Reader.get_haste_name ~reader addr |> Option.map (intern t)
+    let package_haste_module_info =
+      Parsing_heaps.Reader.get_haste_module_info ~reader addr
+      |> Option.map (intern_haste_module_info t)
     in
     let relative_file_data =
       {
-        package_module_name;
+        package_haste_module_info;
         package_hash = Parsing_heaps.read_file_hash parse;
         package_info = Parsing_heaps.read_package_info parse;
       }
@@ -278,11 +288,12 @@ end = struct
     else
       let addr = Parsing_heaps.get_file_addr_unsafe fn in
       let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
-      let unparsed_module_name =
-        Parsing_heaps.Reader.get_haste_name ~reader addr |> Option.map (intern t)
+      let unparsed_haste_module_info =
+        Parsing_heaps.Reader.get_haste_module_info ~reader addr
+        |> Option.map (intern_haste_module_info t)
       in
       let relative_file_data =
-        { unparsed_module_name; unparsed_hash = Parsing_heaps.read_file_hash parse }
+        { unparsed_haste_module_info; unparsed_hash = Parsing_heaps.read_file_hash parse }
       in
       let relative_fn = normalize_file_key t fn in
       (relative_fn, relative_file_data) :: unparsed_heaps
