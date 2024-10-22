@@ -67,6 +67,7 @@ let parse_options jsopts =
   {
     components = bool_opt defaults.components jsopts "components";
     enums = bool_opt defaults.enums jsopts "enums";
+    pattern_matching = bool_opt defaults.pattern_matching jsopts "pattern_matching";
     esproposal_decorators = bool_opt defaults.esproposal_decorators jsopts "esproposal_decorators";
     types = bool_opt defaults.types jsopts "types";
     use_strict = bool_opt defaults.use_strict jsopts "use_strict";

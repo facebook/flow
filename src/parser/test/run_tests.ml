@@ -124,6 +124,9 @@ end = struct
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.components = v })
           | "enums" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.enums = v })
+          | "pattern_matching" ->
+            get_bool k v >>= fun v ->
+            return (test_opts, { opts with Parser_env.pattern_matching = v })
           | "esproposal_decorators" ->
             get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_decorators = v })
