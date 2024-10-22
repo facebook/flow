@@ -128,7 +128,7 @@ const array: Array<number> = React.Children.toArray(children);
 
 :::tip
 In Flow v0.243.0+, consider using [Component Types](../component-types) instead, which will make
-it easier to migrate your Flow code to React 19.
+it easier to migrate your Flow code to React 19. The type will be removed in Flow v0.251.0.
 :::
 
 `React.AbstractComponent<Config, Instance, Renders>` represents a component with
@@ -162,7 +162,7 @@ The definition for `React.ElementType` is roughly:
 ```js
 type ElementType =
   | string
-  | React.AbstractComponent<empty, mixed, React.Node>;
+  | React.ComponentType<empty>;
 ```
 
 ## `React.Key` {#toc-react-key}

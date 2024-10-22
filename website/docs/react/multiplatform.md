@@ -97,7 +97,7 @@ When you enabled multiplatform support, you will likely see that error that the 
 
 One option is to write a common interface file in `.js.flow`:
 
-With [Component Types](../component-types)
+With [Component Types](../component-types/)
 ```jsx title=Image.js.flow
 import * as React from 'react';
 
@@ -107,13 +107,13 @@ declare const Image: component(...Props);
 export default Image;
 ```
 
-With [React.AbstractComponent](../types#toc-react-abstractcomponent)
+With [React.ComponentType](../types#toc-react-componenttype)
 ```jsx title=Image.js.flow
 import * as React from 'react';
 
 type Props = { src: string, lazyLoading?: boolean };
 
-declare const Image: React.AbstractComponent<Props>;
+declare const Image: React.ComponentType<Props>;
 export default Image;
 ```
 

@@ -17,7 +17,7 @@ continuing.
 [higher-order component pattern]: https://facebook.github.io/react/docs/higher-order-components.html
 [React documentation on higher-order components]: https://facebook.github.io/react/docs/higher-order-components.html
 
-You can make use of the [`React.AbstractComponent`](../types/#toc-react-abstractcomponent) type to annotate your higher order components.
+You can make use of the [Component Types](../component-types/) to annotate your higher order components.
 
 ### The Trivial HOC {#toc-the-trivial-hoc}
 
@@ -27,8 +27,8 @@ Let's start with the simplest HOC:
 import * as React from 'react';
 
 function trivialHOC<Config: {...}>(
-  Component: React.AbstractComponent<Config>
-): React.AbstractComponent<Config> {
+  Component: component(...Config),
+): component(...Config) {
   return Component;
 }
 ```
@@ -52,8 +52,8 @@ import * as React from 'react';
 type InjectedProps = {foo: number}
 
 function injectProp<Config>(
-  Component: React.AbstractComponent<{...Config, ...InjectedProps}>
-): React.AbstractComponent<Config> {
+  Component: component(...{...$Exact<Config>, ...InjectedProps})
+): component(...$Exact<Config>) {
   return function WrapperComponent(
     props: Config,
   ) {
@@ -88,8 +88,8 @@ import * as React from 'react';
 type InjectedProps = {foo: number}
 
 function injectProp<Config>(
-  Component: React.AbstractComponent<{...Config, ...InjectedProps}>
-): React.AbstractComponent<Config> {
+  Component: component(...{...$Exact<Config>, ...InjectedProps})
+): component(...$Exact<Config>) {
   return function WrapperComponent(
     props: Config,
   ) {
@@ -114,8 +114,8 @@ const ref = React.createRef<MyComponent>();
 <MyEnhancedComponent ref={ref} a={1} b={2} />;
 ```
 
-We get this error message because `React.AbstractComponent<Config>` doesn't set the `Instance` type
-parameter, so it is automatically set to `mixed`. If we wanted to preserve the instance type
+We get this error message because component type doesn't declare the `ref` prop,
+so it is treated as `React.RefSetter<void>`. If we wanted to preserve the instance type
 of the component, we can use [`React.forwardRef`](https://reactjs.org/docs/forwarding-refs.html):
 
 ```js flow-check
@@ -123,10 +123,10 @@ import * as React from 'react';
 
 type InjectedProps = {foo: number}
 
-function injectAndPreserveInstance<Config, Instance>(
-  Component: React.AbstractComponent<{...Config, ...InjectedProps}, Instance>
-): React.AbstractComponent<Config, Instance> {
-  return React.forwardRef<Config, Instance>((props, ref) =>
+function injectAndPreserveInstance<Config: {...}, Instance>(
+  Component: component(ref?: React.RefSetter<Instance>, ...{...$Exact<Config>, ...InjectedProps})
+): component(ref?: React.RefSetter<Instance>, ...$Exact<Config>) {
+  return React.forwardRef<$Exact<Config>, Instance>((props, ref) =>
       <Component ref={ref} foo={3} {...props} />
   );
 }
@@ -153,8 +153,8 @@ If you try to export a wrapped component, chances are that you'll run into a mis
 import * as React from 'react';
 
 function trivialHOC<Config: {...}>(
-  Component: React.AbstractComponent<Config>,
-): React.AbstractComponent<Config> {
+  Component: component(...Config),
+): component(...Config) {
   return Component;
 }
 
@@ -165,14 +165,14 @@ function MyComponent({bar, foo = 3}: Props): React.Node {}
 export const MyEnhancedComponent = trivialHOC(MyComponent); // ERROR
 ```
 
-You can add an annotation to your exported component using `React.AbstractComponent`:
+You can add an annotation to your exported component using component types:
 
 ```js flow-check
 import * as React from 'react';
 
 function trivialHOC<Config: {...}>(
-  Component: React.AbstractComponent<Config>,
-): React.AbstractComponent<Config> {
+  Component: component(...Config),
+): component(...Config) {
   return Component;
 }
 
@@ -180,5 +180,5 @@ type Props = $ReadOnly<{bar: number, foo?: number}>;
 
 function MyComponent({bar, foo = 3}: Props): React.Node {}
 
-export const MyEnhancedComponent: React.AbstractComponent<Props> = trivialHOC(MyComponent); // OK
+export const MyEnhancedComponent: component(...Props) = trivialHOC(MyComponent); // OK
 ```
