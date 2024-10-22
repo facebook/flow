@@ -307,6 +307,7 @@ module Make (Flow : INPUT) : S = struct
         trace
         ~use_op:(Frame (RendersCompatibility, use_op))
         (l, get_builtin_type cx renders_r ~use_desc:true "React$Node")
+    | (AnyT _, _) -> ()
     | (l, _) ->
       Flow_js_utils.add_output
         cx

@@ -5847,6 +5847,23 @@ struct
       in
       covariant_flow ~use_op renders;
       true
+    | UseT
+        ( use_op,
+          DefT (_, RendersT (StructuralRenders { renders_structural_type; renders_variant = _ }))
+        ) ->
+      covariant_flow ~use_op renders_structural_type;
+      true
+    | UseT
+        ( _,
+          DefT
+            ( _,
+              RendersT
+                ( InstrinsicRenders _
+                | NominalRenders { renders_id = _; renders_name = _; renders_super = _ }
+                | DefaultRenders )
+            )
+        ) ->
+      false
     (* Some types just need to be expanded and filled with any types *)
     | UseT (use_op, (DefT (_, ArrT (ArrayAT _)) as t))
     | UseT (use_op, (DefT (_, ArrT (TupleAT _)) as t))
