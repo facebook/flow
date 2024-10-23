@@ -28,36 +28,36 @@ function test4() {
     return <Foo />;
 }
 
-function test5(Foo: React.AbstractComponent<Props1>) {
+function test5(Foo: React$AbstractComponent<Props1>) {
     return <Foo />;
 }
 
-function test6<P>(Foo: React.AbstractComponent<Props3<P>>): any {
+function test6<P>(Foo: React$AbstractComponent<Props3<P>>): any {
     return <Foo />;
 }
 
-function test7<P>(Foo: React.AbstractComponent<{...Props1, ...Props3<P>}>): any {
+function test7<P>(Foo: React$AbstractComponent<{...Props1, ...Props3<P>}>): any {
     return <Foo />;
 }
 
-function test8<P: React.AbstractComponent<Props1>>(Foo: P): any {
+function test8<P: React$AbstractComponent<Props1>>(Foo: P): any {
     return <Foo />;
 }
 
-function test9<P: Props1>(Foo: React.AbstractComponent<P>): any {
+function test9<P: Props1>(Foo: React$AbstractComponent<P>): any {
     return <Foo />;
 }
 
-function test10(Foo: React.AbstractComponent<Props1 | Props1>): any {
+function test10(Foo: React$AbstractComponent<Props1 | Props1>): any {
     return <Foo />;
 }
 
-function test11(Foo: React.AbstractComponent<Props1>): any {
+function test11(Foo: React$AbstractComponent<Props1>): any {
     const obj = {foo: 1, bar: "2"};
     return <Foo {...obj}/>; // do not add any
 }
 
-function test12(Foo: React.AbstractComponent<Props1>): any {
+function test12(Foo: React$AbstractComponent<Props1>): any {
     const obj = {bar: "2"};
     return <Foo {...obj} />; // add 'foo'
 }

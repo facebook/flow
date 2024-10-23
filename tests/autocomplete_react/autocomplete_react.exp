@@ -427,10 +427,6 @@ Flags: --pretty
 {
   "result":[
     {
-      "name":"AbstractComponent",
-      "type":"type AbstractComponent<-Config, +Instance = mixed, +Renders: React$Node = React$Node> = component(ref: React.RefSetter<Instance>, ...Config) renders Renders"
-    },
-    {
       "name":"ChildrenArray",
       "type":"type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T"
     },
