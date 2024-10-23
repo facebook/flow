@@ -1,133 +1,3 @@
-Error --------------------------------------------------------------------------------------------------- arity.js:13:19
-
-Cannot use AbstractComponent [1] with more than 3 type arguments. [extra-type-arg]
-
-   13| function test3(x: React$AbstractComponent<any, any, any, any>) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- arity.js:20:1
-
-Cannot cast `C` to empty because `Component` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   arity.js:20:1
-   20| C as empty; // ERROR, Type sig correctly handles defaults
-       ^
-
-References:
-   arity.js:19:18
-   19| declare const C: Component;
-                        ^^^^^^^^^ [1]
-   arity.js:20:6
-   20| C as empty; // ERROR, Type sig correctly handles defaults
-            ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- arity.js:21:1
-
-Cannot cast `C` to AbstractComponent because mixed (default type argument for AbstractComponent's 2nd position) [1] is
-incompatible with number [2]. [incompatible-cast]
-
-   arity.js:21:1
-   21| C as React$AbstractComponent<empty, number>; // ERROR
-       ^
-
-References:
-   signature_arity.js:1:25
-    1| export type Component = React$AbstractComponent<any>; // OK
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity.js:21:37
-   21| C as React$AbstractComponent<empty, number>; // ERROR
-                                           ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- arity.js:26:10
-
-Cannot return `x` because `$Iterable` [1] does not render number [2]. [incompatible-return]
-
-   arity.js:26:10
-     26|   return x; // ERROR 2x
-                  ^
-
-References:
-   <BUILTINS>/core.js:1754:21
-   1754| type Iterable<+T> = $Iterable<T,void,void>;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity.js:25:43
-     25| ): React$AbstractComponent<empty, number, number> {
-                                                   ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- arity.js:26:10
-
-Cannot return `x` because `React.Element` [1] is incompatible with number [2]. [incompatible-return]
-
-   arity.js:26:10
-    26|   return x; // ERROR 2x
-                 ^
-
-References:
-   <BUILTINS>/react.js:150:21
-   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                            ^^^^^^^^^^^^^ [1]
-   arity.js:25:43
-    25| ): React$AbstractComponent<empty, number, number> {
-                                                  ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- arity.js:26:10
-
-Cannot return `x` because `React.Portal` [1] does not render number [2]. [incompatible-return]
-
-   arity.js:26:10
-    26|   return x; // ERROR 2x
-                 ^
-
-References:
-   <BUILTINS>/react.js:207:21
-   207| declare opaque type React$Portal;
-                            ^^^^^^^^^^^^ [1]
-   arity.js:25:43
-    25| ): React$AbstractComponent<empty, number, number> {
-                                                  ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- arity.js:26:10
-
-Cannot return `x` because `React.Node` (default type argument for AbstractComponent's 3rd position) [1] does not render
-number [2]. [incompatible-return]
-
-   arity.js:26:10
-   26|   return x; // ERROR 2x
-                ^
-
-References:
-   arity.js:24:6
-   24|   x: React$AbstractComponent<empty>,
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity.js:25:43
-   25| ): React$AbstractComponent<empty, number, number> {
-                                                 ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- arity.js:26:10
-
-Cannot return `x` because mixed (default type argument for AbstractComponent's 2nd position) [1] is incompatible with
-number [2]. [incompatible-return]
-
-   arity.js:26:10
-   26|   return x; // ERROR 2x
-                ^
-
-References:
-   arity.js:24:6
-   24|   x: React$AbstractComponent<empty>,
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   arity.js:25:35
-   25| ): React$AbstractComponent<empty, number, number> {
-                                         ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------- error_positioning/error_positioning.js:30:36
 
 `MockFn` [1] is not a React component. [not-a-component]
@@ -140,15 +10,6 @@ References:
    error_positioning/error_positioning.js:23:4
    23| ): MockFn<TArguments, TReturn>
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- lint.js:3:10
-
-`React$AbstractComponent` is an internal Flow type used to model React components. You should use component type
-instead. See https://flow.org/en/docs/react/component-types/. [internal-type]
-
-   3| type T = React$AbstractComponent<{}>; // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- strict.js:4:12
@@ -220,4 +81,4 @@ References:
 
 
 
-Found 14 errors
+Found 5 errors
