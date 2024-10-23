@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-type Foo = React.AbstractComponent<{}>;
+type Foo = React.ComponentType<{}>;
 <div />;
 
 component Foo() {
