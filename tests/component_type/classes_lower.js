@@ -31,6 +31,4 @@ class SpecificRender extends React.Component<{...}> {
   }
 }
 
-SpecificRender as React$AbstractComponent<{...}, SpecificRender, number>;
 SpecificRender as component(ref: React.RefSetter<SpecificRender>, ...{...}); // Ok, covariant type argument
-SpecificRender as React$AbstractComponent<{...}, SpecificRender, string>; // Error, number ~> string

@@ -22,6 +22,4 @@ NotAFunctionComponent as component(...Props);
 function SpecificRender(): number {
   return 3;
 }
-SpecificRender as React$AbstractComponent<{...}, void, number>;
 SpecificRender as component(...{...}); // OK, covariant type argument
-SpecificRender as React$AbstractComponent<{...}, void, string>; // ERROR, number ~> string
