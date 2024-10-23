@@ -11,7 +11,7 @@ References:
    6| Foo as component(bar: number, ref: React.RefSetter<Instance>); // error: number ~> string
                             ^^^^^^ [1]
    abstract_component_to_component_type.js:1:51
-   1| declare const Foo: React.AbstractComponent<{+bar: string}, Instance>;
+   1| declare const Foo: React$AbstractComponent<{+bar: string}, Instance>;
                                                         ^^^^^^ [2]
 
 
@@ -28,7 +28,7 @@ References:
    7| Foo as component(ref: React.RefSetter<Instance>, ...{bar: number}); // error: number ~> string
                                                                 ^^^^^^ [1]
    abstract_component_to_component_type.js:1:51
-   1| declare const Foo: React.AbstractComponent<{+bar: string}, Instance>;
+   1| declare const Foo: React$AbstractComponent<{+bar: string}, Instance>;
                                                         ^^^^^^ [2]
 
 
@@ -42,7 +42,7 @@ Cannot cast `Foo` to component because `Instance` [1] is incompatible with strin
 
 References:
    abstract_component_to_component_type.js:1:60
-    1| declare const Foo: React.AbstractComponent<{+bar: string}, Instance>;
+    1| declare const Foo: React$AbstractComponent<{+bar: string}, Instance>;
                                                                   ^^^^^^^^ [1]
    abstract_component_to_component_type.js:10:26
    10|     ref: React.RefSetter<string>
@@ -228,16 +228,16 @@ References:
 
 Error --------------------------------------------------------------------- component_type_to_abstract_component.js:12:1
 
-Cannot cast `C1` to `React.AbstractComponent` because number [1] is incompatible with string [2] in property `bar`.
+Cannot cast `C1` to AbstractComponent because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-cast]
 
    component_type_to_abstract_component.js:12:1
-   12| C1 as React.AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
+   12| C1 as React$AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
        ^^
 
 References:
    component_type_to_abstract_component.js:12:38
-   12| C1 as React.AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
+   12| C1 as React$AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
                                             ^^^^^^ [1]
    component_type_to_abstract_component.js:2:34
     2| declare const C1: component(bar: string, ref: React.RefSetter<Instance>);
@@ -246,16 +246,16 @@ References:
 
 Error --------------------------------------------------------------------- component_type_to_abstract_component.js:13:1
 
-Cannot cast `C2` to `React.AbstractComponent` because number [1] is incompatible with string [2] in property `bar`.
+Cannot cast `C2` to AbstractComponent because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-cast]
 
    component_type_to_abstract_component.js:13:1
-   13| C2 as React.AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
+   13| C2 as React$AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
        ^^
 
 References:
    component_type_to_abstract_component.js:13:38
-   13| C2 as React.AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
+   13| C2 as React$AbstractComponent<{+bar: number}, Instance>; // error: number ~> string
                                             ^^^^^^ [1]
    component_type_to_abstract_component.js:3:70
     3| declare const C2: component(ref: React.RefSetter<Instance>, ...{bar: string})
@@ -264,11 +264,10 @@ References:
 
 Error --------------------------------------------------------------------- component_type_to_abstract_component.js:14:1
 
-Cannot cast `C1` to `React.AbstractComponent` because `Instance` [1] is incompatible with string [2].
-[incompatible-cast]
+Cannot cast `C1` to AbstractComponent because `Instance` [1] is incompatible with string [2]. [incompatible-cast]
 
    component_type_to_abstract_component.js:14:1
-   14| C1 as React.AbstractComponent<{+bar: string}, string>; // error: Instance ~> string
+   14| C1 as React$AbstractComponent<{+bar: string}, string>; // error: Instance ~> string
        ^^
 
 References:
@@ -276,22 +275,22 @@ References:
     2| declare const C1: component(bar: string, ref: React.RefSetter<Instance>);
                                                                      ^^^^^^^^ [1]
    component_type_to_abstract_component.js:14:47
-   14| C1 as React.AbstractComponent<{+bar: string}, string>; // error: Instance ~> string
+   14| C1 as React$AbstractComponent<{+bar: string}, string>; // error: Instance ~> string
                                                      ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------- component_type_to_abstract_component.js:15:1
 
-Cannot cast `C3` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with `ImNotARefSetter` [2].
+Cannot cast `C3` to AbstractComponent because `React.RefSetter` [1] is incompatible with `ImNotARefSetter` [2].
 [incompatible-cast]
 
    component_type_to_abstract_component.js:15:1
-   15| C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>
+   15| C3 as React$AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>
        ^^
 
 References:
    component_type_to_abstract_component.js:15:47
-   15| C3 as React.AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>
+   15| C3 as React$AbstractComponent<{+bar: string}, Instance>; // error: ImNotARefSetter ~> React.RefSetter<...>
                                                      ^^^^^^^^ [1]
    component_type_to_abstract_component.js:4:47
     4| declare const C3: component(bar: string, ref: ImNotARefSetter); // error: bad ref

@@ -1,4 +1,4 @@
-declare const Foo: React.AbstractComponent<{+bar: string}, Instance>;
+declare const Foo: React$AbstractComponent<{+bar: string}, Instance>;
 declare class Instance {}
 declare class ImNotARefSetter {}
 

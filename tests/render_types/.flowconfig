@@ -2,3 +2,6 @@
 all=true
 no_flowlib=false
 component_syntax=true
+
+[lints]
+internal-type=off

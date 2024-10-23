@@ -1,7 +1,7 @@
 function promotion_on_cyclic_1() {
   declare component Foo();
 
-  type T = ExactReactElement_DEPRECATED<React.AbstractComponent<empty, void, T>>;
+  type T = ExactReactElement_DEPRECATED<React$AbstractComponent<empty, void, T>>;
   declare const recursiveElement: T;
   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
 }
