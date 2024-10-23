@@ -48,4 +48,4 @@ component Poly<T>() { return null; }
 Poly(); // error
 Poly<number>(); // error
 
-(Baz: React$AbstractComponent<mixed, empty>);
+(Baz: component(ref: React.RefSetter<empty>, ...mixed));
