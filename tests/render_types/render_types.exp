@@ -12,24 +12,6 @@ References:
            ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- cyclic_types.js:6:3
-
-Cannot cast `recursiveElement` to renders `Foo` because `React.Element` [1] does not render `Foo` [2].
-[incompatible-cast]
-
-   cyclic_types.js:6:3
-   6|   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
-        ^^^^^^^^^^^^^^^^
-
-References:
-   cyclic_types.js:5:35
-   5|   declare const recursiveElement: T;
-                                        ^ [1]
-   cyclic_types.js:6:23
-   6|   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
-                            ^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- fragment.js:9:26
 
 Cannot assign `<>...</>` to `el3` because `Fragment` element [1] does not render `Bad` [2]. [incompatible-type]
@@ -2068,23 +2050,50 @@ References:
                                                                          ^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- validation/validation.js:44:68
+
+Cannot instantiate `ExactReactElement_DEPRECATED` because in type argument `ElementType`: [incompatible-type-arg]
+ - Either cannot use number [1] as the type argument of renders type.
+ - Or component [2] is incompatible with string [3].
+
+   validation/validation.js:44:68
+    44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   validation/validation.js:44:88
+    44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
+                                                                                               ^^^^^^ [1]
+   <BUILTINS>/react.js:135:5
+   135|   | string
+            ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------- validation/validation.js:44:39
 
 Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and number [2] is not a render type. [invalid-render]
+when the third type argument is a render type and implicit 'any' [2] is not a render type. [invalid-render]
 
    validation/validation.js:44:39
-   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React$AbstractComponent<empty, mixed, number>>; // error
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   validation/validation.js:44:106
-   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React$AbstractComponent<empty, mixed, number>>; // error
-                                                                                                                ^^^^^^ [2]
+   validation/validation.js:44:80
+   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
+                                                                                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:44:80
+
+Invalid trivially recursive definition of renders number.  [recursive-definition]
+
+   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
+                                                                                      ^^^^^^^^^^^^^^
 
 
 
-Found 152 errors
+Found 153 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

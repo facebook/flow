@@ -289,24 +289,6 @@ References:
                                                    ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- classes_lower.js:36:1
-
-Cannot cast `SpecificRender` to AbstractComponent because number [1] is incompatible with string [2].
-[incompatible-cast]
-
-   classes_lower.js:36:1
-   36| SpecificRender as React$AbstractComponent<{...}, SpecificRender, string>; // Error, number ~> string
-       ^^^^^^^^^^^^^^
-
-References:
-   classes_lower.js:29:13
-   29|   render(): number {
-                   ^^^^^^ [1]
-   classes_lower.js:36:66
-   36| SpecificRender as React$AbstractComponent<{...}, SpecificRender, string>; // Error, number ~> string
-                                                                        ^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------- component_to_component.js:22:10
 
 Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2]. [prop-missing]
@@ -850,24 +832,6 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:27:1
-
-Cannot cast `SpecificRender` to AbstractComponent because number [1] is incompatible with string [2].
-[incompatible-cast]
-
-   function_lower.js:27:1
-   27| SpecificRender as React$AbstractComponent<{...}, void, string>; // ERROR, number ~> string
-       ^^^^^^^^^^^^^^
-
-References:
-   function_lower.js:22:28
-   22| function SpecificRender(): number {
-                                  ^^^^^^ [1]
-   function_lower.js:27:56
-   27| SpecificRender as React$AbstractComponent<{...}, void, string>; // ERROR, number ~> string
-                                                              ^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------- function_to_component_type.js:5:1
 
 Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-cast]
@@ -1330,7 +1294,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 72 errors
+Found 70 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
