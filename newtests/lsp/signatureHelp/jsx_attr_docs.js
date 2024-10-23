@@ -24,10 +24,10 @@ type Props2 = $ReadOnly<{
     bar?: string,
 }>;
 
-function test1(Foo: React$AbstractComponent<Props1>): any {
+function test1(Foo: React.ComponentType<Props1>): any {
     return <Foo foo={/* here */} />;
 }
 
-function test2(Foo: React$AbstractComponent<Props1 | Props2>): any {
+function test2(Foo: React.ComponentType<Props1 | Props2>): any {
     return <Foo foo={/* here */} />;
 }
