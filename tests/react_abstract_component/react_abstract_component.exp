@@ -780,7 +780,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- lint.js:3:10
 
-`React$AbstractComponent` is an internal Flow type used to model an exact React element. You should use component type
+`React$AbstractComponent` is an internal Flow type used to model React components. You should use component type
 instead. See https://flow.org/en/docs/react/component-types/. [internal-type]
 
    3| type T = React$AbstractComponent<{}>; // error

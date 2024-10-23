@@ -2863,7 +2863,7 @@ let to_printable_error :
     | MessageInternalType ReactDollarAbstractComponent ->
       [
         code "React$AbstractComponent";
-        text " is an internal Flow type used to model an exact React element. ";
+        text " is an internal Flow type used to model React components. ";
         text "You should use component type instead. See ";
         text "https://flow.org/en/docs/react/component-types/.";
       ]
