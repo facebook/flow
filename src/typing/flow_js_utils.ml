@@ -3031,14 +3031,16 @@ end = struct
       reason
       ?force_post_component
       ( lazy
-        (normalize_render_type_argument
-           cx
-           ~arg_loc:(TypeUtil.loc_of_t t)
-           ~reason
-           ~renders_variant
-           ~concretize
-           ~is_iterable_for_better_error
-           t
+        (Context.run_in_signature_tvar_env cx (fun () ->
+             normalize_render_type_argument
+               cx
+               ~arg_loc:(TypeUtil.loc_of_t t)
+               ~reason
+               ~renders_variant
+               ~concretize
+               ~is_iterable_for_better_error
+               t
+         )
         )
         )
 end

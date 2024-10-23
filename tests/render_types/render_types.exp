@@ -2050,25 +2050,6 @@ References:
                                                                          ^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- validation/validation.js:44:68
-
-Cannot instantiate `ExactReactElement_DEPRECATED` because in type argument `ElementType`: [incompatible-type-arg]
- - Either cannot use number [1] as the type argument of renders type.
- - Or component [2] is incompatible with string [3].
-
-   validation/validation.js:44:68
-    44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
-                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-References:
-   validation/validation.js:44:88
-    44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
-                                                                                               ^^^^^^ [1]
-   <BUILTINS>/react.js:135:5
-   135|   | string
-            ^^^^^^ [3]
-
-
 Error ----------------------------------------------------------------------------------- validation/validation.js:44:39
 
 Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
@@ -2084,16 +2065,16 @@ References:
                                                                                       ^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- validation/validation.js:44:80
+Error ----------------------------------------------------------------------------------- validation/validation.js:44:88
 
-Invalid trivially recursive definition of renders number.  [recursive-definition]
+Cannot use number [1] as the type argument of renders type. [invalid-render]
 
    44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error
-                                                                                      ^^^^^^^^^^^^^^
+                                                                                              ^^^^^^ [1]
 
 
 
-Found 153 errors
+Found 152 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
