@@ -1160,7 +1160,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | None
           | Some (_, { Ast.Type.TypeArgs.arguments = []; comments = _ }) ->
             error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
-          | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 3
+          | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 1
             ->
             error_type
               cx
@@ -1172,35 +1172,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | _ ->
             let (ts, targs) = convert_type_params () in
             let config = List.nth ts 0 in
-            let mk_default_type_argument_reason_at_position desc_default position =
-              Reason.(
-                update_desc_new_reason (fun desc_type ->
-                    RDefaultTypeArgumentAtIndex { desc_type; desc_default; position }
-                )
-              )
-                reason
-            in
-            let instance =
-              ComponentInstanceAvailableAsInstanceType
-                (Base.Option.value
-                   (List.nth_opt ts 1)
-                   ~default:
-                     (let reason = mk_default_type_argument_reason_at_position RMixed 2 in
-                      MixedT.make reason
-                     )
-                )
-            in
+            let instance = ComponentInstanceAvailableAsInstanceType (MixedT.make reason) in
             let renders =
-              Base.Option.value
-                (List.nth_opt ts 2)
-                ~default:
-                  (let reason =
-                     mk_default_type_argument_reason_at_position
-                       (RIdentifier (OrdinaryName "React$Node"))
-                       3
-                   in
-                   ConsGen.get_builtin_type cx ~use_desc:true reason "React$Node"
-                  )
+              let reason =
+                Reason.update_desc_new_reason
+                  (fun _ -> RIdentifier (OrdinaryName "React$Node"))
+                  reason
+              in
+              ConsGen.get_builtin_type cx ~use_desc:true reason "React$Node"
             in
             reconstruct_ast
               (DefT

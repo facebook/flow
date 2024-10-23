@@ -28,9 +28,5 @@ queries_in_file "type-at-pos" "react.js"
 
 printf "react_abstract_component.js:3:15 = "
 assert_ok "$FLOW" type-at-pos react_abstract_component.js 3 15 --strip-root
-printf "react_abstract_component.js:7:15 = "
-assert_ok "$FLOW" type-at-pos react_abstract_component.js 7 15 --strip-root
-printf "react_abstract_component.js:11:15 = "
-assert_ok "$FLOW" type-at-pos react_abstract_component.js 11 15 --strip-root
-printf "react_abstract_component.js:15:15 = "
-assert_ok "$FLOW" type-at-pos react_abstract_component.js 15 15 --strip-root
+printf "react_abstract_component.js:8:15 = "
+assert_ok "$FLOW" type-at-pos react_abstract_component.js 8 15 --strip-root
