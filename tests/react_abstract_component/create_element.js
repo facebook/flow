@@ -2,15 +2,13 @@
 
 const React = require('react');
 
-declare var C: React$AbstractComponent<
-  {
-    +foo?: number,
-    +bar: number | string,
-    +baz: number,
-  },
-  number,
-  React$Node,
->;
+declare var C: component(
+  ref: React.RefSetter<number>,
+  bar: number | string,
+  baz: number,
+  foo?: number,
+  ...{...}
+);
 
 const _a = <C foo={3} bar="string" baz={4} />;
 const _b = <C bar={3} baz={4} />;
