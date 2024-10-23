@@ -19,7 +19,7 @@ type DefaultProps = {|
 |};
 
 function f<Config: Props>(
-  InputComponent: React.AbstractComponent<Config, mixed>,
+  InputComponent: React.ComponentType<Config>,
 ): React.ComponentType<React.Config<Config, DefaultProps>> {
   return class extends React.Component<React.Config<Config, DefaultProps>> {
     f() {
@@ -38,22 +38,22 @@ function hoc<Props, Component: React.ComponentType<Props>>(
   return (props: Props) => <WrappedComponent {...props} />;
 }
 
-function HOC<Config, Instance>(
-  x: React.AbstractComponent<Config, Instance>,
-): React.AbstractComponent<Config, Instance> {
+function HOC<Config: {...}, Instance>(
+  x: component(ref: React.RefSetter<Instance>, ...Config),
+): component(ref: React.RefSetter<Instance>, ...Config) {
   return x;
 }
 
-function HOC2<Props: {}, DefaultProps: {}, Instance>(
-  x: React.AbstractComponent<React.Config<Props, DefaultProps>, Instance>,
-): React.AbstractComponent<React.Config<Props, DefaultProps>, Instance> {
+function HOC2<Props: {...}, DefaultProps: {}, Instance>(
+  x: component(ref: React.RefSetter<Instance>, ...React.Config<Props, DefaultProps>),
+): component(ref: React.RefSetter<Instance>, ...React.Config<Props, DefaultProps>) {
   return x;
 }
 
-function WrapInDivWithExtraProp<Props, Instance>(
-  X: React.AbstractComponent<{|...Props|}, Instance>,
-): React.AbstractComponent<{|...Props, baz: number|}, void> {
-  const C = ({baz, ...props}: {|...Props, baz: number|}) => (
+function WrapInDivWithExtraProp<Props: {...}, Instance>(
+  X: component(ref: React.RefSetter<Instance>, ...Props),
+): component(...{|...$Exact<Props>, baz: number|}) {
+  const C = ({baz, ...props}: {|...$Exact<Props>, baz: number|}) => (
     <div>
       {baz}
       <X {...props} />

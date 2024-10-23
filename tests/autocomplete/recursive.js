@@ -1,6 +1,6 @@
 // @flow
 
-declare var Foo: React$AbstractComponent<Props, any, React$Node>;
+declare var Foo: React$ComponentType<Props>;
 
 type Props = $ReadOnly<{
   children?: typeof Foo,

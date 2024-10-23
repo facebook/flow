@@ -1,12 +1,12 @@
 //@flow
 const React = require('react');
 
-type Props = {|foo: number|};
+type Props = {|+foo: number|};
 const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
   <button ref={ref} className="FancyButton"></button>
 ));
 
-FancyButton as React.AbstractComponent<Props, HTMLButtonElement>;
+FancyButton as component(ref: React.RefSetter<HTMLButtonElement>, ...Props)
 
 const _a = <FancyButton />; // Error, missing foo
 const _b = <FancyButton foo={3} />;

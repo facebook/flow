@@ -16,8 +16,8 @@ function G(props: { foo: string | number }) {
 var Z = 0;
 <Z />; // error, expected React component
 
-// Ensure AbstractComponent type is usable
-const H: React.AbstractComponent<{ foo: string }> = props => {
+// Ensure ComponentType type is usable
+const H: React.ComponentType<{ foo: string }> = props => {
   return null;
 };
 <H foo="" />; // ok

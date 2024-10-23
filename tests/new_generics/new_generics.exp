@@ -1152,13 +1152,21 @@ Cannot get `X.defaultProps` because property `defaultProps` is missing in `React
 [prop-missing]
 
    react.js:62:26
-   62|   C.defaultProps = {...X.defaultProps}; // nope
-                                ^^^^^^^^^^^^
+    62|   C.defaultProps = {...X.defaultProps}; // nope
+                                 ^^^^^^^^^^^^
 
 References:
-   react.js:54:6
-   54|   X: React.AbstractComponent<{|...Props|}, Instance>,
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:108:47
+                                                      v
+   108| declare type React$AbstractComponentStatics = {
+   109|   displayName?: ?string,
+   110|   // This is only on function components, but trying to access name when
+   111|   // displayName is undefined is a common pattern.
+   112|   name?: ?string,
+   113|   propTypes?: {[string] : any, ...},
+   114|   ...
+   115| };
+        ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:5

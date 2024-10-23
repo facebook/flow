@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 function ref_tests() {
-  declare var Component1: React.AbstractComponent<{}, string>;
+  declare var Component1: component(ref: React.RefSetter<string>);
   <Component1 ref={(s) => (s: string | null)} />;
   declare class Component2 extends React.Component<{}> {}
   <Component2 ref={(s) => (s: Component2 | null)} />;
@@ -14,7 +14,7 @@ function cannot_resolve_name_regression_tests() {
 }
 
 function react_abstract_component_subtyping() {
-  const _: React.AbstractComponent<{foo: string}> = (props) => {
+  const _: React.ComponentType<{foo: string}> = (props) => {
     (props.foo: string); // ok
     (props: empty); // error
   };

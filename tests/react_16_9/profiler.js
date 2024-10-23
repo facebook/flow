@@ -22,7 +22,11 @@ function F(props: {||}) { return null }
 
 const _c: ExactReactElement_DEPRECATED<
   // Ok, instance type is void.
-  React.AbstractComponent<React.ElementConfig<typeof React.Profiler>, void>>
+  component(
+    ref: React.RefSetter<void>,
+    ...React.ElementConfig<typeof React.Profiler>
+  )
+>
 =
   <React.Profiler id="Test3" onRender={onRender}>
     <F />

@@ -6107,10 +6107,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"ab","type":"number"},
-    {
-      "name":"ac",
-      "type":"component(ref: React.RefSetter<any>, ...Props) renders React$Node"
-    }
+    {"name":"ac","type":"React$ComponentType<Props>"}
   ]
 }
 

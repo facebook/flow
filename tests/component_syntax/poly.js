@@ -27,5 +27,5 @@ component Test() {
     </Foo>)
 }
 
-declare const C: React.AbstractComponent<{foo: string}>;
+declare const C: React.ComponentType<{foo: string}>;
 const el = <C foo="str" />;

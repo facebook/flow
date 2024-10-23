@@ -1,7 +1,7 @@
 >>> removed.js (#changes: 1)
 
 
-type Foo = React.AbstractComponent<{}>;
+type Foo = React.ComponentType<{}>;
 <div />;
 
 component Foo() {
