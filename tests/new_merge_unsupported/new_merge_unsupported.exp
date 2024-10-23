@@ -525,8 +525,8 @@ annotation for class extends [2]. [invalid-exported-annotation]
                                 ^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -554,8 +554,8 @@ annotation for property `f` [2]. [invalid-exported-annotation]
                           ^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -569,8 +569,8 @@ annotation for computed property [2]. [invalid-exported-annotation]
                           ^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -592,8 +592,8 @@ spread [2]. [invalid-exported-annotation]
                           ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -607,8 +607,8 @@ exact [2]. [invalid-exported-annotation]
                         ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -622,8 +622,8 @@ for statics [2]. [invalid-exported-annotation]
                         ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -665,8 +665,8 @@ annotation for property `f` [2]. [invalid-exported-annotation]
                           ^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -680,8 +680,8 @@ for prototype [2]. [invalid-exported-annotation]
                                             ^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -695,8 +695,8 @@ mixins [2]. [invalid-exported-annotation]
                                        ^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -724,8 +724,8 @@ annotation for unary minus [2]. [invalid-exported-annotation]
                            ^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -753,8 +753,8 @@ for unary not [2]. [invalid-exported-annotation]
                            ^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -768,8 +768,8 @@ annotation for `$KeyMirror` [2]. [invalid-exported-annotation]
                          ^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -783,8 +783,8 @@ for key set [2]. [invalid-exported-annotation]
                          ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:378:53
-   378|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
+   <BUILTINS>/react.js:374:53
+   374|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
