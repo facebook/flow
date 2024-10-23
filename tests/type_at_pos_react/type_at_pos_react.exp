@@ -2,7 +2,7 @@ lazy_ref.js:14:9 = {
   default: component(ref: RefSetter<{moo(x: string): void}>, ...empty) renders null
 }
 
-'RefSetter' defined at (lib) react.js:1014:9
+'RefSetter' defined at (lib) react.js:1010:9
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
@@ -10,7 +10,7 @@ lazy_ref.js:19:9 = Promise<
 >
 
 'ExactReactElement_DEPRECATED' defined at (lib) react.js:164:13
-'Node' defined at (lib) react.js:356:22
+'Node' defined at (lib) react.js:352:22
 'Promise' defined at (lib) core.js:1972:14
 'Props' defined at exports-component.js:5:5
 
@@ -43,7 +43,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:739:5,741:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:735:5,737:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -80,7 +80,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:739:5,741:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:735:5,737:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -134,7 +134,7 @@ react_component.js:32:13 = {
         "kind":"Generic",
         "typeArgs":[{"kind":"Num"}],
         "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:339:23-35"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:335:23-35"},
           "name":"ComponentType"
         },
         "generic_kind":"type alias"
@@ -162,7 +162,7 @@ react_component.js:32:29 = {
       "expanded":{
         "kind":"TypeAlias",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:339:23-35"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:335:23-35"},
           "name":"ComponentType"
         },
         "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
@@ -201,7 +201,7 @@ It serves as an alternative to writing JSX.
 **@see** https://react.dev/reference/react/createElement
 React$CreateElement
 
-'React$CreateElement' defined at (lib) react.js:249:20
+'React$CreateElement' defined at (lib) react.js:245:20
 
 react.js:4:7,4:19
 
