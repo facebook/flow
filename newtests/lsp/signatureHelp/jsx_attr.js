@@ -13,7 +13,7 @@ type PropsMapped = $ReadOnly<{[key in keyof PropsA]: () => PropsA[key]}>;
 
 type PropsSpread = $ReadOnly<{...PropsA, ...PropsC}>;
 
-function test1(Foo: React$AbstractComponent<PropsA>) {;
+function test1(Foo: React.ComponentType<PropsA>) {;
     return <Foo foo={/* here */} />;
 }
 
@@ -30,62 +30,62 @@ function test4() {
     return <Foo foo={/* here */} />;
 }
 
-function test5(Foo: React$AbstractComponent<PropsA>) {
+function test5(Foo: React.ComponentType<PropsA>) {
     return <Foo foo={/* here */} />;
 }
 
-function test6<P>(Foo: React$AbstractComponent<PropsPoly<P>>): any {
+function test6<P>(Foo: React.ComponentType<PropsPoly<P>>): any {
     return <Foo foo={/* here */} />;
 }
 
-function test7<P>(Foo: React$AbstractComponent<{...PropsA, ...PropsPoly<P>}>): any {
+function test7<P>(Foo: React.ComponentType<{...PropsA, ...PropsPoly<P>}>): any {
     return <Foo foo={/* here */} />;
 }
 
-function test8<P: React$AbstractComponent<PropsA>>(Foo: P): any {
+function test8<P: React.ComponentType<PropsA>>(Foo: P): any {
     return <Foo foo={/* here */} />;
 }
 
-function test9<P: PropsA>(Foo: React$AbstractComponent<P>): any {
+function test9<P: PropsA>(Foo: React.ComponentType<P>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testUnion1(Foo: React$AbstractComponent<PropsA | PropsA>): any {
+function testUnion1(Foo: React.ComponentType<PropsA | PropsA>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testUnion2(Foo: React$AbstractComponent<PropsA | PropsB>): any {
+function testUnion2(Foo: React.ComponentType<PropsA | PropsB>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testUnion3(Foo: React$AbstractComponent<PropsA | PropsC>): any {
+function testUnion3(Foo: React.ComponentType<PropsA | PropsC>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testIntersection1(Foo: React$AbstractComponent<PropsA & PropsB>): any {
+function testIntersection1(Foo: React.ComponentType<PropsA & PropsB>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testIntersection2(Foo: React$AbstractComponent<PropsA & (PropsB & PropsC)>): any {
+function testIntersection2(Foo: React.ComponentType<PropsA & (PropsB & PropsC)>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testIntersection3(Foo: React$AbstractComponent<PropsA | (PropsB & PropsC)>): any {
+function testIntersection3(Foo: React.ComponentType<PropsA | (PropsB & PropsC)>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testIntersection4(Foo: React$AbstractComponent<PropsA & (PropsB | PropsC)>): any {
+function testIntersection4(Foo: React.ComponentType<PropsA & (PropsB | PropsC)>): any {
     return <Foo foo={/* here */} />;
 }
 
-function testOmit(Foo: React$AbstractComponent<PropsOmit>) {;
+function testOmit(Foo: React.ComponentType<PropsOmit>) {;
     return <Foo foo={/* here */} />;
 }
 
-function testMapped(Foo: React$AbstractComponent<PropsMapped>) {;
+function testMapped(Foo: React.ComponentType<PropsMapped>) {;
     return <Foo foo={/* here */} />;
 }
 
-function testSpread(Foo: React$AbstractComponent<PropsSpread>) {;
+function testSpread(Foo: React.ComponentType<PropsSpread>) {;
     return <Foo foo={/* here */} />;
 }
