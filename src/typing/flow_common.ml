@@ -161,6 +161,28 @@ module type SUBTYPING = sig
     Type.cont ->
     unit
 
+  module ImplicitInstantiationKit : sig
+    val run_conditional :
+      Context.t ->
+      Type.DepthTrace.t ->
+      use_op:Type.use_op ->
+      reason:Reason.reason ->
+      tparams:Type.typeparam list ->
+      check_t:Type.t ->
+      extends_t:Type.t ->
+      true_t:Type.t ->
+      false_t:Type.t ->
+      Type.t
+
+    val run_ref_extractor :
+      Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
+
+    val run_render_extractor :
+      Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
+
+    val run_await : Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
+  end
+
   val instantiate_poly_with_targs :
     Context.t ->
     Type.DepthTrace.t ->

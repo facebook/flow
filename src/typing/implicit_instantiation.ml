@@ -1421,6 +1421,9 @@ module type KIT = sig
   val run_ref_extractor :
     Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
 
+  val run_render_extractor :
+    Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
+
   val run_await : Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
 end
 
@@ -1554,6 +1557,50 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       (* If the internal definition for React$RefSetter isn't polymorphic, either we're running with
          no-flowlib or things have gone majorly sideways. Either way, just use mixed *)
       MixedT.make reason
+
+  let run_render_extractor cx ~use_op ~reason t =
+    let name = Subst_name.Name "T" in
+    let bound = MixedT.make reason in
+    let generic_t =
+      let id = Context.make_generic_id cx name (loc_of_reason reason) in
+      GenericT { reason; name; bound; no_infer = false; id }
+    in
+    let tparam =
+      {
+        reason;
+        name : Subst_name.t;
+        bound;
+        polarity = Polarity.Positive;
+        default = None;
+        is_this = false;
+      }
+    in
+    match
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          Pierce.solve_conditional_type_targs
+            cx
+            Type.DepthTrace.dummy_trace
+            ~use_op
+            ~reason
+            ~tparams:[tparam]
+            ~check_t:t
+            ~extends_t:
+              (DefT
+                 ( reason,
+                   ReactAbstractComponentT
+                     {
+                       config = EmptyT.why reason;
+                       instance = ComponentInstanceAvailableAsInstanceType (MixedT.why reason);
+                       renders = generic_t;
+                       component_kind = Structural;
+                     }
+                 )
+              )
+            ~true_t:generic_t
+      )
+    with
+    | Some subst_map -> Type_subst.subst cx ~use_op:unknown_use subst_map generic_t
+    | None -> EmptyT.why reason
 
   (* TODO: await should look up Promise in the environment instead of going directly to
      the core definition. Otherwise, the following won't work with a polyfilled Promise! **)

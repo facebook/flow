@@ -197,7 +197,11 @@ module Make (Flow : INPUT) : S = struct
       )
     in
     let concretize_component_renders_and_check component_t =
-      get_builtin_typeapp cx elem_reason "React$ComponentRenders" [component_t]
+      ImplicitInstantiationKit.run_render_extractor
+        cx
+        ~use_op:unknown_use
+        ~reason:elem_reason
+        component_t
       |> possible_concrete_types_for_inspection cx elem_reason
       |> on_concretized_types
     in

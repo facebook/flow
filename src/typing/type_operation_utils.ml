@@ -280,20 +280,6 @@ module Import_export = struct
     | Error (lreason, any_source) -> AnyT (lreason, any_source)
 end
 
-module ImplicitInstantiation =
-  Implicit_instantiation.Kit
-    (Flow.FlowJs)
-    (struct
-      let mk_targ = Instantiation_utils.ImplicitTypeArgument.mk_targ
-
-      let is_subtype = Flow.FlowJs.rec_flow_t
-
-      let unify cx trace ~use_op (t1, t2) =
-        Flow.FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
-
-      let reposition = Flow.FlowJs.reposition ?desc:None ?annot_loc:None
-    end)
-
 module Operators = struct
   let arith cx reason kind t1 t2 =
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
@@ -674,7 +660,7 @@ module Promise = struct
     (* await distributes over union: await (Promise<T> | void) = T | void *)
     match
       Flow.possible_concrete_types_for_inspection cx reason t
-      |> List.map (ImplicitInstantiation.run_await cx ~use_op:unknown_use ~reason)
+      |> List.map (Flow.FlowJs.ImplicitInstantiationKit.run_await cx ~use_op:unknown_use ~reason)
     with
     | [] -> EmptyT.why reason
     | [t] -> t
