@@ -9,22 +9,18 @@ class Component extends React.Component<{|foo: number, bar: number|}> {
   }
 }
 
-function TrivialHOC<Props, Instance, Renders>(
-  x: React$AbstractComponent<Props, Instance, Renders>,
-): React$AbstractComponent<Props, Instance, Renders> {
+function TrivialHOC<Props: {...}, Instance>(
+  x: component(ref: React.RefSetter<Instance>, ...Props),
+): component(ref: React.RefSetter<Instance>, ...Props) {
   return x;
 }
 
 const TrivialWrap = TrivialHOC(Component);
-TrivialWrap as React$AbstractComponent<
-  {|foo?: number, bar: number|},
-  Component,
-  number,
->; // All ok!
+TrivialWrap as component(ref: React.RefSetter<Component>, bar: number, foo?: number); // All ok!
 
-function WrapInDivWithExtraProp<Props, Instance>(
-  X: React$AbstractComponent<Props, Instance>,
-): React$AbstractComponent<{|...Props, baz: number|}> {
+function WrapInDivWithExtraProp<Props>(
+  X: React.ComponentType<Props>,
+): React.ComponentType<{|...Props, baz: number|}> {
   class C extends React.Component<{|...Props, baz: number|}> {
     static defaultProps: {} = {};
     render(): React.Node {
@@ -41,13 +37,13 @@ function WrapInDivWithExtraProp<Props, Instance>(
 }
 
 const WrappedInDivWithExtraProp = WrapInDivWithExtraProp(Component); // Note, we lose instance type here
-WrappedInDivWithExtraProp as React$AbstractComponent<
+WrappedInDivWithExtraProp as React.ComponentType<
   {|foo?: number, bar: number, baz: number|},
 >;
 
-function AddPropWithDefault<Props, Instance>(
-  X: React$AbstractComponent<Props, Instance>,
-): React$AbstractComponent<{|...Props, baz?: number|}> {
+function AddPropWithDefault<Props>(
+  X: React.ComponentType<Props>,
+): React.ComponentType<{|...Props, baz?: number|}> {
   class C extends React.Component<{|...Props, baz?: number|}> {
     static defaultProps: {baz: 3} = {baz: 3};
     render(): React.Node {
@@ -64,6 +60,6 @@ function AddPropWithDefault<Props, Instance>(
 }
 
 const WrappedAddPropWithDefault = AddPropWithDefault(Component);
-WrappedAddPropWithDefault as React$AbstractComponent<
+WrappedAddPropWithDefault as React.ComponentType<
   {|foo?: number, bar: number, baz?: number|},
 >;

@@ -2,11 +2,7 @@
 
 const React = require('react');
 
-declare var C: React$AbstractComponent<
-  {foo?: number, bar: number},
-  void,
-  React.Node,
->;
+declare var C: component(bar: number, foo?: number, ...{...});
 
 // Create element tests props_to_tin
 const _a = <C bar={3} />;

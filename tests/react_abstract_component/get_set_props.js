@@ -1,6 +1,6 @@
 //@flow
 
-function test(x: React$AbstractComponent<any, any, any>) {
+function test(x: component(ref: React.RefSetter<any>, ...any)) {
   if (x.displayName) {
     x.displayName;
     x.displayName = null;
