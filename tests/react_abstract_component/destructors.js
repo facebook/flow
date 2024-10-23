@@ -2,7 +2,7 @@
 
 const React = require('react');
 
-declare var C: React.AbstractComponent<
+declare var C: React$AbstractComponent<
   {foo?: number, bar: number},
   void,
   React.Node,

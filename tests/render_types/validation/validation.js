@@ -41,5 +41,5 @@ type BadSpecificRenders6 = renders (React.ChildrenArray<ExactReactElement_DEPREC
 
 type BadUnion = renders ExactReactElement_DEPRECATED<typeof Bar | typeof Baz>; // error
 
-type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, number>>; // error
-type GoodStructuralComponent = renders ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, renders Foo>>; // ok
+type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React$AbstractComponent<empty, mixed, number>>; // error
+type GoodStructuralComponent = renders ExactReactElement_DEPRECATED<React$AbstractComponent<empty, mixed, renders Foo>>; // ok

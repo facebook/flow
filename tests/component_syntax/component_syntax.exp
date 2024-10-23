@@ -1427,11 +1427,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:51:2
 
-Cannot cast `Baz` to `React.AbstractComponent` because instance of component Baz [1] is incompatible with empty [2].
+Cannot cast `Baz` to AbstractComponent because instance of component Baz [1] is incompatible with empty [2].
 [incompatible-cast]
 
    errors.js:51:2
-   51| (Baz: React.AbstractComponent<mixed, empty>);
+   51| (Baz: React$AbstractComponent<mixed, empty>);
         ^^^
 
 References:
@@ -1439,22 +1439,22 @@ References:
     6| component Baz() {
        ^^^^^^^^^^^^^^^ [1]
    errors.js:51:38
-   51| (Baz: React.AbstractComponent<mixed, empty>);
+   51| (Baz: React$AbstractComponent<mixed, empty>);
                                             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- errors.js:51:2
 
-Cannot cast `Baz` to `React.AbstractComponent` because mixed [1] is incompatible with props of component Baz [2].
+Cannot cast `Baz` to AbstractComponent because mixed [1] is incompatible with props of component Baz [2].
 [incompatible-cast]
 
    errors.js:51:2
-   51| (Baz: React.AbstractComponent<mixed, empty>);
+   51| (Baz: React$AbstractComponent<mixed, empty>);
         ^^^
 
 References:
    errors.js:51:31
-   51| (Baz: React.AbstractComponent<mixed, empty>);
+   51| (Baz: React$AbstractComponent<mixed, empty>);
                                      ^^^^^ [1]
    errors.js:6:1
     6| component Baz() {
@@ -2369,11 +2369,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:1
 
-Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] is incompatible with null [2].
-[incompatible-cast]
+Cannot cast `Foo` to AbstractComponent because `React.Element` [1] is incompatible with null [2]. [incompatible-cast]
 
    nominal.js:17:1
-    17| Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
+    17| Foo as React$AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
         ^^^
 
 References:
@@ -2381,7 +2380,7 @@ References:
    166| declare type React$MixedElement = React$Element<React$ElementType>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    nominal.js:17:43
-    17| Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
+    17| Foo as React$AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
                                                   ^^^^ [2]
 
 
@@ -2417,7 +2416,7 @@ Error --------------------------------------------------------------------------
 Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
 renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
 
-   25| Baz as React.AbstractComponent<{foo: number}, mixed, renders null>; // OK
+   25| Baz as React$AbstractComponent<{foo: number}, mixed, renders null>; // OK
                                                                     ^^^^ [1]
 
 
@@ -2896,16 +2895,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with object type [2].
+Cannot cast `Foo` to AbstractComponent because `React.RefSetter` [1] is incompatible with object type [2].
 [incompatible-cast]
 
    refs.js:12:2
-   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:38
-   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                             ^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2914,16 +2913,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because inexact `React.RefSetter` [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `Foo` to AbstractComponent because inexact `React.RefSetter` [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    refs.js:12:2
-   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:38
-   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                             ^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2932,16 +2931,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because property `current` is write-only in `React.RefSetter` [1] but
-readable in object type [2]. [incompatible-variance]
+Cannot cast `Foo` to AbstractComponent because property `current` is write-only in `React.RefSetter` [1] but readable in
+object type [2]. [incompatible-variance]
 
    refs.js:12:2
-   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:38
-   12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                             ^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2950,12 +2949,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because in property `current`: [incompatible-cast]
+Cannot cast `Foo` to AbstractComponent because in property `current`: [incompatible-cast]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
    refs.js:12:2
-    12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+    12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
          ^^^
 
 References:
@@ -2963,7 +2962,7 @@ References:
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                                      ^^^^^^^^^^^^^ [1]
    refs.js:12:38
-    12| (Foo: React.AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+    12| (Foo: React$AbstractComponent<empty, string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                              ^^^^^^ [2]
    <BUILTINS>/react.js:181:21
    181|   | { -current: T | null, ... }
@@ -2972,16 +2971,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with object type [2].
+Cannot cast `Foo` to AbstractComponent because `React.RefSetter` [1] is incompatible with object type [2].
 [incompatible-cast]
 
    refs.js:13:2
-   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+   13| (Foo: React$AbstractComponent<empty, typeof Reffed>); //ok
         ^^^
 
 References:
    refs.js:13:38
-   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+   13| (Foo: React$AbstractComponent<empty, typeof Reffed>); //ok
                                             ^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2990,16 +2989,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because inexact `React.RefSetter` [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `Foo` to AbstractComponent because inexact `React.RefSetter` [1] is incompatible with exact object type [2].
+[incompatible-exact]
 
    refs.js:13:2
-   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+   13| (Foo: React$AbstractComponent<empty, typeof Reffed>); //ok
         ^^^
 
 References:
    refs.js:13:38
-   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+   13| (Foo: React$AbstractComponent<empty, typeof Reffed>); //ok
                                             ^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -3008,16 +3007,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because property `current` is write-only in `React.RefSetter` [1] but
-readable in object type [2]. [incompatible-variance]
+Cannot cast `Foo` to AbstractComponent because property `current` is write-only in `React.RefSetter` [1] but readable in
+object type [2]. [incompatible-variance]
 
    refs.js:13:2
-   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+   13| (Foo: React$AbstractComponent<empty, typeof Reffed>); //ok
         ^^^
 
 References:
    refs.js:13:38
-   13| (Foo: React.AbstractComponent<empty, typeof Reffed>); //ok
+   13| (Foo: React$AbstractComponent<empty, typeof Reffed>); //ok
                                             ^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -3026,16 +3025,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to `React.AbstractComponent` because `React.RefSetter` [1] is incompatible with function type [2].
+Cannot cast `Bar` to AbstractComponent because `React.RefSetter` [1] is incompatible with function type [2].
 [incompatible-cast]
 
    refs.js:15:2
-   15| (Bar: React.AbstractComponent<empty, string>); // err
+   15| (Bar: React$AbstractComponent<empty, string>); // err
         ^^^
 
 References:
    refs.js:15:38
-   15| (Bar: React.AbstractComponent<empty, string>); // err
+   15| (Bar: React$AbstractComponent<empty, string>); // err
                                             ^^^^^^ [1]
    refs.js:5:21
     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
@@ -3044,16 +3043,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to `React.AbstractComponent` because a call signature declaring the expected parameter / return type
-is missing in `React.RefSetter` [1] but exists in function type [2]. [prop-missing]
+Cannot cast `Bar` to AbstractComponent because a call signature declaring the expected parameter / return type is
+missing in `React.RefSetter` [1] but exists in function type [2]. [prop-missing]
 
    refs.js:15:2
-   15| (Bar: React.AbstractComponent<empty, string>); // err
+   15| (Bar: React$AbstractComponent<empty, string>); // err
         ^^^
 
 References:
    refs.js:15:38
-   15| (Bar: React.AbstractComponent<empty, string>); // err
+   15| (Bar: React$AbstractComponent<empty, string>); // err
                                             ^^^^^^ [1]
    refs.js:5:21
     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
@@ -3062,12 +3061,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to `React.AbstractComponent` because in the first parameter: [incompatible-cast]
+Cannot cast `Bar` to AbstractComponent because in the first parameter: [incompatible-cast]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
    refs.js:15:2
-    15| (Bar: React.AbstractComponent<empty, string>); // err
+    15| (Bar: React$AbstractComponent<empty, string>); // err
          ^^^
 
 References:
@@ -3075,7 +3074,7 @@ References:
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                              ^^^^^^^^^^^^^ [1]
    refs.js:15:38
-    15| (Bar: React.AbstractComponent<empty, string>); // err
+    15| (Bar: React$AbstractComponent<empty, string>); // err
                                              ^^^^^^ [2]
    <BUILTINS>/react.js:182:11
    182|   | ((T | null) => mixed)
@@ -3084,11 +3083,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to `React.AbstractComponent` because component Reffed [1] is incompatible with string [2].
-[incompatible-cast]
+Cannot cast `Baz` to AbstractComponent because component Reffed [1] is incompatible with string [2]. [incompatible-cast]
 
    refs.js:17:2
-   17| (Baz: React.AbstractComponent<empty, string>); // err
+   17| (Baz: React$AbstractComponent<empty, string>); // err
         ^^^
 
 References:
@@ -3096,7 +3094,7 @@ References:
     8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
                                           ^^^^^^^^^^^^^ [1]
    refs.js:17:38
-   17| (Baz: React.AbstractComponent<empty, string>); // err
+   17| (Baz: React$AbstractComponent<empty, string>); // err
                                             ^^^^^^ [2]
 
 

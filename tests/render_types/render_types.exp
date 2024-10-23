@@ -12,6 +12,24 @@ References:
            ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- cyclic_types.js:6:3
+
+Cannot cast `recursiveElement` to renders `Foo` because `React.Element` [1] does not render `Foo` [2].
+[incompatible-cast]
+
+   cyclic_types.js:6:3
+   6|   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
+        ^^^^^^^^^^^^^^^^
+
+References:
+   cyclic_types.js:5:35
+   5|   declare const recursiveElement: T;
+                                        ^ [1]
+   cyclic_types.js:6:23
+   6|   recursiveElement as renders Foo; // TODO: no error, hit the same TypeAppT again
+                            ^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- fragment.js:9:26
 
 Cannot assign `<>...</>` to `el3` because `Fragment` element [1] does not render `Bad` [2]. [incompatible-type]
@@ -2056,17 +2074,17 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and number [2] is not a render type. [invalid-render]
 
    validation/validation.js:44:39
-   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, number>>; // error
+   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React$AbstractComponent<empty, mixed, number>>; // error
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    validation/validation.js:44:106
-   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React.AbstractComponent<empty, mixed, number>>; // error
+   44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<React$AbstractComponent<empty, mixed, number>>; // error
                                                                                                                 ^^^^^^ [2]
 
 
 
-Found 151 errors
+Found 152 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

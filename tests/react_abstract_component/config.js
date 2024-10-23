@@ -16,18 +16,18 @@ declare var z: NotTheRightConfig;
 z as React.Config<Props, DefaultProps>; // Error, configs don't match
 
 function HOC<Config, Instance, TRenders: React.Node>(
-  x: React.AbstractComponent<Config, Instance, TRenders>,
-): React.AbstractComponent<Config, Instance, TRenders> {
+  x: React$AbstractComponent<Config, Instance, TRenders>,
+): React$AbstractComponent<Config, Instance, TRenders> {
   return x;
 }
 
 function HOC2<Props: {}, DefaultProps: {}, Instance, TRenders: React.Node>(
-  x: React.AbstractComponent<
+  x: React$AbstractComponent<
     React.Config<Props, DefaultProps>,
     Instance,
     TRenders,
   >,
-): React.AbstractComponent<
+): React$AbstractComponent<
   React.Config<Props, DefaultProps>,
   Instance,
   TRenders,

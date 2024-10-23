@@ -2,8 +2,8 @@
 const React = require('react');
 
 declare function HOC<Config: {}, Instance>(
-    x: React.AbstractComponent<Config, Instance>,
-): React.AbstractComponent<Config, Instance>;
+    x: React$AbstractComponent<Config, Instance>,
+): React$AbstractComponent<Config, Instance>;
 
 class A extends React.Component<{}> {}
 
