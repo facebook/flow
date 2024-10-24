@@ -91,7 +91,8 @@
                 "directive":null
               }
             ]
-          }
+          },
+          "guard":null
         },
         {
           "type":"MatchStatementCase",
@@ -117,7 +118,8 @@
             "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":8,"column":3}},
             "range":[60,78],
             "body":[]
-          }
+          },
+          "guard":null
         },
         {
           "type":"MatchStatementCase",
@@ -162,7 +164,8 @@
                 }
               }
             ]
-          }
+          },
+          "guard":null
         }
       ]
     }

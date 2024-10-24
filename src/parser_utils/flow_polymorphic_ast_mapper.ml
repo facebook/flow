@@ -2062,11 +2062,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method match_expression_case (case : ('M, 'T) Ast.Expression.Match.Case.t') =
       let open Ast.Expression.Match.Case in
-      let { pattern; body; comments } = case in
+      let { pattern; body; guard; comments } = case in
       let pattern' = this#expression pattern in
+      let guard' = Option.map ~f:this#expression guard in
       let body' = this#expression body in
       let comments' = this#syntax_opt comments in
-      { pattern = pattern'; body = body'; comments = comments' }
+      { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
 
     method match_statement (x : ('M, 'T) Ast.Statement.Match.t) : ('N, 'U) Ast.Statement.Match.t =
       let open Ast.Statement.Match in
@@ -2078,11 +2079,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method match_statement_case (case : ('M, 'T) Ast.Statement.Match.Case.t') =
       let open Ast.Statement.Match.Case in
-      let { pattern; body; comments } = case in
+      let { pattern; body; guard; comments } = case in
       let pattern' = this#expression pattern in
+      let guard' = Option.map ~f:this#expression guard in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
-      { pattern = pattern'; body = body'; comments = comments' }
+      { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

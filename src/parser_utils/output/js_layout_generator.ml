@@ -3314,17 +3314,39 @@ and variance (loc, { Ast.Variance.kind; comments }) =
       | Ast.Variance.InOut -> fuse [Atom "in out"; space]
     )
 
-and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body; comments }) =
-  layout_node_with_comments_opt
-    loc
-    comments
-    (fuse [expression ~opts pattern; Atom ":"; pretty_space; expression ~opts body])
+and match_case_guard ~opts guard =
+  Base.Option.value_map guard ~default:Empty ~f:(fun e ->
+      fuse [space; Atom "if"; space; expression ~opts e]
+  )
 
-and match_statement_case ~opts (loc, { Ast.Statement.Match.Case.pattern; body; comments }) =
+and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body; guard; comments })
+    =
   layout_node_with_comments_opt
     loc
     comments
-    (fuse [expression ~opts pattern; Atom ":"; pretty_space; block ~opts body])
+    (fuse
+       [
+         expression ~opts pattern;
+         match_case_guard ~opts guard;
+         Atom ":";
+         pretty_space;
+         expression ~opts body;
+       ]
+    )
+
+and match_statement_case ~opts (loc, { Ast.Statement.Match.Case.pattern; body; guard; comments }) =
+  layout_node_with_comments_opt
+    loc
+    comments
+    (fuse
+       [
+         expression ~opts pattern;
+         match_case_guard ~opts guard;
+         Atom ":";
+         pretty_space;
+         block ~opts body;
+       ]
+    )
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =

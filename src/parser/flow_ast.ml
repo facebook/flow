@@ -777,6 +777,7 @@ and Statement : sig
       and ('M, 'T) t' = {
         pattern: ('M, 'T) Expression.t;
         body: 'M * ('M, 'T) Block.t;
+        guard: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
@@ -1742,6 +1743,7 @@ and Expression : sig
       and ('M, 'T) t' = {
         pattern: ('M, 'T) Expression.t;
         body: ('M, 'T) Expression.t;
+        guard: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]

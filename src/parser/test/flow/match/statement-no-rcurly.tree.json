@@ -67,7 +67,8 @@
                 "kind":"const"
               }
             ]
-          }
+          },
+          "guard":null
         },
         {
           "type":"MatchStatementCase",
@@ -114,7 +115,8 @@
                 "kind":"const"
               }
             ]
-          }
+          },
+          "guard":null
         }
       ]
     }

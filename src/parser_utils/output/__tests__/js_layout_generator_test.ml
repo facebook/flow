@@ -2711,10 +2711,12 @@ let tests =
          );
          ( "match_expression" >:: fun ctxt ->
            assert_expression_string ~ctxt "match(x){1:true,2:false}";
+           assert_expression_string ~ctxt "match(x){1 if b:true,2 if f():false}";
            assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1: true,\n  2: false,\n}"
          );
          ( "match_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "match(x){1:{const x=true},2:{const y=false}}";
+           assert_statement_string ~ctxt "match(x){1 if b:{const x=true},2 if f():{const y=false}}";
            assert_statement_string
              ~ctxt
              ~pretty:true

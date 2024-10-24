@@ -654,18 +654,22 @@ with type t = Impl.t = struct
           [("meta", identifier meta); ("property", identifier property)]
       | (loc, Import { Import.argument; comments }) ->
         node ?comments "ImportExpression" loc [("source", expression argument)]
-    and match_expression_case (loc, { Expression.Match.Case.pattern; body; comments }) =
+    and match_expression_case (loc, { Expression.Match.Case.pattern; body; guard; comments }) =
       node
         ?comments
         "MatchExpressionCase"
         loc
-        [("pattern", expression pattern); ("body", expression body)]
-    and match_statement_case (loc, { Statement.Match.Case.pattern; body; comments }) =
+        [
+          ("pattern", expression pattern);
+          ("body", expression body);
+          ("guard", option expression guard);
+        ]
+    and match_statement_case (loc, { Statement.Match.Case.pattern; body; guard; comments }) =
       node
         ?comments
         "MatchStatementCase"
         loc
-        [("pattern", expression pattern); ("body", block body)]
+        [("pattern", expression pattern); ("body", block body); ("guard", option expression guard)]
     and function_declaration
         ( loc,
           {

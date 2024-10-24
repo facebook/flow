@@ -2508,14 +2508,15 @@ class ['loc] mapper =
 
     method match_expression_case (case : ('loc, 'loc) Ast.Expression.Match.Case.t) =
       let open Ast.Expression.Match.Case in
-      let (loc, { pattern; body; comments }) = case in
+      let (loc, { pattern; body; guard; comments }) = case in
       let pattern' = this#expression pattern in
       let body' = this#expression body in
+      let guard' = map_opt this#expression guard in
       let comments' = this#syntax_opt comments in
-      if pattern == pattern' && body == body' && comments == comments' then
+      if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
         case
       else
-        (loc, { pattern; body; comments = comments' })
+        (loc, { pattern; body; guard = guard'; comments = comments' })
 
     method match_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Match.t) =
       let open Ast.Statement.Match in
@@ -2530,14 +2531,15 @@ class ['loc] mapper =
 
     method match_statement_case (case : ('loc, 'loc) Ast.Statement.Match.Case.t) =
       let open Ast.Statement.Match.Case in
-      let (loc, { pattern; body; comments }) = case in
+      let (loc, { pattern; body; guard; comments }) = case in
       let pattern' = this#expression pattern in
       let body' = map_loc this#block body in
+      let guard' = map_opt this#expression guard in
       let comments' = this#syntax_opt comments in
-      if pattern == pattern' && body == body' && comments == comments' then
+      if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
         case
       else
-        (loc, { pattern; body; comments = comments' })
+        (loc, { pattern; body; guard = guard'; comments = comments' })
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in

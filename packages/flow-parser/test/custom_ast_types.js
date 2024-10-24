@@ -232,9 +232,10 @@ function custom_ast_types(fork) {
     .field('cases', [def('MatchExpressionCase')]);
 
   def('MatchExpressionCase')
-    .build('pattern', 'body')
+    .build('pattern', 'body', 'guard')
     .field('pattern', def('Expression'))
-    .field('body', def('Expression'));
+    .field('body', def('Expression'))
+    .field('guard', or(def('Expression'), null));
 
   def('MatchStatement')
     .bases('Statement')
@@ -243,9 +244,10 @@ function custom_ast_types(fork) {
     .field('cases', [def('MatchStatementCase')]);
 
   def('MatchStatementCase')
-    .build('pattern', 'body')
+    .build('pattern', 'body', 'guard')
     .field('pattern', def('Expression'))
-    .field('body', def('BlockStatement'));
+    .field('body', def('BlockStatement'))
+    .field('guard', or(def('Expression'), null));
 
   /////////
   // es2018

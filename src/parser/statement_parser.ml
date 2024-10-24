@@ -636,6 +636,12 @@ module Statement
     let case env =
       let leading = Peek.comments env in
       let pattern = match_pattern env in
+      let guard =
+        if Eat.maybe env T_IF then
+          Some (Parse.expression env)
+        else
+          None
+      in
       Expect.token env T_COLON;
       let body = Parse.block_body env in
       (match Peek.token env with
@@ -645,7 +651,7 @@ module Statement
       | _ -> Expect.token env T_COMMA);
       let trailing = Eat.trailing_comments env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      { Case.pattern; body; comments }
+      { Case.pattern; body; guard; comments }
     in
     let rec case_list env acc =
       match Peek.token env with

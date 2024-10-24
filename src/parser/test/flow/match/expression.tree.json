@@ -50,7 +50,8 @@
                   "range":[27,31],
                   "value":true,
                   "raw":"true"
-                }
+                },
+                "guard":null
               },
               {
                 "type":"MatchExpressionCase",
@@ -69,7 +70,8 @@
                   "range":[42,47],
                   "value":false,
                   "raw":"false"
-                }
+                },
+                "guard":null
               },
               {
                 "type":"MatchExpressionCase",
@@ -112,7 +114,8 @@
                       "computed":false
                     }
                   ]
-                }
+                },
+                "guard":null
               }
             ]
           }
