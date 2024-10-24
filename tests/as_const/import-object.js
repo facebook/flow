@@ -1,6 +1,6 @@
 // Imports
 
-import {obj1, obj2, obj3, obj4, obj5, obj6, obj7, obj8, obj9} from './object';
+import {obj1, obj2, obj3, obj4, obj5, obj6, obj7, obj8, obj9, obj10} from './object';
 
 declare var _: any;
 
@@ -96,4 +96,14 @@ function test_obj9() {
   obj9 as {+f: {+g: {+h: 1}}}; // okay
 
   _ as {+f: {+g: {+h: 1}}} as typeof obj9; // okay
+}
+
+
+function test_obj10() {
+  obj10 as {+f: 1, +g: {+h: 1}}; // okay
+  obj10.g.h as 1; // okay
+
+  _ as {+f: 1, +g: {+h: 1}} as typeof obj10; // okay
+  _ as 1 as typeof obj10.g.h; // okay
+  _ as 2 as typeof obj10.g.h; // error 2 ~> 1
 }

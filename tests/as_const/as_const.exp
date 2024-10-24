@@ -57,13 +57,13 @@ Error --------------------------------------------------------------------------
 Cannot call `arr1.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
 
    array.js:25:8
-   25|   arr1.push(4); // error cannot mutate readonly array
-              ^^^^
+    25|   arr1.push(4); // error cannot mutate readonly array
+               ^^^^
 
 References:
-   <BUILTINS>/prelude.js:26:15
-   26| declare class $ReadOnlyArray<+T> {
-                     ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:700:15
+   700| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- array.js:29:17
@@ -720,6 +720,21 @@ References:
                                    ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- import-object.js:108:8
+
+Cannot cast `_` to `typeof obj10.g.h` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   import-object.js:108:8
+   108|   _ as 2 as typeof obj10.g.h; // error 2 ~> 1
+               ^ [1]
+
+References:
+   import-object.js:108:13
+   108|   _ as 2 as typeof obj10.g.h; // error 2 ~> 1
+                    ^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ import-primitive.js:6:3
 
 Cannot cast `n` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
@@ -1043,46 +1058,46 @@ The `as const` assertion can only be used on string, numeric, boolean, object, o
        ^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:22:3
+Error --------------------------------------------------------------------------------------------------- object.js:23:3
 
 Cannot cast `obj1` to object type because property `f` is read-only in const object literal [1] but writable in object
 type [2]. [incompatible-variance]
 
-   object.js:22:3
-   22|   obj1 as {f: 1}; // error cast to non-readonly
+   object.js:23:3
+   23|   obj1 as {f: 1}; // error cast to non-readonly
          ^^^^
 
 References:
    object.js:7:21
     7| export const obj1 = {f: 1} as const;      // {+f: 1}
                            ^^^^^^ [1]
-   object.js:22:11
-   22|   obj1 as {f: 1}; // error cast to non-readonly
+   object.js:23:11
+   23|   obj1 as {f: 1}; // error cast to non-readonly
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:29:8
+Error --------------------------------------------------------------------------------------------------- object.js:30:8
 
 Cannot cast `_` to `typeof obj1` because inexact object type [1] is incompatible with exact const object literal [2].
 [incompatible-exact]
 
-   object.js:29:8
-   29|   _ as {+f: 1, ...} as typeof obj1; // error inexact ~> exact
+   object.js:30:8
+   30|   _ as {+f: 1, ...} as typeof obj1; // error inexact ~> exact
               ^^^^^^^^^^^^ [1]
 
 References:
-   object.js:29:24
-   29|   _ as {+f: 1, ...} as typeof obj1; // error inexact ~> exact
+   object.js:30:24
+   30|   _ as {+f: 1, ...} as typeof obj1; // error inexact ~> exact
                               ^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:30:12
+Error -------------------------------------------------------------------------------------------------- object.js:31:12
 
 Cannot cast `_` to `typeof obj1` because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   object.js:30:12
-   30|   _ as {f: number} as typeof obj1; // error number ~> 1
+   object.js:31:12
+   31|   _ as {f: number} as typeof obj1; // error number ~> 1
                   ^^^^^^ [1]
 
 References:
@@ -1091,46 +1106,46 @@ References:
                                ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:43:3
+Error --------------------------------------------------------------------------------------------------- object.js:44:3
 
 Cannot cast `obj3` to object type because property `f` is read-only in const object literal [1] but writable in object
 type [2]. [incompatible-variance]
 
-   object.js:43:3
-   43|   obj3 as {f: 1}; // error cast to non-readonly
+   object.js:44:3
+   44|   obj3 as {f: 1}; // error cast to non-readonly
          ^^^^
 
 References:
    object.js:9:21
     9| export const obj3 = {...{f: 1}} as const; // {+f: 1}
                            ^^^^^^^^^^^ [1]
-   object.js:43:11
-   43|   obj3 as {f: 1}; // error cast to non-readonly
+   object.js:44:11
+   44|   obj3 as {f: 1}; // error cast to non-readonly
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:50:8
+Error --------------------------------------------------------------------------------------------------- object.js:51:8
 
 Cannot cast `_` to `typeof obj3` because inexact object type [1] is incompatible with exact const object literal [2].
 [incompatible-exact]
 
-   object.js:50:8
-   50|   _ as {+f: 1, ...} as typeof obj3; // error inexact ~> exact
+   object.js:51:8
+   51|   _ as {+f: 1, ...} as typeof obj3; // error inexact ~> exact
               ^^^^^^^^^^^^ [1]
 
 References:
-   object.js:50:24
-   50|   _ as {+f: 1, ...} as typeof obj3; // error inexact ~> exact
+   object.js:51:24
+   51|   _ as {+f: 1, ...} as typeof obj3; // error inexact ~> exact
                               ^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:51:12
+Error -------------------------------------------------------------------------------------------------- object.js:52:12
 
 Cannot cast `_` to `typeof obj3` because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   object.js:51:12
-   51|   _ as {f: number} as typeof obj3; // error number ~> 1
+   object.js:52:12
+   52|   _ as {f: number} as typeof obj3; // error number ~> 1
                   ^^^^^^ [1]
 
 References:
@@ -1139,151 +1154,151 @@ References:
                                    ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:55:3
+Error --------------------------------------------------------------------------------------------------- object.js:56:3
 
 Cannot cast `obj4` to object type because property `f` is read-only in const object literal [1] but writable in object
 type [2]. [incompatible-variance]
 
-   object.js:55:3
-   55|   obj4 as {f: 1}; // error cast to non-readonly
+   object.js:56:3
+   56|   obj4 as {f: 1}; // error cast to non-readonly
          ^^^^
 
 References:
    object.js:10:21
    10| export const obj4 = {...p} as const;      // {+f: Num<1>}
                            ^^^^^^ [1]
-   object.js:55:11
-   55|   obj4 as {f: 1}; // error cast to non-readonly
+   object.js:56:11
+   56|   obj4 as {f: 1}; // error cast to non-readonly
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:62:8
+Error --------------------------------------------------------------------------------------------------- object.js:63:8
 
 Cannot cast `_` to `typeof obj4` because inexact object type [1] is incompatible with exact const object literal [2].
 [incompatible-exact]
 
-   object.js:62:8
-   62|   _ as {+f: 1, ...} as typeof obj4; // error inexact ~> exact
+   object.js:63:8
+   63|   _ as {+f: 1, ...} as typeof obj4; // error inexact ~> exact
               ^^^^^^^^^^^^ [1]
 
 References:
-   object.js:62:24
-   62|   _ as {+f: 1, ...} as typeof obj4; // error inexact ~> exact
+   object.js:63:24
+   63|   _ as {+f: 1, ...} as typeof obj4; // error inexact ~> exact
                               ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:67:3
+Error --------------------------------------------------------------------------------------------------- object.js:68:3
 
 Cannot cast `obj5` to object type because property `f` is read-only in const object literal [1] but writable in object
 type [2]. [incompatible-variance]
 
-   object.js:67:3
-   67|   obj5 as {f: number}; // error cast to non-readonly
+   object.js:68:3
+   68|   obj5 as {f: number}; // error cast to non-readonly
          ^^^^
 
 References:
    object.js:11:21
    11| export const obj5 = {...q} as const;      // {+f: number}
                            ^^^^^^ [1]
-   object.js:67:11
-   67|   obj5 as {f: number}; // error cast to non-readonly
+   object.js:68:11
+   68|   obj5 as {f: number}; // error cast to non-readonly
                  ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:69:3
+Error --------------------------------------------------------------------------------------------------- object.js:70:3
 
 Cannot cast `obj5` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   object.js:69:3
-   69|   obj5 as {+f: 1, ...}; // error number ~> 1
+   object.js:70:3
+   70|   obj5 as {+f: 1, ...}; // error number ~> 1
          ^^^^
 
 References:
    object.js:4:22
     4| declare const q: {f: number};
                             ^^^^^^ [1]
-   object.js:69:16
-   69|   obj5 as {+f: 1, ...}; // error number ~> 1
+   object.js:70:16
+   70|   obj5 as {+f: 1, ...}; // error number ~> 1
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:73:8
+Error --------------------------------------------------------------------------------------------------- object.js:74:8
 
 Cannot cast `_` to `typeof obj5` because inexact object type [1] is incompatible with exact const object literal [2].
 [incompatible-exact]
 
-   object.js:73:8
-   73|   _ as {+f: number, ...} as typeof obj5; // error inexact ~> exact
+   object.js:74:8
+   74|   _ as {+f: number, ...} as typeof obj5; // error inexact ~> exact
               ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object.js:73:29
-   73|   _ as {+f: number, ...} as typeof obj5; // error inexact ~> exact
+   object.js:74:29
+   74|   _ as {+f: number, ...} as typeof obj5; // error inexact ~> exact
                                    ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:77:3
+Error --------------------------------------------------------------------------------------------------- object.js:78:3
 
 Cannot cast `obj6` to object type because an index signature declaring the expected key / value type is read-only in
 const object literal [1] but writable in object type [2]. [incompatible-variance]
 
-   object.js:77:3
-   77|   obj6 as {[string]: number}; // error readonly ~> non-readonly
+   object.js:78:3
+   78|   obj6 as {[string]: number}; // error readonly ~> non-readonly
          ^^^^
 
 References:
    object.js:12:21
    12| export const obj6 = {...d} as const;      // {+[string]: number}
                            ^^^^^^ [1]
-   object.js:77:11
-   77|   obj6 as {[string]: number}; // error readonly ~> non-readonly
+   object.js:78:11
+   78|   obj6 as {[string]: number}; // error readonly ~> non-readonly
                  ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:86:3
+Error --------------------------------------------------------------------------------------------------- object.js:87:3
 
 Cannot cast `obj7` to object type because property `m` is read-only in const object literal [1] but writable in object
 type [2]. [incompatible-variance]
 
-   object.js:86:3
-   86|   obj7 as {m: () => void}; // error m is readonly in obj7
+   object.js:87:3
+   87|   obj7 as {m: () => void}; // error m is readonly in obj7
          ^^^^
 
 References:
    object.js:13:21
    13| export const obj7 = {m() {}} as const;    // {m(): void}
                            ^^^^^^^^ [1]
-   object.js:86:11
-   86|   obj7 as {m: () => void}; // error m is readonly in obj7
+   object.js:87:11
+   87|   obj7 as {m: () => void}; // error m is readonly in obj7
                  ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:95:3
+Error --------------------------------------------------------------------------------------------------- object.js:96:3
 
 Cannot cast `obj8` to object type because property `g` is read-only in const object literal [1] but writable in object
 type [2] in property `f`. [incompatible-variance]
 
-   object.js:95:3
-   95|   obj8 as {+f: {g: 1}}; // error cast to non-readonly g
+   object.js:96:3
+   96|   obj8 as {+f: {g: 1}}; // error cast to non-readonly g
          ^^^^
 
 References:
    object.js:14:25
    14| export const obj8 = {f: {g: 1}} as const; // {+f: {+g: 1}}
                                ^^^^^^ [1]
-   object.js:95:16
-   95|   obj8 as {+f: {g: 1}}; // error cast to non-readonly g
+   object.js:96:16
+   96|   obj8 as {+f: {g: 1}}; // error cast to non-readonly g
                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- object.js:103:13
+Error ------------------------------------------------------------------------------------------------- object.js:104:13
 
 Cannot cast `_` to `typeof obj8` because inexact object type [1] is incompatible with exact const object literal [2] in
 property `f`. [incompatible-exact]
 
-   object.js:103:13
-   103|   _ as {+f: {+g: 1, ...}} as typeof obj8; // error inexact ~> exact
+   object.js:104:13
+   104|   _ as {+f: {+g: 1, ...}} as typeof obj8; // error inexact ~> exact
                     ^^^^^^^^^^^^ [1]
 
 References:
@@ -1292,19 +1307,34 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- object.js:104:16
+Error ------------------------------------------------------------------------------------------------- object.js:105:16
 
 Cannot cast `_` to `typeof obj8` because number [1] is incompatible with number literal `1` [2] in property `f.g`.
 [incompatible-cast]
 
-   object.js:104:16
-   104|   _ as {f: {g: number}} as typeof obj8; // error number ~> 1
+   object.js:105:16
+   105|   _ as {f: {g: number}} as typeof obj8; // error number ~> 1
                        ^^^^^^ [1]
 
 References:
    object.js:14:29
     14| export const obj8 = {f: {g: 1}} as const; // {+f: {+g: 1}}
                                     ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:120:8
+
+Cannot cast `_` to `typeof obj10.g.h` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   object.js:120:8
+   120|   _ as 2 as typeof obj10.g.h; // error 2 ~> 1
+               ^ [1]
+
+References:
+   object.js:120:13
+   120|   _ as 2 as typeof obj10.g.h; // error 2 ~> 1
+                    ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:11:3
@@ -1559,4 +1589,4 @@ References:
 
 
 
-Found 101 errors
+Found 103 errors
