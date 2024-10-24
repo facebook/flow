@@ -634,6 +634,12 @@ with type t = Impl.t = struct
       | (loc, Class c) -> class_expression (loc, c)
       | (loc, JSXElement element) -> jsx_element (loc, element)
       | (loc, JSXFragment fragment) -> jsx_fragment (loc, fragment)
+      | (loc, Match { Match.arg; cases; comments }) ->
+        node
+          ?comments
+          "MatchExpression"
+          loc
+          [("argument", expression arg); ("cases", array_of_list match_expression_case cases)]
       | (loc, MetaProperty { MetaProperty.meta; property; comments }) ->
         node
           ?comments
@@ -642,6 +648,12 @@ with type t = Impl.t = struct
           [("meta", identifier meta); ("property", identifier property)]
       | (loc, Import { Import.argument; comments }) ->
         node ?comments "ImportExpression" loc [("source", expression argument)]
+    and match_expression_case (loc, { Expression.Match.Case.pattern; body; comments }) =
+      node
+        ?comments
+        "MatchExpressionCase"
+        loc
+        [("pattern", expression pattern); ("body", expression body)]
     and function_declaration
         ( loc,
           {

@@ -502,6 +502,10 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.JSXElement _ ->
       (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
       false
+    | Ast.Expression.Match { Ast.Expression.Match.cases; _ } ->
+      Base.List.for_all cases ~f:(function (_, { Ast.Expression.Match.Case.body; _ }) ->
+          synthesizable body
+          )
     (* TaggedTemplates are function calls! They are not automatically synthesizable *)
     | Ast.Expression.TaggedTemplate _ -> false
     | Ast.Expression.Identifier id -> not (identifier_has_autocomplete ~autocomplete_hooks id)
@@ -2716,6 +2720,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.RegExpLiteral _
       | Ast.Expression.BigIntLiteral _
       | Ast.Expression.ModuleRefLiteral _
+      | Ast.Expression.Match _ (* TODO:match *)
       | Ast.Expression.MetaProperty _
       | Ast.Expression.Sequence _
       | Ast.Expression.Super _

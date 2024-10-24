@@ -533,6 +533,11 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method logical : ('M, 'T) Ast.Expression.Logical.t -> ('N, 'U) Ast.Expression.Logical.t
 
+    method match_expression : ('M, 'T) Ast.Expression.Match.t -> ('N, 'U) Ast.Expression.Match.t
+
+    method match_expression_case :
+      ('M, 'T) Ast.Expression.Match.Case.t' -> ('N, 'U) Ast.Expression.Match.Case.t'
+
     method member : 'T -> ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
 
     method member_private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t

@@ -239,6 +239,7 @@ class ['loc] mapper =
       | (loc, ModuleRefLiteral x) ->
         id_loc this#module_ref_literal loc x expr (fun x -> (loc, ModuleRefLiteral x))
       | (loc, Logical x) -> id_loc this#logical loc x expr (fun x -> (loc, Logical x))
+      | (loc, Match x) -> id_loc this#match_expression loc x expr (fun x -> (loc, Match x))
       | (loc, Member x) -> id_loc this#member loc x expr (fun x -> (loc, Member x))
       | (loc, MetaProperty x) ->
         id_loc this#meta_property loc x expr (fun x -> (loc, MetaProperty x))
@@ -2492,6 +2493,28 @@ class ['loc] mapper =
         expr
       else
         { expr with left = left'; right = right'; comments = comments' }
+
+    method match_expression _loc (expr : ('loc, 'loc) Ast.Expression.Match.t) =
+      let open Ast.Expression.Match in
+      let { arg; cases; comments } = expr in
+      let arg' = this#expression arg in
+      let cases' = map_list this#match_expression_case cases in
+      let comments' = this#syntax_opt comments in
+      if arg == arg' && cases == cases' && comments == comments' then
+        expr
+      else
+        { arg = arg'; cases = cases'; comments = comments' }
+
+    method match_expression_case (case : ('loc, 'loc) Ast.Expression.Match.Case.t) =
+      let open Ast.Expression.Match.Case in
+      let (loc, { pattern; body; comments }) = case in
+      let pattern' = this#expression pattern in
+      let body' = this#expression body in
+      let comments' = this#syntax_opt comments in
+      if pattern == pattern' && body == body' && comments == comments' then
+        case
+      else
+        (loc, { pattern; body; comments = comments' })
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in

@@ -144,6 +144,7 @@ let precedence_of_expression expr =
   | (_, E.NumberLiteral _)
   | (_, E.BigIntLiteral _)
   | (_, E.RegExpLiteral _)
+  | (_, E.Match _)
   | (_, E.ModuleRefLiteral _)
   | (_, E.Object _)
   | (_, E.Super _)
@@ -1239,6 +1240,36 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                | Some arg -> fuse [space; expression ~ctxt ~opts arg]
                | None -> Empty);
              ]
+      | E.Match { E.Match.arg; cases; comments } ->
+        let cases =
+          List.map
+            (fun ((loc, _) as case) ->
+              ( loc,
+                Comment_attachment.match_expression_case_comment_bounds case,
+                match_expression_case ~opts case
+              ))
+            cases
+        in
+        let cases_nodes = list_with_newlines ~sep:(Atom ",") ~skip_empty:false cases in
+        let cases_nodes = cases_nodes @ [if_pretty (Atom ",") Empty] in
+        let cases_node =
+          wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse cases_nodes]
+        in
+        layout_node_with_comments_opt
+          loc
+          comments
+          (fuse
+             [
+               group
+                 [
+                   Atom "match";
+                   pretty_space;
+                   wrap_and_indent (Atom "(", Atom ")") [expression ~opts arg];
+                 ];
+               pretty_space;
+               cases_node;
+             ]
+          )
       | E.MetaProperty { E.MetaProperty.meta; property; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [identifier meta; Atom "."; identifier property]
@@ -3252,6 +3283,12 @@ and variance (loc, { Ast.Variance.kind; comments }) =
       | Ast.Variance.Out -> fuse [Atom "out"; space]
       | Ast.Variance.InOut -> fuse [Atom "in out"; space]
     )
+
+and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body; comments }) =
+  layout_node_with_comments_opt
+    loc
+    comments
+    (fuse [expression ~opts pattern; Atom ":"; pretty_space; expression ~opts body])
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =

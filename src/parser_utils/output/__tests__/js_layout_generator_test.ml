@@ -2709,6 +2709,10 @@ let tests =
              assert_output ~ctxt ~pretty:true pretty_output layout
            )
          );
+         ( "match_expression" >:: fun ctxt ->
+           assert_expression_string ~ctxt "match(x){1:true,2:false}";
+           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1: true,\n  2: false,\n}"
+         );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";

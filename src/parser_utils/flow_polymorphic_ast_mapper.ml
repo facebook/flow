@@ -142,6 +142,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | RegExpLiteral x -> RegExpLiteral (this#regexp_literal x)
         | ModuleRefLiteral x -> ModuleRefLiteral (this#module_ref_literal x)
         | Logical x -> Logical (this#logical x)
+        | Match x -> Match (this#match_expression x)
         | Member x -> Member (this#member annot x)
         | MetaProperty x -> MetaProperty (this#meta_property x)
         | New x -> New (this#new_ annot x)
@@ -2048,6 +2049,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let right' = this#expression right in
       let comments' = this#syntax_opt comments in
       { operator; left = left'; right = right'; comments = comments' }
+
+    method match_expression (x : ('M, 'T) Ast.Expression.Match.t) : ('N, 'U) Ast.Expression.Match.t
+        =
+      let open Ast.Expression.Match in
+      let { arg; cases; comments } = x in
+      let arg' = this#expression arg in
+      let cases' = List.map ~f:(this#on_loc_annot * this#match_expression_case) cases in
+      let comments' = this#syntax_opt comments in
+      { arg = arg'; cases = cases'; comments = comments' }
+
+    method match_expression_case (case : ('M, 'T) Ast.Expression.Match.Case.t') =
+      let open Ast.Expression.Match.Case in
+      let { pattern; body; comments } = case in
+      let pattern' = this#expression pattern in
+      let body' = this#expression body in
+      let comments' = this#syntax_opt comments in
+      { pattern = pattern'; body = body'; comments = comments' }
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

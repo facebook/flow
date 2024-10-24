@@ -526,6 +526,7 @@ let rec resolve_binding cx reason loc b =
         | Ast.Expression.JSXElement _
         | Ast.Expression.JSXFragment _
         | Ast.Expression.Logical _
+        | Ast.Expression.Match _
         | Ast.Expression.MetaProperty _
         | Ast.Expression.New _
         | Ast.Expression.OptionalCall _

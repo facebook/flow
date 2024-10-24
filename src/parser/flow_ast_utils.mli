@@ -132,6 +132,7 @@ module ExpressionSort : sig
     | JSXFragment
     | Literal
     | Logical
+    | Match
     | Member
     | MetaProperty
     | New

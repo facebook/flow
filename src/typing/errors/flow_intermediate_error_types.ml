@@ -69,6 +69,7 @@ type unsupported_syntax =
   | JSXTypeArgs
   | PredicateFunction
   | PredicateDeclarationAnonymousParameters
+  | MatchExpression
   | MultipleIndexers
   | MultipleProtos
   | ExplicitCallAfterProto

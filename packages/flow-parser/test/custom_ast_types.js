@@ -225,6 +225,17 @@ function custom_ast_types(fork) {
     .field('local', def('Pattern'))
     .field('shorthand', Boolean);
 
+  def('MatchExpression')
+    .bases('Expression')
+    .build('argument', 'cases')
+    .field('argument', def('Expression'))
+    .field('cases', [def('MatchExpressionCase')]);
+
+  def('MatchExpressionCase')
+    .build('pattern', 'body')
+    .field('pattern', def('Expression'))
+    .field('body', def('Expression'));
+
   /////////
   // es2018
   /////////

@@ -980,6 +980,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | ModuleRefLiteral { Ast.ModuleRefLiteral.raw; _ } -> raw
   | Logical { Logical.operator; left; right; comments = _ } ->
     do_wrap (code_desc_of_operation left (`Logical operator) right)
+  | Match _ -> "match"
   | Member { Member._object; property; comments = _ } ->
     let o = code_desc_of_expression ~wrap:true _object in
     let p = code_desc_of_property ~optional:false property in

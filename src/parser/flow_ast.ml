@@ -1714,6 +1714,26 @@ and Expression : sig
     [@@deriving show]
   end
 
+  module Match : sig
+    module Case : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        pattern: ('M, 'T) Expression.t;
+        body: ('M, 'T) Expression.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      arg: ('M, 'T) Expression.t;
+      cases: ('M, 'T) Case.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -1739,6 +1759,7 @@ and Expression : sig
     | RegExpLiteral of 'M RegExpLiteral.t
     | ModuleRefLiteral of ('M, 'T) ModuleRefLiteral.t
     | Logical of ('M, 'T) Logical.t
+    | Match of ('M, 'T) Match.t
     | Member of ('M, 'T) Member.t
     | MetaProperty of 'M MetaProperty.t
     | New of ('M, 'T) New.t

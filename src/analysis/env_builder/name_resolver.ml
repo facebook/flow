@@ -5490,6 +5490,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | NullLiteral _
         | RegExpLiteral _
         | BigIntLiteral _
+        | Match _
         | ModuleRefLiteral _
         | MetaProperty _
         | New _

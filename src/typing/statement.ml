@@ -2734,6 +2734,11 @@ module Make
         );
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
+    | Match _ ->
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchExpression));
+      Tast_utils.error_mapper#expression ex
     | Member _ -> subscript ~cond cx ex
     | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->

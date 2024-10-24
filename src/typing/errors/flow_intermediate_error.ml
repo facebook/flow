@@ -3867,6 +3867,8 @@ let to_printable_error :
     | MessageUnsupportedSyntax InvariantSpreadArgument ->
       [text "Unsupported arguments in call to "; code "invariant"; text "."]
     | MessageUnsupportedSyntax JSXTypeArgs -> [text "Flow doesn't support JSX type arguments."]
+    | MessageUnsupportedSyntax MatchExpression ->
+      [code "match"; text " expressions are not supported."]
     | MessageUnsupportedSyntax MetaPropertyExpression -> [text "Not supported."]
     | MessageUnsupportedSyntax MultipleIndexers -> [text "Multiple indexers are not supported."]
     | MessageUnsupportedSyntax MultipleProtos -> [text "Multiple prototypes specified."]

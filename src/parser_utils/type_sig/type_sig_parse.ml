@@ -3101,6 +3101,11 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
       ( loc,
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Logical))
       )
+  | E.Match _ ->
+    Err
+      ( loc,
+        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Match))
+      )
   | E.MetaProperty _ ->
     Err
       ( loc,

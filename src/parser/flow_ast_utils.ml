@@ -528,6 +528,7 @@ module ExpressionSort = struct
     | JSXFragment
     | Literal
     | Logical
+    | Match
     | Member
     | MetaProperty
     | New
@@ -561,6 +562,7 @@ module ExpressionSort = struct
     | JSXFragment -> "JSX fragment"
     | Literal -> "literal"
     | Logical -> "logical expression"
+    | Match -> "match expression"
     | Member -> "member expression"
     | MetaProperty -> "metaproperty expression"
     | New -> "new expression"
