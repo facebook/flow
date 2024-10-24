@@ -13,6 +13,7 @@ export const obj6 = {...d} as const;      // {+[string]: number}
 export const obj7 = {m() {}} as const;    // {m(): void}
 export const obj8 = {f: {g: 1}} as const; // {+f: {+g: 1}}
 export const obj9 = {...{f: {...{g: {...{h: 1}}}}}} as const; // {+f: {+g: {+h: 1}}}
+export const obj10 = Object.freeze({f: 1, g: {h:1}} as const); // {+f: 1, +g: {+h: 1}}
 
 declare var _: any;
 
@@ -108,4 +109,13 @@ function test_obj9() {
   obj9 as {+f: {+g: {+h: 1}}}; // okay
 
   _ as {+f: {+g: {+h: 1}}} as typeof obj9; // okay
+}
+
+function test_obj10() {
+  obj10 as {+f: 1, +g: {+h: 1}}; // okay
+  obj10.g.h as 1; // okay
+
+  _ as {+f: 1, +g: {+h: 1}} as typeof obj10; // okay
+  _ as 1 as typeof obj10.g.h; // okay
+  _ as 2 as typeof obj10.g.h; // error 2 ~> 1
 }

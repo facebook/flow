@@ -3048,6 +3048,39 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
      * signature builder first. *)
     let obj_loc = push_loc tbls obj_loc in
     object_literal opts scope tbls obj_loc ~frozen:true properties
+  (* Treat `Object.freeze({[props]} as const)` as `{[props]} as const` since the
+   * latter provides stronger guarantees that subsume those of Object.freeze(). *)
+  | E.Call
+      {
+        E.Call.callee =
+          ( _,
+            E.Member
+              {
+                E.Member._object =
+                  (_, E.Identifier (_, { Ast.Identifier.name = "Object"; comments = _ }));
+                property =
+                  E.Member.PropertyIdentifier (_, { Ast.Identifier.name = "freeze"; comments = _ });
+                comments = _;
+              }
+          );
+        targs = None;
+        arguments =
+          ( _,
+            {
+              E.ArgList.arguments =
+                [
+                  E.Expression
+                    ( ( _,
+                        E.AsConstExpression { E.AsConstExpression.expression = (_, E.Object _); _ }
+                      ) as as_const_expr
+                    );
+                ];
+              comments = _;
+            }
+          );
+        comments = _;
+      } ->
+    expression opts scope tbls as_const_expr
   | E.Call
       {
         E.Call.callee = (_, E.Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
