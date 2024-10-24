@@ -166,6 +166,12 @@ with type t = Impl.t = struct
           [("object", expression _object); ("body", statement body)]
       | (loc, TypeAlias alias) -> type_alias (loc, alias)
       | (loc, OpaqueType opaque_t) -> opaque_type ~declare:false (loc, opaque_t)
+      | (loc, Match { Match.arg; cases; comments }) ->
+        node
+          ?comments
+          "MatchStatement"
+          loc
+          [("argument", expression arg); ("cases", array_of_list match_statement_case cases)]
       | (loc, Switch { Switch.discriminant; cases; comments; exhaustive_out = _ }) ->
         node
           ?comments
@@ -654,6 +660,12 @@ with type t = Impl.t = struct
         "MatchExpressionCase"
         loc
         [("pattern", expression pattern); ("body", expression body)]
+    and match_statement_case (loc, { Statement.Match.Case.pattern; body; comments }) =
+      node
+        ?comments
+        "MatchStatementCase"
+        loc
+        [("pattern", expression pattern); ("body", block body)]
     and function_declaration
         ( loc,
           {

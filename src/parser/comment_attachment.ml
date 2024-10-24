@@ -573,6 +573,8 @@ let statement_add_comments
       InterfaceDeclaration { s with Interface.comments = merge_comments comments }
     | Labeled ({ Labeled.comments; _ } as s) ->
       Labeled { s with Labeled.comments = merge_comments comments }
+    | Match ({ Match.comments; _ } as s) ->
+      Match { s with Match.comments = merge_comments comments }
     | Return ({ Return.comments; _ } as s) ->
       Return { s with Return.comments = merge_comments comments }
     | Switch ({ Switch.comments; _ } as s) ->
@@ -746,6 +748,11 @@ let object_pattern_property_comment_bounds loc property =
 let match_expression_case_comment_bounds (loc, case) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#match_expression_case (loc, case));
+  collector#comment_bounds
+
+let match_statement_case_comment_bounds (loc, case) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#match_statement_case (loc, case));
   collector#comment_bounds
 
 let switch_case_comment_bounds (loc, case) =

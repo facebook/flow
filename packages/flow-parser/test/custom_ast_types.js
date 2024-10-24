@@ -236,6 +236,17 @@ function custom_ast_types(fork) {
     .field('pattern', def('Expression'))
     .field('body', def('Expression'));
 
+  def('MatchStatement')
+    .bases('Statement')
+    .build('argument', 'cases')
+    .field('argument', def('Expression'))
+    .field('cases', [def('MatchStatementCase')]);
+
+  def('MatchStatementCase')
+    .build('pattern', 'body')
+    .field('pattern', def('Expression'))
+    .field('body', def('BlockStatement'));
+
   /////////
   // es2018
   /////////

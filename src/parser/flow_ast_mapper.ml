@@ -172,6 +172,7 @@ class ['loc] mapper =
         )
       | (loc, Labeled label) ->
         id_loc this#labeled_statement loc label stmt (fun label -> (loc, Labeled label))
+      | (loc, Match x) -> id_loc this#match_statement loc x stmt (fun x -> (loc, Match x))
       | (loc, OpaqueType otype) ->
         id_loc this#opaque_type loc otype stmt (fun otype -> (loc, OpaqueType otype))
       | (loc, Return ret) -> id_loc this#return loc ret stmt (fun ret -> (loc, Return ret))
@@ -2510,6 +2511,28 @@ class ['loc] mapper =
       let (loc, { pattern; body; comments }) = case in
       let pattern' = this#expression pattern in
       let body' = this#expression body in
+      let comments' = this#syntax_opt comments in
+      if pattern == pattern' && body == body' && comments == comments' then
+        case
+      else
+        (loc, { pattern; body; comments = comments' })
+
+    method match_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Match.t) =
+      let open Ast.Statement.Match in
+      let { arg; cases; comments } = stmt in
+      let arg' = this#expression arg in
+      let cases' = map_list this#match_statement_case cases in
+      let comments' = this#syntax_opt comments in
+      if arg == arg' && cases == cases' && comments == comments' then
+        stmt
+      else
+        { arg = arg'; cases = cases'; comments = comments' }
+
+    method match_statement_case (case : ('loc, 'loc) Ast.Statement.Match.Case.t) =
+      let open Ast.Statement.Match.Case in
+      let (loc, { pattern; body; comments }) = case in
+      let pattern' = this#expression pattern in
+      let body' = map_loc this#block body in
       let comments' = this#syntax_opt comments in
       if pattern == pattern' && body == body' && comments == comments' then
         case

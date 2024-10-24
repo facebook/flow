@@ -319,6 +319,7 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
   | FunctionDeclaration _ -> Error "function declaration"
   | If _ -> Error "if"
   | Labeled _ -> Error "labeled"
+  | Match _ -> Error "match"
   | Return _ -> Error "return"
   | Switch _ -> Error "switch"
   | Throw _ -> Error "throw"
@@ -389,6 +390,7 @@ let rec is_type_only_declaration_statement (_, stmt') =
     | FunctionDeclaration _
     | If _
     | Labeled _
+    | Match _
     | Return _
     | Switch _
     | Throw _

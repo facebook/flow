@@ -2713,6 +2713,13 @@ let tests =
            assert_expression_string ~ctxt "match(x){1:true,2:false}";
            assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1: true,\n  2: false,\n}"
          );
+         ( "match_statement" >:: fun ctxt ->
+           assert_statement_string ~ctxt "match(x){1:{const x=true},2:{const y=false}}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "match (x) {\n  1: {\n    const x = true;\n  },\n  2: {\n    const y = false;\n  },\n}"
+         );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";

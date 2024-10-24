@@ -16,7 +16,8 @@ module Statement
     (Type : Parser_common.TYPE)
     (Declaration : Parser_common.DECLARATION)
     (Object : Parser_common.OBJECT)
-    (Pattern_cover : Parser_common.COVER) : Parser_common.STATEMENT = struct
+    (Pattern_cover : Parser_common.COVER)
+    (Expression : Parser_common.EXPRESSION) : Parser_common.STATEMENT = struct
   module Enum = Enum_parser.Enum (Parse)
 
   type for_lhs =
@@ -577,6 +578,92 @@ module Statement
             exhaustive_out = fst discriminant;
           }
     )
+
+  and match_statement_or_match_call env =
+    let leading = Peek.comments env in
+    let start_loc = Peek.loc env in
+    (* Consume `match` as an identifier, in case it's a call expression. *)
+    let id = Parse.identifier env in
+    (* Allows trailing comma - ban? *)
+    let (args_loc, args) = Expression.arguments env in
+    match args with
+    (* `match (<expr>) {` *)
+    | { Ast.Expression.ArgList.arguments = [Ast.Expression.Expression arg]; _ }
+      when (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY ->
+      match_statement ~start_loc ~leading ~arg env
+    (* It's actually a call expression statement of the form `match(...)` *)
+    | _ ->
+      let callee = (fst id, Ast.Expression.Identifier id) in
+      let expr_loc = Loc.btwn start_loc args_loc in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+      let call =
+        Ast.Expression.Call
+          { Ast.Expression.Call.callee; targs = None; arguments = (args_loc, args); comments }
+      in
+      (* Could have a chained call after this. *)
+      let expression =
+        Pattern_cover.as_expression
+          env
+          (Expression.call_cover
+             ~allow_optional_chain:true
+             ~in_optional_chain:false
+             env
+             start_loc
+             (Cover_expr (expr_loc, call))
+          )
+      in
+      with_loc
+        ~start_loc
+        (fun env ->
+          let (trailing, expression) =
+            match semicolon ~expected:"the end of an expression statement (`;`)" env with
+            | Explicit comments -> (comments, expression)
+            | Implicit { remove_trailing; _ } ->
+              ([], remove_trailing expression (fun remover expr -> remover#expression expr))
+          in
+          Statement.Expression
+            {
+              Statement.Expression.expression;
+              directive = None;
+              comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+            })
+        env
+
+  and match_pattern env = Expression.assignment env (* TODO:match *)
+
+  and match_statement env ~start_loc ~leading ~arg =
+    let open Statement.Match in
+    let case env =
+      let leading = Peek.comments env in
+      let pattern = match_pattern env in
+      Expect.token env T_COLON;
+      let body = Parse.block_body env in
+      (match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        ()
+      | _ -> Expect.token env T_COMMA);
+      let trailing = Eat.trailing_comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      { Case.pattern; body; comments }
+    in
+    let rec case_list env acc =
+      match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        List.rev acc
+      | _ -> case_list env (with_loc case env :: acc)
+    in
+    with_loc
+      ~start_loc
+      (fun env ->
+        Expect.token env T_LCURLY;
+        let cases = case_list env [] in
+        Expect.token env T_RCURLY;
+        let trailing = Eat.trailing_comments env in
+        Statement.Match
+          { arg; cases; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+      env
 
   and throw =
     with_loc (fun env ->

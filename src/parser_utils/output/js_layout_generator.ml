@@ -670,6 +670,36 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_with_test "with" (expression ~opts _object); statement_after_test ~opts body;
              ]
           )
+      | S.Match { S.Match.arg; cases; comments } ->
+        let cases =
+          List.map
+            (fun ((loc, _) as case) ->
+              ( loc,
+                Comment_attachment.match_statement_case_comment_bounds case,
+                match_statement_case ~opts case
+              ))
+            cases
+        in
+        let cases_nodes = list_with_newlines ~sep:(Atom ",") ~skip_empty:false cases in
+        let cases_nodes = cases_nodes @ [if_pretty (Atom ",") Empty] in
+        let cases_node =
+          wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse cases_nodes]
+        in
+        layout_node_with_comments_opt
+          loc
+          comments
+          (fuse
+             [
+               group
+                 [
+                   Atom "match";
+                   pretty_space;
+                   wrap_and_indent (Atom "(", Atom ")") [expression ~opts arg];
+                 ];
+               pretty_space;
+               cases_node;
+             ]
+          )
       | S.Switch { S.Switch.discriminant; cases; comments; exhaustive_out = _ } ->
         let case_nodes =
           let rec helper acc =
@@ -3289,6 +3319,12 @@ and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body;
     loc
     comments
     (fuse [expression ~opts pattern; Atom ":"; pretty_space; expression ~opts body])
+
+and match_statement_case ~opts (loc, { Ast.Statement.Match.Case.pattern; body; comments }) =
+  layout_node_with_comments_opt
+    loc
+    comments
+    (fuse [expression ~opts pattern; Atom ":"; pretty_space; block ~opts body])
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =

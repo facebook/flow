@@ -10,4 +10,5 @@ module Statement
     (_ : Parser_common.TYPE)
     (_ : Parser_common.DECLARATION)
     (_ : Parser_common.OBJECT)
-    (_ : Parser_common.COVER) : Parser_common.STATEMENT
+    (_ : Parser_common.COVER)
+    (_ : Parser_common.EXPRESSION) : Parser_common.STATEMENT

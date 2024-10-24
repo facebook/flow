@@ -136,8 +136,8 @@ let check_for_duplicate_exports =
             | DeclareVariable _ | DoWhile _ | Empty _ | ExportDefaultDeclaration _
             | ExportNamedDeclaration _ | Expression _ | For _ | ForIn _ | ForOf _
             | FunctionDeclaration { Function.id = None; _ }
-            | If _ | ImportDeclaration _ | Labeled _ | Return _ | Switch _ | Throw _ | Try _
-            | While _ | With _ ))
+            | If _ | ImportDeclaration _ | Labeled _ | Match _ | Return _ | Switch _ | Throw _
+            | Try _ | While _ | With _ ))
         ) ->
         (* these don't export names -- some are invalid, but the AST allows them *)
         seen)
@@ -159,7 +159,7 @@ let check_for_duplicate_exports =
           | DeclareTypeAlias _ | DeclareOpaqueType _ | DeclareVariable _ | DoWhile _ | Empty _
           | EnumDeclaration _ | Expression _ | For _ | ForIn _ | ForOf _ | FunctionDeclaration _
           | ComponentDeclaration _ | If _ | ImportDeclaration _ | InterfaceDeclaration _ | Labeled _
-          | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _ | OpaqueType _
+          | Match _ | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _ | OpaqueType _
           | VariableDeclaration _ | While _ | With _ ))
       ) ->
       seen
@@ -173,7 +173,7 @@ module rec Parse : PARSER = struct
   module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Pattern_cover)
   module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression) (Pattern_cover)
   module Statement =
-    Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover)
+    Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover) (Expression)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse) (Expression)
 
@@ -339,6 +339,11 @@ module rec Parse : PARSER = struct
     | T_IF -> if_ env
     | T_RETURN -> return env
     | T_SWITCH -> switch env
+    | T_MATCH
+      when (parse_options env).pattern_matching
+           && (not (Peek.ith_is_line_terminator ~i:1 env))
+           && Peek.ith_token ~i:1 env = T_LPAREN ->
+      match_statement_or_match_call env
     | T_THROW -> throw env
     | T_TRY -> try_ env
     | T_WHILE -> while_ env

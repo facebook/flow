@@ -155,6 +155,8 @@ module type JSX = sig
 end
 
 module type EXPRESSION = sig
+  val arguments : env -> (Loc.t, Loc.t) Expression.ArgList.t
+
   val assignment : env -> (Loc.t, Loc.t) Expression.t
 
   val assignment_cover : env -> pattern_cover
@@ -173,6 +175,14 @@ module type EXPRESSION = sig
     env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
 
   val call_type_args : env -> (Loc.t, Loc.t) Expression.CallTypeArgs.t option
+
+  val call_cover :
+    ?allow_optional_chain:bool ->
+    ?in_optional_chain:bool ->
+    env ->
+    Loc.t ->
+    pattern_cover ->
+    pattern_cover
 end
 
 module type STATEMENT = sig
@@ -214,6 +224,8 @@ module type STATEMENT = sig
   val import_declaration : env -> (Loc.t, Loc.t) Statement.t
 
   val interface : env -> (Loc.t, Loc.t) Statement.t
+
+  val match_statement_or_match_call : env -> (Loc.t, Loc.t) Statement.t
 
   val maybe_labeled : env -> (Loc.t, Loc.t) Statement.t
 

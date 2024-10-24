@@ -76,6 +76,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | ImportDeclaration decl -> ImportDeclaration (this#import_declaration annot decl)
         | InterfaceDeclaration stuff -> InterfaceDeclaration (this#interface_declaration annot stuff)
         | Labeled label -> Labeled (this#labeled_statement label)
+        | Match x -> Match (this#match_statement x)
         | OpaqueType otype -> OpaqueType (this#opaque_type annot otype)
         | Return ret -> Return (this#return ret)
         | Switch switch -> Switch (this#switch switch)
@@ -2064,6 +2065,22 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { pattern; body; comments } = case in
       let pattern' = this#expression pattern in
       let body' = this#expression body in
+      let comments' = this#syntax_opt comments in
+      { pattern = pattern'; body = body'; comments = comments' }
+
+    method match_statement (x : ('M, 'T) Ast.Statement.Match.t) : ('N, 'U) Ast.Statement.Match.t =
+      let open Ast.Statement.Match in
+      let { arg; cases; comments } = x in
+      let arg' = this#expression arg in
+      let cases' = List.map ~f:(this#on_loc_annot * this#match_statement_case) cases in
+      let comments' = this#syntax_opt comments in
+      { arg = arg'; cases = cases'; comments = comments' }
+
+    method match_statement_case (case : ('M, 'T) Ast.Statement.Match.Case.t') =
+      let open Ast.Statement.Match.Case in
+      let { pattern; body; comments } = case in
+      let pattern' = this#expression pattern in
+      let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
       { pattern = pattern'; body = body'; comments = comments' }
 

@@ -1121,6 +1121,11 @@ module Make
     | (loc, OpaqueType otype) ->
       let (_, opaque_type_ast) = opaque_type cx loc otype in
       (loc, OpaqueType opaque_type_ast)
+    | (loc, Match _) as s ->
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchStatement));
+      Tast_utils.error_mapper#statement s
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       let discriminant_ast = expression cx discriminant in
       let exhaustive_check_incomplete_out =

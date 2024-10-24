@@ -770,6 +770,26 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module Match : sig
+    module Case : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        pattern: ('M, 'T) Expression.t;
+        body: 'M * ('M, 'T) Block.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      arg: ('M, 'T) Expression.t;
+      cases: ('M, 'T) Case.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Switch : sig
     module Case : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -1300,6 +1320,7 @@ and Statement : sig
     | ImportDeclaration of ('M, 'T) ImportDeclaration.t
     | InterfaceDeclaration of ('M, 'T) Interface.t
     | Labeled of ('M, 'T) Labeled.t
+    | Match of ('M, 'T) Match.t
     | Return of ('M, 'T) Return.t
     | Switch of ('M, 'T) Switch.t
     | Throw of ('M, 'T) Throw.t

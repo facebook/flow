@@ -152,6 +152,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, Throw _)
   | (_, Try _)
   | (_, With _)
+  | (_, Match _)
   | (_, Switch _)
   | (_, Return _)
   | (_, While _)

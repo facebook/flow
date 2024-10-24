@@ -70,6 +70,7 @@ type unsupported_syntax =
   | PredicateFunction
   | PredicateDeclarationAnonymousParameters
   | MatchExpression
+  | MatchStatement
   | MultipleIndexers
   | MultipleProtos
   | ExplicitCallAfterProto

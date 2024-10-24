@@ -60,8 +60,8 @@ let replace_comments_of_statement ~comments =
       | ( Block _ | Break _ | Continue _ | Debugger _ | DeclareExportDeclaration _ | DeclareModule _
         | DeclareModuleExports _ | DeclareNamespace _ | DoWhile _ | Empty _
         | ExportDefaultDeclaration _ | ExportNamedDeclaration _ | Expression _ | For _ | ForIn _
-        | ForOf _ | If _ | ImportDeclaration _ | Labeled _ | Return _ | Switch _ | Throw _ | Try _
-        | While _ | With _ ) as x ->
+        | ForOf _ | If _ | ImportDeclaration _ | Labeled _ | Match _ | Return _ | Switch _ | Throw _
+        | Try _ | While _ | With _ ) as x ->
         x
       )
 
