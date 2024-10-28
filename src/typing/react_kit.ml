@@ -256,10 +256,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
   let props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
     (* Class components or legacy components. *)
-    | DefT (_, ClassT _) ->
+    | DefT (r, ClassT _) ->
       let props = Tvar.mk cx reason_op in
       rec_flow_t ~use_op:unknown_use cx trace (props, tout);
-      rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
+      rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
     (* Stateless functional components. *)
     | DefT (_, FunT _)
     | DefT (_, ObjT { call_t = Some _; _ }) ->
@@ -357,12 +357,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let component = l in
       match drop_generic component with
       (* Class components or legacy components. *)
-      | DefT (_, ClassT _) ->
+      | DefT (r, ClassT _) ->
         (* The Props type parameter is invariant, but we only want to create a
          * constraint tin <: props. *)
         let props = Tvar.mk cx reason_op in
         rec_flow_t ~use_op:unknown_use cx trace (tin, props);
-        rec_flow cx trace (component, ReactInToProps (reason_op, props))
+        rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
       (* Stateless functional components. *)
       | DefT (_, FunT _)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
