@@ -265,6 +265,11 @@ and instantiate_component cx component instantiation_hint =
       )
     in
     Flow_js.subst cx subst_map t_out
+  | DefT (_, ObjT { call_t = Some id; _ }) as t ->
+    (match Context.find_call cx id with
+    | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) as poly_fun_t ->
+      instantiate_component cx poly_fun_t instantiation_hint
+    | _ -> t)
   | t -> t
 
 and type_of_hint_decomposition cx op reason t =

@@ -26,7 +26,7 @@ type Selector<T, R> = T => R;
 export type Store<T> = {
   +Provider: Provider<T>,
   +Consumer: {
-    <TSelect: $ReadOnlyArray<(T) => mixed>>(
+    <TSelect: $ReadOnlyArray<(T) => mixed> = $ReadOnlyArray<(T) => mixed>>(
       ConsumerProps<T, TSelect>,
     ): React$Node,
     // Need the following to fake this as a functional component
