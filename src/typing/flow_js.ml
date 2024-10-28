@@ -2516,6 +2516,20 @@ struct
               )
           in
           rec_flow cx trace (t_, u)
+        | ( DefT (r, ObjT { call_t = Some id; _ }),
+            ReactKitT
+              ( _,
+                _,
+                ( React.CreateElement _ | React.GetProps _ | React.GetConfig _ | React.ConfigCheck _
+                | React.GetRef _ )
+              )
+          )
+          when match Context.find_call cx id with
+               | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) as fun_t ->
+                 rec_flow cx trace (mod_reason_of_t (Fun.const r) fun_t, u);
+                 true
+               | _ -> false ->
+          ()
         | ( DefT (reason_tapp, PolyT { tparams_loc = _; tparams; t_out; _ }),
             ReactKitT (use_op, reason_op, (React.GetProps _ | React.GetConfig _ | React.GetRef _))
           ) ->

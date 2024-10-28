@@ -49,12 +49,21 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ contextual_jsx.js:33:35
+Error ------------------------------------------------------------------------------------------ contextual_jsx.js:33:42
 
-An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   33| <PolyObjectComponent foo={3} fn={(v) => {v as string; /* TODO: should error on cast */ }} />;
-                                         ^
+   contextual_jsx.js:33:42
+   33| <PolyObjectComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
+                                                ^
+
+References:
+   contextual_jsx.js:33:27
+   33| <PolyObjectComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
+                                 ^ [1]
+   contextual_jsx.js:33:47
+   33| <PolyObjectComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
+                                                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ contextual_jsx.js:34:38

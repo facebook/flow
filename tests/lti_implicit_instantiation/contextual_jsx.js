@@ -30,5 +30,5 @@ declare const PolyObjectComponent: {
 };
 declare const PolyFnComponent: <T>(props: {foo: T, fn: (T) => void}) => React.Node;
 
-<PolyObjectComponent foo={3} fn={(v) => {v as string; /* TODO: should error on cast */ }} />;
+<PolyObjectComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
 <PolyFnComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
