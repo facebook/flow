@@ -125,6 +125,7 @@ let stub_metadata ~root ~checked =
     max_workers = 0;
     missing_module_generators = [];
     object_freeze_fix = false;
+    natural_inference_exports_primitive_const = false;
     react_custom_jsx_typing = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;

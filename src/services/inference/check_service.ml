@@ -224,9 +224,11 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
          let loc = Type_sig.def_id_loc def in
          let name = Type_sig.def_name def in
          let reason = Type_sig_merge.def_reason def in
-         let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
-         let t = ConsGen.mk_sig_tvar cx reason resolved in
-         (loc, name, t)
+         let type_ ~const_decl =
+           let resolved = lazy (Merge.merge_def ~const_decl (Lazy.force file_rec) reason def) in
+           ConsGen.mk_sig_tvar cx reason resolved
+         in
+         (loc, name, lazy (type_ ~const_decl:false), lazy (type_ ~const_decl:true))
         )
     in
 

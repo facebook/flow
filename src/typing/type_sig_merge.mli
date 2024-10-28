@@ -29,7 +29,7 @@ type file = {
   cx: Context.t;
   dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
   exports: Type.t;
-  local_defs: (ALoc.t * string * Type.t) Lazy.t Local_defs.t;
+  local_defs: (ALoc.t * string * Type.t Lazy.t * Type.t Lazy.t) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
@@ -51,7 +51,8 @@ val merge_type_export : file -> Reason.t -> ALoc.t Pack.type_export -> Type.name
 
 val merge_exports : file -> Reason.t -> exports -> Type.t
 
-val merge_def : file -> Reason.t -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
+val merge_def :
+  const_decl:bool -> file -> Reason.t -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
 
 val merge_resource_module_t : Context.t -> File_key.t -> string -> Type.t
 
