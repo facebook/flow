@@ -377,8 +377,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ElemT _
     | ReactKitT _
     | ConcretizeT _
-    | ReactPropsToOut _
-    | ReactInToProps _
     | FilterOptionalT _
     | FilterMaybeT _
     | ExtractReactRefT _

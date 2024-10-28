@@ -780,9 +780,6 @@ module rec TypeTerm : sig
     | CondT of reason * t option * t * t_out
     (* util for deciding subclassing relations *)
     | ExtendsUseT of use_op * reason * t list * t * t
-    (* Models the GetProps React functionality *)
-    | ReactPropsToOut of reason * t
-    | ReactInToProps of reason * t
     (* Used to calculate a destructured binding. If annot is true, the lower
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
@@ -4195,8 +4192,6 @@ let string_of_use_ctor = function
   | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
-  | ReactPropsToOut _ -> "ReactPropsToOut"
-  | ReactInToProps _ -> "ReactInToProps"
   | DestructuringT _ -> "DestructuringT"
   | ResolveUnionT _ -> "ResolveUnionT"
   | FilterOptionalT _ -> "FilterOptionalT"

@@ -829,9 +829,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(display_string_of_name name) t
     | ReactKitT (use_op, _, tool) ->
       p t ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
-    | ReactPropsToOut (_, props)
-    | ReactInToProps (_, props) ->
-      p ~extra:(kid props |> spf "%s") t
     | ReposLowerT (_, use_desc, arg) -> p t ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
     | ReposUseT (_, use_desc, use_op, arg) ->
       p t ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
