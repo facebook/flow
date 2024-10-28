@@ -2682,8 +2682,7 @@ struct
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) -> begin
           match Context.find_call cx id with
-          | ( DefT (_, FunT (_, { rest_param = None; type_guard = None; _ }))
-            | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) ) as fun_t ->
+          | DefT (_, FunT (_, { rest_param = None; type_guard = None; _ })) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (mod_reason_of_t (Fun.const r) fun_t, u)
           | _ ->
