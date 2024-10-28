@@ -2671,7 +2671,7 @@ struct
           | ( DefT (_, FunT (_, { rest_param = None; type_guard = None; _ }))
             | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
-            rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
+            rec_flow cx trace (mod_reason_of_t (Fun.const r) fun_t, u)
           | _ ->
             ReactJs.err_incompatible cx ~use_op:unknown_use r (React.GetProps props);
             rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
