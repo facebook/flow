@@ -204,6 +204,8 @@ val munge_underscores : config -> bool
 
 val object_freeze_fix : config -> bool
 
+val natural_inference_exports_primitive_const : config -> bool
+
 val no_flowlib : config -> bool
 
 val node_main_fields : config -> string list

@@ -1437,6 +1437,8 @@ let make_options
     opt_object_freeze_fix = FlowConfig.object_freeze_fix flowconfig;
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
+    opt_natural_inference_exports_primitive_const =
+      FlowConfig.natural_inference_exports_primitive_const flowconfig;
     opt_saved_state_allow_reinit;
     opt_saved_state_fetcher;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;

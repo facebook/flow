@@ -120,10 +120,11 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_object_freeze_fix: bool;
+  opt_natural_inference_exports_primitive_const: bool;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
+  opt_object_freeze_fix: bool;
   opt_profile: bool;
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;
@@ -291,6 +292,9 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let object_freeze_fix opts = opts.opt_object_freeze_fix
+
+let natural_inference_exports_primitive_const opts =
+  opts.opt_natural_inference_exports_primitive_const
 
 let node_main_fields opts = opts.opt_node_main_fields
 

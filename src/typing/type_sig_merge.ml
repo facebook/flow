@@ -40,7 +40,8 @@ type file = {
   cx: Context.t;
   dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
   exports: Type.t;
-  local_defs: (ALoc.t * string * Type.t) Lazy.t Local_defs.t;
+  local_defs:
+    (ALoc.t * string * Type.t Lazy.t (* general *) * Type.t Lazy.t (* const *)) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
@@ -324,11 +325,25 @@ let merge_remote_ref file reason = function
   | Pack.ImportNs { id_loc; name; index } -> import_ns file reason name id_loc index
   | Pack.ImportTypeofNs { id_loc; name; index } -> import_typeof_ns file reason name id_loc index
 
-let merge_ref : 'a. _ -> (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -> 'a) -> _ -> 'a =
- fun file f ref ->
+let merge_ref :
+      'a.
+      ?const_decl:bool ->
+      _ ->
+      (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -> 'a) ->
+      _ ->
+      'a =
+ fun ?(const_decl = false) file f ref ->
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
-    let (lazy (def_loc, name, t)) = Local_defs.get file.local_defs index in
+    let (lazy (def_loc, name, t_general, t_const)) = Local_defs.get file.local_defs index in
+    let t =
+      Lazy.force
+        ( if Context.natural_inference_exports_primitive_const file.cx && const_decl then
+          t_const
+        else
+          t_general
+        )
+    in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ~ref_loc ~def_loc name
   | Pack.RemoteRef { ref_loc; index } ->
@@ -370,7 +385,7 @@ let merge_type_export file reason = function
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
-    let (lazy (loc, name, t)) = Local_defs.get file.local_defs index in
+    let (lazy (loc, name, (lazy t), _)) = Local_defs.get file.local_defs index in
     let type_ = ConsGen.assert_export_is_type file.cx reason name t in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportTypeFrom index ->
@@ -473,15 +488,15 @@ type merge_env = {
 let mk_merge_env ?(infer_tps = SMap.empty) ?(in_no_infer = false) ?(in_renders_arg = false) tps =
   { tps; infer_tps; in_no_infer; in_renders_arg }
 
-let rec merge ?(hooklike = false) ?(as_const = false) env file = function
+let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env file = function
   | Pack.Annot t ->
     let t = merge_annot env file t in
     make_hooklike file hooklike t
   | Pack.Value t ->
-    let t = merge_value ~as_const env file t in
+    let t = merge_value ~as_const ~const_decl env file t in
     make_hooklike file hooklike t
   | Pack.Ref ref ->
-    merge_ref file (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t) ref
+    merge_ref ~const_decl file (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
@@ -608,7 +623,7 @@ and merge_annot env file = function
   | Typeof { loc; qname; t; targs } ->
     let qname = String.concat "." qname in
     let reason = Reason.(mk_reason (RTypeof qname) loc) in
-    let t = merge env file t in
+    let t = merge ~const_decl:true env file t in
     let targs = Option.map ~f:(List.map (merge env file)) targs in
     TypeUtil.typeof_annotation reason t targs
   | Bound { ref_loc; name } ->
@@ -1089,7 +1104,7 @@ and merge_annot env file = function
         )
     )
 
-and merge_value ?(as_const = false) env file = function
+and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | ClassExpr (loc, def) ->
     let name = "<<anonymous class>>" in
     let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
@@ -1103,7 +1118,14 @@ and merge_value ?(as_const = false) env file = function
     let reason = Reason.(mk_reason RString loc) in
     Type.(DefT (reason, StrT AnyLiteral))
   | StringLit (loc, lit) ->
-    if as_const then
+    if Context.natural_inference_exports_primitive_const file.cx then
+      if as_const || const_decl then
+        let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
+        Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
+      else
+        let reason = Reason.(mk_reason RString loc) in
+        Type.(DefT (reason, StrT AnyLiteral))
+    else if as_const then
       let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
       Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
     else
@@ -1117,7 +1139,14 @@ and merge_value ?(as_const = false) env file = function
     let reason = Reason.(mk_reason RNumber loc) in
     Type.(DefT (reason, NumT AnyLiteral))
   | NumberLit (loc, num, raw) ->
-    if as_const then
+    if Context.natural_inference_exports_primitive_const file.cx then
+      if as_const || const_decl then
+        let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
+        Type.(DefT (reason, SingletonNumT (num, raw)))
+      else
+        let reason = Reason.(mk_reason RNumber loc) in
+        Type.(DefT (reason, NumT AnyLiteral))
+    else if as_const then
       let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
       Type.(DefT (reason, SingletonNumT (num, raw)))
     else
@@ -1127,7 +1156,14 @@ and merge_value ?(as_const = false) env file = function
     let reason = Reason.(mk_reason RBigInt loc) in
     Type.(DefT (reason, BigIntT AnyLiteral))
   | BigIntLit (loc, bigint, raw) ->
-    if as_const then
+    if Context.natural_inference_exports_primitive_const file.cx then
+      if as_const || const_decl then
+        let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
+        Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
+      else
+        let reason = Reason.(mk_reason RBigInt loc) in
+        Type.(DefT (reason, BigIntT AnyLiteral))
+    else if as_const then
       let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
       Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
     else
@@ -1137,7 +1173,14 @@ and merge_value ?(as_const = false) env file = function
     let reason = Reason.(mk_reason RBoolean loc) in
     Type.(DefT (reason, BoolT None))
   | BooleanLit (loc, lit) ->
-    if as_const then
+    if Context.natural_inference_exports_primitive_const file.cx then
+      if as_const || const_decl then
+        let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
+        Type.(DefT (reason, SingletonBoolT lit))
+      else
+        let reason = Reason.(mk_reason RBoolean loc) in
+        Type.(DefT (reason, BoolT None))
+    else if as_const then
       let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
       Type.(DefT (reason, SingletonBoolT lit))
     else
@@ -1939,7 +1982,7 @@ let merge_declare_fun file defs =
     let reason = TypeUtil.reason_of_t t0 |> Reason.(replace_desc_reason RIntersectionType) in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
 
-let merge_def file reason = function
+let merge_def ~const_decl file reason = function
   | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
   | OpaqueType { id_loc; name; tparams; body; bound } ->
     let id = Type.Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc) in
@@ -1965,7 +2008,7 @@ let merge_def file reason = function
   | ComponentBinding { id_loc; name; fn_loc = _; def } ->
     merge_component (mk_merge_env SMap.empty) file reason def (Some (id_loc, name))
   | Variable { id_loc = _; name; def } ->
-    merge ~hooklike:(Flow_ast_utils.hook_name name) (mk_merge_env SMap.empty) file def
+    merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) (mk_merge_env SMap.empty) file def
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->
     Type.AnyT.error reason
@@ -1997,13 +2040,13 @@ let merge_export file = function
         { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ })
       ref
   | Pack.ExportBinding index ->
-    let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
+    let (lazy (loc, _name, _, (lazy type_))) = Local_defs.get file.local_defs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefault { default_loc; def } ->
     let type_ = merge (mk_merge_env SMap.empty) file def in
     { Type.name_loc = Some default_loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefaultBinding { default_loc = _; index } ->
-    let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
+    let (lazy (loc, _name, _, (lazy type_))) = Local_defs.get file.local_defs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
@@ -2077,9 +2120,13 @@ let merge_builtins
        let loc = Type_sig.def_id_loc def in
        let name = Type_sig.def_name def in
        let reason = def_reason def in
-       let resolved = lazy (merge_def (Lazy.force file_and_dependency_map_rec |> fst) reason def) in
-       let t = ConsGen.mk_sig_tvar cx reason resolved in
-       (loc, name, t)
+       let type_ ~const_decl =
+         let resolved =
+           lazy (merge_def ~const_decl (Lazy.force file_and_dependency_map_rec |> fst) reason def)
+         in
+         ConsGen.mk_sig_tvar cx reason resolved
+       in
+       (loc, name, lazy (type_ ~const_decl:false), lazy (type_ ~const_decl:true))
       )
   in
 
@@ -2213,7 +2260,7 @@ let merge_builtins
       (fun name i acc ->
         let t =
           Lazy.map
-            (fun (_, _, t) -> t)
+            (fun (_, _, (lazy t), _) -> t)
             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
         in
         SMap.add name t acc)
@@ -2225,7 +2272,7 @@ let merge_builtins
       (fun name i acc ->
         let t =
           Lazy.map
-            (fun (_, _, t) -> t)
+            (fun (_, _, (lazy t), _) -> t)
             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
         in
         SMap.add name t acc)

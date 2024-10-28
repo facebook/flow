@@ -112,6 +112,7 @@ module Opts = struct
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
     object_freeze_fix: bool;
+    natural_inference_exports_primitive_const: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -244,6 +245,7 @@ module Opts = struct
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
       object_freeze_fix = true;
+      natural_inference_exports_primitive_const = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -1016,6 +1018,9 @@ module Opts = struct
       ( "experimental.object_freeze_fix",
         boolean (fun opts v -> Ok { opts with object_freeze_fix = v })
       );
+      ( "experimental.natural_inference.exports.primitive_const",
+        boolean (fun opts v -> Ok { opts with natural_inference_exports_primitive_const = v })
+      );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "react.custom_jsx_typing",
         boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
@@ -1718,6 +1723,9 @@ let multi_platform_ambient_supports_platform_directory_overrides c =
 let munge_underscores c = c.options.Opts.munge_underscores
 
 let object_freeze_fix c = c.options.Opts.object_freeze_fix
+
+let natural_inference_exports_primitive_const c =
+  c.options.Opts.natural_inference_exports_primitive_const
 
 let no_flowlib c = c.options.Opts.no_flowlib
 
