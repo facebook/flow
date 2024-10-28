@@ -162,9 +162,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ResolveSpreadT (_, _, { rrt_resolve_to; _ }) -> resolve_spread_resolve rrt_resolve_to
   | CondT (_, _, _, t) -> resolve t
   | ExtendsUseT _ -> ()
-  | ReactPropsToOut (_, t)
-  | ReactInToProps (_, t) ->
-    resolve t
   | DestructuringT (_, _, _, tvar, _) -> resolve_tvar tvar
   | ResolveUnionT { upper; _ } -> default_resolve_touts ~flow cx loc upper
   | TypeCastT (_, t) -> resolve t

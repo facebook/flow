@@ -106,10 +106,7 @@ and reason_of_use_t = function
   | HooklikeT (r, _) -> r
   | ConcretizeTypeAppsT (_, _, (_, _, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
-  | ReactPropsToOut (reason, _)
-  | ReactInToProps (reason, _)
-  | SealGenericT { reason; _ } ->
-    reason
+  | SealGenericT { reason; _ } -> reason
   | DestructuringT (reason, _, _, _, _) -> reason
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
@@ -274,8 +271,6 @@ let rec util_use_op_of_use_t :
   | ExtractReactRefT _
   | OptionalChainT _
   | CondT (_, _, _, _)
-  | ReactPropsToOut _
-  | ReactInToProps _
   | DestructuringT _
   | ResolveUnionT _
   | ExitRendersT _
