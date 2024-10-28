@@ -253,17 +253,32 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             );
         ]
 
-  let props_to_tout cx trace component ~use_op ~reason_op u tout =
+  let rec props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
     (* Class components or legacy components. *)
     | DefT (r, ClassT _) ->
       let props = Tvar.mk cx reason_op in
       rec_flow_t ~use_op:unknown_use cx trace (props, tout);
       rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
-    (* Stateless functional components. *)
-    | DefT (_, FunT _)
-    | DefT (_, ObjT { call_t = Some _; _ }) ->
-      rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
+    (* Functional components. *)
+    | DefT (r, FunT (_, fun_t)) ->
+      (match fun_t with
+      | { params; rest_param = None; type_guard = None; effect = ArbitraryEffect | AnyEffect; _ } ->
+        (* Contravariance *)
+        Base.List.hd params
+        |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
+        |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, tout)
+      | _ ->
+        err_incompatible cx ~use_op:unknown_use r (React.GetProps tout);
+        rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
+    | DefT (r, ObjT { call_t = Some id; _ }) ->
+      (match Context.find_call cx id with
+      | DefT (_, FunT (_, { rest_param = None; type_guard = None; _ })) as fun_t ->
+        (* Keep the object's reason for better error reporting *)
+        props_to_tout cx trace (mod_reason_of_t (Fun.const r) fun_t) ~use_op ~reason_op u tout
+      | _ ->
+        err_incompatible cx ~use_op:unknown_use r (React.GetProps tout);
+        rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
     (* Special case for intrinsic components. *)
     | DefT (_, SingletonStrT name) ->
       get_intrinsic
@@ -345,7 +360,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ))
 
   let run cx trace ~use_op reason_op l u =
-    let err_incompatible reason = err_incompatible cx ~use_op reason u in
+    let err_incompatible ?(use_op = use_op) reason = err_incompatible cx ~use_op reason u in
     let get_intrinsic = get_intrinsic cx trace l ~reason_op in
     (* This function creates a constraint *from* tin *to* props so that props is
      * an upper bound on tin. This is important because when the type of a
@@ -353,7 +368,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
      * component has an unannotated props argument) we want to create a constraint
      * *from* the props input *to* tin which should then be propagated to the
      * inferred props type. *)
-    let tin_to_props tin =
+    let rec tin_to_props l tin =
       let component = l in
       match drop_generic component with
       (* Class components or legacy components. *)
@@ -363,11 +378,40 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let props = Tvar.mk cx reason_op in
         rec_flow_t ~use_op:unknown_use cx trace (tin, props);
         rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
-      (* Stateless functional components. *)
-      | DefT (_, FunT _)
-      (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      | DefT (_, ObjT { call_t = Some _; _ }) ->
-        rec_flow cx trace (component, ReactInToProps (reason_op, tin))
+        (* Stateless functional components. *)
+      | DefT (r, FunT (_, fun_t)) ->
+        (match fun_t with
+        | {
+         params;
+         return_t;
+         rest_param = None;
+         type_guard = None;
+         effect = ArbitraryEffect | AnyEffect;
+         _;
+        } ->
+          (* Contravariance *)
+          Base.List.hd params
+          |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
+          |> fun t ->
+          rec_flow_t ~use_op:unknown_use cx trace (tin, t);
+          if not (Context.in_implicit_instantiation cx) then
+            rec_flow_t
+              ~use_op:unknown_use
+              cx
+              trace
+              (return_t, get_builtin_type cx reason_op "React$Node")
+        | _ ->
+          err_incompatible ~use_op:unknown_use r;
+          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tin))
+      (* Functional components, again. This time for callable `ObjT`s. *)
+      | DefT (r, ObjT { call_t = Some id; _ }) ->
+        (match Context.find_call cx id with
+        | DefT (_, FunT (_, { rest_param = None; type_guard = None; _ })) as fun_t ->
+          (* Keep the object's reason for better error reporting *)
+          tin_to_props (mod_reason_of_t (Fun.const r) fun_t) tin
+        | _ ->
+          err_incompatible ~use_op:unknown_use r;
+          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tin))
       (* Abstract components. *)
       | DefT (reason, ReactAbstractComponentT _) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason) (* Intrinsic components. *)
@@ -393,7 +437,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         match drop_generic l with
         | DefT (_, ReactAbstractComponentT { config; _ }) -> (config, None)
         | _ ->
-          ( Tvar.mk_where cx reason_op tin_to_props,
+          ( Tvar.mk_where cx reason_op (tin_to_props l),
             (* For class components and function components we want to lookup the
              * static default props property so that we may add it to our config input. *)
             get_defaults cx trace l ~reason_op
