@@ -2623,9 +2623,6 @@ struct
         (* React GetProps *)
         (******************)
 
-        (* props is invariant in the class *)
-        | (DefT (r, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
-          rec_flow_t ~use_op:unknown_use cx trace (l, ReactJs.component_class cx r props)
         (* Functions with rest params or that are predicates cannot be React components *)
         | ( DefT
               ( reason,
