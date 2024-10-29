@@ -3240,71 +3240,98 @@ References:
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- refs.js:87:18
-
-Cannot use `T` in a `ref` property because it is a type parameter. The `ref` property cannot be generic. [invalid-ref]
-
-   87| component Bad<T>(ref: React$RefSetter<T>) { return null };
-                        ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- refs.js:89:19
-
-Cannot use `T` in a `ref` property because it is a type parameter. The `ref` property cannot be generic. [invalid-ref]
-
-   89| component Bad2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
-                         ^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- refs.js:96:13
+Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in property `bar` of the first parameter.
  - Or property `current` is missing in function type [3] but exists in object type [4].
 
-   refs.js:96:13
-    96|   <Foo ref={badRef} />; // error
+   refs.js:92:13
+    92|   <Foo ref={badRef} />; // error
                     ^^^^^^
 
 References:
-   refs.js:92:66
-    92|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+   refs.js:88:66
+    88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
                                                                          ^^^^^^ [1]
-   refs.js:94:60
-    94|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+   refs.js:90:60
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                                                    ^^^^^^^ [2]
-   refs.js:94:25
-    94|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+   refs.js:90:25
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:181:5
    181|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- refs.js:96:13
+Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in property `bar` of property `current`.
  - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
    function type [4].
 
-   refs.js:96:13
-    96|   <Foo ref={badRef} />; // error
+   refs.js:92:13
+    92|   <Foo ref={badRef} />; // error
                     ^^^^^^
 
 References:
-   refs.js:92:66
-    92|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+   refs.js:88:66
+    88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
                                                                          ^^^^^^ [1]
-   refs.js:94:60
-    94|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+   refs.js:90:60
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                                                    ^^^^^^^ [2]
-   refs.js:94:25
-    94|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+   refs.js:90:25
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:182:6
    182|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- refs.js:105:23
+
+Cannot create `GenericRef1` element because in property `ref`: [incompatible-type]
+ - Either `HTMLElement` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
+   consider rewriting object type [2] as an interface.
+ - Or a call signature declaring the expected parameter / return type is missing in `HTMLElement` [1] but exists in
+   function type [3].
+
+   refs.js:105:23
+   105|     <GenericRef1 ref={new HTMLElement()} />; // error
+                              ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:182:6
+   182|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- refs.js:108:23
+
+Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
+ - Either property `current` is missing in function [1] but exists in object type [2].
+ - Or array type [3] is incompatible with string [4] in the first parameter.
+
+   refs.js:108:23
+   108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   refs.js:101:51
+   101|     component GenericRef2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
+                                                          ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   refs.js:108:27
+   108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
+                                  ^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- refs_without_react.js:1:1

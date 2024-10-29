@@ -28,7 +28,6 @@ module type S = sig
     Context.t ->
     config_reason:Reason.reason ->
     instance_reason:Reason.reason ->
-    tparams:Type.typeparams ->
     Types.t ->
     Type.t * Type.component_instance
 
@@ -73,34 +72,13 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config_and_instance
-      cx ~config_reason ~instance_reason ~tparams { params_rev; rest; reconstruct = _ } =
+  let config_and_instance cx ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
     let (pmap, ref_prop) =
       List.fold_left
         (fun (acc, ref_prop) p ->
           let key_and_t = C.param_type_with_name p in
           match key_and_t with
-          | (key_loc, "ref", t) ->
-            let ref =
-              match tparams with
-              | None -> Some (key_loc, t)
-              | Some (_, ({ Type.name; _ }, tps)) ->
-                let names =
-                  Base.List.fold
-                    ~f:(fun acc { Type.name; _ } -> Subst_name.Set.add name acc)
-                    ~init:(Subst_name.Set.singleton name)
-                    tps
-                in
-                (try
-                   let (_ : Subst_name.Set.t) = tparam_finder#type_ cx Polarity.Neutral names t in
-                   Some (key_loc, t)
-                 with
-                | Found name -> begin
-                  Flow_js_utils.add_output cx Error_message.(EInvalidRef (key_loc, name));
-                  None
-                end)
-            in
-            (acc, ref)
+          | (key_loc, "ref", t) -> (acc, Some (key_loc, t))
           | (key_loc, key, t) ->
             ( Type.Properties.add_field
                 (Reason.OrdinaryName key)

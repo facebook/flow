@@ -680,7 +680,6 @@ type 'loc message =
   | MessageInvalidMappedTypeWithOptionalityRemoval
   | MessageInvalidMappedTypeWithVarianceOnArrayInput
   | MessageInvalidReactCreateElement of 'loc virtual_reason
-  | MessageInvalidRefPropertyType of string
   | MessageInvalidRefPropertyInSpread of {
       ref_loc: 'loc;
       spread_loc: 'loc;

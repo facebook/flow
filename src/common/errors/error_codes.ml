@@ -175,7 +175,6 @@ type error_code =
   | InvalidComponentProp
   | ReactIntrinsicOverlap
   | NestedComponent
-  | InvalidRef
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
@@ -343,7 +342,6 @@ let string_of_code : error_code -> string = function
   | NotAnObject -> "not-an-object"
   | NotIterable -> "not-iterable"
   | ObjectThisReference -> "object-this-reference"
-  | InvalidRef -> "invalid-ref"
   | PropMissing -> "prop-missing"
   | ReassignConst -> "reassign-const"
   | ReassignEnum -> "reassign-enum"

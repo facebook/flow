@@ -84,10 +84,6 @@ import * as React from 'react';
     }
 }
 
-component Bad<T>(ref: React$RefSetter<T>) { return null };
-
-component Bad2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
-
 {
   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
 
@@ -98,4 +94,16 @@ component Bad2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
   <Foo ref={null} />; // ok
   <Foo ref={undefined} />; // ok
   <Foo />; // ok
+}
+
+{
+    component GenericRef1<T>(ref: React$RefSetter<T>) { return null };
+    component GenericRef2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
+
+    <GenericRef1 ref={(r: string | null) => {}} />; // ok
+    <GenericRef1 ref={(r: number | null) => {}} />; // ok
+    <GenericRef1 ref={new HTMLElement()} />; // error
+    <GenericRef2 ref={(r: Array<Array<Array<string>>> | null) => {}} />; // ok
+    <GenericRef2 ref={(r: Array<Array<Array<number>>> | null) => {}} />; // ok
+    <GenericRef2 ref={(r: string | null) => {}} />; // error
 }

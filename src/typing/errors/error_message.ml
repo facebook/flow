@@ -291,7 +291,6 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
-  | EInvalidRef of 'loc * string
   | EInvalidTypeof of 'loc * string
   | EBinaryInLHS of 'loc virtual_reason
   | EBinaryInRHS of 'loc virtual_reason
@@ -1105,7 +1104,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EExportRenamedDefault { loc = f loc; name; is_reexport }
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
-  | EInvalidRef (loc, s) -> EInvalidRef (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
@@ -1612,7 +1610,6 @@ let util_use_op_of_msg nope util = function
   | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
-  | EInvalidRef _
   | EBinaryInLHS _
   | EBinaryInRHS _
   | EArithmeticOperand _
@@ -1835,7 +1832,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EParseError (loc, _)
   | EInvalidLHSInAssignment loc
   | EInvalidTypeof (loc, _)
-  | EInvalidRef (loc, _)
   | EUnreachable loc
   | EUnexpectedTemporaryBaseType loc
   | ECannotDelete (loc, _)
@@ -2525,7 +2521,6 @@ let friendly_message_of_msg = function
         use_op;
       }
   | EInvalidTypeof (_, typename) -> Normal (MessageInvalidGenericRef typename)
-  | EInvalidRef (_, typename) -> Normal (MessageInvalidRefPropertyType typename)
   | EArithmeticOperand reason -> Normal (MessageCannotPerformArithOnNonNumbersOrBigInt reason)
   | EBinaryInLHS reason -> Normal (MessageCannotUseInOperatorDueToBadLHS reason)
   | EBinaryInRHS reason -> Normal (MessageCannotUseInOperatorDueToBadRHS reason)
@@ -3072,7 +3067,6 @@ let error_code_of_message err : error_code option =
   | EInvalidReactCreateElement _ -> Some InvalidReactCreateElement
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
-  | EInvalidRef _ -> Some InvalidRef
   | EInvalidInfer _ -> Some InvalidInfer
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting

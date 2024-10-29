@@ -3003,16 +3003,6 @@ let to_printable_error :
         ref invalid_react;
         text " identifier in scope to ensure it is the right one.";
       ]
-    | MessageInvalidRefPropertyType typename ->
-      [
-        text "Cannot use ";
-        code typename;
-        text " in a ";
-        code "ref";
-        text " property because it is a type parameter. The ";
-        code "ref";
-        text " property cannot be generic.";
-      ]
     | MessageInvalidRefPropertyInSpread { ref_loc; spread_loc } ->
       [
         text "Components do not support ";
