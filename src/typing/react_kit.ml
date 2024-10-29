@@ -212,9 +212,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       Some tvar
     | DefT (_, FunT _)
     | DefT (_, ObjT _) ->
-      (* Why `Some VoidT` instead of None? A lot of existing code is depending on the current
-       * behavior of automatically changing props to neutral polarity for function components... *)
-      Some (VoidT.make reason_op)
+      None
     | DefT (_, ReactAbstractComponentT _) -> None
     (* Everything else will not have default props we should diff out. *)
     | _ -> None

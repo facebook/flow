@@ -591,7 +591,7 @@ let eval_hint_tests =
           [Decomp_JsxProps];
     "jsx_props_of_function_component"
     >:: mk_eval_hint_test
-          ~expected:"{+bar: string, +foo: number}"
+          ~expected:"{bar: string, foo: number}"
           "({bar: string, foo: number}) => number"
           [Decomp_JsxProps];
     "jsx_props_of_abstract_component"
