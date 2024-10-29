@@ -1,3 +1,20 @@
+### 0.251.0
+
+Likely to cause new Flow errors:
+* Remove the deprecated `React.AbstractComponent` type. We recommend replacing them with [component types](https://flow.org/en/docs/react/component-types/). Since v0.249.0, we have provided a codemod via the `flow-upgrade` package to aid larger codebases with this conversion: `yarn run flow-codemod eliminateAbstractComponent path/to/src`.
+* In addition to the removal of `React.AbstractComponent` type, we also removed support for the internal `React$AbstractComponent` when more than 1 type argument has been passed. Similarly, you should migrate to use component types if you want to specify ref props and renders.
+
+New Features:
+* We now support a new way to easily specify library definitions for npm modules. For all files in `@flowtyped` directory at the root, they can be resolved by the relative path without leading `./` relative to `@flowtyped`. e.g. `<PROJECT_ROOT>/@flowtyped/react.js.flow` can be used to type the `react` package, and `<PROJECT_ROOT>/@flowtyped/react/jsx-runtime.js.flow` can be used to type `react/jsx-runtime` module. We now recommend using this approach instead of using `declare module` in global libdef.
+
+Notable bug fixes:
+* `any` will now correctly propagate to inferred render type. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhINE8qNgAAQwB7KODQHkAJUEGnxAEEoLQABQASmQPOBtAA3KyoJzcNy+QL4VAeQopNExZqTCQADwipVi6JWAByEA0AD5ZWAlZARIxoBZZSwYAB+G2sZQAEjFMAAyriTBaiiU2M7eDyrKnsF6VvKeSwzfjRYrRerHtB7Ib5MblKVpbRTRKeQBeMsViS182y1tSmXy1U8gD0vZ5swaQvygx5DwltnsNAqpWTUAgAHceRAthqjTRK2xqx3lSRDRm1X2B6ulSqeQA-Z0HuG0DW5EANc1CqBJBoABisACYAKyf98gPSQA).
+* Fixed a bug with regard to jsx type inference with generic callable objects. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABLZ7JyAAoQQYAeWQnOAAB0oJzpZyADwAFQAfAAKamMEii4AwYii+W8TkwKCi5XygCUnIAvIrOQ0IHA2PTTaKAEqsZRWAByEA0vEl9IA3JK2bgOdzoLyBYMAGJGuVK1WUWEasXaiC6-WG41my3W232x05zmu6Ke73YQNQSWyyO0IUG4gW4AAZnpBqgjeVDXNVrFDU5GBInPspigCH9nIA9AAqIe1CDaNickyJyic6DcgcSfWzBpweckQZrqV9xw0EScqcTzn01sTxUV6uC2gx+sQRsttsdruF4B9gdDqQKjHScZxIOcFyXagIFXddql5S9r1ve9JVyEAGhMEg9ygJIMnsEwQHpIA)
+* Fixed a soundness hole that allowed frozen objects to be incompatible with non-readonly objects. This [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SVs9gABDBKBAAF6CADyaAAVnMJOyALzswUi5RWLnYbB8gAUwBgyHZABYAEz0gCUAG4ADqPaAckSpVrYaWi9Wq9XCEQ3dkAH3Z9lMUAQ9IlnO5fKg1uU+vZAHoQ+yAO5wY7sqAQCPsnDs4HskzcyjG82WNBtQMxGA+w0gYiMEhF-W5EANEwkODQJINAAMVi1GoAHFYAIwgelAA) will now produce an error.
+
+Library Definitions:
+* We have updated some core React type definitions to use the new [component type](https://flow.org/en/docs/react/component-types/) instead of `React.AbstractComponent`. Most of the code won't be affected, but you might have to sometimes make the Props readonly.
+
 ### 0.250.0
 
 Likely to cause new Flow errors:
