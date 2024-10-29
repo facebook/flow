@@ -859,7 +859,7 @@ and merge_annot env file = function
   | Function_bind loc ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     Type.FunProtoBindT reason
-  | ReactAbstractComponent { loc; config; instance; renders } ->
+  | ReactAbstractComponent { loc; config } ->
     let reason = Reason.(mk_reason (RCustom "AbstractComponent") loc) in
     let config = merge env file config in
     let mk_default_type_argument_reason_at_position desc_default position =
@@ -872,30 +872,20 @@ and merge_annot env file = function
     in
     let instance =
       Type.ComponentInstanceAvailableAsInstanceType
-        (Base.Option.value_map
-           ~f:(merge env file)
-           ~default:
-             (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
-              Type.MixedT.make reason
-             )
-           instance
+        (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
+         Type.MixedT.make reason
         )
     in
     let renders =
-      Base.Option.value_map
-        ~f:(merge env file)
-        ~default:
-          (let reason =
-             mk_default_type_argument_reason_at_position
-               Reason.(RIdentifier (OrdinaryName "React$Node"))
-               3
-           in
-           ConsGen.mk_instance
-             file.cx
-             reason
-             (Flow_js_utils.lookup_builtin_type file.cx "React$Node" reason)
-          )
-        renders
+      let reason =
+        mk_default_type_argument_reason_at_position
+          Reason.(RIdentifier (OrdinaryName "React$Node"))
+          3
+      in
+      ConsGen.mk_instance
+        file.cx
+        reason
+        (Flow_js_utils.lookup_builtin_type file.cx "React$Node" reason)
     in
     Type.(
       DefT

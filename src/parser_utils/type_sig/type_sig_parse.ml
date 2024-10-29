@@ -2401,7 +2401,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | Some (_, { arguments = config :: targs; _ }) ->
       let config = annot opts scope tbls xs config in
       (match targs with
-      | [] -> Annot (ReactAbstractComponent { loc; config; instance = None; renders = None })
+      | [] -> Annot (ReactAbstractComponent { loc; config })
       | _ -> Err (loc, CheckError))
     | _ -> Err (loc, CheckError)
   end

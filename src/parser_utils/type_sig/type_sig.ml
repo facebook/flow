@@ -559,8 +559,6 @@ type ('loc, 'a) annot =
   | ReactAbstractComponent of {
       loc: 'loc;
       config: 'a;
-      instance: 'a option;
-      renders: 'a option;
     }
   | ReactConfig of {
       loc: 'loc;
