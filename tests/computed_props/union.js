@@ -2,8 +2,8 @@
 type key = 'a' | 'b' | 'c';
 
 declare var k: key;
-const a = {[k]: 3}; // Error, k has multiple lower bounds
-
+const a = {[k]: 3}; // multiple lower bounds okay
+a as {}; // okay
 
 let x;
 if (true) {
@@ -14,7 +14,7 @@ if (true) {
   x = 'baz';
 }
 
-const b = {[x]: 3} // Error, x has multiple lower bounds
+const b = {[x]: 3} // multiple lower bounds okay
 
 declare var maybe: ?string;
 const c = {[maybe]: 3}; // ERROR

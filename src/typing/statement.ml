@@ -2261,8 +2261,19 @@ module Make
     | [] -> DefT (reason_obj, EmptyT)
     | [key] -> single_key key
     | _ ->
-      Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
-      AnyT.error reason
+      if
+        List.for_all
+          (function
+            | DefT (_, StrT _) -> true
+            | _ -> false)
+          keys
+      then
+        (* Allow unions of `string` or singleton string types *)
+        single_key (DefT (reason_key, StrT AnyLiteral))
+      else begin
+        Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
+        AnyT.error reason
+      end
 
   and object_ cx reason ~frozen ~as_const props =
     let open Ast.Expression.Object in

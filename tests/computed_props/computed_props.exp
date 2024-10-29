@@ -40,22 +40,6 @@ References:
               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- object_keys.js:14:36
-
-Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
-`k` [1] is a union. Can you add a literal type annotation to `k` [1]? See https://flow.org/en/docs/types/literals/ for
-more information on literal types. [invalid-computed-prop]
-
-   object_keys.js:14:36
-   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
-                                          ^
-
-References:
-   object_keys.js:14:20
-   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
-                          ^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------------- poly.js:3:29
 
 Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
@@ -206,32 +190,6 @@ References:
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:5:13
-
-Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
-`k` [1] is a union. Can you add a literal type annotation to `k` [1]? See https://flow.org/en/docs/types/literals/ for
-more information on literal types. [invalid-computed-prop]
-
-   union.js:5:13
-   5| const a = {[k]: 3}; // Error, k has multiple lower bounds
-                  ^
-
-References:
-   union.js:4:13
-   4| declare var k: key;
-                  ^ [1]
-
-
-Error --------------------------------------------------------------------------------------------------- union.js:17:13
-
-Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
-`x` [1] is a union. Can you add a literal type annotation to `x` [1]? See https://flow.org/en/docs/types/literals/ for
-more information on literal types. [invalid-computed-prop]
-
-   17| const b = {[x]: 3} // Error, x has multiple lower bounds
-                   ^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- union.js:20:13
 
 Cannot use `maybe` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
@@ -329,4 +287,4 @@ References:
 
 
 
-Found 22 errors
+Found 19 errors
