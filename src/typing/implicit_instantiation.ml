@@ -240,7 +240,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                       ReactAbstractComponentT
                         {
                           config;
-                          instance = ComponentInstanceAvailableAsInstanceType (MixedT.why r);
+                          instance = ComponentInstanceTopType r;
                           renders = react_node;
                           component_kind = Structural;
                         }
@@ -1588,7 +1588,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                    ReactAbstractComponentT
                      {
                        config = EmptyT.why reason;
-                       instance = ComponentInstanceAvailableAsInstanceType (MixedT.why reason);
+                       instance = ComponentInstanceTopType reason;
                        renders = generic_t;
                        component_kind = Structural;
                      }

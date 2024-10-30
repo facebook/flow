@@ -222,17 +222,18 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsRefSetterProp t; _ })
       ->
       t
-    | DefT (_, ClassT instance)
-    | DefT
-        ( _,
-          ReactAbstractComponentT
-            { instance = ComponentInstanceAvailableAsInstanceType instance; _ }
-        ) ->
+    | DefT (_, ClassT instance) ->
       get_builtin_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
         "React$RefSetter"
         [instance]
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceTopType r; _ }) ->
+      get_builtin_typeapp
+        cx
+        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
+        "React$RefSetter"
+        [MixedT.why r]
     | DefT (_, FunT _)
     | DefT (_, ObjT _)
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
@@ -723,12 +724,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (r, ObjT { call_t = Some _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Abstract components. *)
-      | DefT
-          ( _,
-            ReactAbstractComponentT
-              { instance = ComponentInstanceAvailableAsInstanceType instance; _ }
-          ) ->
-        rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
+      | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceTopType r; _ }) ->
+        rec_flow_t ~use_op:unknown_use cx trace (MixedT.why r, tout)
       | DefT
           ( _,
             ReactAbstractComponentT

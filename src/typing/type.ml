@@ -249,10 +249,10 @@ module rec TypeTerm : sig
       }
 
   and component_instance =
-    | ComponentInstanceAvailableAsInstanceType of t
-        (** Instance in React.AbstractComponent<Props, Instance> *)
     | ComponentInstanceAvailableAsRefSetterProp of t
         (** React.RefSetter<Instance> in component(ref: React.RefSetter<Instance>) *)
+    | ComponentInstanceTopType of reason
+        (** Accepting all kinds of ref prop. e.g. React$ComponentType<Props> *)
     | ComponentInstanceOmitted of reason
         (** Modeling the absence of ref prop in components. e.g. component Foo() *)
 

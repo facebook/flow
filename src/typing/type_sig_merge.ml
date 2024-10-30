@@ -871,10 +871,7 @@ and merge_annot env file = function
         reason
     in
     let instance =
-      Type.ComponentInstanceAvailableAsInstanceType
-        (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
-         Type.MixedT.make reason
-        )
+      Type.ComponentInstanceTopType (mk_default_type_argument_reason_at_position Reason.RMixed 2)
     in
     let renders =
       let reason =

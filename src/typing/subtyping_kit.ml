@@ -518,17 +518,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* Easy cases: LHS and RHS have the same kind of instance information,
        * we can still directly flow the type to each other *)
       | (ComponentInstanceOmitted _, ComponentInstanceOmitted _) -> ()
-      | (ComponentInstanceAvailableAsInstanceType l, ComponentInstanceAvailableAsInstanceType r) ->
-        rec_flow_t cx trace ~use_op (l, r)
+      | (ComponentInstanceTopType _, ComponentInstanceTopType _) -> ()
       | (ComponentInstanceAvailableAsRefSetterProp l, ComponentInstanceAvailableAsRefSetterProp r)
         ->
         (* RefSetter is contravariantly typed. We need to flip the flow. *)
         rec_flow_t cx trace ~use_op (r, l)
       (* In the following two cases, we can still directly flow the type to each other *)
-      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsInstanceType instance) ->
-        rec_flow_t cx trace ~use_op (VoidT.make r, instance)
-      | (ComponentInstanceAvailableAsInstanceType instance, ComponentInstanceOmitted r) ->
-        rec_flow_t cx trace ~use_op (instance, VoidT.make r)
+      | (ComponentInstanceOmitted r1, ComponentInstanceTopType r2) ->
+        rec_flow_t cx trace ~use_op (VoidT.make r1, MixedT.why r2)
+      | (ComponentInstanceTopType r1, ComponentInstanceOmitted r2) ->
+        rec_flow_t cx trace ~use_op (MixedT.why r1, VoidT.make r2)
       (* The most tricky cases: LHS and RHS have different kinds of instance information,
        * and one side is ComponentInstanceAvailableAsRefSetterProp. We need to wrap the side
        * that's not ComponentInstanceAvailableAsRefSetterProp with React.RefSetter *)
@@ -540,9 +539,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | None ->
           (* RefSetter is contravariantly typed. We need to flip the flow. *)
           rec_flow_t cx trace ~use_op (react_ref_setter_of cx (DefT (r, VoidT)), ref_prop))
-      | ( ComponentInstanceAvailableAsRefSetterProp ref_prop,
-          ComponentInstanceAvailableAsInstanceType instance
-        ) ->
+      | (ComponentInstanceAvailableAsRefSetterProp ref_prop, ComponentInstanceTopType r_mixed) ->
+        let instance = MixedT.why r_mixed in
         (match try_extract_instance_of_ref_setter cx trace ref_prop with
         | Some t -> rec_flow_t cx trace ~use_op (t, instance)
         | None ->
@@ -554,9 +552,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | None ->
           (* RefSetter is contravariantly typed. We need to flip the flow. *)
           rec_flow_t cx trace ~use_op (ref_prop, react_ref_setter_of cx (DefT (r, VoidT))))
-      | ( ComponentInstanceAvailableAsInstanceType instance,
-          ComponentInstanceAvailableAsRefSetterProp ref_prop
-        ) ->
+      | (ComponentInstanceTopType r_mixed, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
+        let instance = MixedT.why r_mixed in
         (match try_extract_instance_of_ref_setter cx trace ref_prop with
         | Some t -> rec_flow_t cx trace ~use_op (instance, t)
         | None ->
@@ -1467,8 +1464,21 @@ module Make (Flow : INPUT) : OUTPUT = struct
         cx
         trace
         use_op
-        (ComponentInstanceAvailableAsInstanceType this, instance);
-
+        ( ComponentInstanceAvailableAsRefSetterProp
+            (get_builtin_typeapp
+               cx
+               ~use_desc:true
+               (replace_desc_reason
+                  (RTypeAppImplicit
+                     (RTypeAlias ("React$RefSetter", None, RType (OrdinaryName "React$RefSetter")))
+                  )
+                  (reason_of_t this)
+               )
+               "React$RefSetter"
+               [this]
+            ),
+          instance
+        );
       (* check rendersl <: rendersu *)
       Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
     (* Function Component ~> AbstractComponent *)

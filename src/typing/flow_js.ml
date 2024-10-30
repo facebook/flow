@@ -5779,8 +5779,8 @@ struct
       contravariant_flow ~use_op config;
       let () =
         match instance with
-        | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailableAsInstanceType t -> covariant_flow ~use_op t
+        | ComponentInstanceOmitted (_ : reason) -> ()
+        | ComponentInstanceTopType (_ : reason) -> ()
         | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
       in
       covariant_flow ~use_op renders;
@@ -5951,8 +5951,8 @@ struct
       contravariant_flow ~use_op config;
       let () =
         match instance with
-        | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailableAsInstanceType t -> covariant_flow ~use_op t
+        | ComponentInstanceOmitted (_ : reason) -> ()
+        | ComponentInstanceTopType (_ : reason) -> ()
         | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
       in
       covariant_flow ~use_op renders;

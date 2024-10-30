@@ -1186,13 +1186,14 @@ module Make (I : INPUT) : S = struct
         match instance with
         | Type.ComponentInstanceOmitted _ -> return None
         | Type.ComponentInstanceAvailableAsRefSetterProp t -> type__ ~env t >>| Base.Option.some
-        | Type.ComponentInstanceAvailableAsInstanceType t ->
-          type__ ~env t >>| fun t ->
-          Some
-            (Ty.Generic
-               ( Ty_symbol.builtin_symbol (Reason.OrdinaryName "React.RefSetter"),
-                 Ty.TypeAliasKind,
-                 Some [t]
+        | Type.ComponentInstanceTopType _ ->
+          return
+            (Some
+               (Ty.Generic
+                  ( Ty_symbol.builtin_symbol (Reason.OrdinaryName "React.RefSetter"),
+                    Ty.TypeAliasKind,
+                    Some [Ty.Top]
+                  )
                )
             )
       in

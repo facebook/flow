@@ -1172,7 +1172,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | _ ->
             let (ts, targs) = convert_type_params () in
             let config = List.nth ts 0 in
-            let instance = ComponentInstanceAvailableAsInstanceType (MixedT.make reason) in
+            let instance = ComponentInstanceTopType reason in
             let renders =
               let reason =
                 Reason.update_desc_new_reason

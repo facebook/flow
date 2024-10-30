@@ -49,8 +49,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
-Cannot call `foo` with `ref` bound to `a` because mixed (default type argument for AbstractComponent's 2nd position) [1]
-is incompatible with `React.Component` [2]. [incompatible-call]
+Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with `React.Component` [2].
+[incompatible-call]
 
    strict.js:9:5
    9| foo(ref);

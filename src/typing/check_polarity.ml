@@ -203,9 +203,8 @@ end = struct
       check_polarity cx ?trace seen tparams (Polarity.inv polarity) config;
       let () =
         match instance with
-        | ComponentInstanceOmitted _ -> ()
-        | ComponentInstanceAvailableAsInstanceType t ->
-          check_polarity cx ?trace seen tparams polarity t
+        | ComponentInstanceOmitted (_ : Reason.reason) -> ()
+        | ComponentInstanceTopType (_ : Reason.reason) -> ()
         | ComponentInstanceAvailableAsRefSetterProp t ->
           check_polarity cx ?trace seen tparams (Polarity.inv polarity) t
       in
