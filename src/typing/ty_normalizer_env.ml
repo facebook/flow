@@ -56,6 +56,8 @@ type options = {
   verbose_normalizer: bool;
   (* Maximum depth of recursion *)
   max_depth: int option;
+  (* Maximum size of type *)
+  max_size: int option;
   (* In typed AST for type references, we store the type as if it's read under the
    * value namespace. In some places, we might want to record the fact that it's
    * a type-namespace read. *)
@@ -72,6 +74,7 @@ let default_options =
     preserve_inferred_literal_types = false;
     verbose_normalizer = false;
     max_depth = Some 40;
+    max_size = None;
     toplevel_is_type_identifier_reference = false;
   }
 
@@ -85,6 +88,7 @@ let default_codemod_options =
     merge_bot_and_any_kinds = false;
     verbose_normalizer = false;
     max_depth = None;
+    max_size = None;
     toplevel_is_type_identifier_reference = false;
   }
 
