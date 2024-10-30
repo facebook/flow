@@ -6594,9 +6594,9 @@ struct
          Instead, we preserve the union by pushing down the destructor onto the
          branches of the unions.
       *)
-      | (UnionT (r, rep), _) when should_destruct_union () ->
-        destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
-      | (GenericT { reason; bound = UnionT (_, rep); id; name; no_infer }, _)
+      | (UnionT (_, rep), _) when should_destruct_union () ->
+        destruct_union reason (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
+      | (GenericT { reason = _; bound = UnionT (_, rep); id; name; no_infer }, _)
         when should_destruct_union () ->
         destruct_union
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name; no_infer })

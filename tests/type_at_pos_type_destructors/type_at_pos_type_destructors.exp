@@ -1202,3 +1202,19 @@ type ObjBig = {
 
 evaluated-size-limit.js:12:6,12:11
 
+unions.js:12:6
+Flags:
+type ABCDType = ABCD["type"]
+= "a" | "b" | "c" | "d"
+
+'ABCD' defined at unions.js:11:5
+'ABCDType' defined at unions.js:12:5
+
+unions.js:12:6,12:13
+
+unions.js:15:23
+Flags:
+T["type"]
+= "a" | "b" | "c" | "d"
+unions.js:15:23,15:23
+
