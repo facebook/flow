@@ -121,7 +121,12 @@ module type S = sig
     Ty.imported_ident Loc_collections.ALocMap.t
 
   val run_expand_members :
-    force_instance:bool -> genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
+    force_instance:bool ->
+    ?allowed_prop_names:Reason.name list ->
+    genv:Env.genv ->
+    State.t ->
+    Type.t ->
+    (Ty.t, error) result * State.t
 
   val run_expand_literal_union :
     genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
@@ -618,6 +623,7 @@ module Make (I : INPUT) : S = struct
       env:Env.t ->
       ?inherited:bool ->
       ?source:Ty.prop_source ->
+      ?allowed_prop_names:Reason.name list ->
       T.Properties.id ->
       int option ->
       (Ty.prop list, error) t
@@ -626,6 +632,7 @@ module Make (I : INPUT) : S = struct
       env:Env.t ->
       ?inherited:bool ->
       ?source:Ty.prop_source ->
+      ?allowed_prop_names:Reason.name list ->
       Reason.reason ->
       Type.objtype ->
       (Ty.obj_t, error) t
@@ -959,7 +966,7 @@ module Make (I : INPUT) : S = struct
         Some (x, t)
       | _ -> return None
 
-    and obj_ty ~env ?(inherited = false) ?(source = Ty.Other) reason o =
+    and obj_ty ~env ?(inherited = false) ?(source = Ty.Other) ?allowed_prop_names reason o =
       let obj_def_loc = Some (Reason.def_loc_of_reason reason) in
       let { T.flags; props_tmap; call_t; _ } = o in
       let { T.obj_kind; _ } = flags in
@@ -973,7 +980,9 @@ module Make (I : INPUT) : S = struct
         else
           None
       in
-      let%bind obj_props = obj_props_t ~env ~inherited ~source props_tmap call_t in
+      let%bind obj_props =
+        obj_props_t ~env ~inherited ~source ?allowed_prop_names props_tmap call_t
+      in
       let%map obj_kind =
         match obj_kind with
         | T.Exact -> return Ty.ExactObj
@@ -1066,11 +1075,19 @@ module Make (I : INPUT) : S = struct
       let do_props ~env ~inherited ~source props =
         concat_fold_m (obj_prop_t ~env ~inherited ~source) props
       in
-      fun ~env ?(inherited = false) ?(source = Ty.Other) props_id call_id_opt ->
+      fun ~env ?(inherited = false) ?(source = Ty.Other) ?allowed_prop_names props_id call_id_opt ->
         let cx = Env.get_cx env in
+        let prop_map = Context.find_props cx props_id in
         let props =
-          NameUtils.Map.bindings (Context.find_props cx props_id)
-          |> Base.List.map ~f:(fun (k, v) -> (k, v))
+          match allowed_prop_names with
+          | Some names ->
+            Base.List.filter_map
+              ~f:(fun name ->
+                match NameUtils.Map.find_opt name prop_map with
+                | Some v -> Some (name, v)
+                | None -> None)
+              names
+          | None -> NameUtils.Map.bindings prop_map
         in
         let%bind call_props = do_calls ~env call_id_opt in
         let%map props = do_props ~env ~inherited ~source props in
@@ -2168,6 +2185,9 @@ module Make (I : INPUT) : S = struct
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val force_instance : bool
+
+    (* When non-null, only this list of names will be considered in the result *)
+    val allowed_prop_names : Reason.name list option
   end
 
   (* Expand the toplevel structure of the input type into an object type. This is
@@ -2221,10 +2241,22 @@ module Make (I : INPUT) : S = struct
     and member_expand_object ~env ~inherited ~source super implements inst =
       let { T.own_props; proto_props; _ } = inst in
       let%bind own_ty_props =
-        TypeConverter.convert_obj_props_t ~env ~inherited ~source own_props None
+        TypeConverter.convert_obj_props_t
+          ~env
+          ~inherited
+          ~source
+          ?allowed_prop_names:Conf.allowed_prop_names
+          own_props
+          None
       in
       let%bind proto_ty_props =
-        TypeConverter.convert_obj_props_t ~env ~inherited:true ~source proto_props None
+        TypeConverter.convert_obj_props_t
+          ~env
+          ~inherited:true
+          ~source
+          ?allowed_prop_names:Conf.allowed_prop_names
+          proto_props
+          None
       in
       let%bind super_props =
         let%map super_ty = type__ ~env ~inherited:true ~source ~imode:IMInstance super in
@@ -2280,7 +2312,15 @@ module Make (I : INPUT) : S = struct
         }
 
     and obj_t ~env ~inherited ~source ~imode reason o =
-      let%bind obj = TypeConverter.convert_obj_t ~env ~inherited ~source reason o in
+      let%bind obj =
+        TypeConverter.convert_obj_t
+          ~env
+          ~inherited
+          ~source
+          ?allowed_prop_names:Conf.allowed_prop_names
+          reason
+          o
+      in
       let%map extra_props =
         let%map proto = type__ ~env ~inherited:true ~source ~imode o.T.proto_t in
         [Ty.SpreadProp proto]
@@ -2398,9 +2438,11 @@ module Make (I : INPUT) : S = struct
     and convert_t ~env t = type__ ~env ~inherited:false ~source:Ty.Other ~imode:IMUnset t
   end
 
-  let run_expand_members ~force_instance =
+  let run_expand_members ~force_instance ?allowed_prop_names =
     let module Converter = ExpandMembersConverter (struct
       let force_instance = force_instance
+
+      let allowed_prop_names = allowed_prop_names
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
 

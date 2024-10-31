@@ -253,7 +253,15 @@ let type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast =
   !results |> Base.List.map ~f:(TypeDeclarationReference.to_json ~root ~write_root)
 
 let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
-  match Ty_members.extract ~cx ~max_size:2000 ~typed_ast_opt:(Some typed_ast) ~file_sig scheme with
+  match
+    Ty_members.extract
+      ~cx
+      ~max_size:2000
+      ~allowed_prop_names:[Reason.OrdinaryName name]
+      ~typed_ast_opt:(Some typed_ast)
+      ~file_sig
+      scheme
+  with
   | Error _ -> []
   | Ok { Ty_members.members; _ } ->
     Base.Option.value

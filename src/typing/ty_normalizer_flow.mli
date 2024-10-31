@@ -25,7 +25,12 @@ val from_type_with_found_computed_type :
 val from_types :
   ?f:('a -> unit) -> genv -> ('a * Type.t) list -> ('a * (Ty.elt, Ty_normalizer.error) result) list
 
-val expand_members : force_instance:bool -> genv -> Type.t -> (Ty.t, Ty_normalizer.error) result
+val expand_members :
+  force_instance:bool ->
+  ?allowed_prop_names:Reason.name list ->
+  genv ->
+  Type.t ->
+  (Ty.t, Ty_normalizer.error) result
 
 val expand_literal_union : genv -> Type.t -> (Ty.t, Ty_normalizer.error) result
 

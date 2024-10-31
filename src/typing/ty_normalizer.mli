@@ -56,7 +56,12 @@ module type S = sig
     Ty.imported_ident Loc_collections.ALocMap.t
 
   val run_expand_members :
-    force_instance:bool -> genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t
+    force_instance:bool ->
+    ?allowed_prop_names:Reason.name list ->
+    genv:Env.genv ->
+    State.t ->
+    Type.t ->
+    (Ty.t, error) result * State.t
 
   val run_expand_literal_union :
     genv:Env.genv -> State.t -> Type.t -> (Ty.t, error) result * State.t

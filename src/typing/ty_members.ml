@@ -312,13 +312,14 @@ type ty_members = {
   errors: string list;
 }
 
-let extract ?(force_instance = false) ?max_size ~cx ~typed_ast_opt ~file_sig scheme =
+let extract
+    ?(force_instance = false) ?max_size ?allowed_prop_names ~cx ~typed_ast_opt ~file_sig scheme =
   let options =
     {
       Ty_normalizer_env.expand_internal_types = true;
       preserve_inferred_literal_types = false;
       evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
-      optimize_types = true;
+      optimize_types = false;
       omit_targ_defaults_option = false;
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
@@ -328,7 +329,7 @@ let extract ?(force_instance = false) ?max_size ~cx ~typed_ast_opt ~file_sig sch
     }
   in
   let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt ~file_sig in
-  match Ty_normalizer_flow.expand_members ~force_instance genv scheme with
+  match Ty_normalizer_flow.expand_members ~force_instance ?allowed_prop_names genv scheme with
   | Error error -> Error (Ty_normalizer.error_to_string error)
   | Ok (Ty.Any _) -> Error "not enough type information to extract members"
   | Ok this_ty ->
