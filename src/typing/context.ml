@@ -895,11 +895,14 @@ let run_in_synthesis_mode cx f =
 let run_in_signature_tvar_env cx f =
   let saved_speculation_state = !(cx.ccx.speculation_state) in
   let saved_typing_mode = cx.typing_mode in
+  let saved_instantiation_stack = !(cx.ccx.instantiation_stack) in
   cx.ccx.speculation_state := [];
+  cx.ccx.instantiation_stack := [];
   cx.typing_mode <- CheckingMode;
   Exception.protect ~f ~finally:(fun () ->
       cx.typing_mode <- saved_typing_mode;
-      cx.ccx.speculation_state := saved_speculation_state
+      cx.ccx.speculation_state := saved_speculation_state;
+      cx.ccx.instantiation_stack := saved_instantiation_stack
   )
 
 let run_in_hint_eval_mode cx f =
