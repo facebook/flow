@@ -185,7 +185,6 @@ module Make (I : INPUT) : S = struct
       rec_tvar_ids: ISet.t;
       rec_eval_ids: Type.EvalIdSet.t;
       found_computed_type: bool;
-      size: int;
     }
 
     let empty =
@@ -193,7 +192,6 @@ module Make (I : INPUT) : S = struct
         rec_tvar_ids = ISet.empty;
         rec_eval_ids = Type.EvalIdSet.empty;
         found_computed_type = false;
-        size = 0;
       }
 
     let found_computed_type { found_computed_type = x; _ } = x
@@ -284,23 +282,6 @@ module Make (I : INPUT) : S = struct
   (***********************)
 
   let non_opt_param = Ty.{ prm_optional = false }
-
-  let mk_fun_t
-      ?(params = [])
-      ?(effect = Ty.Arbitrary)
-      ?rest
-      ?tparams
-      ?(static = Ty.(TypeOf (FunProto, None)))
-      ret =
-    Ty.
-      {
-        fun_params = params;
-        fun_rest_param = rest;
-        fun_return = ret;
-        fun_type_params = tparams;
-        fun_static = static;
-        fun_effect = effect;
-      }
 
   let mk_fun
       ?(params = [])
@@ -663,19 +644,7 @@ module Make (I : INPUT) : S = struct
       let%bind env = descend env t in
 
       let depth = env.Env.depth - 1 in
-      let%bind stop =
-        match Env.(env.genv.options.max_size) with
-        | Some max_size ->
-          let%bind state = get in
-          let size = state.State.size in
-          let state = { state with State.size = size + 1 } in
-          let%map () = put state in
-          size > max_size
-        | None -> return false
-      in
-      if stop then
-        return (Ty.Any Ty.Recursive)
-      else if Env.verbose env then
+      if Env.verbose env then
         type_debug ~env ?id ~depth t
       else
         type_with_alias_reason ~env ?id t
@@ -950,7 +919,6 @@ module Make (I : INPUT) : S = struct
       let rec go = function
         | Ty.Fun ft -> return [ft]
         | Ty.Inter (t1, t2, ts) -> concat_fold_m go (t1 :: t2 :: ts)
-        | Ty.Any a -> return [mk_fun_t (Ty.ReturnType (Ty.Any a))]
         | _ -> terr ~kind:BadMethodType (Some t)
       in
       let%bind ty = type__ ~env t in
@@ -2100,7 +2068,6 @@ module Make (I : INPUT) : S = struct
       state
       t : ('a, error) result * State.t =
     let env = Env.init ~genv in
-    let state = { state with State.size = 0 } in
     let (result, state) = run state (f ~env t) in
     let result =
       match result with
@@ -2169,7 +2136,6 @@ module Make (I : INPUT) : S = struct
       let (_, result) =
         List.fold_left
           (fun (st, acc) (name, loc, import_mode, t) ->
-            let st = { st with State.size = 0 } in
             match run st (convert genv t) with
             | (Ok (Some def_loc), st) -> (st, ALocMap.add def_loc (loc, name, import_mode) acc)
             | (Ok None, st) ->

@@ -58,7 +58,6 @@ let type_at_pos_type
         merge_bot_and_any_kinds = true;
         verbose_normalizer;
         max_depth = Some max_depth;
-        max_size = None;
         toplevel_is_type_identifier_reference;
       }
     in
@@ -145,7 +144,6 @@ let insert_type_normalize ~cx ~file_sig ~omit_targ_defaults ~typed_ast loc t : T
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
       max_depth = None;
-      max_size = None;
       toplevel_is_type_identifier_reference = false;
     }
   in

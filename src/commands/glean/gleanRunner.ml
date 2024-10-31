@@ -256,7 +256,6 @@ let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
   match
     Ty_members.extract
       ~cx
-      ~max_size:2000
       ~allowed_prop_names:[Reason.OrdinaryName name]
       ~typed_ast_opt:(Some typed_ast)
       ~file_sig

@@ -312,8 +312,7 @@ type ty_members = {
   errors: string list;
 }
 
-let extract
-    ?(force_instance = false) ?max_size ?allowed_prop_names ~cx ~typed_ast_opt ~file_sig scheme =
+let extract ?(force_instance = false) ?allowed_prop_names ~cx ~typed_ast_opt ~file_sig scheme =
   let options =
     {
       Ty_normalizer_env.expand_internal_types = true;
@@ -324,7 +323,6 @@ let extract
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
       max_depth = Some 40;
-      max_size;
       toplevel_is_type_identifier_reference = false;
     }
   in
