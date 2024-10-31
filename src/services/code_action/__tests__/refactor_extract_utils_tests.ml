@@ -60,6 +60,7 @@ let stub_metadata ~root ~checked =
     object_freeze_fix = false;
     natural_inference_exports_primitive_const = false;
     react_custom_jsx_typing = false;
+    react_ref_as_prop = Options.ReactRefAsProp.Disabled;
     react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     relay_integration_esmodules = false;

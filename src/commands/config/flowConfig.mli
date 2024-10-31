@@ -218,6 +218,8 @@ val node_resolver_root_relative_dirnames : config -> string list
 
 val react_custom_jsx_typing : config -> bool
 
+val react_ref_as_prop : config -> Options.ReactRefAsProp.t
+
 val react_runtime : config -> Options.react_runtime
 
 val recursion_limit : config -> int

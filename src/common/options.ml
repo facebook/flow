@@ -25,6 +25,14 @@ type saved_state_fetcher =
   | Scm_fetcher
   | Fb_fetcher
 
+module ReactRefAsProp = struct
+  type t =
+    | Disabled  (** Pre React 19 behavior *)
+    | PartialSupport
+        (** Only implement React 19 behavior for function components.
+          * Utility types will still return ref and props separately. *)
+end
+
 type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
@@ -128,6 +136,7 @@ type t = {
   opt_profile: bool;
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;
+  opt_react_ref_as_prop: ReactRefAsProp.t;
   opt_react_runtime: react_runtime;
   opt_recursion_limit: int;
   opt_relay_integration_esmodules: bool;
@@ -303,6 +312,8 @@ let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_r
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
 
 let react_custom_jsx_typing opts = opts.opt_react_custom_jsx_typing
+
+let react_ref_as_prop opts = opts.opt_react_ref_as_prop
 
 let react_runtime opts = opts.opt_react_runtime
 

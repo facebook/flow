@@ -1455,6 +1455,7 @@ let make_options
     opt_ban_spread_key_props =
       Base.Option.value (FlowConfig.ban_spread_key_props flowconfig) ~default:false;
     opt_react_custom_jsx_typing = FlowConfig.react_custom_jsx_typing flowconfig;
+    opt_react_ref_as_prop = FlowConfig.react_ref_as_prop flowconfig;
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
     opt_relay_integration_esmodules = FlowConfig.relay_integration_esmodules flowconfig;

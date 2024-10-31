@@ -104,6 +104,7 @@ type metadata = {
   natural_inference_exports_primitive_const: bool;
   object_freeze_fix: bool;
   react_custom_jsx_typing: bool;
+  react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   relay_integration_esmodules: bool;
@@ -248,6 +249,8 @@ val call_props : t -> Type.t IMap.t
 val export_maps : t -> Type.Exports.map
 
 val react_custom_jsx_typing : t -> bool
+
+val react_ref_as_prop : t -> Options.ReactRefAsProp.t
 
 val react_runtime : t -> Options.react_runtime
 

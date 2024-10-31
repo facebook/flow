@@ -60,6 +60,7 @@ type metadata = {
   natural_inference_exports_primitive_const: bool;
   object_freeze_fix: bool;
   react_custom_jsx_typing: bool;
+  react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   relay_integration_esmodules: bool;
@@ -287,6 +288,7 @@ let metadata_of_options options =
       Options.natural_inference_exports_primitive_const options;
     object_freeze_fix = Options.object_freeze_fix options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
+    react_ref_as_prop = Options.react_ref_as_prop options;
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     relay_integration_esmodules = Options.relay_integration_esmodules options;
@@ -569,6 +571,8 @@ let call_props cx = cx.ccx.sig_cx.call_props
 let export_maps cx = cx.ccx.sig_cx.export_maps
 
 let react_custom_jsx_typing cx = cx.metadata.react_custom_jsx_typing
+
+let react_ref_as_prop cx = cx.metadata.react_ref_as_prop
 
 let react_runtime cx = cx.metadata.react_runtime
 
