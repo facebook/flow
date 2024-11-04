@@ -450,7 +450,7 @@ and dump_use_t_ (depth, tvars) cx t =
             specialized_component = _;
           } ->
         p ~extra:(spf "CreateElement (%s) => %s" (kid jsx_props) (kid tout)) t
-      | ConfigCheck config -> spf "ConfigCheck (%s)" (kid config)
+      | ConfigCheck { props; instance = _ } -> spf "ConfigCheck (%s)" (kid props)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
       | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
       | GetConfigType (default_props, tout) ->
@@ -601,13 +601,17 @@ and dump_use_t_ (depth, tvars) cx t =
             | Done o -> spf "Done (%s)" (resolved o))
         )
       in
-      let react_props state =
+      let react_props ~ref_manipulation state =
         Object.ReactConfig.(
           spf
-            "(%s)"
+            "(%s, ref_manipulation=%s)"
             (match state with
             | Config _ -> "Config"
             | Defaults _ -> "Defaults")
+            (match ref_manipulation with
+            | FilterRef -> "filter"
+            | KeepRef -> "keep"
+            | AddRef _ -> "add")
         )
       in
       let object_map prop_type = spf "ObjectMap {prop_type: %s}" (kid prop_type) in
@@ -620,7 +624,7 @@ and dump_use_t_ (depth, tvars) cx t =
         | ObjectRep -> "ObjectRep"
         | Spread (options, state) -> spread options state
         | Rest (options, state) -> rest options state
-        | ReactConfig state -> react_props state
+        | ReactConfig { state; ref_manipulation } -> react_props ~ref_manipulation state
         | Object.ObjectMap { prop_type; mapped_type_flags = _; selected_keys_opt = _ } ->
           object_map prop_type
       in

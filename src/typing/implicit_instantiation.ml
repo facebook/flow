@@ -418,8 +418,32 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | Object.Partial
       | Object.Required
       | Object.ObjectRep
-      | Object.ReactConfig _ ->
+      | Object.ReactConfig { ref_manipulation = Object.ReactConfig.FilterRef; _ }
+      | Object.ReactConfig { ref_manipulation = Object.ReactConfig.KeepRef; _ } ->
         identity_reverse_upper_bound cx seen tvar r tout
+      | Object.ReactConfig { ref_manipulation = Object.ReactConfig.AddRef ref_t; _ } ->
+        let solution = merge_upper_bounds cx seen r tout in
+        (match solution with
+        | UpperEmpty -> UpperEmpty
+        | UpperNonT u -> UpperNonT u
+        | UpperT t ->
+          let pmap =
+            NameUtils.Map.singleton
+              (OrdinaryName "ref")
+              (Field
+                 {
+                   preferred_def_locs = None;
+                   key_loc = None;
+                   type_ = ref_t;
+                   polarity = Polarity.Neutral;
+                 }
+              )
+          in
+          (match reverse_component_check_config cx r pmap t |> merge_lower_bounds cx with
+          | None -> UpperEmpty
+          | Some reversed ->
+            Flow.flow_t cx (reversed, tvar);
+            UpperT reversed))
       | Object.ReactCheckComponentConfig pmap ->
         let solution = merge_upper_bounds cx seen r tout in
         (match solution with

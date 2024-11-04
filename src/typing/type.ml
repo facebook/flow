@@ -3005,6 +3005,11 @@ and Object : sig
     type state =
       | Config of { component_default_props: TypeTerm.t option }
       | Defaults of { config: resolved }
+
+    type ref_manipulation =
+      | FilterRef
+      | KeepRef
+      | AddRef of TypeTerm.t
   end
 
   type tool =
@@ -3014,7 +3019,10 @@ and Object : sig
     | Required
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
-    | ReactConfig of ReactConfig.state
+    | ReactConfig of {
+        state: ReactConfig.state;
+        ref_manipulation: ReactConfig.ref_manipulation;
+      }
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ObjectRep
     | ObjectMap of {
@@ -3037,7 +3045,10 @@ and React : sig
         inferred_targs: (TypeTerm.t * Subst_name.Name.t) list option;
         specialized_component: TypeTerm.specialized_callee option;
       }
-    | ConfigCheck of TypeTerm.t
+    | ConfigCheck of {
+        props: TypeTerm.t;
+        instance: TypeTerm.component_instance option;
+      }
     | GetProps of TypeTerm.t_out
     | GetConfig of TypeTerm.t_out
     | GetConfigType of TypeTerm.t * TypeTerm.t_out

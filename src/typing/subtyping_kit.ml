@@ -1498,16 +1498,35 @@ module Make (Flow : INPUT) : OUTPUT = struct
        *  polymorphic HOCs then the [string]: mixed indexer causes spurious errors.
        *  2. We check the ref here, so we don't need to check it in the config as well.
        *)
-      rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
+      rec_flow
+        cx
+        trace
+        ( l,
+          ReactKitT
+            ( use_op,
+              reasonl,
+              React.ConfigCheck
+                {
+                  props = config;
+                  instance =
+                    (match Context.react_ref_as_prop cx with
+                    | Options.ReactRefAsProp.Disabled -> None
+                    | Options.ReactRefAsProp.PartialSupport -> Some instance);
+                }
+            )
+        );
 
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders);
 
-      flow_react_component_instance_to_instance
-        cx
-        trace
-        use_op
-        (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
+      (match Context.react_ref_as_prop cx with
+      | Options.ReactRefAsProp.Disabled ->
+        flow_react_component_instance_to_instance
+          cx
+          trace
+          use_op
+          (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
+      | Options.ReactRefAsProp.PartialSupport -> ())
     (* Object Component ~> AbstractComponent *)
     | ( DefT (reasonl, ObjT { call_t = Some id; _ }),
         DefT
@@ -1515,7 +1534,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
           )
       ) ->
-      rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
+      rec_flow
+        cx
+        trace
+        ( l,
+          ReactKitT
+            ( use_op,
+              reasonl,
+              React.ConfigCheck
+                {
+                  props = config;
+                  instance =
+                    (match Context.react_ref_as_prop cx with
+                    | Options.ReactRefAsProp.Disabled -> None
+                    | Options.ReactRefAsProp.PartialSupport -> Some instance);
+                }
+            )
+        );
 
       (* Ensure the callable signature's return type is compatible with the rendered element (renders). We
        * do this by flowing it to (...empty): renders *)
@@ -1532,11 +1567,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let mixed = MixedT.why reasonu in
       rec_flow_t ~use_op cx trace (Context.find_call cx id, DefT (reasonu, FunT (mixed, funtype)));
 
-      flow_react_component_instance_to_instance
-        cx
-        trace
-        use_op
-        (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
+      (match Context.react_ref_as_prop cx with
+      | Options.ReactRefAsProp.Disabled ->
+        flow_react_component_instance_to_instance
+          cx
+          trace
+          use_op
+          (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
+      | Options.ReactRefAsProp.PartialSupport -> ())
     (* AbstractComponent ~> AbstractComponent *)
     | ( DefT
           ( reasonl,

@@ -1,0 +1,205 @@
+Error ----------------------------------------------------------------------------------- implicit_instantiation.js:13:2
+
+Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
+in object type [2]. [prop-missing]
+
+   implicit_instantiation.js:13:2
+   13| ({}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // error: missing foo prop
+        ^^ [1]
+
+References:
+   implicit_instantiation.js:13:9
+   13| ({}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // error: missing foo prop
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- implicit_instantiation.js:14:2
+
+Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
+in object type [2]. [prop-missing]
+
+   implicit_instantiation.js:14:2
+   14| ({}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // error: missing foo prop
+        ^^ [1]
+
+References:
+   implicit_instantiation.js:14:9
+   14| ({}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // error: missing foo prop
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- implicit_instantiation.js:15:2
+
+Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
+in object type [2]. [prop-missing]
+
+   implicit_instantiation.js:15:2
+   15| ({}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing foo prop
+        ^^ [1]
+
+References:
+   implicit_instantiation.js:15:9
+   15| ({}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing foo prop
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- implicit_instantiation.js:17:1
+
+Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   implicit_instantiation.js:17:1
+   17| null as React.ElementRef<typeof IdMappedFnWithoutRefProp>; // error: null ~> void
+       ^^^^ [1]
+
+References:
+   implicit_instantiation.js:17:9
+   17| null as React.ElementRef<typeof IdMappedFnWithoutRefProp>; // error: null ~> void
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- implicit_instantiation.js:19:1
+
+Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with `HTMLElement` [2]. [incompatible-cast]
+
+   implicit_instantiation.js:19:1
+   19| null as React.ElementRef<typeof IdMappedFnWithOptionalRefProp>; // error: null ~> HTMLElement
+       ^^^^ [1]
+
+References:
+   implicit_instantiation.js:19:9
+   19| null as React.ElementRef<typeof IdMappedFnWithOptionalRefProp>; // error: null ~> HTMLElement
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- implicit_instantiation.js:21:1
+
+Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with `HTMLElement` [2]. [incompatible-cast]
+
+   implicit_instantiation.js:21:1
+   21| null as React.ElementRef<typeof IdMappedFnWithRequiredRefProp>; // error: null ~> HTMLElement
+       ^^^^ [1]
+
+References:
+   implicit_instantiation.js:21:9
+   21| null as React.ElementRef<typeof IdMappedFnWithRequiredRefProp>; // error: null ~> HTMLElement
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- jsx_checking.js:5:2
+
+Cannot create `FnWithRequiredRefProp` element because property `ref` is missing in props [1] but exists in object
+type [2]. [prop-missing]
+
+   jsx_checking.js:5:2
+   5| <FnWithRequiredRefProp foo="bar" />; // error: missing ref prop
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   jsx_checking.js:5:1
+   5| <FnWithRequiredRefProp foo="bar" />; // error: missing ref prop
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn_components.js:3:54
+   3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- jsx_checking.js:6:24
+
+Cannot create `FnWithoutRefProp` element because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-type]
+
+   jsx_checking.js:6:24
+   6| <FnWithoutRefProp foo={1} />; // error: 1 ~> string, normal checking still works
+                             ^ [1]
+
+References:
+   fn_components.js:1:55
+   1| declare export function FnWithoutRefProp(props: {foo: string}): React.Node;
+                                                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- jsx_checking.js:7:2
+
+Cannot create `FnWithoutRefProp` element because property `ref` is missing in object type [1] but exists in props [2].
+[prop-missing]
+
+   jsx_checking.js:7:2
+   7| <FnWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
+       ^^^^^^^^^^^^^^^^
+
+References:
+   fn_components.js:1:49
+   1| declare export function FnWithoutRefProp(props: {foo: string}): React.Node;
+                                                      ^^^^^^^^^^^^^ [1]
+   jsx_checking.js:7:1
+   7| <FnWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- jsx_checking.js:9:39
+
+Cannot create `FnWithOptionalRefProp` element because in property `ref`: [incompatible-type]
+ - Either string [1] is incompatible with `HTMLElement` [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
+
+   jsx_checking.js:9:39
+     9| <FnWithOptionalRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
+                                              ^^^^^^^^^^^^^^^^^^ [3]
+
+References:
+   jsx_checking.js:9:44
+     9| <FnWithOptionalRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
+                                                   ^^^^^^ [1]
+   fn_components.js:2:90
+     2| declare export function FnWithOptionalRefProp(props: {foo: string, ref?: React.RefSetter<HTMLElement>}): React.Node;
+                                                                                                 ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- jsx_checking.js:11:39
+
+Cannot create `FnWithRequiredRefProp` element because in property `ref`: [incompatible-type]
+ - Either string [1] is incompatible with `HTMLElement` [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
+
+   jsx_checking.js:11:39
+    11| <FnWithRequiredRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
+                                              ^^^^^^^^^^^^^^^^^^ [3]
+
+References:
+   jsx_checking.js:11:44
+    11| <FnWithRequiredRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
+                                                   ^^^^^^ [1]
+   fn_components.js:3:89
+     3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
+                                                                                                ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:181:5
+   181|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:13:1
+
+Cannot cast `FnWithRequiredRefProp` to component because property `ref` is missing in props [1] but exists in object
+type [2]. [prop-missing]
+
+   subtyping.js:13:1
+   13| FnWithRequiredRefProp as component(foo: string); // error: missing ref prop
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   subtyping.js:13:26
+   13| FnWithRequiredRefProp as component(foo: string); // error: missing ref prop
+                                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn_components.js:3:54
+    3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 12 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

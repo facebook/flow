@@ -302,7 +302,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * add a positive variance annotation. We may consider marking that type as
          * constant in the future as well. *)
         let prop_polarity = Polarity.Neutral in
-        let finish cx trace reason config defaults =
+        let finish ~ref_manipulation cx trace reason config defaults =
           let {
             Object.reason = config_reason;
             props = config_props;
@@ -318,7 +318,22 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            * independently of our config. So we must remove them so the user can't
            * see them. *)
           let config_props = NameUtils.Map.remove (OrdinaryName "key") config_props in
-          let config_props = NameUtils.Map.remove (OrdinaryName "ref") config_props in
+          let config_props =
+            match ref_manipulation with
+            | FilterRef -> NameUtils.Map.remove (OrdinaryName "ref") config_props
+            | KeepRef -> config_props
+            | AddRef prop_t ->
+              NameUtils.Map.add
+                (OrdinaryName "ref")
+                {
+                  Object.prop_t;
+                  is_own = true;
+                  is_method = false;
+                  polarity = prop_polarity;
+                  key_loc = None;
+                }
+                config_props
+          in
 
           let config_dict = Obj_type.get_dict_opt config_flags.obj_kind in
           (* Create the final props map and dict.
@@ -506,18 +521,21 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             proto
             generics
         in
-        fun state cx trace use_op reason x tout ->
+        fun ~ref_manipulation state cx trace use_op reason x tout ->
           match state with
           (* If we have some type for default props then we need to wait for that
            * type to resolve before finishing our props type. *)
           | Config { component_default_props = Some t } ->
             let tool = Resolve Next in
             let state = Defaults { config = x } in
-            rec_flow cx trace (t, ObjKitT (use_op, reason, tool, ReactConfig state, tout))
+            rec_flow
+              cx
+              trace
+              (t, ObjKitT (use_op, reason, tool, ReactConfig { state; ref_manipulation }, tout))
           (* If we have no default props then finish our object and flow it to our
            * tout type. *)
           | Config { component_default_props = None } ->
-            let ts = Nel.map (fun x -> finish cx trace reason x None) x in
+            let ts = Nel.map (fun x -> finish ~ref_manipulation cx trace reason x None) x in
             let t =
               match ts with
               | (t, []) -> t
@@ -529,7 +547,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           | Defaults { config } ->
             let ts =
               Nel.map_concat
-                (fun c -> Nel.map (fun d -> finish cx trace reason c (Some d)) x)
+                (fun c -> Nel.map (fun d -> finish ~ref_manipulation cx trace reason c (Some d)) x)
                 config
             in
             let t =
@@ -569,7 +587,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | MakeExact -> object_make_exact
       | Spread (options, state) -> object_spread options state
       | Rest (options, state) -> object_rest options state
-      | ReactConfig state -> react_config state
+      | ReactConfig { state; ref_manipulation } -> react_config ~ref_manipulation state
       | ReadOnly -> object_read_only
       | Partial -> object_partial
       | Required -> object_required
