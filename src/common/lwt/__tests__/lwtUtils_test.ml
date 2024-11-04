@@ -85,12 +85,10 @@ let both_result_tests =
     ( "fails_early_exn" %>:: fun ctxt ->
       let (p1, _) = Lwt.wait () in
       let (p2, r2) = Lwt.wait () in
-      Lwt.wakeup_exn r2 (Failure "did not work");
-      (* Lwt_result.both would just hang because p1 never resolves *)
-      let p = LwtUtils.both_result p1 p2 in
       let%lwt exn =
         try%lwt
-          let%lwt _ = p in
+          Lwt.wakeup_exn r2 (Failure "did not work");
+          let%lwt _ = LwtUtils.both_result p1 p2 in
           Lwt.return_none
         with
         | Failure s -> Lwt.return_some s
