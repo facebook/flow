@@ -47,6 +47,7 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_jest_integration: bool;
+  enable_pattern_matching_expressions: bool;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -274,6 +275,7 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_jest_integration = Options.enable_jest_integration options;
+    enable_pattern_matching_expressions = Options.enable_pattern_matching_expressions options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -491,6 +493,8 @@ let enable_const_params cx =
 let enable_enums cx = cx.metadata.enable_enums
 
 let enable_jest_integration cx = cx.metadata.enable_jest_integration
+
+let enable_pattern_matching_expressions cx = cx.metadata.enable_pattern_matching_expressions
 
 let enable_relay_integration cx =
   cx.metadata.enable_relay_integration

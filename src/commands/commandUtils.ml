@@ -1400,6 +1400,8 @@ let make_options
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_jest_integration = FlowConfig.jest_integration flowconfig;
+    opt_enable_pattern_matching_expressions =
+      Base.Option.value ~default:false (FlowConfig.pattern_matching_expressions flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);

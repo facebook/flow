@@ -118,6 +118,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
+    pattern_matching_expressions: bool option;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_runtime: Options.react_runtime;
@@ -252,6 +253,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
+      pattern_matching_expressions = None;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.Disabled;
       react_runtime = Options.ReactRuntimeClassic;
@@ -1024,6 +1026,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with natural_inference_exports_primitive_const = v })
       );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
+      ( "experimental.pattern_matching_expressions",
+        boolean (fun opts v -> Ok { opts with pattern_matching_expressions = Some v })
+      );
       ( "react.custom_jsx_typing",
         boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
       );
@@ -1746,6 +1751,8 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
+
+let pattern_matching_expressions c = c.options.Opts.pattern_matching_expressions
 
 let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 

@@ -214,6 +214,8 @@ val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list
 
+val pattern_matching_expressions : config -> bool option
+
 val node_resolver_root_relative_dirnames : config -> string list
 
 val react_custom_jsx_typing : config -> bool

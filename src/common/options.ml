@@ -91,6 +91,7 @@ type t = {
   opt_dev_only_refinement_info_as_errors: bool;
   opt_enable_const_params: bool;
   opt_enable_jest_integration: bool;
+  opt_enable_pattern_matching_expressions: bool;
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
@@ -225,6 +226,8 @@ let dev_only_refinement_info_as_errors opts = opts.opt_dev_only_refinement_info_
 let enable_const_params opts = opts.opt_enable_const_params
 
 let enable_jest_integration opts = opts.opt_enable_jest_integration
+
+let enable_pattern_matching_expressions opts = opts.opt_enable_pattern_matching_expressions
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

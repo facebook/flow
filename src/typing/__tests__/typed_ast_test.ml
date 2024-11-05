@@ -36,6 +36,7 @@ let metadata =
     enable_const_params = false;
     enable_enums = true;
     enable_jest_integration = false;
+    enable_pattern_matching_expressions = false;
     enable_relay_integration = false;
     exact_by_default = false;
     facebook_fbs = None;
