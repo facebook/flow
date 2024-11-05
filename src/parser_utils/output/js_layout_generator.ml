@@ -3371,9 +3371,49 @@ and match_pattern ~opts (loc, pattern) =
     in
     layout_node_with_comments_opt loc comments (fuse [Atom operator; argument])
   | BindingPattern binding -> match_binding_pattern loc binding
+  | ObjectPattern obj -> match_object_pattern ~opts loc obj
 
 and match_binding_pattern loc { Ast.MatchPattern.BindingPattern.kind; id; comments } =
   source_location_with_comments ?comments (loc, fuse_with_space [variable_kind kind; identifier id])
+
+and match_object_pattern ~opts loc { Ast.MatchPattern.ObjectPattern.properties; rest; comments } =
+  let open Ast.MatchPattern.ObjectPattern in
+  let prop_key key =
+    match key with
+    | Property.StringLiteral (loc, lit) -> string_literal ~opts loc lit
+    | Property.NumberLiteral (loc, lit) -> number_literal ~opts loc lit
+    | Property.Identifier ident -> identifier ident
+  in
+  let props_rev =
+    Base.List.rev_map
+      ~f:(fun (loc, { Property.key; pattern; shorthand; comments }) ->
+        layout_node_with_comments_opt
+          loc
+          comments
+          ( if shorthand then
+            match_pattern ~opts pattern
+          else
+            fuse [prop_key key; Atom ":"; pretty_space; match_pattern ~opts pattern]
+          ))
+      properties
+  in
+  let props_rev =
+    Base.Option.value_map rest ~default:props_rev ~f:(fun (rest_loc, { Rest.argument; comments }) ->
+        let (arg_loc, arg) = argument in
+        let rest =
+          layout_node_with_comments_opt
+            rest_loc
+            comments
+            (fuse [Atom "..."; match_binding_pattern arg_loc arg])
+        in
+        rest :: props_rev
+    )
+  in
+  let props = List.rev props_rev in
+  layout_node_with_comments_opt
+    loc
+    comments
+    (group [new_list ~wrap:(Atom "{", Atom "}") ~sep:(fuse [Atom ","]) props])
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =

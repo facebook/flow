@@ -273,6 +273,22 @@ function custom_ast_types(fork) {
     .field('id', def('Identifier'))
     .field('kind', or('let', 'const', 'var'));
 
+  def('MatchObjectPattern')
+    .bases('MatchPattern')
+    .build('properties', 'rest')
+    .field('properties', [def('MatchObjectPatternProperty')])
+    .field('rest', or(def('MatchObjectPatternRest'), null));
+
+  def('MatchObjectPatternProperty')
+    .build('key', 'pattern')
+    .field('key', or(def('Identifier'), def('Literal')))
+    .field('pattern', def('MatchPattern'))
+    .field('shorthand', Boolean);
+
+  def('MatchObjectPatternRest')
+    .build('argument')
+    .field('argument', def('MatchBindingPattern'));
+
   /////////
   // es2018
   /////////

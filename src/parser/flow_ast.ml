@@ -1975,6 +1975,42 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module ObjectPattern : sig
+    module Property : sig
+      type ('M, 'T) key =
+        | StringLiteral of ('M * 'M StringLiteral.t)
+        | NumberLiteral of ('M * 'M NumberLiteral.t)
+        | Identifier of ('M, 'T) Identifier.t
+
+      and ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        key: ('M, 'T) key;
+        pattern: ('M, 'T) MatchPattern.t;
+        shorthand: bool;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    module Rest : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        argument: 'M * ('M, 'T) BindingPattern.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      properties: ('M, 'T) Property.t list;
+      rest: ('M, 'T) Rest.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'M * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -1987,6 +2023,7 @@ and MatchPattern : sig
     | UnaryPattern of 'M UnaryPattern.t
     | BindingPattern of ('M, 'T) BindingPattern.t
     | IdentifierPattern of ('M, 'T) Identifier.t
+    | ObjectPattern of ('M, 'T) ObjectPattern.t
   [@@deriving show]
 end =
   MatchPattern

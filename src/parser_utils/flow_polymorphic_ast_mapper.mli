@@ -554,6 +554,21 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method match_binding_pattern :
       ('M, 'T) Ast.MatchPattern.BindingPattern.t -> ('N, 'U) Ast.MatchPattern.BindingPattern.t
 
+    method match_object_pattern :
+      ('M, 'T) Ast.MatchPattern.ObjectPattern.t -> ('N, 'U) Ast.MatchPattern.ObjectPattern.t
+
+    method match_object_pattern_property :
+      ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.t ->
+      ('N, 'U) Ast.MatchPattern.ObjectPattern.Property.t
+
+    method match_object_pattern_property_key :
+      ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.key ->
+      ('N, 'U) Ast.MatchPattern.ObjectPattern.Property.key
+
+    method match_object_pattern_rest :
+      ('M, 'T) Ast.MatchPattern.ObjectPattern.Rest.t' ->
+      ('N, 'U) Ast.MatchPattern.ObjectPattern.Rest.t'
+
     method member : 'T -> ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
 
     method member_private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t

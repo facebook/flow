@@ -75,6 +75,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
     | T_VAR ->
       let (loc, binding) = binding_pattern env ~kind:Ast.Variable.Var in
       (loc, BindingPattern binding)
+    | T_LCURLY -> object_pattern env
     | _ when Peek.is_identifier env ->
       let id = Parse.identifier env in
       (fst id, IdentifierPattern id)
@@ -134,9 +135,106 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         { BindingPattern.kind; id; comments })
       env
 
+  and object_pattern env =
+    let property_key env =
+      let open ObjectPattern.Property in
+      let leading = Peek.comments env in
+      match Peek.token env with
+      | T_STRING (loc, value, raw, octal) ->
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
+        Expect.token env (T_STRING (loc, value, raw, octal));
+        let trailing = Eat.trailing_comments env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        StringLiteral (loc, { Ast.StringLiteral.value; raw; comments })
+      | T_NUMBER { kind; raw } ->
+        let loc = Peek.loc env in
+        let value = Parse.number env kind raw in
+        let trailing = Eat.trailing_comments env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        NumberLiteral (loc, { Ast.NumberLiteral.value; raw; comments })
+      | _ ->
+        let id = identifier_name env in
+        Identifier id
+    in
+    let property env =
+      let start_loc = Peek.loc env in
+      let leading = Peek.comments env in
+      let shorthand_prop (loc, binding) =
+        let { BindingPattern.id = (_, id); _ } = binding in
+        let key = ObjectPattern.Property.Identifier (loc, id) in
+        let pattern = (loc, BindingPattern binding) in
+        let trailing = Eat.trailing_comments env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        (start_loc, { ObjectPattern.Property.key; pattern; shorthand = true; comments })
+      in
+      match Peek.token env with
+      | T_CONST -> shorthand_prop (binding_pattern env ~kind:Ast.Variable.Const)
+      | T_LET -> shorthand_prop (binding_pattern env ~kind:Ast.Variable.Let)
+      | T_VAR -> shorthand_prop (binding_pattern env ~kind:Ast.Variable.Var)
+      | _ ->
+        let key = property_key env in
+        Expect.token env T_COLON;
+        let pattern = match_pattern env in
+        let trailing = Eat.trailing_comments env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        (start_loc, { ObjectPattern.Property.key; pattern; shorthand = false; comments })
+    in
+    let rec properties env acc =
+      match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        (List.rev acc, None)
+      | T_ELLIPSIS ->
+        let (rest_loc, rest) =
+          with_loc
+            (fun env ->
+              let leading = Peek.comments env in
+              Expect.token env T_ELLIPSIS;
+              let argument =
+                match Peek.token env with
+                | T_CONST -> Some (binding_pattern env ~kind:Ast.Variable.Const)
+                | T_LET -> Some (binding_pattern env ~kind:Ast.Variable.Let)
+                | T_VAR -> Some (binding_pattern env ~kind:Ast.Variable.Var)
+                | _ ->
+                  error_unexpected ~expected:"`const` or `let`" env;
+                  None
+              in
+              let trailing = Eat.trailing_comments env in
+              let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+              Option.map (fun argument -> { ObjectPattern.Rest.argument; comments }) argument)
+            env
+        in
+        let rest = Option.map (fun rest -> (rest_loc, rest)) rest in
+        (List.rev acc, rest)
+      | _ ->
+        let prop = property env in
+        if not (Peek.token env = T_RCURLY) then Expect.token env T_COMMA;
+        properties env (prop :: acc)
+    in
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_LCURLY;
+        let (properties, rest) = properties env [] in
+        let internal = Peek.comments env in
+        Expect.token env T_RCURLY;
+        let trailing = Eat.trailing_comments env in
+        ObjectPattern
+          {
+            ObjectPattern.properties;
+            rest;
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
+          })
+      env
+
   and add_comments ?(leading = []) ?(trailing = []) (loc, pattern) =
     let merge_comments inner =
       Flow_ast_utils.merge_comments
+        ~inner
+        ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
+    in
+    let merge_comments_with_internal inner =
+      Flow_ast_utils.merge_comments_with_internal
         ~inner
         ~outer:(Flow_ast_utils.mk_comments_opt ~leading ~trailing ())
     in
@@ -158,5 +256,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         BindingPattern { p with BindingPattern.comments = merge_comments comments }
       | IdentifierPattern (id_loc, ({ Ast.Identifier.comments; _ } as p)) ->
         IdentifierPattern (id_loc, { p with Ast.Identifier.comments = merge_comments comments })
+      | ObjectPattern ({ ObjectPattern.comments; _ } as p) ->
+        ObjectPattern { p with ObjectPattern.comments = merge_comments_with_internal comments }
     )
 end

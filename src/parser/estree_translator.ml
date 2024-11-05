@@ -702,9 +702,37 @@ with type t = Impl.t = struct
           [("operator", string operator); ("argument", argument)]
       | BindingPattern binding -> match_binding_pattern (loc, binding)
       | IdentifierPattern id -> node "MatchIdentifierPattern" loc [("id", identifier id)]
+      | ObjectPattern { ObjectPattern.properties; rest; comments } ->
+        let property_key key =
+          match key with
+          | ObjectPattern.Property.StringLiteral lit -> string_literal lit
+          | ObjectPattern.Property.NumberLiteral lit -> number_literal lit
+          | ObjectPattern.Property.Identifier id -> identifier id
+        in
+        let property (loc, { ObjectPattern.Property.key; pattern; shorthand; comments }) =
+          node
+            ?comments
+            "MatchObjectPatternProperty"
+            loc
+            [
+              ("key", property_key key);
+              ("pattern", match_pattern pattern);
+              ("shorthand", bool shorthand);
+            ]
+        in
+        node
+          ?comments:(format_internal_comments comments)
+          "MatchObjectPattern"
+          loc
+          [
+            ("properties", array_of_list property properties);
+            ("rest", option match_object_pattern_rest rest);
+          ]
     and match_binding_pattern (loc, { MatchPattern.BindingPattern.kind; id; comments }) =
       let kind = variable_kind kind in
       node ?comments "MatchBindingPattern" loc [("id", identifier id); ("kind", string kind)]
+    and match_object_pattern_rest (loc, { MatchPattern.ObjectPattern.Rest.argument; comments }) =
+      node ?comments "MatchObjectPatternRest" loc [("argument", match_binding_pattern argument)]
     and function_declaration
         ( loc,
           {

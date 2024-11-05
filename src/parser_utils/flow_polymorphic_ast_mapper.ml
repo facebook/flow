@@ -2101,6 +2101,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | UnaryPattern x -> UnaryPattern (this#match_unary_pattern x)
         | IdentifierPattern x -> IdentifierPattern (this#t_identifier x)
         | BindingPattern x -> BindingPattern (this#match_binding_pattern x)
+        | ObjectPattern x -> ObjectPattern (this#match_object_pattern x)
       )
 
     method match_unary_pattern (unary_pattern : 'M Ast.MatchPattern.UnaryPattern.t)
@@ -2126,6 +2127,44 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = this#pattern_identifier ~kind id in
       let comments' = this#syntax_opt comments in
       { id = id'; kind; comments = comments' }
+
+    method match_object_pattern (object_pattern : ('M, 'T) Ast.MatchPattern.ObjectPattern.t)
+        : ('N, 'U) Ast.MatchPattern.ObjectPattern.t =
+      let open Ast.MatchPattern.ObjectPattern in
+      let { properties; rest; comments } = object_pattern in
+      let properties' = List.map ~f:this#match_object_pattern_property properties in
+      let rest' = Option.map rest ~f:(this#on_loc_annot * this#match_object_pattern_rest) in
+      let comments' = this#syntax_with_internal_opt comments in
+      { properties = properties'; rest = rest'; comments = comments' }
+
+    method match_object_pattern_property (prop : ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.t)
+        : ('N, 'U) Ast.MatchPattern.ObjectPattern.Property.t =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      let (loc, { key; pattern; shorthand; comments }) = prop in
+      let key' = this#match_object_pattern_property_key key in
+      let pattern' = this#match_pattern pattern in
+      let comments' = this#syntax_opt comments in
+      (this#on_loc_annot loc, { key = key'; pattern = pattern'; shorthand; comments = comments' })
+
+    method match_object_pattern_property_key
+        (key : ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.key)
+        : ('N, 'U) Ast.MatchPattern.ObjectPattern.Property.key =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      match key with
+      | StringLiteral (annot, lit) ->
+        StringLiteral (this#on_loc_annot annot, this#string_literal lit)
+      | NumberLiteral (annot, lit) ->
+        NumberLiteral (this#on_loc_annot annot, this#number_literal lit)
+      | Identifier ident -> Identifier (this#t_identifier ident)
+
+    method match_object_pattern_rest (rest : ('M, 'T) Ast.MatchPattern.ObjectPattern.Rest.t')
+        : ('N, 'U) Ast.MatchPattern.ObjectPattern.Rest.t' =
+      let open Ast.MatchPattern.ObjectPattern.Rest in
+      let { argument; comments } = rest in
+      let (arg_loc, arg) = argument in
+      let argument' = (this#on_loc_annot arg_loc, this#match_binding_pattern arg) in
+      let comments' = this#syntax_opt comments in
+      { argument = argument'; comments = comments' }
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

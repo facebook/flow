@@ -2728,6 +2728,14 @@ let tests =
              ~ctxt
              "match(x){0:0,1n:1,\"s\":2,true:3,null:4,x:5,const y:6,_:7}"
          );
+         ( "match_pattern_object" >:: fun ctxt ->
+           assert_expression_string ~ctxt "match(x){{foo:true}:2}";
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             "match (x) {\n  {foo: true, bar: 1, const x, let y}: 2,\n}";
+           assert_expression_string ~ctxt "match(x){{foo:1,...const x}:x}"
+         );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";

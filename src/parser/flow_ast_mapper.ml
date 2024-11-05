@@ -2560,6 +2560,8 @@ class ['loc] mapper =
         id this#identifier x pattern (fun x -> (loc, IdentifierPattern x))
       | (loc, BindingPattern x) ->
         id_loc this#match_binding_pattern loc x pattern (fun x -> (loc, BindingPattern x))
+      | (loc, ObjectPattern x) ->
+        id this#match_object_pattern x pattern (fun x -> (loc, ObjectPattern x))
 
     method match_unary_pattern (unary_pattern : 'loc Ast.MatchPattern.UnaryPattern.t) =
       let open Ast.MatchPattern.UnaryPattern in
@@ -2593,6 +2595,50 @@ class ['loc] mapper =
         binding_pattern
       else
         { id = id'; kind; comments = comments' }
+
+    method match_object_pattern (object_pattern : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.t) =
+      let open Ast.MatchPattern.ObjectPattern in
+      let { properties; rest; comments } = object_pattern in
+      let properties' = map_list this#match_object_pattern_property properties in
+      let rest' = map_loc_opt this#match_object_pattern_rest rest in
+      let comments' = this#syntax_opt comments in
+      if properties == properties' && rest == rest' && comments == comments' then
+        object_pattern
+      else
+        { properties = properties'; rest = rest'; comments = comments' }
+
+    method match_object_pattern_property
+        (prop : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.Property.t) =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      let (loc, { key; pattern; shorthand; comments }) = prop in
+      let key' = this#match_object_pattern_property_key key in
+      let pattern' = this#match_pattern pattern in
+      let comments' = this#syntax_opt comments in
+      if key == key' && pattern == pattern' && comments == comments' then
+        prop
+      else
+        (loc, { key = key'; pattern = pattern'; shorthand; comments = comments' })
+
+    method match_object_pattern_property_key
+        (key : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.Property.key) =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      match key with
+      | StringLiteral (loc, lit) ->
+        id_loc this#string_literal loc lit key (fun lit -> StringLiteral (loc, lit))
+      | NumberLiteral (loc, lit) ->
+        id_loc this#number_literal loc lit key (fun lit -> NumberLiteral (loc, lit))
+      | Identifier ident -> id this#identifier ident key (fun ident -> Identifier ident)
+
+    method match_object_pattern_rest
+        _loc (rest : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.Rest.t') =
+      let open Ast.MatchPattern.ObjectPattern.Rest in
+      let { argument; comments } = rest in
+      let argument' = map_loc this#match_binding_pattern argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        rest
+      else
+        { argument = argument'; comments = comments' }
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in
