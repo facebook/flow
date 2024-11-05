@@ -1,0 +1,103 @@
+Error ----------------------------------------------------------------------------------------------------- body.js:18:3
+
+Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   body.js:18:3
+   18|   out as empty; // ERROR
+         ^^^
+
+References:
+   body.js:13:8
+   13|     1: true,
+              ^^^^ [1]
+   body.js:18:10
+   18|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- body.js:18:3
+
+Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   body.js:18:3
+   18|   out as empty; // ERROR
+         ^^^
+
+References:
+   body.js:14:8
+   14|     2: false,
+              ^^^^^ [1]
+   body.js:18:10
+   18|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- body.js:27:3
+
+Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   body.js:27:3
+   27|   out as empty; // ERROR
+         ^^^
+
+References:
+   body.js:23:8
+   23|     1: true,
+              ^^^^ [1]
+   body.js:27:10
+   27|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- body.js:27:3
+
+Cannot cast `out` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   body.js:27:3
+   27|   out as empty; // ERROR
+         ^^^
+
+References:
+   body.js:24:8
+   24|     2: 's',
+              ^^^ [1]
+   body.js:27:10
+   27|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- body.js:38:3
+
+Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   body.js:38:3
+   38|   out as empty; // ERROR
+         ^^^
+
+References:
+   body.js:34:8
+   34|     1: true,
+              ^^^^ [1]
+   body.js:38:10
+   38|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- body.js:46:3
+
+Unreachable code. [unreachable-code]
+
+   46|   out; // ERROR: unreachable
+         ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- body.js:55:3
+
+Unreachable code. [unreachable-code]
+
+   55|   out; // ERROR: unreachable
+         ^^^^
+
+
+
+Found 7 errors

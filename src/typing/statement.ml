@@ -2750,11 +2750,40 @@ module Make
         );
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
-    | Match _ ->
-      Flow.add_output
-        cx
-        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchExpression));
-      Tast_utils.error_mapper#expression ex
+    | Match { Match.arg; cases; comments } ->
+      if not @@ Context.enable_pattern_matching_expressions cx then (
+        Flow.add_output
+          cx
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchExpression));
+        Tast_utils.error_mapper#expression ex
+      ) else
+        let reason = mk_reason RMatchExpression loc in
+        let arg = expression cx arg in
+        let (cases_rev, ts_rev, all_throws) =
+          Base.List.fold cases ~init:([], [], true) ~f:(fun (cases, ts, all_throws) case ->
+              let (case_loc, { Match.Case.pattern; body; guard; comments }) = case in
+              let pattern = Tast_utils.error_mapper#match_pattern pattern in
+              let guard = Base.Option.map guard ~f:(expression cx) in
+              let ((((_, t), _) as body), throws) =
+                Abnormal.catch_expr_control_flow_exception (fun () -> expression cx body)
+              in
+              let case_ast = (case_loc, { Match.Case.pattern; body; guard; comments }) in
+              let all_throws = all_throws && throws in
+              let ts =
+                if throws then
+                  ts
+                else
+                  t :: ts
+              in
+              (case_ast :: cases, ts, all_throws)
+          )
+        in
+        let match_t = union_of_ts reason (List.rev ts_rev) in
+        let ast = ((loc, match_t), Match { Match.arg; cases = List.rev cases_rev; comments }) in
+        if (not (List.is_empty cases)) && all_throws then
+          Abnormal.throw_expr_control_flow_exception loc ast
+        else
+          ast
     | Member _ -> subscript ~cond cx ex
     | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->

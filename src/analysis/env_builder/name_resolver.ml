@@ -2903,6 +2903,28 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#merge_completion_states conditional_completion_states;
         expr
 
+      method! match_expression _ x =
+        let open Flow_ast.Expression.Match in
+        let { arg; cases; comments = _ } = x in
+        ignore @@ this#expression arg;
+        let env0 = this#env_snapshot in
+        let completion_states =
+          Base.List.fold cases ~init:[] ~f:(fun acc case ->
+              let (_, { Case.pattern; body; guard; comments = _ }) = case in
+              (* TODO:match *)
+              ignore pattern;
+              Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+              this#run_to_completion (fun () -> ignore @@ this#expression body) :: acc
+          )
+          |> List.rev
+        in
+        this#reset_env env0;
+        (match completion_states with
+        | hd :: [] -> this#from_completion hd
+        | hd :: tl -> this#merge_completion_states (hd, tl)
+        | [] -> ());
+        x
+
       method merge_conditional_branches_with_refinements
           (env1, refined_env1, completion_state1) (env2, refined_env2, completion_state2) : unit =
         (* We only want to merge the refined environments from the two branches of an if-statement
