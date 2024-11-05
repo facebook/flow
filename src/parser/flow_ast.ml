@@ -2011,6 +2011,25 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module ArrayPattern : sig
+    module Rest : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        argument: ('M * ('M, 'T) BindingPattern.t) option;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      elements: ('M, 'T) MatchPattern.t list;
+      rest: ('M, 'T) Rest.t option;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'M * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -2024,6 +2043,7 @@ and MatchPattern : sig
     | BindingPattern of ('M, 'T) BindingPattern.t
     | IdentifierPattern of ('M, 'T) Identifier.t
     | ObjectPattern of ('M, 'T) ObjectPattern.t
+    | ArrayPattern of ('M, 'T) ArrayPattern.t
   [@@deriving show]
 end =
   MatchPattern

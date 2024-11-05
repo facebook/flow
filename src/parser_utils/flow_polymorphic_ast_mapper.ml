@@ -2102,6 +2102,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | IdentifierPattern x -> IdentifierPattern (this#t_identifier x)
         | BindingPattern x -> BindingPattern (this#match_binding_pattern x)
         | ObjectPattern x -> ObjectPattern (this#match_object_pattern x)
+        | ArrayPattern x -> ArrayPattern (this#match_array_pattern x)
       )
 
     method match_unary_pattern (unary_pattern : 'M Ast.MatchPattern.UnaryPattern.t)
@@ -2163,6 +2164,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { argument; comments } = rest in
       let (arg_loc, arg) = argument in
       let argument' = (this#on_loc_annot arg_loc, this#match_binding_pattern arg) in
+      let comments' = this#syntax_opt comments in
+      { argument = argument'; comments = comments' }
+
+    method match_array_pattern (array_pattern : ('M, 'T) Ast.MatchPattern.ArrayPattern.t)
+        : ('N, 'U) Ast.MatchPattern.ArrayPattern.t =
+      let open Ast.MatchPattern.ArrayPattern in
+      let { elements; rest; comments } = array_pattern in
+      let elements' = List.map ~f:this#match_pattern elements in
+      let rest' = Option.map rest ~f:(this#on_loc_annot * this#match_array_pattern_rest) in
+      let comments' = this#syntax_with_internal_opt comments in
+      { elements = elements'; rest = rest'; comments = comments' }
+
+    method match_array_pattern_rest (rest : ('M, 'T) Ast.MatchPattern.ArrayPattern.Rest.t')
+        : ('N, 'U) Ast.MatchPattern.ArrayPattern.Rest.t' =
+      let open Ast.MatchPattern.ArrayPattern.Rest in
+      let { argument; comments } = rest in
+      let argument' = Option.map argument ~f:(this#on_loc_annot * this#match_binding_pattern) in
       let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 

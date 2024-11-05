@@ -76,6 +76,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
       let (loc, binding) = binding_pattern env ~kind:Ast.Variable.Var in
       (loc, BindingPattern binding)
     | T_LCURLY -> object_pattern env
+    | T_LBRACKET -> array_pattern env
     | _ when Peek.is_identifier env ->
       let id = Parse.identifier env in
       (fst id, IdentifierPattern id)
@@ -227,6 +228,50 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
           })
       env
 
+  and array_pattern env =
+    let rec elements env acc =
+      match Peek.token env with
+      | T_EOF
+      | T_RBRACKET ->
+        (List.rev acc, None)
+      | T_ELLIPSIS ->
+        let rest =
+          with_loc
+            (fun env ->
+              let leading = Peek.comments env in
+              Expect.token env T_ELLIPSIS;
+              let argument =
+                match Peek.token env with
+                | T_CONST -> Some (binding_pattern env ~kind:Ast.Variable.Const)
+                | T_LET -> Some (binding_pattern env ~kind:Ast.Variable.Let)
+                | T_VAR -> Some (binding_pattern env ~kind:Ast.Variable.Var)
+                | _ -> None
+              in
+              let trailing = Eat.trailing_comments env in
+              let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+              { ArrayPattern.Rest.argument; comments })
+            env
+        in
+        (List.rev acc, Some rest)
+      | _ ->
+        let pattern = match_pattern env in
+        if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
+        elements env (pattern :: acc)
+    in
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_LBRACKET;
+        let (elements, rest) = elements env [] in
+        let internal = Peek.comments env in
+        Expect.token env T_RBRACKET;
+        let trailing = Eat.trailing_comments env in
+        let comments =
+          Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+        in
+        ArrayPattern { ArrayPattern.elements; rest; comments })
+      env
+
   and add_comments ?(leading = []) ?(trailing = []) (loc, pattern) =
     let merge_comments inner =
       Flow_ast_utils.merge_comments
@@ -258,5 +303,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         IdentifierPattern (id_loc, { p with Ast.Identifier.comments = merge_comments comments })
       | ObjectPattern ({ ObjectPattern.comments; _ } as p) ->
         ObjectPattern { p with ObjectPattern.comments = merge_comments_with_internal comments }
+      | ArrayPattern ({ ArrayPattern.comments; _ } as p) ->
+        ArrayPattern { p with ArrayPattern.comments = merge_comments_with_internal comments }
     )
 end

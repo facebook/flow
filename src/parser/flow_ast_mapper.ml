@@ -2562,6 +2562,8 @@ class ['loc] mapper =
         id_loc this#match_binding_pattern loc x pattern (fun x -> (loc, BindingPattern x))
       | (loc, ObjectPattern x) ->
         id this#match_object_pattern x pattern (fun x -> (loc, ObjectPattern x))
+      | (loc, ArrayPattern x) ->
+        id this#match_array_pattern x pattern (fun x -> (loc, ArrayPattern x))
 
     method match_unary_pattern (unary_pattern : 'loc Ast.MatchPattern.UnaryPattern.t) =
       let open Ast.MatchPattern.UnaryPattern in
@@ -2634,6 +2636,28 @@ class ['loc] mapper =
       let open Ast.MatchPattern.ObjectPattern.Rest in
       let { argument; comments } = rest in
       let argument' = map_loc this#match_binding_pattern argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        rest
+      else
+        { argument = argument'; comments = comments' }
+
+    method match_array_pattern (array_pattern : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.t) =
+      let open Ast.MatchPattern.ArrayPattern in
+      let { elements; rest; comments } = array_pattern in
+      let elements' = map_list this#match_pattern elements in
+      let rest' = map_loc_opt this#match_array_pattern_rest rest in
+      let comments' = this#syntax_opt comments in
+      if elements == elements' && rest == rest' && comments == comments' then
+        array_pattern
+      else
+        { elements = elements'; rest = rest'; comments = comments' }
+
+    method match_array_pattern_rest _loc (rest : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.Rest.t')
+        =
+      let open Ast.MatchPattern.ArrayPattern.Rest in
+      let { argument; comments } = rest in
+      let argument' = map_loc_opt this#match_binding_pattern argument in
       let comments' = this#syntax_opt comments in
       if argument == argument' && comments == comments' then
         rest
