@@ -551,6 +551,16 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method match_unary_pattern_argument :
       'M Ast.MatchPattern.UnaryPattern.argument -> 'N Ast.MatchPattern.UnaryPattern.argument
 
+    method match_member_pattern :
+      ('M, 'T) Ast.MatchPattern.MemberPattern.t -> ('N, 'U) Ast.MatchPattern.MemberPattern.t
+
+    method match_member_pattern_base :
+      ('M, 'T) Ast.MatchPattern.MemberPattern.base -> ('N, 'U) Ast.MatchPattern.MemberPattern.base
+
+    method match_member_pattern_property :
+      ('M, 'T) Ast.MatchPattern.MemberPattern.property ->
+      ('N, 'U) Ast.MatchPattern.MemberPattern.property
+
     method match_binding_pattern :
       ('M, 'T) Ast.MatchPattern.BindingPattern.t -> ('N, 'U) Ast.MatchPattern.BindingPattern.t
 

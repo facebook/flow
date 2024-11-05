@@ -121,8 +121,63 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
     | T_LCURLY -> object_pattern env
     | T_LBRACKET -> array_pattern env
     | _ when Peek.is_identifier env ->
+      let start_loc = Peek.loc env in
       let id = Parse.identifier env in
-      (fst id, IdentifierPattern id)
+      let rec member acc =
+        match Peek.token env with
+        | T_PERIOD ->
+          let mem =
+            with_loc
+              ~start_loc
+              (fun env ->
+                Eat.token env;
+                let property = MemberPattern.PropertyIdentifier (identifier_name env) in
+                let trailing = Eat.trailing_comments env in
+                let comments = Flow_ast_utils.mk_comments_opt ~trailing () in
+                { MemberPattern.base = acc; property; comments })
+              env
+          in
+          member (MemberPattern.BaseMember mem)
+        | T_LBRACKET ->
+          let mem =
+            with_loc
+              ~start_loc
+              (fun env ->
+                Expect.token env T_LBRACKET;
+                let leading = Peek.comments env in
+                let property =
+                  match Peek.token env with
+                  | T_STRING (loc, value, raw, octal) ->
+                    if octal then strict_error env Parse_error.StrictOctalLiteral;
+                    Expect.token env (T_STRING (loc, value, raw, octal));
+                    let trailing = Eat.trailing_comments env in
+                    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+                    MemberPattern.PropertyString (loc, { Ast.StringLiteral.value; raw; comments })
+                  | T_NUMBER { kind; raw } ->
+                    let loc = Peek.loc env in
+                    let value = Parse.number env kind raw in
+                    let trailing = Eat.trailing_comments env in
+                    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+                    MemberPattern.PropertyNumber (loc, { Ast.NumberLiteral.value; raw; comments })
+                  | _ ->
+                    error_unexpected ~expected:"a number or string literal" env;
+                    let loc = Peek.loc env in
+                    MemberPattern.PropertyString
+                      (loc, { Ast.StringLiteral.value = ""; raw = "\"\""; comments = None })
+                in
+                Expect.token env T_RBRACKET;
+                let trailing = Eat.trailing_comments env in
+                let comments = Flow_ast_utils.mk_comments_opt ~trailing () in
+                { MemberPattern.base = acc; property; comments })
+              env
+          in
+          member (MemberPattern.BaseMember mem)
+        | _ ->
+          (match acc with
+          | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, IdentifierPattern id)
+          | MemberPattern.BaseMember (loc, member) -> (loc, MemberPattern (loc, member)))
+      in
+      member (MemberPattern.BaseIdentifier id)
     | t ->
       let leading = Peek.comments env in
       let loc = Peek.loc env in
@@ -344,6 +399,8 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         BindingPattern { p with BindingPattern.comments = merge_comments comments }
       | IdentifierPattern (id_loc, ({ Ast.Identifier.comments; _ } as p)) ->
         IdentifierPattern (id_loc, { p with Ast.Identifier.comments = merge_comments comments })
+      | MemberPattern (loc, ({ MemberPattern.comments; _ } as p)) ->
+        MemberPattern (loc, { p with MemberPattern.comments = merge_comments comments })
       | ObjectPattern ({ ObjectPattern.comments; _ } as p) ->
         ObjectPattern { p with ObjectPattern.comments = merge_comments_with_internal comments }
       | ArrayPattern ({ ArrayPattern.comments; _ } as p) ->

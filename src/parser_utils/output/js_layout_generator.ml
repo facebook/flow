@@ -3358,6 +3358,7 @@ and match_pattern ~opts (loc, pattern) =
   | BooleanPattern lit -> boolean_literal loc lit
   | NullPattern comments -> null_literal loc comments
   | IdentifierPattern ident -> identifier ident
+  | MemberPattern mem -> match_member_pattern ~opts mem
   | UnaryPattern { UnaryPattern.operator; argument; comments } ->
     let operator =
       match operator with
@@ -3389,6 +3390,21 @@ and match_pattern ~opts (loc, pattern) =
       loc
       comments
       (fuse [pattern; space; Atom "as"; space; identifier id])
+
+and match_member_pattern ~opts (loc, { Ast.MatchPattern.MemberPattern.base; property; comments }) =
+  let open Ast.MatchPattern.MemberPattern in
+  let base =
+    match base with
+    | BaseIdentifier id -> identifier id
+    | BaseMember mem -> match_member_pattern ~opts mem
+  in
+  layout_node_with_comments_opt
+    loc
+    comments
+    (match property with
+    | PropertyString (loc, lit) -> fuse [base; Atom "["; string_literal ~opts loc lit; Atom "]"]
+    | PropertyNumber (loc, lit) -> fuse [base; Atom "["; number_literal ~opts loc lit; Atom "]"]
+    | PropertyIdentifier ident -> fuse [base; Atom "."; identifier ident])
 
 and match_binding_pattern loc { Ast.MatchPattern.BindingPattern.kind; id; comments } =
   source_location_with_comments ?comments (loc, fuse_with_space [variable_kind kind; identifier id])

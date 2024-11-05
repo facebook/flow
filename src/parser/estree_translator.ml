@@ -702,6 +702,24 @@ with type t = Impl.t = struct
           [("operator", string operator); ("argument", argument)]
       | BindingPattern binding -> match_binding_pattern (loc, binding)
       | IdentifierPattern id -> node "MatchIdentifierPattern" loc [("id", identifier id)]
+      | MemberPattern mem ->
+        let rec member (loc, { MemberPattern.base; property; comments }) =
+          let member_base = function
+            | MemberPattern.BaseIdentifier id -> identifier id
+            | MemberPattern.BaseMember mem -> member mem
+          in
+          let member_property = function
+            | MemberPattern.PropertyString lit -> string_literal lit
+            | MemberPattern.PropertyNumber lit -> number_literal lit
+            | MemberPattern.PropertyIdentifier id -> identifier id
+          in
+          node
+            ?comments
+            "MatchMemberPattern"
+            loc
+            [("base", member_base base); ("property", member_property property)]
+        in
+        member mem
       | ObjectPattern { ObjectPattern.properties; rest; comments } ->
         let property_key key =
           match key with

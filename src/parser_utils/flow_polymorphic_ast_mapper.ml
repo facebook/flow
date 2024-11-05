@@ -2100,6 +2100,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | BigIntPattern x -> BigIntPattern (this#bigint_literal x)
         | UnaryPattern x -> UnaryPattern (this#match_unary_pattern x)
         | IdentifierPattern x -> IdentifierPattern (this#t_identifier x)
+        | MemberPattern x -> MemberPattern (this#match_member_pattern x)
         | BindingPattern x -> BindingPattern (this#match_binding_pattern x)
         | ObjectPattern x -> ObjectPattern (this#match_object_pattern x)
         | ArrayPattern x -> ArrayPattern (this#match_array_pattern x)
@@ -2115,6 +2116,31 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let argument' = (this#on_loc_annot arg_loc, this#match_unary_pattern_argument arg) in
       let comments' = this#syntax_opt comments in
       { operator; argument = argument'; comments = comments' }
+
+    method match_member_pattern (member_pattern : ('M, 'T) Ast.MatchPattern.MemberPattern.t)
+        : ('N, 'U) Ast.MatchPattern.MemberPattern.t =
+      let open Ast.MatchPattern.MemberPattern in
+      let (loc, { base; property; comments }) = member_pattern in
+      let loc' = this#on_type_annot loc in
+      let base' = this#match_member_pattern_base base in
+      let property' = this#match_member_pattern_property property in
+      let comments' = this#syntax_opt comments in
+      (loc', { base = base'; property = property'; comments = comments' })
+
+    method match_member_pattern_base (base : ('M, 'T) Ast.MatchPattern.MemberPattern.base)
+        : ('N, 'U) Ast.MatchPattern.MemberPattern.base =
+      let open Ast.MatchPattern.MemberPattern in
+      match base with
+      | BaseIdentifier ident -> BaseIdentifier (this#t_identifier ident)
+      | BaseMember mem -> BaseMember (this#match_member_pattern mem)
+
+    method match_member_pattern_property (prop : ('M, 'T) Ast.MatchPattern.MemberPattern.property)
+        : ('N, 'U) Ast.MatchPattern.MemberPattern.property =
+      let open Ast.MatchPattern.MemberPattern in
+      match prop with
+      | PropertyString (loc, lit) -> PropertyString (this#on_loc_annot loc, this#string_literal lit)
+      | PropertyNumber (loc, lit) -> PropertyNumber (this#on_loc_annot loc, this#number_literal lit)
+      | PropertyIdentifier ident -> PropertyIdentifier (this#t_identifier ident)
 
     method match_unary_pattern_argument (argument : 'M Ast.MatchPattern.UnaryPattern.argument)
         : 'N Ast.MatchPattern.UnaryPattern.argument =

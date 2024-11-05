@@ -1966,6 +1966,26 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module MemberPattern : sig
+    type ('M, 'T) base =
+      | BaseIdentifier of ('M, 'T) Identifier.t
+      | BaseMember of ('M, 'T) t
+
+    and ('M, 'T) property =
+      | PropertyString of ('M * 'M StringLiteral.t)
+      | PropertyNumber of ('M * 'M NumberLiteral.t)
+      | PropertyIdentifier of ('M, 'T) Identifier.t
+
+    and ('M, 'T) t = 'T * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      base: ('M, 'T) base;
+      property: ('M, 'T) property;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module BindingPattern : sig
     type ('M, 'T) t = {
       kind: Variable.kind;
@@ -2059,6 +2079,7 @@ and MatchPattern : sig
     | UnaryPattern of 'M UnaryPattern.t
     | BindingPattern of ('M, 'T) BindingPattern.t
     | IdentifierPattern of ('M, 'T) Identifier.t
+    | MemberPattern of ('M, 'T) MemberPattern.t
     | ObjectPattern of ('M, 'T) ObjectPattern.t
     | ArrayPattern of ('M, 'T) ArrayPattern.t
     | OrPattern of ('M, 'T) OrPattern.t

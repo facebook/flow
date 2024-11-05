@@ -2558,6 +2558,8 @@ class ['loc] mapper =
         id this#match_unary_pattern x pattern (fun x -> (loc, UnaryPattern x))
       | (loc, IdentifierPattern x) ->
         id this#identifier x pattern (fun x -> (loc, IdentifierPattern x))
+      | (loc, MemberPattern x) ->
+        id this#match_member_pattern x pattern (fun x -> (loc, MemberPattern x))
       | (loc, BindingPattern x) ->
         id_loc this#match_binding_pattern loc x pattern (fun x -> (loc, BindingPattern x))
       | (loc, ObjectPattern x) ->
@@ -2588,6 +2590,34 @@ class ['loc] mapper =
         id_loc this#number_literal loc lit argument (fun lit -> NumberLiteral lit)
       | BigIntLiteral lit ->
         id_loc this#bigint_literal loc lit argument (fun lit -> BigIntLiteral lit)
+
+    method match_member_pattern (member_pattern : ('loc, 'loc) Ast.MatchPattern.MemberPattern.t) =
+      let open Ast.MatchPattern.MemberPattern in
+      let (loc, { base; property; comments }) = member_pattern in
+      let base' = this#match_member_pattern_base base in
+      let property' = this#match_member_pattern_property property in
+      let comments' = this#syntax_opt comments in
+      if base == base' && property == property' && comments == comments' then
+        member_pattern
+      else
+        (loc, { base = base'; property = property'; comments = comments' })
+
+    method match_member_pattern_base (base : ('loc, 'loc) Ast.MatchPattern.MemberPattern.base) =
+      let open Ast.MatchPattern.MemberPattern in
+      match base with
+      | BaseIdentifier x -> id this#identifier x base (fun x -> BaseIdentifier x)
+      | BaseMember x -> id this#match_member_pattern x base (fun x -> BaseMember x)
+
+    method match_member_pattern_property
+        (prop : ('loc, 'loc) Ast.MatchPattern.MemberPattern.property) =
+      let open Ast.MatchPattern.MemberPattern in
+      match prop with
+      | PropertyString (loc, lit) ->
+        id_loc this#string_literal loc lit prop (fun lit -> PropertyString (loc, lit))
+      | PropertyNumber (loc, lit) ->
+        id_loc this#number_literal loc lit prop (fun lit -> PropertyNumber (loc, lit))
+      | PropertyIdentifier ident ->
+        id this#identifier ident prop (fun ident -> PropertyIdentifier ident)
 
     method match_binding_pattern
         _loc (binding_pattern : ('loc, 'loc) Ast.MatchPattern.BindingPattern.t) =

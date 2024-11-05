@@ -2749,6 +2749,13 @@ let tests =
            assert_expression_string ~ctxt "match(x){{foo:[1] as y}:true}";
            assert_expression_string ~ctxt "match(x){{foo:(1|2|3) as y}:true}"
          );
+         ( "match_pattern_member" >:: fun ctxt ->
+           assert_expression_string ~ctxt "match(x){foo.bar:true}";
+           assert_expression_string ~ctxt "match(x){foo[1]:true}";
+           assert_expression_string ~ctxt "match(x){foo[\"bar\"]:true}";
+           assert_expression_string ~ctxt "match(x){foo.bar[1]:true}";
+           assert_expression_string ~ctxt "match(x){foo[1].bar[\"baz\"]:true}"
+         );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";
