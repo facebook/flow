@@ -629,13 +629,11 @@ module Statement
             })
         env
 
-  and match_pattern env = Expression.assignment env (* TODO:match *)
-
   and match_statement env ~start_loc ~leading ~arg =
     let open Statement.Match in
     let case env =
       let leading = Peek.comments env in
-      let pattern = match_pattern env in
+      let pattern = Parse.match_pattern env in
       let guard =
         if Eat.maybe env T_IF then
           Some (Parse.expression env)

@@ -38,11 +38,16 @@
                 "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":10}},
                 "range":[24,32],
                 "pattern":{
-                  "type":"Literal",
+                  "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
                   "range":[24,25],
-                  "value":1,
-                  "raw":"1"
+                  "literal":{
+                    "type":"Literal",
+                    "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
+                    "range":[24,25],
+                    "value":1,
+                    "raw":"1"
+                  }
                 },
                 "body":{
                   "type":"Literal",
@@ -58,11 +63,16 @@
                 "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":15}},
                 "range":[35,48],
                 "pattern":{
-                  "type":"Literal",
+                  "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":7}},
                   "range":[35,40],
-                  "value":"foo",
-                  "raw":"'foo'"
+                  "literal":{
+                    "type":"Literal",
+                    "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":7}},
+                    "range":[35,40],
+                    "value":"foo",
+                    "raw":"'foo'"
+                  }
                 },
                 "body":{
                   "type":"Literal",
@@ -78,11 +88,16 @@
                 "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":22}},
                 "range":[51,71],
                 "pattern":{
-                  "type":"Literal",
+                  "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":3}},
                   "range":[51,52],
-                  "value":2,
-                  "raw":"2"
+                  "literal":{
+                    "type":"Literal",
+                    "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":3}},
+                    "range":[51,52],
+                    "value":2,
+                    "raw":"2"
+                  }
                 },
                 "body":{
                   "type":"ObjectExpression",

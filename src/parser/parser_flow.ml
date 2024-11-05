@@ -170,6 +170,7 @@ module rec Parse : PARSER = struct
   module Type = Type_parser.Type (Parse)
   module Declaration = Declaration_parser.Declaration (Parse) (Type)
   module Pattern_cover = Pattern_cover.Cover (Parse)
+  module Match_pattern = Match_pattern_parser.Match_pattern (Parse)
   module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Pattern_cover)
   module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression) (Pattern_cover)
   module Statement =
@@ -502,6 +503,8 @@ module rec Parse : PARSER = struct
   and pattern = Pattern.pattern
 
   and pattern_from_expr = Pattern.from_expr
+
+  and match_pattern = Match_pattern.match_pattern
 end
 
 (*****************************************************************************)

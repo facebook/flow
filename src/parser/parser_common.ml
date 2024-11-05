@@ -75,6 +75,8 @@ module type PARSER = sig
   val annot : env -> (Loc.t, Loc.t) Type.annotation
 
   val bigint : env -> Token.bigint_type -> string -> int64 option
+
+  val match_pattern : env -> (Loc.t, Loc.t) MatchPattern.t
 end
 
 module type TYPE = sig
@@ -303,6 +305,10 @@ module type DECLARATION = sig
   val enum_declaration : ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.t
 
   val component : env -> (Loc.t, Loc.t) Statement.t
+end
+
+module type MATCH_PATTERN = sig
+  val match_pattern : env -> (Loc.t, Loc.t) MatchPattern.t
 end
 
 let identifier_name_raw env =

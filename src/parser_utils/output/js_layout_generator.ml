@@ -3326,7 +3326,7 @@ and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body;
     comments
     (fuse
        [
-         expression ~opts pattern;
+         match_pattern ~opts pattern;
          match_case_guard ~opts guard;
          Atom ":";
          pretty_space;
@@ -3340,13 +3340,40 @@ and match_statement_case ~opts (loc, { Ast.Statement.Match.Case.pattern; body; g
     comments
     (fuse
        [
-         expression ~opts pattern;
+         match_pattern ~opts pattern;
          match_case_guard ~opts guard;
          Atom ":";
          pretty_space;
          block ~opts body;
        ]
     )
+
+and match_pattern ~opts (loc, pattern) =
+  let open Ast.MatchPattern in
+  match pattern with
+  | WildcardPattern comments -> layout_node_with_comments_opt loc comments (Atom "_")
+  | NumberPattern lit -> number_literal ~opts loc lit
+  | BigIntPattern lit -> bigint_literal loc lit
+  | StringPattern lit -> string_literal ~opts loc lit
+  | BooleanPattern lit -> boolean_literal loc lit
+  | NullPattern comments -> null_literal loc comments
+  | IdentifierPattern ident -> identifier ident
+  | UnaryPattern { UnaryPattern.operator; argument; comments } ->
+    let operator =
+      match operator with
+      | UnaryPattern.Minus -> "-"
+      | UnaryPattern.Plus -> "+"
+    in
+    let argument =
+      match argument with
+      | (loc, UnaryPattern.NumberLiteral lit) -> number_literal ~opts loc lit
+      | (loc, UnaryPattern.BigIntLiteral lit) -> bigint_literal loc lit
+    in
+    layout_node_with_comments_opt loc comments (fuse [Atom operator; argument])
+  | BindingPattern binding -> match_binding_pattern loc binding
+
+and match_binding_pattern loc { Ast.MatchPattern.BindingPattern.kind; id; comments } =
+  source_location_with_comments ?comments (loc, fuse_with_space [variable_kind kind; identifier id])
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =

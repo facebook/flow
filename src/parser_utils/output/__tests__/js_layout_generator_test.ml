@@ -2722,6 +2722,12 @@ let tests =
              ~pretty:true
              "match (x) {\n  1: {\n    const x = true;\n  },\n  2: {\n    const y = false;\n  },\n}"
          );
+         ( "match_pattern_core" >:: fun ctxt ->
+           assert_expression_string ~ctxt "match(x){-1:true,+2:false,-3n:true,+4n:false}";
+           assert_expression_string
+             ~ctxt
+             "match(x){0:0,1n:1,\"s\":2,true:3,null:4,x:5,const y:6,_:7}"
+         );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";

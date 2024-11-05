@@ -233,7 +233,7 @@ function custom_ast_types(fork) {
 
   def('MatchExpressionCase')
     .build('pattern', 'body', 'guard')
-    .field('pattern', def('Expression'))
+    .field('pattern', def('MatchPattern'))
     .field('body', def('Expression'))
     .field('guard', or(def('Expression'), null));
 
@@ -245,9 +245,33 @@ function custom_ast_types(fork) {
 
   def('MatchStatementCase')
     .build('pattern', 'body', 'guard')
-    .field('pattern', def('Expression'))
+    .field('pattern', def('MatchPattern'))
     .field('body', def('BlockStatement'))
     .field('guard', or(def('Expression'), null));
+
+  def('MatchWildcardPattern').bases('MatchPattern');
+
+  def('MatchLiteralPattern')
+    .bases('MatchPattern')
+    .build('literal')
+    .field('literal', def('Literal'));
+
+  def('MatchUnaryPattern')
+    .bases('MatchPattern')
+    .build('operator', 'argument')
+    .field('operator', or('+', '-'))
+    .field('argument', def('Literal'));
+
+  def('MatchIdentifierPattern')
+    .bases('MatchPattern')
+    .build('id')
+    .field('id', def('Identifier'));
+
+  def('MatchBindingPattern')
+    .bases('MatchPattern')
+    .build('id', 'kind')
+    .field('id', def('Identifier'))
+    .field('kind', or('let', 'const', 'var'));
 
   /////////
   // es2018

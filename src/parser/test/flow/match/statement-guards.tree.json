@@ -21,11 +21,16 @@
           "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":4,"column":4}},
           "range":[14,45],
           "pattern":{
-            "type":"Literal",
+            "type":"MatchLiteralPattern",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
             "range":[14,15],
-            "value":1,
-            "raw":"1"
+            "literal":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
+              "range":[14,15],
+              "value":1,
+              "raw":"1"
+            }
           },
           "body":{
             "type":"BlockStatement",
@@ -76,11 +81,16 @@
           "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":7,"column":4}},
           "range":[48,85],
           "pattern":{
-            "type":"Literal",
+            "type":"MatchLiteralPattern",
             "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":7}},
             "range":[48,53],
-            "value":"foo",
-            "raw":"'foo'"
+            "literal":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":7}},
+              "range":[48,53],
+              "value":"foo",
+              "raw":"'foo'"
+            }
           },
           "body":{
             "type":"BlockStatement",
@@ -138,11 +148,16 @@
           "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":10,"column":4}},
           "range":[88,123],
           "pattern":{
-            "type":"Literal",
+            "type":"MatchLiteralPattern",
             "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":3}},
             "range":[88,89],
-            "value":2,
-            "raw":"2"
+            "literal":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":3}},
+              "range":[88,89],
+              "value":2,
+              "raw":"2"
+            }
           },
           "body":{
             "type":"BlockStatement",

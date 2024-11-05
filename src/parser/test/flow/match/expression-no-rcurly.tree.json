@@ -44,11 +44,16 @@
                 "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":10}},
                 "range":[24,32],
                 "pattern":{
-                  "type":"Literal",
+                  "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
                   "range":[24,25],
-                  "value":1,
-                  "raw":"1"
+                  "literal":{
+                    "type":"Literal",
+                    "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
+                    "range":[24,25],
+                    "value":1,
+                    "raw":"1"
+                  }
                 },
                 "body":{
                   "type":"Literal",
@@ -64,11 +69,16 @@
                 "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":14}},
                 "range":[35,47],
                 "pattern":{
-                  "type":"Literal",
+                  "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":7}},
                   "range":[35,40],
-                  "value":"foo",
-                  "raw":"'foo'"
+                  "literal":{
+                    "type":"Literal",
+                    "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":7}},
+                    "range":[35,40],
+                    "value":"foo",
+                    "raw":"'foo'"
+                  }
                 },
                 "body":{
                   "type":"Literal",

@@ -660,7 +660,7 @@ with type t = Impl.t = struct
         "MatchExpressionCase"
         loc
         [
-          ("pattern", expression pattern);
+          ("pattern", match_pattern pattern);
           ("body", expression body);
           ("guard", option expression guard);
         ]
@@ -669,7 +669,42 @@ with type t = Impl.t = struct
         ?comments
         "MatchStatementCase"
         loc
-        [("pattern", expression pattern); ("body", block body); ("guard", option expression guard)]
+        [
+          ("pattern", match_pattern pattern);
+          ("body", block body);
+          ("guard", option expression guard);
+        ]
+    and match_pattern (loc, pattern) =
+      let open MatchPattern in
+      let literal x = node "MatchLiteralPattern" loc [("literal", x)] in
+      match pattern with
+      | WildcardPattern comments -> node ?comments "MatchWildcardPattern" loc []
+      | StringPattern lit -> literal (string_literal (loc, lit))
+      | BooleanPattern lit -> literal (boolean_literal (loc, lit))
+      | NullPattern comments -> literal (null_literal (loc, comments))
+      | NumberPattern lit -> literal (number_literal (loc, lit))
+      | BigIntPattern lit -> literal (bigint_literal (loc, lit))
+      | UnaryPattern { UnaryPattern.operator; argument; comments } ->
+        let operator =
+          match operator with
+          | UnaryPattern.Minus -> "-"
+          | UnaryPattern.Plus -> "+"
+        in
+        let argument =
+          match argument with
+          | (loc, UnaryPattern.NumberLiteral lit) -> number_literal (loc, lit)
+          | (loc, UnaryPattern.BigIntLiteral lit) -> bigint_literal (loc, lit)
+        in
+        node
+          ?comments
+          "MatchUnaryPattern"
+          loc
+          [("operator", string operator); ("argument", argument)]
+      | BindingPattern binding -> match_binding_pattern (loc, binding)
+      | IdentifierPattern id -> node "MatchIdentifierPattern" loc [("id", identifier id)]
+    and match_binding_pattern (loc, { MatchPattern.BindingPattern.kind; id; comments }) =
+      let kind = variable_kind kind in
+      node ?comments "MatchBindingPattern" loc [("id", identifier id); ("kind", string kind)]
     and function_declaration
         ( loc,
           {

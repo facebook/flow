@@ -2060,10 +2060,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { arg = arg'; cases = cases'; comments = comments' }
 
-    method match_expression_case (case : ('M, 'T) Ast.Expression.Match.Case.t') =
+    method match_expression_case (case : ('M, 'T) Ast.Expression.Match.Case.t')
+        : ('N, 'U) Ast.Expression.Match.Case.t' =
       let open Ast.Expression.Match.Case in
       let { pattern; body; guard; comments } = case in
-      let pattern' = this#expression pattern in
+      let pattern' = this#match_pattern pattern in
       let guard' = Option.map ~f:this#expression guard in
       let body' = this#expression body in
       let comments' = this#syntax_opt comments in
@@ -2080,11 +2081,51 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method match_statement_case (case : ('M, 'T) Ast.Statement.Match.Case.t') =
       let open Ast.Statement.Match.Case in
       let { pattern; body; guard; comments } = case in
-      let pattern' = this#expression pattern in
+      let pattern' = this#match_pattern pattern in
       let guard' = Option.map ~f:this#expression guard in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
       { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
+
+    method match_pattern (pattern : ('M, 'T) Ast.MatchPattern.t) : ('N, 'U) Ast.MatchPattern.t =
+      let open Ast.MatchPattern in
+      let (annot, patt) = pattern in
+      ( this#on_loc_annot annot,
+        match patt with
+        | WildcardPattern x -> WildcardPattern (this#syntax_opt x)
+        | StringPattern x -> StringPattern (this#string_literal x)
+        | BooleanPattern x -> BooleanPattern (this#boolean_literal x)
+        | NullPattern x -> NullPattern (this#syntax_opt x)
+        | NumberPattern x -> NumberPattern (this#number_literal x)
+        | BigIntPattern x -> BigIntPattern (this#bigint_literal x)
+        | UnaryPattern x -> UnaryPattern (this#match_unary_pattern x)
+        | IdentifierPattern x -> IdentifierPattern (this#t_identifier x)
+        | BindingPattern x -> BindingPattern (this#match_binding_pattern x)
+      )
+
+    method match_unary_pattern (unary_pattern : 'M Ast.MatchPattern.UnaryPattern.t)
+        : 'N Ast.MatchPattern.UnaryPattern.t =
+      let open Ast.MatchPattern.UnaryPattern in
+      let { operator; argument; comments } = unary_pattern in
+      let (arg_loc, arg) = argument in
+      let argument' = (this#on_loc_annot arg_loc, this#match_unary_pattern_argument arg) in
+      let comments' = this#syntax_opt comments in
+      { operator; argument = argument'; comments = comments' }
+
+    method match_unary_pattern_argument (argument : 'M Ast.MatchPattern.UnaryPattern.argument)
+        : 'N Ast.MatchPattern.UnaryPattern.argument =
+      let open Ast.MatchPattern.UnaryPattern in
+      match argument with
+      | NumberLiteral lit -> NumberLiteral (this#number_literal lit)
+      | BigIntLiteral lit -> BigIntLiteral (this#bigint_literal lit)
+
+    method match_binding_pattern (binding_pattern : ('M, 'T) Ast.MatchPattern.BindingPattern.t)
+        : ('N, 'U) Ast.MatchPattern.BindingPattern.t =
+      let open Ast.MatchPattern.BindingPattern in
+      let { id; kind; comments } = binding_pattern in
+      let id' = this#pattern_identifier ~kind id in
+      let comments' = this#syntax_opt comments in
+      { id = id'; kind; comments = comments' }
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

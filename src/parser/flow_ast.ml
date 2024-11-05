@@ -775,7 +775,7 @@ and Statement : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        pattern: ('M, 'T) Expression.t;
+        pattern: ('M, 'T) MatchPattern.t;
         body: 'M * ('M, 'T) Block.t;
         guard: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
@@ -1741,7 +1741,7 @@ and Expression : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        pattern: ('M, 'T) Expression.t;
+        pattern: ('M, 'T) MatchPattern.t;
         body: ('M, 'T) Expression.t;
         guard: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
@@ -1947,6 +1947,49 @@ and JSX : sig
   [@@deriving show]
 end =
   JSX
+
+and MatchPattern : sig
+  module UnaryPattern : sig
+    type operator =
+      | Plus
+      | Minus
+
+    and 'M argument =
+      | NumberLiteral of 'M NumberLiteral.t
+      | BigIntLiteral of 'M BigIntLiteral.t
+
+    and 'M t = {
+      operator: operator;
+      argument: 'M * 'M argument;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
+  module BindingPattern : sig
+    type ('M, 'T) t = {
+      kind: Variable.kind;
+      id: ('M, 'T) Identifier.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
+  type ('M, 'T) t = 'M * ('M, 'T) t'
+
+  and ('M, 'T) t' =
+    | WildcardPattern of ('M, unit) Syntax.t option
+    | NumberPattern of 'M NumberLiteral.t
+    | BigIntPattern of 'M BigIntLiteral.t
+    | StringPattern of 'M StringLiteral.t
+    | BooleanPattern of 'M BooleanLiteral.t
+    | NullPattern of ('M, unit) Syntax.t option
+    | UnaryPattern of 'M UnaryPattern.t
+    | BindingPattern of ('M, 'T) BindingPattern.t
+    | IdentifierPattern of ('M, 'T) Identifier.t
+  [@@deriving show]
+end =
+  MatchPattern
 
 and Pattern : sig
   module RestElement : sig

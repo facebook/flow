@@ -543,6 +543,17 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method match_statement_case :
       ('M, 'T) Ast.Statement.Match.Case.t' -> ('N, 'U) Ast.Statement.Match.Case.t'
 
+    method match_pattern : ('M, 'T) Ast.MatchPattern.t -> ('N, 'U) Ast.MatchPattern.t
+
+    method match_unary_pattern :
+      'M Ast.MatchPattern.UnaryPattern.t -> 'N Ast.MatchPattern.UnaryPattern.t
+
+    method match_unary_pattern_argument :
+      'M Ast.MatchPattern.UnaryPattern.argument -> 'N Ast.MatchPattern.UnaryPattern.argument
+
+    method match_binding_pattern :
+      ('M, 'T) Ast.MatchPattern.BindingPattern.t -> ('N, 'U) Ast.MatchPattern.BindingPattern.t
+
     method member : 'T -> ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
 
     method member_private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t

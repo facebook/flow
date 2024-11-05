@@ -2509,7 +2509,7 @@ class ['loc] mapper =
     method match_expression_case (case : ('loc, 'loc) Ast.Expression.Match.Case.t) =
       let open Ast.Expression.Match.Case in
       let (loc, { pattern; body; guard; comments }) = case in
-      let pattern' = this#expression pattern in
+      let pattern' = this#match_pattern pattern in
       let body' = this#expression body in
       let guard' = map_opt this#expression guard in
       let comments' = this#syntax_opt comments in
@@ -2532,7 +2532,7 @@ class ['loc] mapper =
     method match_statement_case (case : ('loc, 'loc) Ast.Statement.Match.Case.t) =
       let open Ast.Statement.Match.Case in
       let (loc, { pattern; body; guard; comments }) = case in
-      let pattern' = this#expression pattern in
+      let pattern' = this#match_pattern pattern in
       let body' = map_loc this#block body in
       let guard' = map_opt this#expression guard in
       let comments' = this#syntax_opt comments in
@@ -2540,6 +2540,59 @@ class ['loc] mapper =
         case
       else
         (loc, { pattern; body; guard = guard'; comments = comments' })
+
+    method match_pattern (pattern : ('loc, 'loc) Ast.MatchPattern.t) =
+      let open Ast.MatchPattern in
+      match pattern with
+      | (loc, WildcardPattern x) -> id this#syntax_opt x pattern (fun x -> (loc, WildcardPattern x))
+      | (loc, StringPattern x) ->
+        id_loc this#string_literal loc x pattern (fun x -> (loc, StringPattern x))
+      | (loc, BooleanPattern x) ->
+        id_loc this#boolean_literal loc x pattern (fun x -> (loc, BooleanPattern x))
+      | (loc, NullPattern x) -> id this#syntax_opt x pattern (fun x -> (loc, NullPattern x))
+      | (loc, NumberPattern x) ->
+        id_loc this#number_literal loc x pattern (fun x -> (loc, NumberPattern x))
+      | (loc, BigIntPattern x) ->
+        id_loc this#bigint_literal loc x pattern (fun x -> (loc, BigIntPattern x))
+      | (loc, UnaryPattern x) ->
+        id this#match_unary_pattern x pattern (fun x -> (loc, UnaryPattern x))
+      | (loc, IdentifierPattern x) ->
+        id this#identifier x pattern (fun x -> (loc, IdentifierPattern x))
+      | (loc, BindingPattern x) ->
+        id_loc this#match_binding_pattern loc x pattern (fun x -> (loc, BindingPattern x))
+
+    method match_unary_pattern (unary_pattern : 'loc Ast.MatchPattern.UnaryPattern.t) =
+      let open Ast.MatchPattern.UnaryPattern in
+      let { operator; argument; comments } = unary_pattern in
+      let (arg_loc, arg) = argument in
+      let argument' =
+        id_loc this#match_unary_pattern_argument arg_loc arg argument (fun arg -> (arg_loc, arg))
+      in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        unary_pattern
+      else
+        { operator; argument = argument'; comments = comments' }
+
+    method match_unary_pattern_argument loc (argument : 'loc Ast.MatchPattern.UnaryPattern.argument)
+        =
+      let open Ast.MatchPattern.UnaryPattern in
+      match argument with
+      | NumberLiteral lit ->
+        id_loc this#number_literal loc lit argument (fun lit -> NumberLiteral lit)
+      | BigIntLiteral lit ->
+        id_loc this#bigint_literal loc lit argument (fun lit -> BigIntLiteral lit)
+
+    method match_binding_pattern
+        _loc (binding_pattern : ('loc, 'loc) Ast.MatchPattern.BindingPattern.t) =
+      let open Ast.MatchPattern.BindingPattern in
+      let { id; kind; comments } = binding_pattern in
+      let id' = this#pattern_identifier ~kind id in
+      let comments' = this#syntax_opt comments in
+      if id == id' && comments == comments' then
+        binding_pattern
+      else
+        { id = id'; kind; comments = comments' }
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in

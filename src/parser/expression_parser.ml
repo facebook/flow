@@ -1383,12 +1383,10 @@ module Expression
 
   and primary env = as_expression env (primary_cover env)
 
-  and match_pattern env = assignment env (* TODO:match *)
-
   and match_expression env ~start_loc ~leading ~arg =
     let case env =
       let leading = Peek.comments env in
-      let pattern = match_pattern env in
+      let pattern = Parse.match_pattern env in
       let guard =
         if Eat.maybe env T_IF then
           Some (Parse.expression env)
