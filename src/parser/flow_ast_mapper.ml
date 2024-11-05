@@ -2564,6 +2564,8 @@ class ['loc] mapper =
         id this#match_object_pattern x pattern (fun x -> (loc, ObjectPattern x))
       | (loc, ArrayPattern x) ->
         id this#match_array_pattern x pattern (fun x -> (loc, ArrayPattern x))
+      | (loc, OrPattern x) -> id this#match_or_pattern x pattern (fun x -> (loc, OrPattern x))
+      | (loc, AsPattern x) -> id this#match_as_pattern x pattern (fun x -> (loc, AsPattern x))
 
     method match_unary_pattern (unary_pattern : 'loc Ast.MatchPattern.UnaryPattern.t) =
       let open Ast.MatchPattern.UnaryPattern in
@@ -2663,6 +2665,27 @@ class ['loc] mapper =
         rest
       else
         { argument = argument'; comments = comments' }
+
+    method match_or_pattern (or_pattern : ('loc, 'loc) Ast.MatchPattern.OrPattern.t) =
+      let open Ast.MatchPattern.OrPattern in
+      let { patterns; comments } = or_pattern in
+      let patterns' = map_list this#match_pattern patterns in
+      let comments' = this#syntax_opt comments in
+      if patterns == patterns' && comments == comments' then
+        or_pattern
+      else
+        { patterns = patterns'; comments = comments' }
+
+    method match_as_pattern (as_pattern : ('loc, 'loc) Ast.MatchPattern.AsPattern.t) =
+      let open Ast.MatchPattern.AsPattern in
+      let { pattern; id; comments } = as_pattern in
+      let pattern' = this#match_pattern pattern in
+      let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
+      let comments' = this#syntax_opt comments in
+      if pattern == pattern' && id == id' && comments == comments' then
+        as_pattern
+      else
+        { pattern = pattern'; id = id'; comments = comments' }
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in

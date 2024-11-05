@@ -2030,6 +2030,23 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module OrPattern : sig
+    type ('M, 'T) t = {
+      patterns: ('M, 'T) MatchPattern.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
+  module AsPattern : sig
+    type ('M, 'T) t = {
+      pattern: ('M, 'T) MatchPattern.t;
+      id: ('M, 'T) Identifier.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'M * ('M, 'T) t'
 
   and ('M, 'T) t' =
@@ -2044,6 +2061,8 @@ and MatchPattern : sig
     | IdentifierPattern of ('M, 'T) Identifier.t
     | ObjectPattern of ('M, 'T) ObjectPattern.t
     | ArrayPattern of ('M, 'T) ArrayPattern.t
+    | OrPattern of ('M, 'T) OrPattern.t
+    | AsPattern of ('M, 'T) AsPattern.t
   [@@deriving show]
 end =
   MatchPattern

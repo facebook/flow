@@ -576,6 +576,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.MatchPattern.ArrayPattern.Rest.t' ->
       ('N, 'U) Ast.MatchPattern.ArrayPattern.Rest.t'
 
+    method match_or_pattern :
+      ('M, 'T) Ast.MatchPattern.OrPattern.t -> ('N, 'U) Ast.MatchPattern.OrPattern.t
+
+    method match_as_pattern :
+      ('M, 'T) Ast.MatchPattern.AsPattern.t -> ('N, 'U) Ast.MatchPattern.AsPattern.t
+
     method member : 'T -> ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
 
     method member_private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t

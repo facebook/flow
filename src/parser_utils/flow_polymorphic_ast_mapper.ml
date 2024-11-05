@@ -2103,6 +2103,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | BindingPattern x -> BindingPattern (this#match_binding_pattern x)
         | ObjectPattern x -> ObjectPattern (this#match_object_pattern x)
         | ArrayPattern x -> ArrayPattern (this#match_array_pattern x)
+        | OrPattern x -> OrPattern (this#match_or_pattern x)
+        | AsPattern x -> AsPattern (this#match_as_pattern x)
       )
 
     method match_unary_pattern (unary_pattern : 'M Ast.MatchPattern.UnaryPattern.t)
@@ -2183,6 +2185,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let argument' = Option.map argument ~f:(this#on_loc_annot * this#match_binding_pattern) in
       let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
+
+    method match_or_pattern (or_pattern : ('M, 'T) Ast.MatchPattern.OrPattern.t)
+        : ('N, 'U) Ast.MatchPattern.OrPattern.t =
+      let open Ast.MatchPattern.OrPattern in
+      let { patterns; comments } = or_pattern in
+      let patterns' = List.map ~f:this#match_pattern patterns in
+      let comments' = this#syntax_opt comments in
+      { patterns = patterns'; comments = comments' }
+
+    method match_as_pattern (as_pattern : ('M, 'T) Ast.MatchPattern.AsPattern.t)
+        : ('N, 'U) Ast.MatchPattern.AsPattern.t =
+      let open Ast.MatchPattern.AsPattern in
+      let { pattern; id; comments } = as_pattern in
+      let pattern' = this#match_pattern pattern in
+      let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
+      let comments' = this#syntax_opt comments in
+      { pattern = pattern'; id = id'; comments = comments' }
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

@@ -299,6 +299,17 @@ function custom_ast_types(fork) {
     .build('argument')
     .field('argument', or(def('MatchBindingPattern'), null));
 
+  def('MatchOrPattern')
+    .bases('MatchPattern')
+    .build('patterns')
+    .field('patterns', [def('MatchPattern')]);
+
+  def('MatchAsPattern')
+    .bases('MatchPattern')
+    .build('pattern', 'id')
+    .field('pattern', def('MatchPattern'))
+    .field('id', def('Identifier'));
+
   /////////
   // es2018
   /////////

@@ -3373,6 +3373,22 @@ and match_pattern ~opts (loc, pattern) =
   | BindingPattern binding -> match_binding_pattern loc binding
   | ObjectPattern obj -> match_object_pattern ~opts loc obj
   | ArrayPattern arr -> match_array_pattern ~opts loc arr
+  | OrPattern { OrPattern.patterns; comments } ->
+    let patterns = Base.List.map ~f:(match_pattern ~opts) patterns in
+    layout_node_with_comments_opt
+      loc
+      comments
+      (join (fuse [pretty_space; Atom "|"; pretty_space]) patterns)
+  | AsPattern { AsPattern.pattern; id; comments } ->
+    let pattern =
+      match pattern with
+      | (_, OrPattern _) -> fuse [Atom "("; match_pattern ~opts pattern; Atom ")"]
+      | _ -> match_pattern ~opts pattern
+    in
+    layout_node_with_comments_opt
+      loc
+      comments
+      (fuse [pattern; space; Atom "as"; space; identifier id])
 
 and match_binding_pattern loc { Ast.MatchPattern.BindingPattern.kind; id; comments } =
   source_location_with_comments ?comments (loc, fuse_with_space [variable_kind kind; identifier id])

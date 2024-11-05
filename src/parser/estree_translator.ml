@@ -737,6 +737,14 @@ with type t = Impl.t = struct
             ("elements", array_of_list match_pattern elements);
             ("rest", option match_array_pattern_rest rest);
           ]
+      | OrPattern { OrPattern.patterns; comments } ->
+        node ?comments "MatchOrPattern" loc [("patterns", array_of_list match_pattern patterns)]
+      | AsPattern { AsPattern.pattern; id; comments } ->
+        node
+          ?comments
+          "MatchAsPattern"
+          loc
+          [("pattern", match_pattern pattern); ("id", identifier id)]
     and match_binding_pattern (loc, { MatchPattern.BindingPattern.kind; id; comments }) =
       let kind = variable_kind kind in
       node ?comments "MatchBindingPattern" loc [("id", identifier id); ("kind", string kind)]
