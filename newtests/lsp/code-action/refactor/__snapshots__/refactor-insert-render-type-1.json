@@ -23,6 +23,15 @@
             }
           ]
         }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_inferred_render_type",
+          "Insert inferred render type"
+        ]
       }
     }
   ]

@@ -153,13 +153,26 @@ let code_action_insert_inferred_render_type
              { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
          )
     in
+    let title = "Insert inferred render type" in
+    let diagnostic_title = "insert_inferred_render_type" in
     [
       CodeAction.Action
         {
-          CodeAction.title = "Insert inferred render type";
+          CodeAction.title;
           kind = CodeActionKind.refactor;
           diagnostics = [];
-          action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          (* todo log *)
+          action =
+            CodeAction.BothEditThenCommand
+              ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                {
+                  Command.title = "";
+                  command = Command.Command "log";
+                  arguments =
+                    ["textDocument/codeAction"; diagnostic_title; title]
+                    |> List.map (fun str -> Hh_json.JSON_String str);
+                }
+              );
         };
     ]
   | None -> []
