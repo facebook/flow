@@ -1247,8 +1247,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1972:15
-   1972| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1984:15
+   1984| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error
