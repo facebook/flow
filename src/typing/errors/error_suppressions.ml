@@ -269,7 +269,8 @@ let check
   (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
     match err.Flow_intermediate_error_types.kind with
-    | Flow_errors_utils.LintError _ -> in_node_modules ~root ~file_options loc
+    | Flow_errors_utils.LintError _ ->
+      in_node_modules ~root ~file_options loc || in_declarations ~file_options loc
     | _ -> in_declarations ~file_options loc
   in
   match (ignore, code_opt) with
