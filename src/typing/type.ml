@@ -634,7 +634,11 @@ module rec TypeTerm : sig
     | GetProtoT of reason * tvar
     | SetProtoT of reason * t
     (* repositioning *)
-    | ReposLowerT of reason * bool (* use_desc *) * use_t
+    | ReposLowerT of {
+        reason: reason;
+        use_desc: bool;
+        use_t: use_t;
+      }
     | ReposUseT of reason * bool (* use_desc *) * use_op * t
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of {

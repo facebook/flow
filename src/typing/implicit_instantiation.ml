@@ -384,7 +384,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       UpperNonT u
     | DeepReadOnlyT (((r, _) as tout), _) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
     | HooklikeT ((r, _) as tout) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
-    | ReposLowerT (_, _, use_t) -> t_of_use_t cx seen tvar use_t
+    | ReposLowerT { use_t; _ } -> t_of_use_t cx seen tvar use_t
     | ReposUseT (_, _, _use_op, t) ->
       Flow.flow_t cx (t, tvar);
       UpperT t

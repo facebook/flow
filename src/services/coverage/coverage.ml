@@ -191,7 +191,7 @@ let visitor =
     method private types_of_use acc =
       function
       | UseT (_, t) -> t :: acc
-      | ReposLowerT (_, _, u) -> self#types_of_use acc u
+      | ReposLowerT { use_t = u; _ } -> self#types_of_use acc u
       | _ -> acc
 
     method private merged_t cx uses =

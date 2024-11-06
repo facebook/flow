@@ -466,7 +466,7 @@ module Make (I : INPUT) : S = struct
         | T.TypeCastT (_, t) :: rest ->
           let%bind t = cont ~env ~id:(TVarKey id) t in
           uses_t_aux (t :: acc) rest
-        | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux acc (u :: rest)
+        | T.ReposLowerT { use_t = u; _ } :: rest -> uses_t_aux acc (u :: rest)
         (* skip these *)
         | T.CJSExtractNamedExportsT _ :: rest -> uses_t_aux acc rest
         | u :: _ -> return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))

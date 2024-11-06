@@ -84,7 +84,7 @@ and reason_of_use_t = function
   | OptionalIndexedAccessT { reason; _ } -> reason
   | PrivateMethodT (_, reason, _, _, _, _, _) -> reason
   | ReactKitT (_, reason, _) -> reason
-  | ReposLowerT (reason, _, _) -> reason
+  | ReposLowerT { reason; _ } -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
@@ -205,7 +205,8 @@ let rec util_use_op_of_use_t :
   | GetElemT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetElemT { x with use_op })
   | OptionalIndexedAccessT ({ use_op; _ } as x) ->
     util use_op (fun use_op -> OptionalIndexedAccessT { x with use_op })
-  | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
+  | ReposLowerT { reason; use_desc; use_t } ->
+    nested_util use_t (fun use_t -> ReposLowerT { reason; use_desc; use_t })
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT { use_op; reason; targs; args; tout; return_hint; specialized_ctor } ->
     util use_op (fun use_op ->

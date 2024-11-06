@@ -988,7 +988,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       (* check that o has key x *)
       let u = HasOwnPropT (use_op, reason_next, l) in
-      rec_flow cx trace (o, ReposLowerT (reason_op, false, u))
+      rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
     | ( ( DefT (reason_s, NumericStrKeyT (_, s))
         | GenericT { reason = reason_s; bound = DefT (_, NumericStrKeyT (_, s)); _ } ),
         KeysT (reason_op, o)
@@ -996,7 +996,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let reason_next = replace_desc_new_reason (RProperty (Some (OrdinaryName s))) reason_s in
       let l = DefT (reason_s, StrT (Literal (None, OrdinaryName s))) in
       let u = HasOwnPropT (use_op, reason_next, l) in
-      rec_flow cx trace (o, ReposLowerT (reason_op, false, u))
+      rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
     | (KeysT (reason1, o1), _) ->
       (* flow all keys of o1 to u *)
       rec_flow cx trace (o1, GetKeysT (reason1, UseT (use_op, u)))
@@ -1867,20 +1867,22 @@ module Make (Flow : INPUT) : OUTPUT = struct
               trace
               ( super,
                 ReposLowerT
-                  ( lreason,
-                    false,
-                    LookupT
-                      {
-                        reason = ureason;
-                        lookup_kind;
-                        try_ts_on_failure = [];
-                        propref;
-                        lookup_action = LookupProp (use_op, Property.type_ up);
-                        method_accessible = false;
-                        ids = Some (Properties.Set.of_list [lown; lproto]);
-                        ignore_dicts = false;
-                      }
-                  )
+                  {
+                    reason = lreason;
+                    use_desc = false;
+                    use_t =
+                      LookupT
+                        {
+                          reason = ureason;
+                          lookup_kind;
+                          try_ts_on_failure = [];
+                          propref;
+                          lookup_action = LookupProp (use_op, Property.type_ up);
+                          method_accessible = false;
+                          ids = Some (Properties.Set.of_list [lown; lproto]);
+                          ignore_dicts = false;
+                        };
+                  }
               )
       );
 
@@ -2242,7 +2244,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* functions statics *)
     (*********************)
     | (DefT (reason, FunT (static, _)), AnyT _) ->
-      rec_flow cx trace (static, ReposLowerT (reason, false, UseT (use_op, u)))
+      rec_flow cx trace (static, ReposLowerT { reason; use_desc = false; use_t = UseT (use_op, u) })
     (*****************)
     (* class statics *)
     (*****************)

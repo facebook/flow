@@ -1119,7 +1119,7 @@ struct
         | (MaybeT (_, tout), FilterMaybeT _) ->
           rec_flow cx trace (tout, u)
         | (DefT (_, EmptyT), FilterMaybeT (use_op, tout)) -> rec_flow_t cx trace ~use_op (l, tout)
-        | (MaybeT _, ReposLowerT (reason_op, use_desc, u)) ->
+        | (MaybeT _, ReposLowerT { reason = reason_op; use_desc; use_t = u }) ->
           (* Don't split the maybe type into its constituent members. Instead,
              reposition the entire maybe type. *)
           let loc = loc_of_reason reason_op in
@@ -1167,7 +1167,7 @@ struct
           rec_flow_t cx trace ~use_op (EmptyT.why r, tout)
         | (OptionalT { reason = _; type_ = tout; use_desc = _ }, FilterOptionalT _) ->
           rec_flow cx trace (tout, u)
-        | (OptionalT _, ReposLowerT (reason, use_desc, u)) ->
+        | (OptionalT _, ReposLowerT { reason; use_desc; use_t = u }) ->
           (* Don't split the optional type into its constituent members. Instead,
              reposition the entire optional type. *)
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
@@ -1229,7 +1229,7 @@ struct
         | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
           let reason_op = reason_of_use_t u in
           instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Upper u)
-        | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
+        | (TypeAppT _, ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc },
             MethodT (_, _, _, _, _)
@@ -1434,7 +1434,7 @@ struct
 
         (* Repositioning should happen before opaque types are considered so that we can
          * have the "most recent" location when we do look at the opaque type *)
-        | (OpaqueT _, ReposLowerT (reason, use_desc, u)) ->
+        | (OpaqueT _, ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Store the opaque type when doing `ToStringT`, so we can use that
            rather than just `string` if the underlying is `string`. *)
@@ -1649,7 +1649,7 @@ struct
           iter_resolve_union ~f:rec_flow cx trace reason rep upper
         (* Don't split the union type into its constituent members. Instead,
            reposition the entire union type. *)
-        | (UnionT _, ReposLowerT (reason, use_desc, u)) ->
+        | (UnionT _, ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (UnionT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
@@ -1879,7 +1879,7 @@ struct
         (* This duplicates the (_, ReposLowerT u) near the end of this pattern
            match but has to appear here to preempt the (IntersectionT, _) in
            between so that we reposition the entire intersection. *)
-        | (IntersectionT _, ReposLowerT (reason, use_desc, u)) ->
+        | (IntersectionT _, ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
@@ -2242,7 +2242,7 @@ struct
            it would be in practice.
         *)
         | ( DefT (_, (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _)),
-            ReposLowerT (reason, use_desc, u)
+            ReposLowerT { reason; use_desc; use_t = u }
           ) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (DefT (reason, SingletonStrT key), _) ->
@@ -2340,9 +2340,9 @@ struct
           (* TODO: check that this is a subtype of i? *)
           continue_repos cx trace r i k
         | (AnyT _, ThisSpecializeT (r, _, k)) -> continue_repos cx trace r l k
-        | (DefT (_, PolyT _), ReposLowerT (reason, use_desc, u)) ->
+        | (DefT (_, PolyT _), ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (DefT (_, ClassT (ThisInstanceT _)), ReposLowerT (reason, use_desc, u)) ->
+        | (DefT (_, ClassT (ThisInstanceT _)), ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Special case for `_ instanceof C` where C is polymorphic *)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
@@ -2553,7 +2553,7 @@ struct
           ) ->
           let method_type =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                let u =
+                let use_t =
                   GetPropT
                     {
                       use_op;
@@ -2565,7 +2565,7 @@ struct
                       hint = hint_unavailable;
                     }
                 in
-                rec_flow cx trace (static, ReposLowerT (reason, false, u))
+                rec_flow cx trace (static, ReposLowerT { reason; use_desc = false; use_t })
             )
           in
           apply_method_action cx trace method_type use_op reason_call l action
@@ -2729,7 +2729,9 @@ struct
         | (AnyT (_, src), ObjTestT (reason_op, _, u)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason_op, u)
         | (_, ObjTestT (reason_op, default, u)) ->
-          let u = ReposLowerT (reason_op, false, UseT (unknown_use, u)) in
+          let u =
+            ReposLowerT { reason = reason_op; use_desc = false; use_t = UseT (unknown_use, u) }
+          in
           if object_like l then
             rec_flow cx trace (l, u)
           else
@@ -2831,8 +2833,8 @@ struct
                then use the ExtendsUseT use type to search for a nominally matching
                implementation, thereby short-circuiting a potentially expensive
                structural test at the use site. *)
-            let u = ExtendsUseT (use_op, reason_op, try_ts_on_failure @ implements, l, u) in
-            rec_flow cx trace (super, ReposLowerT (reason, false, u))
+            let use_t = ExtendsUseT (use_op, reason_op, try_ts_on_failure @ implements, l, u) in
+            rec_flow cx trace (super, ReposLowerT { reason; use_desc = false; use_t })
         (*********************************************************)
         (* class types derive instance types (with constructors) *)
         (*********************************************************)
@@ -2969,13 +2971,25 @@ struct
         (* statics can be read   *)
         (*************************)
         | (DefT (_, InstanceT { static; _ }), GetStaticsT ((reason_op, _) as tout)) ->
-          rec_flow cx trace (static, ReposLowerT (reason_op, false, UseT (unknown_use, OpenT tout)))
+          rec_flow
+            cx
+            trace
+            ( static,
+              ReposLowerT
+                { reason = reason_op; use_desc = false; use_t = UseT (unknown_use, OpenT tout) }
+            )
         | (AnyT (_, src), GetStaticsT ((reason_op, _) as tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, OpenT tout)
         | (ObjProtoT _, GetStaticsT ((reason_op, _) as tout)) ->
           (* ObjProtoT not only serves as the instance type of the root class, but
              also as the statics of the root class. *)
-          rec_flow cx trace (l, ReposLowerT (reason_op, false, UseT (unknown_use, OpenT tout)))
+          rec_flow
+            cx
+            trace
+            ( l,
+              ReposLowerT
+                { reason = reason_op; use_desc = false; use_t = UseT (unknown_use, OpenT tout) }
+            )
         (********************)
         (* __proto__ getter *)
         (********************)
@@ -3504,8 +3518,8 @@ struct
           (* Spread fields from super into an object *)
           let obj_super =
             Tvar.mk_where cx reason_op (fun tvar ->
-                let u = ObjRestT (reason_op, xs, tvar, Reason.mk_id ()) in
-                rec_flow cx trace (super, ReposLowerT (reason, false, u))
+                let use_t = ObjRestT (reason_op, xs, tvar, Reason.mk_id ()) in
+                rec_flow cx trace (super, ReposLowerT { reason; use_desc = false; use_t })
             )
           in
           let o =
@@ -4146,7 +4160,13 @@ struct
             t
             reason_inst
             (own_props, proto_props, inst_call_t, inst_dict);
-          rec_flow cx trace (super, ReposLowerT (reason_inst, false, ImplementsT (use_op, t)))
+          rec_flow
+            cx
+            trace
+            ( super,
+              ReposLowerT
+                { reason = reason_inst; use_desc = false; use_t = ImplementsT (use_op, t) }
+            )
         | (_, ImplementsT _) -> add_output cx (Error_message.EUnsupportedImplements (reason_of_t l))
         (*********************************************************************)
         (* class A is a base class of class B iff                            *)
@@ -4216,7 +4236,7 @@ struct
         (* functions statics - part B *)
         (******************************)
         | (DefT (reason, FunT (static, _)), _) when object_like_op u ->
-          rec_flow cx trace (static, ReposLowerT (reason, false, u))
+          rec_flow cx trace (static, ReposLowerT { reason; use_desc = false; use_t = u })
         (*****************************************)
         (* classes can have their prototype read *)
         (*****************************************)
@@ -4247,19 +4267,19 @@ struct
         | (DefT (reason, ClassT instance), GetPrivatePropT (use_op, reason_op, x, scopes, _, tout))
           ->
           let u = GetPrivatePropT (use_op, reason_op, x, scopes, true, tout) in
-          rec_flow cx trace (instance, ReposLowerT (reason, false, u))
+          rec_flow cx trace (instance, ReposLowerT { reason; use_desc = false; use_t = u })
         | ( DefT (reason, ClassT instance),
             SetPrivatePropT (use_op, reason_op, x, mode, scopes, _, wr_ctx, tout, tp)
           ) ->
           let u = SetPrivatePropT (use_op, reason_op, x, mode, scopes, true, wr_ctx, tout, tp) in
-          rec_flow cx trace (instance, ReposLowerT (reason, false, u))
+          rec_flow cx trace (instance, ReposLowerT { reason; use_desc = false; use_t = u })
         | ( DefT (reason, ClassT instance),
             PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, _, action)
           ) ->
           let u =
             PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, true, action)
           in
-          rec_flow cx trace (instance, ReposLowerT (reason, false, u))
+          rec_flow cx trace (instance, ReposLowerT { reason; use_desc = false; use_t = u })
         | ( DefT (reason, ClassT instance),
             MethodT (use_op, reason_call, reason_lookup, propref, action)
           ) ->
@@ -4279,7 +4299,10 @@ struct
                       hint = hint_unavailable;
                     }
                 in
-                rec_flow cx trace (OpenT statics, ReposLowerT (reason, false, u))
+                rec_flow
+                  cx
+                  trace
+                  (OpenT statics, ReposLowerT { reason; use_desc = false; use_t = u })
             )
           in
           apply_method_action cx trace method_type use_op reason_call l action
@@ -4546,7 +4569,7 @@ struct
            the location stored in the ReposLowerT, which is usually the location
            where that lower bound was used; the lower bound's location (which is
            being overwritten) is where it was defined. *)
-        | (_, ReposLowerT (reason, use_desc, u)) ->
+        | (_, ReposLowerT { reason; use_desc; use_t = u }) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (***********************************************************)
         (* generics                                                *)
@@ -8975,7 +8998,7 @@ struct
                   flow_opt
                     cx
                     ?trace
-                    (t_open, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))
+                    (t_open, ReposLowerT { reason; use_desc; use_t = UseT (unknown_use, tvar) })
               )
         end
       | EvalT (root, (TypeDestructorT (_, _, d) as defer_use_t), id) as t ->
@@ -9003,7 +9026,10 @@ struct
           | None ->
             Tvar.mk_where cx reason (fun tvar ->
                 Cache.Eval.add_repos cx root defer_use_t id tvar;
-                flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)));
+                flow_opt
+                  cx
+                  ?trace
+                  (t, ReposLowerT { reason; use_desc; use_t = UseT (unknown_use, tvar) });
                 if no_unresolved then (
                   Tvar_resolver.resolve cx t;
                   Tvar_resolver.resolve cx tvar
