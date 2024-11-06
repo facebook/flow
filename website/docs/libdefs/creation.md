@@ -3,6 +3,8 @@ title: Creating Library Definitions
 slug: /libdefs/creation
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Before spending the time to write your own libdef, we recommend that you look to
 see if there is already a libdef for the third-party code that you're addressing.
 `flow-typed` is a [tool and repository](https://github.com/flowtype/flow-typed/)
@@ -117,9 +119,57 @@ type T = TypeOnlyFoo.Baz; // ok
 
 ## Declaring A Module {#toc-declaring-a-module}
 
-Often, third-party code is organized in terms of modules rather than globals. To
-write a libdef that declares the presence of a module you'll want to use the
-`declare module` syntax:
+Often, third-party code is organized in terms of modules rather than globals.
+Flow offers two different ways to declare a module.
+
+### Declaring a module in the `@flowtyped` directory  <SinceVersion version="0.251.0" />  {#toc-declaring-a-module-in-at-flowtyped}
+
+Since v0.251.0, Flow has added support for easily declaring third-party modules in the
+`@flowtyped` directory at the root of the project. Before looking into `node_modules` for
+the module specifier `foo/bar/baz`, Flow will look into `@flowtyped/foo/bar/baz.js.flow` and
+`@flowtyped/foo/bar/baz/index.js.flow`.
+
+For example, if you want to declare the types for `react`, you can do:
+
+```js title="@flowtyped/react.js.flow"
+export type ReactSetStateFunction<S> = ((S => S) | S) => void;
+declare export function useState<S>(initial: S): [S, ReactSetStateFunction<S>];
+
+// Other stuff...
+```
+
+which will allow you to import these functions and types from `react`:
+
+```js title="foo/bar/baz/my-product-code.jsx"
+import * as React from 'react';
+
+function MyComponent({onSelect}: {onSelect: ReactSetStateFunction<string>}) {
+  const [a, setA] = React.useState(new Set<string>());
+  return <div />;
+}
+// Other stuff...
+```
+
+If you want to declare the types for a scoped package like `@my-company/library-a`, you can do
+
+```js title="@flowtyped/@my-company/library-a.js.flow"
+declare export const foo: string;
+declare export const bar: number;
+```
+
+If you want to declare the types for a deeply nested module in a package like
+`react-native/internals/foo`, you can do:
+
+```js title="@flowtyped/react-native/internals/foo.js.flow"
+declare export const SECRET_INTERNALS_Foo: {...};
+```
+
+This approach is preferrable to the approach described [below](#toc-declaring-a-module-globally),
+because editing these files will not trigger a restart of Flow server.
+
+### Declaring a module in the global namespace  {#toc-declaring-a-module-globally}
+
+You can also declare modules using the `declare module` syntax:
 
 ```js
 declare module "some-third-party-library" {
