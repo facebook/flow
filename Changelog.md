@@ -1,3 +1,16 @@
+### 0.252.0
+
+Likely to cause new Flow errors:
+* Flow will no longer apply type transformation to function components' props when you extract props through the utility types. [For example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABDAHso4NBOQAxYgACmpjBIyE5wBgxCl9lMUAQ9IAlFKAEqsZRWAByEA0AG4ADo+VZC4icgC8nM10QAJABRNreCQAYWg8AQAB4VsYIDBzRAAHwGzkAejDnNmDX5+UG0oA1LKIPKpBVlbxOVAIAB3aXJ1OK5Um3IgBomEj8qBJBoABisACYAKz12sgelAA), function components' props won't automatically get `$ReadOnly` applied, which might cause new errors.
+
+New Features:
+* We have removed the restriction of not allowing generics with ref prop in component syntax
+
+Notable bug fixes:
+* Files in `[declarations]` section will have all lint errors silenced.
+* Fixed an issue that caused errors in hover type on unions of evaluated types ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhIAEzs7lQVk+VYAAgAggKALwC4ArYzIAUAcgwsvpfKl2AFACExRKVTLZWhFcrBQBhTWS1Y6sD6-nGAUAERN2rlbEtButQo14pFAB91QBuF2qw128XG702v28q2qt2BzVugXewPhlXCtWBgAqgo9qZtAG1WSAVfmALrhgD0pYFlYAegLKWwBWkBSRahAAO4CgAGyejNoz1qzgbzBdWxdjGoTNo7fPLldnFXsrHrEBgne72b7qoHufzhZARc1+Yw+fjAvzaGP3vzYAvp5AbHzU4jMAeyjg0AFMGIAB40zKewA+AAKeQZTTIddyLABKGUGggOB62AJUoBnWdULQ9CBRrOsGwgJsW3bDswJ3Ec9zHQNHxQjCqLQ+cFnYAVl07Ijh2MUdxUPG8z048BuPvEBH1yEAGhMEg3ygJIGgABisDkAFYAEYrEkkB6SAA))
+* Flow allows unions of strings to be used as the key in creation of objects with computed properties.
+
 ### 0.251.1
 
 Misc:
