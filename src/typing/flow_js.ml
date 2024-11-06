@@ -8978,7 +8978,7 @@ struct
                     (t_open, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))
               )
         end
-      | EvalT (root, defer_use_t, id) as t ->
+      | EvalT (root, (TypeDestructorT (_, _, d) as defer_use_t), id) as t ->
         (* Modifying the reason of `EvalT`, as we do for other types, is not
            enough, since it will only affect the reason of the resulting tvar.
            Instead, repositioning a `EvalT` should simulate repositioning the
@@ -8989,13 +8989,22 @@ struct
         let reason = reason_of_defer_use_t defer_use_t in
         let use_desc = Base.Option.is_some desc in
         begin
+          let no_unresolved =
+            (not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx root))
+            && not (Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d)
+          in
           match Cache.Eval.find_repos cx root defer_use_t id with
-          | Some tvar -> tvar
+          | Some tvar ->
+            (match tvar with
+            | OpenT (_, id)
+              when no_unresolved && Base.List.is_empty (Flow_js_utils.possible_types cx id) ->
+              EmptyT.why (reason_of_t tvar)
+            | _ -> tvar)
           | None ->
             Tvar.mk_where cx reason (fun tvar ->
                 Cache.Eval.add_repos cx root defer_use_t id tvar;
                 flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)));
-                if not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t) then (
+                if no_unresolved then (
                   Tvar_resolver.resolve cx t;
                   Tvar_resolver.resolve cx tvar
                 )
