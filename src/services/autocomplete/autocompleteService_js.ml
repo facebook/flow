@@ -559,34 +559,32 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
 
 (* Roughly collects upper bounds of a type.
  * This logic will be changed or made unnecessary once we have contextual typing *)
-let upper_bound_t_of_t ~cx =
-  let rec upper_bounds_of_t : ISet.t -> Type.t -> Type.t list =
-    let open Base.List.Let_syntax in
-    fun seen -> function
-      | Type.OpenT (_, id) ->
-        (* A given tvar might be reachable from many paths through uses. If
-         * we've seen this tvar before, we should not re-add the uses we've
-         * already seen. *)
-        if ISet.mem id seen then
-          []
-        else
-          let seen = ISet.add id seen in
-          let%bind use = Flow_js_utils.possible_uses cx id in
-          upper_bounds_of_use_t seen use
-      | t -> return t
-  and upper_bounds_of_use_t : ISet.t -> Type.use_t -> Type.t list =
+let expected_concrete_type_of_t ~cx =
+  let rec unwrap : ISet.t -> Type.t -> Type.t option =
    fun seen -> function
-    | Type.ReposLowerT (_, _, use) -> upper_bounds_of_use_t seen use
-    | Type.UseT (_, t) -> upper_bounds_of_t seen t
-    | _ -> []
+    | Type.OpenT (_, id) ->
+      (* A given tvar might be reachable from many paths through uses. If
+       * we've seen this tvar before, we should not re-add the uses we've
+       * already seen. *)
+      if ISet.mem id seen then
+        None
+      else
+        let seen = ISet.add id seen in
+        let use =
+          match Context.find_graph cx id with
+          | Type.Constraint.Resolved t -> Some t
+          | Type.Constraint.FullyResolved s -> Some (Context.force_fully_resolved_tvar cx s)
+          | Type.Constraint.Unresolved _ -> None
+        in
+        Base.Option.bind ~f:(unwrap seen) use
+    | t -> Some t
   in
   fun lb_type ->
     let seen = ISet.empty in
     let reason = TypeUtil.reason_of_t lb_type in
-    match upper_bounds_of_t seen lb_type with
-    | [] -> Type.MixedT.make reason
-    | [upper_bound] -> upper_bound
-    | ub1 :: ub2 :: ubs -> Type.IntersectionT (reason, Type.InterRep.make ub1 ub2 ubs)
+    match unwrap seen lb_type with
+    | None -> Type.MixedT.make reason
+    | Some t -> t
 
 let rec literals_of_ty acc ty =
   match ty with
@@ -627,12 +625,12 @@ let autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit
   in
   (prefer_single_quotes, edit_locs)
 
-let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token =
-  let upper_bound_ty =
-    Result.value (Ty_normalizer_flow.expand_literal_union genv upper_bound) ~default:Ty.Top
+let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~expected_type ~token =
+  let expected_type_ty =
+    Result.value (Ty_normalizer_flow.expand_literal_union genv expected_type) ~default:Ty.Top
   in
   let exact_by_default = Context.exact_by_default cx in
-  let literals = literals_of_ty [] upper_bound_ty in
+  let literals = literals_of_ty [] expected_type_ty in
   let (prefer_single_quotes, edit_locs) =
     autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit_locs ~token
   in
@@ -860,10 +858,10 @@ let autocomplete_id
   let open AcCompletion in
   let { cx; layout_options; norm_genv = genv; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
-  let upper_bound = upper_bound_t_of_t ~cx type_ in
+  let expected_type = expected_concrete_type_of_t ~cx type_ in
   let prefer_single_quotes = layout_options.Js_layout_generator.single_quotes in
   let results =
-    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token
+    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~expected_type ~token
   in
   let rank =
     if results = [] then
@@ -2020,14 +2018,14 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
           SSet.union acc spread_keys
     )
   in
-  let upper_bound = upper_bound_t_of_t ~cx:typing.cx obj_type in
+  let expected_type = expected_concrete_type_of_t ~cx:typing.cx obj_type in
   match
     let open Base.Result.Let_syntax in
     let%bind (methods, methods_errors_to_log) =
-      unused_super_methods ~typing ~edit_locs ~exclude_keys upper_bound
+      unused_super_methods ~typing ~edit_locs ~exclude_keys expected_type
     in
     let%bind (mems, mems_errors_to_log) =
-      members_of_type ~typing ~exclude_keys ~exclude_proto_members:true upper_bound
+      members_of_type ~typing ~exclude_keys ~exclude_proto_members:true expected_type
     in
     let items =
       mems
@@ -2276,10 +2274,10 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
       | Ac_literal { lit_type = None } -> AcEmpty "Literal"
       | Ac_literal { lit_type = Some lit_type } ->
-        let upper_bound = upper_bound_t_of_t ~cx lit_type in
+        let expected_type = expected_concrete_type_of_t ~cx lit_type in
         let prefer_single_quotes = layout_options.Js_layout_generator.single_quotes in
         let items =
-          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~upper_bound ~token
+          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~expected_type ~token
           |> filter_by_token_and_sort token
         in
         let result = { AcCompletion.items; is_incomplete = false } in
