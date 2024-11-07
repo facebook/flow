@@ -399,9 +399,12 @@ module Node = struct
       ]
 
   let flow_typed_module ~options ~reader ?phantom_acc ~source import_str =
-    let root = Options.root options |> File_path.to_string in
-    let root = Filename.concat root "@flowtyped" in
-    resolve_relative ~options ~reader ?phantom_acc ~source root import_str
+    Options.file_options options
+    |> Files.module_declaration_dirnames
+    |> Base.List.map ~f:(fun root ->
+           lazy (resolve_relative ~options ~reader ?phantom_acc ~source root import_str)
+       )
+    |> lazy_seq
 
   (* The flowconfig option `module.system.node.allow_root_relative` tells Flow
    * to resolve requires like `require('foo/bar.js')` relative to the project

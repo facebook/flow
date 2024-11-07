@@ -21,6 +21,7 @@ val mk_options :
   implicitly_include_root:bool ->
   includes:Path_matcher.t ->
   lib_paths:File_path.t list ->
+  module_declaration_dirnames:string list ->
   module_file_exts:string list ->
   module_resource_exts:SSet.t ->
   multi_platform:bool ->
@@ -45,6 +46,8 @@ val implicitly_include_root : options -> bool
 val includes : options -> Path_matcher.t
 
 val lib_paths : options -> File_path.t list
+
+val module_declaration_dirnames : options -> string list
 
 val module_file_exts : options -> string list
 

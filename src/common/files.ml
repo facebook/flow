@@ -19,6 +19,7 @@ type options = {
   implicitly_include_root: bool;
   includes: Path_matcher.t;
   lib_paths: File_path.t list;
+  module_declaration_dirnames: string list;
   module_file_exts: string list;
   module_resource_exts: SSet.t;
   multi_platform: bool;
@@ -36,6 +37,7 @@ let mk_options
     ~implicitly_include_root
     ~includes
     ~lib_paths
+    ~module_declaration_dirnames
     ~module_file_exts
     ~module_resource_exts
     ~multi_platform
@@ -51,6 +53,7 @@ let mk_options
     implicitly_include_root;
     includes;
     lib_paths;
+    module_declaration_dirnames;
     module_file_exts;
     module_resource_exts;
     multi_platform;
@@ -69,6 +72,7 @@ let default_options =
     implicitly_include_root = true;
     includes = Path_matcher.empty;
     lib_paths = [];
+    module_declaration_dirnames = [];
     module_file_exts = [];
     module_resource_exts = SSet.empty;
     multi_platform = false;
@@ -91,6 +95,8 @@ let implicitly_include_root options = options.implicitly_include_root
 let includes options = options.includes
 
 let lib_paths options = options.lib_paths
+
+let module_declaration_dirnames options = options.module_declaration_dirnames
 
 let module_file_exts options = options.module_file_exts
 

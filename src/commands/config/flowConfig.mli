@@ -181,6 +181,8 @@ val merge_timeout : config -> int option
 
 val missing_module_generators : config -> (Str.regexp * string) list
 
+val module_declaration_dirnames : config -> string list
+
 val module_file_exts : config -> string list
 
 val module_name_mappers : config -> (Str.regexp * string) list

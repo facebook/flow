@@ -101,6 +101,7 @@ module Opts = struct
     max_workers: int option;
     merge_timeout: int option;
     missing_module_generators: (Str.regexp * string) list;
+    module_declaration_dirnames: string list;
     module_file_exts: string list;
     module_name_mappers: (Str.regexp * string) list;
     module_resource_exts: SSet.t;
@@ -236,6 +237,7 @@ module Opts = struct
       max_workers = None;
       merge_timeout = Some 100;
       missing_module_generators = [];
+      module_declaration_dirnames = ["<PROJECT_ROOT>/@flowtyped"];
       module_file_exts;
       module_name_mappers = [];
       module_resource_exts;
@@ -785,6 +787,17 @@ module Opts = struct
         let module_name_mappers = v :: opts.module_name_mappers in
         Ok { opts with module_name_mappers })
 
+  let module_declaration_dirnames_parser =
+    string
+      ~init:(fun opts -> { opts with module_declaration_dirnames = [] })
+      ~multiple:true
+      (fun opts v ->
+        if v = Filename.current_dir_name || v = Filename.parent_dir_name then
+          Error (spf "%S is not a valid value for `module.declaration_dirnames`." v)
+        else
+          let module_declaration_dirnames = v :: opts.module_declaration_dirnames in
+          Ok { opts with module_declaration_dirnames })
+
   let node_main_field_parser =
     string
       ~init:(fun opts -> { opts with node_main_fields = [] })
@@ -1002,6 +1015,7 @@ module Opts = struct
       ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
       ("module.name_mapper", name_mapper_parser);
       ("module.name_mapper.extension", name_mapper_extension_parser);
+      ("module.declaration_dirnames", module_declaration_dirnames_parser);
       ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
@@ -1715,6 +1729,8 @@ let max_workers c = c.options.Opts.max_workers
 let merge_timeout c = c.options.Opts.merge_timeout
 
 let missing_module_generators c = c.options.Opts.missing_module_generators
+
+let module_declaration_dirnames c = c.options.Opts.module_declaration_dirnames
 
 let module_file_exts c = c.options.Opts.module_file_exts
 

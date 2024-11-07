@@ -715,6 +715,10 @@ let file_options =
            ~root
            ~lib_paths
     in
+    let module_declaration_dirnames =
+      FlowConfig.module_declaration_dirnames flowconfig
+      |> Base.List.map ~f:(Files.expand_project_root_token ~root)
+    in
     let module_file_exts = FlowConfig.module_file_exts flowconfig in
     let module_resource_exts = FlowConfig.module_resource_exts flowconfig in
     let multi_platform = FlowConfig.multi_platform flowconfig |> Base.Option.value ~default:false in
@@ -736,6 +740,7 @@ let file_options =
       ~declarations
       ~includes
       ~lib_paths
+      ~module_declaration_dirnames
       ~module_file_exts
       ~module_resource_exts
       ~multi_platform
