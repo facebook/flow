@@ -21,7 +21,13 @@ open Get_def_result
 let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name =
   let ( let* ) = Result.bind in
   let* Ty_members.{ members; _ } =
-    Ty_members.extract ~force_instance ~cx ~typed_ast_opt ~file_sig t
+    Ty_members.extract
+      ~allowed_prop_names:[Reason.OrdinaryName name]
+      ~force_instance
+      ~cx
+      ~typed_ast_opt
+      ~file_sig
+      t
   in
   let def_locs =
     Base.Option.bind

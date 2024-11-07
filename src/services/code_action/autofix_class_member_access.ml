@@ -74,7 +74,13 @@ let prefix_with_this ast target =
 
 let is_member cx typed_ast file_sig type_ name =
   match
-    Ty_members.extract ~force_instance:true ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig type_
+    Ty_members.extract
+      ~force_instance:true
+      ~allowed_prop_names:[Reason.OrdinaryName name]
+      ~cx
+      ~typed_ast_opt:(Some typed_ast)
+      ~file_sig
+      type_
   with
   | Error _ -> false
   | Ok Ty_members.{ members; _ } ->
