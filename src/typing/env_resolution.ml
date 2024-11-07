@@ -1331,6 +1331,7 @@ let resolve_component_type_params cx graph component =
 let resolve_component cx graph component =
   let open Name_def_ordering in
   Context.constraint_cache cx := FlowSet.empty;
+  Context.eval_repos_cache cx := EvalReposCacheMap.empty;
   let resolve_illegal entries =
     EnvSet.iter
       (fun (kind, loc) -> Type_env.resolve_env_entry cx (AnyT.at (AnyError None) loc) kind loc)

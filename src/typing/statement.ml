@@ -2619,8 +2619,8 @@ module Make
         | None ->
           let res = expression_ ~cond ~as_const ~frozen cx loc e in
           if not (Context.typing_mode cx <> Context.CheckingMode) then begin
-            let cache = Context.constraint_cache cx in
-            cache := FlowSet.empty;
+            Context.constraint_cache cx := FlowSet.empty;
+            Context.eval_repos_cache cx := EvalReposCacheMap.empty;
             Node_cache.set_expression node_cache res
           end;
           res
