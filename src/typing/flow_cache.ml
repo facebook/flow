@@ -29,6 +29,7 @@ module FlowConstraint = struct
      * have defense against bad cyclic types. *)
     | (_, ConcretizeT _) ->
       false
+    | (_, (BindT _ | CallT _ | MethodT _ | PrivateMethodT _ | ConstructorT _)) -> false
     | _ ->
       (* Use ops are purely for better error messages: they should have no
          effect on type checking. However, recursively nested use ops can pose
