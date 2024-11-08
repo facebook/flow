@@ -65,7 +65,7 @@ let main
       else
         CodemodCommand.main
           (GleanRunner.make
-             ~output_dir
+             ~output_dir_opt
              ~write_root
              ~include_direct_deps
              ~include_reachable_deps
@@ -74,6 +74,19 @@ let main
           )
           codemod_flags
           ()
+    | (None, _) ->
+      print_endline "--output-dir is not specified. This will be a dry-run.";
+      CodemodCommand.main
+        (GleanRunner.make
+           ~output_dir_opt
+           ~write_root:(Base.Option.value write_root_opt ~default:"default")
+           ~include_direct_deps
+           ~include_reachable_deps
+           ~glean_log
+           ~glean_timeout
+        )
+        codemod_flags
+        ()
     | _ -> failwith "--output-dir and --write-root are required."
   )
 

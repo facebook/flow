@@ -736,7 +736,7 @@ let all_schema_version = 7
 let flow_schema_version = 3
 
 let create_typed_runner_config
-    ~output_dir ~write_root ~include_direct_deps ~glean_log ~glean_timeout =
+    ~output_dir_opt ~write_root ~include_direct_deps ~glean_log ~glean_timeout =
   (module struct
     type accumulator = {
       files_analyzed: int;
@@ -855,54 +855,60 @@ let create_typed_runner_config
         log "file of string module";
         let file_of_string_module = file_of_string_modules ~root ~write_root ~options ~file in
         let file_lines = file_liness ~root ~write_root ~file in
-        log "outputting";
-        let output_file =
-          let file_name = Printf.sprintf "%d.json" (Unix.getpid ()) in
-          Filename.concat output_dir file_name
+        let json_filenames =
+          match output_dir_opt with
+          | None -> SSet.empty
+          | Some output_dir ->
+            log "outputting";
+            let output_file =
+              let file_name = Printf.sprintf "%d.json" (Unix.getpid ()) in
+              Filename.concat output_dir file_name
+            in
+            let is_first_write_to_file = not (Sys.file_exists output_file) in
+            let out_channel =
+              open_out_gen [Open_wronly; Open_creat; Open_append; Open_text] 0o666 output_file
+            in
+            let output_facts predicate facts =
+              let open Hh_json in
+              json_to_output
+                out_channel
+                (JSON_Object [("predicate", JSON_String predicate); ("facts", JSON_Array facts)])
+            in
+            if is_first_write_to_file then
+              output_string out_channel "["
+            else
+              output_string out_channel ",";
+            let flow_pred pred = Printf.sprintf "flow.%s.%d" pred flow_schema_version in
+            output_facts (flow_pred "LocalDeclarationReference") local_declaration_reference;
+            output_string out_channel ",";
+            output_facts (flow_pred "DeclarationInfo") declaration_info;
+            output_string out_channel ",";
+            output_facts (flow_pred "SourceOfExport") source_of_export;
+            output_string out_channel ",";
+            output_facts (flow_pred "ImportDeclaration") import_declaration;
+            output_string out_channel ",";
+            output_facts (flow_pred "MemberDeclarationReference") member_declaration_reference;
+            output_string out_channel ",";
+            output_facts (flow_pred "MemberDeclarationInfo") member_declaration_info;
+            output_string out_channel ",";
+            output_facts (flow_pred "TypeDeclarationReference") type_declaration_reference;
+            output_string out_channel ",";
+            output_facts (flow_pred "TypeDeclarationInfo") type_declaration_info;
+            output_string out_channel ",";
+            output_facts (flow_pred "TypeImportDeclaration") type_import_declaration;
+            output_string out_channel ",";
+            output_facts (flow_pred "SourceOfTypeExport") source_of_type_export;
+            output_string out_channel ",";
+            output_facts (flow_pred "FileOfStringModule") file_of_string_module;
+            output_string out_channel ",";
+            output_facts (flow_pred "ModuleDoc") module_documentation;
+            output_string out_channel ",";
+            output_facts "src.FileLines.1" file_lines;
+            close_out out_channel;
+            SSet.singleton output_file
         in
-        let is_first_write_to_file = not (Sys.file_exists output_file) in
-        let out_channel =
-          open_out_gen [Open_wronly; Open_creat; Open_append; Open_text] 0o666 output_file
-        in
-        let output_facts predicate facts =
-          let open Hh_json in
-          json_to_output
-            out_channel
-            (JSON_Object [("predicate", JSON_String predicate); ("facts", JSON_Array facts)])
-        in
-        if is_first_write_to_file then
-          output_string out_channel "["
-        else
-          output_string out_channel ",";
-        let flow_pred pred = Printf.sprintf "flow.%s.%d" pred flow_schema_version in
-        output_facts (flow_pred "LocalDeclarationReference") local_declaration_reference;
-        output_string out_channel ",";
-        output_facts (flow_pred "DeclarationInfo") declaration_info;
-        output_string out_channel ",";
-        output_facts (flow_pred "SourceOfExport") source_of_export;
-        output_string out_channel ",";
-        output_facts (flow_pred "ImportDeclaration") import_declaration;
-        output_string out_channel ",";
-        output_facts (flow_pred "MemberDeclarationReference") member_declaration_reference;
-        output_string out_channel ",";
-        output_facts (flow_pred "MemberDeclarationInfo") member_declaration_info;
-        output_string out_channel ",";
-        output_facts (flow_pred "TypeDeclarationReference") type_declaration_reference;
-        output_string out_channel ",";
-        output_facts (flow_pred "TypeDeclarationInfo") type_declaration_info;
-        output_string out_channel ",";
-        output_facts (flow_pred "TypeImportDeclaration") type_import_declaration;
-        output_string out_channel ",";
-        output_facts (flow_pred "SourceOfTypeExport") source_of_type_export;
-        output_string out_channel ",";
-        output_facts (flow_pred "FileOfStringModule") file_of_string_module;
-        output_string out_channel ",";
-        output_facts (flow_pred "ModuleDoc") module_documentation;
-        output_string out_channel ",";
-        output_facts "src.FileLines.1" file_lines;
-        close_out out_channel;
         log "done";
-        { files_analyzed = 1; json_filenames = SSet.singleton output_file }
+        { files_analyzed = 1; json_filenames }
       in
       if glean_timeout > 0 then
         Timeout.with_timeout
@@ -916,9 +922,14 @@ let create_typed_runner_config
   )
 
 let make
-    ~output_dir ~write_root ~include_direct_deps ~include_reachable_deps ~glean_log ~glean_timeout =
+    ~output_dir_opt
+    ~write_root
+    ~include_direct_deps
+    ~include_reachable_deps
+    ~glean_log
+    ~glean_timeout =
   let module C = ( val create_typed_runner_config
-                         ~output_dir
+                         ~output_dir_opt
                          ~write_root
                          ~include_direct_deps
                          ~glean_log
