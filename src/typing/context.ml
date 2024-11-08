@@ -59,6 +59,7 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_exports_primitive_const: bool;
+  normalizer_indexed_access_perf_fix: bool;
   object_freeze_fix: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -288,6 +289,7 @@ let metadata_of_options options =
     missing_module_generators = Options.missing_module_generators options;
     natural_inference_exports_primitive_const =
       Options.natural_inference_exports_primitive_const options;
+    normalizer_indexed_access_perf_fix = Options.normalizer_indexed_access_perf_fix options;
     object_freeze_fix = Options.object_freeze_fix options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;

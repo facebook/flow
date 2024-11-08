@@ -27,17 +27,17 @@ type MappedObj9 = {[key in keyof O]-?: number};
 //   ^
 
 // Unevaluated
-type Unevaluated1<T: {...}> = {[key in keyof T]: T[key]}; 
+type Unevaluated1<T: {...}> = {[key in keyof T]: T[key]};
 //   ^
-type Unevaluated2<T: {...}> = {+[key in keyof T]: T[key]}; 
+type Unevaluated2<T: {...}> = {+[key in keyof T]: T[key]};
 //   ^
-type Unevaluated3<T: {...}> = {-[key in keyof T]: T[key]}; 
+type Unevaluated3<T: {...}> = {-[key in keyof T]: T[key]};
 //   ^
-type Unevaluated4<T: {...}> = {[key in keyof T]?: T[key]}; 
+type Unevaluated4<T: {...}> = {[key in keyof T]?: T[key]};
 //   ^
-type Unevaluated5<T: {...}> = {+[key in keyof T]?: T[key]}; 
+type Unevaluated5<T: {...}> = {+[key in keyof T]?: T[key]};
 //   ^
-type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]}; 
+type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]};
 //   ^
 
 declare var x: {[key in keyof O]: O[key]};
@@ -78,3 +78,24 @@ type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
 declare var z: SemiHomomorphic<{foo: number}, 'foo'>;
    z;
 // ^
+
+declare opaque type Id<T>;
+
+type Obj = $ReadOnly<{
+  prop0: string,
+  prop1: string,
+  prop2: string,
+  prop3: string,
+  prop4: string,
+  prop5: string,
+  prop6: string,
+  prop7: string,
+  prop8: string,
+  prop9: string,
+}>
+
+type IDMap<+Obj: {+[string]: mixed}> = {[Key in keyof Obj]: Id<Obj[Key]>}
+
+declare const props: { obj: $ReadOnly<IDMap<Obj>> };
+props.obj.prop0;
+//         ^

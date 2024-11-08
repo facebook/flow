@@ -119,6 +119,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
+    normalizer_indexed_access_perf_fix: bool;
     pattern_matching_expressions: bool option;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -255,6 +256,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
+      normalizer_indexed_access_perf_fix = true;
       pattern_matching_expressions = None;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.Disabled;
@@ -981,6 +983,9 @@ module Opts = struct
       );
       ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
         multi_platform_ambient_supports_platform_directory_overrides_parser
+      );
+      ( "experimental.normalizer_indexed_access_perf_fix",
+        boolean (fun opts v -> Ok { opts with normalizer_indexed_access_perf_fix = v })
       );
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
@@ -1767,6 +1772,8 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
+
+let normalizer_indexed_access_perf_fix c = c.options.Opts.normalizer_indexed_access_perf_fix
 
 let pattern_matching_expressions c = c.options.Opts.pattern_matching_expressions
 

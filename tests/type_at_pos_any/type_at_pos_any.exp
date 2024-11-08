@@ -299,10 +299,7 @@ typed.js:15:27 = {
   "end":37
 }
 typed.js:16:5 = {
-  "types":{
-    "unevaluated":{"type":"{f1: number}[string]"},
-    "evaluated":{"type":"any (implicit)"}
-  },
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
   "reasons":[],
   "loc":{
     "source":"typed.js",

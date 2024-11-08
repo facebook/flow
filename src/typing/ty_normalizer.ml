@@ -380,8 +380,86 @@ module Make (I : INPUT) : S = struct
     | Env.EvaluateSome -> false
     | Env.EvaluateAll -> true
 
-  let should_evaluate_destructor ~env ~force_eval d =
+  (* Sometimes, we need to inspect Type.t so that we can avoid doing the work of
+   * printing giant types repeatedly. See should_force_eval_to_avoid_giant_types below. *)
+  let rec unwrap_unless_aliased ~env t =
+    let open T in
+    match t with
+    | OpenT (r, id) ->
+      Flow_js_utils.merge_tvar_opt Env.(env.genv.cx) r id
+      |> Base.Option.bind ~f:(unwrap_unless_aliased ~env)
+    | EvalT (_, _, id) when should_eval_skip_aliases ~env () ->
+      Eval.Map.find_opt id (Context.evaluated Env.(env.genv.cx))
+      |> Base.Option.bind ~f:(unwrap_unless_aliased ~env)
+    | t ->
+      (* Type aliases won't be expanded, so we don't waste time printing giant types.
+       * As a result, we don't have to unwrap them. *)
+      (match desc_of_reason ~unwrap:false (TypeUtil.reason_of_t t) with
+      | RTypeAlias (_, Some _, _) -> None
+      | _ -> Some t)
+
+  (*
+  Without the heuristic, given
+
+  ```
+  declare opaque type Id<T>;
+  type Obj = $ReadOnly<{ ...giant object... }>
+  type IDMap<+Obj: {+[string]: mixed}> = {[Key in keyof Obj]: Id<Obj[Key]>}
+  declare const props: { obj: $ReadOnly<IDMap<Obj>> };
+  props.obj;
+  ```
+
+  we will print something like
+
+  ```
+  {
+    field1: Id<{...full giant type...}['field1'],
+    field2: Id<{...full giant type...}['field2']>,
+    ...
+  }
+  ```
+
+  This heuristic prevents that by detecting we have an indexed access EvalT on objects,
+  and then we force the evaluation so we will not hit the potentially expensive unevaluated case.
+  *)
+  let should_force_eval_to_avoid_giant_types ~env t d =
+    Context.((metadata Env.(env.genv.cx)).normalizer_indexed_access_perf_fix)
+    &&
+    let open T in
+    match d with
+    | PropertyType _
+    | ElementType { index_type = DefT (_, (SingletonStrT _ | StrT _)) }
+    | OptionalIndexedAccessNonMaybeType _
+    | OptionalIndexedAccessResultType _ ->
+      (match unwrap_unless_aliased ~env t with
+      | Some (DefT (_, ObjT _)) -> true
+      | _ -> false)
+    | NonMaybeType
+    | ElementType _
+    | ExactType
+    | ReadOnlyType
+    | PartialType
+    | RequiredType
+    | SpreadType _
+    | SpreadTupleType _
+    | RestType _
+    | ValuesType
+    | ConditionalType _
+    | TypeMap _
+    | ReactElementPropsType
+    | ReactElementConfigType
+    | ReactElementRefType
+    | ReactConfigType _
+    | ReactCheckComponentConfig _
+    | ReactDRO _
+    | MakeHooklike
+    | MappedType _
+    | EnumType ->
+      false
+
+  let should_evaluate_destructor ~env ~force_eval t d =
     force_eval
+    || should_force_eval_to_avoid_giant_types ~env t d
     ||
     match Env.evaluate_type_destructors env with
     | Env.EvaluateNone -> false
@@ -428,10 +506,10 @@ module Make (I : INPUT) : S = struct
    * - non_eval: apply when no destructuring happened
    *)
   let eval_t ~env ~(cont : fn_t) ~(default : fn_t) ~non_eval ?(force_eval = false) x =
-    let (_, T.TypeDestructorT (_, _, d), id) = x in
+    let (t, T.TypeDestructorT (_, _, d), id) = x in
     let cx = Env.get_cx env in
     let%bind () = modify (fun state -> { state with State.found_computed_type = true }) in
-    let should_eval = should_evaluate_destructor ~env ~force_eval d in
+    let should_eval = should_evaluate_destructor ~env ~force_eval t d in
     I.eval
       cx
       ~should_eval

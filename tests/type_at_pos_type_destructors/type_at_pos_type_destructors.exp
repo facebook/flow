@@ -1147,6 +1147,14 @@ SemiHomomorphic<{foo: number, ...}, "foo">
 
 mapped-type.js:79:4,79:4
 
+mapped-type.js:100:12
+Flags:
+Id<string>
+
+'Id' defined at mapped-type.js:82:20
+
+mapped-type.js:100:11,100:15
+
 evaluated-size-limit.js:6:6
 Flags:
 type ObjSmall = {p1: {[key in Keys]: string}, ...}

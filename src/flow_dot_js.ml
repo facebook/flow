@@ -125,6 +125,7 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
+    normalizer_indexed_access_perf_fix = true;
     object_freeze_fix = false;
     natural_inference_exports_primitive_const = false;
     react_custom_jsx_typing = false;

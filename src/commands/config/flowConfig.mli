@@ -216,6 +216,8 @@ val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list
 
+val normalizer_indexed_access_perf_fix : config -> bool
+
 val pattern_matching_expressions : config -> bool option
 
 val node_resolver_root_relative_dirnames : config -> string list
