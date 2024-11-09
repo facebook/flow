@@ -496,7 +496,15 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let t = merge_value ~as_const ~const_decl env file t in
     make_hooklike file hooklike t
   | Pack.Ref ref ->
-    merge_ref ~const_decl file (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t) ref
+    (* Let's have the property retain the precise type in
+     *   export const FOO = "foo";
+     *   export const OBJ = { FOO } as const;
+     *)
+    merge_ref
+      ~const_decl:(as_const || const_decl)
+      file
+      (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t)
+      ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in

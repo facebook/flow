@@ -15,6 +15,7 @@ export const spread = { ...obj };
 
 export const objRefs = { abc, abcRef };
 export const spreadObjRefs = { ...objRefs };
+export const asConst = { abc, abcRef } as const;
 
 export type Abc = typeof abc;
 export type One = typeof one;
@@ -81,6 +82,15 @@ objRefs.abc as "abc"; // TODO error string ~> "abc"
 objRefs.abcRef as "abc"; // TODO error string ~> "abc"
 spreadObjRefs.abc as "abc"; // TODO error string ~> "abc"
 spreadObjRefs.abcRef as "abc"; // TODO error string ~> "abc"
+
+asConst.abc as "abc"; // okay
+asConst.abcRef as "abc"; // okay
+asConst.abc as "def"; // error "abc" ~> "def"
+asConst.abcRef as "def"; // error "abc" ~> "def"
+_ as "def" as typeof asConst.abc; // TODO error "def" ~> "abc"
+_ as "def" as typeof asConst.abcRef; // TODO error "def" ~> "abc"
+_ as string as typeof asConst.abc; // TODO error string ~> "abc"
+_ as string as typeof asConst.abcRef; // TODO error string ~> "abc"
 
 _ as "abc" as Abc as "abc"; // okay
 _ as 1 as One as 1; // okay

@@ -13,6 +13,7 @@ import {
   spread,
   objRefs,
   spreadObjRefs,
+  asConst,
   type Abc,
   type One,
   type Tru,
@@ -83,6 +84,15 @@ objRefs.abc as "abc"; // error string ~> "abc"
 objRefs.abcRef as "abc"; // error string ~> "abc"
 spreadObjRefs.abc as "abc"; // error string ~> "abc"
 spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
+
+asConst.abc as "abc"; // okay
+asConst.abcRef as "abc"; // okay
+asConst.abc as "def"; // error  "abc" ~> "def"
+asConst.abcRef as "def"; // error "abc" ~> "def"
+_ as "def" as typeof asConst.abc; // error "def" ~> "abc"
+_ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
+_ as string as typeof asConst.abc; // error string ~> "abc"
+_ as string as typeof asConst.abcRef; // error string ~> "abc"
 
 _ as "abc" as Abc as "abc"; // okay
 _ as 1 as One as 1; // okay
