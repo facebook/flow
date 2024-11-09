@@ -582,6 +582,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method match_array_pattern :
       ('M, 'T) Ast.MatchPattern.ArrayPattern.t -> ('N, 'U) Ast.MatchPattern.ArrayPattern.t
 
+    method match_pattern_array_element :
+      ('M, 'T) Ast.MatchPattern.ArrayPattern.Element.t ->
+      ('N, 'U) Ast.MatchPattern.ArrayPattern.Element.t
+
     method match_array_pattern_rest :
       ('M, 'T) Ast.MatchPattern.ArrayPattern.Rest.t' ->
       ('N, 'U) Ast.MatchPattern.ArrayPattern.Rest.t'

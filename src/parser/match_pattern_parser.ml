@@ -327,7 +327,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
       env
 
   and array_pattern env =
-    let rec elements env acc =
+    let rec elements env ~start_loc acc =
       match Peek.token env with
       | T_EOF
       | T_RBRACKET ->
@@ -353,14 +353,17 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         (List.rev acc, Some rest)
       | _ ->
         let pattern = match_pattern env in
+        let index = Loc.btwn start_loc (Peek.loc env) in
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-        elements env (pattern :: acc)
+        let element = { ArrayPattern.Element.index; pattern } in
+        elements env ~start_loc (element :: acc)
     in
     with_loc
       (fun env ->
         let leading = Peek.comments env in
+        let start_loc = Peek.loc env in
         Expect.token env T_LBRACKET;
-        let (elements, rest) = elements env [] in
+        let (elements, rest) = elements env ~start_loc [] in
         let internal = Peek.comments env in
         Expect.token env T_RBRACKET;
         let trailing = Eat.trailing_comments env in

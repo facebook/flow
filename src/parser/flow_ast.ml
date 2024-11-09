@@ -2032,6 +2032,14 @@ and MatchPattern : sig
   end
 
   module ArrayPattern : sig
+    module Element : sig
+      type ('M, 'T) t = {
+        index: 'M;
+        pattern: ('M, 'T) MatchPattern.t;
+      }
+      [@@deriving show]
+    end
+
     module Rest : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
@@ -2043,7 +2051,7 @@ and MatchPattern : sig
     end
 
     type ('M, 'T) t = {
-      elements: ('M, 'T) MatchPattern.t list;
+      elements: ('M, 'T) Element.t list;
       rest: ('M, 'T) Rest.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }

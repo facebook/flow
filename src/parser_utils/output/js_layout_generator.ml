@@ -3450,7 +3450,9 @@ and match_object_pattern ~opts loc { Ast.MatchPattern.ObjectPattern.properties; 
 
 and match_array_pattern ~opts loc { Ast.MatchPattern.ArrayPattern.elements; rest; comments } =
   let open Ast.MatchPattern.ArrayPattern in
-  let elements_rev = Base.List.rev_map ~f:(match_pattern ~opts) elements in
+  let elements_rev =
+    Base.List.rev_map ~f:(fun { Element.pattern; _ } -> match_pattern ~opts pattern) elements
+  in
   let elements_rev =
     Base.Option.value_map
       rest

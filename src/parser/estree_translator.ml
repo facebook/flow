@@ -752,7 +752,11 @@ with type t = Impl.t = struct
           "MatchArrayPattern"
           loc
           [
-            ("elements", array_of_list match_pattern elements);
+            ( "elements",
+              array_of_list
+                (fun { ArrayPattern.Element.pattern; _ } -> match_pattern pattern)
+                elements
+            );
             ("rest", option match_array_pattern_rest rest);
           ]
       | OrPattern { OrPattern.patterns; comments } ->

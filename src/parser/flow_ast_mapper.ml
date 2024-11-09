@@ -2677,7 +2677,7 @@ class ['loc] mapper =
     method match_array_pattern (array_pattern : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.t) =
       let open Ast.MatchPattern.ArrayPattern in
       let { elements; rest; comments } = array_pattern in
-      let elements' = map_list this#match_pattern elements in
+      let elements' = map_list this#match_pattern_array_element elements in
       let rest' = map_loc_opt this#match_array_pattern_rest rest in
       let comments' = this#syntax_opt comments in
       if elements == elements' && rest == rest' && comments == comments' then
@@ -2695,6 +2695,16 @@ class ['loc] mapper =
         rest
       else
         { argument = argument'; comments = comments' }
+
+    method match_pattern_array_element
+        (element : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.Element.t) =
+      let open Ast.MatchPattern.ArrayPattern.Element in
+      let { pattern; index } = element in
+      let pattern' = this#match_pattern pattern in
+      if pattern == pattern' then
+        element
+      else
+        { pattern = pattern'; index }
 
     method match_or_pattern (or_pattern : ('loc, 'loc) Ast.MatchPattern.OrPattern.t) =
       let open Ast.MatchPattern.OrPattern in
