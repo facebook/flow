@@ -2396,13 +2396,14 @@ module Make
     in
     (t, List.rev rev_prop_asts)
 
+  and init_var kind =
+    match kind with
+    | Ast.Variable.Const -> Type_env.init_const
+    | Ast.Variable.Let -> Type_env.init_let
+    | Ast.Variable.Var -> Type_env.init_var
+
   and variable cx kind ?if_uninitialized id init =
-    let init_var =
-      match kind with
-      | Ast.Variable.Const -> Type_env.init_const
-      | Ast.Variable.Let -> Type_env.init_let
-      | Ast.Variable.Var -> Type_env.init_var
-    in
+    let init_var = init_var kind in
     let annot = Destructuring.type_of_pattern id in
     let has_anno =
       match annot with
@@ -2758,11 +2759,27 @@ module Make
         Tast_utils.error_mapper#expression ex
       ) else
         let reason = mk_reason RMatchExpression loc in
+        let arg_orig = arg in
         let arg = expression cx arg in
         let (cases_rev, ts_rev, all_throws) =
           Base.List.fold cases ~init:([], [], true) ~f:(fun (cases, ts, all_throws) case ->
               let (case_loc, { Match.Case.pattern; body; guard; comments }) = case in
-              let pattern = Tast_utils.error_mapper#match_pattern pattern in
+              let pattern =
+                Match_pattern.pattern
+                  cx
+                  arg_orig
+                  pattern
+                  ~on_identifier:identifier
+                  ~on_expression:expression
+                  ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
+                    init_var kind cx ~use_op t name_loc;
+                    Type_env.constraining_type
+                      ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
+                      cx
+                      name
+                      name_loc
+                )
+              in
               let guard = Base.Option.map guard ~f:(expression cx) in
               let ((((_, t), _) as body), throws) =
                 Abnormal.catch_expr_control_flow_exception (fun () -> expression cx body)

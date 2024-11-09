@@ -265,6 +265,147 @@ end = struct
   let pattern = fold_pattern ~default:() ~join:(fun _ _ -> ())
 end
 
+module MatchPattern : sig
+  val visit_pattern :
+    visit_binding:(ALoc.t -> string -> binding -> unit) ->
+    visit_expression:((ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
+    visit_intermediate:(ALoc.t -> binding -> unit) ->
+    binding ->
+    (ALoc.t, ALoc.t) Flow_ast.MatchPattern.t ->
+    unit
+end = struct
+  open Ast.MatchPattern
+
+  let array_element acc index =
+    let selector = Selector.Elem { index; has_default = false } in
+    Select { selector; parent = acc }
+
+  let array_rest acc i =
+    let selector = Selector.ArrRest i in
+    Select { selector; parent = acc }
+
+  let object_property acc key =
+    let open ObjectPattern.Property in
+    match key with
+    | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+      let selector = Selector.Prop { prop = name; prop_loc = loc; has_default = false } in
+      (Select { selector; parent = acc }, name)
+    | StringLiteral (loc, { Ast.StringLiteral.value; _ }) ->
+      let selector = Selector.Prop { prop = value; prop_loc = loc; has_default = false } in
+      (Select { selector; parent = acc }, value)
+    | NumberLiteral (loc, { Ast.NumberLiteral.value; _ }) ->
+      if Js_number.is_float_safe_integer value then
+        let prop = Dtoa.ecma_string_of_float value in
+        let selector = Selector.Prop { prop; prop_loc = loc; has_default = false } in
+        (Select { selector; parent = acc }, prop)
+      else
+        (* TODO:match error condition *)
+        (snd acc, "")
+
+  let object_rest acc used_props =
+    let selector = Selector.ObjRest { used_props; after_computed = false } in
+    Select { selector; parent = acc }
+
+  let binding ~visit_binding acc (name_loc, { Ast.Identifier.name; _ }) =
+    visit_binding name_loc name acc
+
+  let rec visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc (loc, pattern) =
+    match pattern with
+    | BindingPattern { BindingPattern.id; kind = _; comments = _ } -> binding ~visit_binding acc id
+    | NumberPattern x -> visit_expression (loc, Ast.Expression.NumberLiteral x)
+    | BigIntPattern x -> visit_expression (loc, Ast.Expression.BigIntLiteral x)
+    | StringPattern x -> visit_expression (loc, Ast.Expression.StringLiteral x)
+    | BooleanPattern x -> visit_expression (loc, Ast.Expression.BooleanLiteral x)
+    | NullPattern x -> visit_expression (loc, Ast.Expression.NullLiteral x)
+    | IdentifierPattern x -> visit_expression (loc, Ast.Expression.Identifier x)
+    | WildcardPattern _ -> ()
+    | UnaryPattern { UnaryPattern.operator; argument; comments } ->
+      let operator =
+        match operator with
+        | UnaryPattern.Plus -> Ast.Expression.Unary.Plus
+        | UnaryPattern.Minus -> Ast.Expression.Unary.Minus
+      in
+      let argument =
+        match argument with
+        | (loc, UnaryPattern.NumberLiteral lit) -> (loc, Ast.Expression.NumberLiteral lit)
+        | (loc, UnaryPattern.BigIntLiteral lit) -> (loc, Ast.Expression.BigIntLiteral lit)
+      in
+      visit_expression
+        (loc, Ast.Expression.Unary { Ast.Expression.Unary.operator; argument; comments })
+    | MemberPattern mem ->
+      let rec member (loc, { MemberPattern.base; property; comments }) =
+        let _object =
+          match base with
+          | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, Ast.Expression.Identifier id)
+          | MemberPattern.BaseMember mem -> member mem
+        in
+        let property =
+          match property with
+          | MemberPattern.PropertyIdentifier id -> Ast.Expression.Member.PropertyIdentifier id
+          | MemberPattern.PropertyString (loc, lit) ->
+            Ast.Expression.Member.PropertyExpression (loc, Ast.Expression.StringLiteral lit)
+          | MemberPattern.PropertyNumber (loc, lit) ->
+            Ast.Expression.Member.PropertyExpression (loc, Ast.Expression.NumberLiteral lit)
+        in
+        let exp =
+          (loc, Ast.Expression.Member { Ast.Expression.Member._object; property; comments })
+        in
+        visit_expression exp;
+        exp
+      in
+      ignore @@ member mem
+    | ArrayPattern { ArrayPattern.elements; rest; comments = _ } ->
+      visit_intermediate loc acc;
+      let used_elements =
+        array_elements ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) elements
+      in
+      Base.Option.iter rest ~f:(function (_, { ArrayPattern.Rest.argument; comments = _ }) ->
+          Base.Option.iter argument ~f:(function
+              | (_, { BindingPattern.id; kind = _; comments = _ }) ->
+              let acc = array_rest (loc, acc) used_elements in
+              binding ~visit_binding acc id
+              )
+          )
+    | ObjectPattern { ObjectPattern.properties; rest; comments = _ } ->
+      visit_intermediate loc acc;
+      let used_props =
+        object_properties ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) properties
+      in
+      Base.Option.iter rest ~f:(function
+          | ( _,
+              {
+                ObjectPattern.Rest.argument = (_, { BindingPattern.id; kind = _; comments = _ });
+                comments = _;
+              }
+            )
+          ->
+          let acc = object_rest (loc, acc) used_props in
+          binding ~visit_binding acc id
+          )
+    | OrPattern { OrPattern.patterns; comments = _ } ->
+      Base.List.iter
+        patterns
+        ~f:(visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc)
+    | AsPattern { AsPattern.pattern; id; comments = _ } ->
+      visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+      binding ~visit_binding acc id
+
+  and array_elements ~visit_binding ~visit_expression ~visit_intermediate acc elements =
+    Base.List.fold elements ~init:0 ~f:(fun i { ArrayPattern.Element.pattern; _ } ->
+        let acc = array_element acc i in
+        visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+        i + 1
+    )
+
+  and object_properties ~visit_binding ~visit_expression ~visit_intermediate acc properties =
+    Base.List.fold properties ~init:[] ~f:(fun used_props prop ->
+        let (_, { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }) = prop in
+        let (acc, prop_name) = object_property acc key in
+        visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+        prop_name :: used_props
+    )
+end
+
 let pattern_has_annot p = p |> Destructure.type_of_pattern |> Base.Option.is_some
 
 let func_is_synthesizable_from_annotation ({ Ast.Function.return; generator; _ } as f) =
@@ -2708,6 +2849,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hints expr
       | Ast.Expression.AsConstExpression { Ast.Expression.AsConstExpression.expression; _ } ->
         this#visit_expression ~hints ~cond expression
+      | Ast.Expression.Match x -> this#visit_match_expression x
       | Ast.Expression.Class _
       | Ast.Expression.Identifier _
       | Ast.Expression.Import _
@@ -2720,7 +2862,6 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.RegExpLiteral _
       | Ast.Expression.BigIntLiteral _
       | Ast.Expression.ModuleRefLiteral _
-      | Ast.Expression.Match _ (* TODO:match *)
       | Ast.Expression.MetaProperty _
       | Ast.Expression.Sequence _
       | Ast.Expression.Super _
@@ -2960,6 +3101,35 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | _ -> ()
       );
       res
+
+    method! match_expression loc _ = fail loc "Should be visited by visit_match_expression"
+
+    method private visit_match_expression x =
+      let open Ast.Expression.Match in
+      let { arg; cases; comments = _ } = x in
+      ignore @@ this#expression arg;
+      Base.List.iter cases ~f:(function (_, { Case.pattern; body; guard; comments = _ }) ->
+          let acc = Value { hints = []; expr = arg } in
+          this#add_match_destructure_bindings acc pattern;
+          ignore @@ super#match_pattern pattern;
+          Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+          ignore @@ this#expression body
+          )
+
+    method add_match_destructure_bindings root pattern =
+      let visit_binding loc name binding =
+        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
+        this#add_ordinary_binding
+          loc
+          (mk_reason (RIdentifier (OrdinaryName name)) loc)
+          (Binding binding)
+      in
+      MatchPattern.visit_pattern
+        ~visit_binding
+        ~visit_expression:(this#visit_expression ~hints:[] ~cond:NonConditionalContext)
+        ~visit_intermediate:this#add_destructure_binding
+        (Root root)
+        pattern
   end
 
 let find_defs ~autocomplete_hooks ~react_jsx env_info toplevel_scope_kind ast =

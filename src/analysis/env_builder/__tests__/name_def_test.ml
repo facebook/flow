@@ -20,6 +20,8 @@ module Context = struct
 
   let enable_enums _cx = true
 
+  let enable_pattern_matching _cx = true
+
   let file _cx = File_key.SourceFile "test.js"
 
   let jsx _cx = !jsx_mode
@@ -1622,3 +1624,100 @@ type T = typeof w;
       (3, 6) to (3, 7) =>
       (4, 5) to (4, 6) =>
       (2, 18) to (2, 19) |}]
+
+let%expect_test "match_pattern_binding" =
+  print_init_test {|
+(match (x) {
+  const a: a,
+});
+  |};
+  [%expect {|
+    [
+      (3, 8) to (3, 9) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_tuple" =
+  print_init_test {|
+(match (x) {
+  [const a]: a,
+});
+  |};
+  [%expect {|
+    [
+      (3, 9) to (3, 10) => (val (2, 8) to (2, 9))[0];
+      (3, 2) to (3, 11) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_tuple_rest" =
+  print_init_test {|
+(match (x) {
+  [_, ...const b]: b,
+});
+  |};
+  [%expect {|
+    [
+      (3, 15) to (3, 16) => (val (2, 8) to (2, 9))[...];
+      (3, 2) to (3, 17) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_object" =
+  print_init_test {|
+(match (x) {
+  {foo: const a}: a,
+});
+  |};
+  [%expect {|
+    [
+      (3, 14) to (3, 15) => (val (2, 8) to (2, 9)).foo;
+      (3, 2) to (3, 16) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_object_shorthand" =
+  print_init_test {|
+(match (x) {
+  {const foo}: foo,
+});
+  |};
+  [%expect {|
+    [
+      (3, 9) to (3, 12) => (val (2, 8) to (2, 9)).foo;
+      (3, 2) to (3, 13) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_object_rest" =
+  print_init_test {|
+(match (x) {
+  {foo: _, ...const rest}: rest,
+});
+  |};
+  [%expect {|
+    [
+      (3, 20) to (3, 24) => (val (2, 8) to (2, 9)){ ... };
+      (3, 2) to (3, 25) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_as" =
+  print_init_test {|
+(match (x) {
+  {foo: 1 as a}: a,
+});
+  |};
+  [%expect {|
+    [
+      (3, 13) to (3, 14) => (val (2, 8) to (2, 9)).foo;
+      (3, 2) to (3, 15) => val (2, 8) to (2, 9)
+    ] |}]
+
+let%expect_test "match_pattern_nested" =
+  print_init_test {|
+(match (x) {
+  {foo: [_, _, {bar: const x}]}: x,
+});
+  |};
+  [%expect {|
+    [
+      (3, 27) to (3, 28) => (((val (2, 8) to (2, 9)).foo)[2]).bar;
+      (3, 2) to (3, 31) => val (2, 8) to (2, 9);
+      (3, 8) to (3, 30) => (val (2, 8) to (2, 9)).foo;
+      (3, 15) to (3, 29) => ((val (2, 8) to (2, 9)).foo)[2]
+    ] |}]

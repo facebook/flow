@@ -2908,22 +2908,44 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let { arg; cases; comments = _ } = x in
         ignore @@ this#expression arg;
         let env0 = this#env_snapshot in
-        let completion_states =
-          Base.List.fold cases ~init:[] ~f:(fun acc case ->
-              let (_, { Case.pattern; body; guard; comments = _ }) = case in
-              (* TODO:match *)
-              ignore pattern;
-              Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
-              this#run_to_completion (fun () -> ignore @@ this#expression body) :: acc
-          )
-          |> List.rev
-        in
+        let completion_states = ref [] in
+        Base.List.iter cases ~f:(fun case ->
+            let (case_loc, { Case.pattern; body; guard; comments = _ }) = case in
+            let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+            let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
+            this#with_bindings
+              ~lexical:true
+              case_loc
+              bindings
+              (fun () ->
+                ignore @@ this#match_pattern pattern;
+                Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+                let completion_state =
+                  this#run_to_completion (fun () -> ignore @@ this#expression body)
+                in
+                completion_states := completion_state :: !completion_states)
+              ()
+        );
+        let completion_states = !completion_states |> List.rev in
         this#reset_env env0;
         (match completion_states with
         | hd :: [] -> this#from_completion hd
         | hd :: tl -> this#merge_completion_states (hd, tl)
         | [] -> ());
         x
+
+      method! match_pattern pattern =
+        ( if Flow_ast_utils.match_pattern_has_binding pattern then
+          let (loc, _) = pattern in
+          let write_entries =
+            EnvMap.add
+              (Env_api.PatternLoc, loc)
+              (Env_api.AssigningWrite (mk_reason RDestructuring loc))
+              env_state.write_entries
+          in
+          env_state <- { env_state with write_entries }
+        );
+        super#match_pattern pattern
 
       method merge_conditional_branches_with_refinements
           (env1, refined_env1, completion_state1) (env2, refined_env2, completion_state2) : unit =

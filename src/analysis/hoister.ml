@@ -131,6 +131,24 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
 
     method base_pattern = super#pattern
 
+    method! match_binding_pattern _loc binding_pattern =
+      let open Ast.MatchPattern.BindingPattern in
+      let { kind; id; comments = _ } = binding_pattern in
+      (match kind with
+      | Ast.Variable.Let -> this#add_let_binding id
+      | Ast.Variable.Const -> this#add_const_binding id
+      | Ast.Variable.Var ->
+        (* `var` is not allowed. *)
+        ());
+      binding_pattern
+
+    method! match_as_pattern as_pattern =
+      let open Ast.MatchPattern.AsPattern in
+      let { pattern; id; comments = _ } = as_pattern in
+      ignore @@ super#match_pattern pattern;
+      this#add_const_binding id;
+      as_pattern
+
     method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       let old_lkind = let_kind in
       let_kind <- Bindings.Parameter;

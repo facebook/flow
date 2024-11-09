@@ -375,6 +375,8 @@ struct
 
         method! pattern_object_property_identifier_key ?kind:_ id = id
 
+        method! match_object_pattern_property key = key
+
         method! enum_member_identifier id = id
 
         method! object_key_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id

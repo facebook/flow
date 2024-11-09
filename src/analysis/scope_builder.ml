@@ -299,6 +299,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         ignore kind;
         id
 
+      method! match_object_pattern_property_key key = key
+
       (* don't rename the `Foo` in `enum E { Foo }` *)
       method! enum_member_identifier id = id
 
@@ -362,6 +364,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! component_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
         let (loc, block) = body in
         (loc, super#block loc block)
+
+      method! match_expression_case case =
+        let open Flow_ast.Expression.Match.Case in
+        let (loc, { pattern; body = _; guard = _; comments = _ }) = case in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+        let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
+        ignore @@ this#with_bindings ~lexical:true loc bindings super#match_expression_case case;
+        case
 
       method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in

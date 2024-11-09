@@ -84,6 +84,36 @@ let rec pattern_has_binding =
   | (_, Array { Array.elements; _ }) -> List.exists element elements
   | (_, Expression _) -> false
 
+let rec match_pattern_has_binding =
+  let open MatchPattern in
+  let property (_, { ObjectPattern.Property.pattern = p; _ }) = match_pattern_has_binding p in
+  function
+  | (_, WildcardPattern _)
+  | (_, NumberPattern _)
+  | (_, BigIntPattern _)
+  | (_, StringPattern _)
+  | (_, BooleanPattern _)
+  | (_, NullPattern _)
+  | (_, UnaryPattern _)
+  | (_, IdentifierPattern _)
+  | (_, MemberPattern _) ->
+    false
+  | (_, BindingPattern _) -> true
+  | (_, ObjectPattern { ObjectPattern.properties; rest; comments = _ }) ->
+    List.exists property properties || Option.is_some rest
+  | (_, ArrayPattern { ArrayPattern.elements; rest; comments = _ }) ->
+    let rest_has_binding =
+      match rest with
+      | None -> false
+      | Some (_, { ArrayPattern.Rest.argument; comments = _ }) -> Option.is_some argument
+    in
+    List.exists
+      (fun { ArrayPattern.Element.pattern; _ } -> match_pattern_has_binding pattern)
+      elements
+    || rest_has_binding
+  | (_, OrPattern { OrPattern.patterns; _ }) -> List.exists match_pattern_has_binding patterns
+  | (_, AsPattern _) -> true
+
 let partition_directives statements =
   let open Statement in
   let rec helper directives = function

@@ -755,6 +755,10 @@ end = struct
       method! pattern_object_property_identifier_key ?kind (key : ('loc, 'loc) Ast.Identifier.t) =
         ignore kind;
         key
+
+      method! match_object_pattern_property_key key = key
+
+      method! match_member_pattern_property prop = prop
     end
 
   (****** pass 1 *******)
@@ -858,6 +862,22 @@ end = struct
           decl
         else
           (loc, { Ast.Statement.VariableDeclaration.Declarator.id = id'; init = init' })
+
+      method! match_expression_case case =
+        let open Flow_ast.Expression.Match.Case in
+        let (loc, { pattern; body; guard; comments = _ }) = case in
+        this#enter_scope
+          Lex
+          (fun _ () ->
+            ignore
+            @@ this#in_context
+                 ~mod_cx:(fun _ -> { init_state = Value 0 })
+                 (fun () -> this#match_pattern pattern);
+            Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+            ignore @@ this#expression body)
+          loc
+          ();
+        case
 
       method! function_declaration loc (expr : ('loc, 'loc) Ast.Function.t) =
         let open Ast.Function in

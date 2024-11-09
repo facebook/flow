@@ -99,5 +99,146 @@ Unreachable code. [unreachable-code]
          ^^^^
 
 
+Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
-Found 7 errors
+Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:9:3
+   9|   out as empty; // ERROR
+        ^^^
+
+References:
+   patterns.js:3:20
+   3|   declare const x: number;
+                         ^^^^^^ [1]
+   patterns.js:9:10
+   9|   out as empty; // ERROR
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:20:3
+
+Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:20:3
+   20|   out as empty; // ERROR
+         ^^^
+
+References:
+   patterns.js:14:20
+   14|   declare const x: number;
+                          ^^^^^^ [1]
+   patterns.js:20:10
+   20|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:31:3
+
+Cannot resolve name `a`. [cannot-resolve-name]
+
+   31|   a; // ERROR: cannot resolve name
+         ^
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:42:3
+
+Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:42:3
+   42|   out as empty; // ERROR
+         ^^^
+
+References:
+   patterns.js:36:21
+   36|   declare const x: [number];
+                           ^^^^^^ [1]
+   patterns.js:42:10
+   42|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:54:3
+
+Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:54:3
+   54|   out as empty; // ERROR
+         ^^^
+
+References:
+   patterns.js:47:26
+   47|   declare const x: {foo: number};
+                                ^^^^^^ [1]
+   patterns.js:54:10
+   54|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:66:3
+
+Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:66:3
+   66|   out as empty; // ERROR
+         ^^^
+
+References:
+   patterns.js:59:26
+   59|   declare const x: {foo: number};
+                                ^^^^^^ [1]
+   patterns.js:66:10
+   66|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:79:3
+
+Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:79:3
+   79|   out as empty; // ERROR
+         ^^^
+
+References:
+   patterns.js:71:33
+   71|   declare const x: {foo: [{bar: number}]};
+                                       ^^^^^^ [1]
+   patterns.js:79:10
+   79|   out as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:87:6
+
+Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   patterns.js:87:6
+   87|     [a, const a]: a, // ERROR: reference before declaration
+            ^
+
+References:
+   patterns.js:87:15
+   87|     [a, const a]: a, // ERROR: reference before declaration
+                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ patterns.js:99:23
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:99:23
+   99|     {foo: const n} if n as empty: n, // ERROR
+                             ^
+
+References:
+   patterns.js:93:26
+   93|   declare const x: {foo: number};
+                                ^^^^^^ [1]
+   patterns.js:99:28
+   99|     {foo: const n} if n as empty: n, // ERROR
+                                  ^^^^^ [2]
+
+
+
+Found 16 errors
