@@ -1,0 +1,5 @@
+[options]
+all=true
+component_syntax=true
+no_flowlib=false
+react.runtime=automatic
