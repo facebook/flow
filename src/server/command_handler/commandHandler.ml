@@ -2908,6 +2908,7 @@ let handle_global_find_references
     ~profiling
     ~env
     ~kind
+    ~include_declaration
     ~request:_
     ~refs_to_lsp_result
     text_doc_position =
@@ -3003,6 +3004,14 @@ let handle_global_find_references
               | FindRefsTypes.FoundReferences refs -> refs)
               (Base.List.filter refs ~f:(fun (_, ref_loc) -> Loc.source ref_loc <> Some file_key))
           in
+          let refs =
+            if include_declaration then
+              refs
+            else
+              Base.List.filter refs ~f:(fun (_, ref_loc) ->
+                  not (Base.List.mem def_locs ref_loc ~equal:Loc.equal)
+              )
+          in
           let response = ResponseMessage (id, refs_to_lsp_result ~current_ast:(Some ast) refs) in
           let metadata =
             with_data
@@ -3023,7 +3032,10 @@ let handle_global_find_references
 
 let handle_persistent_find_references
     ~loc_of_aloc ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let text_doc_position = params.FindReferences.loc in
+  let FindReferences.
+        { loc = text_doc_position; context = { includeDeclaration = include_declaration; _ }; _ } =
+    params
+  in
   let ref_to_location (_, loc) = Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok in
   handle_global_find_references
     ~loc_of_aloc
@@ -3034,6 +3046,7 @@ let handle_persistent_find_references
     ~profiling
     ~env
     ~kind:FindRefsTypes.FindReferences
+    ~include_declaration
     ~request:(LspProt.LspToServer (RequestMessage (id, FindReferencesRequest params)))
     ~refs_to_lsp_result:(fun ~current_ast:_ refs ->
       let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
@@ -3124,6 +3137,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
     ~profiling
     ~env
     ~kind:FindRefsTypes.Rename
+    ~include_declaration:true
     ~request:(LspProt.LspToServer (RequestMessage (id, RenameRequest params)))
     ~refs_to_lsp_result:(fun ~current_ast refs ->
       let (ref_map, files) =

@@ -25,12 +25,14 @@ module.exports = (suite(
       line: number,
       col: number,
       expectedFile: string,
+      includeDeclaration: boolean = true,
     ) {
       return lspRequestAndWaitUntilResponse('textDocument/references', {
         textDocument: {
           uri: `<PLACEHOLDER_PROJECT_URL>/__fixtures__/${fixture}`,
         },
         position: {line: line, character: col},
+        context: {includeDeclaration},
       }).verifyLSPMessageSnapshot(
         join(__dirname, '__snapshots__', expectedFile),
         [
@@ -48,6 +50,7 @@ module.exports = (suite(
         addFiles(...fixtures),
         lspStartAndConnect(),
         snapshot('locals.js', 3, 5, 'var_defs_1.json'),
+        snapshot('locals.js', 3, 5, 'var_defs_1_no_declaration.json', false),
         snapshot('locals.js', 4, 2, 'var_defs_2.json'),
         snapshot('locals.js', 23, 1, 'var_defs_3.json'),
         snapshot('locals.js', 25, 3, 'var_defs_4.json'),
