@@ -437,7 +437,7 @@ module NewAPI : sig
 
   val prepare_write_haste_module :
     ([ `string ] addr ->
-    int ->
+    Bitset.t ->
     [ `file ] entity addr ->
     [ `file ] sklist addr ->
     [ `haste_module ] addr
@@ -448,7 +448,7 @@ module NewAPI : sig
 
   val get_haste_name : [ `haste_module ] addr -> [ `string ] addr
 
-  val get_haste_namespace_bitset : [ `haste_module ] addr -> int
+  val get_haste_namespace_bitset : [ `haste_module ] addr -> Bitset.t
 
   val get_haste_provider : [ `haste_module ] addr -> [ `file ] entity addr
 

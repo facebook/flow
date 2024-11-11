@@ -35,6 +35,10 @@ let is_subset bit_set_a bit_set_b = bit_set_a lor bit_set_b = bit_set_b
 
 let no_overlap bit_set_a bit_set_b = bit_set_a land bit_set_b = 0
 
+let from_int_unchecked i = i
+
+let to_int i = i
+
 let equal = Int.equal
 
 let compare = Int.compare

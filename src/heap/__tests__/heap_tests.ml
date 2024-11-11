@@ -375,7 +375,7 @@ let add_provider_barrier_test _ =
       and+ parse_ent = prepare_write_entity
       and+ haste_ent = prepare_write_entity
       and+ foo_f = prepare_write_file Source_file in
-      let foo_m = foo_m foo 1 (foo_provider None) foo_dependents in
+      let foo_m = foo_m foo (Bitset.all_one 1) (foo_provider None) foo_dependents in
       let haste_info = haste_info foo_m in
       let foo_f = foo_f foo (parse_ent None) (haste_ent (Some haste_info)) None in
       add_haste_provider foo_m foo_f haste_info;

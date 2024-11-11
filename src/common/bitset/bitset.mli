@@ -25,6 +25,10 @@ val no_overlap : t -> t -> bool
 
 val equal : t -> t -> bool
 
+val from_int_unchecked : int -> t
+
+val to_int : t -> int
+
 val compare : t -> t -> int
 
 val to_string : t -> string

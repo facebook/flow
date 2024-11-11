@@ -47,6 +47,7 @@
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
  (libraries
+  flow_common_bitset
   common_lz4
   heap_libc
   leb128
