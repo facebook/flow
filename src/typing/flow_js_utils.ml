@@ -1466,12 +1466,16 @@ module ImportTypeofTKit = struct
               tparams_loc;
               tparams = typeparams;
               t_out = DefT (_, (ClassT _ | FunT _ | ReactAbstractComponentT _)) as lower_t;
-              id;
+              id = _;
             }
         ) ->
       let typeof_t = TypeUtil.typeof_annotation reason lower_t None in
 
-      poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportTypeofKind, typeof_t)))
+      poly_type
+        (Poly.generate_id ())
+        tparams_loc
+        typeparams
+        (DefT (reason, TypeT (ImportTypeofKind, typeof_t)))
     | DefT (_, TypeT _)
     | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) ->
       add_output cx (Error_message.EImportTypeAsTypeof (reason, export_name));
