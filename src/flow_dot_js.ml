@@ -142,6 +142,7 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
     ts_syntax = true;
+    type_expansion_recursion_limit = 3;
     use_mixed_in_catch_variables = false;
     ban_spread_key_props = false;
   }

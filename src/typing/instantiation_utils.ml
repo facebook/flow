@@ -164,15 +164,28 @@ end = struct
     fun cx side (c, ts) ->
       let stack = Context.instantiation_stack cx in
       let tss = Base.List.map ~f:(collect_roots cx) ts in
+      let limit = Context.type_expansion_recursion_limit cx in
       let loop =
-        !stack
-        |> List.exists (fun (prev_c, prev_tss, prev_side) ->
-               c = prev_c && possibly_expanding_targs prev_tss tss && side = prev_side
-           )
+        Base.List.fold_until
+          !stack
+          ~init:0
+          ~finish:(fun _ -> false)
+          ~f:(fun count (prev_c, prev_tss, prev_side) ->
+            if c = prev_c && possibly_expanding_targs prev_tss tss && side = prev_side then
+              let count = count + 1 in
+              if count >= limit then
+                Base.Continue_or_stop.Stop true
+              else
+                Base.Continue_or_stop.Continue count
+            else
+              Base.Continue_or_stop.Continue count)
       in
       if loop then (
         if Context.is_verbose cx then
-          prerr_endlinef "encountered the same TypeAppT again: %s" (show_entry (c, tss, side));
+          prerr_endlinef
+            "encountered the same TypeAppT again for %d times: %s"
+            limit
+            (show_entry (c, tss, side));
         false
       ) else (
         stack := (c, tss, side) :: !stack;

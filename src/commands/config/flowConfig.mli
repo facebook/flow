@@ -262,6 +262,8 @@ val suppress_types : config -> SSet.t
 
 val ts_syntax : config -> bool
 
+val type_expansion_recursion_limit : config -> int
+
 val use_mixed_in_catch_variables : config -> bool option
 
 val ban_spread_key_props : config -> bool option
