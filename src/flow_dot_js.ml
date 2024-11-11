@@ -126,7 +126,6 @@ let stub_metadata ~root ~checked =
     max_workers = 0;
     missing_module_generators = [];
     normalizer_indexed_access_perf_fix = true;
-    object_freeze_fix = false;
     natural_inference_exports_primitive_const = false;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.Disabled;

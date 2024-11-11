@@ -112,7 +112,6 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
-    object_freeze_fix: bool;
     natural_inference_exports_primitive_const: bool;
     no_flowlib: bool;
     node_main_fields: string list;
@@ -250,7 +249,6 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
-      object_freeze_fix = true;
       natural_inference_exports_primitive_const = false;
       no_flowlib = false;
       node_main_fields = ["main"];
@@ -1042,9 +1040,6 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.object_freeze_fix",
-        boolean (fun opts v -> Ok { opts with object_freeze_fix = v })
-      );
       ( "experimental.natural_inference.exports.primitive_const",
         boolean (fun opts v -> Ok { opts with natural_inference_exports_primitive_const = v })
       );
@@ -1764,8 +1759,6 @@ let multi_platform_ambient_supports_platform_directory_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
-
-let object_freeze_fix c = c.options.Opts.object_freeze_fix
 
 let natural_inference_exports_primitive_const c =
   c.options.Opts.natural_inference_exports_primitive_const

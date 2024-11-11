@@ -158,7 +158,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (* if inflowing type is literal (thus guaranteed to be
        unaliased), propertywise subtyping is sound *)
-    let lit = is_literal_object_reason ~object_freeze_fix:(Context.object_freeze_fix cx) lreason in
+    let lit = is_literal_object_reason lreason in
     (* If both are dictionaries, ensure the keys and values are compatible
        with each other. *)
     let ldict = Obj_type.get_dict_opt lflags.obj_kind in
@@ -193,10 +193,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         )
     | _ -> ());
 
-    if
-      rflags.obj_kind = Exact
-      && not (is_literal_object_reason ~object_freeze_fix:(Context.object_freeze_fix cx) ureason)
-    then (
+    if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
       if not (Obj_type.is_exact lflags.obj_kind) then
         exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason (DefT (lreason, ObjT l_obj));
       Context.iter_real_props cx lflds (fun name _ ->

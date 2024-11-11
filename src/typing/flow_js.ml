@@ -6120,7 +6120,7 @@ struct
   and inst_structural_subtype
       cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id, inst_dict) =
     let lreason = reason_of_t lower in
-    let lit = is_literal_object_reason ~object_freeze_fix:(Context.object_freeze_fix cx) lreason in
+    let lit = is_literal_object_reason lreason in
     let own_props = Context.find_props cx own_props_id in
     let proto_props = Context.find_props cx proto_props_id in
     let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
@@ -7833,17 +7833,13 @@ struct
         ) ->
         if
           (not (Obj_type.is_exact lflags.obj_kind))
-          && (not
-                (is_literal_object_reason ~object_freeze_fix:(Context.object_freeze_fix cx) ureason)
-             )
+          && (not (is_literal_object_reason ureason))
           && Obj_type.is_exact uflags.obj_kind
         then
           exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason t1;
         if
           (not (Obj_type.is_exact uflags.obj_kind))
-          && (not
-                (is_literal_object_reason ~object_freeze_fix:(Context.object_freeze_fix cx) lreason)
-             )
+          && (not (is_literal_object_reason lreason))
           && Obj_type.is_exact lflags.obj_kind
         then
           exact_obj_error cx uflags.obj_kind ~use_op ~exact_reason:lreason t2;

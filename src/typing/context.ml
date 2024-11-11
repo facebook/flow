@@ -60,7 +60,6 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_exports_primitive_const: bool;
   normalizer_indexed_access_perf_fix: bool;
-  object_freeze_fix: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
@@ -291,7 +290,6 @@ let metadata_of_options options =
     natural_inference_exports_primitive_const =
       Options.natural_inference_exports_primitive_const options;
     normalizer_indexed_access_perf_fix = Options.normalizer_indexed_access_perf_fix options;
-    object_freeze_fix = Options.object_freeze_fix options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
     react_runtime = Options.react_runtime options;
@@ -648,8 +646,6 @@ let missing_module_generators cx = cx.metadata.missing_module_generators
 
 let natural_inference_exports_primitive_const cx =
   cx.metadata.natural_inference_exports_primitive_const
-
-let object_freeze_fix cx = cx.metadata.object_freeze_fix
 
 let jsx cx = cx.metadata.jsx
 

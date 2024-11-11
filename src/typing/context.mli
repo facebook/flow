@@ -104,7 +104,6 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_exports_primitive_const: bool;
   normalizer_indexed_access_perf_fix: bool;
-  object_freeze_fix: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
@@ -307,8 +306,6 @@ val max_workers : t -> int
 val missing_module_generators : t -> (Str.regexp * string) list
 
 val natural_inference_exports_primitive_const : t -> bool
-
-val object_freeze_fix : t -> bool
 
 val jsx : t -> Options.jsx_mode
 
