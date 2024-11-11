@@ -24,12 +24,16 @@ let lst = Nel.one 2 |> Nel.cons 4 |> Nel.cons 6
 let lst2 = Nel.one 5 |> Nel.cons 3
 
 let tests =
-  "nel"
+  "bitset"
   >::: [
          ( "all_one_size_16" >:: fun ctxt ->
            let bitset = Bitset.all_one 16 in
            for i = 0 to 15 do
-             assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem i bitset)
+             assert_equal
+               ~ctxt
+               ~printer:(fun b -> string_of_int i ^ " " ^ string_of_bool b)
+               true
+               (Bitset.mem i bitset)
            done
          );
          ( "all_one_size_17" >:: fun ctxt ->
@@ -43,7 +47,7 @@ let tests =
            for i = 0 to 15 do
              assert_equal ~ctxt ~printer:string_of_bool false (Bitset.mem i bitset)
            done;
-           Bitset.set bitset 3;
+           let bitset = Bitset.set 3 bitset in
            assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem 3 bitset);
            assert_equal ~ctxt ~printer:string_of_bool false (Bitset.mem 4 bitset)
          );
@@ -52,7 +56,7 @@ let tests =
            for i = 0 to 16 do
              assert_equal ~ctxt ~printer:string_of_bool false (Bitset.mem i bitset)
            done;
-           Bitset.set bitset 16;
+           let bitset = Bitset.set 16 bitset in
            assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem 16 bitset);
            assert_equal ~ctxt ~printer:string_of_bool false (Bitset.mem 15 bitset)
          );
@@ -61,7 +65,7 @@ let tests =
            for i = 0 to 15 do
              assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem i bitset)
            done;
-           Bitset.unset bitset 3;
+           let bitset = Bitset.unset 3 bitset in
            assert_equal ~ctxt ~printer:string_of_bool false (Bitset.mem 3 bitset);
            assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem 4 bitset)
          );
@@ -70,7 +74,7 @@ let tests =
            for i = 0 to 16 do
              assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem i bitset)
            done;
-           Bitset.unset bitset 16;
+           let bitset = Bitset.unset 16 bitset in
            assert_equal ~ctxt ~printer:string_of_bool false (Bitset.mem 16 bitset);
            assert_equal ~ctxt ~printer:string_of_bool true (Bitset.mem 15 bitset)
          );
@@ -109,42 +113,18 @@ let tests =
            assert_equal ~ctxt ~printer:string_of_bool true (is_subset (all_zero 31) (all_zero 31));
            assert_equal ~ctxt ~printer:string_of_bool true (is_subset (all_one 31) (all_one 31));
            let () =
-             let a = all_zero 21 in
-             let b = all_zero 21 in
-             set b 3;
-             set a 10;
-             set b 10;
-             set a 11;
-             set b 11;
-             set a 17;
-             set b 17;
-             set b 18;
+             let a = all_zero 21 |> set 10 |> set 11 |> set 17 in
+             let b = all_zero 21 |> set 3 |> set 10 |> set 11 |> set 17 |> set 18 in
              assert_equal ~ctxt ~printer:string_of_bool true (is_subset a b)
            in
            let () =
-             let a = all_zero 21 in
-             let b = all_zero 21 in
-             set b 3;
-             set a 10;
-             set b 10;
-             set a 11;
-             set b 11;
-             set a 17;
-             set b 17;
-             set a 18;
+             let a = all_zero 21 |> set 10 |> set 11 |> set 17 |> set 18 in
+             let b = all_zero 21 |> set 3 |> set 10 |> set 11 |> set 17 in
              assert_equal ~ctxt ~printer:string_of_bool false (is_subset a b)
            in
            let () =
-             let a = all_zero 21 in
-             let b = all_zero 21 in
-             set a 3;
-             set a 10;
-             set b 10;
-             set a 11;
-             set b 11;
-             set a 17;
-             set b 17;
-             set b 18;
+             let a = all_zero 21 |> set 3 |> set 10 |> set 11 |> set 17 in
+             let b = all_zero 21 |> set 10 |> set 11 |> set 17 |> set 18 in
              assert_equal ~ctxt ~printer:string_of_bool false (is_subset a b)
            in
            ()
@@ -156,23 +136,13 @@ let tests =
            assert_equal ~ctxt ~printer:string_of_bool true (no_overlap (all_zero 31) (all_zero 31));
            assert_equal ~ctxt ~printer:string_of_bool false (no_overlap (all_one 31) (all_one 31));
            let () =
-             let a = all_zero 21 in
-             let b = all_zero 21 in
-             set b 3;
-             set a 10;
-             set b 11;
-             set a 17;
-             set b 18;
+             let a = all_zero 21 |> set 10 |> set 17 in
+             let b = all_zero 21 |> set 3 |> set 11 |> set 18 in
              assert_equal ~ctxt ~printer:string_of_bool true (no_overlap a b)
            in
            let () =
-             let a = all_zero 21 in
-             let b = all_zero 21 in
-             set b 3;
-             set a 3;
-             set a 11;
-             set a 17;
-             set a 18;
+             let a = all_zero 21 |> set 3 |> set 11 |> set 17 |> set 18 in
+             let b = all_zero 21 |> set 3 in
              assert_equal ~ctxt ~printer:string_of_bool false (is_subset a b)
            in
            ()

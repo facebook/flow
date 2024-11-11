@@ -1,0 +1,5 @@
+(library
+ (name flow_common_bitset)
+ (wrapped false)
+ (preprocess
+  (pps lwt_ppx ppx_deriving.std)))

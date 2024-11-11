@@ -9,10 +9,12 @@ type t = Bitset.t [@@deriving show]
 
 let available_platforms_to_bitset ~multi_platform_extensions available_platforms =
   let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
-  Base.List.iteri multi_platform_extensions ~f:(fun i ext ->
-      if Base.List.exists available_platforms ~f:(fun p -> ext = "." ^ p) then Bitset.set bitset i
-  );
-  bitset
+  Base.List.foldi multi_platform_extensions ~init:bitset ~f:(fun i bitset ext ->
+      if Base.List.exists available_platforms ~f:(fun p -> ext = "." ^ p) then
+        Bitset.set i bitset
+      else
+        bitset
+  )
 
 let available_platforms ~file_options ~filename ~explicit_available_platforms : t option =
   if not (Files.multi_platform file_options) then
@@ -22,7 +24,9 @@ let available_platforms ~file_options ~filename ~explicit_available_platforms : 
     match Files.platform_specific_extensions_and_indices_opt ~options:file_options filename with
     | Some result ->
       let bitset = Bitset.all_zero (Base.List.length multi_platform_extensions) in
-      Base.List.iter result ~f:(fun (i, _) -> Bitset.set bitset i);
+      let bitset =
+        Base.List.fold result ~init:bitset ~f:(fun bitset (i, _) -> Bitset.set i bitset)
+      in
       Some bitset
     | None ->
       (match explicit_available_platforms with

@@ -3,6 +3,7 @@
  (wrapped false)
  (libraries
   hh_json ; hack
+  flow_common_bitset
   flow_parser
   string ; hack
   sys_utils ; hack

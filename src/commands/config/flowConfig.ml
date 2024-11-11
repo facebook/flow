@@ -702,6 +702,8 @@ module Opts = struct
             )
         else if Base.List.mem opts.multi_platform_extensions v ~equal:String.equal then
           Ok opts
+        else if Base.List.length opts.multi_platform_extensions > Bitset.max_size then
+          Error ("Too many platforms extension are set. The max is " ^ string_of_int Bitset.max_size)
         else
           Ok { opts with multi_platform_extensions = v :: opts.multi_platform_extensions })
 

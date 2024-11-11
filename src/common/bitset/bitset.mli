@@ -7,16 +7,24 @@
 
 type t [@@deriving show]
 
+val max_size : int
+
 val all_zero : int -> t
 
 val all_one : int -> t
 
 val mem : int -> t -> bool
 
-val set : t -> int -> unit
+val set : int -> t -> t
 
-val unset : t -> int -> unit
+val unset : int -> t -> t
 
 val is_subset : t -> t -> bool
 
 val no_overlap : t -> t -> bool
+
+val equal : t -> t -> bool
+
+val compare : t -> t -> int
+
+val to_string : t -> string
