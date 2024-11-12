@@ -60,7 +60,6 @@ let make_options_flags
   }
 
 let make_saved_state_flags
-    ?saved_state_allow_reinit
     ?saved_state_fetcher
     ?(saved_state_force_recheck = false)
     ?(saved_state_no_fallback = false)
@@ -68,8 +67,7 @@ let make_saved_state_flags
     ?(saved_state_verify = false)
     () =
   {
-    CommandUtils.Saved_state_flags.saved_state_allow_reinit;
-    saved_state_fetcher;
+    CommandUtils.Saved_state_flags.saved_state_fetcher;
     saved_state_force_recheck;
     saved_state_no_fallback;
     saved_state_skip_version_check;

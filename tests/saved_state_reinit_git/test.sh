@@ -52,7 +52,6 @@ assert_ok "$FLOW" start \
   --file-watcher=none \
   --saved-state-fetcher=scm \
   --saved-state-no-fallback \
-  --saved-state-allow-reinit \
   --wait
 
 # --saved-state-no-fallback doesn't error if there's no saved state found

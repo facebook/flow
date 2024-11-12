@@ -129,7 +129,6 @@ module Opts = struct
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
     root_name: string option;
-    saved_state_allow_reinit: bool option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
     shm_heap_size: int;
@@ -264,7 +263,6 @@ module Opts = struct
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       root_name = None;
-      saved_state_allow_reinit = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
@@ -863,7 +861,12 @@ module Opts = struct
     )
 
   let saved_state_allow_reinit_parser =
-    boolean (fun opts v -> Ok { opts with saved_state_allow_reinit = Some v })
+    boolean (fun opts v ->
+        if v then
+          Ok opts
+        else
+          Error "Support for saved_state.allow_reinit=false is removed."
+    )
 
   let saved_state_fetcher_parser =
     enum
@@ -1792,8 +1795,6 @@ let relay_integration_module_prefix_includes c =
 let required_version c = c.version
 
 let root_name c = c.options.Opts.root_name
-
-let saved_state_allow_reinit c = c.options.Opts.saved_state_allow_reinit
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 

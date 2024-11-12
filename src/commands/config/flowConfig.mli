@@ -242,8 +242,6 @@ val required_version : config -> string option
 
 val root_name : config -> string option
 
-val saved_state_allow_reinit : config -> bool option
-
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
 val shm_hash_table_pow : config -> int

@@ -146,7 +146,6 @@ type t = {
   opt_relay_integration_module_prefix_includes: Str.regexp list;
   opt_root: File_path.t;
   opt_root_name: string option;
-  opt_saved_state_allow_reinit: bool;
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_no_fallback: bool;
@@ -334,8 +333,6 @@ let relay_integration_module_prefix_includes opts =
 let root opts = opts.opt_root
 
 let root_name opts = opts.opt_root_name
-
-let saved_state_allow_reinit opts = opts.opt_saved_state_allow_reinit
 
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 

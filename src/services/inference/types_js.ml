@@ -2331,12 +2331,7 @@ let init ~profiling ~workers options =
   Lwt.return (libs_ok, env)
 
 let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env =
-  match%lwt
-    if Options.saved_state_allow_reinit options then
-      load_saved_state ~profiling ~workers options
-    else
-      Lwt.return (Error "Reinit from saved state is disabled")
-  with
+  match%lwt load_saved_state ~profiling ~workers options with
   | Error msg ->
     (* Either there is no saved state or we failed to load it for some reason *)
     Hh_logger.info "Failed to load saved state: %s" msg;
@@ -2423,10 +2418,7 @@ let recheck
         env
     with
     | Recheck_too_slow ->
-      if Options.saved_state_allow_reinit options then
-        reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
-      else
-        Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
+      reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
 
 let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~message env =
   let { ServerEnv.dependency_info; errors; collated_errors; _ } = env in

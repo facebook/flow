@@ -923,7 +923,6 @@ end
 
 module Saved_state_flags = struct
   type t = {
-    saved_state_allow_reinit: bool option;
     saved_state_fetcher: Options.saved_state_fetcher option;
     saved_state_force_recheck: bool;
     saved_state_no_fallback: bool;
@@ -1063,7 +1062,6 @@ let options_flags =
 let saved_state_flags =
   let collect_saved_state_flags
       main
-      saved_state_allow_reinit
       saved_state_fetcher
       saved_state_force_recheck
       saved_state_no_fallback
@@ -1071,8 +1069,7 @@ let saved_state_flags =
       saved_state_verify =
     main
       {
-        Saved_state_flags.saved_state_allow_reinit;
-        saved_state_fetcher;
+        Saved_state_flags.saved_state_fetcher;
         saved_state_force_recheck;
         saved_state_no_fallback;
         saved_state_skip_version_check;
@@ -1083,7 +1080,6 @@ let saved_state_flags =
     CommandSpec.ArgSpec.(
       prev
       |> collect collect_saved_state_flags
-      |> flag "--saved-state-allow-reinit" no_arg ~doc:"" ~env:"FLOW_SAVED_STATE_ALLOW_REINIT"
       |> flag
            "--saved-state-fetcher"
            (enum
@@ -1324,12 +1320,6 @@ let make_options
     | timeout -> timeout)
     |> Base.Option.map ~f:float_of_int
   in
-  let opt_saved_state_allow_reinit =
-    Base.Option.first_some
-      saved_state_options_flags.saved_state_allow_reinit
-      (FlowConfig.saved_state_allow_reinit flowconfig)
-    |> Base.Option.value ~default:false
-  in
   (* The CLI flag overrides the .flowconfig *)
   let opt_saved_state_fetcher =
     Base.Option.value
@@ -1445,7 +1435,6 @@ let make_options
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
     opt_natural_inference_exports_primitive_const =
       FlowConfig.natural_inference_exports_primitive_const flowconfig;
-    opt_saved_state_allow_reinit;
     opt_saved_state_fetcher;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;

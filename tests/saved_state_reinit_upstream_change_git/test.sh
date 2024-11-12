@@ -54,7 +54,6 @@ assert_ok "$FLOW" start \
   --file-watcher=none \
   --saved-state-fetcher=scm \
   --saved-state-no-fallback \
-  --saved-state-allow-reinit \
   --lazy-mode=true \
   --wait
 
