@@ -2169,6 +2169,20 @@ struct
         (**************)
         | (DefT (_, EmptyT), ConditionalT { use_op; tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
+        | ( DefT (reason_tapp, PolyT { tparams_loc = _; tparams; t_out; _ }),
+            ConditionalT { use_op; reason = reason_op; _ }
+          ) ->
+          let t_ =
+            ImplicitInstantiationKit.run_monomorphize
+              cx
+              trace
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+              tparams
+              t_out
+          in
+          rec_flow cx trace (t_, u)
         | ( check_t,
             ConditionalT
               {

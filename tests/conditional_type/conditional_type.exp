@@ -910,6 +910,75 @@ References:
              ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- poly_t_input.js:5:1
+
+Cannot cast `v1` to empty because boolean literal `false` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   poly_t_input.js:5:1
+   5| v1 as empty; // error: false ~> empty
+      ^^
+
+References:
+   poly_t_input.js:3:64
+   3| declare const v1: typeof f extends (v: mixed) => void ? true : false;
+                                                                     ^^^^^ [1]
+   poly_t_input.js:5:7
+   5| v1 as empty; // error: false ~> empty
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- poly_t_input.js:9:1
+
+Cannot cast `v2` to empty because boolean literal `true` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   poly_t_input.js:9:1
+   9| v2 as empty; // error: true ~> empty
+      ^^
+
+References:
+   poly_t_input.js:7:58
+   7| declare const v2: typeof f extends (v: string) => void ? true : false;
+                                                               ^^^^ [1]
+   poly_t_input.js:9:7
+   9| v2 as empty; // error: true ~> empty
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- poly_t_input.js:13:1
+
+Cannot cast `v3` to empty because boolean literal `false` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   poly_t_input.js:13:1
+   13| v3 as empty; // error: false ~> empty
+       ^^
+
+References:
+   poly_t_input.js:11:65
+   11| declare const v3: typeof f extends (v: number) => void ? true : false;
+                                                                       ^^^^^ [1]
+   poly_t_input.js:13:7
+   13| v3 as empty; // error: false ~> empty
+             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- poly_t_input.js:17:1
+
+Cannot cast `v4` to empty because string (inferred from type parameter's bound) [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   poly_t_input.js:17:1
+   17| v4 as empty; // error: string ~> empty
+       ^^
+
+References:
+   poly_t_input.js:1:23
+    1| declare function f<T: string>(t: T): void;
+                             ^^^^^^ [1]
+   poly_t_input.js:17:7
+   17| v4 as empty; // error: string ~> empty
+             ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- subst.js:4:4
 
 Cannot cast `num` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1018,7 +1087,7 @@ References:
 
 
 
-Found 66 errors
+Found 70 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
