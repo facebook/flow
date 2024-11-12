@@ -530,7 +530,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:14:1
 
-Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with instance of component [2].
+[incompatible-cast]
 
    destructors.js:14:1
    14| 3 as React.ElementRef<typeof C>; // Error, 3 is not void.

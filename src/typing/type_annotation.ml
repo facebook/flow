@@ -1265,31 +1265,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 )
                 targs
           )
-        | "React$ElementRef" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 ( loc,
-                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
-                     "ElementRef"
-                 )
-              );
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.hd ts in
-              let reason = mk_reason (RType (OrdinaryName "React$ElementRef")) loc in
-              reconstruct_ast
-                (mk_type_destructor
-                   cx
-                   (use_op reason)
-                   reason
-                   t
-                   ReactElementRefType
-                   (mk_eval_id cx loc)
-                )
-                targs
-          )
         | "$Flow$EnforceOptimized" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -1373,6 +1348,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             Flow_js_utils.add_output
               cx
               (Error_message.EInternalType (loc, Flow_intermediate_error_types.ReactDollarElement));
+          local_generic_type ()
+        | "React$ElementRef" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 ( loc,
+                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
+                     "ElementRef"
+                 )
+              );
           local_generic_type ()
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()

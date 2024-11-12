@@ -2427,13 +2427,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactElementConfig (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "React$ElementRef" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (ReactElementRef (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
   | "StringPrefix" ->
     (match targs with
     | Some (_, { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ })]; _ }) ->

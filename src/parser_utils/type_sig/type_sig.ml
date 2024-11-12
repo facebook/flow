@@ -568,7 +568,6 @@ type ('loc, 'a) annot =
   | ReactCreateClass of 'loc
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a
-  | ReactElementRef of 'loc * 'a
   | ReactImmutable of 'loc * 'a
   | FunAnnot of 'loc * ('loc, 'a) fun_sig
   | ComponentAnnot of 'loc * ('loc, 'a) component_sig

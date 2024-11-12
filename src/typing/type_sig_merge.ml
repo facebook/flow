@@ -916,12 +916,6 @@ and merge_annot env file = function
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementConfigType), id))
-  | ReactElementRef (loc, t) ->
-    let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementRef")) loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let t = merge env file t in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementRefType), id))
   | ReactImmutable (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$Immutable")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
