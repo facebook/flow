@@ -82,7 +82,6 @@ module Opts = struct
     gc_worker_minor_heap_size: int option;  (** Gc.control's minor_heap_size *)
     gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
-    generate_tests: bool;
     haste_module_ref_prefix: string option;
     haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_name_reducers: (Str.regexp * string) list;
@@ -218,7 +217,6 @@ module Opts = struct
       gc_worker_minor_heap_size = None;
       gc_worker_space_overhead = None;
       gc_worker_window_size = None;
-      generate_tests = false;
       haste_module_ref_prefix = None;
       haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
