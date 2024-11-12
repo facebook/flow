@@ -255,8 +255,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | Options.ReactRefAsProp.PartialSupport -> None)
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
     | DefT (_, StrT _)
-    | DefT (_, SingletonStrT _)
-    | _ ->
+    | DefT (_, SingletonStrT _) ->
       get_builtin_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
@@ -269,6 +268,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             );
         ]
       |> Option.some
+    | _ -> None
 
   let rec props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
