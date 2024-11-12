@@ -1485,7 +1485,6 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
-    opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
     opt_automatic_require_default =
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;

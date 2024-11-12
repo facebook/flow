@@ -118,7 +118,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
-  type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
   ban_spread_key_props: bool;
 }
