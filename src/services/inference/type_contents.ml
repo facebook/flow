@@ -180,7 +180,9 @@ let unchecked_dependencies ~options ~reader file requires =
   let node_modules_containers = !Files.node_modules_containers in
   Array.fold_left
     (fun acc r ->
-      match Module_js.imported_module ~options ~reader ~node_modules_containers file r with
+      match
+        Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file r
+      with
       | Error _ -> acc
       | Ok m ->
         (match unchecked_dependency m with

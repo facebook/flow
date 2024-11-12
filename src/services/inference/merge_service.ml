@@ -499,7 +499,9 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
   let reader = Abstract_state_reader.State_reader reader in
   let resolved_modules =
     let node_modules_containers = !Files.node_modules_containers in
-    let f mref = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
+    let f mref =
+      Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
+    in
     SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
   in
   let { Check_service.check_file; compute_env = _ } =
@@ -520,7 +522,9 @@ let compute_env_of_contents ~reader options master_cx file ast docblock file_sig
   let reader = Abstract_state_reader.State_reader reader in
   let resolved_modules =
     let node_modules_containers = !Files.node_modules_containers in
-    let f mref = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
+    let f mref =
+      Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
+    in
     SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
   in
   let { Check_service.check_file = _; compute_env } =

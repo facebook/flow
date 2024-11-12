@@ -168,15 +168,15 @@ module type MODULE_SYSTEM = sig
   val exported_module :
     Options.t -> File_key.t -> package_info:package_info -> Haste_module_info.t option
 
-  (* Given a file and a reference in it to an imported module, make the name of
-     the module it refers to. If given an optional reference to an accumulator,
+  (* Given a file (importing_file) and a reference in it to an imported module (import_specifier),
+     make the name of the module it refers to. If given an optional reference to an accumulator,
      record paths that were looked up but not found during resolution. *)
   val imported_module :
     options:Options.t ->
     reader:Abstract_state_reader.t ->
-    SSet.t SMap.t ->
-    File_key.t ->
-    ?phantom_acc:phantom_acc ->
+    node_modules_containers:SSet.t SMap.t ->
+    importing_file:File_key.t ->
+    phantom_acc:phantom_acc option ->
     string ->
     Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
@@ -211,7 +211,7 @@ let record_phantom_dependency mname dependency = function
 module Node = struct
   let exported_module _ _ ~package_info:_ = None
 
-  let path_if_exists ~reader ~file_options phantom_acc path =
+  let path_if_exists ~reader ~file_options ~phantom_acc path =
     let path = resolve_symlinks path in
     let mname =
       Files.eponymous_module
@@ -229,8 +229,8 @@ module Node = struct
       record_phantom_dependency mname dependency phantom_acc;
       None
 
-  let path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts =
-    let f ext = path_if_exists ~reader ~file_options phantom_acc (path ^ ext) in
+  let path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts =
+    let f ext = path_if_exists ~reader ~file_options ~phantom_acc (path ^ ext) in
     List.find_map f file_exts
 
   let parse_main ~reader ~file_options phantom_acc package_filename file_exts =
@@ -252,13 +252,13 @@ module Node = struct
       let path_w_index = Filename.concat path "index" in
       lazy_seq
         [
-          lazy (path_if_exists ~reader ~file_options phantom_acc path);
-          lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
+          lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
+          lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
           lazy
-            (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path_w_index file_exts);
+            (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path_w_index file_exts);
         ]
 
-  let resolve_package ~options ~reader ?phantom_acc package_dir =
+  let resolve_package ~options ~reader ~phantom_acc package_dir =
     let file_options = Options.file_options options in
     let file_exts = Files.module_file_exts file_options in
     lazy_seq
@@ -275,15 +275,18 @@ module Node = struct
           (path_if_exists_with_file_exts
              ~reader
              ~file_options
-             phantom_acc
+             ~phantom_acc
              (Filename.concat package_dir "index")
              file_exts
           );
       ]
 
-  let ordered_allowed_implicit_platform_specific_import ~file_options filename =
+  let ordered_allowed_implicit_platform_specific_import ~file_options ~importing_file =
     match
-      Platform_set.available_platforms ~file_options ~filename ~explicit_available_platforms:None
+      Platform_set.available_platforms
+        ~file_options
+        ~filename:importing_file
+        ~explicit_available_platforms:None
       |> Option.map (Platform_set.to_platform_string_set ~file_options)
     with
     | None -> None
@@ -312,30 +315,33 @@ module Node = struct
       in
       Some (single_platform @ grouped_platform)
 
-  let resolve_relative ~options ~reader ?phantom_acc ~source root_path rel_path =
+  let resolve_relative ~options ~reader ~phantom_acc ~importing_file ~relative_to_directory rel_path
+      =
     let file_options = Options.file_options options in
-    let path = Files.normalize_path root_path rel_path in
+    let path = Files.normalize_path relative_to_directory rel_path in
     (* We do not try resource file extensions here. So while you can write
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
     let file_exts = Files.module_file_exts file_options in
     match
-      ordered_allowed_implicit_platform_specific_import ~file_options (File_key.to_string source)
+      ordered_allowed_implicit_platform_specific_import
+        ~file_options
+        ~importing_file:(File_key.to_string importing_file)
     with
     | None ->
       lazy_seq
         [
           (* Try <path> import directly. Needed for `import './foo.js'`  *)
-          lazy (path_if_exists ~reader ~file_options phantom_acc path);
+          lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
           (* Try <path>.js import. Needed for `import './foo'`  *)
-          lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
-          lazy (resolve_package ~options ~reader ?phantom_acc path);
+          lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
+          lazy (resolve_package ~options ~reader ~phantom_acc path);
         ]
     | Some ordered_platforms ->
       lazy_seq
         ([
            (* Try <path> import directly. Needed for `import './foo.js'`  *)
-           lazy (path_if_exists ~reader ~file_options phantom_acc path);
+           lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
          ]
          (* Try <path>.<platform>.js import.
           * Needed so that `import './foo'` resolves to foo.android.js in android.js files *)
@@ -344,24 +350,31 @@ module Node = struct
                 (path_if_exists_with_file_exts
                    ~reader
                    ~file_options
-                   phantom_acc
+                   ~phantom_acc
                    (path ^ "." ^ platform)
                    file_exts
                 )
           )
         @ [
             (* Try <path>.js import. Needed for `import './foo'`  *)
-            lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
-            lazy (resolve_package ~options ~reader ?phantom_acc path);
+            lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
+            lazy (resolve_package ~options ~reader ~phantom_acc path);
           ]
         )
 
-  let rec node_module ~options ~reader node_modules_containers file ?phantom_acc ~source dir r =
+  let rec node_module
+      ~options
+      ~reader
+      ~node_modules_containers
+      ~phantom_acc
+      ~importing_file
+      ~possible_node_module_container_dir
+      ~import_specifier =
     let file_options = Options.file_options options in
     lazy_seq
       [
         lazy
-          (match SMap.find_opt dir node_modules_containers with
+          (match SMap.find_opt possible_node_module_container_dir node_modules_containers with
           | Some existing_node_modules_dirs ->
             lazy_seq
               (Files.node_resolver_dirnames file_options
@@ -371,10 +384,10 @@ module Node = struct
                          resolve_relative
                            ~options
                            ~reader
-                           ?phantom_acc
-                           ~source
-                           dir
-                           (spf "%s%s%s" dirname Filename.dir_sep r)
+                           ~phantom_acc
+                           ~importing_file
+                           ~relative_to_directory:possible_node_module_container_dir
+                           (spf "%s%s%s" dirname Filename.dir_sep import_specifier)
                        else
                          None
                        )
@@ -382,27 +395,35 @@ module Node = struct
               )
           | None -> None);
         lazy
-          (let parent_dir = Filename.dirname dir in
-           if dir = parent_dir then
+          (let parent_dir = Filename.dirname possible_node_module_container_dir in
+           if possible_node_module_container_dir = parent_dir then
              None
            else
              node_module
                ~options
                ~reader
-               node_modules_containers
-               file
-               ?phantom_acc
-               ~source
-               (Filename.dirname dir)
-               r
+               ~node_modules_containers
+               ~phantom_acc
+               ~importing_file
+               ~possible_node_module_container_dir:
+                 (Filename.dirname possible_node_module_container_dir)
+               ~import_specifier
           );
       ]
 
-  let flow_typed_module ~options ~reader ?phantom_acc ~source import_str =
+  let flow_typed_module ~options ~reader ~phantom_acc ~importing_file ~import_specifier =
     Options.file_options options
     |> Files.module_declaration_dirnames
-    |> Base.List.map ~f:(fun root ->
-           lazy (resolve_relative ~options ~reader ?phantom_acc ~source root import_str)
+    |> Base.List.map ~f:(fun relative_to_directory ->
+           lazy
+             (resolve_relative
+                ~options
+                ~reader
+                ~phantom_acc
+                ~importing_file
+                ~relative_to_directory
+                import_specifier
+             )
        )
     |> lazy_seq
 
@@ -410,51 +431,67 @@ module Node = struct
    * to resolve requires like `require('foo/bar.js')` relative to the project
    * root directory. This is something bundlers like Webpack can be configured
    * to do. *)
-  let resolve_root_relative ~options ~reader ?phantom_acc ~source import_str =
+  let resolve_root_relative ~options ~reader ~phantom_acc ~importing_file ~import_specifier =
     if Options.node_resolver_allow_root_relative options then
       let dirnames = Options.node_resolver_root_relative_dirnames options in
       let root = Options.root options |> File_path.to_string in
       let f dirname =
-        let root =
+        let relative_to_directory =
           if dirname = "" then
             root
           else
             Filename.concat root dirname
         in
-        lazy (resolve_relative ~options ~reader ?phantom_acc ~source root import_str)
+        lazy
+          (resolve_relative
+             ~options
+             ~reader
+             ~phantom_acc
+             ~importing_file
+             ~relative_to_directory
+             import_specifier
+          )
       in
       lazy_seq (Base.List.map ~f dirnames)
     else
       None
 
-  let resolve_import ~options ~reader node_modules_containers f ?phantom_acc import_str =
-    let file = File_key.to_string f in
-    let dir = Filename.dirname file in
-    if is_relative_or_absolute import_str then
-      resolve_relative ~options ~reader ?phantom_acc ~source:f dir import_str
+  let resolve_import
+      ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc import_specifier =
+    let file = File_key.to_string importing_file in
+    let importing_file_dir = Filename.dirname file in
+    if is_relative_or_absolute import_specifier then
+      resolve_relative
+        ~options
+        ~reader
+        ~phantom_acc
+        ~importing_file
+        ~relative_to_directory:importing_file_dir
+        import_specifier
     else
       lazy_seq
         [
-          lazy (resolve_root_relative ~options ~reader ?phantom_acc ~source:f import_str);
-          lazy (flow_typed_module ~options ~reader ?phantom_acc ~source:f import_str);
+          lazy
+            (resolve_root_relative ~options ~reader ~phantom_acc ~importing_file ~import_specifier);
+          lazy (flow_typed_module ~options ~reader ~phantom_acc ~importing_file ~import_specifier);
           lazy
             (node_module
                ~options
                ~reader
-               node_modules_containers
-               f
-               ?phantom_acc
-               ~source:f
-               dir
-               import_str
+               ~node_modules_containers
+               ~phantom_acc
+               ~importing_file
+               ~possible_node_module_container_dir:importing_file_dir
+               ~import_specifier
             );
         ]
 
-  let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
-    let candidates = module_name_candidates ~options r in
+  let imported_module
+      ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc import_specifier =
+    let candidates = module_name_candidates ~options import_specifier in
     match
       List.find_map
-        (resolve_import ~options ~reader node_modules_containers file ?phantom_acc)
+        (resolve_import ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc)
         (Nel.to_list candidates)
     with
     | Some m -> Ok m
@@ -548,10 +585,11 @@ module Haste : MODULE_SYSTEM = struct
     else
       None
 
-  let resolve_haste_module ~options ~reader ?phantom_acc ~source ~dir r =
+  let resolve_haste_module
+      ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
     let (name, subpath) =
-      match String.split_on_char '/' r with
-      | [] -> (r, [])
+      match String.split_on_char '/' import_specifier with
+      | [] -> (import_specifier, [])
       | scope :: package :: rest when String.starts_with ~prefix:"@" scope ->
         (scope ^ "/" ^ package, rest)
       | package :: rest -> (package, rest)
@@ -561,14 +599,20 @@ module Haste : MODULE_SYSTEM = struct
     match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
     | Some addr ->
       (match (package_dir_opt ~reader addr, subpath) with
-      | (Some package_dir, []) -> Node.resolve_package ~options ~reader ?phantom_acc package_dir
+      | (Some package_dir, []) -> Node.resolve_package ~options ~reader ~phantom_acc package_dir
       | (Some package_dir, subpath) ->
         (* add a phantom dep on the package name, so we re-resolve the subpath
            if the package gets a new provider *)
         record_phantom_dependency mname dependency phantom_acc;
 
         let path = Files.construct_path package_dir subpath in
-        Node.resolve_relative ~options ~reader ?phantom_acc ~source dir path
+        Node.resolve_relative
+          ~options
+          ~reader
+          ~phantom_acc
+          ~importing_file
+          ~relative_to_directory:importing_file_dir
+          path
       | (None, []) -> dependency
       | (None, _ :: _) ->
         (* if r = foo/bar and foo is a regular module, don't resolve.
@@ -583,8 +627,16 @@ module Haste : MODULE_SYSTEM = struct
       None
 
   let resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-      ~options ~reader ?phantom_acc ~dir ~source r =
-    let dependency = resolve_haste_module ~options ~reader ?phantom_acc ~source ~dir r in
+      ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
+    let dependency =
+      resolve_haste_module
+        ~options
+        ~reader
+        ~phantom_acc
+        ~importing_file
+        ~importing_file_dir
+        ~import_specifier
+    in
     let file_options = Options.file_options options in
     if Files.multi_platform file_options then
       match Option.map Parsing_heaps.read_dependency dependency with
@@ -602,33 +654,63 @@ module Haste : MODULE_SYSTEM = struct
     else
       dependency
 
-  let resolve_import ~options ~reader node_modules_containers f ?phantom_acc r =
-    let file = File_key.to_string f in
-    let dir = Filename.dirname file in
-    if is_relative_or_absolute r then
-      Node.resolve_relative ~options ~reader ?phantom_acc ~source:f dir r
+  let resolve_import
+      ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc ~import_specifier =
+    let file = File_key.to_string importing_file in
+    let importing_file_dir = Filename.dirname file in
+    if is_relative_or_absolute import_specifier then
+      Node.resolve_relative
+        ~options
+        ~reader
+        ~phantom_acc
+        ~importing_file
+        ~relative_to_directory:importing_file_dir
+        import_specifier
     else
       let file_options = Options.file_options options in
       if not (Files.multi_platform file_options) then
         lazy_seq
           [
-            lazy (resolve_haste_module ~options ~reader ?phantom_acc ~source:f ~dir r);
-            lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
-            lazy (Node.flow_typed_module ~options ~reader ?phantom_acc ~source:f r);
+            lazy
+              (resolve_haste_module
+                 ~options
+                 ~reader
+                 ~phantom_acc
+                 ~importing_file
+                 ~importing_file_dir
+                 ~import_specifier
+              );
+            lazy
+              (Node.resolve_root_relative
+                 ~options
+                 ~reader
+                 ~phantom_acc
+                 ~importing_file
+                 ~import_specifier
+              );
+            lazy
+              (Node.flow_typed_module
+                 ~options
+                 ~reader
+                 ~phantom_acc
+                 ~importing_file
+                 ~import_specifier
+              );
             lazy
               (Node.node_module
                  ~options
                  ~reader
-                 node_modules_containers
-                 file
-                 ?phantom_acc
-                 ~source:f
-                 dir
-                 r
+                 ~node_modules_containers
+                 ~phantom_acc
+                 ~importing_file
+                 ~possible_node_module_container_dir:importing_file_dir
+                 ~import_specifier
               );
           ]
       else
-        match Node.ordered_allowed_implicit_platform_specific_import ~file_options file with
+        match
+          Node.ordered_allowed_implicit_platform_specific_import ~file_options ~importing_file:file
+        with
         | None ->
           lazy_seq
             [
@@ -636,23 +718,36 @@ module Haste : MODULE_SYSTEM = struct
                 (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
                    ~options
                    ~reader
-                   ?phantom_acc
-                   ~source:f
-                   ~dir
-                   r
+                   ~phantom_acc
+                   ~importing_file
+                   ~importing_file_dir
+                   ~import_specifier
                 );
-              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
-              lazy (Node.flow_typed_module ~options ~reader ?phantom_acc ~source:f r);
+              lazy
+                (Node.resolve_root_relative
+                   ~options
+                   ~reader
+                   ~phantom_acc
+                   ~importing_file
+                   ~import_specifier
+                );
+              lazy
+                (Node.flow_typed_module
+                   ~options
+                   ~reader
+                   ~phantom_acc
+                   ~importing_file
+                   ~import_specifier
+                );
               lazy
                 (Node.node_module
                    ~options
                    ~reader
-                   node_modules_containers
-                   file
-                   ?phantom_acc
-                   ~source:f
-                   dir
-                   r
+                   ~node_modules_containers
+                   ~phantom_acc
+                   ~importing_file
+                   ~possible_node_module_container_dir:importing_file_dir
+                   ~import_specifier
                 );
             ]
         | Some ordered_platforms ->
@@ -662,10 +757,10 @@ module Haste : MODULE_SYSTEM = struct
                    (resolve_haste_module
                       ~options
                       ~reader
-                      ?phantom_acc
-                      ~source:f
-                      ~dir
-                      (r ^ "." ^ platform)
+                      ~phantom_acc
+                      ~importing_file
+                      ~importing_file_dir
+                      ~import_specifier:(import_specifier ^ "." ^ platform)
                    )
              )
             @ [
@@ -673,34 +768,56 @@ module Haste : MODULE_SYSTEM = struct
                   (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
                      ~options
                      ~reader
-                     ?phantom_acc
-                     ~source:f
-                     ~dir
-                     r
+                     ~phantom_acc
+                     ~importing_file
+                     ~importing_file_dir
+                     ~import_specifier
                   );
-                lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc ~source:f r);
-                lazy (Node.flow_typed_module ~options ~reader ?phantom_acc ~source:f r);
+                lazy
+                  (Node.resolve_root_relative
+                     ~options
+                     ~reader
+                     ~phantom_acc
+                     ~importing_file
+                     ~import_specifier
+                  );
+                lazy
+                  (Node.flow_typed_module
+                     ~options
+                     ~reader
+                     ~phantom_acc
+                     ~importing_file
+                     ~import_specifier
+                  );
                 lazy
                   (Node.node_module
                      ~options
                      ~reader
-                     node_modules_containers
-                     file
-                     ?phantom_acc
-                     ~source:f
-                     dir
-                     r
+                     ~node_modules_containers
+                     ~phantom_acc
+                     ~importing_file
+                     ~possible_node_module_container_dir:importing_file_dir
+                     ~import_specifier
                   );
               ]
             )
 
-  let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
+  let imported_module
+      ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc import_specifier =
     (* For historical reasons, the Haste module system always picks the first
      * matching candidate, unlike the Node module system which picks the first
      * "valid" matching candidate. *)
-    let candidates = module_name_candidates ~options r in
-    let r = Nel.hd candidates in
-    match resolve_import ~options ~reader node_modules_containers file ?phantom_acc r with
+    let candidates = module_name_candidates ~options import_specifier in
+    let import_specifier = Nel.hd candidates in
+    match
+      resolve_import
+        ~options
+        ~reader
+        ~node_modules_containers
+        ~importing_file
+        ~phantom_acc
+        ~import_specifier
+    with
     | Some m -> Ok m
     | None ->
       (* If the candidates list is a singleton, then no name mappers applied,
@@ -709,7 +826,7 @@ module Haste : MODULE_SYSTEM = struct
       let mapped_name =
         match Nel.tl candidates with
         | [] -> None
-        | _ -> Some r
+        | _ -> Some import_specifier
       in
       Error mapped_name
 
@@ -759,9 +876,16 @@ let exported_module ~options =
   let module M = (val get_module_system options) in
   M.exported_module options
 
-let imported_module ~options ~reader ~node_modules_containers file ?phantom_acc r =
+let imported_module
+    ~options ~reader ~node_modules_containers ~importing_file ?phantom_acc import_specifier =
   let module M = (val get_module_system options) in
-  M.imported_module ~options ~reader node_modules_containers file ?phantom_acc r
+  M.imported_module
+    ~options
+    ~reader
+    ~node_modules_containers
+    ~importing_file
+    ~phantom_acc
+    import_specifier
 
 let choose_provider ~options m files errmap =
   let module M = (val get_module_system options) in
@@ -779,7 +903,14 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
   let resolved_modules =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     Array.map
-      (fun mref -> imported_module file mref ~options ~reader ~node_modules_containers ~phantom_acc)
+      (fun mref ->
+        imported_module
+          ~importing_file:file
+          mref
+          ~options
+          ~reader
+          ~node_modules_containers
+          ~phantom_acc)
       requires
   in
   Parsing_heaps.Resolved_requires_mutator.add_resolved_requires

@@ -1215,7 +1215,7 @@ let find_module ~options ~reader (moduleref, filename) =
       ~options
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
-      file
+      ~importing_file:file
       moduleref
   in
   let provider =

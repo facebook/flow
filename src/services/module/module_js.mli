@@ -17,7 +17,7 @@ val imported_module :
   options:Options.t ->
   reader:Abstract_state_reader.t ->
   node_modules_containers:SSet.t SMap.t ->
-  File_key.t ->
+  importing_file:File_key.t ->
   ?phantom_acc:phantom_acc ->
   string ->
   Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
