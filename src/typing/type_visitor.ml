@@ -213,8 +213,7 @@ class ['a] t =
       | RequiredType
       | EnumType
       | ReactElementPropsType
-      | ReactElementConfigType
-      | ReactElementRefType ->
+      | ReactElementConfigType ->
         acc
       | ReactCheckComponentConfig map -> self#namemap (self#prop cx pole_TODO) acc map
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props

@@ -699,8 +699,7 @@ class virtual ['a] t =
               homomorphic = homomorphic';
             }
       | ReactElementPropsType
-      | ReactElementConfigType
-      | ReactElementRefType ->
+      | ReactElementConfigType ->
         t
 
     method object_kit_spread_operand_slice

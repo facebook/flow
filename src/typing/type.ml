@@ -1596,7 +1596,6 @@ module rec TypeTerm : sig
     | TypeMap of type_map
     | ReactElementPropsType
     | ReactElementConfigType
-    | ReactElementRefType
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactDRO of react_dro

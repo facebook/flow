@@ -40,7 +40,6 @@ let string_of_destructor = function
   | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
-  | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
   | MappedType _ -> "MappedType"
 

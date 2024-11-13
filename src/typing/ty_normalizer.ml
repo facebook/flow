@@ -448,7 +448,6 @@ module Make (I : INPUT) : S = struct
     | TypeMap _
     | ReactElementPropsType
     | ReactElementConfigType
-    | ReactElementRefType
     | ReactConfigType _
     | ReactCheckComponentConfig _
     | ReactDRO _
@@ -489,7 +488,6 @@ module Make (I : INPUT) : S = struct
         | EnumType
         | ReactElementPropsType
         | ReactElementConfigType
-        | ReactElementRefType
         | ReactConfigType _ ->
           false)
       )
@@ -1760,7 +1758,6 @@ module Make (I : INPUT) : S = struct
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
-      | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in
         Ty.Utility (Ty.ReactConfigType (ty, default_props'))

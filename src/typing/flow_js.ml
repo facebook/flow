@@ -6827,8 +6827,6 @@ struct
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetProps (OpenT tout)))
         | ReactElementConfigType ->
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig (OpenT tout)))
-        | ReactElementRefType ->
-          rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetRef (OpenT tout)))
         | ReactConfigType default_props ->
           rec_flow
             cx
