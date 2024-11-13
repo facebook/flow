@@ -61,11 +61,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ClassT (Flow.get_builtin_typeapp cx reason "React$Component" [props; Tvar.mk cx reason])
       )
 
-  let get_intrinsic cx trace component ~reason_op artifact literal prop =
-    let reason = reason_of_t component in
+  let get_intrinsic cx trace ~component_reason ~reason_op ~artifact ~literal ~prop_polarity tout =
+    let reason = component_reason in
     (* Get the internal $JSXIntrinsics map. *)
     let intrinsics =
-      let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) (loc_of_t component) in
+      let reason =
+        mk_reason (RType (OrdinaryName "$JSXIntrinsics")) (loc_of_reason component_reason)
+      in
       get_builtin_type cx reason "$JSXIntrinsics"
     in
     (* Create a use_op for the upcoming operations. *)
@@ -87,34 +89,35 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | Literal _ -> ()
     | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, StrT literal))));
 
-    (* Create a type variable which will represent the specific intrinsic we
-     * find in the intrinsics map. *)
-    let intrinsic = Tvar.mk_no_wrap cx reason in
     (* Get the intrinsic from the map. *)
-    rec_flow
-      cx
-      trace
-      ( intrinsics,
-        GetPropT
-          {
-            use_op;
-            reason;
-            id = None;
-            from_annot = false;
-            propref =
-              (match literal with
-              | Literal (_, name) ->
-                let reason =
-                  replace_desc_reason
-                    (RReactElement { name_opt = Some name; from_component_syntax = false })
-                    reason
-                in
-                mk_named_prop ~reason name
-              | _ -> Computed component);
-            tout = (reason, intrinsic);
-            hint = hint_unavailable;
-          }
-      );
+    let intrinsic =
+      Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+          rec_flow
+            cx
+            trace
+            ( intrinsics,
+              GetPropT
+                {
+                  use_op;
+                  reason;
+                  id = None;
+                  from_annot = false;
+                  propref =
+                    (match literal with
+                    | Literal (_, name) ->
+                      let reason =
+                        replace_desc_reason
+                          (RReactElement { name_opt = Some name; from_component_syntax = false })
+                          reason
+                      in
+                      mk_named_prop ~reason name
+                    | _ -> Computed (DefT (reason, StrT AnyLiteral)));
+                  tout;
+                  hint = hint_unavailable;
+                }
+            )
+      )
+    in
 
     (* Get the artifact from the intrinsic. *)
     let propref =
@@ -131,14 +134,15 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     rec_flow
       cx
       trace
-      ( OpenT (reason, intrinsic),
+      ( intrinsic,
         LookupT
           {
             reason = reason_op;
             lookup_kind = Strict reason_op;
             try_ts_on_failure = [];
             propref;
-            lookup_action = LookupProp (unknown_use, prop);
+            lookup_action =
+              LookupProp (unknown_use, OrdinaryField { type_ = tout; polarity = prop_polarity });
             method_accessible = true;
             ids = Some Properties.Set.empty;
             ignore_dicts = false;
@@ -217,7 +221,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Everything else will not have default props we should diff out. *)
     | _ -> None
 
-  let get_expected_ref cx use_op reason_ref component =
+  let get_expected_ref cx reason_ref component =
     match component with
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceAvailableAsRefSetterProp t; _ })
       ->
@@ -254,19 +258,45 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         "React$RefSetter"
         [VoidT.why reason_ref]
       |> Option.some
-    | DefT (_, StrT _)
-    | DefT (_, SingletonStrT _) ->
+    | DefT (_, StrT lit) ->
+      let instance =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_ref (fun tout ->
+            get_intrinsic
+              cx
+              DepthTrace.unit_trace
+              ~component_reason:(reason_of_t component)
+              ~reason_op:reason_ref
+              ~artifact:`Instance
+              ~literal:lit
+              ~prop_polarity:Polarity.Positive
+              tout
+        )
+      in
       get_builtin_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
         "React$RefSetter"
-        [
-          EvalT
-            ( component,
-              TypeDestructorT (use_op, reason_ref, ReactElementRefType),
-              Eval.generate_id ()
-            );
-        ]
+        [instance]
+      |> Option.some
+    | DefT (_, SingletonStrT name) ->
+      let instance =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_ref (fun tout ->
+            get_intrinsic
+              cx
+              DepthTrace.unit_trace
+              ~component_reason:(reason_of_t component)
+              ~reason_op:reason_ref
+              ~artifact:`Instance
+              ~literal:(Literal (None, name))
+              ~prop_polarity:Polarity.Positive
+              tout
+        )
+      in
+      get_builtin_typeapp
+        cx
+        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
+        "React$RefSetter"
+        [instance]
       |> Option.some
     | _ -> None
 
@@ -301,20 +331,22 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       get_intrinsic
         cx
         trace
-        component
+        ~component_reason:(reason_of_t component)
         ~reason_op
-        `Props
-        (Literal (None, name))
-        (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
+        ~artifact:`Props
+        ~literal:(Literal (None, name))
+        ~prop_polarity:Polarity.Positive
+        tout
     | DefT (_, StrT lit) ->
       get_intrinsic
         cx
         trace
-        component
+        ~component_reason:(reason_of_t component)
         ~reason_op
-        `Props
-        lit
-        (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
+        ~artifact:`Props
+        ~literal:lit
+        ~prop_polarity:Polarity.Positive
+        tout
     (* any and any specializations *)
     | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
     | DefT (reason, ReactAbstractComponentT { config; _ }) ->
@@ -378,7 +410,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
 
   let run cx trace ~use_op reason_op l u =
     let err_incompatible ?(use_op = use_op) reason = err_incompatible cx ~use_op reason u in
-    let get_intrinsic = get_intrinsic cx trace l ~reason_op in
+    let get_intrinsic = get_intrinsic cx trace ~component_reason:(reason_of_t l) ~reason_op in
     (* This function creates a constraint *from* tin *to* props so that props is
      * an upper bound on tin. This is important because when the type of a
      * component's props is inferred (such as when a stateless functional
@@ -434,11 +466,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason) (* Intrinsic components. *)
       | DefT (_, SingletonStrT name) ->
         get_intrinsic
-          `Props
-          (Literal (None, name))
-          (OrdinaryField { type_ = tin; polarity = Polarity.Negative })
+          ~artifact:`Props
+          ~literal:(Literal (None, name))
+          ~prop_polarity:Polarity.Negative
+          tin
       | DefT (_, StrT lit) ->
-        get_intrinsic `Props lit (OrdinaryField { type_ = tin; polarity = Polarity.Negative })
+        get_intrinsic ~artifact:`Props ~literal:lit ~prop_polarity:Polarity.Negative tin
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
@@ -696,7 +729,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           replace_desc_reason (RCustom "React ref") (reason_of_t normalized_jsx_props)
         in
         (* Create the ref type. *)
-        match get_expected_ref cx use_op reason_ref l with
+        match get_expected_ref cx reason_ref l with
         | None -> ()
         | Some ref_t ->
           (* Flow the config input ref type to the ref type. *)
@@ -864,11 +897,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Intrinsic components. *)
       | DefT (_, SingletonStrT name) ->
         get_intrinsic
-          `Instance
-          (Literal (None, name))
-          (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
+          ~artifact:`Instance
+          ~literal:(Literal (None, name))
+          ~prop_polarity:Polarity.Positive
+          tout
       | DefT (_, StrT lit) ->
-        get_intrinsic `Instance lit (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
+        get_intrinsic ~artifact:`Instance ~literal:lit ~prop_polarity:Polarity.Positive tout
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)
