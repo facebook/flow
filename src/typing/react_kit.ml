@@ -244,16 +244,16 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           cx
           (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
           "React$RefSetter"
-          [
-            EvalT
-              ( component,
-                TypeDestructorT (use_op, reason_ref, ReactElementRefType),
-                Eval.generate_id ()
-              );
-          ]
+          [VoidT.why reason_ref]
         |> Option.some
       | Options.ReactRefAsProp.PartialSupport -> None)
-    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
+      get_builtin_typeapp
+        cx
+        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
+        "React$RefSetter"
+        [VoidT.why reason_ref]
+      |> Option.some
     | DefT (_, StrT _)
     | DefT (_, SingletonStrT _) ->
       get_builtin_typeapp
