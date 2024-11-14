@@ -1,3 +1,27 @@
+### 0.253.0
+
+Likely to cause new Flow errors:
+* `React$ElementRef` is now implemented with a conditional type instead of a builtin Flow utility type. You might see new errors with generic `React$ElementRef`. Most of the times, you should replace `React.ElementRef<T>` with just `T` if there are no other uses of generic `T`.
+* We've increased safety in checks involving recursive types.
+
+New Features:
+* You can now set multiple [`@flowtyped`](https://flow.org/en/docs/libdefs/creation/#toc-declaring-a-module-in-at-flowtyped) like directories via `module.declaration_dirnames` config. e.g.
+```
+module.declaration_dirnames=<PROJECT_ROOT>/decl1
+module.declaration_dirnames=<PROJECT_ROOT>/decl2
+```
+Please note that when you set this, `@flowtyped` at the root will no longer be considered special, and you will need to explicitly add it like
+```
+module.declaration_dirnames=<PROJECT_ROOT>/@flowtyped
+```
+
+Notable bug fixes:
+* A generic type as input to conditional type will have type parameters pinned with their default or upper bound, instead of being `empty`.
+* We fixed a cache collision issue that might cause instantiation of a value-imported generic component type to interfere with a typeof-imported generic component type.
+
+IDE:
+* Flow now respects `includeDeclaration` from LSP request for find-references command. In practice, this means that "find all references" in vscode will continue to return both declaration and all uses, while "go to references" will exclude the declaration.
+
 ### 0.252.0
 
 Likely to cause new Flow errors:
