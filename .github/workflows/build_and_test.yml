@@ -379,7 +379,7 @@ jobs:
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '15.4.0'
+        xcode-version: '16.1.0'
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
@@ -410,7 +410,7 @@ jobs:
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '15.4.0'
+        xcode-version: '16.1.0'
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
