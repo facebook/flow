@@ -105,6 +105,7 @@ type t =
   | JSXAttributeValueEmptyExpression
   | LiteralShorthandProperty
   | MalformedUnicode
+  | MatchNonSingleArgument
   | MethodInDestructuring
   | MissingJSXClosingTag of string
   | MissingTypeParam
@@ -393,6 +394,7 @@ module PP = struct
       "JSX attributes must only be assigned a non-empty expression"
     | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
     | MalformedUnicode -> "Malformed unicode"
+    | MatchNonSingleArgument -> "`match` only supports one argument"
     | MethodInDestructuring -> "Object pattern can't contain methods"
     | MissingJSXClosingTag name ->
       Printf.sprintf "JSX element %s has no corresponding closing tag." name

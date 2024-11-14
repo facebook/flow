@@ -584,15 +584,23 @@ module Statement
     let start_loc = Peek.loc env in
     (* Consume `match` as an identifier, in case it's a call expression. *)
     let id = Parse.identifier env in
-    (* Allows trailing comma - ban? *)
+    (* Allows trailing comma. *)
     let (args_loc, args) = Expression.arguments env in
-    match args with
-    (* `match (<expr>) {` *)
-    | { Ast.Expression.ArgList.arguments = [Ast.Expression.Expression arg]; _ }
-      when (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY ->
-      match_statement ~start_loc ~leading ~arg env
-    (* It's actually a call expression statement of the form `match(...)` *)
-    | _ ->
+    (* `match (<exprs>) {` *)
+    if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then (
+      match args with
+      | { Ast.Expression.ArgList.arguments = [Ast.Expression.Expression arg]; _ } ->
+        match_statement ~start_loc ~leading ~arg env
+      | _ ->
+        error_at env (args_loc, Parse_error.MatchNonSingleArgument);
+        let error_arg =
+          ( args_loc,
+            Ast.Expression.Sequence { Ast.Expression.Sequence.expressions = []; comments = None }
+          )
+        in
+        match_statement ~start_loc ~leading ~arg:error_arg env
+    ) else
+      (* It's actually a call expression statement of the form `match(...)` *)
       let callee = (fst id, Ast.Expression.Identifier id) in
       let expr_loc = Loc.btwn start_loc args_loc in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
