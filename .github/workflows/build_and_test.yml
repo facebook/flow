@@ -373,13 +373,13 @@ jobs:
     - name: Run tests
       run: ./runtests.sh bin/macos/flow
   runtests_macos_arm:
-    runs-on: macos-14
+    runs-on: macos-15
     needs:
     - build_macos_arm64
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '14.3.1'
+        xcode-version: '16.1.0'
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
@@ -404,13 +404,13 @@ jobs:
     - name: Run tool tests
       run: ./tool test -p 4 --bin bin/linux/flow
   tool_test_macos:
-    runs-on: macos-14
+    runs-on: macos-15
     needs:
     - build_macos_arm64
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '14.3.1'
+        xcode-version: '16.1.0'
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
