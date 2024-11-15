@@ -1995,6 +1995,16 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module RestPattern : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      argument: ('M * ('M, 'T) BindingPattern.t) option;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module ObjectPattern : sig
     module Property : sig
       type ('M, 'T) key =
@@ -2013,19 +2023,9 @@ and MatchPattern : sig
       [@@deriving show]
     end
 
-    module Rest : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        argument: 'M * ('M, 'T) BindingPattern.t;
-        comments: ('M, unit) Syntax.t option;
-      }
-      [@@deriving show]
-    end
-
     type ('M, 'T) t = {
       properties: ('M, 'T) Property.t list;
-      rest: ('M, 'T) Rest.t option;
+      rest: ('M, 'T) RestPattern.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
@@ -2040,19 +2040,9 @@ and MatchPattern : sig
       [@@deriving show]
     end
 
-    module Rest : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        argument: ('M * ('M, 'T) BindingPattern.t) option;
-        comments: ('M, unit) Syntax.t option;
-      }
-      [@@deriving show]
-    end
-
     type ('M, 'T) t = {
       elements: ('M, 'T) Element.t list;
-      rest: ('M, 'T) Rest.t option;
+      rest: ('M, 'T) RestPattern.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]

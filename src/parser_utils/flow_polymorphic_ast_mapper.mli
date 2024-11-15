@@ -575,10 +575,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.key ->
       ('N, 'U) Ast.MatchPattern.ObjectPattern.Property.key
 
-    method match_object_pattern_rest :
-      ('M, 'T) Ast.MatchPattern.ObjectPattern.Rest.t' ->
-      ('N, 'U) Ast.MatchPattern.ObjectPattern.Rest.t'
-
     method match_array_pattern :
       ('M, 'T) Ast.MatchPattern.ArrayPattern.t -> ('N, 'U) Ast.MatchPattern.ArrayPattern.t
 
@@ -586,9 +582,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.MatchPattern.ArrayPattern.Element.t ->
       ('N, 'U) Ast.MatchPattern.ArrayPattern.Element.t
 
-    method match_array_pattern_rest :
-      ('M, 'T) Ast.MatchPattern.ArrayPattern.Rest.t' ->
-      ('N, 'U) Ast.MatchPattern.ArrayPattern.Rest.t'
+    method match_rest_pattern :
+      ('M, 'T) Ast.MatchPattern.RestPattern.t' -> ('N, 'U) Ast.MatchPattern.RestPattern.t'
 
     method match_or_pattern :
       ('M, 'T) Ast.MatchPattern.OrPattern.t -> ('N, 'U) Ast.MatchPattern.OrPattern.t

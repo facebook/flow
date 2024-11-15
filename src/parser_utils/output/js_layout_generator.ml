@@ -3433,15 +3433,8 @@ and match_object_pattern ~opts loc { Ast.MatchPattern.ObjectPattern.properties; 
       properties
   in
   let props_rev =
-    Base.Option.value_map rest ~default:props_rev ~f:(fun (rest_loc, { Rest.argument; comments }) ->
-        let (arg_loc, arg) = argument in
-        let rest =
-          layout_node_with_comments_opt
-            rest_loc
-            comments
-            (fuse [Atom "..."; match_binding_pattern arg_loc arg])
-        in
-        rest :: props_rev
+    Base.Option.value_map rest ~default:props_rev ~f:(fun rest ->
+        match_rest_pattern rest :: props_rev
     )
   in
   let props = List.rev props_rev in
@@ -3456,20 +3449,8 @@ and match_array_pattern ~opts loc { Ast.MatchPattern.ArrayPattern.elements; rest
     Base.List.rev_map ~f:(fun { Element.pattern; _ } -> match_pattern ~opts pattern) elements
   in
   let elements_rev =
-    Base.Option.value_map
-      rest
-      ~default:elements_rev
-      ~f:(fun (rest_loc, { Rest.argument; comments }) ->
-        let rest =
-          match argument with
-          | Some (arg_loc, arg) ->
-            layout_node_with_comments_opt
-              rest_loc
-              comments
-              (fuse [Atom "..."; match_binding_pattern arg_loc arg])
-          | None -> layout_node_with_comments_opt rest_loc comments (Atom "...")
-        in
-        rest :: elements_rev
+    Base.Option.value_map rest ~default:elements_rev ~f:(fun rest ->
+        match_rest_pattern rest :: elements_rev
     )
   in
   let elements = List.rev elements_rev in
@@ -3477,6 +3458,12 @@ and match_array_pattern ~opts loc { Ast.MatchPattern.ArrayPattern.elements; rest
     loc
     comments
     (group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") elements])
+
+and match_rest_pattern (loc, { Ast.MatchPattern.RestPattern.argument; comments }) =
+  match argument with
+  | Some (arg_loc, arg) ->
+    layout_node_with_comments_opt loc comments (fuse [Atom "..."; match_binding_pattern arg_loc arg])
+  | None -> layout_node_with_comments_opt loc comments (Atom "...")
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
   let case_left =

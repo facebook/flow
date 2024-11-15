@@ -87,6 +87,10 @@ let rec pattern_has_binding =
 let rec match_pattern_has_binding =
   let open MatchPattern in
   let property (_, { ObjectPattern.Property.pattern = p; _ }) = match_pattern_has_binding p in
+  let rest_has_binding = function
+    | Some (_, { RestPattern.argument = Some _; comments = _ }) -> true
+    | _ -> false
+  in
   function
   | (_, WildcardPattern _)
   | (_, NumberPattern _)
@@ -100,17 +104,12 @@ let rec match_pattern_has_binding =
     false
   | (_, BindingPattern _) -> true
   | (_, ObjectPattern { ObjectPattern.properties; rest; comments = _ }) ->
-    List.exists property properties || Option.is_some rest
+    rest_has_binding rest || List.exists property properties
   | (_, ArrayPattern { ArrayPattern.elements; rest; comments = _ }) ->
-    let rest_has_binding =
-      match rest with
-      | None -> false
-      | Some (_, { ArrayPattern.Rest.argument; comments = _ }) -> Option.is_some argument
-    in
-    List.exists
-      (fun { ArrayPattern.Element.pattern; _ } -> match_pattern_has_binding pattern)
-      elements
-    || rest_has_binding
+    rest_has_binding rest
+    || List.exists
+         (fun { ArrayPattern.Element.pattern; _ } -> match_pattern_has_binding pattern)
+         elements
   | (_, OrPattern { OrPattern.patterns; _ }) -> List.exists match_pattern_has_binding patterns
   | (_, AsPattern _) -> true
 

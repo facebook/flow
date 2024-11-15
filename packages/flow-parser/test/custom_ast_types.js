@@ -279,11 +279,15 @@ function custom_ast_types(fork) {
     .field('id', def('Identifier'))
     .field('kind', or('let', 'const', 'var'));
 
+  def('MatchRestPattern')
+    .build('argument')
+    .field('argument', or(def('MatchBindingPattern'), null));
+
   def('MatchObjectPattern')
     .bases('MatchPattern')
     .build('properties', 'rest')
     .field('properties', [def('MatchObjectPatternProperty')])
-    .field('rest', or(def('MatchObjectPatternRest'), null));
+    .field('rest', or(def('MatchRestPattern'), null));
 
   def('MatchObjectPatternProperty')
     .build('key', 'pattern')
@@ -291,19 +295,11 @@ function custom_ast_types(fork) {
     .field('pattern', def('MatchPattern'))
     .field('shorthand', Boolean);
 
-  def('MatchObjectPatternRest')
-    .build('argument')
-    .field('argument', def('MatchBindingPattern'));
-
   def('MatchArrayPattern')
     .bases('MatchPattern')
     .build('elements', 'rest')
     .field('elements', [def('MatchPattern')])
-    .field('rest', or(def('MatchArrayPatternRest'), null));
-
-  def('MatchArrayPatternRest')
-    .build('argument')
-    .field('argument', or(def('MatchBindingPattern'), null));
+    .field('rest', or(def('MatchRestPattern'), null));
 
   def('MatchOrPattern')
     .bases('MatchPattern')

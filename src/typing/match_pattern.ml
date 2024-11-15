@@ -106,6 +106,20 @@ let rec member cx ~on_identifier ~on_expression mem =
   let ((_, t), _) = on_expression cx exp in
   (exp, ((loc, t), { base; property = get_property t; comments }))
 
+let rest_pattern cx ~on_binding acc rest =
+  let open Ast.MatchPattern.RestPattern in
+  Base.Option.map rest ~f:(fun (rest_loc, { argument; comments }) ->
+      ( rest_loc,
+        {
+          argument =
+            Base.Option.map argument ~f:(fun (arg_loc, arg) ->
+                (arg_loc, binding_pattern cx ~on_binding acc arg)
+            );
+          comments;
+        }
+      )
+  )
+
 let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
     (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t =
   let open Ast.MatchPattern in
@@ -141,34 +155,11 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
     | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding acc x)
     | WildcardPattern x -> WildcardPattern x
     | ArrayPattern { ArrayPattern.elements; rest; comments } ->
-      let rest =
-        Base.Option.map rest ~f:(fun (rest_loc, { ArrayPattern.Rest.argument; comments }) ->
-            ( rest_loc,
-              {
-                ArrayPattern.Rest.argument =
-                  Base.Option.map argument ~f:(fun (arg_loc, arg) ->
-                      (arg_loc, binding_pattern cx ~on_binding acc arg)
-                  );
-                comments;
-              }
-            )
-        )
-      in
+      let rest = rest_pattern cx ~on_binding acc rest in
       let elements = array_elements cx ~on_identifier ~on_expression ~on_binding acc elements in
       ArrayPattern { ArrayPattern.elements; rest; comments }
     | ObjectPattern { ObjectPattern.properties; rest; comments } ->
-      let rest =
-        Base.Option.map
-          rest
-          ~f:(fun (rest_loc, { ObjectPattern.Rest.argument = (arg_loc, arg); comments }) ->
-            ( rest_loc,
-              {
-                ObjectPattern.Rest.argument = (arg_loc, binding_pattern cx ~on_binding acc arg);
-                comments;
-              }
-            )
-        )
-      in
+      let rest = rest_pattern cx ~on_binding acc rest in
       let properties =
         object_properties cx ~on_identifier ~on_expression ~on_binding acc properties
       in

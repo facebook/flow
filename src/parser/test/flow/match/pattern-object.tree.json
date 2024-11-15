@@ -1,17 +1,17 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":10,"column":2}},
-  "range":[0,213],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":2}},
+  "range":[0,234],
   "body":[
     {
       "type":"VariableDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":10,"column":2}},
-      "range":[0,213],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":2}},
+      "range":[0,234],
       "declarations":[
         {
           "type":"VariableDeclarator",
-          "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":10,"column":1}},
-          "range":[6,212],
+          "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":11,"column":1}},
+          "range":[6,233],
           "id":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":7}},
@@ -22,8 +22,8 @@
           },
           "init":{
             "type":"MatchExpression",
-            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":10,"column":1}},
-            "range":[10,212],
+            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":11,"column":1}},
+            "range":[10,233],
             "argument":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
@@ -393,7 +393,7 @@
                     }
                   ],
                   "rest":{
-                    "type":"MatchObjectPatternRest",
+                    "type":"MatchRestPattern",
                     "loc":{"source":null,"start":{"line":7,"column":12},"end":{"line":7,"column":22}},
                     "range":[143,153],
                     "argument":{
@@ -461,7 +461,7 @@
                     }
                   ],
                   "rest":{
-                    "type":"MatchObjectPatternRest",
+                    "type":"MatchRestPattern",
                     "loc":{"source":null,"start":{"line":8,"column":12},"end":{"line":8,"column":20}},
                     "range":[171,179],
                     "argument":{
@@ -529,7 +529,7 @@
                     }
                   ],
                   "rest":{
-                    "type":"MatchObjectPatternRest",
+                    "type":"MatchRestPattern",
                     "loc":{"source":null,"start":{"line":9,"column":12},"end":{"line":9,"column":20}},
                     "range":[197,205],
                     "argument":{
@@ -555,6 +555,60 @@
                   "name":"y",
                   "typeAnnotation":null,
                   "optional":false
+                },
+                "guard":null
+              },
+              {
+                "type":"MatchExpressionCase",
+                "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":20}},
+                "range":[213,231],
+                "pattern":{
+                  "type":"MatchObjectPattern",
+                  "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":16}},
+                  "range":[213,227],
+                  "properties":[
+                    {
+                      "type":"MatchObjectPatternProperty",
+                      "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":8}},
+                      "range":[214,219],
+                      "key":{
+                        "type":"Identifier",
+                        "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":10}},
+                        "range":[214,221],
+                        "name":"x",
+                        "typeAnnotation":null,
+                        "optional":false
+                      },
+                      "pattern":{
+                        "type":"MatchBindingPattern",
+                        "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":10}},
+                        "range":[214,221],
+                        "id":{
+                          "type":"Identifier",
+                          "loc":{"source":null,"start":{"line":10,"column":9},"end":{"line":10,"column":10}},
+                          "range":[220,221],
+                          "name":"x",
+                          "typeAnnotation":null,
+                          "optional":false
+                        },
+                        "kind":"const"
+                      },
+                      "shorthand":true
+                    }
+                  ],
+                  "rest":{
+                    "type":"MatchRestPattern",
+                    "loc":{"source":null,"start":{"line":10,"column":12},"end":{"line":10,"column":15}},
+                    "range":[223,226],
+                    "argument":null
+                  }
+                },
+                "body":{
+                  "type":"Literal",
+                  "loc":{"source":null,"start":{"line":10,"column":18},"end":{"line":10,"column":19}},
+                  "range":[229,230],
+                  "value":1,
+                  "raw":"1"
                 },
                 "guard":null
               }

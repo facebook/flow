@@ -7,4 +7,5 @@ const e = match (x) {
   {const x, ...const y}: y,
   {const x, ...let y}: y,
   {const x, ...var z}: y,
+  {const x, ...}: 1,
 };

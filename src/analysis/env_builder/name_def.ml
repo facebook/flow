@@ -359,7 +359,7 @@ end = struct
       let used_elements =
         array_elements ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) elements
       in
-      Base.Option.iter rest ~f:(function (_, { ArrayPattern.Rest.argument; comments = _ }) ->
+      Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
           Base.Option.iter argument ~f:(function
               | (_, { BindingPattern.id; kind = _; comments = _ }) ->
               let acc = array_rest (loc, acc) used_elements in
@@ -371,16 +371,12 @@ end = struct
       let used_props =
         object_properties ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) properties
       in
-      Base.Option.iter rest ~f:(function
-          | ( _,
-              {
-                ObjectPattern.Rest.argument = (_, { BindingPattern.id; kind = _; comments = _ });
-                comments = _;
-              }
-            )
-          ->
-          let acc = object_rest (loc, acc) used_props in
-          binding ~visit_binding acc id
+      Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
+          Base.Option.iter argument ~f:(function
+              | (_, { BindingPattern.id; kind = _; comments = _ }) ->
+              let acc = object_rest (loc, acc) used_props in
+              binding ~visit_binding acc id
+              )
           )
     | OrPattern { OrPattern.patterns; comments = _ } ->
       Base.List.iter

@@ -2634,7 +2634,7 @@ class ['loc] mapper =
       let open Ast.MatchPattern.ObjectPattern in
       let { properties; rest; comments } = object_pattern in
       let properties' = map_list this#match_object_pattern_property properties in
-      let rest' = map_loc_opt this#match_object_pattern_rest rest in
+      let rest' = map_loc_opt this#match_rest_pattern rest in
       let comments' = this#syntax_opt comments in
       if properties == properties' && rest == rest' && comments == comments' then
         object_pattern
@@ -2663,38 +2663,16 @@ class ['loc] mapper =
         id_loc this#number_literal loc lit key (fun lit -> NumberLiteral (loc, lit))
       | Identifier ident -> id this#identifier ident key (fun ident -> Identifier ident)
 
-    method match_object_pattern_rest
-        _loc (rest : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.Rest.t') =
-      let open Ast.MatchPattern.ObjectPattern.Rest in
-      let { argument; comments } = rest in
-      let argument' = map_loc this#match_binding_pattern argument in
-      let comments' = this#syntax_opt comments in
-      if argument == argument' && comments == comments' then
-        rest
-      else
-        { argument = argument'; comments = comments' }
-
     method match_array_pattern (array_pattern : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.t) =
       let open Ast.MatchPattern.ArrayPattern in
       let { elements; rest; comments } = array_pattern in
       let elements' = map_list this#match_pattern_array_element elements in
-      let rest' = map_loc_opt this#match_array_pattern_rest rest in
+      let rest' = map_loc_opt this#match_rest_pattern rest in
       let comments' = this#syntax_opt comments in
       if elements == elements' && rest == rest' && comments == comments' then
         array_pattern
       else
         { elements = elements'; rest = rest'; comments = comments' }
-
-    method match_array_pattern_rest _loc (rest : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.Rest.t')
-        =
-      let open Ast.MatchPattern.ArrayPattern.Rest in
-      let { argument; comments } = rest in
-      let argument' = map_loc_opt this#match_binding_pattern argument in
-      let comments' = this#syntax_opt comments in
-      if argument == argument' && comments == comments' then
-        rest
-      else
-        { argument = argument'; comments = comments' }
 
     method match_pattern_array_element
         (element : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.Element.t) =
@@ -2705,6 +2683,16 @@ class ['loc] mapper =
         element
       else
         { pattern = pattern'; index }
+
+    method match_rest_pattern _loc (rest : ('loc, 'loc) Ast.MatchPattern.RestPattern.t') =
+      let open Ast.MatchPattern.RestPattern in
+      let { argument; comments } = rest in
+      let argument' = map_loc_opt this#match_binding_pattern argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        rest
+      else
+        { argument = argument'; comments = comments' }
 
     method match_or_pattern (or_pattern : ('loc, 'loc) Ast.MatchPattern.OrPattern.t) =
       let open Ast.MatchPattern.OrPattern in
