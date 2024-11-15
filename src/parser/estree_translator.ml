@@ -701,11 +701,11 @@ with type t = Impl.t = struct
           loc
           [("operator", string operator); ("argument", argument)]
       | BindingPattern binding -> match_binding_pattern (loc, binding)
-      | IdentifierPattern id -> node "MatchIdentifierPattern" loc [("id", identifier id)]
+      | IdentifierPattern id -> match_identifier_pattern id
       | MemberPattern mem ->
         let rec member (loc, { MemberPattern.base; property; comments }) =
           let member_base = function
-            | MemberPattern.BaseIdentifier id -> identifier id
+            | MemberPattern.BaseIdentifier id -> match_identifier_pattern id
             | MemberPattern.BaseMember mem -> member mem
           in
           let member_property = function
@@ -768,6 +768,9 @@ with type t = Impl.t = struct
           | AsPattern.Identifier id -> identifier id
         in
         node ?comments "MatchAsPattern" loc [("pattern", match_pattern pattern); ("target", target)]
+    and match_identifier_pattern id =
+      let (loc, _) = id in
+      node "MatchIdentifierPattern" loc [("id", identifier id)]
     and match_binding_pattern (loc, { MatchPattern.BindingPattern.kind; id; comments }) =
       let kind = variable_kind kind in
       node ?comments "MatchBindingPattern" loc [("id", identifier id); ("kind", string kind)]

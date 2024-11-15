@@ -42,12 +42,17 @@
                   "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":9}},
                   "range":[24,31],
                   "base":{
-                    "type":"Identifier",
+                    "type":"MatchIdentifierPattern",
                     "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
                     "range":[24,27],
-                    "name":"foo",
-                    "typeAnnotation":null,
-                    "optional":false
+                    "id":{
+                      "type":"Identifier",
+                      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
+                      "range":[24,27],
+                      "name":"foo",
+                      "typeAnnotation":null,
+                      "optional":false
+                    }
                   },
                   "property":{
                     "type":"Identifier",
@@ -76,12 +81,17 @@
                   "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":8}},
                   "range":[41,47],
                   "base":{
-                    "type":"Identifier",
+                    "type":"MatchIdentifierPattern",
                     "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
                     "range":[41,44],
-                    "name":"foo",
-                    "typeAnnotation":null,
-                    "optional":false
+                    "id":{
+                      "type":"Identifier",
+                      "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
+                      "range":[41,44],
+                      "name":"foo",
+                      "typeAnnotation":null,
+                      "optional":false
+                    }
                   },
                   "property":{
                     "type":"Literal",
@@ -109,12 +119,17 @@
                   "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":12}},
                   "range":[57,67],
                   "base":{
-                    "type":"Identifier",
+                    "type":"MatchIdentifierPattern",
                     "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":5}},
                     "range":[57,60],
-                    "name":"foo",
-                    "typeAnnotation":null,
-                    "optional":false
+                    "id":{
+                      "type":"Identifier",
+                      "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":5}},
+                      "range":[57,60],
+                      "name":"foo",
+                      "typeAnnotation":null,
+                      "optional":false
+                    }
                   },
                   "property":{
                     "type":"Literal",
@@ -146,12 +161,17 @@
                     "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":9}},
                     "range":[77,84],
                     "base":{
-                      "type":"Identifier",
+                      "type":"MatchIdentifierPattern",
                       "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":5}},
                       "range":[77,80],
-                      "name":"foo",
-                      "typeAnnotation":null,
-                      "optional":false
+                      "id":{
+                        "type":"Identifier",
+                        "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":5}},
+                        "range":[77,80],
+                        "name":"foo",
+                        "typeAnnotation":null,
+                        "optional":false
+                      }
                     },
                     "property":{
                       "type":"Identifier",
@@ -196,12 +216,17 @@
                       "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":8}},
                       "range":[97,103],
                       "base":{
-                        "type":"Identifier",
+                        "type":"MatchIdentifierPattern",
                         "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":5}},
                         "range":[97,100],
-                        "name":"foo",
-                        "typeAnnotation":null,
-                        "optional":false
+                        "id":{
+                          "type":"Identifier",
+                          "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":5}},
+                          "range":[97,100],
+                          "name":"foo",
+                          "typeAnnotation":null,
+                          "optional":false
+                        }
                       },
                       "property":{
                         "type":"Literal",

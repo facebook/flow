@@ -270,7 +270,7 @@ function custom_ast_types(fork) {
   def('MatchMemberPattern')
     .bases('MatchPattern')
     .build('base', 'property')
-    .field('base', or(def('Identifier'), def('MatchMemberPattern')))
+    .field('base', or(def('MatchIdentifierPattern'), def('MatchMemberPattern')))
     .field('property', or(def('Identifier'), def('Literal')));
 
   def('MatchBindingPattern')
