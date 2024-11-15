@@ -10493,6 +10493,142 @@ References:
                 ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:25:16
+
+Refined at [1] [2]
+
+   object_prop_exists.js:25:16
+   25|         return result as empty; // bad: result is not empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:24:8
+   24|     if(result?.ok === false) {
+              ^^^^^^^^^^ [1]
+   object_prop_exists.js:24:8
+   24|     if(result?.ok === false) {
+              ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:31:16
+
+Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:31:16
+   31|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:29:45
+   29|   function withResult2(result: {ok: true} | {ok: void}): string {
+                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:31:26
+   31|         return result as empty; // good error: result not refined to empty
+                                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:31:16
+
+Refined at [1] [2]
+
+   object_prop_exists.js:31:16
+   31|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:30:8
+   30|     if(result?.ok === undefined) {
+              ^^^^^^^^^^ [1]
+   object_prop_exists.js:30:8
+   30|     if(result?.ok === undefined) {
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:37:16
+
+Refined at [1] [2]
+
+   object_prop_exists.js:37:16
+   37|         return result as empty; // bad: result is not empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:36:8
+   36|     if(result?.ok === null) {
+              ^^^^^^^^^^ [1]
+   object_prop_exists.js:36:8
+   36|     if(result?.ok === null) {
+              ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:43:16
+
+Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:43:16
+   43|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:41:45
+   41|   function withResult4(result: {ok: true} | {ok: null}): string {
+                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:43:26
+   43|         return result as empty; // good error: result not refined to empty
+                                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:43:16
+
+Refined at [1] [2]
+
+   object_prop_exists.js:43:16
+   43|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:42:8
+   42|     if(result?.ok == null) {
+              ^^^^^^^^^^ [1]
+   object_prop_exists.js:42:8
+   42|     if(result?.ok == null) {
+              ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:49:16
+
+Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:49:16
+   49|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:47:45
+   47|   function withResult5(result: {ok: true} | {ok: null}): string {
+                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:49:26
+   49|         return result as empty; // good error: result not refined to empty
+                                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:49:16
+
+Refined at [1] [2]
+
+   object_prop_exists.js:49:16
+   49|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:48:8
+   48|     if(result?.ok == undefined) {
+              ^^^^^^^^^^ [1]
+   object_prop_exists.js:48:8
+   48|     if(result?.ok == undefined) {
+              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- object_union_number_keys.js:5:5
 
 Refined at [1]
@@ -16797,7 +16933,7 @@ References:
 
 
 
-Found 1143 errors
+Found 1151 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

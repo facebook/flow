@@ -1286,6 +1286,78 @@ let%expect_test "optional_chain_not_lit" =
           {refinement = And (And (Not (Maybe), PropTruthyR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
+let%expect_test "optional_chain_bad_prop_truthy_r" =
+  print_ssa_test {|
+  function withResult1(result: {ok: true} | {ok: false}): string {
+    if(result?.ok === false) {
+        return result as empty; // bad: result is not empty
+    }
+    return "Hello"
+  }
+  function withResult2(result: {ok: true} | {ok: void}): string {
+    if(result?.ok === undefined) {
+        return result as empty; // good error: result not refined to empty
+    }
+    return "Hello"
+  }
+  function withResult3(result: {ok: true} | {ok: null}): string {
+    if(result?.ok === null) {
+        return result as empty; // bad: result is not empty
+    }
+    return "Hello"
+  }
+  function withResult4(result: {ok: true} | {ok: null}): string {
+    if(result?.ok == null) {
+        return result as empty; // good error: result not refined to empty
+    }
+    return "Hello"
+  }
+  function withResult5(result: {ok: true} | {ok: null}): string {
+    if(result?.ok == undefined) {
+        return result as empty; // good error: result not refined to empty
+    }
+    return "Hello"
+  }
+|};
+    [%expect{|
+      [
+        (3, 7) to (3, 13) => {
+          (2, 23) to (2, 29): (`result`)
+        };
+        (4, 15) to (4, 21) => {
+          {refinement = And (And (Not (Maybe), PropTruthyR (ok)), SentinelR ok); writes = (2, 23) to (2, 29): (`result`)}
+        };
+        (9, 7) to (9, 13) => {
+          (8, 23) to (8, 29): (`result`)
+        };
+        (9, 22) to (9, 31) => {
+          Global undefined
+        };
+        (10, 15) to (10, 21) => {
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (ok))), Not (Not (SentinelR ok))); writes = (8, 23) to (8, 29): (`result`)}
+        };
+        (15, 7) to (15, 13) => {
+          (14, 23) to (14, 29): (`result`)
+        };
+        (16, 15) to (16, 21) => {
+          {refinement = And (And (Not (Maybe), PropTruthyR (ok)), SentinelR ok); writes = (14, 23) to (14, 29): (`result`)}
+        };
+        (21, 7) to (21, 13) => {
+          (20, 23) to (20, 29): (`result`)
+        };
+        (22, 15) to (22, 21) => {
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (ok))), Not (Not (PropNullishR ok))); writes = (20, 23) to (20, 29): (`result`)}
+        };
+        (27, 7) to (27, 13) => {
+          (26, 23) to (26, 29): (`result`)
+        };
+        (27, 21) to (27, 30) => {
+          Global undefined
+        };
+        (28, 15) to (28, 21) => {
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (ok))), Not (Not (PropNullishR ok))); writes = (26, 23) to (26, 29): (`result`)}
+        }] |}]
+
 let%expect_test "optional_chain_member_base" =
   print_ssa_test {|let x = undefined;
 (x.foo?.bar === 3) ? x : x|};
