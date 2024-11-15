@@ -148,6 +148,12 @@ val haste_module_ref_prefix_LEGACY_INTEROP : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list
 
+val haste_namespaces : config -> string Nel.t
+
+val haste_overlapping_namespaces_mapping : config -> SSet.t SMap.t
+
+val haste_namespaces_path_mapping : config -> (string * string list) list
+
 val haste_paths_excludes : config -> string list
 
 val haste_paths_includes : config -> string list

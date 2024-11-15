@@ -555,25 +555,42 @@ module Haste : MODULE_SYSTEM = struct
 
   let exported_module options =
     let is_haste_file = is_haste_file options in
+    let haste_namespaces_options = Options.haste_namespaces_options options in
+    let namespace_of_path path =
+      path
+      |> Haste_namespaces.namespaces_bitset_of_path ~opts:haste_namespaces_options
+      |> Haste_namespaces.to_bitset
+    in
     let is_within_node_modules = is_within_node_modules options in
     fun file ~package_info ->
       match file with
-      | File_key.SourceFile _ ->
+      | File_key.SourceFile path ->
         if is_mock file then
-          Some (Haste_module_info.of_module_name (short_module_name_of file))
+          Some
+            (Haste_module_info.mk
+               ~module_name:(short_module_name_of file)
+               ~namespace_bitset:(namespace_of_path path)
+            )
         else
           (* Standardize \ to / in path for Windows *)
           let normalized_file_name =
             Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
           in
           if is_haste_file normalized_file_name then
-            Some (Haste_module_info.of_module_name (haste_name options normalized_file_name))
+            Some
+              (Haste_module_info.mk
+                 ~module_name:(haste_name options normalized_file_name)
+                 ~namespace_bitset:(namespace_of_path path)
+              )
           else
             None
       | File_key.JsonFile path ->
         (match package_info with
         | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->
-          Package_json.name pkg |> Option.map Haste_module_info.of_module_name
+          Package_json.name pkg
+          |> Option.map (fun module_name ->
+                 Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path path)
+             )
         | _ -> None)
       | _ ->
         (* Lib files, resource files, etc don't have any fancy haste name *)

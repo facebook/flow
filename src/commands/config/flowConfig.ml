@@ -85,6 +85,9 @@ module Opts = struct
     haste_module_ref_prefix: string option;
     haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_name_reducers: (Str.regexp * string) list;
+    haste_namespaces: string list;
+    haste_overlapping_namespaces_mapping: SSet.t SMap.t;
+    haste_namespaces_path_mapping: (string * string list) list;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
     ignore_non_literal_requires: bool;
@@ -219,6 +222,9 @@ module Opts = struct
       haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
+      haste_namespaces = ["default"];
+      haste_overlapping_namespaces_mapping = SMap.empty;
+      haste_namespaces_path_mapping = [];
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       ignore_non_literal_requires = false;
@@ -473,6 +479,72 @@ module Opts = struct
         let%bind pattern = optparse_regexp pattern in
         Ok (pattern, template))
       (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers })
+
+  let haste_namespaces_parser =
+    string
+      ~init:(fun opts -> { opts with haste_namespaces = [] })
+      ~multiple:true
+      (fun opts v ->
+        if List.mem v opts.haste_namespaces then
+          Ok opts
+        else
+          Ok { opts with haste_namespaces = v :: opts.haste_namespaces })
+
+  let haste_namespaces_path_mapping_parser =
+    mapping
+      ~init:(fun opts -> opts)
+      ~multiple:true
+      (fun (path, namespaces) ->
+        let namespaces = Base.String.split ~on:',' namespaces |> Base.List.map ~f:String.trim in
+        Ok (path, namespaces))
+      (fun opts (path, namespaces) ->
+        let open Base.Result.Let_syntax in
+        let%bind () =
+          match Base.List.find namespaces ~f:(fun n -> not (List.mem n opts.haste_namespaces)) with
+          | Some n ->
+            Error
+              (n
+              ^ " is not a known Haste namespace name configured in `module.system.haste.experimental.namespaces`."
+              )
+          | None -> return ()
+        in
+        (* The validation and tracking below ensures that a namespace never appears in more than
+         * one unique overlapping pattern.
+         * This enables us to have very simple lookup for reachable namespaces.
+         * e.g. given A, it can know that it needs to look up only A and A+B, instead of all possible
+         * namespace set combinations that include A.
+         *
+         * See Haste_namespaces.reachable_namespace_bitsets_from_namespace_bitset for implementation
+         * that relies on the fact. *)
+        let%bind haste_overlapping_namespaces_mapping =
+          if List.length namespaces <= 1 then
+            return opts.haste_overlapping_namespaces_mapping
+          else
+            let ns_set = SSet.of_list namespaces in
+            Base.List.fold_until
+              namespaces
+              ~init:opts.haste_overlapping_namespaces_mapping
+              ~f:(fun acc ns ->
+                match SMap.find_opt ns acc with
+                | None -> Base.Continue_or_stop.Continue (SMap.add ns ns_set acc)
+                | Some set ->
+                  if SSet.equal set ns_set then
+                    Base.Continue_or_stop.Continue acc
+                  else
+                    Base.Continue_or_stop.Stop
+                      (Error
+                         ("Namespace "
+                         ^ ns
+                         ^ " appears in multiple overlapping Haste namespace path mapping. "
+                         ^ "This is unsupported."
+                         )
+                      ))
+              ~finish:(fun acc -> Base.Result.Ok acc)
+        in
+        let haste_namespaces_path_mapping =
+          (path, namespaces) :: opts.haste_namespaces_path_mapping
+        in
+        Ok { opts with haste_overlapping_namespaces_mapping; haste_namespaces_path_mapping })
 
   let haste_paths_excludes_parser =
     string
@@ -1029,6 +1101,10 @@ module Opts = struct
         haste_module_ref_prefix_LEGACY_INTEROP_parser
       );
       ("module.system.haste.name_reducers", haste_name_reducers_parser);
+      ("module.system.haste.experimental.namespaces", haste_namespaces_parser);
+      ( "module.system.haste.experimental.namespace_path_mapping",
+        haste_namespaces_path_mapping_parser
+      );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
       ("module.system.haste.use_name_reducers", haste_use_name_reducers_parser);
@@ -1699,6 +1775,12 @@ let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 let haste_module_ref_prefix_LEGACY_INTEROP c = c.options.Opts.haste_module_ref_prefix_LEGACY_INTEROP
 
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
+
+let haste_namespaces c = Nel.of_list_exn c.options.Opts.haste_namespaces
+
+let haste_overlapping_namespaces_mapping c = c.options.Opts.haste_overlapping_namespaces_mapping
+
+let haste_namespaces_path_mapping c = c.options.Opts.haste_namespaces_path_mapping
 
 let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 

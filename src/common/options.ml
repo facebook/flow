@@ -108,6 +108,7 @@ type t = {
   opt_haste_module_ref_prefix: string option;
   opt_haste_module_ref_prefix_LEGACY_INTEROP: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
+  opt_haste_namespaces_options: Haste_namespaces.options;
   opt_haste_paths_excludes: string list;
   opt_haste_paths_includes: string list;
   opt_ignore_non_literal_requires: bool;
@@ -261,6 +262,8 @@ let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 let haste_module_ref_prefix_LEGACY_INTEROP opts = opts.opt_haste_module_ref_prefix_LEGACY_INTEROP
 
 let haste_name_reducers opts = opts.opt_haste_name_reducers
+
+let haste_namespaces_options opts = opts.opt_haste_namespaces_options
 
 let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 

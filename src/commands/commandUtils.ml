@@ -1420,6 +1420,13 @@ let make_options
     opt_haste_module_ref_prefix_LEGACY_INTEROP =
       FlowConfig.haste_module_ref_prefix_LEGACY_INTEROP flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
+    opt_haste_namespaces_options =
+      Haste_namespaces.mk_options
+        ~haste_namespaces:(FlowConfig.haste_namespaces flowconfig)
+        ~haste_overlapping_namespaces_mapping:
+          (FlowConfig.haste_overlapping_namespaces_mapping flowconfig)
+        ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
+        ~haste_namespaces_path_mapping:(FlowConfig.haste_namespaces_path_mapping flowconfig);
     opt_haste_paths_excludes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
