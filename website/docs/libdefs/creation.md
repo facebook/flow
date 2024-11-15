@@ -132,8 +132,8 @@ the module specifier `foo/bar/baz`, Flow will look into `@flowtyped/foo/bar/baz.
 For example, if you want to declare the types for `react`, you can do:
 
 ```js title="@flowtyped/react.js.flow"
-export type ReactSetStateFunction<S> = ((S => S) | S) => void;
-declare export function useState<S>(initial: S): [S, ReactSetStateFunction<S>];
+export type SetStateFunction<S> = ((S => S) | S) => void;
+declare export function useState<S>(initial: S): [S, SetStateFunction<S>];
 
 // Other stuff...
 ```
@@ -143,7 +143,7 @@ which will allow you to import these functions and types from `react`:
 ```js title="foo/bar/baz/my-product-code.jsx"
 import * as React from 'react';
 
-function MyComponent({onSelect}: {onSelect: ReactSetStateFunction<string>}) {
+function MyComponent({onSelect}: {onSelect: React.SetStateFunction<string>}) {
   const [a, setA] = React.useState(new Set<string>());
   return <div />;
 }
