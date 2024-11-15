@@ -251,6 +251,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           [VoidT.why reason_ref]
         |> Option.some
       | Options.ReactRefAsProp.PartialSupport -> None)
+    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
+      when match Context.react_ref_as_prop cx with
+           | Options.ReactRefAsProp.PartialSupport -> true
+           | Options.ReactRefAsProp.Disabled -> false ->
+      None
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
       get_builtin_typeapp
         cx
@@ -497,6 +502,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
               )
           | _ -> None)
+        | DefT (_, ReactAbstractComponentT { config; instance = ComponentInstanceOmitted _; _ }) ->
+          Some config
         | _ -> None
       in
       let definitely_has_ref_in_props cx r props =

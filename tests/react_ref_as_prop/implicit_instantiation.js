@@ -1,4 +1,5 @@
 import {FnWithoutRefProp,FnWithOptionalRefProp,FnWithRequiredRefProp} from './fn_components';
+import {CompWithoutRefProp, CompWithOptionalRefProp, CompWithRequiredRefProp} from './component_syntax_components';
 
 declare function id<Props: {...}, Instance>(
   c: component(ref: React.RefSetter<Instance>, ...Props),
@@ -22,3 +23,19 @@ null as React.ElementRef<typeof IdMappedFnWithRequiredRefProp>; // error: null ~
 
 id((props) => { props as {+foo: string} }) as React.ComponentType<{foo: string}>; // ok
 id((props) => { props as {+foo: string} }) as component(foo: string); // ok
+
+const IdMappedCompWithoutRefProp = id(CompWithoutRefProp); // ok
+const IdMappedCompWithOptionalRefProp = id(CompWithOptionalRefProp); // ok
+const IdMappedCompWithRequiredRefProp = id(CompWithRequiredRefProp); // ok
+({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // ok
+({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // ok
+({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // ok
+({}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // error: missing foo prop
+({}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // error: missing foo prop
+({}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing foo prop
+undefined as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // ok
+null as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> void
+new HTMLElement() as React.ElementRef<typeof IdMappedCompWithOptionalRefProp>; // ok
+null as React.ElementRef<typeof IdMappedCompWithOptionalRefProp>; // error: null ~> HTMLElement
+new HTMLElement() as React.ElementRef<typeof IdMappedCompWithRequiredRefProp>; // ok
+null as React.ElementRef<typeof IdMappedCompWithRequiredRefProp>; // error: null ~> HTMLElement
