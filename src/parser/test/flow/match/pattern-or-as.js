@@ -4,4 +4,5 @@ const e = match (x) {
   {foo: [1] as y}: y,
   {foo: 1 | 2 | 3 as y}: y,
   {foo: (1 | 2 | 3) as y}: y,
+  {foo: [1] as const y}: y,
 };

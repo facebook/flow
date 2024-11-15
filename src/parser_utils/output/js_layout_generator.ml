@@ -3380,16 +3380,18 @@ and match_pattern ~opts (loc, pattern) =
       loc
       comments
       (join (fuse [pretty_space; Atom "|"; pretty_space]) patterns)
-  | AsPattern { AsPattern.pattern; id; comments } ->
+  | AsPattern { AsPattern.pattern; target; comments } ->
     let pattern =
       match pattern with
       | (_, OrPattern _) -> fuse [Atom "("; match_pattern ~opts pattern; Atom ")"]
       | _ -> match_pattern ~opts pattern
     in
-    layout_node_with_comments_opt
-      loc
-      comments
-      (fuse [pattern; space; Atom "as"; space; identifier id])
+    let target =
+      match target with
+      | AsPattern.Binding (loc, binding) -> match_binding_pattern loc binding
+      | AsPattern.Identifier ident -> identifier ident
+    in
+    layout_node_with_comments_opt loc comments (fuse [pattern; space; Atom "as"; space; target])
 
 and match_member_pattern ~opts (loc, { Ast.MatchPattern.MemberPattern.base; property; comments }) =
   let open Ast.MatchPattern.MemberPattern in

@@ -144,9 +144,12 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
 
     method! match_as_pattern as_pattern =
       let open Ast.MatchPattern.AsPattern in
-      let { pattern; id; comments = _ } = as_pattern in
-      ignore @@ super#match_pattern pattern;
-      this#add_const_binding id;
+      let { pattern; target; comments = _ } = as_pattern in
+      (match target with
+      | Binding (loc, binding) -> ignore @@ this#match_binding_pattern loc binding
+      | Identifier id ->
+        ignore @@ super#match_pattern pattern;
+        this#add_const_binding id);
       as_pattern
 
     method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =

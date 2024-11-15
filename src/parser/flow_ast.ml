@@ -2067,9 +2067,13 @@ and MatchPattern : sig
   end
 
   module AsPattern : sig
-    type ('M, 'T) t = {
+    type ('M, 'T) target =
+      | Identifier of ('M, 'T) Identifier.t
+      | Binding of 'M * ('M, 'T) BindingPattern.t
+
+    and ('M, 'T) t = {
       pattern: ('M, 'T) MatchPattern.t;
-      id: ('M, 'T) Identifier.t;
+      target: ('M, 'T) target;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

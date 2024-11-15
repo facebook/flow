@@ -125,10 +125,16 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
         Base.List.map patterns ~f:(pattern cx ~on_identifier ~on_expression ~on_binding acc)
       in
       OrPattern { OrPattern.patterns; comments }
-    | AsPattern { AsPattern.pattern = p; id; comments } ->
+    | AsPattern { AsPattern.pattern = p; target; comments } ->
       let p = pattern cx ~on_identifier ~on_expression ~on_binding acc p in
-      let id = binding_identifier cx ~on_binding ~kind:Ast.Variable.Const acc id in
-      AsPattern { AsPattern.pattern = p; id; comments }
+      let target =
+        match target with
+        | AsPattern.Binding (loc, binding) ->
+          AsPattern.Binding (loc, binding_pattern cx ~on_binding acc binding)
+        | AsPattern.Identifier id ->
+          AsPattern.Identifier (binding_identifier cx ~on_binding ~kind:Ast.Variable.Const acc id)
+      in
+      AsPattern { AsPattern.pattern = p; target; comments }
     | IdentifierPattern (loc, x) ->
       let t = on_identifier cx x loc in
       IdentifierPattern ((loc, t), x)

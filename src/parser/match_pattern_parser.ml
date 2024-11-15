@@ -46,10 +46,22 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
           ~start_loc
           (fun env ->
             Eat.token env;
-            let id = Parse.identifier env in
+            let target =
+              match Peek.token env with
+              | T_CONST ->
+                let (loc, binding) = binding_pattern env ~kind:Ast.Variable.Const in
+                AsPattern.Binding (loc, binding)
+              | T_LET ->
+                let (loc, binding) = binding_pattern env ~kind:Ast.Variable.Let in
+                AsPattern.Binding (loc, binding)
+              | T_VAR ->
+                let (loc, binding) = binding_pattern env ~kind:Ast.Variable.Var in
+                AsPattern.Binding (loc, binding)
+              | _ -> AsPattern.Identifier (Parse.identifier env)
+            in
             let trailing = Eat.trailing_comments env in
             let comments = Flow_ast_utils.mk_comments_opt ~trailing () in
-            { AsPattern.pattern; id; comments })
+            { AsPattern.pattern; target; comments })
           env
       in
       (as_loc, AsPattern as_pattern)

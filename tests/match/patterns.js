@@ -111,6 +111,15 @@
     _: 0,
   };
 }
+{
+  declare const x: {foo: [number]};
+
+  const out = match (x) {
+    {foo: [1] as const n}: n as [number], // OK
+    {foo: [1 as const n]}: n as number, // OK
+    _: 0,
+  };
+}
 
 // Array rest
 {

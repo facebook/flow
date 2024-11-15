@@ -386,9 +386,12 @@ end = struct
       Base.List.iter
         patterns
         ~f:(visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc)
-    | AsPattern { AsPattern.pattern; id; comments = _ } ->
+    | AsPattern { AsPattern.pattern; target; comments = _ } ->
       visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
-      binding ~visit_binding acc id
+      (match target with
+      | AsPattern.Binding (_, { BindingPattern.id; kind = _; comments = _ })
+      | AsPattern.Identifier id ->
+        binding ~visit_binding acc id)
 
   and array_elements ~visit_binding ~visit_expression ~visit_intermediate acc elements =
     Base.List.fold elements ~init:0 ~f:(fun i { ArrayPattern.Element.pattern; _ } ->

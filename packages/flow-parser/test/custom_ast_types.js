@@ -314,7 +314,7 @@ function custom_ast_types(fork) {
     .bases('MatchPattern')
     .build('pattern', 'id')
     .field('pattern', def('MatchPattern'))
-    .field('id', def('Identifier'));
+    .field('target', or(def('Identifier'), def('MatchBindingPattern')));
 
   /////////
   // es2018
