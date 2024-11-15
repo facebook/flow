@@ -297,6 +297,8 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         (List.rev acc, None)
       | T_ELLIPSIS ->
         let rest = rest_pattern env in
+        if Peek.token env = T_COMMA then
+          error_at env (Peek.loc env, Parse_error.MatchNonLastRest `Object);
         (List.rev acc, Some rest)
       | _ ->
         let prop = property env in
@@ -327,6 +329,8 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         (List.rev acc, None)
       | T_ELLIPSIS ->
         let rest = rest_pattern env in
+        if Peek.token env = T_COMMA then
+          error_at env (Peek.loc env, Parse_error.MatchNonLastRest `Array);
         (List.rev acc, Some rest)
       | _ ->
         let pattern = match_pattern env in

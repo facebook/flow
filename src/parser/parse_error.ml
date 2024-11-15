@@ -105,6 +105,7 @@ type t =
   | JSXAttributeValueEmptyExpression
   | LiteralShorthandProperty
   | MalformedUnicode
+  | MatchNonLastRest of [ `Object | `Array ]
   | MatchNonSingleArgument
   | MethodInDestructuring
   | MissingJSXClosingTag of string
@@ -394,6 +395,13 @@ module PP = struct
       "JSX attributes must only be assigned a non-empty expression"
     | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
     | MalformedUnicode -> "Malformed unicode"
+    | MatchNonLastRest kind ->
+      let kind =
+        match kind with
+        | `Object -> "object"
+        | `Array -> "array"
+      in
+      Printf.sprintf "In match %s pattern, the rest must be the last element in the pattern" kind
     | MatchNonSingleArgument -> "`match` only supports one argument"
     | MethodInDestructuring -> "Object pattern can't contain methods"
     | MissingJSXClosingTag name ->
