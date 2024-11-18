@@ -4919,7 +4919,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             in
             this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
         in
-        ignore @@ this#optional_chain expr;
+        ignore
+        @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+             ~can_refine_obj_to_non_maybe:true
+             ~can_refine_obj_prop_truthy:true
+             expr;
         this#commit_refinement refis;
         if will_negate then this#negate_new_refinements ()
 
@@ -4947,7 +4951,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               in
               this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           in
-          ignore @@ this#optional_chain expr;
+          ignore
+          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+               ~can_refine_obj_to_non_maybe:true
+               ~can_refine_obj_prop_truthy:true
+               expr;
           this#commit_refinement refis;
           if will_negate then this#negate_new_refinements ()
         end else begin
@@ -4972,7 +4980,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         match (refinement, RefinementKey.of_expression arg) with
         | (Some ref, Some refinement_key) ->
-          ignore @@ this#optional_chain arg;
+          ignore
+          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+               ~can_refine_obj_to_non_maybe:true
+               ~can_refine_obj_prop_truthy:true
+               arg;
           let refinement =
             if sense && not undef then
               ref
@@ -4981,7 +4993,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           in
           this#add_single_refinement refinement_key ~refining_locs:(L.LSet.singleton loc) refinement;
           if sense && undef then this#negate_new_refinements ()
-        | _ -> ignore @@ this#optional_chain arg
+        | _ -> ignore @@ this#expression arg
 
       method literal_test ~strict ~sense loc expr refinement other =
         (* Negating if sense is false is handled by negate_new_refinements. *)
@@ -5004,7 +5016,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           | _ -> refis
         in
-        ignore @@ this#optional_chain expr;
+        ignore
+        @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+             ~can_refine_obj_to_non_maybe:true
+             ~can_refine_obj_prop_truthy:true
+             expr;
         this#commit_refinement refis;
         if not sense then this#negate_new_refinements ()
 
@@ -5184,7 +5200,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           right
 
       method instance_test loc expr instance =
-        ignore @@ this#optional_chain expr;
+        ignore
+        @@ (* We already ensure that RHS of instanceof must be object,
+            * so the expression must be at least truthy as well *)
+        this#optional_chain ~can_refine_obj_to_non_maybe:true ~can_refine_obj_prop_truthy:true expr;
         ignore @@ this#expression instance;
         match RefinementKey.of_expression expr with
         | None -> ()
@@ -5307,7 +5326,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           in
 
           ignore @@ this#expression callee;
-          ignore @@ this#optional_chain arg;
+          ignore
+          @@ this#optional_chain
+             (* We refined the argument to be Array, which is truthy,
+                so the object must also be non-maybe *)
+               ~can_refine_obj_to_non_maybe:true
+               ~can_refine_obj_prop_truthy:true
+               arg;
           this#commit_refinement refi
         (* Latent refinements are only applied on function calls where the function call is an identifier *)
         | { Call.callee; arguments; targs; _ } when not (Flow_ast_utils.is_call_to_invariant callee)
@@ -5403,12 +5428,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | _ -> ());
         this#record_member_read expr
 
-      method optional_chain (loc, expr) =
+      method optional_chain ~can_refine_obj_to_non_maybe ~can_refine_obj_prop_truthy (loc, expr) =
         let open Ast.Expression in
         this#record_member_read (loc, expr);
         let () =
           match expr with
-          | OptionalMember _ -> this#member_expression_refinement loc expr LookupMap.empty
+          | OptionalMember _ ->
+            this#member_expression_refinement
+              ~can_refine_obj_to_non_maybe
+              ~can_refine_obj_prop_truthy
+              loc
+              expr
+              LookupMap.empty
           | OptionalCall
               {
                 OptionalCall.call = { Call.callee; targs; arguments; comments = _ };
@@ -5420,7 +5451,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                non-maybe refinement on callee for now. *)
             let refi = LookupMap.empty in
 
-            ignore @@ this#optional_chain callee;
+            ignore (* TODO(samzhou19815): Audit *)
+            @@ this#optional_chain
+                 ~can_refine_obj_to_non_maybe:true
+                 ~can_refine_obj_prop_truthy:true
+                 callee;
             this#commit_refinement refi;
             let _targs' = Base.Option.map ~f:this#call_type_args targs in
             let _arguments' = this#arg_list arguments in
@@ -5431,7 +5466,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         (loc, expr)
 
-      method member_expression_refinement loc expr refis =
+      method member_expression_refinement
+          ~can_refine_obj_to_non_maybe ~can_refine_obj_prop_truthy loc expr refis =
         let open Flow_ast.Expression in
         let open Flow_ast.Expression.Member in
         let optional =
@@ -5442,7 +5478,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         match expr with
         | OptionalMember OptionalMember.{ member = { Member._object; property; _ }; _ }
         | Member Member.{ _object; property; _ } ->
-          ignore @@ this#optional_chain _object;
+          ignore
+          @@ this#optional_chain ~can_refine_obj_to_non_maybe ~can_refine_obj_prop_truthy _object;
           let propname =
             match property with
             | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
@@ -5455,22 +5492,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (match RefinementKey.of_expression _object with
           | None -> ignore @@ this#member_property property
           | Some refinement_key_obj ->
-            if optional then
+            if optional && can_refine_obj_to_non_maybe then
               this#add_single_refinement
                 refinement_key_obj
                 ~refining_locs:(L.LSet.singleton loc)
                 (NotR MaybeR);
             ignore @@ this#member_property property;
             let refis =
-              Base.Option.value_map
-                ~f:(fun propname ->
-                  this#extend_refinement
-                    refinement_key_obj
-                    ~refining_locs:(L.LSet.singleton loc)
-                    (PropTruthyR { propname; loc })
-                    refis)
-                ~default:refis
-                propname
+              if can_refine_obj_prop_truthy then
+                Base.Option.value_map
+                  ~f:(fun propname ->
+                    this#extend_refinement
+                      refinement_key_obj
+                      ~refining_locs:(L.LSet.singleton loc)
+                      (PropTruthyR { propname; loc })
+                      refis)
+                  ~default:refis
+                  propname
+              else
+                refis
             in
 
             this#commit_refinement refis)
@@ -5516,7 +5556,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | Some key -> this#start_refinement key ~refining_locs:(L.LSet.singleton loc) TruthyR
           in
           ignore @@ this#record_member_read expression;
-          this#member_expression_refinement loc expr refis;
+          this#member_expression_refinement
+          (* Over here, optional chaining appears directly at the truthy refinement position,
+           * so the following holds. *)
+            ~can_refine_obj_to_non_maybe:true
+            ~can_refine_obj_prop_truthy:true
+            loc
+            expr
+            refis;
           expression
         | Array _
         | ArrowFunction _
@@ -5639,7 +5686,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | (_, Flow_ast.Expression.Member _)
         | (_, Flow_ast.Expression.OptionalMember _) ->
           this#push_refinement_scope empty_refinements;
-          let res = this#optional_chain expr in
+          let res =
+            this#optional_chain
+            (* The refinement made here is local to the expression and won't escape. *)
+              ~can_refine_obj_to_non_maybe:true
+              ~can_refine_obj_prop_truthy:true
+              expr
+          in
           this#pop_refinement_scope ();
           res
         | _ -> super#expression expr
