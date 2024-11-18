@@ -81,6 +81,7 @@ module OptionalChainingRefinement = struct
   type t =
     | CanApplyPropTruthyRefi
     | CanApplyPropNonNullishRefi
+    | CanApplyPropNonVoidRefi
 end
 
 module RefinementKey = Refinement_key.Make (Loc_sig.ALocS)
@@ -4995,8 +4996,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore
           @@ this#optional_chain
                ~can_refine_obj_to_non_maybe:true
-                 (* TODO(samzhou19815): should be even more precise in the strict case. It should only accept void *)
-               ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropNonNullishRefi
+               ~can_refine_obj_prop:
+                 OptionalChainingRefinement.(
+                   if strict then
+                     CanApplyPropNonVoidRefi
+                   else
+                     CanApplyPropNonNullishRefi
+                 )
                expr;
           this#commit_refinement refis;
           if will_negate then this#negate_new_refinements ()
@@ -5034,7 +5040,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             ignore
             @@ this#optional_chain
                  ~can_refine_obj_to_non_maybe:true
-                 ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropNonNullishRefi
+                 ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropNonVoidRefi
                  arg;
             let refinement = NotR ref in
             this#add_single_refinement
@@ -5602,6 +5608,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       refinement_key_obj
                       ~refining_locs:(L.LSet.singleton loc)
                       (NotR (PropNullishR { propname; loc }))
+                      refis)
+                  ~default:refis
+                  propname
+              | OptionalChainingRefinement.CanApplyPropNonVoidRefi ->
+                Base.Option.value_map
+                  ~f:(fun propname ->
+                    this#extend_refinement
+                      refinement_key_obj
+                      ~refining_locs:(L.LSet.singleton loc)
+                      (PropNonVoidR { propname; loc })
                       refis)
                   ~default:refis
                   propname

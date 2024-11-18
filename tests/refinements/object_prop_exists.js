@@ -50,4 +50,10 @@
     }
     return "Hello"
   }
+  function withResult6(result: {ok: void} | {ok: null}): string {
+    if(result?.ok === undefined) {
+        return result as empty; // good error: result not refined to empty, and only reference the void case
+    }
+    return "Hello"
+  }
 }

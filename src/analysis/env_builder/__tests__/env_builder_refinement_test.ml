@@ -1334,7 +1334,7 @@ let%expect_test "optional_chain_bad_prop_truthy_r" =
           Global undefined
         };
         (10, 15) to (10, 21) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR ok))), Not (Not (SentinelR ok))); writes = (8, 23) to (8, 29): (`result`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (PropNonVoidR ok)), Not (Not (SentinelR ok))); writes = (8, 23) to (8, 29): (`result`)}
         };
         (15, 7) to (15, 13) => {
           (14, 23) to (14, 29): (`result`)
