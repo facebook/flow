@@ -4903,29 +4903,42 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           this#merge_refinement_scopes ~conjunction lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~sense ~strict loc expr other =
-        (* Negating if sense is false is handled by negate_new_refinements. *)
-        let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
-        let will_negate = strict <> sense in
-        let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
-        let refis =
-          match RefinementKey.of_expression expr with
-          | None -> refis
-          | Some key ->
-            let refinement =
-              if strict then
-                NullR
-              else
-                NotR MaybeR
-            in
-            this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
-        in
-        ignore
-        @@ this#optional_chain (* TODO(samzhou19815): Audit *)
-             ~can_refine_obj_to_non_maybe:true
-             ~can_refine_obj_prop_truthy:true
-             expr;
-        this#commit_refinement refis;
-        if will_negate then this#negate_new_refinements ()
+        if strict then (
+          (* Negating if sense is false is handled by negate_new_refinements. *)
+          let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+          let will_negate = not sense in
+          let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
+          let refis =
+            match RefinementKey.of_expression expr with
+            | None -> refis
+            | Some key ->
+              this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) NullR refis
+          in
+          ignore
+          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+               ~can_refine_obj_to_non_maybe:true
+               ~can_refine_obj_prop_truthy:true
+               expr;
+          this#commit_refinement refis;
+          if will_negate then this#negate_new_refinements ()
+        ) else
+          (* Negating if sense is false is handled by negate_new_refinements. *)
+          let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+          let will_negate = sense in
+          let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
+          let refis =
+            match RefinementKey.of_expression expr with
+            | None -> refis
+            | Some key ->
+              this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) (NotR MaybeR) refis
+          in
+          ignore
+          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+               ~can_refine_obj_to_non_maybe:true
+               ~can_refine_obj_prop_truthy:true
+               expr;
+          this#commit_refinement refis;
+          if will_negate then this#negate_new_refinements ()
 
       method is_global_undefined =
         match this#env_read_opt "undefined" with
