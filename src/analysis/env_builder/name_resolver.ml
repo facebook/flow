@@ -4992,19 +4992,35 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         match (refinement, RefinementKey.of_expression arg) with
         | (Some ref, Some refinement_key) ->
-          ignore
-          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
-               ~can_refine_obj_to_non_maybe:true
-               ~can_refine_obj_prop_truthy:true
-               arg;
-          let refinement =
-            if sense && not undef then
-              ref
-            else
-              NotR ref
-          in
-          this#add_single_refinement refinement_key ~refining_locs:(L.LSet.singleton loc) refinement;
-          if sense && undef then this#negate_new_refinements ()
+          if undef then (
+            ignore
+            @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+                 ~can_refine_obj_to_non_maybe:true
+                 ~can_refine_obj_prop_truthy:true
+                 arg;
+            let refinement = NotR ref in
+            this#add_single_refinement
+              refinement_key
+              ~refining_locs:(L.LSet.singleton loc)
+              refinement;
+            if sense then this#negate_new_refinements ()
+          ) else (
+            ignore
+            @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+                 ~can_refine_obj_to_non_maybe:true
+                 ~can_refine_obj_prop_truthy:true
+                 arg;
+            let refinement =
+              if sense then
+                ref
+              else
+                NotR ref
+            in
+            this#add_single_refinement
+              refinement_key
+              ~refining_locs:(L.LSet.singleton loc)
+              refinement
+          )
         | _ -> ignore @@ this#expression arg
 
       method literal_test ~strict ~sense loc expr refinement other =
