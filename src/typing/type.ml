@@ -1011,7 +1011,7 @@ module rec TypeTerm : sig
     | ArrP (* Array.isArray *)
     (* `if (a.b)` yields `flow (a, PredicateT(PropTruthyP ("b"), tout))` *)
     | PropTruthyP of string * reason
-    (* `if (a?.b === null)` yields `flow (a, PredicateT(PropIsNullP ("b"), tout))` *)
+    (* `if (a?.b === null)` yields `flow (a, PredicateT(PropIsExactlyNullP ("b"), tout))` *)
     | PropIsExactlyNullP of string * reason
     (* `if (a?.b !== undefined)` yields `flow (a, PredicateT(PropNonVoidP ("b"), tout))` *)
     | PropNonVoidP of string * reason
