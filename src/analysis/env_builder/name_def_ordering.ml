@@ -235,6 +235,8 @@ struct
             | SingletonNumR _
             | SingletonBigIntR _
             | PropNullishR _
+            | PropIsExactlyNullR _
+            | PropNonVoidR _
             | PropTruthyR _ ->
               ()
           in

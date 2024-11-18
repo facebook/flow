@@ -1011,6 +1011,10 @@ module rec TypeTerm : sig
     | ArrP (* Array.isArray *)
     (* `if (a.b)` yields `flow (a, PredicateT(PropTruthyP ("b"), tout))` *)
     | PropTruthyP of string * reason
+    (* `if (a?.b === null)` yields `flow (a, PredicateT(PropIsNullP ("b"), tout))` *)
+    | PropIsExactlyNullP of string * reason
+    (* `if (a?.b !== undefined)` yields `flow (a, PredicateT(PropNonVoidP ("b"), tout))` *)
+    | PropNonVoidP of string * reason
     (* `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))` *)
     | PropNonMaybeP of string * reason
     (* Encondes the latent predicate associated with the [index]-th parameter
@@ -4255,6 +4259,8 @@ let rec string_of_predicate = function
   (* Array.isArray *)
   | ArrP -> "array"
   | PropTruthyP (key, _) -> spf "prop `%s` is truthy" key
+  | PropIsExactlyNullP (key, _) -> spf "prop `%s` is exactly null" key
+  | PropNonVoidP (key, _) -> spf "prop `%s` is not undefined" key
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
   | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i

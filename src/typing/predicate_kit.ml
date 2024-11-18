@@ -21,6 +21,10 @@ type prop_guard =
   | PropGuardNotTruthy
   | PropGuardMaybe
   | PropGuardNotMaybe
+  | PropGuardNull
+  | PropGuardNotNull
+  | PropGuardVoid
+  | PropGuardNotVoid
 
 let concretization_variant_of_predicate = function
   | MaybeP
@@ -287,6 +291,11 @@ and predicate_no_concretization cx trace result_collector l ~p =
   | NotP (PropTruthyP (key, r)) -> prop_truthy_test cx trace key r false l result_collector
   | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l result_collector
   | NotP (PropNonMaybeP (key, r)) -> prop_non_maybe_test cx trace key r false l result_collector
+  | PropIsExactlyNullP (key, r) -> prop_is_exactly_null_test cx trace key r true l result_collector
+  | NotP (PropIsExactlyNullP (key, r)) ->
+    prop_is_exactly_null_test cx trace key r false l result_collector
+  | PropNonVoidP (key, r) -> prop_non_void_test cx trace key r true l result_collector
+  | NotP (PropNonVoidP (key, r)) -> prop_non_void_test cx trace key r false l result_collector
   (* classical logic i guess *)
   | NotP (NotP p) -> predicate_no_concretization cx trace result_collector l ~p
   | NotP (AndP (p1, p2)) ->
@@ -507,6 +516,30 @@ and prop_non_maybe_test cx trace key reason sense obj result_collector =
     obj
     sense
     (PropGuardNotMaybe, PropGuardMaybe)
+    obj
+
+and prop_is_exactly_null_test cx trace key reason sense obj result_collector =
+  prop_exists_test_generic
+    key
+    reason
+    cx
+    trace
+    result_collector
+    obj
+    sense
+    (PropGuardNull, PropGuardNotNull)
+    obj
+
+and prop_non_void_test cx trace key reason sense obj result_collector =
+  prop_exists_test_generic
+    key
+    reason
+    cx
+    trace
+    result_collector
+    obj
+    sense
+    (PropGuardNotVoid, PropGuardVoid)
     obj
 
 and prop_exists_test_generic key reason cx trace result_collector orig_obj sense (pred, not_pred) =
@@ -1119,6 +1152,26 @@ and guard_prop cx source pred =
   end
   | PropGuardNotMaybe -> begin
     match Type_filter.not_maybe cx source with
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
+  end
+  | PropGuardNull -> begin
+    match Type_filter.null source with
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
+  end
+  | PropGuardNotNull -> begin
+    match Type_filter.not_null cx source with
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
+  end
+  | PropGuardVoid -> begin
+    match Type_filter.undefined source with
+    | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
+    | _ -> false
+  end
+  | PropGuardNotVoid -> begin
+    match Type_filter.not_undefined cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
     | _ -> false
   end

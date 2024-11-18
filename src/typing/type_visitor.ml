@@ -186,6 +186,8 @@ class ['a] t =
       | VoidP -> acc
       | ArrP -> acc
       | PropTruthyP _ -> acc
+      | PropNonVoidP _ -> acc
+      | PropIsExactlyNullP _ -> acc
       | PropNonMaybeP _ -> acc
       | LatentP ((lazy (_, _, t, targs, argts)), _) ->
         let acc = self#type_ cx P.Positive acc t in

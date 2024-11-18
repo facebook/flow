@@ -346,6 +346,10 @@ let predicate_of_refinement cx =
     | PropNullishR { propname; loc } ->
       Some
         (NotP (PropNonMaybeP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)))
+    | PropIsExactlyNullR { propname; loc } ->
+      Some (PropIsExactlyNullP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
+    | PropNonVoidR { propname; loc } ->
+      Some (PropNonVoidP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
     | PropTruthyR { propname; loc } ->
       Some (PropTruthyP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
   in

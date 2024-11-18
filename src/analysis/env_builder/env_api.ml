@@ -160,6 +160,14 @@ module type S = sig
           propname: string;
           loc: L.t;
         }
+      | PropIsExactlyNullR of {
+          propname: string;
+          loc: L.t;
+        }
+      | PropNonVoidR of {
+          propname: string;
+          loc: L.t;
+        }
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
           targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
@@ -439,6 +447,14 @@ module Make
           propname: string;
           loc: L.t;
         }
+      | PropIsExactlyNullR of {
+          propname: string;
+          loc: L.t;
+        }
+      | PropNonVoidR of {
+          propname: string;
+          loc: L.t;
+        }
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
           targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
@@ -670,6 +686,8 @@ module Make
         lit
     | SentinelR { prop; _ } -> Printf.sprintf "SentinelR %s" prop
     | PropNullishR { propname = prop; _ } -> Printf.sprintf "PropNullishR %s" prop
+    | PropIsExactlyNullR { propname = prop; _ } -> Printf.sprintf "PropIsExactlyNullR %s" prop
+    | PropNonVoidR { propname = prop; _ } -> Printf.sprintf "PropNonVoidR %s" prop
     | LatentR { func = _; targs = _; arguments = _; index } ->
       Printf.sprintf "LatentR (index = %i)" index
     | PropTruthyR { propname; loc = _ } -> Printf.sprintf "PropTruthyR (%s)" propname

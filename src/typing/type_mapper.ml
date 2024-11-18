@@ -915,6 +915,8 @@ class virtual ['a] t =
       | VoidP
       | ArrP
       | PropNonMaybeP _
+      | PropNonVoidP _
+      | PropIsExactlyNullP _
       | PropTruthyP _ ->
         p
       | LatentP ((lazy (use_op, loc, t, targs, argts)), i) ->
