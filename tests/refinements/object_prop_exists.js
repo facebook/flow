@@ -34,7 +34,7 @@
   }
   function withResult3(result: {ok: true} | {ok: null}): string {
     if(result?.ok === null) {
-        return result as empty; // bad: result is not empty
+        return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }

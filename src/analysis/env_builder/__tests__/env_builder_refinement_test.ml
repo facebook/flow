@@ -1340,7 +1340,7 @@ let%expect_test "optional_chain_bad_prop_truthy_r" =
           (14, 23) to (14, 29): (`result`)
         };
         (16, 15) to (16, 21) => {
-          {refinement = And (And (Not (Maybe), PropTruthyR (ok)), SentinelR ok); writes = (14, 23) to (14, 29): (`result`)}
+          {refinement = And (And (Not (Maybe), PropIsExactlyNullR ok), SentinelR ok); writes = (14, 23) to (14, 29): (`result`)}
         };
         (21, 7) to (21, 13) => {
           (20, 23) to (20, 29): (`result`)

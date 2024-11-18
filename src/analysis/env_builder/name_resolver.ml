@@ -82,6 +82,7 @@ module OptionalChainingRefinement = struct
     | CanApplyPropTruthyRefi
     | CanApplyPropNonNullishRefi
     | CanApplyPropNonVoidRefi
+    | CanApplyPropIsExactlyNullRefi
 end
 
 module RefinementKey = Refinement_key.Make (Loc_sig.ALocS)
@@ -4911,7 +4912,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method null_test ~sense ~strict loc expr other =
         if strict then (
-          (* Negating if sense is false is handled by negate_new_refinements. *)
+          (* It's easier to reason about the following code if we only consider
+           * `foo?.bar === null` for now.
+           * We will have sentinel refinement on `foo` and is-null refinement `foo.bar` linked
+           * together.
+           * In addition to the linked refinement above, we also have a separate implicit
+           * refinement on the optional chaining. Since we know that the prop foo.bar must be
+           * exactly null and thus `foo` must not be maybe.
+           *
+           * Now for the sense=false case, we simply negative everything at the end. The linked
+           * refinement will be negated together.
+           *)
           let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
           let will_negate = not sense in
           let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
@@ -4922,9 +4933,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) NullR refis
           in
           ignore
-          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+          @@ this#optional_chain
                ~can_refine_obj_to_non_maybe:true
-               ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropTruthyRefi
+               ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropIsExactlyNullRefi
                expr;
           this#commit_refinement refis;
           if will_negate then this#negate_new_refinements ()
@@ -5618,6 +5629,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       refinement_key_obj
                       ~refining_locs:(L.LSet.singleton loc)
                       (PropNonVoidR { propname; loc })
+                      refis)
+                  ~default:refis
+                  propname
+              | OptionalChainingRefinement.CanApplyPropIsExactlyNullRefi ->
+                Base.Option.value_map
+                  ~f:(fun propname ->
+                    this#extend_refinement
+                      refinement_key_obj
+                      ~refining_locs:(L.LSet.singleton loc)
+                      (PropIsExactlyNullR { propname; loc })
                       refis)
                   ~default:refis
                   propname
