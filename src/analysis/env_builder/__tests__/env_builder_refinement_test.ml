@@ -1388,7 +1388,7 @@ let%expect_test "optional_chain_with_call" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 23) to (2, 24) => {
-          {refinement = And (Not (Maybe), PropTruthyR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+          (1, 4) to (1, 5): (`x`)
         };
         (2, 27) to (2, 28) => {
           (1, 4) to (1, 5): (`x`)

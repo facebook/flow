@@ -5451,14 +5451,20 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                non-maybe refinement on callee for now. *)
             let refi = LookupMap.empty in
 
-            ignore (* TODO(samzhou19815): Audit *)
+            this#push_refinement_scope empty_refinements;
+            ignore
             @@ this#optional_chain
+               (* The refinement made here is local to the call expression and won't escape.
+                  * We do need to refine. Consider x?.(x), the x in the args position should read
+                  * a refined value, because otherwise the function won't be called and the
+                  * arguments won't be evaluated. *)
                  ~can_refine_obj_to_non_maybe:true
                  ~can_refine_obj_prop_truthy:true
                  callee;
             this#commit_refinement refi;
             let _targs' = Base.Option.map ~f:this#call_type_args targs in
             let _arguments' = this#arg_list arguments in
+            this#pop_refinement_scope ();
             this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc
           | Member mem -> ignore @@ this#member loc mem
           | Call call -> ignore @@ this#call loc call
