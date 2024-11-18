@@ -16,6 +16,12 @@ type instanceof_rhs =
   | TypeOperand of Type.t
   | InternalExtendsOperand of reason * Type.t * Type.t
 
+type prop_guard =
+  | PropGuardTruthy
+  | PropGuardNotTruthy
+  | PropGuardMaybe
+  | PropGuardNotMaybe
+
 let concretization_variant_of_predicate = function
   | MaybeP
   | NotP MaybeP
@@ -488,11 +494,20 @@ and prop_truthy_test cx trace key reason sense obj result_collector =
     result_collector
     obj
     sense
-    (TruthyP, NotP TruthyP)
+    (PropGuardTruthy, PropGuardNotTruthy)
     obj
 
 and prop_non_maybe_test cx trace key reason sense obj result_collector =
-  prop_exists_test_generic key reason cx trace result_collector obj sense (NotP MaybeP, MaybeP) obj
+  prop_exists_test_generic
+    key
+    reason
+    cx
+    trace
+    result_collector
+    obj
+    sense
+    (PropGuardNotMaybe, PropGuardMaybe)
+    obj
 
 and prop_exists_test_generic key reason cx trace result_collector orig_obj sense (pred, not_pred) =
   function
@@ -508,7 +523,7 @@ and prop_exists_test_generic key reason cx trace result_collector orig_obj sense
           else
             not_pred
         in
-        concretize_and_guard_prop cx trace t pred orig_obj result_collector
+        concretize_and_guard_prop cx t pred orig_obj result_collector
       | None ->
         (* prop cannot be read *)
         report_unchanged_filtering_result_to_predicate_result orig_obj result_collector;
@@ -545,7 +560,7 @@ and prop_exists_test_generic key reason cx trace result_collector orig_obj sense
           else
             not_pred
         in
-        concretize_and_guard_prop cx trace t pred orig_obj result_collector
+        concretize_and_guard_prop cx t pred orig_obj result_collector
       else (
         report_unchanged_filtering_result_to_predicate_result orig_obj result_collector;
         add_output
@@ -1075,44 +1090,38 @@ and eq_test cx _trace result_collector (sense, left, right) =
 (**********)
 (* guards *)
 (**********)
-and concretize_and_guard_prop cx trace source pred orig_obj result_collector =
+and concretize_and_guard_prop cx source pred orig_obj result_collector =
   let all_changed =
     possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t source) source
-    |> List.for_all (fun t -> guard_prop cx trace t pred orig_obj result_collector)
+    |> List.for_all (fun t -> guard_prop cx t pred)
   in
   if all_changed then
     report_changes_to_input result_collector
   else
     report_unchanged_filtering_result_to_predicate_result orig_obj result_collector
 
-and guard_prop cx trace source pred input result_collector =
+and guard_prop cx source pred =
   match pred with
-  | TruthyP -> begin
+  | PropGuardTruthy -> begin
     match Type_filter.truthy cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
     | _ -> false
   end
-  | NotP TruthyP -> begin
+  | PropGuardNotTruthy -> begin
     match Type_filter.not_truthy cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
     | _ -> false
   end
-  | MaybeP -> begin
+  | PropGuardMaybe -> begin
     match Type_filter.maybe cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
     | _ -> false
   end
-  | NotP MaybeP -> begin
+  | PropGuardNotMaybe -> begin
     match Type_filter.not_maybe cx source with
     | Type_filter.TypeFilterResult { type_ = DefT (_, EmptyT); changed } -> changed
     | _ -> false
   end
-  | NotP (NotP p) -> guard_prop cx trace source p input result_collector
-  | _ ->
-    let loc = loc_of_reason (reason_of_t input) in
-    let pred_str = string_of_predicate pred in
-    add_output cx Error_message.(EInternal (loc, UnsupportedGuardPredicate pred_str));
-    false
 
 type predicate_result =
   | TypeChanged of Type.t

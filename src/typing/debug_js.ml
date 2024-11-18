@@ -1108,7 +1108,6 @@ let dump_error_message =
     | ForcedReadOfUnderResolutionTvar _ -> "ForcedReadOfUnderResolutionTvar"
     | MethodNotAFunction -> "MethodNotAFunction"
     | OptionalMethod -> "OptionalMethod"
-    | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
     | PropertyDescriptorPropertyCannotBeRead -> "PropertyDescriptorPropertyCannotBeRead"
     | ForInLHS -> "ForInLHS"
     | ForOfLHS -> "ForOfLHS"

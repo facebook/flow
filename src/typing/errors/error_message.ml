@@ -655,7 +655,6 @@ and binding_error =
 and internal_error =
   | MethodNotAFunction
   | OptionalMethod
-  | UnsupportedGuardPredicate of string
   | PropertyDescriptorPropertyCannotBeRead
   | ForInLHS
   | ForOfLHS
@@ -2051,7 +2050,6 @@ let string_of_internal_error = function
       (Env_api.show_def_loc_type k)
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
-  | UnsupportedGuardPredicate pred -> spf "unsupported guard predicate (%s)" pred
   | PropertyDescriptorPropertyCannotBeRead -> "unexpected property in properties object"
   | ForInLHS -> "unexpected LHS in for...in"
   | ForOfLHS -> "unexpected LHS in for...of"
