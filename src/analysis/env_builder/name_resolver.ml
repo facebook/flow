@@ -4937,6 +4937,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         (* Negating if sense is true is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
         if (not check_for_bound_undefined) || this#is_global_undefined then begin
+          (* It's easier to reason about the following code if we only consider
+           * `foo?.bar !== undefined` for now.
+           * We will have sentinel refinement on `foo` and non-void refinement `foo.bar` linked
+           * together.
+           * In addition to the linked refinement above, we also have a separate implicit
+           * refinement on the optional chaining. Since we know that the prop foo.bar must exist
+           * and thus `foo` must not be maybe.
+           * TODO(samzhou19815): replace can_refine_obj_prop_truthy with can_refine_obj_prop_exists
+           *
+           * Now for the sense=true case, we simply negative everything at the end. The linked
+           * refinement will be negated together.
+           *)
           let will_negate = sense in
           let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
           let refis =
@@ -4952,7 +4964,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           in
           ignore
-          @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+          @@ this#optional_chain
                ~can_refine_obj_to_non_maybe:true
                ~can_refine_obj_prop_truthy:true
                expr;
