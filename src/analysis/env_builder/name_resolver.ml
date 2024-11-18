@@ -4905,6 +4905,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method null_test ~sense ~strict loc expr other =
         (* Negating if sense is false is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
+        let will_negate = strict <> sense in
+        let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
         let refis =
           match RefinementKey.of_expression expr with
           | None -> refis
@@ -4917,8 +4919,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             in
             this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
         in
-        let will_negate = strict <> sense in
-        let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
         ignore @@ this#optional_chain expr;
         this#commit_refinement refis;
         if will_negate then this#negate_new_refinements ()
@@ -4933,6 +4933,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         (* Negating if sense is true is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
         if (not check_for_bound_undefined) || this#is_global_undefined then begin
+          let will_negate = sense in
+          let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
           let refis =
             match RefinementKey.of_expression expr with
             | None -> refis
@@ -4946,8 +4948,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           in
           ignore @@ this#optional_chain expr;
-          let will_negate = sense in
-          let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
           this#commit_refinement refis;
           if will_negate then this#negate_new_refinements ()
         end else begin
