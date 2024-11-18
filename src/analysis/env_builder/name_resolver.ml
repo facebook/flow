@@ -4951,7 +4951,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           this#commit_refinement refis;
           if will_negate then this#negate_new_refinements ()
         end else begin
-          ignore @@ this#optional_chain expr;
+          ignore @@ this#expression expr;
           this#commit_refinement refis
         end
 
