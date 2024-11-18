@@ -1262,10 +1262,10 @@ let%expect_test "optional_chain_lit" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 17) to (2, 18) => {
-          {refinement = And (And (Not (Maybe), PropTruthyR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (And (Not (Maybe), Not (PropNullishR foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 21) to (2, 22) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_not_lit" =
@@ -1280,10 +1280,10 @@ let%expect_test "optional_chain_not_lit" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 17) to (2, 18) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR foo))), Not (SentinelR foo)); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 21) to (2, 22) => {
-          {refinement = And (And (Not (Maybe), PropTruthyR (foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (And (Not (Maybe), Not (PropNullishR foo)), SentinelR foo); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "optional_chain_bad_prop_truthy_r" =
@@ -1325,7 +1325,7 @@ let%expect_test "optional_chain_bad_prop_truthy_r" =
           (2, 23) to (2, 29): (`result`)
         };
         (4, 15) to (4, 21) => {
-          {refinement = And (And (Not (Maybe), PropTruthyR (ok)), SentinelR ok); writes = (2, 23) to (2, 29): (`result`)}
+          {refinement = And (And (Not (Maybe), Not (PropNullishR ok)), SentinelR ok); writes = (2, 23) to (2, 29): (`result`)}
         };
         (9, 7) to (9, 13) => {
           (8, 23) to (8, 29): (`result`)
@@ -1334,7 +1334,7 @@ let%expect_test "optional_chain_bad_prop_truthy_r" =
           Global undefined
         };
         (10, 15) to (10, 21) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (ok))), Not (Not (SentinelR ok))); writes = (8, 23) to (8, 29): (`result`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR ok))), Not (Not (SentinelR ok))); writes = (8, 23) to (8, 29): (`result`)}
         };
         (15, 7) to (15, 13) => {
           (14, 23) to (14, 29): (`result`)
@@ -1346,7 +1346,7 @@ let%expect_test "optional_chain_bad_prop_truthy_r" =
           (20, 23) to (20, 29): (`result`)
         };
         (22, 15) to (22, 21) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (ok))), Not (Not (PropNullishR ok))); writes = (20, 23) to (20, 29): (`result`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR ok))), Not (Not (PropNullishR ok))); writes = (20, 23) to (20, 29): (`result`)}
         };
         (27, 7) to (27, 13) => {
           (26, 23) to (26, 29): (`result`)
@@ -1355,7 +1355,7 @@ let%expect_test "optional_chain_bad_prop_truthy_r" =
           Global undefined
         };
         (28, 15) to (28, 21) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (ok))), Not (Not (PropNullishR ok))); writes = (26, 23) to (26, 29): (`result`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR ok))), Not (Not (PropNullishR ok))); writes = (26, 23) to (26, 29): (`result`)}
         }] |}]
 
 let%expect_test "optional_chain_member_base" =
@@ -1406,7 +1406,7 @@ let%expect_test "optional_multiple_chains" =
           (1, 4) to (1, 5): (`x`)
         };
         (2, 31) to (2, 32) => {
-          {refinement = And (Not (Maybe), PropTruthyR (foo)); writes = (1, 4) to (1, 5): (`x`)}
+          {refinement = And (Not (Maybe), Not (PropNullishR foo)); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 35) to (2, 36) => {
           (1, 4) to (1, 5): (`x`)
@@ -6531,19 +6531,19 @@ x?.y.z?.w(x.y.z);
           (2, 12) to (2, 13): (`x`)
         };
         (3, 7) to (3, 8) => {
-          {refinement = And (Not (Maybe), PropTruthyR (y)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (Not (Maybe), Not (PropNullishR y)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (4, 0) to (4, 1) => {
           (2, 12) to (2, 13): (`x`)
         };
         (4, 10) to (4, 11) => {
-          {refinement = And (Not (Maybe), PropTruthyR (y)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (Not (Maybe), Not (PropNullishR y)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (4, 10) to (4, 13) => {
-          {refinement = PropTruthyR (z); writes = projection at (4, 0) to (4, 4)}
+          {refinement = Not (PropNullishR z); writes = projection at (4, 0) to (4, 4)}
         };
         (4, 10) to (4, 15) => {
-          {refinement = And (Not (Maybe), PropTruthyR (w)); writes = projection at (4, 0) to (4, 6)}
+          {refinement = And (Not (Maybe), Not (PropNullishR w)); writes = projection at (4, 0) to (4, 6)}
         };
         (5, 1) to (5, 2) => {
           (2, 12) to (2, 13): (`x`)
@@ -6577,19 +6577,19 @@ x.a;
           (2, 12) to (2, 13): (`x`)
         };
         (4, 2) to (4, 3) => {
-          {refinement = And (And (Not (Maybe), PropTruthyR (a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (And (Not (Maybe), Not (PropNullishR a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
         };
         (5, 2) to (5, 3) => {
-          {refinement = And (And (Not (Maybe), PropTruthyR (a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = And (And (Not (Maybe), Not (PropNullishR a)), SentinelR a); writes = (2, 12) to (2, 13): (`x`)}
         };
         (5, 2) to (5, 5) => {
           {refinement = 42; writes = projection at (3, 4) to (3, 8)}
         };
         (7, 2) to (7, 3) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (8, 2) to (8, 3) => {
-          {refinement = Or (Or (Not (Not (Maybe)), Not (PropTruthyR (a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
+          {refinement = Or (Or (Not (Not (Maybe)), Not (Not (PropNullishR a))), Not (SentinelR a)); writes = (2, 12) to (2, 13): (`x`)}
         };
         (10, 0) to (10, 1) => {
           (2, 12) to (2, 13): (`x`)

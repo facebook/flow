@@ -10495,10 +10495,27 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:25:16
 
+Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_prop_exists.js:25:16
+   25|         return result as empty; // good error: result not refined to empty
+                      ^^^^^^
+
+References:
+   object_prop_exists.js:23:45
+   23|   function withResult1(result: {ok: true} | {ok: false}): string {
+                                                   ^^^^^^^^^^^ [1]
+   object_prop_exists.js:25:26
+   25|         return result as empty; // good error: result not refined to empty
+                                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- object_prop_exists.js:25:16
+
 Refined at [1] [2]
 
    object_prop_exists.js:25:16
-   25|         return result as empty; // bad: result is not empty
+   25|         return result as empty; // good error: result not refined to empty
                       ^^^^^^
 
 References:
@@ -16933,7 +16950,7 @@ References:
 
 
 
-Found 1151 errors
+Found 1152 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -22,7 +22,7 @@
 {
   function withResult1(result: {ok: true} | {ok: false}): string {
     if(result?.ok === false) {
-        return result as empty; // bad: result is not empty
+        return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }
