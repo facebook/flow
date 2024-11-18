@@ -4993,8 +4993,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         match (refinement, RefinementKey.of_expression arg) with
         | (Some ref, Some refinement_key) ->
           if undef then (
+            (* It's easier to reason about the following code if we only consider
+             * `typeof foo?.bar !== 'undefined'` for now.
+             * First, we will have non-void refinement `foo.bar`.
+             * In addition, we also have a separate implicit refinement on the optional chaining.
+             * Since we know that the prop foo.bar must exist and thus `foo` must not be maybe.
+             * TODO(samzhou19815): replace can_refine_obj_prop_truthy with can_refine_obj_prop_exists
+             *
+             * Now for the sense=true case, we simply negative everything at the end.
+             *)
             ignore
-            @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+            @@ this#optional_chain
                  ~can_refine_obj_to_non_maybe:true
                  ~can_refine_obj_prop_truthy:true
                  arg;
@@ -5006,7 +5015,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             if sense then this#negate_new_refinements ()
           ) else (
             ignore
-            @@ this#optional_chain (* TODO(samzhou19815): Audit *)
+            @@ this#optional_chain
+               (* TODO(samzhou19815): This is very problematic.
+                * We add refinements to obj regardless of whether it's === or !==,
+                * and regardless of whether the type contains falsy values *)
                  ~can_refine_obj_to_non_maybe:true
                  ~can_refine_obj_prop_truthy:true
                  arg;
