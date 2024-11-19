@@ -719,7 +719,7 @@ Flags: --pretty
     },
     {
       "name":"?.toSpliced",
-      "type":"void | (<S, Item: $ReadOnlyArray<S> | S>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<T | S>)"
+      "type":"void | (<S>(start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>)"
     },
     {"name":"?.unshift","type":"void | ((...items: Array<T>) => number)"},
     {"name":"?.values","type":"void | (() => Iterator<T>)"},
@@ -822,7 +822,7 @@ Flags: --pretty
     {"name":"toSorted","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
     {
       "name":"toSpliced",
-      "type":"<S, Item: $ReadOnlyArray<S> | S>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<T | S>"
+      "type":"<S>(start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>"
     },
     {"name":"unshift","type":"(...items: Array<T>) => number"},
     {"name":"values","type":"() => Iterator<T>"},
