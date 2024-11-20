@@ -539,5 +539,7 @@ class requires_calculator ~file_key ~ast ~opts =
 
 let program ~file_key ~ast ~opts =
   let walk = new requires_calculator ~file_key ~ast ~opts in
-  walk#add_multiplatform_synthetic_imports;
+  (match file_key with
+  | File_key.LibFile _ -> ()
+  | _ -> walk#add_multiplatform_synthetic_imports);
   walk#eval walk#program ast
