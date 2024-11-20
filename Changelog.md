@@ -1,3 +1,11 @@
+### 0.254.0
+
+Likely to cause new Flow errors:
+* Previously we incorrectly applied truthy refinement on optional chaining where it shouldn't be applied. The issue is now fixed, and you might see change in behavior similar to [these examples](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRgD2UcGgAAIAO5wCS1ABK7W0EgAjAAKFgkUXILnACBbOVSGT0rkAH3lirlZOw9IAlPKADpQLlmrlwGBcqUinQAfisiq5AF5XVzdYbgCbzT6udLRVyMCQudgRHDaABuLkAemjXNmDU5+UGfttElT8C+bC5aRDYZWvC5UAgPIzFVKOYgWqV7o29O95vrUCbbMe8NNfIFwplOgATDaexI5Qqayq9Rrq3KjrgDcbTebLdb-fbHVsXW7p56G77U4PA8HQ+Go7H4yxExBk7RdwGWJmK7nDwWiyWy1nK5Oi9oZ9uuU2m2bWw5blOyFNMAGYB1lD8GggOA2DVTURynL9Zy9eczUXSCVydV1nS5B4NDvNgt3Q31l3TIM8yPGM4wTJMSBTapPggdNb3LQti1LNi31zJCuRguD-0bE16VyEAGhMEhOSgJIMnsEwQHpIA)
+
+Library Definitions:
+* Improve Array `toSpliced` method type (thanks @aph!)
+
 ### 0.253.0
 
 Likely to cause new Flow errors:
