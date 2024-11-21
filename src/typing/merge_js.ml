@@ -599,7 +599,7 @@ let get_lint_severities metadata strict_mode lint_severities =
 let post_merge_checks cx ast tast metadata =
   force_lazy_tvars cx;
   check_react_rules cx tast;
-  check_multiplatform_conformance cx ast tast;
+  if not (Context.is_lib_file cx) then check_multiplatform_conformance cx ast tast;
   check_polarity cx;
   check_general_post_inference_validations cx;
   detect_sketchy_null_checks cx tast;
