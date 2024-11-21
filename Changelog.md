@@ -1,3 +1,8 @@
+### 0.254.1
+
+Notable bug fixes:
+* Fixed a potential crash when experimental multiplatform support is enabled.
+
 ### 0.254.0
 
 Likely to cause new Flow errors:
