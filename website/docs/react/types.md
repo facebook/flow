@@ -292,8 +292,17 @@ type *of* a React component so you need to use `typeof` as in
 
 ## `React.Config<Props, DefaultProps>` {#toc-react-config}
 
-Calculates a config object from props and default props. This is most useful for annotating
-HOCs that are abstracted over configs. See our [docs on writing HOCs](../hoc) for more information.
+:::warning
+This type will be removed in 0.256.0. This type is usually only useful for legacy class components.
+You can create your own equivalent type with
+
+```flow
+type ReactConfigShim<Props, DefaultProps> = $ReadOnly<{
+  ...Omit<Props, $Keys<DefaultProps>>, ...Partial<DefaultProps>
+}>;
+:::
+
+Calculates a config object from props and default props.
 
 ## `ExactReactElement_DEPRECATED<typeof Component>` {#toc-react-element}
 

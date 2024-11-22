@@ -17,11 +17,11 @@ Cannot cast `3` to `React.FragmentType` because number [1] is incompatible with 
          ^ [1]
 
 References:
-   <BUILTINS>/react.js:750:5
+   <BUILTINS>/react.js:760:5
             v------------------------------------------------------
-   750|     declare component Fragment<Renders: React$Node = void>(
-   751|       children?: Renders,
-   752|     ) renders Renders;
+   760|     declare component Fragment<Renders: React$Node = void>(
+   761|       children?: Renders,
+   762|     ) renders Renders;
             -----------------^ [2]
 
 
