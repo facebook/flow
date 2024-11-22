@@ -139,6 +139,7 @@ module Opts = struct
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     ts_syntax: bool;
+    type_expansion_recursion_limit: int;
     use_mixed_in_catch_variables: bool option;
     ban_spread_key_props: bool option;
     wait_for_recheck: bool;
@@ -276,6 +277,7 @@ module Opts = struct
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       ts_syntax = false;
+      type_expansion_recursion_limit = 3;
       use_mixed_in_catch_variables = None;
       ban_spread_key_props = None;
       wait_for_recheck = false;
@@ -1150,6 +1152,9 @@ module Opts = struct
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("suppress_type", suppress_types_parser);
+      ( "experimental.type_expansion_recursion_limit",
+        uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
+      );
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
@@ -1893,6 +1898,8 @@ let strict_mode c = c.strict_mode
 let suppress_types c = c.options.Opts.suppress_types
 
 let ts_syntax c = c.options.Opts.ts_syntax
+
+let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 
