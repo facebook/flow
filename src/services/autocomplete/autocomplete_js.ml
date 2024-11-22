@@ -40,7 +40,7 @@ type autocomplete_type =
     }  (** object key *)
   | Ac_literal of { lit_type: Type.t option }  (** inside a string literal *)
   | Ac_module  (** a module name *)
-  | Ac_type of { allow_react_element_shorthand: bool }  (** type identifiers *)
+  | Ac_type  (** type identifiers *)
   | Ac_type_binding  (** introduces a new type name. like Ac_binding, but for types *)
   | Ac_qualified_type of Type.t  (** qualified type identifiers *)
   | Ac_member of {
@@ -178,8 +178,6 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
 
     val mutable enclosing_classes : Type.t Lazy.t list = []
 
-    val mutable allow_react_element_shorthand = false
-
     method private covers_target loc = covers_target cursor loc
 
     method private get_enclosing_class = Base.List.hd enclosing_classes
@@ -244,7 +242,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
         let autocomplete_type =
           match autocomplete_type with
           | Ac_id _
-          | Ac_type _
+          | Ac_type
             when from_trigger_character ->
             (* space is a trigger character, so this avoids completing immediately following
                a space ('.' is also a trigger, but it'd be an Acmem for member expressions) *)
@@ -669,7 +667,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
       begin
         match id with
         | Unqualified (loc, { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
-          this#find loc name (Ac_type { allow_react_element_shorthand })
+          this#find loc name Ac_type
         | Qualified (_, { qualification; id = (loc, Flow_ast.Identifier.{ name; _ }) })
           when this#covers_target loc ->
           let qualification_type =
@@ -900,21 +898,11 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
         )
       | _ -> super#type_ t
 
-    method! render_type t =
-      let saved_allow_react_element_shorthand = allow_react_element_shorthand in
-      allow_react_element_shorthand <- true;
-      let t' = super#render_type t in
-      allow_react_element_shorthand <- saved_allow_react_element_shorthand;
-      t'
-
     method! generic_type gt =
       let open Flow_ast.Type.Generic in
       let { id; targs; comments } = gt in
       let id' = this#generic_identifier_type id in
-      let saved_allow_react_element_shorthand = allow_react_element_shorthand in
-      allow_react_element_shorthand <- true;
       let targs' = Base.Option.map ~f:this#type_args targs in
-      allow_react_element_shorthand <- saved_allow_react_element_shorthand;
       let comments' = this#syntax_opt comments in
       { id = id'; targs = targs'; comments = comments' }
 

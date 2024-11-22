@@ -38,7 +38,7 @@ type autocomplete_type =
     }  (** object key *)
   | Ac_literal of { lit_type: Type.t option }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
-  | Ac_type of { allow_react_element_shorthand: bool }  (** type identifiers *)
+  | Ac_type  (** type identifiers *)
   | Ac_type_binding
   | Ac_qualified_type of Type.t  (** qualified type identifiers *)
   | Ac_member of {

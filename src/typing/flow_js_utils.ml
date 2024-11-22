@@ -971,6 +971,23 @@ let builtin_react_element_opaque_id cx =
     end
   | _ -> None
 
+let builtin_react_renders_exactly_opaque_id cx =
+  let t_opt = lookup_builtin_type_opt cx "React$RendersExactly" in
+  match t_opt with
+  | Some (OpenT (_, id)) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    begin
+      match constraints with
+      | Constraint.FullyResolved s ->
+        (match Context.force_fully_resolved_tvar cx s with
+        | DefT (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ })
+          ->
+          Some opaque_id
+        | _ -> None)
+      | _ -> None
+    end
+  | _ -> None
+
 let enum_proto cx ~reason ~enum_object_t ~enum_value_t ~representation_t =
   lookup_builtin_typeapp cx reason "$EnumProto" [enum_object_t; enum_value_t; representation_t]
 
@@ -1227,7 +1244,7 @@ let substitute_mapped_type_distributive_tparams
     (subst property_type, homomorphic')
 
 module ValueToTypeReferenceTransform = struct
-  (* a component syntax value annotation becomes an element of that component *)
+  (* a component syntax value annotation becomes React$RendersExactly of that component *)
   let run_on_abstract_component cx reason_component reason_op l =
     let elem_reason =
       let desc = react_element_desc_of_component_reason reason_component in
@@ -1235,7 +1252,10 @@ module ValueToTypeReferenceTransform = struct
       annot_reason ~annot_loc (replace_desc_reason desc reason_op)
     in
     let t =
-      Tvar.mk_fully_resolved cx elem_reason (lookup_builtin_type cx "React$Element" elem_reason)
+      Tvar.mk_fully_resolved
+        cx
+        elem_reason
+        (lookup_builtin_type cx "React$RendersExactly" elem_reason)
     in
     TypeUtil.typeapp ~from_value:false ~use_desc:true elem_reason t [l]
 
@@ -2985,6 +3005,12 @@ end = struct
       in
       Base.List.iter
         (normalization_cx.concretize c)
+        ~f:(on_concretized_component_normalization normalization_cx ~resolved_elem_reason:element_r)
+    | OpaqueT
+        (element_r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: (_ as _targs); _ })
+      when Some opaque_id = builtin_react_renders_exactly_opaque_id normalization_cx.cx ->
+      Base.List.iter
+        (normalization_cx.concretize component_t)
         ~f:(on_concretized_component_normalization normalization_cx ~resolved_elem_reason:element_r)
     | t -> on_concretized_bad_non_element_normalization normalization_cx t
 

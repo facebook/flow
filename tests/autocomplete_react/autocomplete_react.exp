@@ -372,6 +372,8 @@ components.js:7:21
 Flags: --pretty --imports
 {
   "result":[
+    {"name":"MyComponent","type":"React$RendersExactly<typeof MyComponent>"},
+    {"name":"MyComponent3","type":"component() renders MyComponent"},
     {"name":"MyComponent4","type":"Import type from ./exported_components"},
     {"name":"MyComponent5","type":"Import type from ./exported_components"},
     {"name":"MyComponent6","type":"Import type from ./exported_components"},
@@ -384,7 +386,7 @@ components.js:10:29
 Flags: --pretty --imports
 {
   "result":[
-    {"name":"MyComponent","type":"element of component MyComponent()"},
+    {"name":"MyComponent","type":"React$RendersExactly<typeof MyComponent>"},
     {"name":"MyComponent3","type":"component() renders MyComponent"},
     {"name":"MyComponent4","type":"Import type from ./exported_components"},
     {"name":"MyComponent5","type":"Import type from ./exported_components"},
@@ -398,7 +400,7 @@ components.js:15:28
 Flags: --pretty --imports
 {
   "result":[
-    {"name":"MyComponent","type":"element of component MyComponent()"},
+    {"name":"MyComponent","type":"React$RendersExactly<typeof MyComponent>"},
     {"name":"MyComponent3","type":"component() renders MyComponent"},
     {"name":"MyComponent4","type":"Import type from ./exported_components"},
     {"name":"MyComponent5","type":"Import type from ./exported_components"},
@@ -456,11 +458,11 @@ Flags: --pretty
     {"name":"Portal","type":"type Portal = React$Portal"},
     {
       "name":"PropOf",
-      "type":"type PropOf<E: string | React$MixedElement, K: string> = PropsOf<E>[K]"
+      "type":"type PropOf<E: string | React$MixedElement | React$RendersExactly<React$ElementType>, K: string> = PropsOf<E>[K]"
     },
     {
       "name":"PropsOf",
-      "type":"type PropsOf<E: string | React$MixedElement> = E extends React$Element<infer C> ? React$ElementConfig<C> : E extends string ? $JSXIntrinsics[E][\"props\"] : empty"
+      "type":"type PropsOf<E: string | React$MixedElement | React$RendersExactly<React$ElementType>> = E extends React$Element<infer C> ? React$ElementConfig<C> : E extends React$RendersExactly<infer C> ? React$ElementConfig<C> : E extends string ? $JSXIntrinsics[E][\"props\"] : empty"
     },
     {
       "name":"ReactSetStateFunction",
@@ -469,7 +471,7 @@ Flags: --pretty
     {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
     {
       "name":"RefOf",
-      "type":"type RefOf<E: string | React$MixedElement> = E extends React$Element<infer C> ? React$ElementRef<C> : E extends string ? $JSXIntrinsics[E][\"instance\"] : empty"
+      "type":"type RefOf<E: string | React$MixedElement | React$RendersExactly<React$ElementType>> = E extends React$Element<infer C> ? React$ElementRef<C> : E extends React$RendersExactly<infer C> ? React$ElementRef<C> : E extends string ? $JSXIntrinsics[E][\"instance\"] : empty"
     },
     {"name":"RefSetter","type":"type RefSetter<-T> = React$RefSetter<T>"}
   ]

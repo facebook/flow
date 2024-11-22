@@ -43,10 +43,10 @@ component RendersMaybeMenuItem() renders MaybeMenuItem {
 }
 (<RendersMaybeMenuItem />) as renders? MenuItem; // OK
 
-rendersMaybeMenuItem as renders (null | false | void | MenuItem); // invalid-render turns RHS any
+rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof MenuItem>); // invalid-render turns RHS any
 
-rendersMaybeMenuItem as renders (null | false | void | Bar); // invalid-render turns RHS any
+rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof Bar>); // invalid-render turns RHS any
 
 component MightRenderMenuItem() renders? MenuItem {
-  return null as null | MenuItem; // OK
+  return null as null | ExactReactElement_DEPRECATED<typeof MenuItem>; // OK
 }

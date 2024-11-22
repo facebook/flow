@@ -8,7 +8,7 @@ component MenuItem() { return null }
 (true: renders* MenuItem); // ERROR
 
 (<MenuItem />: renders* MenuItem); // OK
-declare const menuItemChildrenArray: React.ChildrenArray<MenuItem>;
+declare const menuItemChildrenArray: React.ChildrenArray<ExactReactElement_DEPRECATED<typeof MenuItem>>;
 (menuItemChildrenArray: renders* MenuItem); // OK
 
 component BlueMenuItem() renders MenuItem { return <MenuItem />; }

@@ -8,19 +8,19 @@ component Qux(bar: string) renders* number { return 3; }
 //        ^
 component Poly<T> (foo: T) {return null};
 //        ^
-type PolyElementTypeApp1 = Poly<string>;
+type PolyRendersExactlyTypeApp1 = Poly<string>;
 //        ^
-type PolyElementTypeApp2 = Poly<string>;
-//                          ^
-type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C> ? C : empty;
+type PolyRendersExactlyTypeApp1 = Poly<string>;
+//                            ^
+type ConcretizedPolyComponent = Poly<string> extends React$RendersExactly<infer C> ? C : empty;
 //        ^
-type FooElement = Foo;
-//                 ^
+type RendersExactlyFoo = Foo;
+//                        ^
 
 declare const x: React$AbstractComponent<{}>;
 
-type xElement = x;
-//              ^
+type xRendersExactly= x;
+//                    ^
 
 component FooForParam(foo: ?number) { return null; }
 //                     ^

@@ -1316,14 +1316,7 @@ let local_type_identifiers artifacts =
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer_flow.from_types norm_genv
 
-let autocomplete_unqualified_type
-    ~typing
-    ~ac_options
-    ~allow_react_element_shorthand_completion
-    ~tparams_rev
-    ~ac_loc
-    ~edit_locs
-    ~token =
+let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit_locs ~token =
   let {
     loc_of_aloc;
     get_ast_from_shared_mem;
@@ -1401,8 +1394,7 @@ let autocomplete_unqualified_type
                  elt
              in
              (result :: items_rev, errors_to_log)
-           | Ok (Ty.Decl (Ty.NominalComponentDecl _) as elt)
-             when allow_react_element_shorthand_completion ->
+           | Ok (Ty.Decl (Ty.NominalComponentDecl _) as elt) ->
              let result =
                autocomplete_create_result_elt
                  ~documentation_and_tags
@@ -1412,8 +1404,7 @@ let autocomplete_unqualified_type
                  (Ty_utils.reinterpret_elt_as_type_identifier elt)
              in
              (result :: items_rev, errors_to_log)
-           | Ok (Ty.Type (Ty.Component { renders = Some (Ty.Renders _); _ }) as t)
-             when allow_react_element_shorthand_completion ->
+           | Ok (Ty.Type (Ty.Component { renders = Some (Ty.Renders _); _ }) as t) ->
              let result =
                autocomplete_create_result_elt
                  ~documentation_and_tags
@@ -1672,14 +1663,7 @@ let autocomplete_member
         errors_to_log = id_errors_to_log;
       } =
         if is_type_annotation then
-          autocomplete_unqualified_type
-            ~typing
-            ~ac_options
-            ~allow_react_element_shorthand_completion:false
-            ~tparams_rev
-            ~ac_loc
-            ~edit_locs
-            ~token
+          autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit_locs ~token
         else
           autocomplete_id
             ~typing
@@ -2192,7 +2176,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_comment _ -> "Ac_comment"
   | Ac_enum -> "Acenum"
   | Ac_module -> "Acmodule"
-  | Ac_type _ -> "Actype"
+  | Ac_type -> "Actype"
   | Ac_jsx_text -> "Empty"
   | Ac_id _ -> "Acid"
   | Ac_class_key _ -> "Ac_class_key"
@@ -2370,17 +2354,9 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
           ~token
           component_t
           (ac_loc, attribute_name)
-      | Ac_type { allow_react_element_shorthand } ->
+      | Ac_type ->
         AcResult
-          (autocomplete_unqualified_type
-             ~typing
-             ~ac_options
-             ~allow_react_element_shorthand_completion:allow_react_element_shorthand
-             ~tparams_rev
-             ~ac_loc
-             ~edit_locs
-             ~token
-          )
+          (autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit_locs ~token)
       | Ac_qualified_type qtype ->
         autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type qtype
     in

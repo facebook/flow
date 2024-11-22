@@ -33,7 +33,7 @@ main.js:20:5,20:10
 
 main.js:22:5
 Flags:
-element of component CompLocal()
+React$RendersExactly<typeof CompLocal>
 
 'Comp' defined at exports.js:11:15
 

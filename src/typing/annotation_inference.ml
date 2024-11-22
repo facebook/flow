@@ -603,7 +603,7 @@ module rec ConsGen : S = struct
       reposition cx (loc_of_reason reason) it
     | ((DefT (_, ReactAbstractComponentT _) as l), Annot_UseT_TypeT (reason, _)) ->
       (* a component syntax value annotation becomes an element of that component *)
-      get_builtin_typeapp cx reason "React$Element" [l]
+      get_builtin_typeapp cx reason "React$RendersExactly" [l]
     | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
     | (DefT (_, EnumObjectT { enum_value_t; _ }), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum value type *)

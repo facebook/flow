@@ -3,15 +3,17 @@ import * as React from 'react';
 export component Foo() { return null }
 
 const x: Foo = Foo; // ERROR
-const fooElem: Foo = <Foo />; // OK
+const fooElem: Foo = <Foo />; // ERROR
+const fooRenderShorthand: renders Foo = <Foo />; // OK
+const fooRenderVerbose: renders React$RendersExactly<typeof Foo> = <Foo />; // OK
 
 export component Poly<T>(prop: T) { return null }
-const polyElem: Poly<number> = <Poly prop={3} />; // OK
-const polyElemBad: Poly<number> = <Poly prop="STRING" />; // ERROR
+const polyElem: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop={3} />; // OK
+const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
 type PolyNoTargs = Poly; // ERROR
 
 export type AliasedFoo = Foo;
 
 export const MemoFoo = (React.memo(Foo): component(ref: React.RefSetter<React.RefOf<Foo>>, ...React.PropsOf<Foo>) renders Foo);
-const FooElem: renders Foo = <MemoFoo />;
-const MemoFooElem: MemoFoo = <MemoFoo />;
+const rendersFoo: renders Foo = <MemoFoo />;
+const rendersMemoFoo: renders MemoFoo = <MemoFoo />;

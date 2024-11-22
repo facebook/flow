@@ -580,22 +580,38 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   in
   let nominal_component_decl ~depth s typeParameters typeArgs regular_props ref_prop renders is_type
       =
-    let base =
-      [
-        Atom "component";
-        space;
-        identifier (local_name_of_symbol s);
-        (* Prefer displaying type arguments if they exist *)
-        (match typeArgs with
-        | Some ts -> type_args ~depth ts
-        | None -> option ~f:(type_parameter ~depth) typeParameters);
-        type_component_sig ~depth ~regular_props ~ref_prop ~renders;
-      ]
-    in
     if is_type then
-      fuse (Atom "element" :: space :: Atom "of" :: space :: base)
+      fuse
+        [
+          Atom "React$RendersExactly";
+          list
+            ~wrap:(Atom "<", Atom ">")
+            ~sep:(Atom ",")
+            [
+              fuse
+                [
+                  Atom "typeof";
+                  space;
+                  identifier (local_name_of_symbol s);
+                  (* Prefer displaying type arguments if they exist *)
+                  (match typeArgs with
+                  | Some ts -> type_args ~depth ts
+                  | None -> option ~f:(type_parameter ~depth) typeParameters);
+                ];
+            ];
+        ]
     else
-      fuse base
+      fuse
+        [
+          Atom "component";
+          space;
+          identifier (local_name_of_symbol s);
+          (* Prefer displaying type arguments if they exist *)
+          (match typeArgs with
+          | Some ts -> type_args ~depth ts
+          | None -> option ~f:(type_parameter ~depth) typeParameters);
+          type_component_sig ~depth ~regular_props ~ref_prop ~renders;
+        ]
   in
   let type_alias ~depth name tparams t_opt =
     let { sym_name = name; _ } = name in

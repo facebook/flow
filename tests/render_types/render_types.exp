@@ -579,18 +579,18 @@ of a component-syntax components can appear in renders. If you want to express t
 please use `renders?` instead. [invalid-render]
 
    renders_maybe.js:46:34
-   46| rendersMaybeMenuItem as renders (null | false | void | MenuItem); // invalid-render turns RHS any
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   46| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof MenuItem>); // invalid-render turns RHS any
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    renders_maybe.js:46:41
-   46| rendersMaybeMenuItem as renders (null | false | void | MenuItem); // invalid-render turns RHS any
+   46| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof MenuItem>); // invalid-render turns RHS any
                                                ^^^^^ [1]
    renders_maybe.js:46:34
-   46| rendersMaybeMenuItem as renders (null | false | void | MenuItem); // invalid-render turns RHS any
+   46| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof MenuItem>); // invalid-render turns RHS any
                                         ^^^^ [2]
    renders_maybe.js:46:49
-   46| rendersMaybeMenuItem as renders (null | false | void | MenuItem); // invalid-render turns RHS any
+   46| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof MenuItem>); // invalid-render turns RHS any
                                                        ^^^^ [3]
 
 
@@ -601,18 +601,18 @@ of a component-syntax components can appear in renders. If you want to express t
 please use `renders?` instead. [invalid-render]
 
    renders_maybe.js:48:34
-   48| rendersMaybeMenuItem as renders (null | false | void | Bar); // invalid-render turns RHS any
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   48| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof Bar>); // invalid-render turns RHS any
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    renders_maybe.js:48:41
-   48| rendersMaybeMenuItem as renders (null | false | void | Bar); // invalid-render turns RHS any
+   48| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof Bar>); // invalid-render turns RHS any
                                                ^^^^^ [1]
    renders_maybe.js:48:34
-   48| rendersMaybeMenuItem as renders (null | false | void | Bar); // invalid-render turns RHS any
+   48| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof Bar>); // invalid-render turns RHS any
                                         ^^^^ [2]
    renders_maybe.js:48:49
-   48| rendersMaybeMenuItem as renders (null | false | void | Bar); // invalid-render turns RHS any
+   48| rendersMaybeMenuItem as renders (null | false | void | ExactReactElement_DEPRECATED<typeof Bar>); // invalid-render turns RHS any
                                                        ^^^^ [3]
 
 

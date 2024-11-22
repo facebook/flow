@@ -40,51 +40,54 @@ component.js:9:11,9:14
 
 component.js:11:11
 Flags:
-type PolyElementTypeApp1 = Poly<string>
+type PolyRendersExactlyTypeApp1 = Poly<string>
 
 'Poly' defined at component.js:9:0
-'PolyElementTypeApp1' defined at component.js:11:5
+'PolyRendersExactlyTypeApp1' defined at component.js:11:5
 
-component.js:11:6,11:24
+component.js:11:6,11:31
 
-component.js:13:29
+component.js:13:31
 Flags:
-element of component Poly<T>(foo: T)
+type PolyRendersExactlyTypeApp1 = Poly<string>
 
 'Poly' defined at component.js:9:0
+'PolyRendersExactlyTypeApp1' defined at component.js:13:5
 
-component.js:13:28,13:31
+component.js:13:6,13:31
 
 component.js:15:11
 Flags:
-type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C>
+type ConcretizedPolyComponent = Poly<string> extends React$RendersExactly<
+  infer C,
+>
   ? C
   : empty
 = typeof Poly
 
-'C' defined at component.js:15:73
+'C' defined at component.js:15:80
 'ConcretizedPolyComponent' defined at component.js:15:5
 'Poly' defined at component.js:9:0
-'React$Element' defined at (lib) react.js:150:20
+'React$RendersExactly' defined at (lib) react.js:165:20
 
 component.js:15:6,15:29
 
-component.js:17:20
+component.js:17:27
 Flags:
-element of component Foo(foo: number)
+React$RendersExactly<typeof Foo>
 
 'Foo' defined at component.js:1:0
 
-component.js:17:19,17:21
+component.js:17:26,17:28
 
-component.js:22:17
+component.js:22:23
 Flags:
-element of component x(ref: React.RefSetter<mixed>) renders React$Node
+React$RendersExactly<typeof x>
 
 'React$Node' defined at (lib) react.js:15:13
 'x' defined at component.js:20:14
 
-component.js:22:17,22:17
+component.js:22:23,22:23
 
 component.js:25:24
 Flags:
@@ -137,11 +140,11 @@ render_types.js:10:6,10:6
 
 render_types.js:12:6
 Flags:
-type V = renders Foo | React$Element<typeof Bar>
+type V = renders Foo | React$RendersExactly<typeof Bar>
 
 'Bar' defined at render_types.js:6:0
 'Foo' defined at render_types.js:5:10
-'React$Element' defined at (lib) react.js:150:20
+'React$RendersExactly' defined at (lib) react.js:165:20
 'V' defined at render_types.js:12:5
 
 render_types.js:12:6,12:6
@@ -193,7 +196,7 @@ render_types.js:28:6,28:23
 
 render_types.js:30:36
 Flags:
-element of component Poly<T>()
+React$RendersExactly<typeof Poly<T>>
 
 'Poly' defined at render_types.js:24:0
 
