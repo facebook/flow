@@ -59,7 +59,6 @@ let stub_metadata ~root ~checked =
     max_workers = 0;
     missing_module_generators = [];
     natural_inference_exports_primitive_const = false;
-    normalizer_indexed_access_perf_fix = true;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.Disabled;
     react_runtime = Options.ReactRuntimeClassic;

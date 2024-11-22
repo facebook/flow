@@ -1450,8 +1450,6 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_normalizer_indexed_access_perf_fix =
-      FlowConfig.normalizer_indexed_access_perf_fix flowconfig;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
     opt_use_mixed_in_catch_variables =

@@ -423,8 +423,6 @@ module Make (I : INPUT) : S = struct
   and then we force the evaluation so we will not hit the potentially expensive unevaluated case.
   *)
   let should_force_eval_to_avoid_giant_types ~env t d =
-    Context.((metadata Env.(env.genv.cx)).normalizer_indexed_access_perf_fix)
-    &&
     let open T in
     match d with
     | PropertyType _
