@@ -428,95 +428,6 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- config.js:16:3
-
-Cannot cast `y` to `C` because `Props` [1] is incompatible with `C` [2]. [incompatible-cast]
-
-   config.js:16:3
-   16|   y as C; // error, generics don't match
-         ^
-
-References:
-   config.js:11:6
-   11|   y: React.Config<P, D>,
-            ^^^^^^^^^^^^^^^^^^ [1]
-   config.js:16:8
-   16|   y as C; // error, generics don't match
-              ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- config.js:18:3
-
-Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Props` [1] but exists in
-`NotTheRightConfig` [2]. [prop-missing]
-
-   config.js:18:3
-   18|   y as NotTheRightConfig; // Error, configs don't match
-         ^
-
-References:
-   config.js:11:6
-   11|   y: React.Config<P, D>,
-            ^^^^^^^^^^^^^^^^^^ [1]
-   config.js:18:8
-   18|   y as NotTheRightConfig; // Error, configs don't match
-              ^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- config.js:18:3
-
-Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Props` [1] but exists in
-`NotTheRightConfig` [2]. [prop-missing]
-
-   config.js:18:3
-   18|   y as NotTheRightConfig; // Error, configs don't match
-         ^
-
-References:
-   config.js:11:6
-   11|   y: React.Config<P, D>,
-            ^^^^^^^^^^^^^^^^^^ [1]
-   config.js:18:8
-   18|   y as NotTheRightConfig; // Error, configs don't match
-              ^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- config.js:19:3
-
-Cannot cast `z` to `React.Config` because property `bar` is missing in `NotTheRightConfig` [1] but exists in
-`Props` [2]. [prop-missing]
-
-   config.js:19:3
-   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
-         ^
-
-References:
-   config.js:12:6
-   12|   z: W,
-            ^ [1]
-   config.js:19:8
-   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- config.js:19:3
-
-Cannot cast `z` to `React.Config` because property `foo` is missing in `NotTheRightConfig` [1] but exists in
-`Props` [2]. [prop-missing]
-
-   config.js:19:3
-   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
-         ^
-
-References:
-   config.js:12:6
-   12|   z: W,
-            ^ [1]
-   config.js:19:8
-   19|   z as React.Config<Props, DefaultProps>; // Error, configs don't match
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:15:13
 
 Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
@@ -1146,13 +1057,13 @@ References:
                                      ^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- react.js:62:26
+Error --------------------------------------------------------------------------------------------------- react.js:46:26
 
 Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
 [prop-missing]
 
-   react.js:62:26
-    62|   C.defaultProps = {...X.defaultProps}; // nope
+   react.js:46:26
+    46|   C.defaultProps = {...X.defaultProps}; // nope
                                  ^^^^^^^^^^^^
 
 References:
@@ -1578,7 +1489,7 @@ References:
 
 
 
-Found 92 errors
+Found 87 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -1,9 +1,9 @@
 const React = require('react');
 
-type Props = {f: number, g: number};
+type Props = {f?: number, g: number};
 type DefaultProps = {f: number};
 
-type T = React.Config<Props, DefaultProps>;
+type T = {f?: number, g: number} extends (infer O) ? O : empty;
 declare var t: T;
 
 // Annot_SpecializeT

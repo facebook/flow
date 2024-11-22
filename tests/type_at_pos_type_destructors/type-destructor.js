@@ -194,4 +194,3 @@ function non_evaluated() {
 // React.ElementPropsType
 // React.ElementConfigType
 // React.ElementRefType
-// React.ConfigType

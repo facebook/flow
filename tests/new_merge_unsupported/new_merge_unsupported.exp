@@ -517,22 +517,22 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:25
 
-Cannot use class extends on config of React component [1] in an export position. Please provide an (alternative)
-annotation for class extends [2]. [invalid-exported-annotation]
+Cannot use class extends on conditional type [1] in an export position. Please provide an (alternative) annotation for
+class extends [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:10:25
-    10| export class x1 extends ((0: any): T) {}
-                                ^^^^^^^^^^^^^ [2]
+   10| export class x1 extends ((0: any): T) {}
+                               ^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:36
 
-Cannot extend `x1` [1] with `T` because `Props` [2] is not inheritable. [incompatible-use]
+Cannot extend `x1` [1] with `T` because object type [2] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:10:36
    10| export class x1 extends ((0: any): T) {}
@@ -546,32 +546,32 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:13:19
 
-Cannot use property `f` on config of React component [1] in an export position. Please provide an (alternative)
-annotation for property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+property `f` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:13:19
-    13| export const x2 = t.f;
-                          ^^^ [2]
+   13| export const x2 = t.f;
+                         ^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:19
 
-Cannot use computed property on config of React component [1] in an export position. Please provide an (alternative)
-annotation for computed property [2]. [invalid-exported-annotation]
+Cannot use computed property on conditional type [1] in an export position. Please provide an (alternative) annotation
+for computed property [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:16:19
-    16| export const x3 = t[('': string)];
-                          ^^^^^^^^^^^^^^^ [2]
+   16| export const x3 = t[('': string)];
+                         ^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:26
@@ -584,52 +584,52 @@ Cannot access object with computed property using string [1]. [invalid-computed-
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:19:19
 
-Cannot use spread on config of React component [1] in an export position. Please provide an (alternative) annotation for
+Cannot use spread on conditional type [1] in an export position. Please provide an (alternative) annotation for
 spread [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:19:19
-    19| export const x4 = { ...t };
-                          ^^^^^^^^ [2]
+   19| export const x4 = { ...t };
+                         ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:22:17
 
-Cannot use exact on config of React component [1] in an export position. Please provide an (alternative) annotation for
+Cannot use exact on conditional type [1] in an export position. Please provide an (alternative) annotation for
 exact [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:22:17
-    22| declare var y5: $Exact<T>;
-                        ^^^^^^^^^ [2]
+   22| declare var y5: $Exact<T>;
+                       ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:26:17
 
-Cannot use statics on config of React component [1] in an export position. Please provide an (alternative) annotation
-for statics [2]. [invalid-exported-annotation]
+Cannot use statics on conditional type [1] in an export position. Please provide an (alternative) annotation for
+statics [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:26:17
-    26| declare var y6: Class<T>;
-                        ^^^^^^^^ [2]
+   26| declare var y6: Class<T>;
+                       ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:27:19
 
-`Props` [1] is not an instance type. [incompatible-use]
+object type [1] is not an instance type. [incompatible-use]
 
    ops_on_react_config.js:27:19
    27| export const x6 = y6.f;
@@ -643,7 +643,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:30:14
 
-Cannot extend statics of `T` [1] with `c7` because `Props` [1] is not inheritable. [incompatible-use]
+Cannot extend statics of `T` [1] with `c7` because object type [1] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:30:14
    30| export class c7 extends ((0: any): Class<T>) {}
@@ -657,52 +657,52 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:32:19
 
-Cannot use property `f` on config of React component [1] in an export position. Please provide an (alternative)
-annotation for property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+property `f` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:32:19
-    32| export const x7 = y7.f;
-                          ^^^^ [2]
+   32| export const x7 = y7.f;
+                         ^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:35:37
 
-Cannot use prototype on config of React component [1] in an export position. Please provide an (alternative) annotation
-for prototype [2]. [invalid-exported-annotation]
+Cannot use prototype on conditional type [1] in an export position. Please provide an (alternative) annotation for
+prototype [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:35:37
-    35| declare export var x8: { __proto__: T };
-                                            ^ [2]
+   35| declare export var x8: { __proto__: T };
+                                           ^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
 
-Cannot use mixins on config of React component [1] in an export position. Please provide an (alternative) annotation for
+Cannot use mixins on conditional type [1] in an export position. Please provide an (alternative) annotation for
 mixins [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:38:32
-    38| declare export class x9 mixins t {}
-                                       ^ [2]
+   38| declare export class x9 mixins t {}
+                                      ^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
 
-`Props` [1] is not a class. [not-a-class]
+object type [1] is not a class. [not-a-class]
 
    ops_on_react_config.js:38:32
    38| declare export class x9 mixins t {}
@@ -716,22 +716,22 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:20
 
-Cannot use unary minus on config of React component [1] in an export position. Please provide an (alternative)
-annotation for unary minus [2]. [invalid-exported-annotation]
+Cannot use unary minus on conditional type [1] in an export position. Please provide an (alternative) annotation for
+unary minus [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:41:20
-    41| export const x10 = -t;
-                           ^^ [2]
+   41| export const x10 = -t;
+                          ^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:21
 
-Cannot perform arithmetic operation because `Props` [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    ops_on_react_config.js:41:21
    41| export const x10 = -t;
@@ -745,47 +745,47 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:44:20
 
-Cannot use unary not on config of React component [1] in an export position. Please provide an (alternative) annotation
-for unary not [2]. [invalid-exported-annotation]
+Cannot use unary not on conditional type [1] in an export position. Please provide an (alternative) annotation for unary
+not [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:44:20
-    44| export const x11 = !t;
-                           ^^ [2]
+   44| export const x11 = !t;
+                          ^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:47:18
 
-Cannot use `$KeyMirror` on config of React component [1] in an export position. Please provide an (alternative)
-annotation for `$KeyMirror` [2]. [invalid-exported-annotation]
+Cannot use `$KeyMirror` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+`$KeyMirror` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:47:18
-    47| declare var y12: $KeyMirror<T>;
-                         ^^^^^^^^^^^^^ [2]
+   47| declare var y12: $KeyMirror<T>;
+                        ^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:18
 
-Cannot use key set on config of React component [1] in an export position. Please provide an (alternative) annotation
-for key set [2]. [invalid-exported-annotation]
+Cannot use key set on conditional type [1] in an export position. Please provide an (alternative) annotation for key
+set [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:51:18
-    51| declare var y13: $Keys<T>;
-                         ^^^^^^^^ [2]
+   51| declare var y13: $Keys<T>;
+                        ^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:399:53
-   399|   declare export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:6:10
+    6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

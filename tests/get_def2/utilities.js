@@ -113,11 +113,3 @@ f = () => {
     <Comp foo={''} bar={3} />;
 //                  ^
 }
-
-f = () => {
-  declare const Comp: React.ComponentType<React.Config<SourceObj, {bar: string}>>;
-    <Comp foo={''} bar={3} />;
-//         ^
-    <Comp foo={''} bar={3} />;
-//                  ^
-}

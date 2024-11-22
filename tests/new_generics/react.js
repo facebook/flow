@@ -18,16 +18,6 @@ type DefaultProps = {|
   b: string,
 |};
 
-function f<Config: Props>(
-  InputComponent: React.ComponentType<Config>,
-): React.ComponentType<React.Config<Config, DefaultProps>> {
-  return class extends React.Component<React.Config<Config, DefaultProps>> {
-    f() {
-      const inputComponent = <InputComponent {...this.props} />;
-    }
-  };
-}
-
 function connect<TProps: {...}, SProps: TProps>(): React.ComponentType<SProps> {
   return class extends React.Component<TProps> {};
 }
@@ -41,12 +31,6 @@ function hoc<Props, Component: React.ComponentType<Props>>(
 function HOC<Config: {...}, Instance>(
   x: component(ref: React.RefSetter<Instance>, ...Config),
 ): component(ref: React.RefSetter<Instance>, ...Config) {
-  return x;
-}
-
-function HOC2<Props: {...}, DefaultProps: {}, Instance>(
-  x: component(ref: React.RefSetter<Instance>, ...React.Config<Props, DefaultProps>),
-): component(ref: React.RefSetter<Instance>, ...React.Config<Props, DefaultProps>) {
   return x;
 }
 

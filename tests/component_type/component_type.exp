@@ -327,112 +327,58 @@ References:
                                          ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- config_HOC.js:13:1
+Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
 
-Cannot cast `y` to `NotTheRightConfig` because property `baz` is missing in `Props` [1] but exists in
+Cannot cast `x` to `NotTheRightConfig` because property `baz` is missing in `Config` [1] but exists in
 `NotTheRightConfig` [2]. [prop-missing]
 
-   config_HOC.js:13:1
-   13| y as NotTheRightConfig; // Error, configs don't match
+   config_HOC.js:10:1
+   10| x as NotTheRightConfig; // Error, configs don't match
        ^
 
 References:
-   config_HOC.js:8:16
-    8| declare var y: React.Config<Props, DefaultProps>;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   config_HOC.js:13:6
-   13| y as NotTheRightConfig; // Error, configs don't match
+   config_HOC.js:7:16
+    7| declare var x: Config;
+                      ^^^^^^ [1]
+   config_HOC.js:10:6
+   10| x as NotTheRightConfig; // Error, configs don't match
             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- config_HOC.js:13:1
+Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
 
-Cannot cast `y` to `NotTheRightConfig` because property `qux` is missing in `Props` [1] but exists in
+Cannot cast `x` to `NotTheRightConfig` because property `qux` is missing in `Config` [1] but exists in
 `NotTheRightConfig` [2]. [prop-missing]
 
-   config_HOC.js:13:1
-   13| y as NotTheRightConfig; // Error, configs don't match
+   config_HOC.js:10:1
+   10| x as NotTheRightConfig; // Error, configs don't match
        ^
 
 References:
-   config_HOC.js:8:16
-    8| declare var y: React.Config<Props, DefaultProps>;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   config_HOC.js:13:6
-   13| y as NotTheRightConfig; // Error, configs don't match
+   config_HOC.js:7:16
+    7| declare var x: Config;
+                      ^^^^^^ [1]
+   config_HOC.js:10:6
+   10| x as NotTheRightConfig; // Error, configs don't match
             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- config_HOC.js:16:1
-
-Cannot cast `z` to `React.Config` because property `bar` is missing in `NotTheRightConfig` [1] but exists in
-`Props` [2]. [prop-missing]
-
-   config_HOC.js:16:1
-   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
-       ^
-
-References:
-   config_HOC.js:15:16
-   15| declare var z: NotTheRightConfig;
-                      ^^^^^^^^^^^^^^^^^ [1]
-   config_HOC.js:16:6
-   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- config_HOC.js:16:1
-
-Cannot cast `z` to `React.Config` because property `foo` is missing in `NotTheRightConfig` [1] but exists in
-`Props` [2]. [prop-missing]
-
-   config_HOC.js:16:1
-   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
-       ^
-
-References:
-   config_HOC.js:15:16
-   15| declare var z: NotTheRightConfig;
-                      ^^^^^^^^^^^^^^^^^ [1]
-   config_HOC.js:16:6
-   16| z as React.Config<Props, DefaultProps>; // Error, configs don't match
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- config_HOC.js:39:13
+Error ---------------------------------------------------------------------------------------------- config_HOC.js:27:13
 
 Cannot create `WrappedComponent` element because property `bar` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   config_HOC.js:39:13
-   39| const _c = <WrappedComponent foo={3} />; // Error missing bar
+   config_HOC.js:27:13
+   27| const _c = <WrappedComponent foo={3} />; // Error missing bar
                    ^^^^^^^^^^^^^^^^
 
 References:
-   config_HOC.js:39:12
-   39| const _c = <WrappedComponent foo={3} />; // Error missing bar
+   config_HOC.js:27:12
+   27| const _c = <WrappedComponent foo={3} />; // Error missing bar
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   config_HOC.js:30:41
-   30| class Component extends React.Component<{foo: number, bar: number, ...}> {
+   config_HOC.js:18:41
+   18| class Component extends React.Component<{foo: number, bar: number, ...}> {
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- config_HOC.js:44:13
-
-Cannot create `WrappedComponent2` element because property `bar` is missing in props [1] but exists in object type [2].
-[prop-missing]
-
-   config_HOC.js:44:13
-   44| const _f = <WrappedComponent2 />; // Error missing bar
-                   ^^^^^^^^^^^^^^^^^
-
-References:
-   config_HOC.js:44:12
-   44| const _f = <WrappedComponent2 />; // Error missing bar
-                  ^^^^^^^^^^^^^^^^^^^^^ [1]
-   config_HOC.js:26:49
-   26| ): component(ref: React.RefSetter<Instance>, ...React.Config<Props, DefaultProps>) {
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:15:13
@@ -1198,7 +1144,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 63 errors
+Found 60 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
