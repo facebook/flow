@@ -94,6 +94,7 @@ module Opts = struct
     include_warnings: bool;
     jest_integration: bool;
     lazy_mode: lazy_mode option;
+    libdef_recheck_partial_fix: bool;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
     max_files_checked_per_worker: int;
@@ -231,6 +232,7 @@ module Opts = struct
       include_warnings = false;
       jest_integration = false;
       lazy_mode = None;
+      libdef_recheck_partial_fix = false;
       log_saving = SMap.empty;
       long_lived_workers = false;
       max_files_checked_per_worker = 100;
@@ -1082,6 +1084,9 @@ module Opts = struct
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("jest_integration", boolean (fun opts v -> Ok { opts with jest_integration = v }));
       ("lazy_mode", lazy_mode_parser);
+      ( "experimental.libdef_recheck_partial_fix",
+        boolean (fun opts v -> Ok { opts with libdef_recheck_partial_fix = v })
+      );
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
@@ -1793,6 +1798,8 @@ let include_warnings c = c.options.Opts.include_warnings
 let jest_integration c = c.options.Opts.jest_integration
 
 let lazy_mode c = c.options.Opts.lazy_mode
+
+let libdef_recheck_partial_fix c = c.options.Opts.libdef_recheck_partial_fix
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities
