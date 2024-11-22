@@ -1,3 +1,9 @@
+### 0.254.2
+
+Misc:
+ * Add option to disable experimental configuration
+
+
 ### 0.254.1
 
 Notable bug fixes:
