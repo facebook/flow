@@ -170,11 +170,11 @@ References:
    annotation.js:48:39
     48| declare var InlineRef: component(ref: number); // error
                                               ^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -228,11 +228,11 @@ Cannot create `SpreadRef` element because in property `ref`: [incompatible-type]
                         ^ [1]
 
 References:
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1186,11 +1186,11 @@ References:
    declared.js:50:34
     50| declare component InlineRef(ref: number); // error
                                          ^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1244,11 +1244,11 @@ Cannot create `SpreadRef` element because in property `ref`: [incompatible-type]
                         ^ [1]
 
 References:
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2221,11 +2221,11 @@ References:
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
                                     ^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2728,8 +2728,8 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
@@ -2760,8 +2760,8 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2817,8 +2817,8 @@ The `ref` parameter must be a subtype of `React.RefSetter`.
                       ^^^
 
 References:
-   <BUILTINS>/react.js:181:21
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:21
+   196|   | { -current: T | null, ... }
                             ^^^^ [1]
    refs.js:3:30
      3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2826,8 +2826,8 @@ References:
    refs.js:3:20
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2847,14 +2847,14 @@ References:
    refs.js:5:22
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                              ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:182:11
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:11
+   197|   | ((T | null) => mixed)
                   ^^^^ [2]
    refs.js:5:21
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2963,8 +2963,8 @@ References:
    refs.js:12:38
     12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                              ^^^^^^ [2]
-   <BUILTINS>/react.js:181:21
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:21
+   196|   | { -current: T | null, ... }
                             ^^^^ [3]
 
 
@@ -3125,8 +3125,8 @@ References:
    refs.js:15:38
     15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
                                              ^^^^^^ [2]
-   <BUILTINS>/react.js:182:11
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:11
+   197|   | ((T | null) => mixed)
                   ^^^^ [3]
 
 
@@ -3144,8 +3144,8 @@ References:
    refs.js:17:22
     17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:8:36
      8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
@@ -3170,8 +3170,8 @@ References:
    refs.js:17:22
     17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:8:36
      8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
@@ -3196,8 +3196,8 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:56:66
     56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
@@ -3235,8 +3235,8 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -3260,8 +3260,8 @@ References:
    refs.js:90:25
     90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -3286,8 +3286,8 @@ References:
    refs.js:90:25
     90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -3304,11 +3304,11 @@ Cannot create `GenericRef1` element because in property `ref`: [incompatible-typ
                               ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:182:6
-   182|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -3323,8 +3323,8 @@ Cannot create `GenericRef2` element because in property `ref`: [incompatible-typ
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:181:5
-   181|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:101:51
    101|     component GenericRef2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
