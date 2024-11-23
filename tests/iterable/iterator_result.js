@@ -1,6 +1,6 @@
 /* @flow */
 
-function makeIterator1(coin_flip: () => boolean ): Iterator<string> {
+function makeIterator1(coin_flip: () => boolean ): $IteratorProtocol<string> {
   return {
     "@@iterator"() { return makeIterator1(coin_flip); },
     next(): IteratorResult<string, void> {
@@ -14,7 +14,7 @@ function makeIterator1(coin_flip: () => boolean ): Iterator<string> {
   }
 }
 
-function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
+function makeIterator2(coin_flip: () => boolean ): $IteratorProtocol<string> {
   return {
     "@@iterator"() { return makeIterator2(coin_flip); },
     next(): IteratorResult<string, void> {
