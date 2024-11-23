@@ -1169,16 +1169,16 @@ Cannot declare a type guard on a(n) generator function. [function-predicate]
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
 
-`Generator` [1] is incompatible with boolean [2]. [incompatible-type]
+`$Generator` [1] is incompatible with boolean [2]. [incompatible-type]
 
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1756:11
-   1756| interface Generator<+Yield,+Return,-Next> {
-                   ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1879:40
+   1879| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
@@ -1191,23 +1191,23 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1751:11
-   1751| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1865:11
+   1865| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:20:10
 
-Cannot return `(typeof x) == "number"` because `Generator` [1] is incompatible with boolean [2]. [incompatible-return]
+Cannot return `(typeof x) == "number"` because `$Generator` [1] is incompatible with boolean [2]. [incompatible-return]
 
    invalid.js:20:10
      20|   return typeof x == "number";
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1756:11
-   1756| interface Generator<+Yield,+Return,-Next> {
-                   ^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1879:40
+   1879| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
                                         ^^^^^^^^^^^ [2]
@@ -1247,8 +1247,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1984:15
-   1984| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2102:15
+   2102| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error

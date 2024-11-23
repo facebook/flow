@@ -75,12 +75,12 @@ References:
    map.js:21:22
      21|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [1]
-   <BUILTINS>/core.js:1815:38
-   1815|     constructor(iterable?: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:1933:38
+   1933|     constructor(iterable?: ?Iterable<[K, V]>): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:21:21
@@ -96,12 +96,12 @@ References:
    map.js:21:29
      21|     let x = new Map(['foo', 123]); // error
                                      ^^^ [1]
-   <BUILTINS>/core.js:1815:38
-   1815|     constructor(iterable?: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:1933:38
+   1933|     constructor(iterable?: ?Iterable<[K, V]>): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:22:42
@@ -120,9 +120,9 @@ References:
    map.js:22:16
      22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:22:42
@@ -141,9 +141,9 @@ References:
    map.js:22:24
      22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                 ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ map.js:27:6
@@ -155,8 +155,8 @@ Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with b
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1823:22
-   1823|     get(key: K): V | void;
+   <BUILTINS>/core.js:1941:22
+   1941|     get(key: K): V | void;
                               ^^^^ [1]
    map.js:27:20
      27|     (x.get('foo'): boolean); // error, string | void
@@ -206,11 +206,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -226,11 +226,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -246,11 +246,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -266,11 +266,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -286,11 +286,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -306,11 +306,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -329,11 +329,11 @@ References:
    weakset.js:27:31
      27| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:1840:28
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:28
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1840:43
-   1840| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:1958:43
+   1958| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

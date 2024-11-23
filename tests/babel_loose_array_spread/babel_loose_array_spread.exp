@@ -16,6 +16,24 @@ References:
                                     ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- apply.js:11:15
+
+Cannot call `f.apply` because `$IteratorProtocol` [1] is incompatible with `Iterator` [2] in the return value of
+property `@@iterator` of type argument `A`. [incompatible-call]
+
+   apply.js:11:15
+     11| f.apply(null, it); // Error
+                       ^^
+
+References:
+   <BUILTINS>/core.js:1866:19
+   1866|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1149:17
+   1149|   @@iterator(): Iterator<T>;
+                         ^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- iterables.js:2:5
 
 `$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
@@ -187,4 +205,4 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors

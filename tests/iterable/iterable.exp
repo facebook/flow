@@ -106,8 +106,8 @@ value of property `@@iterator`. [incompatible-return]
                   ^^^
 
 References:
-   <BUILTINS>/core.js:1926:28
-   1926|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1932:28
+   1932|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    map.js:13:55
      13| function mapTest4(map: Map<number, string>): Iterable<string> {
