@@ -84,8 +84,6 @@ let default_options =
 
 let default_lib_dir options = options.default_lib_dir
 
-let with_default_lib_dir ~default_lib_dir options = { options with default_lib_dir }
-
 let ignores options = options.ignores
 
 let untyped options = options.untyped
@@ -537,12 +535,15 @@ let is_in_flowlib (options : options) : string -> bool =
   match options.default_lib_dir with
   | None -> (fun _ -> false)
   | Some libdir ->
-    let root =
+    let root_str =
       match libdir with
       | Prelude path
       | Flowlib path ->
-        path
+        File_path.to_string path
     in
+    (* Similar to the |> File_path.to_string |> File_path.make |> File_path.to_string indirection
+     * in init below, we need to do this to resolve symlinks. *)
+    let root = File_path.make root_str in
     is_prefix (File_path.to_string root)
 
 let init ?(flowlibs_only = false) (options : options) =

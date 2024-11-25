@@ -35,8 +35,6 @@ val default_options : options
 
 val default_lib_dir : options -> lib_dir option
 
-val with_default_lib_dir : default_lib_dir:lib_dir option -> options -> options
-
 val ignores : options -> (string * Str.regexp) list
 
 val untyped : options -> (string * Str.regexp) list

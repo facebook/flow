@@ -155,7 +155,12 @@ let get_ls_files ~root ~all ~options ~libs ~imaginary = function
     let subdir = Some (File_path.make dir) in
     Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~include_libdef:false ~libs
   | Some file ->
-    if (Sys.file_exists file || imaginary) && (all || wanted ~root ~options libs file) then
+    if
+      (Sys.file_exists file || imaginary)
+      (* Make flow ls never report flowlib files *)
+      && (not (Files.is_in_flowlib options file))
+      && (all || wanted ~root ~options libs file)
+    then
       let file = file |> File_path.make |> File_path.to_string in
       let rec cb =
         ref (fun () ->
@@ -241,8 +246,6 @@ let main
   let options =
     make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag
   in
-  (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
-  let options = Files.with_default_lib_dir ~default_lib_dir:None options in
   let (_, libs) = Files.init options in
   (* `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
    * we pass in ~libs:SSet.empty, which means we won't filter out any lib files *)
