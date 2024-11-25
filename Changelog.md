@@ -1,3 +1,15 @@
+### 0.255.0
+
+Likely to cause new Flow errors:
+* Referencing a react-component typed value in type position will now create a `React$RendersExactly<typeof Component>` type instead of `React$Element<typeof Component>` type. All existing usages intended to create an exact react element will now error as a result. Using it as type passed to render type, `React.PropsOf`, `React.PropOf` and `React.RefOf` is unaffected and will not be affected in the future. If you want exact react elements, the only way that doesn't trigger Flow error is by `ExactReactElement_DEPRECATED<typeof Component>`.
+
+Library Definitions:
+* `React.Config` type is marked as deprecated and will be removed soon. You can create your own equivalent type with
+```js
+type ReactConfigShim<Props, DefaultProps> = $ReadOnly<{
+  ...Omit<Props, $Keys<DefaultProps>>, ...Partial<DefaultProps>
+}>;
+
 ### 0.254.2
 
 Misc:
