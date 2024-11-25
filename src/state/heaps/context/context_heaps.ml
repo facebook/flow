@@ -27,7 +27,10 @@ module MasterContextHeap =
     end)
 
 let add_master master_cx =
-  WorkerCancel.with_no_cancellations (fun () -> MasterContextHeap.add () master_cx)
+  WorkerCancel.with_no_cancellations (fun () ->
+      MasterContextHeap.remove ();
+      MasterContextHeap.add () master_cx
+  )
 
 let find_master () =
   match MasterContextHeap.get () with
