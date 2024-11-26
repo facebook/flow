@@ -140,35 +140,6 @@ component ComponentWithARef(ref: React.RefSetter<HTMLElement>) {
 
 Behind the scenes Component Syntax will wrap the component in the required [React.forwardRef call](https://react.dev/reference/react/forwardRef) to ensure the component works as expected at runtime. The one restriction for refs is they must be defined as an inline parameter, refs within rest params are not supported. This is due to the need to compile in the `forwardRef` call, for this to work correctly we need to be able to statically determine the ref from the component definition.
 
-## Elements of Components
-
-For components declared in Component Syntax, you can use `ComponentName` to reference the type of an element of that component.
-For components not using Component Syntax you have to write `React.Element<typeof ComponentName>`.
-
-```js flow-check
-import * as React from 'react';
-
-declare component Foo();
-declare component Bar();
-
-const foo: Foo = <Foo />;
-const bar: Bar = <Foo />; // ERROR
-```
-
-The syntax also works for generic components:
-
-```js flow-check
-import * as React from 'react';
-
-declare component Foo<T>(prop: T);
-
-const foo1: Foo<string> = <Foo prop="" />;
-const foo2: Foo<number> = <Foo prop="" />; // Invalid generic type argument
-const foo3: Foo = <Foo prop="" />; // Missing generic type argument
-```
-
-We do not recommend requiring very specific type of elements. It will make your parent and children components more coupled. Instead, this feature is designed to make expressing [render types](../render-types) easier.
-
 ## Rules for Components
 
 Component Syntax enforces a few restrictions in components to help ensure correctness:
