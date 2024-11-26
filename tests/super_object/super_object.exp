@@ -1,0 +1,21 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:7
+
+Cannot reference `super` from within method `foo` [1]. For safety, Flow restricts access to `super` inside object
+methods since these methods may be unbound and rebound. Consider rewriting the object as a class.
+[object-this-reference]
+
+   test.js:3:7
+   3|       super.x;
+            ^^^^^
+
+References:
+   test.js:2:5
+          v------
+   2|     foo() {
+   3|       super.x;
+   4|     }
+          ^ [1]
+
+
+
+Found 1 error

@@ -1739,14 +1739,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                         )
                     | ClassStaticEnv -> Val.class_static_super reason
                     | ClassInstanceEnv -> Val.class_instance_super reason
-                    | IllegalThisEnv ->
-                      raise
-                        Env_api.(
-                          Env_invariant
-                            ( Some loc,
-                              Impossible "It's impossible to bind super under IllegalThisEnv"
-                            )
-                        )
+                    | IllegalThisEnv -> Val.illegal_this reason
                   in
                   (v, v, None)
                 | _ ->
@@ -4189,9 +4182,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | (_, Get { key; value = (loc, fn); comments = _ })
         | (_, Set { key; value = (loc, fn); comments = _ }) ->
           ignore @@ this#object_key key;
-          let illegal_this_binding =
-            Bindings.singleton
-              ((loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
+          let illegal_this_super_binding =
+            Bindings.add
+              ((loc, { Ast.Identifier.name = "super"; comments = None }), Bindings.Const)
+              (Bindings.singleton
+                 ((loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
+              )
           in
           (* Do not bind this to a function-level this as usual. We use arrow function visitor
              so that we purposely skip this binding, and instead we bind this under a special
@@ -4200,7 +4196,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           @@ this#with_scoped_bindings
                ~this_super_binding_env:IllegalThisEnv
                loc
-               illegal_this_binding
+               illegal_this_super_binding
                (this#non_this_binding_function loc)
                fn;
           prop

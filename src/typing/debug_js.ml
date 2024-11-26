@@ -1800,8 +1800,8 @@ let dump_error_message =
         (dump_reason cx definition)
         (Flow_intermediate_error_types.string_of_assigned_const_like_binding_type binding_kind)
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
-    | EObjectThisReference (loc, r) ->
-      spf "EObjectThisReference (%s, %s)" (string_of_aloc loc) (dump_reason cx r)
+    | EObjectThisSuperReference (loc, r, _) ->
+      spf "EObjectThisSuperReference (%s, %s, _)" (string_of_aloc loc) (dump_reason cx r)
     | EComponentThisReference { this_loc; component_loc } ->
       spf
         "EComponentThisReference (this=%s, component=%s)"

@@ -817,7 +817,7 @@ type 'loc message =
   | MessageSuppressionMissingCode of string
   | MessageThisInComponent of 'loc
   | MessageThisInExportedFunction
-  | MessageThisInObject of 'loc virtual_reason
+  | MessageThisSuperInObject of 'loc virtual_reason * This_finder.kind
   | MessageTSAsConst of Options.CastingSyntax.t
   | MessageTSKeyofType
   | MessageTSNeverType

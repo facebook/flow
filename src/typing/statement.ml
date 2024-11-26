@@ -298,7 +298,7 @@ module Make
       let (targts, _) = convert_call_targs cx Subst_name.Map.empty args in
       Some targts
 
-  module ALoc_this_finder = This_finder.Make (Loc_collections.ALocSet)
+  module ALoc_this_finder = This_finder.Make (Loc_collections.ALocMap)
 
   let error_on_this_uses_in_object_methods cx =
     let open Ast in
@@ -309,7 +309,7 @@ module Make
         | Object.Property (prop_loc, Object.Property.Set { key; value = (_, func); _ }) ->
           let finder = new ALoc_this_finder.finder in
           finder#eval (finder#function_ prop_loc) func
-          |> Loc_collections.ALocSet.iter (fun loc ->
+          |> Loc_collections.ALocMap.iter (fun loc kind ->
                  let reason =
                    match key with
                    | Object.Property.Identifier (_, { Identifier.name; _ })
@@ -318,7 +318,7 @@ module Make
                      mk_reason (RMethod (Some name)) prop_loc
                    | _ -> mk_reason (RMethod None) prop_loc
                  in
-                 Flow_js.add_output cx (Error_message.EObjectThisReference (loc, reason))
+                 Flow_js.add_output cx (Error_message.EObjectThisSuperReference (loc, reason, kind))
              )
         | _ -> ()
         )
@@ -326,10 +326,14 @@ module Make
   let error_on_this_uses_in_components cx { Ast.Statement.ComponentDeclaration.sig_loc; body; _ } =
     let finder = new ALoc_this_finder.finder in
     finder#eval finder#component_body body
-    |> Loc_collections.ALocSet.iter (fun this_loc ->
-           Flow_js.add_output
-             cx
-             (Error_message.EComponentThisReference { component_loc = sig_loc; this_loc })
+    |> Loc_collections.ALocMap.iter (fun this_loc kind ->
+           match kind with
+           | This_finder.Super ->
+             Utils_js.assert_false "Super expressions in components should be syntax errors"
+           | This_finder.This ->
+             Flow_js.add_output
+               cx
+               (Error_message.EComponentThisReference { component_loc = sig_loc; this_loc })
        )
 
   (* Given the expression of a statement expression, returns a list of child

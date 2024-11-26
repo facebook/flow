@@ -516,7 +516,7 @@ and 'loc t' =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
-  | EObjectThisReference of 'loc * 'loc virtual_reason
+  | EObjectThisSuperReference of 'loc * 'loc virtual_reason * This_finder.kind
   | EComponentThisReference of {
       component_loc: 'loc;
       this_loc: 'loc;
@@ -1301,7 +1301,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     in
     EHookRuleViolation { callee_loc = f callee_loc; call_loc = f call_loc; hook_rule }
   | EHookNaming l -> EHookNaming (f l)
-  | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
+  | EObjectThisSuperReference (loc, r, k) -> EObjectThisSuperReference (f loc, map_reason r, k)
   | EComponentThisReference { component_loc; this_loc } ->
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
   | EComponentCase loc -> EComponentCase (f loc)
@@ -1670,7 +1670,7 @@ let util_use_op_of_msg nope util = function
   | EHookUniqueIncompatible _
   | EHookRuleViolation _
   | EHookNaming _
-  | EObjectThisReference _
+  | EObjectThisSuperReference _
   | EComponentThisReference _
   | EComponentCase _
   | EComponentMissingReturn _
@@ -1861,7 +1861,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeParamMinArity (loc, _)
   | EAssignConstLikeBinding { loc; _ }
   | EMalformedCode loc
-  | EObjectThisReference (loc, _)
+  | EObjectThisSuperReference (loc, _, _)
   | EComponentThisReference { this_loc = loc; _ }
   | EComponentCase loc
   | EInvalidGraphQL (loc, _)
@@ -2689,7 +2689,7 @@ let friendly_message_of_msg = function
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->
     Normal (MessageCannotReassignConstantLikeBinding { definition; binding_kind })
   | EMalformedCode _ -> Normal MessageSuppressionMalformedCode
-  | EObjectThisReference (_, reason) -> Normal (MessageThisInObject reason)
+  | EObjectThisSuperReference (_, reason, k) -> Normal (MessageThisSuperInObject (reason, k))
   | EComponentThisReference { component_loc; this_loc = _ } ->
     Normal (MessageThisInComponent component_loc)
   | EComponentCase _ -> Normal MessageComponentNonUpperCase
@@ -3133,7 +3133,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
-  | EObjectThisReference _ -> Some ObjectThisReference
+  | EObjectThisSuperReference _ -> Some ObjectThisReference
   | EComponentThisReference _ -> Some ComponentThisReference
   | EComponentCase _ -> Some ComponentCase
   | EComponentMissingReturn _ -> Some ComponentMissingReturn

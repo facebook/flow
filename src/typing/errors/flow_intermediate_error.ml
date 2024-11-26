@@ -3464,19 +3464,29 @@ let to_printable_error :
       ]
     | MessageThisInExportedFunction ->
       [text "Cannot use "; code "this"; text " in an exported function."]
-    | MessageThisInObject reason ->
+    | MessageThisSuperInObject (reason, kind) ->
+      let (v, suggestion) =
+        match kind with
+        | This_finder.This ->
+          ( "this",
+            [
+              text " Consider replacing the reference to ";
+              code "this";
+              text " with the name of the object, or rewriting the object as a class.";
+            ]
+          )
+        | This_finder.Super -> ("super", [text " Consider rewriting the object as a class."])
+      in
       [
         text "Cannot reference ";
-        code "this";
+        code v;
         text " from within ";
         ref reason;
         text ". For safety, Flow restricts access to ";
-        code "this";
+        code v;
         text " inside object methods since these methods may be unbound and rebound.";
-        text " Consider replacing the reference to ";
-        code "this";
-        text " with the name of the object, or rewriting the object as a class.";
       ]
+      @ suggestion
     | MessageTSAsConst enabled_casting_syntax ->
       let (example, _) = type_casting_examples enabled_casting_syntax in
       [

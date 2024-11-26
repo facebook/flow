@@ -5,13 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (LocSet : Flow_set.S) = struct
+type kind =
+  | Super
+  | This
+
+module Make (LocMap : WrappedMap.S) = struct
   class ['loc] finder =
     object (this)
-      inherit [LocSet.t, 'loc] Flow_ast_visitor.visitor ~init:LocSet.empty
+      inherit [kind LocMap.t, 'loc] Flow_ast_visitor.visitor ~init:LocMap.empty
 
       method! this_expression loc node =
-        this#update_acc (LocSet.add loc);
+        this#update_acc (LocMap.add loc This);
+        node
+
+      method! super_expression loc node =
+        this#update_acc (LocMap.add loc Super);
         node
 
       (* Any mentions of `this` in these constructs would reference
