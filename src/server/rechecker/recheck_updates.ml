@@ -10,10 +10,12 @@ module FilenameSet = Utils_js.FilenameSet
 
 let spf = Printf.sprintf
 
-type error = {
-  msg: string;
-  exit_status: Exit.t;
-}
+type error =
+  | RecoverableShouldReinitNonLazily of { msg: string }
+  | Unrecoverable of {
+      msg: string;
+      exit_status: Exit.t;
+    }
 
 let is_incompatible_package_json ~options ~reader =
   (* WARNING! Be careful when adding new incompatibilities to this function. While dfind will
@@ -43,7 +45,10 @@ let get_updated_flowconfig config_path =
   match config with
   | Ok (config, _warnings) -> Ok (config, hash)
   | Error _ ->
-    Error { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
+    Error
+      (Unrecoverable
+         { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
+      )
 
 let assert_compatible_flowconfig_version =
   let not_satisfied version_constraint =
@@ -58,7 +63,7 @@ let assert_compatible_flowconfig_version =
           version_constraint
           Flow_version.version
       in
-      Error { msg; exit_status = Exit.Flowconfig_changed }
+      Error (Unrecoverable { msg; exit_status = Exit.Flowconfig_changed })
     | _ -> Ok ()
 
 (** determines whether the flowconfig changed in a way that requires restarting
@@ -79,7 +84,10 @@ let assert_compatible_flowconfig_change ~options config_path =
   else
     let () = Hh_logger.error "Flowconfig hash changed from %S to %S" old_hash new_hash in
     let%bind () = assert_compatible_flowconfig_version new_config in
-    Error { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
+    Error
+      (Unrecoverable
+         { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
+      )
 
 (** Checks whether [updates] includes the flowconfig, and if so whether the change can
     be handled incrementally (returns [Ok ()]) or we need to restart (returns [Error]) *)
@@ -112,10 +120,12 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
       |> String.concat "\n"
     in
     Error
-      {
-        msg = spf "%s\nPackages changed in an incompatible way" messages;
-        exit_status = Exit.Server_out_of_date;
-      }
+      (Unrecoverable
+         {
+           msg = spf "%s\nPackages changed in an incompatible way" messages;
+           exit_status = Exit.Server_out_of_date;
+         }
+      )
   else
     Ok ()
 
@@ -128,7 +138,7 @@ let did_content_change ~reader filename =
     let reader = Abstract_state_reader.State_reader reader in
     not (Parsing_service_js.does_content_match_file_hash ~reader file content)
 
-let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates =
+let check_for_lib_changes ~should_recover ~reader ~all_libs ~root ~skip_incompatible updates =
   let flow_typed_path = File_path.to_string (Files.get_flowtyped_path root) in
   let is_changed_lib filename =
     let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
@@ -139,11 +149,19 @@ let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates =
     let messages =
       SSet.elements libs |> List.rev_map (spf "Modified lib file: %s") |> String.concat "\n"
     in
-    Error
-      {
-        msg = spf "%s\nLib files changed in an incompatible way" messages;
-        exit_status = Exit.Server_out_of_date;
-      }
+    if should_recover then
+      Error
+        (RecoverableShouldReinitNonLazily
+           { msg = spf "%s\nLib files changed in an incompatible way" messages }
+        )
+    else
+      Error
+        (Unrecoverable
+           {
+             msg = spf "%s\nLib files changed in an incompatible way" messages;
+             exit_status = Exit.Server_out_of_date;
+           }
+        )
   else
     Ok ()
 
@@ -206,7 +224,15 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   let%bind () =
     check_for_package_json_changes ~is_incompatible_package_json ~skip_incompatible updates
   in
-  (* Die if a lib file changed *)
-  let%bind () = check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates in
+  (* Try to recover/die if libs files have changed *)
+  let%bind () =
+    check_for_lib_changes
+      ~should_recover:(Options.libdef_recheck_partial_fix options)
+      ~reader
+      ~all_libs
+      ~root
+      ~skip_incompatible
+      updates
+  in
   (* Return only the updates we care about *)
   Ok (filter_wanted_updates ~file_options ~sroot ~want updates)

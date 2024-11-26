@@ -93,8 +93,11 @@ let process_updates ~skip_incompatible ~options env updates =
   match
     Recheck_updates.process_updates ~skip_incompatible ~options ~libs:env.ServerEnv.libs updates
   with
-  | Ok updates -> updates
-  | Error { Recheck_updates.msg; exit_status } -> Exit.exit ~msg exit_status
+  | Ok updates -> ServerMonitorListenerState.NormalUpdates updates
+  | Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg }) ->
+    Hh_logger.info "%s" msg;
+    ServerMonitorListenerState.RequiredFullCheckReinit
+  | Error (Recheck_updates.Unrecoverable { msg; exit_status }) -> Exit.exit ~msg exit_status
 
 (** Notify clients that a recheck is starting. This is used to know that
     error updates are incremental. [send_end_recheck] must be called when
@@ -123,6 +126,7 @@ let recheck
     env
     ?(files_to_force = CheckedSet.empty)
     ~find_ref_command
+    ~require_full_check_reinit
     ~changed_mergebase
     ~missed_changes
     ~will_be_checked_files
@@ -146,6 +150,7 @@ let recheck
             ~updates
             ~find_ref_request
             ~files_to_force
+            ~require_full_check_reinit
             ~changed_mergebase
             ~missed_changes
             ~will_be_checked_files
@@ -272,6 +277,7 @@ let rec recheck_single ~recheck_count genv env =
     files_to_prioritize;
     files_to_force;
     find_ref_command;
+    require_full_check_reinit;
   } =
     workload
   in
@@ -290,7 +296,8 @@ let rec recheck_single ~recheck_count genv env =
       files_to_recheck
   in
   if
-    (not did_change_mergebase)
+    (not require_full_check_reinit)
+    && (not did_change_mergebase)
     && CheckedSet.is_empty files_to_recheck
     && CheckedSet.is_empty files_to_force
   then
@@ -321,6 +328,7 @@ let rec recheck_single ~recheck_count genv env =
             genv
             env
             ~files_to_force
+            ~require_full_check_reinit
             ~changed_mergebase
             ~missed_changes
             ~will_be_checked_files

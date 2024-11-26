@@ -2305,7 +2305,8 @@ let load_saved_state ~profiling ~workers options =
        in
        let updates =
          match updates with
-         | Base.Result.Error { Recheck_updates.msg; _ } ->
+         | Base.Result.Error (Recheck_updates.Unrecoverable { msg; _ })
+         | Base.Result.Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg }) ->
            Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
            raise Saved_state.(Invalid_saved_state Changed_files)
          | Base.Result.Ok updates -> updates
@@ -2412,6 +2413,59 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
     in
     Lwt.return (log_recheck_event, recheck_stats, Ok [], env)
 
+let reinit_full_check
+    ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env =
+  Hh_logger.info "Reiniting with a full check.";
+  let%lwt env =
+    with_transaction "partial-reinit" @@ fun transaction reader ->
+    let file_options = Options.file_options options in
+    let (ordered_libs, _) = Files.init file_options in
+
+    let%lwt (env, libs_ok) =
+      init_with_initial_state
+        ~profiling
+        ~workers
+        ~transaction
+        ~reader
+        ~options
+        ~restore_dependency_info:(fun () -> Lwt.return env.ServerEnv.dependency_info)
+        (Some env)
+        ( env.ServerEnv.files,
+          env.ServerEnv.unparsed,
+          ordered_libs,
+          env.ServerEnv.package_json_files,
+          Modulename.Set.empty,
+          env.ServerEnv.errors.ServerEnv.local_errors
+        )
+    in
+    (* TODO: what do we do if they're not? exit? *)
+    ignore libs_ok;
+    Lwt.return env
+  in
+
+  (* schedule a recheck of all changes since saved state -- both the upstream
+     changes between when the saved state was generated and master, and local
+     updates since master. *)
+  let all_checked_set =
+    CheckedSet.(empty |> add ~focused:env.ServerEnv.files |> union files_to_force |> union updates)
+  in
+  will_be_checked_files := all_checked_set;
+
+  ServerMonitorListenerState.push_after_reinit
+    ~files_to_prioritize:(CheckedSet.focused all_checked_set)
+    ~files_to_recheck:(CheckedSet.focused all_checked_set)
+    ~files_to_force:all_checked_set
+    ();
+
+  let log_recheck_event ~profiling =
+    FlowEventLogger.reinit_full_check ~profiling;
+    Lwt.return_unit
+  in
+  let recheck_stats =
+    { LspProt.dependent_file_count = 0; changed_file_count = 0; top_cycle = None }
+  in
+  Lwt.return (log_recheck_event, recheck_stats, Ok [], env)
+
 let recheck
     ~profiling
     ~options
@@ -2419,12 +2473,22 @@ let recheck
     ~updates
     ~find_ref_request
     ~files_to_force
+    ~require_full_check_reinit
     ~changed_mergebase
     ~missed_changes
     ~will_be_checked_files
     env =
   let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
-  if missed_changes && did_change_mergebase then
+  if require_full_check_reinit then
+    reinit_full_check
+      ~profiling
+      ~workers
+      ~options
+      ~updates
+      ~files_to_force
+      ~will_be_checked_files
+      env
+  else if missed_changes && did_change_mergebase then
     (* Reinitialize the server. This should be just like starting up a new server,
        except that the existing server stays running and can answer requests
        using committed data until the re-init is complete. *)

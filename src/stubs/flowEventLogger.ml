@@ -111,6 +111,8 @@ let recheck_series ~recheck_count:_ ~profiling:_ = ()
 
 let reinit ~profiling:_ = ()
 
+let reinit_full_check ~profiling:_ = ()
+
 let murdered_by_oom_killer _ = ()
 
 let ephemeral_command_success ~json_data:_ ~client_context:_ ~profiling:_ = ()

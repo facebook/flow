@@ -56,6 +56,7 @@ type recheck_workload = {
     )
     option;
   metadata: MonitorProt.file_watcher_metadata;
+  require_full_check_reinit: bool;
 }
 
 type workload_changes = {
@@ -68,14 +69,18 @@ type priority =
   | Priority
   | Normal
 
+type updates =
+  | NormalUpdates of Utils_js.FilenameSet.t
+  | RequiredFullCheckReinit
+
 (* APIs to wait *)
 val wait_for_anything :
-  process_updates:(skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(skip_incompatible:bool -> SSet.t -> updates) ->
   get_forced:(unit -> CheckedSet.t) ->
   unit Lwt.t
 
 val wait_for_updates_for_recheck :
-  process_updates:(skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(skip_incompatible:bool -> SSet.t -> updates) ->
   get_forced:(unit -> CheckedSet.t) ->
   priority:priority ->
   workload_changes Lwt.t
@@ -91,6 +96,6 @@ val update_env : ServerEnv.env -> ServerEnv.env
 val requeue_workload : recheck_workload -> unit
 
 val get_and_clear_recheck_workload :
-  process_updates:(skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(skip_incompatible:bool -> SSet.t -> updates) ->
   get_forced:(unit -> CheckedSet.t) ->
   priority * recheck_workload

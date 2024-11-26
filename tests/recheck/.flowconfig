@@ -7,3 +7,4 @@ lib
 [options]
 all=true
 exact_by_default=false
+experimental.libdef_recheck_partial_fix=true

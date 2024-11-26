@@ -17,7 +17,7 @@ assert_ok "$FLOW" force-recheck --no-auto-start lib/lib.js
 echo "second status, after touch"
 assert_errors "$FLOW" status --no-auto-start 2>/dev/null
 
-# This should cause the flow server to die, but the monitor will restart one
+# This also should not cause the Flow server to die, and Flow should return full errors.
 cp lib/lib.js.modified lib/lib.js
 assert_ok "$FLOW" force-recheck --no-auto-start lib/lib.js
 echo "third status, after modification"
@@ -29,15 +29,21 @@ assert_ok "$FLOW" stop
 # Start the server back up but turn off the restarting behavior
 start_flow . --no-auto-restart
 
-# This should cause the flow server and monitor to die, due to --no-auto-restart
+# This also should not cause the Flow server to die, and Flow should return full errors.
 cp lib/lib.js.orig lib/lib.js
 assert_ok "$FLOW" force-recheck --no-auto-start lib/lib.js
 
 echo "fourth status, after modification"
-# This should have no output, since it won't find a server. It will print stuff
-# on stderr but it includes the nondeterministically-chosen tmpdir so we can't
-# compare against it.
-assert_exit 6 "$FLOW" status --no-auto-start 2>/dev/null
+# This also should not cause the Flow server to die, and Flow should return full errors.
+assert_errors "$FLOW" status --no-auto-start 2>/dev/null
+
+# This should fixed the type error
+cp lib/lib.js.fixed lib/lib.js
+assert_ok "$FLOW" force-recheck --no-auto-start lib/lib.js
+
+echo "fixth status, after modification"
+# All flow errors should be fixed.
+assert_ok "$FLOW" status --no-auto-start 2>/dev/null
 
 echo "done"
 

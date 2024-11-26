@@ -130,11 +130,16 @@ type recheck_workload = {
     )
     option;
   metadata: MonitorProt.file_watcher_metadata;
+  require_full_check_reinit: bool;
 }
 
 type priority =
   | Priority
   | Normal
+
+type updates =
+  | NormalUpdates of Utils_js.FilenameSet.t
+  | RequiredFullCheckReinit
 
 let empty_recheck_workload =
   {
@@ -143,6 +148,7 @@ let empty_recheck_workload =
     files_to_force = CheckedSet.empty;
     find_ref_command = None;
     metadata = MonitorProt.empty_file_watcher_metadata;
+    require_full_check_reinit = false;
   }
 
 let recheck_acc = ref empty_recheck_workload
@@ -215,6 +221,21 @@ let update
   in
   (workload, orig_workload != workload)
 
+let update_to_require_reinit workload =
+  if workload.require_full_check_reinit then
+    (workload, false)
+  else
+    ( {
+        files_to_prioritize = workload.files_to_prioritize;
+        files_to_recheck = workload.files_to_recheck;
+        files_to_force = workload.files_to_force;
+        find_ref_command = workload.find_ref_command;
+        metadata = workload.metadata;
+        require_full_check_reinit = true;
+      },
+      true
+    )
+
 type workload_changes = {
   num_files_to_prioritize: int;
   num_files_to_recheck: int;
@@ -269,16 +290,20 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
            let (workload, changed) =
              match files with
              | ChangedFiles (changed_files, urgent) ->
-               let updates = process_updates ~skip_incompatible:false changed_files in
-               if urgent then
-                 update ~files_to_prioritize:updates workload
-               else
-                 update ~files_to_recheck:updates workload
+               (match process_updates ~skip_incompatible:false changed_files with
+               | NormalUpdates updates ->
+                 if urgent then
+                   update ~files_to_prioritize:updates workload
+                 else
+                   update ~files_to_recheck:updates workload
+               | RequiredFullCheckReinit -> update_to_require_reinit workload)
              | FilesToForceFocusedAndRecheck { files; skip_incompatible } ->
-               let updates = process_updates ~skip_incompatible files in
-               let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
-               let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
-               update ~files_to_recheck:updates ~files_to_force workload
+               (match process_updates ~skip_incompatible files with
+               | NormalUpdates updates ->
+                 let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
+                 let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
+                 update ~files_to_recheck:updates ~files_to_force workload
+               | RequiredFullCheckReinit -> update_to_require_reinit workload)
              | GlobalFindRef { request; client; references_to_lsp_response; def_locs } ->
                let files_to_recheck = FilenameSet.of_list (List.filter_map Loc.source def_locs) in
                update
@@ -337,8 +362,16 @@ let requeue_workload workload =
         | (r, _) ->
           r);
       metadata = MonitorProt.merge_file_watcher_metadata prev.metadata workload.metadata;
+      require_full_check_reinit =
+        prev.require_full_check_reinit || workload.require_full_check_reinit;
     }
   in
+  if prev.require_full_check_reinit || workload.require_full_check_reinit then
+    Hh_logger.info
+      "Previous recheck requires restart: %b; new workload requires restart: %b"
+      prev.require_full_check_reinit
+      workload.require_full_check_reinit;
+
   recheck_acc := next
 
 let get_and_clear_recheck_workload ~process_updates ~get_forced =

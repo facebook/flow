@@ -1,0 +1,32 @@
+No errors initially:
+No errors!
+
+Updating libdef and then removing a file should error:
+Error ------------------------------------------------------------------------------------------------------ test.js:1:8
+
+Cannot resolve module `./to_be_removed`. [cannot-resolve-module]
+
+   1| import './to_be_removed'
+             ^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+Adding back the removed file and then updating libdef should remove error:
+No errors!
+Removing a file and then updating libdef should error:
+Error ------------------------------------------------------------------------------------------------------ test.js:1:8
+
+Cannot resolve module `./to_be_removed`. [cannot-resolve-module]
+
+   1| import './to_be_removed'
+             ^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+Updating libdef and add then addiing back the removed file should remove error:
+No errors!
+

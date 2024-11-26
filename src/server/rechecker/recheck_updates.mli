@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type error = {
-  msg: string;
-  exit_status: Exit.t;
-}
+type error =
+  | RecoverableShouldReinitNonLazily of { msg: string }
+  | Unrecoverable of {
+      msg: string;
+      exit_status: Exit.t;
+    }
 
 val process_updates :
   ?skip_incompatible:bool ->

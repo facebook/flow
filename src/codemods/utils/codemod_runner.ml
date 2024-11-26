@@ -617,6 +617,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
             ~updates:(CheckedSet.add ~focused:roots CheckedSet.empty)
             ~find_ref_request:FindRefsTypes.empty_request
             ~files_to_force:CheckedSet.empty
+            ~require_full_check_reinit:false
             ~changed_mergebase:None
             ~missed_changes:false
             ~will_be_checked_files:(ref CheckedSet.empty)
