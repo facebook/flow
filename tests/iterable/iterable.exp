@@ -14,9 +14,9 @@ References:
    array.js:7:20
       7| ['hi'] as Iterable<number>; // Error string ~> number
                             ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- array.js:8:1
@@ -35,9 +35,9 @@ References:
    array.js:8:23
       8| ['hi', 1] as Iterable<string>; // Error number ~> string
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- caching_bug.js:21:79
@@ -56,9 +56,9 @@ References:
    caching_bug.js:21:62
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- iterator_result.js:23:31
@@ -106,15 +106,15 @@ value of property `@@iterator`. [incompatible-return]
                   ^^^
 
 References:
-   <BUILTINS>/core.js:1814:28
-   1814|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1932:28
+   1932|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    map.js:13:55
      13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10
@@ -133,9 +133,9 @@ References:
    set.js:13:47
      13| function setTest4(set: Set<string>): Iterable<number> {
                                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- string.js:3:2
@@ -154,9 +154,9 @@ References:
    string.js:3:29
       3| (new String("hi"): Iterable<number>); // Error - string is a Iterable<string>
                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:22
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                              ^^^^^ [3]
+   <BUILTINS>/core.js:1749:30
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
 
 
 

@@ -1311,6 +1311,7 @@ Flags: --pretty
     {"name":"Intl$PluralRules","type":"typeof Intl$PluralRules"},
     {"name":"isFinite","type":"(number: mixed) => boolean"},
     {"name":"isNaN","type":"(number: mixed) => boolean"},
+    {"name":"Iterator","type":"typeof Iterator"},
     {
       "name":"JSON",
       "type":"{|+parse: (text: string, reviver?: (key: any, value: any) => any) => any, +stringify: ((value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: mixed, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)|}"

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:2
 
-Cannot cast `foo[Symbol.iterator]` to boolean because `$Iterator` [1] is incompatible with boolean [2].
+Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator` [1] is incompatible with boolean [2].
 [incompatible-cast]
 
    iterator.js:6:2

@@ -22,8 +22,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                             ^^^
 
 References:
-   <BUILTINS>/core.js:1942:19
-   1942| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2060:19
+   2060| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    arr_rest.js:9:16
       9| const [...y] = new Set() // still error
@@ -322,8 +322,8 @@ Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. 
                 ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1751:11
-   1751| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1865:11
+   1865| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -461,8 +461,8 @@ References:
    implicit_instantiation.js:147:11
     147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
                    ^^^^^ [2]
-   <BUILTINS>/core.js:1942:19
-   1942| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2060:19
+   2060| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
 
 
@@ -481,8 +481,8 @@ References:
    implicit_instantiation.js:148:11
     148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
                    ^^^^^ [2]
-   <BUILTINS>/core.js:1942:19
-   1942| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2060:19
+   2060| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
 
 
@@ -723,7 +723,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ----------------------------------------------------------------------------------------------------- lits.js:52:3
 
-Cannot cast `s2.values()` to `Iterator` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot cast `s2.values()` to `Iterator` because number [1] is incompatible with string [2] in type argument `Yield` [3].
 [incompatible-cast]
 
    lits.js:52:3
@@ -737,9 +737,9 @@ References:
    lits.js:52:27
      52|   s2.values() as Iterator<string>; // error number ~> string
                                    ^^^^^^ [2]
-   <BUILTINS>/core.js:1749:16
-   1749| type Iterator<+T> = $Iterator<T,void,void>;
-                        ^ [3]
+   <BUILTINS>/core.js:1759:25
+   1759| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+                                 ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ misplaced_error.js:9:31

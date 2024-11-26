@@ -859,8 +859,8 @@ References:
    string.js:1:18
       1| declare const s: string;
                           ^^^^^^ [1]
-   <BUILTINS>/core.js:1751:11
-   1751| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1865:11
+   1865| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 

@@ -42,9 +42,9 @@ References:
    class.js:23:39
      23|   *stmt_return_err(): Generator<void, number, void> {
                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1756:29
-   1756| interface Generator<+Yield,+Return,-Next> {
-                                     ^^^^^^ [3]
+   <BUILTINS>/core.js:1879:24
+   1879| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+                                ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:28:22
@@ -125,15 +125,15 @@ of property `@@iterator`. [incompatible-type-arg]
                     ^^
 
 References:
-   <BUILTINS>/core.js:1749:38
-   1749| type Iterator<+T> = $Iterator<T,void,void>;
-                                              ^^^^ [1]
+   <BUILTINS>/core.js:1759:50
+   1759| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+                                                          ^^^^ [1]
    class.js:71:71
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
                                                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1745:37
-   1745| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
-                                             ^^^^ [3]
+   <BUILTINS>/core.js:1749:50
+   1749| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                                          ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:41
@@ -374,9 +374,9 @@ References:
    generators.js:22:46
      22| function *stmt_return_err(): Generator<void, number, void> {
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1756:29
-   1756| interface Generator<+Yield,+Return,-Next> {
-                                     ^^^^^^ [3]
+   <BUILTINS>/core.js:1879:24
+   1879| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+                                ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:27:20
