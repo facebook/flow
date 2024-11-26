@@ -1740,6 +1740,140 @@ let assert_valid_hashes updates invalid_hashes =
     Exit.(exit ~msg:"Saved state verification failed" Invalid_saved_state)
   )
 
+let init_with_initial_state
+    ~profiling
+    ~workers
+    ~transaction
+    ~reader
+    ~options
+    ~restore_dependency_info
+    env
+    (parsed, unparsed, ordered_libs, packages, dirty_modules, local_errors) =
+  let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
+  Hh_logger.info "Loading libraries";
+  MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
+
+  (* We actually parse and typecheck the libraries, even though we're loading from saved state.
+   * We'd need to check them anyway, as soon as any file is checked, since we don't track
+   * dependents for libraries. And we don't really support incrementally checking libraries
+   *
+   * The order of libraries is significant. If two libraries define the same thing, the one
+   * merged later wins. For this reason, the saved state stores the order in which the non-flowlib
+   * libraries were merged. So all we need to guarantee here is:
+   *
+   * 1. The builtin libraries are merged first
+   * 2. The non-builtin libraries are merged in the same order as before
+   *)
+  let libs = SSet.of_list ordered_libs in
+  let%lwt ( additional_parsed,
+            additional_unparsed,
+            _unchanged,
+            _not_found,
+            additional_dirty_modules,
+            additional_local_errors,
+            _
+          ) =
+    let additional_libdef_files_not_delivered = ref true in
+    parse ~options ~profiling ~workers ~reader (fun () ->
+        if !additional_libdef_files_not_delivered then (
+          let files = SSet.fold (fun name acc -> File_key.LibFile name :: acc) libs [] in
+          additional_libdef_files_not_delivered := false;
+          Bucket.of_list files
+        ) else
+          Bucket.of_list []
+    )
+  in
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
+    let suppressions = Error_suppressions.empty in
+    let warnings = FilenameMap.empty in
+    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
+  in
+  let (parsed, unparsed, dirty_modules, local_errors) =
+    ( FilenameSet.union parsed additional_parsed,
+      FilenameSet.union unparsed additional_unparsed,
+      Modulename.Set.union dirty_modules additional_dirty_modules,
+      FilenameMap.union
+        ~combine:(fun _ a b -> Some (Flow_error.ErrorSet.union a b))
+        local_errors
+        additional_local_errors
+    )
+  in
+  Hh_logger.info "Resolving dependencies";
+  MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
+
+  (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
+  let%lwt (_changed_modules, duplicate_providers) =
+    commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
+  in
+  let%lwt () =
+    resolve_requires
+      ~transaction
+      ~reader
+      ~options
+      ~profiling
+      ~workers
+      ~parsed:(FilenameSet.elements additional_parsed)
+      ~parsed_set:additional_parsed
+  in
+  let errors =
+    let merge_errors = FilenameMap.empty in
+    { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
+  in
+
+  let%lwt dependency_info = restore_dependency_info () in
+  (* We explicitly add libdef files to the dependency graph, since they are not included
+   * in the saved state due to unstable temporarily path problem. *)
+  let dependency_info =
+    Dependency_info.update
+      dependency_info
+      (FilenameSet.fold
+         (fun f -> FilenameMap.add f (FilenameSet.empty, FilenameSet.empty))
+         additional_parsed
+         FilenameMap.empty
+      )
+      FilenameSet.empty
+  in
+
+  Hh_logger.info "Indexing files";
+  let%lwt exports =
+    with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed
+    )
+  in
+
+  let connections =
+    Base.Option.value_map
+      ~f:(fun env -> env.ServerEnv.connections)
+      ~default:Persistent_connection.empty
+      env
+  in
+
+  let (collated_errors, _) =
+    ErrorCollator.update_local_collated_errors
+      ~reader:abstract_reader
+      ~options
+      suppressions
+      local_errors
+      Collated_errors.empty
+    |> ErrorCollator.update_error_state_timestamps
+  in
+
+  let env =
+    mk_env
+      ~files:parsed
+      ~unparsed
+      ~package_json_files:packages
+      ~dependency_info
+      ~ordered_libs
+      ~libs
+      ~errors
+      ~collated_errors
+      ~exports
+      ~connections
+      ~master_cx
+  in
+  Lwt.return (env, libs_ok)
+
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
   with_transaction "init" @@ fun transaction reader ->
   let is_init = Option.is_none env in
@@ -1950,129 +2084,20 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   Hh_logger.info "Loading libraries";
   MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
 
-  (* We actually parse and typecheck the libraries, even though we're loading from saved state.
-   * We'd need to check them anyway, as soon as any file is checked, since we don't track
-   * dependents for libraries. And we don't really support incrementally checking libraries
-   *
-   * The order of libraries is significant. If two libraries define the same thing, the one
-   * merged later wins. For this reason, the saved state stores the order in which the non-flowlib
-   * libraries were merged. So all we need to guarantee here is:
-   *
-   * 1. The builtin libraries are merged first
-   * 2. The non-builtin libraries are merged in the same order as before
-   *)
   let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
-  let libs = SSet.of_list ordered_libs in
-  let%lwt ( additional_parsed,
-            additional_unparsed,
-            _unchanged,
-            _not_found,
-            additional_dirty_modules,
-            additional_local_errors,
-            _
-          ) =
-    let additional_libdef_files_not_delivered = ref true in
-    parse ~options ~profiling ~workers ~reader (fun () ->
-        if !additional_libdef_files_not_delivered then (
-          let files = SSet.fold (fun name acc -> File_key.LibFile name :: acc) libs [] in
-          additional_libdef_files_not_delivered := false;
-          Bucket.of_list files
-        ) else
-          Bucket.of_list []
-    )
-  in
-  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
-    let suppressions = Error_suppressions.empty in
-    let warnings = FilenameMap.empty in
-    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
-  in
-  let (parsed, unparsed, dirty_modules, local_errors) =
-    ( FilenameSet.union parsed additional_parsed,
-      FilenameSet.union unparsed additional_unparsed,
-      Modulename.Set.union dirty_modules additional_dirty_modules,
-      FilenameMap.union
-        ~combine:(fun _ a b -> Some (Flow_error.ErrorSet.union a b))
-        local_errors
-        additional_local_errors
-    )
-  in
-  Hh_logger.info "Resolving dependencies";
-  MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
-
-  (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
-  let%lwt (_changed_modules, duplicate_providers) =
-    commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
-  in
-  let%lwt () =
-    resolve_requires
+  let%lwt (env, libs_ok) =
+    init_with_initial_state
+      ~profiling
+      ~workers
       ~transaction
       ~reader
       ~options
-      ~profiling
-      ~workers
-      ~parsed:(FilenameSet.elements additional_parsed)
-      ~parsed_set:additional_parsed
-  in
-  let errors =
-    let merge_errors = FilenameMap.empty in
-    { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
-  in
-
-  let%lwt dependency_info =
-    with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
-        Lwt.return (Saved_state.restore_dependency_info dependency_graph)
-    )
-  in
-  (* We explicitly add libdef files to the dependency graph, since they are not included
-   * in the saved state due to unstable temporarily path problem. *)
-  let dependency_info =
-    Dependency_info.update
-      dependency_info
-      (FilenameSet.fold
-         (fun f -> FilenameMap.add f (FilenameSet.empty, FilenameSet.empty))
-         additional_parsed
-         FilenameMap.empty
-      )
-      FilenameSet.empty
-  in
-
-  Hh_logger.info "Indexing files";
-  let%lwt exports =
-    with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed
-    )
-  in
-
-  let connections =
-    Base.Option.value_map
-      ~f:(fun env -> env.ServerEnv.connections)
-      ~default:Persistent_connection.empty
+      ~restore_dependency_info:(fun () ->
+        with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
+            Lwt.return (Saved_state.restore_dependency_info dependency_graph)
+        ))
       env
-  in
-
-  let (collated_errors, _) =
-    ErrorCollator.update_local_collated_errors
-      ~reader:abstract_reader
-      ~options
-      suppressions
-      local_errors
-      Collated_errors.empty
-    |> ErrorCollator.update_error_state_timestamps
-  in
-
-  let env =
-    mk_env
-      ~files:parsed
-      ~unparsed
-      ~package_json_files:packages
-      ~dependency_info
-      ~ordered_libs
-      ~libs
-      ~errors
-      ~collated_errors
-      ~exports
-      ~connections
-      ~master_cx
+      (parsed, unparsed, ordered_libs, packages, dirty_modules, local_errors)
   in
   Lwt.return (env, libs_ok)
 
