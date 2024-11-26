@@ -8,12 +8,6 @@
 open OUnit2
 open Export_service.For_test
 
-let sf name = File_key.SourceFile name
-
-let module_file file_key = Modulename.Filename file_key
-
-let module_name name = Modulename.Haste (Haste_module_info.of_module_name name)
-
 let inferred_name_of_modulename_tests =
   [
     ( "string_dot" >:: fun ctxt ->
