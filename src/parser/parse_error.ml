@@ -106,7 +106,8 @@ type t =
   | LiteralShorthandProperty
   | MalformedUnicode
   | MatchNonLastRest of [ `Object | `Array ]
-  | MatchNonSingleArgument
+  | MatchEmptyArgument
+  | MatchSpreadArgument
   | MethodInDestructuring
   | MissingJSXClosingTag of string
   | MissingTypeParam
@@ -402,7 +403,8 @@ module PP = struct
         | `Array -> "array"
       in
       Printf.sprintf "In match %s pattern, the rest must be the last element in the pattern" kind
-    | MatchNonSingleArgument -> "`match` only supports one argument"
+    | MatchEmptyArgument -> "`match` argument must not be empty"
+    | MatchSpreadArgument -> "`match` argument cannot contain spread elements"
     | MethodInDestructuring -> "Object pattern can't contain methods"
     | MissingJSXClosingTag name ->
       Printf.sprintf "JSX element %s has no corresponding closing tag." name

@@ -516,3 +516,20 @@ let is_start_of_type_guard env =
   | ((T_IDENTIFIER _ | T_THIS), (T_IS | T_IDENTIFIER { raw = "is"; _ })) ->
     true
   | _ -> false
+
+let reparse_arguments_as_match_argument env (args_loc, args) =
+  let { Expression.ArgList.arguments; _ } = args in
+  if List.is_empty arguments then Parser_env.error_at env (args_loc, Parse_error.MatchEmptyArgument);
+  let filtered_args =
+    List.filter_map
+      (function
+        | Expression.Spread (loc, _) ->
+          Parser_env.error_at env (loc, Parse_error.MatchSpreadArgument);
+          None
+        | Expression.Expression e -> Some e)
+      arguments
+  in
+  match filtered_args with
+  | [expr] -> expr
+  | expressions ->
+    (args_loc, Expression.Sequence { Expression.Sequence.expressions; comments = None })

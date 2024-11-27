@@ -1339,28 +1339,19 @@ module Expression
       (* Consume `match` as an identifier, in case it's a call expression. *)
       let id = Parse.identifier env in
       (* Allows trailing comma. *)
-      let (args_loc, args) = arguments env in
+      let args = arguments env in
       (* `match (<expr>) {` *)
-      if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then (
-        match args with
-        | { Ast.Expression.ArgList.arguments = [Ast.Expression.Expression arg]; _ } ->
-          Cover_expr (match_expression ~start_loc ~leading ~arg env)
-        | _ ->
-          error_at env (args_loc, Parse_error.MatchNonSingleArgument);
-          let error_arg =
-            ( args_loc,
-              Ast.Expression.Sequence { Ast.Expression.Sequence.expressions = []; comments = None }
-            )
-          in
-          Cover_expr (match_expression ~start_loc ~leading ~arg:error_arg env)
-      ) else
+      if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then
+        let arg = Parser_common.reparse_arguments_as_match_argument env args in
+        Cover_expr (match_expression ~start_loc ~leading ~arg env)
+      else
         (* It's actually a call expression of the form `match(...)` *)
         let callee = (fst id, Expression.Identifier id) in
+        let (args_loc, _) = args in
         let loc = Loc.btwn start_loc args_loc in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
         let call =
-          Expression.Call
-            { Expression.Call.callee; targs = None; arguments = (args_loc, args); comments }
+          Expression.Call { Expression.Call.callee; targs = None; arguments = args; comments }
         in
         (* Could have a chained call after this. *)
         call_cover
