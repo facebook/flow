@@ -9,6 +9,7 @@ Library Definitions:
 type ReactConfigShim<Props, DefaultProps> = $ReadOnly<{
   ...Omit<Props, $Keys<DefaultProps>>, ...Partial<DefaultProps>
 }>;
+```
 
 ### 0.254.2
 
