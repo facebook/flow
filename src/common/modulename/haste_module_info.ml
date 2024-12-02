@@ -11,11 +11,7 @@ type t = {
 }
 [@@deriving show]
 
-let default_namespace_bitset = Bitset.all_one 1
-
 let mk ~module_name ~namespace_bitset = { module_name; namespace_bitset }
-
-let of_module_name module_name = { module_name; namespace_bitset = default_namespace_bitset }
 
 let module_name { module_name; _ } = module_name
 
