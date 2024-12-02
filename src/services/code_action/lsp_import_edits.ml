@@ -162,7 +162,11 @@ let haste_package_path ~module_system_info ~src_dir require_path =
       match remaining with
       | [] -> None
       | package_name_candidate :: parent_dir_names ->
-        if module_system_info.is_package_file package_name_candidate then
+        if
+          module_system_info.is_package_file
+            ~module_path:require_path
+            ~module_name:package_name_candidate
+        then
           let package_path_parts = List.rev (package_name_candidate :: parent_dir_names) in
           let within_package =
             match find_ancestor_rev package_path_parts src_parts with

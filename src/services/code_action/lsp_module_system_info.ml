@@ -10,6 +10,6 @@ type t = {
   haste_module_system: bool;
   get_haste_module_info: File_key.t -> Haste_module_info.t option;
   get_package_info: File_key.t -> (Package_json.t, unit) result option;
-  is_package_file: string -> bool;
+  is_package_file: module_path:string -> module_name:string -> bool;
   resolves_to_real_path: from:string -> to_real_path:string -> bool;
 }

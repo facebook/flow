@@ -254,9 +254,16 @@ let get_haste_module_info ~reader f =
   |> Base.Option.bind ~f:(Parsing_heaps.Reader.get_haste_module_info ~reader)
 
 let mk_module_system_info =
-  let is_package_file ~reader module_name =
+  let is_package_file ~options ~reader ~module_path ~module_name =
+    let namespace_bitset =
+      Haste_namespaces.namespaces_bitset_of_path
+        ~opts:(Options.haste_namespaces_options options)
+        module_path
+      |> Haste_namespaces.to_bitset
+    in
     let dependency =
-      Parsing_heaps.get_dependency (Modulename.Haste (Haste_module_info.of_module_name module_name))
+      Parsing_heaps.get_dependency
+        (Modulename.Haste (Haste_module_info.mk ~module_name ~namespace_bitset))
     in
     match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
     | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr
@@ -268,7 +275,7 @@ let mk_module_system_info =
       haste_module_system = Options.(module_system options = Haste);
       get_haste_module_info = get_haste_module_info ~reader;
       get_package_info = Parsing_heaps.Reader.get_package_info ~reader;
-      is_package_file = is_package_file ~reader;
+      is_package_file = is_package_file ~options ~reader;
       resolves_to_real_path =
         (fun ~from ~to_real_path -> Sys_utils.realpath from = Some to_real_path);
     }

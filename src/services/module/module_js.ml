@@ -611,37 +611,53 @@ module Haste : MODULE_SYSTEM = struct
         (scope ^ "/" ^ package, rest)
       | package :: rest -> (package, rest)
     in
-    let mname = Modulename.Haste (Haste_module_info.of_module_name name) in
-    let dependency = Parsing_heaps.get_dependency mname in
-    match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
-    | Some addr ->
-      (match (package_dir_opt ~reader addr, subpath) with
-      | (Some package_dir, []) -> Node.resolve_package ~options ~reader ~phantom_acc package_dir
-      | (Some package_dir, subpath) ->
-        (* add a phantom dep on the package name, so we re-resolve the subpath
-           if the package gets a new provider *)
-        record_phantom_dependency mname dependency phantom_acc;
+    let resolve mname =
+      let dependency = Parsing_heaps.get_dependency mname in
+      match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
+      | Some addr ->
+        (match (package_dir_opt ~reader addr, subpath) with
+        | (Some package_dir, []) -> Node.resolve_package ~options ~reader ~phantom_acc package_dir
+        | (Some package_dir, subpath) ->
+          (* add a phantom dep on the package name, so we re-resolve the subpath
+             if the package gets a new provider *)
+          record_phantom_dependency mname dependency phantom_acc;
 
-        let path = Files.construct_path package_dir subpath in
-        Node.resolve_relative
-          ~options
-          ~reader
-          ~phantom_acc
-          ~importing_file
-          ~relative_to_directory:importing_file_dir
-          path
-      | (None, []) -> dependency
-      | (None, _ :: _) ->
-        (* if r = foo/bar and foo is a regular module, don't resolve.
-           TODO: could we provide a better error than just failing to resolve?
+          let path = Files.construct_path package_dir subpath in
+          Node.resolve_relative
+            ~options
+            ~reader
+            ~phantom_acc
+            ~importing_file
+            ~relative_to_directory:importing_file_dir
+            path
+        | (None, []) -> dependency
+        | (None, _ :: _) ->
+          (* if r = foo/bar and foo is a regular module, don't resolve.
+             TODO: could we provide a better error than just failing to resolve?
 
-           we do need to add a phantom dep on the module, so we re-resolve
-           if the provider changes to a package. *)
+             we do need to add a phantom dep on the module, so we re-resolve
+             if the provider changes to a package. *)
+          record_phantom_dependency mname dependency phantom_acc;
+          None)
+      | None ->
         record_phantom_dependency mname dependency phantom_acc;
-        None)
-    | None ->
-      record_phantom_dependency mname dependency phantom_acc;
-      None
+        None
+    in
+    let candidate_haste_namespace_bitset =
+      let opts = Options.haste_namespaces_options options in
+      File_key.to_string importing_file
+      |> Haste_namespaces.namespaces_bitset_of_path ~opts
+      |> Haste_namespaces.reachable_namespace_bitsets_from_namespace_bitset ~opts
+      |> List.map Haste_namespaces.to_bitset
+    in
+    let mname_of_bitset namespace_bitset =
+      Modulename.Haste (Haste_module_info.mk ~module_name:name ~namespace_bitset)
+    in
+    lazy_seq
+      (Base.List.map candidate_haste_namespace_bitset ~f:(fun b ->
+           lazy (resolve (mname_of_bitset b))
+       )
+      )
 
   let resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
       ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
