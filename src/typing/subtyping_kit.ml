@@ -737,6 +737,27 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, ThisTypeAppT (reason_tapp, c, this, ts)) ->
       let reason_op = reason_of_t l in
       instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Lower (use_op, l))
+    (*
+     * When a subtyping question involves a union appearing on the right or an
+     * intersection appearing on the left, the simplification rules are
+     * imprecise: we split the union / intersection into cases and try to prove
+     * that the subtyping question holds for one of the cases, but each of those
+     * cases may be unprovable, which might lead to spurious errors. In
+     * particular, obvious assertions such as (A | B) & C is a subtype of A | B
+     * cannot be proved if we choose to split the union first (discharging
+     * unprovable subgoals of (A | B) & C being a subtype of either A or B);
+     * dually, obvious assertions such as A & B is a subtype of (A & B) | C
+     * cannot be proved if we choose to simplify the intersection first
+     * (discharging unprovable subgoals of either A or B being a subtype of (A &
+     * B) | C). So instead, we try inclusion rules to handle such cases.
+     *
+     * An orthogonal benefit is that for large unions or intersections, checking
+     * inclusion is significantly faster that splitting for proving simple
+     * inequalities (O(n) instead of O(n^2) for n cases).
+     *)
+    | (IntersectionT (_, rep), u)
+      when Base.List.mem ~equal:(Concrete_type_eq.eq cx) (InterRep.members rep) u ->
+      ()
     (* If we have a TypeAppT (c, ts) ~> TypeAppT (c, ts) then we want to
      * concretize both cs to PolyTs so that we may referentially compare them.
      * We cannot compare the non-concretized versions since they may have been
@@ -1096,27 +1117,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> ()
       );
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (l, UseT (use_op, t)))
-    (*
-     * When a subtyping question involves a union appearing on the right or an
-     * intersection appearing on the left, the simplification rules are
-     * imprecise: we split the union / intersection into cases and try to prove
-     * that the subtyping question holds for one of the cases, but each of those
-     * cases may be unprovable, which might lead to spurious errors. In
-     * particular, obvious assertions such as (A | B) & C is a subtype of A | B
-     * cannot be proved if we choose to split the union first (discharging
-     * unprovable subgoals of (A | B) & C being a subtype of either A or B);
-     * dually, obvious assertions such as A & B is a subtype of (A & B) | C
-     * cannot be proved if we choose to simplify the intersection first
-     * (discharging unprovable subgoals of either A or B being a subtype of (A &
-     * B) | C). So instead, we try inclusion rules to handle such cases.
-     *
-     * An orthogonal benefit is that for large unions or intersections, checking
-     * inclusion is significantly faster that splitting for proving simple
-     * inequalities (O(n) instead of O(n^2) for n cases).
-     *)
-    | (IntersectionT (_, rep), u)
-      when Base.List.mem ~equal:(Concrete_type_eq.eq cx) (InterRep.members rep) u ->
-      ()
     (* String enum sets can be handled in logarithmic time by just
      * checking for membership in the set.
      *)
