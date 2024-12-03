@@ -70,4 +70,15 @@ let rec eq cx t1 t2 =
       (match Type.Eval.Map.find_opt id (Context.evaluated cx) with
       | Some t -> eq cx t1 t
       | None -> compare t1 (swap_reason t2 t1) = 0)
+    | ( TypeAppT
+          { reason = _; use_op = _; type_ = t1; targs = targs1; from_value = fv1; use_desc = _ },
+        TypeAppT
+          { reason = _; use_op = _; type_ = t2; targs = targs2; from_value = fv2; use_desc = _ }
+      ) ->
+      eq cx t1 t2 && fv1 = fv2 && eq_targs cx targs1 targs2
     | _ -> compare t1 (swap_reason t2 t1) = 0
+
+and eq_targs cx targs1 targs2 =
+  match Base.List.for_all2 targs1 targs2 ~f:(eq cx) with
+  | Base.List.Or_unequal_lengths.Ok v -> v
+  | Base.List.Or_unequal_lengths.Unequal_lengths -> false
