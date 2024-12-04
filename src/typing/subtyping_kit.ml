@@ -1015,6 +1015,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let l = DefT (reason_s, StrT (Literal (None, OrdinaryName s))) in
       let u = HasOwnPropT (use_op, reason_next, l) in
       rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
+    | ( ( StrUtilT { reason = reason_s; op; remainder }
+        | GenericT { reason = reason_s; bound = StrUtilT { reason = _; op; remainder }; _ } ),
+        KeysT (reason_op, o)
+      ) ->
+      let l = StrUtilT { reason = reason_s; op; remainder } in
+      let u = HasOwnPropT (use_op, reason_s, l) in
+      rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
     | (KeysT (reason1, o1), _) ->
       (* flow all keys of o1 to u *)
       rec_flow cx trace (o1, GetKeysT (reason1, UseT (use_op, u)))

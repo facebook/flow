@@ -21,14 +21,19 @@ type DataProp = StringPrefix<'data-'>;
 }
 
 // Use in a dictionary
+type Dict = {+[DataProp]: mixed};
 {
-  const x = {
+  const o = {
     'data-foo': 1,
     'data-bar': true,
   };
-  const d = x as {+[DataProp]: mixed}; // OK
+  const d = o as Dict; // OK
   d['data-baz']; // OK
   d[123]; // ERROR
+  'data-baz' as $Keys<Dict>; // OK
+  declare const x: DataProp;
+  x as $Keys<Dict>; // OK
+  x as $Keys<{['xxx']: mixed}>; // ERROR
 }
 
 // Can use string properties and methods
