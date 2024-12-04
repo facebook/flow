@@ -618,6 +618,10 @@ and Type : sig
       | Extends
     [@@deriving show]
 
+    module ConstModifier : sig
+      type 'M t = 'M * ('M, unit) Syntax.t option [@@deriving show]
+    end
+
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
@@ -626,6 +630,7 @@ and Type : sig
       bound_kind: bound_kind;
       variance: 'M Variance.t option;
       default: ('M, 'T) Type.t option;
+      const: 'M ConstModifier.t option;
     }
     [@@deriving show]
   end

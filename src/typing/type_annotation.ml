@@ -2576,11 +2576,18 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         bound_kind;
         variance;
         default;
+        const;
       } =
         type_param
       in
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
       let polarity = polarity cx variance in
+      Base.Option.iter const ~f:(fun (loc, _) ->
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ConstTypeParameter)
+            )
+      );
       (match bound_kind with
       | Ast.Type.TypeParam.Extends when not (from_infer_type || Context.ts_syntax cx) ->
         Flow_js_utils.add_output
@@ -2648,6 +2655,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               bound_kind;
               variance;
               default = default_ast;
+              const;
             }
           )
         in

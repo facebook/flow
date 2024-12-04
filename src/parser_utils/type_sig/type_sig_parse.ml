@@ -1891,6 +1891,7 @@ and object_type =
                 bound_kind = _;
                 variance = _;
                 default = _;
+                const = _;
               }
             ) =
           key_tparam
@@ -2515,6 +2516,7 @@ and tparam opts scope tbls xs tp =
           bound_kind = _;
           variance = v;
           default = d;
+          const = _;
         }
       ) =
     tp

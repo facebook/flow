@@ -68,6 +68,19 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         )
     | _ -> None
 
+  let maybe_const env =
+    match Peek.token env with
+    | T_CONST ->
+      Some
+        (with_loc
+           (fun env ->
+             let leading = Peek.comments env in
+             Eat.token env;
+             Flow_ast_utils.mk_comments_opt ~leading ())
+           env
+        )
+    | _ -> None
+
   let number_singleton ~neg kind value raw env =
     if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
     let leading = Peek.comments env in
@@ -529,6 +542,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                   bound_kind = Type.TypeParam.Extends;
                   variance = None;
                   default = None;
+                  const = None;
                 })
               env
           in
@@ -1295,6 +1309,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 variance = None;
                 default = None;
                 bound_kind = Type.TypeParam.Colon;
+                const = None;
               }
             in
             (* We already checked in mapped_type_or_indexer that the next token was an
@@ -1797,6 +1812,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           let (param, require_default) =
             with_loc_extra
               (fun env ->
+                let const = maybe_const env in
                 let variance = maybe_variance ~parse_in_out:true env in
                 let (loc, (name, bound, bound_kind)) = bounded_type env in
                 let (default, require_default) =
@@ -1808,7 +1824,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                     if require_default then error_at env (loc, Parse_error.MissingTypeParamDefault);
                     (None, require_default)
                 in
-                ({ Type.TypeParam.name; bound; bound_kind; variance; default }, require_default))
+                ( { Type.TypeParam.name; bound; bound_kind; variance; default; const },
+                  require_default
+                ))
               env
           in
           (param :: acc, require_default)

@@ -87,6 +87,7 @@ type unsupported_syntax =
   | WithStatement
   | ComponentSyntax
   | DeclareNamespace
+  | ConstTypeParameter
 
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse

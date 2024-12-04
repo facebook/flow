@@ -156,6 +156,7 @@ let type_ options =
             bound_kind = T.TypeParam.Extends;
             variance = None;
             default = None;
+            const = None;
           }
       in
       just (T.Infer { T.Infer.tparam; comments = None })
@@ -491,6 +492,7 @@ let type_ options =
         bound_kind = T.TypeParam.Colon;
         variance = variance_ tp.tp_polarity;
         default;
+        const = None;
       }
     )
   and type_arguments ts =

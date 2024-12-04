@@ -661,6 +661,7 @@ let is_reserved_type str_val =
   | "bigint"
   | "bool"
   | "boolean"
+  | "const"
   | "empty"
   | "extends"
   | "false"
@@ -691,6 +692,7 @@ let token_is_reserved_type t =
   | T_ANY_TYPE
   | T_BIGINT_TYPE
   | T_BOOLEAN_TYPE _
+  | T_CONST
   | T_EMPTY_TYPE
   | T_EXTENDS
   | T_FALSE

@@ -3314,6 +3314,12 @@ and variance (loc, { Ast.Variance.kind; comments }) =
       | Ast.Variance.InOut -> fuse [Atom "in out"; space]
     )
 
+and const const_ =
+  if Base.Option.is_some const_ then
+    fuse [Atom "const"; space]
+  else
+    Empty
+
 and match_case_guard ~opts guard =
   Base.Option.value_map guard ~default:Empty ~f:(fun e ->
       fuse [space; Atom "if"; space; expression ~opts e]
@@ -3492,10 +3498,12 @@ and type_param
         bound_kind;
         variance = variance_;
         default;
+        const = const_;
       }
     ) =
   fuse
     [
+      const const_;
       option variance variance_;
       source_location_with_comments ?comments (loc, Atom name);
       hint

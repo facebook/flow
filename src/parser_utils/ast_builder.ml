@@ -80,6 +80,7 @@ module Types = struct
       ?(bound_kind = Ast.Type.TypeParam.Colon)
       ?variance
       ?default
+      ?const
       name =
     ( loc,
       {
@@ -88,6 +89,7 @@ module Types = struct
         bound_kind;
         variance;
         default;
+        const;
       }
     )
 

@@ -1547,6 +1547,14 @@ class ['loc] mapper =
 
     method variance_opt (opt : 'loc Ast.Variance.t option) = map_opt this#variance opt
 
+    method tparam_const_modifier (c : 'loc Ast.Type.TypeParam.ConstModifier.t) =
+      let (loc, comments) = c in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        c
+      else
+        (loc, comments')
+
     method type_args (targs : ('loc, 'loc) Ast.Type.TypeArgs.t) =
       let open Ast.Type.TypeArgs in
       let (loc, { arguments; comments }) = targs in
@@ -1569,15 +1577,31 @@ class ['loc] mapper =
 
     method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
-      let (loc, { name; bound; bound_kind; variance; default }) = tparam in
+      let (loc, { name; bound; bound_kind; variance; default; const }) = tparam in
       let bound' = this#type_annotation_hint bound in
       let variance' = this#variance_opt variance in
       let default' = map_opt this#type_ default in
+      let const' = map_opt this#tparam_const_modifier const in
       let name' = this#binding_type_identifier name in
-      if name' == name && bound' == bound && variance' == variance && default' == default then
+      if
+        name' == name
+        && bound' == bound
+        && variance' == variance
+        && default' == default
+        && const' == const
+      then
         tparam
       else
-        (loc, { name = name'; bound = bound'; bound_kind; variance = variance'; default = default' })
+        ( loc,
+          {
+            name = name';
+            bound = bound';
+            bound_kind;
+            variance = variance';
+            default = default';
+            const = const';
+          }
+        )
 
     method generic_type _loc (gt : ('loc, 'loc) Ast.Type.Generic.t) =
       let open Ast.Type.Generic in

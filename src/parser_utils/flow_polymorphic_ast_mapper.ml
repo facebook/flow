@@ -1236,13 +1236,21 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method type_param (tparam : ('M, 'T) Ast.Type.TypeParam.t) : ('N, 'U) Ast.Type.TypeParam.t =
       let open Ast.Type.TypeParam in
-      let (annot, { name; bound; bound_kind; variance; default }) = tparam in
+      let (annot, { name; bound; bound_kind; variance; default; const }) = tparam in
       let name' = this#type_param_identifier name in
       let bound' = this#type_annotation_hint bound in
       let variance' = this#variance_opt variance in
       let default' = Option.map ~f:this#type_ default in
+      let const' = Option.map ~f:this#tparam_const_modifier const in
       ( this#on_loc_annot annot,
-        { name = name'; bound = bound'; bound_kind; variance = variance'; default = default' }
+        {
+          name = name';
+          bound = bound';
+          bound_kind;
+          variance = variance';
+          default = default';
+          const = const';
+        }
       )
 
     method type_param_identifier (id : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
@@ -2737,6 +2745,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method variance_opt (opt : 'M Ast.Variance.t option) : 'N Ast.Variance.t option =
       Option.map ~f:this#variance opt
+
+    method tparam_const_modifier (c : 'M Ast.Type.TypeParam.ConstModifier.t)
+        : 'N Ast.Type.TypeParam.ConstModifier.t =
+      let (loc, comments) = c in
+      let loc' = this#on_loc_annot loc in
+      let comments' = this#syntax_opt comments in
+      (loc', comments')
 
     method while_ (stuff : ('M, 'T) Ast.Statement.While.t) : ('N, 'U) Ast.Statement.While.t =
       let open Ast.Statement.While in

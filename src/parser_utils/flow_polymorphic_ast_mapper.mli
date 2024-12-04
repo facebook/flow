@@ -98,6 +98,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method component_body :
       'M * ('M, 'T) Ast.Statement.Block.t -> 'N * ('N, 'U) Ast.Statement.Block.t
 
+    method tparam_const_modifier :
+      'M Ast.Type.TypeParam.ConstModifier.t -> 'N Ast.Type.TypeParam.ConstModifier.t
+
     method class_ : ('M, 'T) Ast.Class.t -> ('N, 'U) Ast.Class.t
 
     method class_body : ('M, 'T) Flow_ast.Class.Body.t -> ('N, 'U) Ast.Class.Body.t

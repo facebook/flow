@@ -2187,6 +2187,7 @@ with type t = Impl.t = struct
             bound_kind;
             variance = tp_var;
             default;
+            const;
           }
         ) =
       node
@@ -2201,6 +2202,9 @@ with type t = Impl.t = struct
            ("variance", option variance tp_var);
            ("default", option _type default);
          ]
+        @ (match const with
+          | Some (loc, comments) -> [("const", node ?comments "ConstModifier" loc [])]
+          | None -> [])
         @
         match bound_kind with
         | Type.TypeParam.Colon -> []

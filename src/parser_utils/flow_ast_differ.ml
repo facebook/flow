@@ -3364,6 +3364,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       bound_kind = bound_kind1;
       variance = variance1;
       default = default1;
+      const = const1;
     } =
       t_param1
     in
@@ -3373,6 +3374,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       bound_kind = bound_kind2;
       variance = variance2;
       default = default2;
+      const = const2;
     } =
       t_param2
     in
@@ -3386,8 +3388,15 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         None
     in
     let default_diff = diff_if_changed_nonopt_fn type_ default1 default2 in
+    let const_diff =
+      if const1 = const2 then
+        Some []
+      else
+        None
+    in
     let result =
-      join_diff_list [variance_diff; name_diff; bound_diff; bound_kind_diff; default_diff]
+      join_diff_list
+        [variance_diff; name_diff; bound_diff; bound_kind_diff; default_diff; const_diff]
     in
     Base.Option.value
       result

@@ -3899,6 +3899,8 @@ let to_printable_error :
       [text "Unsupported static internal slot "; code name; text "."]
     | MessageUnsupportedSyntax WithStatement ->
       [text "Flow doesn't support "; code "with"; text " statements."]
+    | MessageUnsupportedSyntax ConstTypeParameter ->
+      [text "Const type parameters are not yet supported. This modifier will be ignored."]
     | MessageUnsupportedVarianceAnnotation kind ->
       [text "Variance modifiers cannot appear on a type parameter of a "; text kind; text "."]
     | MessageUntypedImport module_name ->

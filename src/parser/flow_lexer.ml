@@ -1785,6 +1785,7 @@ let type_token env lexbuf =
     | "bigint" -> Token (env, T_BIGINT_TYPE)
     | "bool" -> Token (env, T_BOOLEAN_TYPE BOOL)
     | "boolean" -> Token (env, T_BOOLEAN_TYPE BOOLEAN)
+    | "const" -> Token (env, T_CONST)
     | "empty" -> Token (env, T_EMPTY_TYPE)
     | "extends" -> Token (env, T_EXTENDS)
     | "false" -> Token (env, T_FALSE)
