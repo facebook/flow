@@ -37,7 +37,7 @@ let mk_options =
         IMap.empty
     in
     let namespaces_path_mapping =
-      Base.List.rev_map haste_namespaces_path_mapping ~f:(fun (path, ns) ->
+      Base.List.map haste_namespaces_path_mapping ~f:(fun (path, ns) ->
           (map_path path, list_to_bitset ~haste_namespaces ns)
       )
     in
@@ -68,6 +68,20 @@ let reachable_namespace_bitsets_from_namespace_bitset ~opts ns =
         else
           None
     )
+  in
+  let additional =
+    match additional with
+    | Some _ -> additional
+    | None ->
+      if IMap.exists (fun _ b -> Bitset.equal b ns) opts.overlapping_namespaces_mapping then
+        Base.List.find_mapi (Nel.to_list opts.namespaces) ~f:(fun i _ ->
+            if Bitset.mem i ns then
+              Some (Bitset.all_zero size |> Bitset.set i)
+            else
+              None
+        )
+      else
+        None
   in
   match additional with
   | Some ns' -> [ns; ns']
