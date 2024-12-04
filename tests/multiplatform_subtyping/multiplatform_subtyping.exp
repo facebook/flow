@@ -442,6 +442,25 @@ References:
                                               ^^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------------- component.ios.js:1:26
+
+Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `Foo.baz`.
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   component.ios.js:1:26
+   1| declare export component Foo(bar: string, baz: number); // incompatible-type with baz prop, otherwise ok
+                               ^^^
+
+References:
+   component.js.flow:1:48
+   1| declare export component Foo(bar: string, baz: boolean)
+                                                     ^^^^^^^ [1]
+   component.ios.js:1:48
+   1| declare export component Foo(bar: string, baz: number); // incompatible-type with baz prop, otherwise ok
+                                                     ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:11:21
 
 Cannot conform to common interface module because `FooBad` [1] is incompatible with `FooBad` [2] in property `FooBad`.
@@ -651,4 +670,4 @@ References:
 
 
 
-Found 36 errors
+Found 37 errors

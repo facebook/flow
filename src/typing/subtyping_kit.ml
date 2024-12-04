@@ -1609,7 +1609,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 config = configl;
                 instance = instancel;
                 renders = rendersl;
-                component_kind = Nominal (idl, _name_l, _);
+                component_kind = Nominal (idl, name_l, _);
               }
           ),
         DefT
@@ -1619,11 +1619,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 config = configu;
                 instance = instanceu;
                 renders = rendersu;
-                component_kind = Nominal (idu, _name_u, _);
+                component_kind = Nominal (idu, name_u, _);
               }
           )
       )
-      when ALoc.equal_id idl idu ->
+      when ALoc.equal_id idl idu
+           || TypeUtil.nominal_id_have_same_logical_module
+                ~file_options:Context.((metadata cx).file_options)
+                (idl, Some name_l)
+                (idu, Some name_u) ->
       rec_flow_t cx trace ~use_op (configu, configl);
       flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu);
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
