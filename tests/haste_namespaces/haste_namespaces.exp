@@ -1,0 +1,69 @@
+Error -------------------------------------------------------------------------------------------- common/Common.js:1:24
+
+Cannot resolve module `NativeOnly`. [cannot-resolve-module]
+
+   1| import { native } from "NativeOnly"; // error: common code cannot import native-only code
+                             ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- common/Common.js:4:1
+
+Cannot cast `web` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   common/Common.js:4:1
+   4| web as empty; // error: string ~> empty
+      ^^^
+
+References:
+   web/WebOnly.js:6:27
+   6| declare export const web: string;
+                                ^^^^^^ [1]
+   common/Common.js:4:8
+   4| web as empty; // error: string ~> empty
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- native/NativeOnly.js:4:1
+
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   native/NativeOnly.js:4:1
+   4| foo as empty; // error: string ~> empty
+      ^^^
+
+References:
+   common/CommonLib.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   native/NativeOnly.js:4:8
+   4| foo as empty; // error: string ~> empty
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- native/NativeOnly.js:8:8
+
+Cannot resolve module `WebInCommon`. [cannot-resolve-module]
+
+   8| import 'WebInCommon' // error: native code cannot import web code. This one tests the precedence rule in flowconfig
+             ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- web/WebOnly.js:4:1
+
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   web/WebOnly.js:4:1
+   4| foo as empty; // error: string ~> empty
+      ^^^
+
+References:
+   common/CommonLib.js:1:27
+   1| declare export const foo: string;
+                                ^^^^^^ [1]
+   web/WebOnly.js:4:8
+   4| foo as empty; // error: string ~> empty
+             ^^^^^ [2]
+
+
+
+Found 5 errors
