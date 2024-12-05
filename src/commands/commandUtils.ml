@@ -1378,7 +1378,7 @@ let make_options
       |> min Sys_utils.nbr_procs;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
-    opt_as_const = Base.Option.value ~default:false (FlowConfig.enable_as_const flowconfig);
+    opt_as_const = Base.Option.value ~default:true (FlowConfig.enable_as_const flowconfig);
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
     opt_react_rules = FlowConfig.react_rules flowconfig;
     opt_hook_compatibility = FlowConfig.hook_compatibility flowconfig;
