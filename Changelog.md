@@ -1,3 +1,9 @@
+### 0.256.0
+
+Notable bug fixes:
+* Fixed a limitation when checking intersections of polymorphic types (e.g. [tryFlow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABABBdkAXnZwHZlgQyHZAEZ2fSANwAHR8q3ZACFefzBRhheyAEwSmVQWVs7DsgAKAB4ACoAPmV3IAPoqdRonlQDYD2fIRSbgbRLQAyflS2XydkYEhG42e82S9kAeij7IA7nBjuyoBAJOycEGoOyTJQIJRkxA47kQA0TCQ4NAkg0AAxWDUAVnrVmrIHpQA))
+* Fixed an internal error raised when using `super` in an object method. Such cases are now user-facing errors.
+
 ### 0.255.0
 
 Likely to cause new Flow errors:
