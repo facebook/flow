@@ -261,7 +261,7 @@ module Opts = struct
       node_resolver_root_relative_dirnames = [""];
       pattern_matching_expressions = None;
       react_custom_jsx_typing = false;
-      react_ref_as_prop = Options.ReactRefAsProp.Disabled;
+      react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
       relay_integration = false;
@@ -1132,6 +1132,7 @@ module Opts = struct
           [
             ("disabled", Options.ReactRefAsProp.Disabled);
             ("experimental.partial_support", Options.ReactRefAsProp.PartialSupport);
+            ("partial_support", Options.ReactRefAsProp.PartialSupport);
           ]
           (fun opts react_ref_as_prop -> Ok { opts with react_ref_as_prop })
       );

@@ -2,6 +2,7 @@
 component_syntax=true
 all=true
 no_flowlib=false
+react.ref_as_prop=disabled
 
 [lints]
 internal-type=off

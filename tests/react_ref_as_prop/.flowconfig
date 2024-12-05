@@ -2,4 +2,4 @@
 all=true
 no_flowlib=false
 react.runtime=automatic
-react.ref_as_prop=experimental.partial_support
+react.ref_as_prop=partial_support
